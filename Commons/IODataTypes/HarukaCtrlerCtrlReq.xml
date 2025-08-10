@@ -1,0 +1,281 @@
+<!--
+==============================================================================
+== Haruka Software Storage.
+== Definition of message format expressing control request for controller.
+-->
+
+<root namespace='Haruka.IODataTypes.HarukaCtrlerCtrlReq' class='ReaderWriter' >
+  <form name='HarukaCtrlerCtrlReq'>
+    <item name='Request' selection='true' >
+
+      <!--
+      summary : Login request.
+      param : True, if the existing login session should be discarded.
+              If false is specified and a valid login session already exists, login will fail.
+      returns : HarukaCtrlerCtrlRes.LoginResult
+      -->
+      <item name='Login' constraint='boolean' />
+
+      <!--
+      summary : Logout request.
+      param : Session ID.
+      returns : HarukaCtrlerCtrlRes.LogoutResult
+      -->
+      <item name='Logout' constraint='CtrlSessionID' />
+
+      <!--
+      summary : No operation request. No active features.
+      param : Session ID.
+      returns : HarukaCtrlerCtrlRes.NoOperationResult
+      -->
+      <item name='NoOperation' constraint='CtrlSessionID' />
+
+      <!--
+      summary : Get current effective configuration of the controller.
+      param : Session ID.
+      returns : HarukaCtrlerCtrlRes.ControllerConfig
+      -->
+      <item name='GetControllerConfig' constraint='CtrlSessionID' />
+
+      <!--
+      summary : Update the controller configuration.
+      param : Session ID and controller configuration values. 
+              This value must be XML string based HarukaCtrlConf.
+      returns : HarukaCtrlerCtrlRes.SetControllerConfigResult
+      -->
+      <item name='SetControllerConfig' >
+        <item name='SessionID' constraint='CtrlSessionID' />
+        <item name='Config' constraint='string' />
+      </item>
+
+      <!--
+      summary : Retrieve list of the target device directories.
+      param : Session ID. 
+      returns : HarukaCtrlerCtrlRes.TargetDeviceDirs
+      -->
+      <item name='GetTargetDeviceDir' constraint='CtrlSessionID' />
+
+      <!--
+      summary : Create the target device directory.
+      param : Session ID.
+              Target device ID of which should be created the directory.
+      returns : HarukaCtrlerCtrlRes.CreateTargetDeviceDirResult
+      -->
+      <item name='CreateTargetDeviceDir' >
+        <item name='SessionID' constraint='CtrlSessionID' />
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+      </item>
+
+      <!--
+      summary : Delete the target device directory.
+      param : Session ID.
+              Target device ID of which should be removed the directory.
+      returns : HarukaCtrlerCtrlRes.DeleteTargetDeviceDirResult
+      -->
+      <item name='DeleteTargetDeviceDir' >
+        <item name='SessionID' constraint='CtrlSessionID' />
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+      </item>
+
+      <!--
+      summary : Retrieve the target device configuration.
+      param : Session ID.
+              Target device ID of which should be retrieved the configuration.
+      returns : HarukaCtrlerCtrlRes.TargetDeviceConfig
+      -->
+      <item name='GetTargetDeviceConfig' >
+        <item name='SessionID' constraint='CtrlSessionID' />
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+      </item>
+
+      <!--
+      summary : Create or update the target device configuration.
+      param : Session ID.
+              Target device ID of which should be written to the configuration.
+              Configuration data XML string. It must be based on TargetDeviceConf.
+      returns : HarukaCtrlerCtrlRes.CreateTargetDeviceConfigResult
+      -->
+      <item name='CreateTargetDeviceConfig' >
+        <item name='SessionID' constraint='CtrlSessionID' />
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+        <item name='Config' constraint='string' />
+      </item>
+
+      <!--
+      summary : Retrieve list of target group ID configured in specified target device.
+      param : Session ID.
+              Target device ID of which should be retrieved the target group IDs.
+              Configuration data XML string. It must be based on TargetDeviceConf.
+      returns : HarukaCtrlerCtrlRes.TargetGroupID
+      -->
+      <item name='GetTargetGroupID' >
+        <item name='SessionID' constraint='CtrlSessionID' />
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+      </item>
+
+      <!--
+      summary : Retrieve the target group configuration data.
+      param : Session ID.
+              Target device ID and target group ID that be retrieved the configuration.
+      returns : HarukaCtrlerCtrlRes.TargetGroupID
+      -->
+      <item name='GetTargetGroupConfig' >
+        <item name='SessionID' constraint='CtrlSessionID' />
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+        <item name='TargetGroupID' constraint='TargetGroupID' />
+      </item>
+
+      <!--
+      summary : Retrieve all of the target group configurations configured on the specified target device.
+      param : Session ID.
+              Target device ID.
+      returns : HarukaCtrlerCtrlRes.AllTargetGroupConfig
+      -->
+      <item name='GetAllTargetGroupConfig' >
+        <item name='SessionID' constraint='CtrlSessionID' />
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+      </item>
+
+      <!--
+      summary : Create or update the target group configuration.
+      param : Session ID.
+              Target device ID.
+              Target group ID.
+              Target group configuration data XML string. It must be based on TargetGroupConf.
+      returns : HarukaCtrlerCtrlRes.CreateTargetGroupConfigResult
+      -->
+      <item name='CreateTargetGroupConfig' >
+        <item name='SessionID' constraint='CtrlSessionID' />
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+        <item name='TargetGroupID' constraint='TargetGroupID' />
+        <item name='Config' constraint='string' />
+      </item>
+
+      <!--
+      summary : Delete the target group configuration.
+      param : Session ID.
+              Target device ID.
+              Target group ID.
+      returns : HarukaCtrlerCtrlRes.DeleteTargetGroupConfigResult
+      -->
+      <item name='DeleteTargetGroupConfig' >
+        <item name='SessionID' constraint='CtrlSessionID' />
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+        <item name='TargetGroupID' constraint='TargetGroupID' />
+      </item>
+
+      <!--
+      summary : Retrieve list of the LU working directories configured in the specified target device.
+      param : Session ID.
+              Target device ID.
+      returns : HarukaCtrlerCtrlRes.LUWorkDirs
+      -->
+      <item name='GetLUWorkDir' >
+        <item name='SessionID' constraint='CtrlSessionID' />
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+      </item>
+
+      <!--
+      summary : Create LU working directory in the specified target device.
+      param : Session ID.
+              Target device ID.
+              LUN should be created.
+      returns : HarukaCtrlerCtrlRes.CreateLUWorkDirResult
+      -->
+      <item name='CreateLUWorkDir' >
+        <item name='SessionID' constraint='CtrlSessionID' />
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+        <item name='LUN' constraint='LUN_T' />
+      </item>
+
+      <!--
+      summary : Remove LU working directory in the specified target device.
+      param : Session ID.
+              Target device ID.
+              LUN should be removed.
+      returns : HarukaCtrlerCtrlRes.DeleteLUWorkDirResult
+      -->
+      <item name='DeleteLUWorkDir' >
+        <item name='SessionID' constraint='CtrlSessionID' />
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+        <item name='LUN' constraint='LUN_T' />
+      </item>
+
+      <!--
+      summary : Retrieve list of the target device ID of which currently running target device.
+      param : Session ID.
+      returns : HarukaCtrlerCtrlRes.TargetDeviceProcs
+      -->
+      <item name='GetTargetDeviceProcs' constraint='CtrlSessionID' />
+
+      <!--
+      summary : Kill the specified target device.
+      param : Session ID.
+              Target device ID.
+      returns : HarukaCtrlerCtrlRes.KillTargetDeviceProcResult
+      -->
+      <item name='KillTargetDeviceProc' >
+        <item name='SessionID' constraint='CtrlSessionID' />
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+      </item>
+
+      <!--
+      summary : Start the specified target device.
+      param : Session ID.
+              Target device ID.
+      returns : HarukaCtrlerCtrlRes.StartTargetDeviceProcResult
+      -->
+      <item name='StartTargetDeviceProc' >
+        <item name='SessionID' constraint='CtrlSessionID' />
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+      </item>
+
+      <!--
+      summary : Request to send target device controll request to specified target device.
+      param : Session ID.
+              Target device ID.
+              Target device controll request XML string. It should be based on TargetDeviceCtrlReq.
+      returns : HarukaCtrlerCtrlRes.TargetDeviceCtrlResponse
+      -->
+      <item name='TargetDeviceCtrlRequest' >
+        <item name='SessionID' constraint='CtrlSessionID' />
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+        <item name='Request' constraint='string' />
+      </item>
+
+      <!--
+      summary : Request to create media files.
+      param : Session ID.
+              Media file arguments.
+      returns : HarukaCtrlerCtrlRes.CreateMediaFileResult
+      -->
+      <item name='CreateMediaFile' >
+        <item name='SessionID' constraint='CtrlSessionID' />
+        <item name='MediaType' selection='true' >
+          <item name='PlainFile'>
+            <item name='FileName' constraint='string' minvalue='1' maxvalue='MAX_FILENAME_STR_LENGTH' />
+            <item name='FileSize' constraint='long' minvalue='1' />
+          </item>
+        </item>
+      </item>
+
+      <!--
+      summary : Retrieve list of status for creating media file process.
+      param : Session ID.
+      returns : HarukaCtrlerCtrlRes.InitMediaStatus
+      -->
+      <item name='GetInitMediaStatus' constraint='CtrlSessionID' />
+
+      <!--
+      summary : Terminate creating media file process.
+      param : Session ID.
+      returns : HarukaCtrlerCtrlRes.KillInitMediaProcResult
+      -->
+      <item name='KillInitMediaProc' >
+        <item name='SessionID' constraint='CtrlSessionID' />
+        <item name='ProcID' constraint='unsignedLong' />
+      </item>
+
+    </item>
+  </form>
+</root>

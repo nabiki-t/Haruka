@@ -1,0 +1,63 @@
+<root namespace='Haruka.IODataTypes.TargetGroupConf' class='ReaderWriter' >
+  <form name='TargetGroup'>
+    <item name='TargetGroupID' constraint='TargetGroupID' />
+    <item name='TargetGroupName' constraint='string' minvalue='0' maxvalue='MAX_TARGET_GROUP_NAME_STR_LENGTH' />
+    <item name='EnabledAtStart' constraint='boolean' mincount='0' maxcount='1' default='true' />
+    <item name='Target' mincount='1' maxcount='MAX_TARGET_COUNT_IN_TD' >
+      <item name='IdentNumber' constraint='TNODEIDX_T' />
+      <item name='TargetPortalGroupTag' constraint='TPGT_T' minvalue='0' maxvalue='0' />
+      <item name='TargetName' constraint='iSCSIName' />
+      <item name='TargetAlias' constraint='string' minvalue='0' maxvalue='MAX_TARGET_ALIAS_STR_LENGTH' />
+      <item name='LUN' constraint='LUN_T' mincount='1' maxcount='MAX_LOGICALUNIT_COUNT_IN_TD' />
+      <item name='Auth' selection='true'>
+        <item name='CHAP'>
+          <item name='InitiatorAuth' >
+            <item name='UserName' constraint='string' minvalue='1' maxvalue='MAX_USER_NAME_STR_LENGTH' pattern='^[a-zA-Z0-9\.\-+@_/\[\]\:]+$' />
+            <item name='Password' constraint='string' minvalue='1' maxvalue='MAX_PASSWORD_STR_LENGTH' pattern='^[a-zA-Z0-9\.\-+@_/\[\]\:]+$' />
+          </item>
+          <item name='TargetAuth' >
+            <item name='UserName' constraint='string' minvalue='0' maxvalue='MAX_USER_NAME_STR_LENGTH' pattern='^[a-zA-Z0-9\.\-+@_/\[\]\:]*$' />
+            <item name='Password' constraint='string' minvalue='0' maxvalue='MAX_PASSWORD_STR_LENGTH' pattern='^[a-zA-Z0-9\.\-+@_/\[\]\:]*$' />
+          </item>
+        </item>
+        <item name='None' constraint='unit' />
+      </item>
+    </item>
+    <item name='LogicalUnit' mincount='1' maxcount='MAX_LOGICALUNIT_COUNT_IN_TD' >
+      <item name='LUN' constraint='LUN_T' />
+      <item name='LUName' constraint='string' minvalue='0' maxvalue='MAX_LU_NAME_STR_LENGTH' />
+      <item name='WorkPath' constraint='string' hidden='true' />
+      <item name='LUDevice' constraint='DEVICE' />
+    </item>
+  </form>
+  <typedef name='DEVICE' selection='true'>
+    <item name='BlockDevice' >
+      <item name='Peripheral' constraint='MEDIA' />
+    </item>
+    <item name='DummyDevice' constraint='unit' />
+  </typedef>
+  <typedef name='MEDIA' selection='true'>
+    <item name='PlainFile' >
+      <item name='IdentNumber' constraint='MEDIAIDX_T' />
+      <item name='MediaName' constraint='string' minvalue='0' maxvalue='MAX_MEDIA_NAME_STR_LENGTH' />
+      <item name='FileName' constraint='string' minvalue='0' maxvalue='MAX_FILENAME_STR_LENGTH' />
+      <item name='MaxMultiplicity' constraint='unsignedInt' mincount='0' maxcount='1' minvalue='PLAINFILE_MIN_MAXMULTIPLICITY' maxvalue='PLAINFILE_MAX_MAXMULTIPLICITY' defaultref='PLAINFILE_DEF_MAXMULTIPLICITY' />
+      <item name='QueueWaitTimeOut' constraint='int' mincount='0' maxcount='1' minvalue='PLAINFILE_MIN_QUEUEWAITTIMEOUT' maxvalue='PLAINFILE_MAX_QUEUEWAITTIMEOUT' defaultref='PLAINFILE_DEF_QUEUEWAITTIMEOUT'/>
+      <item name='WriteProtect' constraint='boolean' />
+    </item>
+    <item name='MemBuffer' >
+      <item name='IdentNumber' constraint='MEDIAIDX_T' />
+      <item name='MediaName' constraint='string' minvalue='0' maxvalue='MAX_MEDIA_NAME_STR_LENGTH' />
+      <item name='BytesCount' constraint='unsignedLong' />
+    </item>
+    <item name='DummyMedia'>
+      <item name='IdentNumber' constraint='MEDIAIDX_T' />
+      <item name='MediaName' constraint='string' minvalue='0' maxvalue='MAX_MEDIA_NAME_STR_LENGTH' />
+    </item>
+    <item name='DebugMedia'>
+      <item name='IdentNumber' constraint='MEDIAIDX_T' />
+      <item name='MediaName' constraint='string' minvalue='0' maxvalue='MAX_MEDIA_NAME_STR_LENGTH' />
+      <item name='Peripheral' constraint='MEDIA' />
+    </item>
+  </typedef>
+</root>

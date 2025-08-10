@@ -1,0 +1,143 @@
+﻿<Grid
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        MinWidth="350" MinHeight="100" >
+    <StackPanel>
+        <TextBlock Name="Title" Text="Controller" VerticalAlignment="Top" Height="27" FontSize="18" Padding="0,0,0,0" TextTrimming="CharacterEllipsis" />
+        <Expander Name="ConfigurationExpander" Header="Configuration" Margin="10,2,5,2" VerticalAlignment="Top" IsExpanded="True" TabIndex="0">
+            <StackPanel>
+                <StackPanel Margin="5,2,0,2" Orientation="Horizontal">
+                    <Button Name="EditButton" Width="60" Content="Edit" Margin="5,2,5,2" TabIndex="1" />
+                    <Button Name="ApplyButton" Width="60" Content="Apply" Margin="5,2,5,2" TabIndex="2" />
+                    <Button Name="DiscardButton" Width="60" Content="Discard" Margin="5,2,5,2" TabIndex="3" />
+                </StackPanel>
+                <TextBlock Name="ErrorMessageLabel" Text="" Margin="5,2,0,2" TextTrimming="CharacterEllipsis"/>
+
+                <!-- Remote control -->
+                <Grid Margin="5,2,0,2">
+                    <StackPanel>
+                        <TextBlock Name="RemoteControlTextBlock" Text="Remote Control" Margin="0,0,0,0" Padding="0,0,0,0" Foreground="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                        <Grid Margin="10,2,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4*" />
+                                <ColumnDefinition Width="6*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Name="PortNumberTextBlock" Text="Port Number"  Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            <TextBox Grid.Column="1" Name="PortNumberTextBox" Text="3268" TabIndex="5" Padding="2,2,2,2"/>
+                        </Grid>
+                        <Grid Margin="10,2,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4*" />
+                                <ColumnDefinition Width="6*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Name="AddressTextBlock" Text="Address" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            <TextBox Grid.Column="1" Name="AddressTextBox" Text="::1" TabIndex="7" Padding="2,2,2,2"/>
+                        </Grid>
+                        <StackPanel Margin="10,2,0,2">
+                            <TextBlock Name="IPWhiteListTextBlock" Text="IP White List" Margin="0,0,0,0" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            <Grid Margin="10,0,0,0">
+                                <StackPanel HorizontalAlignment="Right" Width="20">
+                                    <Button Name="AddIPWhiteListButton" Content="&#xE710;" FontFamily="Segoe MDL2 Assets" Margin="0,0,0,0" TabIndex="9" />
+                                    <Button Name="RemoveIPWhiteListButton" Content="&#xE738;" FontFamily="Segoe MDL2 Assets" Margin="0,2,0,0" TabIndex="10" />
+                                </StackPanel>
+                                <ListBox Name="IPWhiteListListBox" Height="120" TabIndex="8" DockPanel.Dock="Top" Margin="0,0,25,0" />
+
+                            </Grid>
+
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Log Maintenance -->
+                <Grid Margin="5,2,0,2">
+                    <StackPanel>
+                        <TextBlock Name="LogMaintenanceTextBlock" Text="Log Maintenance" Margin="0,0,0,0" Padding="0,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" TextTrimming="CharacterEllipsis"/>
+                        <StackPanel Margin="10,2,0,2">
+                            <RadioButton Name="StanserdOutputRadio" Content="Stanserd Output" Margin="0,0,0,0" TabIndex="11"/>
+                            <Grid Margin="10,0,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="4*" />
+                                    <ColumnDefinition Width="6*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Name="StdoutTotalLimitTextBlock" Text="Total Limit" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                <TextBox Grid.Column="1" Name="StdoutLMTotalLimitTextBox" Text="100000" TabIndex="13" Padding="2,2,2,2"/>
+                            </Grid>
+                        </StackPanel>
+                        <StackPanel Margin="10,2,0,2">
+                            <RadioButton Name="FileRadio" Content="File" Margin="0,0,0,0" TabIndex="14"/>
+                            <Grid Margin="10,2,0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="4*" />
+                                    <ColumnDefinition Width="6*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Name="FileTotalLimitTextBlock" Text="Total Limit" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                <TextBox Grid.Column="1" Name="FileTotalLimitTextBox" Text="100000" TabIndex="16" Padding="2,2,2,2"/>
+                            </Grid>
+                            <Grid Margin="10,2,0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="4*" />
+                                    <ColumnDefinition Width="6*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Name="MaxFileCountTextBlock" Text="Max File Count" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                <TextBox Grid.Column="1" Name="MaxFileCountTextBox" Text="30" TabIndex="18" Padding="2,2,2,2"/>
+                            </Grid>
+                            <Grid Margin="10,2,0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="4*" />
+                                    <ColumnDefinition Width="6*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Name="ForceSyncTextBlock" Text="Force Sync" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                <ComboBox Grid.Column="1" Name="ForceSyncCombo" SelectedIndex="0" TabIndex="20">
+                                    <TextBlock>True</TextBlock>
+                                    <TextBlock>False</TextBlock>
+                                </ComboBox>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Log Parameters -->
+                <Grid Margin="5,2,0,2">
+                    <StackPanel>
+                        <TextBlock Name="LogParametersTextBlock" Text="Log Parameters" Margin="0,0,0,0" Padding="0,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" TextTrimming="CharacterEllipsis"/>
+                        <Grid Margin="10,2,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4*" />
+                                <ColumnDefinition Width="6*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Name="SoftLimitTextBlock" Text="Soft Limit" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            <TextBox Grid.Column="1" Name="SoftLimitTextBox" Text="2000" TabIndex="22" Padding="2,2,2,2"/>
+                        </Grid>
+                        <Grid Margin="10,2,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4*" />
+                                <ColumnDefinition Width="6*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Name="HardLimitTextBlock" Text="Hard Limit" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            <TextBox Grid.Column="1" Name="HardLimitTextBox" Text="5000" TabIndex="24" Padding="2,2,2,2" />
+                        </Grid>
+                        <Grid Margin="10,2,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4*" />
+                                <ColumnDefinition Width="6*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Name="LogLevelTextBlock" Text="Log Level" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            <ComboBox Grid.Column="1" Name="LogLevelCombo" SelectedIndex="0" TabIndex="26">
+                                <TextBlock>VERBOSE</TextBlock>
+                                <TextBlock>INFO</TextBlock>
+                                <TextBlock>WARNING</TextBlock>
+                                <TextBlock>ERROR</TextBlock>
+                                <TextBlock>FAILED</TextBlock>
+                                <TextBlock>OFF</TextBlock>
+                            </ComboBox>
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+
+            </StackPanel>
+        </Expander>
+    </StackPanel>
+</Grid>
+    

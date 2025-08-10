@@ -1,0 +1,12 @@
+<root namespace='Haruka.Test.UT.ConfRW_002_DateTime' class='ConfRW_UT002_DateTime' >
+  <form name='Test'>
+    <item name='D1' constraint='DateTime' />
+    <item name='D2' constraint='DateTime' mincount='2' maxcount='3'/>
+    <item name='D3' constraint='DateTime' mincount='0' maxcount='1'/>
+    <item name='D4' constraint='DateTime' hidden='true'/>
+    <item name='D5' constraint='DateTime' hidden='true' default='0001-02-03T04:05:06'/>
+    <item name='D6' constraint='DateTime' hidden='true' defaultref='PRODUCT_RELEASE_DATE'/>
+    <item name='D7' constraint='DateTime' mincount='0' maxcount='1' default='0002-03-04T05:06:07'/>
+    <item name='D8' constraint='DateTime' mincount='0' maxcount='1' defaultref='PRODUCT_RELEASE_DATE'/>
+  </form>
+</root>

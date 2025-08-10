@@ -1,0 +1,74 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Authors>nabiki_t</Authors>
+    <Company>nabiki_t</Company>
+    <Product>Haruka software storage.</Product>
+    <Description>Haruka software storage. common library.</Description>
+    <Copyright></Copyright>
+    <EnableNETAnalyzers>True</EnableNETAnalyzers>
+    <AnalysisLevel>6.0-all</AnalysisLevel>
+    <BaseOutputPath>..\Work</BaseOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <WarningLevel>5</WarningLevel>
+    <Tailcalls>True</Tailcalls>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>5</WarningLevel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="IODataTypes\HarukaCtrlConf.fs" />
+    <Compile Include="IODataTypes\TargetDeviceConf.fs" />
+    <Compile Include="IODataTypes\TargetGroupConf.fs" />
+    <Compile Include="IODataTypes\HarukaCtrlerCtrlReq.fs" />
+    <Compile Include="IODataTypes\HarukaCtrlerCtrlRes.fs" />
+    <Compile Include="IODataTypes\TargetDeviceCtrlReq.fs" />
+    <Compile Include="IODataTypes\TargetDeviceCtrlRes.fs" />
+    <Compile Include="IODataTypes\MediaCtrlReq.fs" />
+    <Compile Include="IODataTypes\MediaCtrlRes.fs" />
+    <Compile Include="IODataTypes\PersistentReservation.fs" />
+    <Compile Include="IODataTypes\StringTableFormat.fs" />
+    <Compile Include="IODataTypes\InitMediaMessage.fs" />
+    <Compile Include="IODataTypes\TempExport.fs" />
+    <Content Include="IODataTypes\HarukaCtrlConf.xml" />
+    <Content Include="IODataTypes\TargetDeviceConf.xml" />
+    <Content Include="IODataTypes\TargetGroupConf.xml" />
+    <Content Include="IODataTypes\HarukaCtrlerCtrlReq.xml" />
+    <Content Include="IODataTypes\HarukaCtrlerCtrlRes.xml" />
+    <Content Include="IODataTypes\TargetDeviceCtrlReq.xml" />
+    <Content Include="IODataTypes\TargetDeviceCtrlRes.xml" />
+    <Content Include="IODataTypes\MediaCtrlReq.xml" />
+    <Content Include="IODataTypes\MediaCtrlRes.xml" />
+    <Content Include="IODataTypes\PersistentReservation.xml" />
+    <Content Include="IODataTypes\StringTableFormat.xml" />
+    <Content Include="IODataTypes\InitMediaMessage.xml" />
+    <Content Include="IODataTypes\TempExport.xml" />
+    <Compile Include="PooledBuffer.fs" />
+    <Compile Include="Functions.fs" />
+    <Compile Include="OptimisticLock.fs" />
+    <Compile Include="WorkingQueue.fs" />
+    <Compile Include="ResCounter.fs" />
+    <Compile Include="PDUInterface.fs" />
+    <Compile Include="Interfaces.fs" />
+    <Compile Include="Exceptions.fs" />
+    <Compile Include="Logger.fs" />
+    <Compile Include="ResponseFence.fs" />
+    <Compile Include="StringTable.fs" />
+    <Compile Include="CommandParser.fs" />
+    <Compile Include="Killer.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Constants\Constants.fsproj" />
+  </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="dotnet run --project ..\GenConfRW -c $(Configuration) ./IODataTypes" />
+  </Target>
+
+</Project>

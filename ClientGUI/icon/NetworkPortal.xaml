@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+	<DrawingBrush x:Key="NetworkPortal" Stretch="Uniform">
+		<DrawingBrush.Drawing>
+			<DrawingGroup>
+				<DrawingGroup.Children>
+					<GeometryDrawing Brush="#FF898989" Geometry="F1 M 3.21832,6.50001L 61.2808,6.50001L 61.2808,58.4491L 3.21832,58.4491L 3.21832,6.50001 Z ">
+						<GeometryDrawing.Pen>
+							<Pen Thickness="3" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" Brush="#FF000000"/>
+						</GeometryDrawing.Pen>
+					</GeometryDrawing>
+					<GeometryDrawing Brush="#FF000000" Geometry="F1 M 20.9683,16.7212L 43.0317,16.7212L 43.0317,25.4159L 20.9683,25.4159L 20.9683,16.7212 Z "/>
+					<GeometryDrawing Brush="#FF000000" Geometry="F1 M 24.9067,11.3333L 39.0933,11.3333L 39.0933,19.4645L 24.9067,19.4645L 24.9067,11.3333 Z "/>
+					<GeometryDrawing Brush="#FF000000" Geometry="F1 M 10.125,23.105L 53.875,23.105L 53.875,51.0835L 10.125,51.0835L 10.125,23.105 Z "/>
+					<DrawingGroup ClipGeometry="F1 M 10.125,23.105L 53.875,23.105L 53.875,51.0835L 10.125,51.0835L 10.125,23.105 Z ">
+						<DrawingGroup.Children>
+							<GeometryDrawing Brush="#FFFFFF00" Geometry="F1 M 13.5117,41.4972L 17.7968,41.4972L 17.7968,51.7708L 13.5117,51.7708L 13.5117,41.4972 Z "/>
+							<GeometryDrawing Brush="#FFFFFF00" Geometry="F1 M 19.8056,41.4972L 24.0907,41.4972L 24.0907,51.7708L 19.8056,51.7708L 19.8056,41.4972 Z "/>
+							<GeometryDrawing Brush="#FFFFFF00" Geometry="F1 M 26.396,41.4972L 30.6811,41.4972L 30.6811,51.7708L 26.396,51.7708L 26.396,41.4972 Z "/>
+							<GeometryDrawing Brush="#FFFFFF00" Geometry="F1 M 32.8899,41.4972L 37.175,41.4972L 37.175,51.7708L 32.8899,51.7708L 32.8899,41.4972 Z "/>
+							<GeometryDrawing Brush="#FFFFFF00" Geometry="F1 M 39.396,41.4972L 43.6811,41.4972L 43.6811,51.7708L 39.396,51.7708L 39.396,41.4972 Z "/>
+							<GeometryDrawing Brush="#FFFFFF00" Geometry="F1 M 45.9899,41.4972L 50.275,41.4972L 50.275,51.7708L 45.9899,51.7708L 45.9899,41.4972 Z "/>
+						</DrawingGroup.Children>
+					</DrawingGroup>
+					<GeometryDrawing Brush="#FFFF0000" Geometry="F1 M 10.0833,20.4167L 18.5314,20.4167L 18.5314,11.203L 10.0833,11.203L 10.0833,20.4167 Z "/>
+					<GeometryDrawing Brush="#FF64FF00" Geometry="F1 M 45.5037,20.4167L 53.9518,20.4167L 53.9518,11.203L 45.5037,11.203L 45.5037,20.4167 Z "/>
+				</DrawingGroup.Children>
+			</DrawingGroup>
+		</DrawingBrush.Drawing>
+	</DrawingBrush>
+</ResourceDictionary>

@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <GenerateDocumentationFile>False</GenerateDocumentationFile>
+    <Authors>nabiki_t</Authors>
+    <Company>nabiki_t</Company>
+    <Product>Haruka software storage.</Product>
+    <Description>Haruka software storage. common library.</Description>
+    <BaseOutputPath>..\Work</BaseOutputPath>
+    <EnableNETAnalyzers>True</EnableNETAnalyzers>
+    <AnalysisLevel>6.0-all</AnalysisLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <WarningLevel>5</WarningLevel>
+    <Tailcalls>True</Tailcalls>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>5</WarningLevel>
+    <Tailcalls>True</Tailcalls>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Constants.fs" />
+    <Compile Include="TypeDefs.fs" />
+    <Compile Include="IPCondition.fs" />
+    <Compile Include="ITNexus.fs" />
+  </ItemGroup>
+
+</Project>

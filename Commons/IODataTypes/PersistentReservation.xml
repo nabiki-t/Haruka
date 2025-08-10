@@ -1,0 +1,15 @@
+<root namespace='Haruka.IODataTypes.PersistentReservation' class='ReaderWriter' >
+  <form name='PRInfo'>
+    <item name='Type' constraint='PR_TYPE' />
+    <item name='Registration' mincount='0' maxcount='PRDATA_MAX_REGISTRATION_COUNT'>
+      <item name='ITNexus'>
+        <item name='InitiatorName' constraint='iSCSIName' />
+        <item name='ISID' constraint='ISID' />
+        <item name='TargetName' constraint='iSCSIName' />
+        <item name='TPGT' constraint='TPGT_T' />
+      </item>
+      <item name='ReservationKey' constraint='RESVKEY_T' />
+      <item name='Holder' constraint='boolean' />
+    </item>
+  </form>
+</root>

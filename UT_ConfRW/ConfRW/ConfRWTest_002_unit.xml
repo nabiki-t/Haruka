@@ -1,0 +1,8 @@
+<root namespace='Haruka.Test.UT.ConfRW_002_unit' class='ConfRW_UT002_unit' >
+  <form name='Test'>
+    <item name='D1' constraint='unit' />
+    <item name='D2' constraint='unit' mincount='2' maxcount='3'/>
+    <item name='D3' constraint='unit' mincount='0' maxcount='1'/>
+    <item name='D4' constraint='unit' hidden='true'/>
+  </form>
+</root>

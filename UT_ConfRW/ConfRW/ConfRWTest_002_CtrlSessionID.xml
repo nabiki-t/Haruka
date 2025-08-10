@@ -1,0 +1,10 @@
+<root namespace='Haruka.Test.UT.ConfRW_002_CtrlSessionID' class='ConfRW_UT002_CtrlSessionID' >
+  <form name='Test'>
+    <item name='D1' constraint='CtrlSessionID' minvalue='1' maxvalue='2'/>
+    <item name='D2' constraint='CtrlSessionID' mincount='2' maxcount='3'/>
+    <item name='D3' constraint='CtrlSessionID' mincount='0' maxcount='1'/>
+    <item name='D4' constraint='CtrlSessionID' hidden='true'/>
+    <item name='D5' constraint='CtrlSessionID' hidden='true' default='CSI_99000000-0000-0000-0000-000000000099'/>
+    <item name='D6' constraint='CtrlSessionID' mincount='0' maxcount='1' default='CSI_98000000-0000-0000-0000-000000000098'/>
+  </form>
+</root>

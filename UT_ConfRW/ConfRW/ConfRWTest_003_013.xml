@@ -1,0 +1,13 @@
+<root namespace='Haruka.Test.UT.ConfRW_003_013' class='ReaderWriter' >
+  <form name='Test'>
+    <item name='D1' constraint='int' />
+    <item name='D2' constraint='T031_1' />
+  </form>
+  <typedef name='T031_1'>
+    <item name='D3' constraint='int' />
+    <item name='R031_1' selection='true'>
+      <item name='D4' constraint='int' />
+      <item name='D5' constraint='T031_1' />
+    </item>
+  </typedef>
+</root>

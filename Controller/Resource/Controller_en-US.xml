@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Messages>
+  <Section>
+    <Message>
+      <Name>CMDERR_UNKNOWN_COMMAND</Name>
+      <Value>'{0}' is unknown. </Value>
+    </Message>
+    <Message>
+      <Name>CMDERR_LAST_ARG_VAL_MISSING</Name>
+      <Value>Missing value of the last argument.</Value>
+    </Message>
+    <Message>
+      <Name>CMDERR_MISSING_MANDATORY_ARG</Name>
+      <Value>Missing mandatory argument.</Value>
+    </Message>
+    <Message>
+      <Name>CMDERR_INVALID_ARG_COUNT</Name>
+      <Value>Invalid arguments count. Expected {0} args.</Value>
+    </Message>
+    <Message>
+      <Name>CMDERR_INVALID_ARG_VALUE</Name>
+      <Value>Invalid value '{0}' had been specified.</Value>
+    </Message>
+    <Message>
+      <Name>CMDERR_MISSING_MANDATORY_ARG</Name>
+      <Value>Argument '{0}' is missing.</Value>
+    </Message>
+    <Message>
+      <Name>WORKING_DIR_ALREADY_EXISTS</Name>
+      <Value>Specified working directory already exists.</Value>
+    </Message>
+  </Section>
+</Messages>

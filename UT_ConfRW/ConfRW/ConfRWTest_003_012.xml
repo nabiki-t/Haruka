@@ -1,0 +1,21 @@
+<root namespace='Haruka.Test.UT.ConfRW_003_012' class='ReaderWriter' >
+  <form name='Test'>
+    <item name='D7' constraint='T030_1' />
+    <item name='D9' selection='true' >
+      <item name='D9_1' constraint='T030_2' />
+      <item name='D9_2' constraint='T030_3' />
+    </item>
+  </form>
+  <typedef name='T030_1'>
+    <item name='D1' constraint='int' mincount='2' maxcount='3'/>
+    <item name='D2' constraint='int' mincount='2' maxcount='3'/>
+  </typedef>
+  <typedef name='T030_2'>
+    <item name='D3' constraint='int' />
+    <item name='D4' constraint='int' />
+  </typedef>
+  <typedef name='T030_3' selection='true'>
+    <item name='D5' constraint='int' />
+    <item name='D6' constraint='int' />
+  </typedef>
+</root>

@@ -1,0 +1,61 @@
+<!--
+==============================================================================
+== Haruka Software Storage.
+== Definition of message format expressing control request for media.
+-->
+
+<root namespace='Haruka.IODataTypes.MediaCtrlReq' class='ReaderWriter' >
+  <form name='MediaCtrlReq'>
+    <item name='Request' selection='true' >
+
+      <!-- Request for Debug Media -->
+      <item name='Debug' selection='true' >
+
+        <!--
+        summary : Request to send all registered traps.
+        returns : MediaCtrlRes.AllTraps
+        -->
+        <item name='GetAllTraps' constraint='unit' />
+
+        <!--
+        summary : Request to register a trap.
+        returns : MediaCtrlRes.AllTraps
+        -->
+        <item name='AddTrap' >
+          <item name='Event' selection='true'>
+            <item name='TestUnitReady' constraint='unit' />
+            <item name='ReadCapacity' constraint='unit' />
+            <item name='Read' >
+              <item name='StartLBA' constraint='unsignedLong' />
+              <item name='EndLBA' constraint='unsignedLong' />
+            </item>
+            <item name='Write' >
+              <item name='StartLBA' constraint='unsignedLong' />
+              <item name='EndLBA' constraint='unsignedLong' />
+            </item>
+            <item name='Format' constraint='unit' />
+          </item>
+          <item name='Action' selection='true'>
+            <item name='ACA' constraint='string' />
+            <item name='LUReset' constraint='string' />
+            <item name='Count' constraint='int' />
+            <item name='Delay' constraint='int' />
+          </item>
+        </item>
+
+        <!--
+        summary : Request to clear all registered traps.
+        returns : MediaCtrlRes.ClearTrapsResult
+        -->
+        <item name='ClearTraps' constraint='unit' />
+
+        <!--
+        summary : Request to get the counter value.
+        returns : MediaCtrlRes.ClearTrapsResult
+        -->
+        <item name='GetCounterValue' constraint='int' />
+      </item>
+  
+    </item>
+  </form>
+</root>

@@ -1,0 +1,10 @@
+<root namespace='Haruka.Test.UT.ConfRW_002_GUID' class='ConfRW_UT002_GUID' >
+  <form name='Test'>
+    <item name='D1' constraint='GUID' minvalue='1' maxvalue='2'/>
+    <item name='D2' constraint='GUID' mincount='2' maxcount='3'/>
+    <item name='D3' constraint='GUID' mincount='0' maxcount='1'/>
+    <item name='D4' constraint='GUID' hidden='true'/>
+    <item name='D5' constraint='GUID' hidden='true' default='99000000-0000-0000-0000-000000000099'/>
+    <item name='D6' constraint='GUID' mincount='0' maxcount='1' default='98000000-0000-0000-0000-000000000098'/>
+  </form>
+</root>

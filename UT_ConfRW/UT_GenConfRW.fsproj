@@ -1,0 +1,142 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <AnalysisLevel>6.0-all</AnalysisLevel>
+    <EnableNETAnalyzers>True</EnableNETAnalyzers>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <WarningLevel>5</WarningLevel>
+    <Tailcalls>True</Tailcalls>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>5</WarningLevel>
+    <Tailcalls>True</Tailcalls>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="ConfRW\ConfRWTest_001.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_AuthMethodCandidateValue.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_boolean.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_CID_T.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_CONCNT_T.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_CtrlSessionID.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_DateTime.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_double.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_GUID.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_int.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_iSCSIName.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_IPCondition.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_ISID.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_long.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_LUN_T.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_MEDIAIDX_T.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_NETPORTIDX_T.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_PR_TYPE.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_LogLevel.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_RESVKEY_T.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_short.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_string.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_TargetDeviceID.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_TargetGroupID.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_TNODEIDX_T.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_TPGT_T.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_TSIH_T.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_unit.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_unsignedInt.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_unsignedLong.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_unsignedShort.fs" />
+    <Compile Include="ConfRW\ConfRWTest_003_001.fs" />
+    <Compile Include="ConfRW\ConfRWTest_003_002.fs" />
+    <Compile Include="ConfRW\ConfRWTest_003_003.fs" />
+    <Compile Include="ConfRW\ConfRWTest_003_004.fs" />
+    <Compile Include="ConfRW\ConfRWTest_003_005.fs" />
+    <Compile Include="ConfRW\ConfRWTest_003_006.fs" />
+    <Compile Include="ConfRW\ConfRWTest_003_007.fs" />
+    <Compile Include="ConfRW\ConfRWTest_003_008.fs" />
+    <Compile Include="ConfRW\ConfRWTest_003_009.fs" />
+    <Compile Include="ConfRW\ConfRWTest_003_010.fs" />
+    <Compile Include="ConfRW\ConfRWTest_003_011.fs" />
+    <Compile Include="ConfRW\ConfRWTest_003_012.fs" />
+    <Compile Include="ConfRW\ConfRWTest_003_013.fs" />
+    <Compile Include="ConfRW\ConfRWTest_003_014.fs" />
+    <Compile Include="ConfRW\ConfRWTest_004_001.fs" />
+    <Compile Include="ConfRW\ConfRWTest_004_002.fs" />
+    <Content Include="ConfRW\ConfRWTest_001.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_AuthMethodCandidateValue.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_boolean.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_CID_T.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_CONCNT_T.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_CtrlSessionID.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_DateTime.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_double.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_GUID.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_int.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_iSCSIName.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_IPCondition.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_ISID.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_long.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_LUN_T.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_MEDIAIDX_T.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_NETPORTIDX_T.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_PR_TYPE.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_LogLevel.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_RESVKEY_T.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_short.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_string.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_TargetDeviceID.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_TargetGroupID.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_TNODEIDX_T.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_TPGT_T.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_TSIH_T.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_unit.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_unsignedInt.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_unsignedLong.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_unsignedShort.xml" />
+    <Content Include="ConfRW\ConfRWTest_003_001.xml" />
+    <Content Include="ConfRW\ConfRWTest_003_002.xml" />
+    <Content Include="ConfRW\ConfRWTest_003_003.xml" />
+    <Content Include="ConfRW\ConfRWTest_003_004.xml" />
+    <Content Include="ConfRW\ConfRWTest_003_005.xml" />
+    <Content Include="ConfRW\ConfRWTest_003_006.xml" />
+    <Content Include="ConfRW\ConfRWTest_003_007.xml" />
+    <Content Include="ConfRW\ConfRWTest_003_008.xml" />
+    <Content Include="ConfRW\ConfRWTest_003_009.xml" />
+    <Content Include="ConfRW\ConfRWTest_003_010.xml" />
+    <Content Include="ConfRW\ConfRWTest_003_011.xml" />
+    <Content Include="ConfRW\ConfRWTest_003_012.xml" />
+    <Content Include="ConfRW\ConfRWTest_003_013.xml" />
+    <Content Include="ConfRW\ConfRWTest_003_014.xml" />
+    <Content Include="ConfRW\ConfRWTest_004_001.xml" />
+    <Content Include="ConfRW\ConfRWTest_004_002.xml" />
+    <Compile Include="GenConfRWTest_001.fs" />
+    <Compile Include="GenConfRWTest_002.fs" />
+    <Compile Include="main.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Commons\Commons.fsproj" />
+    <ProjectReference Include="..\Constants\Constants.fsproj" />
+    <ProjectReference Include="..\GenConfRW\GenConfRW.fsproj" />
+    <ProjectReference Include="..\TestCommon\TestCommon.fsproj" />
+  </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="dotnet run --project ..\GenConfRW -c $(Configuration) ConfRW" />
+  </Target>
+
+</Project>

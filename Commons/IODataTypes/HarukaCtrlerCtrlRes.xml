@@ -1,0 +1,299 @@
+<!--
+==============================================================================
+== Haruka Software Storage.
+== Definition of message format expressing control response for controller.
+-->
+
+<root namespace='Haruka.IODataTypes.HarukaCtrlerCtrlRes' class='ReaderWriter' >
+  <form name='HarukaCtrlerCtrlRes'>
+    <item name='Response' selection='true' >
+
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.Login
+      Result : True, if succeeded to login. Otherwise false.
+      SessionID : Session ID. This value must be specified in the request messages.
+      -->
+      <item name='LoginResult'>
+        <item name='Result' constraint='boolean' />
+        <item name='SessionID' constraint='CtrlSessionID' />
+      </item>
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.Logout
+      Result : True, if succeeded to logout. Otherwise false.
+      SessionID : Session ID of the logouted session.
+      -->
+      <item name='LogoutResult'>
+        <item name='Result' constraint='boolean' />
+        <item name='SessionID' constraint='CtrlSessionID' />
+      </item>
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.NoOperation
+      Result : True, if succeeded. Otherwise false.
+      SessionID : Session ID of the currentry effective login session.
+      -->
+      <item name='NoOperationResult'>
+        <item name='Result' constraint='boolean' />
+        <item name='SessionID' constraint='CtrlSessionID' />
+      </item>
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.GetControllerConfig
+      Config : Current effective controler configuration data. It is XML string based HarukaCtrlConf.
+      ErrorMessage : Error message string. If succeeded, this value will be set empty.
+      -->
+      <item name='ControllerConfig' >
+        <item name='Config' constraint='string' />
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.SetControllerConfig
+      Result : True, if succeeded. Otherwise false.
+      ErrorMessage : Error message string. If succeeded, this value will be set empty.
+      -->
+      <item name='SetControllerConfigResult' >
+        <item name='Result' constraint='boolean' />
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.GetTargetDeviceDir
+      TargetDeviceID : List of target device IDs, currentry configured.
+      ErrorMessage : Error message string. If succeeded, this value will be set empty.
+      -->
+      <item name='TargetDeviceDirs'>
+        <item name='TargetDeviceID' constraint='TargetDeviceID' mincount='0' maxcount='MAX_TARGET_DEVICE_COUNT' />
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.CreateTargetDeviceDir
+      -->
+      <item name='CreateTargetDeviceDirResult' constraint='TDReqResult' />
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.DeleteTargetDeviceDir
+      -->
+      <item name='DeleteTargetDeviceDirResult' constraint='TDReqResult' />
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.GetTargetDeviceConfig
+      TargetDeviceID : Specified target device ID in the request message.
+      Config : Configuration XML string based on TargetDeviceConf.
+      ErrorMessage : Error message string. If succeeded, this value will be set empty.
+      -->
+      <item name='TargetDeviceConfig' >
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+        <item name='Config' constraint='string' />
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.CreateTargetDeviceConfig
+      -->
+      <item name='CreateTargetDeviceConfigResult'  constraint='TDReqResult' />
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.GetTargetGroupID
+      TargetDeviceID : Specified target device ID in the request message.
+      TargetGroupID : List of target group IDs, currentry configured in the specified target device.
+      ErrorMessage : Error message string. If succeeded, this value will be set empty.
+      -->
+      <item name='TargetGroupID' >
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+        <item name='TargetGroupID' constraint='TargetGroupID' mincount='0' maxcount='MAX_TARGET_GROUP_COUNT_IN_TD' />
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.GetTargetGroupConfig
+      TargetDeviceID : Specified target device ID in the request message.
+      TargetGroupID : Specified target group ID in the request message.
+      Config : Configuration XML string based on TargetGroupConf.
+      ErrorMessage : Error message string. If succeeded, this value will be set empty.
+      -->
+      <item name='TargetGroupConfig'>
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+        <item name='TargetGroupID' constraint='TargetGroupID' />
+        <item name='Config' constraint='string' />
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.GetAllTargetGroupConfig
+      TargetDeviceID : Specified target device ID in the request message.
+      TargetGroup : List of the target group ID and te configuration data.
+      TargetGroupID : Currentry configured target group ID in the specified target device.
+      Config : Configuration XML string based on TargetGroupConf.
+      ErrorMessage : Error message string. If succeeded, this value will be set empty.
+      -->
+      <item name='AllTargetGroupConfig' >
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+        <item name='TargetGroup' mincount='0' maxcount='MAX_TARGET_GROUP_COUNT_IN_TD' >
+          <item name='TargetGroupID' constraint='TargetGroupID' />
+          <item name='Config' constraint='string' />
+        </item>
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.CreateTargetGroupConfig
+      TargetDeviceID : Specified target device ID in the request message.
+      TargetGroupID : Specified target group ID in the request message.
+      Result : True, if succeeded. Otherwise false.
+      ErrorMessage : Error message string. If succeeded, this value will be set empty.
+      -->
+      <item name='CreateTargetGroupConfigResult' >
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+        <item name='TargetGroupID' constraint='TargetGroupID' />
+        <item name='Result' constraint='boolean' />
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.DeleteTargetGroupConfig
+      TargetDeviceID : Specified target device ID in the request message.
+      TargetGroupID : Specified target group ID in the request message.
+      Result : True, if succeeded. Otherwise false.
+      ErrorMessage : Error message string. If succeeded, this value will be set empty.
+      -->
+      <item name='DeleteTargetGroupConfigResult' >
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+        <item name='TargetGroupID' constraint='TargetGroupID' />
+        <item name='Result' constraint='boolean' />
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.GetLUWorkDir
+      TargetDeviceID : Specified target device ID in the request message.
+      Name : List of LUNs that has already created the LU working directory.
+      ErrorMessage : Error message string. If succeeded, this value will be set empty.
+      -->
+      <item name='LUWorkDirs'>
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+        <item name='Name' constraint='LUN_T' mincount='0' maxcount='MAX_LOGICALUNIT_COUNT_IN_TD' />
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.CreateLUWorkDir
+      TargetDeviceID : Specified target device ID in the request message.
+      LUN : Specified LUN in the request message.
+      Result : True, if succeeded. Otherwise false.
+      ErrorMessage : Error message string. If succeeded, this value will be set empty.
+      -->
+      <item name='CreateLUWorkDirResult'>
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+        <item name='LUN' constraint='LUN_T' />
+        <item name='Result' constraint='boolean' />
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.DeleteLUWorkDir
+      TargetDeviceID : Specified target device ID in the request message.
+      LUN : Specified LUN in the request message.
+      Result : True, if succeeded. Otherwise false.
+      ErrorMessage : Error message string. If succeeded, this value will be set empty.
+      -->
+      <item name='DeleteLUWorkDirResult'>
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+        <item name='LUN' constraint='LUN_T' />
+        <item name='Result' constraint='boolean' />
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.GetTargetDeviceProcs
+      TargetDeviceID : list of the target device ID of which currently running target device.
+      ErrorMessage : Error message string. If succeeded, this value will be set empty.
+      -->
+      <item name='TargetDeviceProcs'>
+        <item name='TargetDeviceID' constraint='TargetDeviceID' mincount='0' maxcount='MAX_TARGET_DEVICE_COUNT' />
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.KillTargetDeviceProc
+      -->
+      <item name='KillTargetDeviceProcResult' constraint='TDReqResult' />
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.StartTargetDeviceProc
+      -->
+      <item name='StartTargetDeviceProcResult' constraint='TDReqResult' />
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.TargetDeviceCtrlRequest
+      TargetDeviceID : Specified target device ID in the request message.
+      Response : Response string returned by target device. 
+      ErrorMessage : Error message string. If succeeded, this value will be set empty.
+      -->
+      <item name='TargetDeviceCtrlResponse' >
+        <item name='TargetDeviceID' constraint='TargetDeviceID' />
+        <item name='Response' constraint='string' />
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.CreateMediaFile
+      Result : True, if succeeded. Otherwise false.
+      ProcID : Process ID that is executed for creating media file.
+      ErrorMessage : Error message string. If succeeded, this value will be set empty.
+      -->
+      <item name='CreateMediaFileResult' >
+        <item name='Result' constraint='boolean' />
+        <item name='ProcID' constraint='unsignedLong' />
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.GetInitMediaStatus
+      Procs : List of process information.
+      ErrorMessage : Error message string. If succeeded, this value will be set empty.
+      -->
+      <item name='InitMediaStatus' >
+        <item name='Procs' mincount='0' maxcount='INITMEDIA_MAX_MULTIPLICITY'>
+          <item name='ProcID' constraint='unsignedLong' />
+          <item name='PathName' constraint='string' minvalue='0' maxvalue='MAX_FILENAME_STR_LENGTH' />
+          <item name='FileType' constraint='string' minvalue='0' maxvalue='32' />
+          <item name='Status' selection='true' >
+            <item name='NotStarted' constraint='unit' />
+            <item name='ProgressCreation' constraint='unsignedByte' minvalue='0' maxvalue='100' />
+            <item name='Recovery' constraint='unsignedByte' minvalue='0' maxvalue='100' />
+            <item name='NormalEnd' constraint='unit' />
+            <item name='AbnormalEnd' constraint='unit' />
+          </item>
+          <item name='ErrorMessage' constraint='string' minvalue='0' maxvalue='INITMEDIA_MAX_ERRMSG_LENGTH' mincount='0' maxcount='INITMEDIA_MAX_ERRMSG_COUNT' />
+        </item>
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.KillInitMediaProc
+      Result : True, if succeeded. Otherwise false.
+      ErrorMessage : Error message string. If succeeded, this value will be set empty.
+      -->
+      <item name='KillInitMediaProcResult' >
+        <item name='Result' constraint='boolean' />
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Data returned when an unexpected error occurs.
+      -->
+      <item name='UnexpectedError' constraint='string' />
+
+    </item>
+  </form>
+
+  <typedef name='TDReqResult'>
+    <item name='TargetDeviceID' constraint='TargetDeviceID' />
+    <item name='Result' constraint='boolean' />
+    <item name='ErrorMessage' constraint='string' />
+  </typedef>
+</root>

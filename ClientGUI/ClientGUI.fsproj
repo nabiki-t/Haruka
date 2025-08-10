@@ -1,0 +1,241 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>True</UseWPF>
+    <UseWindowsForms>True</UseWindowsForms>
+    <BaseOutputPath>..\Work</BaseOutputPath>
+    <ApplicationIcon>icon\Application.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Tailcalls>True</Tailcalls>
+    <WarningLevel>5</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>5</WarningLevel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Page Remove="icon\Controller.xaml" />
+    <Page Remove="icon\ControllerModified.xaml" />
+    <Page Remove="icon\LUBlockDevice.xaml" />
+    <Page Remove="icon\LUDummyDevice.xaml" />
+    <Page Remove="icon\MediaPlainFile.xaml" />
+    <Page Remove="icon\MediaMembuffer.xaml" />
+    <Page Remove="icon\MediaDummy.xaml" />
+    <Page Remove="icon\MediaDebug.xaml" />
+    <Page Remove="icon\NetworkPortal.xaml" />
+    <Page Remove="icon\StatusModified.xaml" />
+    <Page Remove="icon\StatusRunning.xaml" />
+    <Page Remove="icon\StatusUnloaded.xaml" />
+    <Page Remove="icon\Target.xaml" />
+    <Page Remove="icon\TargetDevieModified.xaml" />
+    <Page Remove="icon\TargetDevieRunning.xaml" />
+    <Page Remove="icon\TargetDevieUnloaded.xaml" />
+    <Page Remove="icon\TargetGroupActive.xaml" />
+    <Page Remove="icon\TargetGroupLoaded.xaml" />
+    <Page Remove="icon\TargetGroupModified.xaml" />
+    <Page Remove="icon\TargetGroupUnloaded.xaml" />
+    <Page Remove="XAML\BlockDeviceLUPropPage.xaml" />
+    <Page Remove="XAML\ControllerPropPage.xaml" />
+    <Page Remove="XAML\CreateMediaFile.xaml" />
+    <Page Remove="XAML\DebugMediaPropPage.xaml" />
+    <Page Remove="XAML\DummyDeviceLUPropPage.xaml" />
+    <Page Remove="XAML\DummyMediaPropPage.xaml" />
+    <Page Remove="XAML\EditDebugTrap.xaml" />
+    <Page Remove="XAML\EditIPWhiteList.xaml" />
+    <Page Remove="XAML\EditTargetName.xaml" />
+    <Page Remove="XAML\InitialPropPage.xaml" />
+    <Page Remove="XAML\LoginDialog.xaml" />
+    <Page Remove="XAML\MemBufferMediaPropPage.xaml" />
+    <Page Remove="XAML\NetworkPortalPropPage.xaml" />
+    <Page Remove="XAML\PlainFileMediaPropPage.xaml" />
+    <Page Remove="XAML\TargetDevicePropPage.xaml" />
+    <Page Remove="XAML\TargetGroupPropPage.xaml" />
+    <Page Remove="XAML\TargetPropPage.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="icon\Application.ico" />
+    <None Include="icon\Controller.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="icon\ControllerModified.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="icon\LUBlockDevice.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="icon\LUDummyDevice.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="icon\MediaPlainFile.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="icon\MediaMembuffer.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="icon\MediaDummy.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="icon\MediaDebug.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="icon\NetworkPortal.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="icon\StatusModified.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="icon\StatusRunning.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="icon\StatusUnloaded.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="icon\Target.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="icon\TargetDevieModified.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="icon\TargetDevieRunning.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="icon\TargetDevieUnloaded.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="icon\TargetGroupActive.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="icon\TargetGroupLoaded.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="icon\TargetGroupModified.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="icon\TargetGroupUnloaded.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Resource\ClientGUI_GUIText_en-US.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Resource\ClientGUI_Messages_en-US.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="XAML\LoginDialog.xaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="XAML\EditIPWhiteList.xaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="XAML\EditDebugTrap.xaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="XAML\EditTargetName.xaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="XAML\CreateMediaFile.xaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="XAML\InitialPropPage.xaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="XAML\ControllerPropPage.xaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="XAML\TargetDevicePropPage.xaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="XAML\NetworkPortalPropPage.xaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="XAML\TargetGroupPropPage.xaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="XAML\TargetPropPage.xaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="XAML\BlockDeviceLUPropPage.xaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="XAML\DummyDeviceLUPropPage.xaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="XAML\PlainFileMediaPropPage.xaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="XAML\MemBufferMediaPropPage.xaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="XAML\DummyMediaPropPage.xaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="XAML\DebugMediaPropPage.xaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Include="XAML\MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="ClientGUI.exe.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Compile Include="Constants.fs" />
+    <Compile Include="UserOpeStat.fs" />
+    <Compile Include="GraphWriter.fs" />
+    <Compile Include="IconLoader.fs" />
+    <Compile Include="XamlLoader.fs" />
+    <Compile Include="GUIConfig.fs" />
+    <Compile Include="PropPageInterface.fs" />
+    <Compile Include="LoginDialog.fs" />
+    <Compile Include="EditIPWhiteList.fs" />
+    <Compile Include="EditDebugTrapDialog.fs" />
+    <Compile Include="EditTargetNameDialog.fs" />
+    <Compile Include="CreateMediaFile.fs" />
+    <Compile Include="MediaUsageCtrlUpdater.fs" />
+    <Compile Include="SessionsCtrlUpdater.fs" />
+    <Compile Include="InitialPropPage.fs" />
+    <Compile Include="ControllerPropPage.fs" />
+    <Compile Include="TargetDevicePropPage.fs" />
+    <Compile Include="NetworkPortalPropPage.fs" />
+    <Compile Include="TargetGroupPropPage.fs" />
+    <Compile Include="TargetPropPage.fs" />
+    <Compile Include="BlockDeviceLUPropPage.fs" />
+    <Compile Include="DummyDeviceLUPropPage.fs" />
+    <Compile Include="PlainFileMediaPropPage.fs" />
+    <Compile Include="MemBufferMediaPropPage.fs" />
+    <Compile Include="DummyMediaPropPage.fs" />
+    <Compile Include="DebugMediaPropPage.fs" />
+    <Compile Include="MainWindow.fs" />
+    <Compile Include="main.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Client\Client.fsproj" />
+    <ProjectReference Include="..\Commons\Commons.fsproj" />
+    <ProjectReference Include="..\Constants\Constants.fsproj" />
+  </ItemGroup>
+
+
+</Project>

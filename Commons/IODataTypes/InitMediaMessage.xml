@@ -1,0 +1,28 @@
+<!--
+==============================================================================
+== Haruka Software Storage.
+== Definition of messages for the initial media creation process.
+-->
+<root namespace='Haruka.IODataTypes.InitMediaMessage' class='ReaderWriter' >
+  <form name='OutputLine'>
+    <item name='LineType' selection='true'>
+
+      <!--
+      This message notifies that the media creation process has started.
+      -->
+      <item name='Start' constraint='unit' />
+
+      <!-- This message notifies the file name that will be created. -->
+      <item name='CreateFile' constraint='string' minvalue='0' maxvalue='MAX_FILENAME_STR_LENGTH' />
+
+      <!-- This message notifies progress of the media creation process. -->
+      <item name='Progress' constraint='unsignedByte' minvalue='0' maxvalue='100' />
+
+      <!-- This message notifies that the media creation process has finished. -->
+      <item name='End' constraint='string' minvalue='0' maxvalue='INITMEDIA_MAX_ERRMSG_LENGTH' />
+
+      <!-- This message represents an error message. -->
+      <item name='ErrorMessage' constraint='string' minvalue='0' maxvalue='INITMEDIA_MAX_ERRMSG_LENGTH' />
+    </item>
+  </form>
+</root>

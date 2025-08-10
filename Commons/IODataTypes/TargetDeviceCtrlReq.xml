@@ -1,0 +1,143 @@
+<!--
+==============================================================================
+== Haruka Software Storage.
+== Definition of message format expressing control request for TargetDevice.
+-->
+
+<root namespace='Haruka.IODataTypes.TargetDeviceCtrlReq' class='ReaderWriter' >
+  <form name='TargetDeviceCtrlReq'>
+    <item name='Request' selection='true' >
+
+      <!--
+      summary : Get the list of target group ID and name that is activated currentry.
+      returns : TargetDeviceCtrlRes.ActiveTargetGroups
+      -->
+      <item name='GetActiveTargetGroups' constraint='unit' />
+
+      <!--
+      summary : Get the list of target group ID and name that is loaded currentry.
+                The list also contains activated target groups.
+      returns : TargetDeviceCtrlRes.LoadedTargetGroups
+      -->
+      <item name='GetLoadedTargetGroups' constraint='unit' />
+
+      <!--
+      summary : Request that specified target group be inactivated.
+      param : Target group ID that specifies the target group to inactivated.
+      returns : TargetDeviceCtrlRes.InactivateTargetGroupResult
+      -->
+      <item name='InactivateTargetGroup' constraint='TargetGroupID' />
+
+      <!--
+      summary : Request that specified target group be activated.
+      param : Target group ID that specifies the target group to activated.
+      returns : TargetDeviceCtrlRes.ActivateTargetGroupResult
+      -->
+      <item name='ActivateTargetGroup' constraint='TargetGroupID' />
+
+      <!--
+      summary : Request that specified target group be unloaded.
+      param : Target group ID that specifies the target group to unloaded.
+      returns : TargetDeviceCtrlRes.UnloadTargetGroupResult
+      -->
+      <item name='UnloadTargetGroup' constraint='TargetGroupID' />
+
+      <!--
+      summary : Request that specified target group be loaded.
+      param : Target group ID that specifies the target group to loaded.
+      returns : TargetDeviceCtrlRes.LoadTargetGroupResult
+      -->
+      <item name='LoadTargetGroup' constraint='TargetGroupID' />
+
+      <!--
+      summary : Update log parameters.
+      param : Log parameters to be used.
+      returns : TargetDeviceCtrlRes.SetLogParametersResult
+      -->
+      <item name='SetLogParameters' >
+        <item name='SoftLimit' constraint='unsignedInt' minvalue='LOGPARAM_MIN_SOFTLIMIT' maxvalue='LOGPARAM_MAX_SOFTLIMIT' />
+        <item name='HardLimit' constraint='unsignedInt' minvalue='LOGPARAM_MIN_HARDLIMIT' maxvalue='LOGPARAM_MAX_HARDLIMIT' />
+        <item name='LogLevel' constraint='LogLevel' />
+      </item>
+
+      <!--
+      summary : Get current log parameters.
+      returns : TargetDeviceCtrlRes.LogParameters
+      -->
+      <item name='GetLogParameters' constraint='unit' />
+
+      <!--
+      summary : Get target device name.
+      returns : TargetDeviceCtrlRes.DeviceName
+      -->
+      <item name='GetDeviceName' constraint='unit' />
+
+      <!--
+      summary : Get a list of sessions that is belonged to target device, target group or target.
+      param : Specify where to get a list of sessions belonging to.
+      returns : TargetDeviceCtrlRes.SessionList
+      -->
+      <item name='GetSession' selection='true'>
+        <item name='SessInTargetDevice' constraint='unit' />
+        <item name='SessInTargetGroup' constraint='TargetGroupID' />
+        <item name='SessInTarget' constraint='TNODEIDX_T' />
+      </item>
+
+      <!--
+      summary : Request that destruct session.
+      param : TSIH of session that should be terminated. 
+      returns : TargetDeviceCtrlRes.DestructSessionResult
+      -->
+      <item name='DestructSession' constraint='TSIH_T' />
+
+      <!--
+      summary : Get a list of connection that is belonged to target device, tharget group or target.
+      param : Specify where to get a list of connections belonging to.
+      returns : TargetDeviceCtrlRes.ConnectionList
+      -->
+      <item name='GetConnection' selection='true'>
+        <item name='ConInTargetDevice' constraint='unit' />
+        <item name='ConInNetworkPortal' constraint='NETPORTIDX_T' />
+        <item name='ConInTargetGroup' constraint='TargetGroupID' />
+        <item name='ConInTarget' constraint='TNODEIDX_T' />
+        <item name='ConInSession' constraint='TSIH_T' />
+      </item>
+
+      <!--
+      summary : Get LU status.
+      param : LUN that specify logical unit where to get status.
+      returns : TargetDeviceCtrlRes.LUStatus
+      -->
+      <item name='GetLUStatus' constraint='LUN_T' />
+
+      <!--
+      summary : Request LU reset.
+      param : LUN that specify logical unit to reset.
+      returns : TargetDeviceCtrlRes.LUResetResult
+      -->
+      <item name='LUReset' constraint='LUN_T' />
+
+      <!--
+      summary : Get media status.
+      param : media ID that specify media where to get status.
+      returns : TargetDeviceCtrlRes.MediaStatus
+      -->
+      <item name='GetMediaStatus' >
+        <item name='LUN' constraint='LUN_T' />
+        <item name='ID' constraint='MEDIAIDX_T' />
+      </item>
+
+      <!--
+      summary : Media control request.
+      param : Media ID that specify media where to get status, and request string.
+      returns : TargetDeviceCtrlRes.MediaControlResponse
+      -->
+      <item name='MediaControlRequest' >
+        <item name='LUN' constraint='LUN_T' />
+        <item name='ID' constraint='MEDIAIDX_T' />
+        <item name='Request' constraint='string' />
+      </item>
+
+    </item>
+  </form>
+</root>

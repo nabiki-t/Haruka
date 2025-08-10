@@ -1,0 +1,177 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        Title="Haruka -"
+        VerticalAlignment="Top" Width="640" Height="500" WindowStartupLocation="Manual" MinWidth="250" MinHeight="200" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" >
+
+    <Window.Resources>
+        <!-- Tree view context menu for controller node -->
+        <ContextMenu x:Key="ContMenu_TVI_Controller" Name="ContMenu_TVI_Controller">
+            <MenuItem Name="ContMenu_TVI_Controller_Select" Header="Select" />
+            <MenuItem Name="ContMenu_TVI_Controller_Logout" Header="Logout" />
+            <MenuItem Name="ContMenu_TVI_Controller_Reload" Header="Reload" />
+            <Separator />
+            <MenuItem Name="ContMenu_TVI_Controller_AddTargetDevice" Header="Add Target Device" />
+            <MenuItem Name="ContMenu_TVI_Controller_Paste" Header="Paste" />
+        </ContextMenu>
+        <!-- Tree view context menu for TargetDevice node -->
+        <ContextMenu x:Key="ContMenu_TVI_TargetDevice" Name="ContMenu_TVI_TargetDevice">
+            <MenuItem Name="ContMenu_TVI_TargetDevice_Select" Header="Select" />
+            <MenuItem Name="ContMenu_TVI_TargetDevice_Start" Header="Start" />
+            <MenuItem Name="ContMenu_TVI_TargetDevice_Stop" Header="Stop" />
+            <Separator />
+            <MenuItem Name="ContMenu_TVI_TargetDevice_AddTargetGroup" Header="Add Target Group" />
+            <MenuItem Name="ContMenu_TVI_TargetDevice_AddNetworkPortal" Header="Add Network Portal" />
+            <MenuItem Name="ContMenu_TVI_TargetDevice_Copy" Header="Copy" />
+            <MenuItem Name="ContMenu_TVI_TargetDevice_Paste" Header="Paste" />
+            <Separator />
+            <MenuItem Name="ContMenu_TVI_TargetDevice_Delete" Header="Delete" />
+        </ContextMenu>
+        <!-- Tree view context menu for TargetGroup node -->
+        <ContextMenu x:Key="ContMenu_TVI_TargetGroup" Name="ContMenu_TVI_TargetGroup">
+            <MenuItem Name="ContMenu_TVI_TargetGroup_Select" Header="Select" />
+            <MenuItem Name="ContMenu_TVI_TargetGroup_Activate" Header="Activate" />
+            <MenuItem Name="ContMenu_TVI_TargetGroup_Load" Header="Load" />
+            <MenuItem Name="ContMenu_TVI_TargetGroup_Inactivate" Header="Inactivate" />
+            <MenuItem Name="ContMenu_TVI_TargetGroup_Unload" Header="Unload" />
+            <Separator />
+            <MenuItem Name="ContMenu_TVI_TargetGroup_AddTarget" Header="Add Target" />
+            <MenuItem Name="ContMenu_TVI_TargetGroup_AddBlockDeviceLU" Header="Add Block Device LU" />
+            <MenuItem Name="ContMenu_TVI_TargetGroup_Copy" Header="Copy" />
+            <MenuItem Name="ContMenu_TVI_TargetGroup_Paste" Header="Paste" />
+
+            <Separator />
+            <MenuItem Name="ContMenu_TVI_TargetGroup_Delete" Header="Delete" />
+        </ContextMenu>
+        <!-- Tree view context menu for Network Portal node -->
+        <ContextMenu x:Key="ContMenu_TVI_NetworkPortal" Name="ContMenu_TVI_NetworkPortal">
+            <MenuItem Name="ContMenu_TVI_NetworkPortal_Select" Header="Select" />
+            <Separator />
+            <MenuItem Name="ContMenu_TVI_NetworkPortal_Copy" Header="Copy" />
+            <Separator />
+            <MenuItem Name="ContMenu_TVI_NetworkPortal_Delete" Header="Delete" />
+        </ContextMenu>
+        <!-- Tree view context menu for Target node -->
+        <ContextMenu x:Key="ContMenu_TVI_Target" Name="ContMenu_TVI_Target">
+            <MenuItem Name="ContMenu_TVI_Target_Select" Header="Select" />
+            <Separator />
+            <MenuItem Name="ContMenu_TVI_Target_Copy" Header="Copy" />
+            <Separator />
+            <MenuItem Name="ContMenu_TVI_Target_Delete" Header="Delete" />
+        </ContextMenu>
+        <!-- Tree view context menu for Block Device LU node -->
+        <ContextMenu x:Key="ContMenu_TVI_BlockDeviceLU" Name="ContMenu_TVI_BlockDeviceLU">
+            <MenuItem Name="ContMenu_TVI_BlockDeviceLU_Select" Header="Select" />
+            <Separator />
+            <MenuItem Name="ContMenu_TVI_BlockDeviceLU_AddPlainFileMedia" Header="Add Plain File Media" />
+            <MenuItem Name="ContMenu_TVI_BlockDeviceLU_AddMemBufferMedia" Header="Add MemBuffer Media" />
+            <MenuItem Name="ContMenu_TVI_BlockDeviceLU_AddDebugMedia" Header="Add Debug Media" />
+            <MenuItem Name="ContMenu_TVI_BlockDeviceLU_Copy" Header="Copy" />
+            <MenuItem Name="ContMenu_TVI_BlockDeviceLU_Paste" Header="Paste" />
+
+            <Separator />
+            <MenuItem Name="ContMenu_TVI_BlockDeviceLU_Delete" Header="Delete" />
+        </ContextMenu>
+        <!-- Tree view context menu for Dummy Device LU node -->
+        <ContextMenu x:Key="ContMenu_TVI_DummyDeviceLU" Name="ContMenu_TVI_DummyDeviceLU">
+            <MenuItem Name="ContMenu_TVI_DummyDeviceLU_Select" Header="Select" />
+            <Separator />
+            <MenuItem Name="ContMenu_TVI_DummyDeviceLU_Delete" Header="Delete" />
+        </ContextMenu>
+        <!-- Tree view context menu for Plain file media node -->
+        <ContextMenu x:Key="ContMenu_TVI_PlainFileMedia" Name="ContMenu_TVI_PlainFileMedia">
+            <MenuItem Name="ContMenu_TVI_PlainFileMedia_Select" Header="Select" />
+            <Separator />
+            <MenuItem Name="ContMenu_TVI_PlainFileMedia_Copy" Header="Copy" />
+            <Separator />
+            <MenuItem Name="ContMenu_TVI_PlainFileMedia_Delete" Header="Delete" />
+        </ContextMenu>
+        <!-- Tree view context menu for MemBuffer media node -->
+        <ContextMenu x:Key="ContMenu_TVI_MemBufferMedia" Name="ContMenu_TVI_MemBufferMedia">
+            <MenuItem Name="ContMenu_TVI_MemBufferMedia_Select" Header="Select" />
+            <Separator />
+            <MenuItem Name="ContMenu_TVI_MemBufferMedia_Copy" Header="Copy" />
+            <Separator />
+            <MenuItem Name="ContMenu_TVI_MemBufferMedia_Delete" Header="Delete" />
+        </ContextMenu>
+        <!-- Tree view context menu for Debug media node -->
+        <ContextMenu x:Key="ContMenu_TVI_DebugMedia" Name="ContMenu_TVI_DebugMedia">
+            <MenuItem Name="ContMenu_TVI_DebugMedia_Select" Header="Select" />
+            <Separator />
+            <MenuItem Name="ContMenu_TVI_DebugMedia_AddPlainFileMedia" Header="Add Plain File Media" />
+            <MenuItem Name="ContMenu_TVI_DebugMedia_AddMemBufferMedia" Header="Add MemBuffer Media" />
+            <MenuItem Name="ContMenu_TVI_DebugMedia_AddDebugMedia" Header="Add Debug Media" />
+            <MenuItem Name="ContMenu_TVI_DebugMedia_Copy" Header="Copy" />
+            <MenuItem Name="ContMenu_TVI_DebugMedia_Paste" Header="Paste" />
+            <Separator />
+            <MenuItem Name="ContMenu_TVI_DebugMedia_Delete" Header="Delete" />
+        </ContextMenu>
+        <!-- Tree view context menu for Dummy media node -->
+        <ContextMenu x:Key="ContMenu_TVI_DummyMedia" Name="ContMenu_TVI_DummyMedia">
+            <MenuItem Name="ContMenu_TVI_DummyMedia_Select" Header="Select" />
+            <Separator />
+            <MenuItem Name="ContMenu_TVI_DummyMedia_Delete" Header="Delete" />
+        </ContextMenu>
+    </Window.Resources>
+
+    <Window.InputBindings>
+        <KeyBinding x:Name="LoginKey" Modifiers="Control" Key="L" />
+        <KeyBinding x:Name="LogoffKey" Modifiers="Control" Key="O" />
+        <KeyBinding x:Name="ReloadKey" Modifiers="Control" Key="R" />
+        <KeyBinding x:Name="VerifyKey" Modifiers="Control+Shift" Key="E" />
+        <KeyBinding x:Name="PulishKey" Modifiers="Control" Key="P" />
+    </Window.InputBindings>
+
+    <DockPanel LastChildFill="True">
+        <Menu DockPanel.Dock="Top" Margin="5,2,5,0" >
+            <MenuItem x:Name="Menu_Connection" Header="_Connection">
+                <MenuItem x:Name="Menu_Login" Header="Log_in" InputGestureText="Ctrl+L" />
+                <MenuItem x:Name="Menu_Logout" Header="Log_out" InputGestureText="Ctrl+O" />
+                <MenuItem x:Name="Menu_Reload" Header="_Reload" InputGestureText="Ctrl+R" />
+                <Separator />
+                <MenuItem x:Name="Menu_Exit" Header="_Exit" />
+            </MenuItem>
+            <MenuItem x:Name="Menu_Edit" Header="Edit">
+                <MenuItem x:Name="Menu_Verify" Header="_Verify" InputGestureText="Ctrl+E" />
+                <MenuItem x:Name="Menu_Pulish" Header="_Publish" InputGestureText="Ctrl+P" />
+                <Separator />
+                <MenuItem x:Name="Menu_CreateMediaFile" Header="_Create Media File" />
+            </MenuItem>
+            <MenuItem x:Name="Menu_Help" Header="_Help">
+                <MenuItem x:Name="Menu_About" Header="About" />
+            </MenuItem>
+        </Menu>
+        <Grid Name="MainGrid">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition MinWidth="50" Width="3*"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition MinWidth="50" Width="7*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition MinHeight="50" Height="8*"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition MinHeight="50" Height="2*"/>
+            </Grid.RowDefinitions>
+            <TreeView Name="StructTree"  Grid.Column="0" Margin="5,5,0,0" />
+            <GridSplitter VerticalAlignment="Stretch" HorizontalAlignment="Center" Margin="0,5,0,0" Grid.ColumnSpan="1" Grid.Column="1" Width="5" Cursor="SizeWE"/>
+            <ScrollViewer Name="PropGrid" Grid.Column="2" Margin="0,5,5,0" HorizontalScrollBarVisibility="Visible"/>
+            <GridSplitter HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="5,0,5,0" Grid.ColumnSpan="3" Grid.Row="1" Height="5" Cursor="SizeNS"/>
+            <Grid Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3" Margin="5,0,5,0">
+                <ListView Name="VerifyResultList" Margin="0,0,0,5" >
+                    <ListView.View>
+                        <GridView>
+                            <GridView.Columns>
+                                <GridViewColumn Header="Node" DisplayMemberBinding="{Binding NodeName}" Width="200" />
+                                <GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" Width="400" />
+                            </GridView.Columns>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+                <ProgressBar Name="RequestingProgress" Height="5" VerticalAlignment="Bottom" BorderThickness="0,0,0,0" />
+            </Grid>
+        </Grid>
+    </DockPanel>
+</Window>
+    

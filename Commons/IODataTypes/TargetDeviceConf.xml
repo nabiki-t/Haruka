@@ -1,0 +1,28 @@
+<root namespace='Haruka.IODataTypes.TargetDeviceConf' class='ReaderWriter' >
+  <form name='TargetDevice'>
+    <item name='NetworkPortal' mincount='0' maxcount='MAX_NETWORK_PORTAL_COUNT'>
+      <item name='IdentNumber' constraint='NETPORTIDX_T' />
+      <item name='TargetPortalGroupTag' constraint='TPGT_T' minvalue='0' maxvalue='0' />
+      <item name='TargetAddress' constraint='string' minvalue='0' maxvalue='MAX_TARGET_ADDRESS_STR_LENGTH' />
+      <item name='PortNumber' constraint='unsignedShort' minvalue='1' maxvalue='65535' />
+      <item name='DisableNagle' constraint='boolean' />
+      <item name='ReceiveBufferSize' constraint='int' minvalue='0' />
+      <item name='SendBufferSize' constraint='int' minvalue='0' />
+      <item name='WhiteList' constraint='IPCondition' mincount='0' maxcount='MAX_IP_WHITELIST_COUNT' />
+    </item>
+    <item name='NegotiableParameters' mincount='0' maxcount='1' >
+      <item name='MaxRecvDataSegmentLength' constraint='unsignedInt' minvalue='NEGOPARAM_MIN_MaxRecvDataSegmentLength' maxvalue='NEGOPARAM_MAX_MaxRecvDataSegmentLength' />
+      <item name='MaxBurstLength' constraint='unsignedInt' minvalue='NEGOPARAM_MIN_MaxBurstLength' maxvalue='NEGOPARAM_MAX_MaxBurstLength' />
+      <item name='FirstBurstLength' constraint='unsignedInt' minvalue='NEGOPARAM_MIN_FirstBurstLength' maxvalue='NEGOPARAM_MAX_FirstBurstLength' />
+      <item name='DefaultTime2Wait' constraint='unsignedShort' minvalue='NEGOPARAM_MIN_DefaultTime2Wait' maxvalue='NEGOPARAM_MAX_DefaultTime2Wait' />
+      <item name='DefaultTime2Retain' constraint='unsignedShort' minvalue='NEGOPARAM_MIN_DefaultTime2Retain' maxvalue='NEGOPARAM_MAX_DefaultTime2Retain' />
+      <item name='MaxOutstandingR2T' constraint='unsignedShort' minvalue='NEGOPARAM_MIN_MaxOutstandingR2T' maxvalue='NEGOPARAM_MAX_MaxOutstandingR2T' />
+    </item>
+    <item name='LogParameters' mincount='0' maxcount='1' >
+      <item name='SoftLimit' constraint='unsignedInt' minvalue='LOGPARAM_MIN_SOFTLIMIT' maxvalue='LOGPARAM_MAX_SOFTLIMIT' />
+      <item name='HardLimit' constraint='unsignedInt' minvalue='LOGPARAM_MIN_HARDLIMIT' maxvalue='LOGPARAM_MAX_HARDLIMIT' />
+      <item name='LogLevel' constraint='LogLevel' />
+    </item>
+    <item name='DeviceName' constraint='string' mincount='0' maxcount='1' minvalue='0' maxvalue='MAX_DEVICE_NAME_STR_LENGTH' default='' />
+  </form>
+</root>

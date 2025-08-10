@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Messages>
+  <Section>
+    <Message>
+      <Name>KEY_0_1</Name>
+      <Value>MESSAGE_0_1</Value>
+    </Message>
+    <Message>
+      <Name>KEY_0_2</Name>
+      <Value>MESSAGE_0_2</Value>
+    </Message>
+  </Section>
+  <Section>
+    <Name>SECTION001</Name>
+    <Message>
+      <Name>KEY_1_1</Name>
+      <Value>MESSAGE_1_1</Value>
+    </Message>
+    <Message>
+      <Name>KEY_1_2</Name>
+      <Value>MESSAGE_1_2</Value>
+    </Message>
+  </Section>
+  <Section>
+    <Name>SECTION002</Name>
+    <Message>
+      <Name>KEY_2_1</Name>
+      <Value>MESSAGE_2_1</Value>
+    </Message>
+    <Message>
+      <Name>KEY_2_1</Name>
+      <Value>MESSAGE_2_1</Value>
+    </Message>
+  </Section>
+</Messages>

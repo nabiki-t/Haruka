@@ -1,0 +1,6 @@
+<root namespace='Haruka.Test.UT.ConfRW_004_001' class='ReaderWriter' >
+  <form name='Test'>
+    <item name='C' constraint='int' mincount='MAX_TARGET_DEVICE_COUNT' maxcount='65535'/>
+    <item name='D' constraint='int' mincount='1' maxcount='MAX_TARGET_DEVICE_COUNT'/>
+  </form>
+</root>

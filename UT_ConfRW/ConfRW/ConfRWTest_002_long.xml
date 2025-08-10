@@ -1,0 +1,12 @@
+<root namespace='Haruka.Test.UT.ConfRW_002_long' class='ConfRW_UT002_long' >
+  <form name='Test'>
+    <item name='D1' constraint='long' minvalue='1' maxvalue='2'/>
+    <item name='D2' constraint='long' mincount='2' maxcount='3'/>
+    <item name='D3' constraint='long' mincount='0' maxcount='1'/>
+    <item name='D4' constraint='long' hidden='true'/>
+    <item name='D5' constraint='long' hidden='true' default='99'/>
+    <item name='D6' constraint='long' hidden='true' defaultref='MAX_TARGET_DEVICE_COUNT'/>
+    <item name='D7' constraint='long' mincount='0' maxcount='1' default='98'/>
+    <item name='D8' constraint='long' mincount='0' maxcount='1' defaultref='MAX_TARGET_DEVICE_COUNT'/>
+  </form>
+</root>

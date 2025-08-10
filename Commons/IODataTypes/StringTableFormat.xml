@@ -1,0 +1,16 @@
+<!--
+==============================================================================
+== Haruka Software Storage.
+== Definition of file format for the string table.
+-->
+<root namespace='Haruka.IODataTypes.StringTableFormat' class='ReaderWriter' >
+  <form name='Messages'>
+    <item name='Section' mincount='0' maxcount='65535'>
+      <item name='Name' constraint='string' mincount='0' maxcount='1' />
+      <item name='Message' mincount='0' maxcount='65535'>
+        <item name='Name' constraint='string' />
+        <item name='Value' constraint='string' />
+      </item>
+    </item>
+  </form>
+</root>

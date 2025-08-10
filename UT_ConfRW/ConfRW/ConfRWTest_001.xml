@@ -1,0 +1,5 @@
+<root namespace='Haruka.Test.UT.ConfRW_001' class='ConfRW_UT001' >
+  <form name='Test'>
+    <item name='Dummy' constraint='int' />
+  </form>
+</root>

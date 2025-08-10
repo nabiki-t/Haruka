@@ -1,0 +1,1457 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Messages>
+
+
+  <!-- Login Dialog -->
+  <Section>
+    <Name>LoginDialog</Name>
+    <Message>
+      <Name>TITLE</Name>
+      <Value>Login</Value>
+    </Message>
+    <Message>
+      <Name>LoginByDirectoryRadio</Name>
+      <Value>_Directory</Value>
+    </Message>
+    <Message>
+      <Name>LoginByNetwordRadio</Name>
+      <Value>_IP/Port</Value>
+    </Message>
+    <Message>
+      <Name>HostNameLabel</Name>
+      <Value>_Host Name</Value>
+    </Message>
+    <Message>
+      <Name>PortNumberLabel</Name>
+      <Value>_Port Number</Value>
+    </Message>
+    <Message>
+      <Name>ForceLoginCheck</Name>
+      <Value>Force login</Value>
+    </Message>
+    <Message>
+      <Name>LoginButton</Name>
+      <Value>_Login</Value>
+    </Message>
+    <Message>
+      <Name>CancelButton</Name>
+      <Value>_Cancel</Value>
+    </Message>
+  </Section>
+
+  <!-- Edit IP white list dialog box -->
+  <Section>
+    <Name>EditIPWhiteList</Name>
+    <Message>
+      <Name>TITLE</Name>
+      <Value>IP White List</Value>
+    </Message>
+    <Message>
+      <Name>TypeTextBlock</Name>
+      <Value>Type</Value>
+    </Message>
+    <Message>
+      <Name>IPAddressTextBlock</Name>
+      <Value>IP Address (Ex. 192.168.0.1, fe80::1111:2222)</Value>
+    </Message>
+    <Message>
+      <Name>MaskTextBlock</Name>
+      <Value>Mask (Ex. 255.255.255.0, FFFF:FFFF::)</Value>
+    </Message>
+    <Message>
+      <Name>OKButton</Name>
+      <Value>_OK</Value>
+    </Message>
+    <Message>
+      <Name>CancelButton</Name>
+      <Value>_Cancel</Value>
+    </Message>
+  </Section>
+
+  <!-- EditDebugTrapDialog -->
+  <Section>
+    <Name>EditDebugTrapDialog</Name>
+    <Message>
+      <Name>TITLE</Name>
+      <Value>EditDebugTrapDialog</Value>
+    </Message>
+    <Message>
+      <Name>EventTextBlock</Name>
+      <Value>Event</Value>
+    </Message>
+    <Message>
+      <Name>StartLBATextBlock</Name>
+      <Value>Start LBA</Value>
+    </Message>
+    <Message>
+      <Name>EndLBATextBlock</Name>
+      <Value>End LBA</Value>
+    </Message>
+    <Message>
+      <Name>ActionTextBlock</Name>
+      <Value>Action</Value>
+    </Message>
+    <Message>
+      <Name>MessageTextBlock</Name>
+      <Value>Message</Value>
+    </Message>
+    <Message>
+      <Name>CountIndexTextBlock</Name>
+      <Value>Count Index</Value>
+    </Message>
+    <Message>
+      <Name>OKButton</Name>
+      <Value>OK</Value>
+    </Message>
+    <Message>
+      <Name>CancelButton</Name>
+      <Value>Cancel</Value>
+    </Message>
+  </Section>
+
+  <!-- EditTargetNameDialog -->
+  <Section>
+    <Name>EditTargetNameDialog</Name>
+    <Message>
+      <Name>TITLE</Name>
+      <Value>Target Name</Value>
+    </Message>
+    <Message>
+      <Name>IQNFormatRadio</Name>
+      <Value>iqn. format</Value>
+    </Message>
+    <Message>
+      <Name>YearTextBlock</Name>
+      <Value>Year(YYYY)</Value>
+    </Message>
+    <Message>
+      <Name>MonthTextBlock</Name>
+      <Value>Month(MM)</Value>
+    </Message>
+    <Message>
+      <Name>DomainTextBlock</Name>
+      <Value>Reversed domain name</Value>
+    </Message>
+    <Message>
+      <Name>OptStrTextBlock</Name>
+      <Value>Option string</Value>
+    </Message>
+    <Message>
+      <Name>EUIFormatRadio</Name>
+      <Value>eui. format</Value>
+    </Message>
+    <Message>
+      <Name>EUI64TextBlock</Name>
+      <Value>EUI-64 Identifier(16 hex digits)</Value>
+    </Message>
+    <Message>
+      <Name>UnknownFormatRadio</Name>
+      <Value>Other</Value>
+    </Message>
+    <Message>
+      <Name>RandomButton</Name>
+      <Value>Random</Value>
+    </Message>
+    <Message>
+      <Name>OKButton</Name>
+      <Value>OK</Value>
+    </Message>
+    <Message>
+      <Name>CancelButton</Name>
+      <Value>Cancel</Value>
+    </Message>
+  </Section>
+
+  <!-- Create Media File Dialog -->
+  <Section>
+    <Name>CreateMediaFile</Name>
+    <Message>
+      <Name>TITLE</Name>
+      <Value>Create Media File</Value>
+    </Message>
+    <Message>
+      <Name>PathNameTextBox</Name>
+      <Value>Path Name (strongly recommended to specify the full path.)</Value>
+    </Message>
+    <Message>
+      <Name>FileTypeTextBlock</Name>
+      <Value>File Type</Value>
+    </Message>
+    <Message>
+      <Name>FileSizeTextBlock</Name>
+      <Value>File Size (MiB)</Value>
+    </Message>
+    <Message>
+      <Name>BlockSizeTextBlock</Name>
+      <Value>Block Size</Value>
+    </Message>
+    <Message>
+      <Name>CreateButton</Name>
+      <Value>Create</Value>
+    </Message>
+    <Message>
+      <Name>CreateButton</Name>
+      <Value>Create</Value>
+    </Message>
+    <Message>
+      <Name>KillButton</Name>
+      <Value>Kill</Value>
+    </Message>
+    <Message>
+      <Name>KillButton</Name>
+      <Value>Kill</Value>
+    </Message>
+    <Message>
+      <Name>StatusListView_PID</Name>
+      <Value>PID</Value>
+    </Message>
+    <Message>
+      <Name>StatusListView_PathName</Name>
+      <Value>Path Name</Value>
+    </Message>
+    <Message>
+      <Name>StatusListView_FileType</Name>
+      <Value>File Type</Value>
+    </Message>
+    <Message>
+      <Name>StatusListView_Status</Name>
+      <Value>Status</Value>
+    </Message>
+    <Message>
+      <Name>StatusListView_Progress</Name>
+      <Value>Progress</Value>
+    </Message>
+    <Message>
+      <Name>StatusListView_Message</Name>
+      <Value>Message</Value>
+    </Message>
+
+  </Section>
+
+  <!-- Initial property page -->
+  <Section>
+    <Name>InitialPropPage</Name>
+    <Message>
+      <Name>Title</Name>
+      <Value>Welcom to Haruka GUI client.</Value>
+    </Message>
+    <Message>
+      <Name>MessageLabel</Name>
+      <Value>Select "Connection - Login" menu to login to the controller.</Value>
+    </Message>
+  </Section>
+
+  <!-- Controller property page -->
+  <Section>
+    <Name>ControllerPropPage</Name>
+    <Message>
+      <Name>Title</Name>
+      <Value>Controller</Value>
+    </Message>
+    <Message>
+      <Name>ConfigurationExpander</Name>
+      <Value>Configuration</Value>
+    </Message>
+    <Message>
+      <Name>EditButton</Name>
+      <Value>_Edit</Value>
+    </Message>
+    <Message>
+      <Name>ApplyButton</Name>
+      <Value>_Apply</Value>
+    </Message>
+    <Message>
+      <Name>DiscardButton</Name>
+      <Value>_Discard</Value>
+    </Message>
+    <Message>
+      <Name>RemoteControlTextBlock</Name>
+      <Value>Remote Control</Value>
+    </Message>
+    <Message>
+      <Name>PortNumberTextBlock</Name>
+      <Value>Port Number</Value>
+    </Message>
+    <Message>
+      <Name>AddressTextBlock</Name>
+      <Value>Address</Value>
+    </Message>
+    <Message>
+      <Name>IPWhiteListTextBlock</Name>
+      <Value>IP White List</Value>
+    </Message>
+    <Message>
+      <Name>LogMaintenanceTextBlock</Name>
+      <Value>Log Maintenance</Value>
+    </Message>
+    <Message>
+      <Name>StanserdOutputRadio</Name>
+      <Value>_Stanserd Output</Value>
+    </Message>
+    <Message>
+      <Name>StdoutTotalLimitTextBlock</Name>
+      <Value>Total Limit</Value>
+    </Message>
+    <Message>
+      <Name>FileRadio</Name>
+      <Value>_File</Value>
+    </Message>
+    <Message>
+      <Name>FileTotalLimitTextBlock</Name>
+      <Value>Total Limit</Value>
+    </Message>
+    <Message>
+      <Name>MaxFileCountTextBlock</Name>
+      <Value>Max File Count</Value>
+    </Message>
+    <Message>
+      <Name>ForceSyncTextBlock</Name>
+      <Value>Force Sync</Value>
+    </Message>
+    <Message>
+      <Name>LogParametersTextBlock</Name>
+      <Value>Log Parameters</Value>
+    </Message>
+    <Message>
+      <Name>SoftLimitTextBlock</Name>
+      <Value>Soft Limit</Value>
+    </Message>
+    <Message>
+      <Name>HardLimitTextBlock</Name>
+      <Value>Hard Limit</Value>
+    </Message>
+    <Message>
+      <Name>LogLevelTextBlock</Name>
+      <Value>Log Level</Value>
+    </Message>
+  </Section>
+
+  <!-- Target device property page -->
+  <Section>
+    <Name>TargetDevicePropPage</Name>
+    <Message>
+      <Name>Title</Name>
+      <Value>Target Device</Value>
+    </Message>
+    <Message>
+      <Name>StatusExpander</Name>
+      <Value>Status</Value>
+    </Message>
+    <Message>
+      <Name>CurrentStatusLabelTextBlock</Name>
+      <Value>Current Status</Value>
+    </Message>
+    <Message>
+      <Name>StartButton</Name>
+      <Value>Start</Value>
+    </Message>
+    <Message>
+      <Name>StopButton</Name>
+      <Value>Stop</Value>
+    </Message>
+    <Message>
+      <Name>CurrentLogParamLabelTextBlock</Name>
+      <Value>Current Log Parameters</Value>
+    </Message>
+    <Message>
+      <Name>CurrentSoftLimitTextBlock</Name>
+      <Value>Soft Limit</Value>
+    </Message>
+    <Message>
+      <Name>CurrentSoftLimitTextBlock</Name>
+      <Value>Soft Limit</Value>
+    </Message>
+    <Message>
+      <Name>CurrentHardLimitTextBlock</Name>
+      <Value>Hard Limit</Value>
+    </Message>
+    <Message>
+      <Name>CurrentLogLevelTextBlock</Name>
+      <Value>Log Level</Value>
+    </Message>
+    <Message>
+      <Name>ApplyCurLogParamButton</Name>
+      <Value>Apply</Value>
+    </Message>
+    <Message>
+      <Name>LoadCurLogParamButton</Name>
+      <Value>Load</Value>
+    </Message>
+    <Message>
+      <Name>SessionsExpander</Name>
+      <Value>Sessions</Value>
+    </Message>
+    <Message>
+      <Name>SessionListTextBlock</Name>
+      <Value>Sessions List</Value>
+    </Message>
+    <Message>
+      <Name>DestroySessionButton</Name>
+      <Value>Destroy Session</Value>
+    </Message>
+    <Message>
+      <Name>SessionParamsTextBlock</Name>
+      <Value>Parameters</Value>
+    </Message>
+    <Message>
+      <Name>UsageTextBlock</Name>
+      <Value>Usage</Value>
+    </Message>
+    <Message>
+      <Name>ReceiveBytesTextBlock</Name>
+      <Value>Receive Bytes</Value>
+    </Message>
+    <Message>
+      <Name>SendBytesTextBlock</Name>
+      <Value>Send Bytes</Value>
+    </Message>
+    <Message>
+      <Name>ConfigurationExpander</Name>
+      <Value>Configuration</Value>
+    </Message>
+    <Message>
+      <Name>EditButton</Name>
+      <Value>Edit</Value>
+    </Message>
+    <Message>
+      <Name>ApplyButton</Name>
+      <Value>Apply</Value>
+    </Message>
+    <Message>
+      <Name>DiscardButton</Name>
+      <Value>Discard</Value>
+    </Message>
+    <Message>
+      <Name>NodeConfigurationTextBlock</Name>
+      <Value>Node Configuration</Value>
+    </Message>
+    <Message>
+      <Name>NodeConfigurationTextBlock</Name>
+      <Value>Node Configuration</Value>
+    </Message>
+    <Message>
+      <Name>TargetDeviceIDTextBlock</Name>
+      <Value>Target Device ID</Value>
+    </Message>
+    <Message>
+      <Name>TargetDeviceNameTextBlock</Name>
+      <Value>Target Device Name</Value>
+    </Message>
+    <Message>
+      <Name>NegotiableParametersTextBlock</Name>
+      <Value>Negotiable Parameters</Value>
+    </Message>
+    <Message>
+      <Name>LogParametersTextBlock</Name>
+      <Value>Log Parameters</Value>
+    </Message>
+    <Message>
+      <Name>SoftLimitTextBlock</Name>
+      <Value>Soft Limit</Value>
+    </Message>
+    <Message>
+      <Name>HardLimitTextBlock</Name>
+      <Value>Hard Limit</Value>
+    </Message>
+    <Message>
+      <Name>LogLevelTextBlock</Name>
+      <Value>Log Level</Value>
+    </Message>
+  </Section>
+
+  <!-- Network portal property page -->
+  <Section>
+    <Name>NetworkPortalPropPage</Name>
+    <Message>
+      <Name>Title</Name>
+      <Value>Network Portal</Value>
+    </Message>
+    <Message>
+      <Name>ConnectionExpander</Name>
+      <Value>Connections</Value>
+    </Message>
+    <Message>
+      <Name>ConnectionListTextBlock</Name>
+      <Value>Connections List</Value>
+    </Message>
+    <Message>
+      <Name>ConnectionParamsTextBlock</Name>
+      <Value>Parameters</Value>
+    </Message>
+    <Message>
+      <Name>UsagePerConnectionTextBlock</Name>
+      <Value>Usage Per Connection</Value>
+    </Message>
+    <Message>
+      <Name>ReceiveBytesPerConnectionTextBlock</Name>
+      <Value>Receive Bytes</Value>
+    </Message>
+    <Message>
+      <Name>SendBytesPerConnectionTextBlock</Name>
+      <Value>Send Bytes</Value>
+    </Message>
+    <Message>
+      <Name>TotalUsageExpander</Name>
+      <Value>Total Usage</Value>
+    </Message>
+    <Message>
+      <Name>TotalReceiveBytesTextBlock</Name>
+      <Value>Receive Bytes</Value>
+    </Message>
+    <Message>
+      <Name>TotalSendBytesTextBlock</Name>
+      <Value>Send Bytes</Value>
+    </Message>
+    <Message>
+      <Name>ConfigurationExpander</Name>
+      <Value>Configuration</Value>
+    </Message>
+    <Message>
+      <Name>EditButton</Name>
+      <Value>Edit</Value>
+    </Message>
+    <Message>
+      <Name>ApplyButton</Name>
+      <Value>Apply</Value>
+    </Message>
+    <Message>
+      <Name>DiscardButton</Name>
+      <Value>Discard</Value>
+    </Message>
+    <Message>
+      <Name>NetworkPortalIDTextBlock</Name>
+      <Value>Network Portal ID</Value>
+    </Message>
+    <Message>
+      <Name>TargetPortalGroupTagTextBlock</Name>
+      <Value>Target Portal Group Tag</Value>
+    </Message>
+    <Message>
+      <Name>TargetAddressTextBlock</Name>
+      <Value>Target Address</Value>
+    </Message>
+    <Message>
+      <Name>PortNumberTextBlock</Name>
+      <Value>Port Number</Value>
+    </Message>
+    <Message>
+      <Name>DisableNagleTextBlock</Name>
+      <Value>Disable Nagle</Value>
+    </Message>
+    <Message>
+      <Name>ReceiveBufferSizeTextBlock</Name>
+      <Value>Receive Buffer Size</Value>
+    </Message>
+    <Message>
+      <Name>SendBufferSizeTextBlock</Name>
+      <Value>Send Buffer Size</Value>
+    </Message>
+    <Message>
+      <Name>IPWhiteListTextBlock</Name>
+      <Value>IP White List</Value>
+    </Message>
+  </Section>
+
+  <!-- Target group property page -->
+  <Section>
+    <Name>TargetGroupPropPage</Name>
+    <Message>
+      <Name>Title</Name>
+      <Value>Target Group</Value>
+    </Message>
+    <Message>
+      <Name>StatusExpander</Name>
+      <Value>Status</Value>
+    </Message>
+    <Message>
+      <Name>ActivateButton</Name>
+      <Value>Activate</Value>
+    </Message>
+    <Message>
+      <Name>LoadButton</Name>
+      <Value>Load</Value>
+    </Message>
+    <Message>
+      <Name>InactivateButton</Name>
+      <Value>Inactivate</Value>
+    </Message>
+    <Message>
+      <Name>UnloadButton</Name>
+      <Value>Unload</Value>
+    </Message>
+    <Message>
+      <Name>SessionsExpander</Name>
+      <Value>Sessions</Value>
+    </Message>
+    <Message>
+      <Name>SessionListTextBlock</Name>
+      <Value>Sessions List</Value>
+    </Message>
+    <Message>
+      <Name>DestroySessionButton</Name>
+      <Value>Destroy Session</Value>
+    </Message>
+    <Message>
+      <Name>SessionParamsTextBlock</Name>
+      <Value>Parameters</Value>
+    </Message>
+    <Message>
+      <Name>UsageTextBlock</Name>
+      <Value>Usage</Value>
+    </Message>
+    <Message>
+      <Name>ReceiveBytesTextBlock</Name>
+      <Value>Receive Bytes</Value>
+    </Message>
+    <Message>
+      <Name>SendBytesTextBlock</Name>
+      <Value>Send Bytes</Value>
+    </Message>
+    <Message>
+      <Name>ConfigurationExpander</Name>
+      <Value>Configuration</Value>
+    </Message>
+    <Message>
+      <Name>EditButton</Name>
+      <Value>Edit</Value>
+    </Message>
+    <Message>
+      <Name>ApplyButton</Name>
+      <Value>Apply</Value>
+    </Message>
+    <Message>
+      <Name>DiscardButton</Name>
+      <Value>Discard</Value>
+    </Message>
+    <Message>
+      <Name>TargetGroupIDTextBlock</Name>
+      <Value>Target Group ID</Value>
+    </Message>
+    <Message>
+      <Name>TargetGroupNameTextBlock</Name>
+      <Value>Target Group Name</Value>
+    </Message>
+    <Message>
+      <Name>EnableAtStartTextBlock</Name>
+      <Value>Enable At Start</Value>
+    </Message>
+  </Section>
+
+  <!-- Target property page -->
+  <Section>
+    <Name>TargetPropPage</Name>
+    <Message>
+      <Name>Title</Name>
+      <Value>Target</Value>
+    </Message>
+    <Message>
+      <Name>SessionsExpander</Name>
+      <Value>Sessions</Value>
+    </Message>
+    <Message>
+      <Name>SessionListTextBlock</Name>
+      <Value>Sessions List</Value>
+    </Message>
+    <Message>
+      <Name>DestroySessionButton</Name>
+      <Value>Destroy Session</Value>
+    </Message>
+    <Message>
+      <Name>SessionParamsTextBlock</Name>
+      <Value>Parameters</Value>
+    </Message>
+    <Message>
+      <Name>UsageTextBlock</Name>
+      <Value>Usage</Value>
+    </Message>
+    <Message>
+      <Name>ReceiveBytesTextBlock</Name>
+      <Value>Receive Bytes</Value>
+    </Message>
+    <Message>
+      <Name>SendBytesTextBlock</Name>
+      <Value>Send Bytes</Value>
+    </Message>
+    <Message>
+      <Name>ConfigurationExpander</Name>
+      <Value>Configuration</Value>
+    </Message>
+    <Message>
+      <Name>EditButton</Name>
+      <Value>Edit</Value>
+    </Message>
+    <Message>
+      <Name>ApplyButton</Name>
+      <Value>Apply</Value>
+    </Message>
+    <Message>
+      <Name>DiscardButton</Name>
+      <Value>Discard</Value>
+    </Message>
+    <Message>
+      <Name>NodeConfigurationTextBlock</Name>
+      <Value>Node Configuration</Value>
+    </Message>
+    <Message>
+      <Name>TargetIDTextBlock</Name>
+      <Value>Target ID</Value>
+    </Message>
+    <Message>
+      <Name>TargetPortalGroupTagTextBlock</Name>
+      <Value>Target Portal Group Tag</Value>
+    </Message>
+    <Message>
+      <Name>TargetNameTextBlock</Name>
+      <Value>Target Name</Value>
+    </Message>
+    <Message>
+      <Name>TargetAliasTextBlock</Name>
+      <Value>Target Alias</Value>
+    </Message>
+    <Message>
+      <Name>AuthTitleTextBlock</Name>
+      <Value>Authentification</Value>
+    </Message>
+    <Message>
+      <Name>AuthTypeTextBlock</Name>
+      <Value>Enable Authentification</Value>
+    </Message>
+    <Message>
+      <Name>InitiatorAuthTextBlock</Name>
+      <Value>Initiator</Value>
+    </Message>
+    <Message>
+      <Name>InitiatorAuthUserNameTextBlock</Name>
+      <Value>User Name</Value>
+    </Message>
+    <Message>
+      <Name>InitiatorAuthPasswordTextBlock</Name>
+      <Value>Password</Value>
+    </Message>
+    <Message>
+      <Name>TargetAuthTextBlock</Name>
+      <Value>Target</Value>
+    </Message>
+    <Message>
+      <Name>TargetAuthUserNameTextBlock</Name>
+      <Value>TargetAuthUserNameTextBlock</Value>
+    </Message>
+    <Message>
+      <Name>TargetAuthPasswordTextBlock</Name>
+      <Value>Password</Value>
+    </Message>
+    <Message>
+      <Name>LogicalUnitTitleTextBlock</Name>
+      <Value>Logical Unit</Value>
+    </Message>
+  </Section>
+
+  <!-- Block Device LU property page -->
+  <Section>
+    <Name>BlockDeviceLUPropPage</Name>
+    <Message>
+      <Name>Title</Name>
+      <Value>Block Device LU</Value>
+    </Message>
+    <Message>
+      <Name>UsageExpander</Name>
+      <Value>Usage</Value>
+    </Message>
+    <Message>
+      <Name>ReadBytesTextBlock</Name>
+      <Value>Read Bytes</Value>
+    </Message>
+    <Message>
+      <Name>WrittenBytesTextBlock</Name>
+      <Value>Written Bytes</Value>
+    </Message>
+    <Message>
+      <Name>ReadTickCountTextBlock</Name>
+      <Value>Read Tick Count</Value>
+    </Message>
+    <Message>
+      <Name>WriteTickCountTextBlock</Name>
+      <Value>Write Tick Count</Value>
+    </Message>
+    <Message>
+      <Name>ReadCountTextBlock</Name>
+      <Value>Read Count</Value>
+    </Message>
+    <Message>
+      <Name>WrittenCountTextBlock</Name>
+      <Value>Written Count</Value>
+    </Message>
+    <Message>
+      <Name>StatusExpander</Name>
+      <Value>Status</Value>
+    </Message>
+    <Message>
+      <Name>OperationLabelTextBlock</Name>
+      <Value>Operation</Value>
+    </Message>
+    <Message>
+      <Name>LUResetTextBlock</Name>
+      <Value>LU Reset</Value>
+    </Message>
+    <Message>
+      <Name>LUResetButton</Name>
+      <Value>Reset</Value>
+    </Message>
+    <Message>
+      <Name>ACAStatusLabelTextBlock</Name>
+      <Value>ACA Status</Value>
+    </Message>
+    <Message>
+      <Name>ACAStatusTextBlock</Name>
+      <Value>ACA Status</Value>
+    </Message>
+    <Message>
+      <Name>ITNexusTextBlock</Name>
+      <Value>I_T Nexus</Value>
+    </Message>
+    <Message>
+      <Name>StatusCodeTextBlock</Name>
+      <Value>Status</Value>
+    </Message>
+    <Message>
+      <Name>SenseKeyTextBlock</Name>
+      <Value>Sense Key</Value>
+    </Message>
+    <Message>
+      <Name>AdditionalSenseCodeTextBlock</Name>
+      <Value>Additional Sense Code</Value>
+    </Message>
+    <Message>
+      <Name>CurrentErrorTextBlock</Name>
+      <Value>Current Error</Value>
+    </Message>
+    <Message>
+      <Name>CurrentErrorTextBlock</Name>
+      <Value>Current Error</Value>
+    </Message>
+    <Message>
+      <Name>ConfigurationExpander</Name>
+      <Value>Configuration</Value>
+    </Message>
+    <Message>
+      <Name>EditButton</Name>
+      <Value>Edit</Value>
+    </Message>
+    <Message>
+      <Name>ApplyButton</Name>
+      <Value>Apply</Value>
+    </Message>
+    <Message>
+      <Name>DiscardButton</Name>
+      <Value>Discard</Value>
+    </Message>
+    <Message>
+      <Name>LUNTextBlock</Name>
+      <Value>LUN</Value>
+    </Message>
+    <Message>
+      <Name>LUNameTextBlock</Name>
+      <Value>LU Name</Value>
+    </Message>
+   </Section>
+
+  <!-- Dummy Device LU property page -->
+  <Section>
+      <Name>DummyDeviceLUPropPage</Name>
+      <Message>
+        <Name>Title</Name>
+        <Value>Dummy Device LU</Value>
+      </Message>
+      <Message>
+        <Name>StatusExpander</Name>
+        <Value>Status</Value>
+      </Message>
+      <Message>
+        <Name>OperationLabelTextBlock</Name>
+        <Value>Operation</Value>
+      </Message>
+      <Message>
+        <Name>LUResetTextBlock</Name>
+        <Value>LU Reset</Value>
+      </Message>
+      <Message>
+        <Name>LUResetButton</Name>
+        <Value>Reset</Value>
+      </Message>
+      <Message>
+        <Name>ACAStatusLabelTextBlock</Name>
+        <Value>ACA Status</Value>
+      </Message>
+      <Message>
+        <Name>ACAStatusTextBlock</Name>
+        <Value>ACA Status</Value>
+      </Message>
+      <Message>
+        <Name>ITNexusTextBlock</Name>
+        <Value>I_T Nexus</Value>
+      </Message>
+      <Message>
+        <Name>StatusCodeTextBlock</Name>
+        <Value>Status</Value>
+      </Message>
+      <Message>
+        <Name>SenseKeyTextBlock</Name>
+        <Value>Sense Key</Value>
+      </Message>
+      <Message>
+        <Name>AdditionalSenseCodeTextBlock</Name>
+        <Value>Additional Sense Code</Value>
+      </Message>
+      <Message>
+        <Name>CurrentErrorTextBlock</Name>
+        <Value>Current Error</Value>
+      </Message>
+      <Message>
+        <Name>CurrentErrorTextBlock</Name>
+        <Value>Current Error</Value>
+      </Message>
+      <Message>
+        <Name>ConfigurationExpander</Name>
+        <Value>Configuration</Value>
+      </Message>
+      <Message>
+        <Name>EditButton</Name>
+        <Value>Edit</Value>
+      </Message>
+      <Message>
+        <Name>ApplyButton</Name>
+        <Value>Apply</Value>
+      </Message>
+      <Message>
+        <Name>DiscardButton</Name>
+        <Value>Discard</Value>
+      </Message>
+      <Message>
+        <Name>LUNTextBlock</Name>
+        <Value>LUN</Value>
+      </Message>
+      <Message>
+        <Name>LUNameTextBlock</Name>
+        <Value>LU Name</Value>
+      </Message>    
+  </Section>
+
+  <!-- Plain File Media property page -->
+  <Section>
+    <Name>PlainFileMediaPropPage</Name>
+    <Message>
+      <Name>Title</Name>
+      <Value>Plain File Media</Value>
+    </Message>
+    <Message>
+      <Name>UsageExpander</Name>
+      <Value>Usage</Value>
+    </Message>
+    <Message>
+      <Name>ReadBytesTextBlock</Name>
+      <Value>Read Bytes</Value>
+    </Message>
+    <Message>
+      <Name>WrittenBytesTextBlock</Name>
+      <Value>Written Bytes</Value>
+    </Message>
+    <Message>
+      <Name>ReadTickCountTextBlock</Name>
+      <Value>Read Tick Count</Value>
+    </Message>
+    <Message>
+      <Name>WriteTickCountTextBlock</Name>
+      <Value>Write Tick Count</Value>
+    </Message>
+    <Message>
+      <Name>ReadCountTextBlock</Name>
+      <Value>Read Count</Value>
+    </Message>
+    <Message>
+      <Name>WrittenCountTextBlock</Name>
+      <Value>Written Count</Value>
+    </Message>
+    <Message>
+      <Name>ConfigurationExpander</Name>
+      <Value>Configuration</Value>
+    </Message>
+    <Message>
+      <Name>EditButton</Name>
+      <Value>Edit</Value>
+    </Message>
+    <Message>
+      <Name>ApplyButton</Name>
+      <Value>Apply</Value>
+    </Message>
+    <Message>
+      <Name>DiscardButton</Name>
+      <Value>Discard</Value>
+    </Message>
+    <Message>
+      <Name>IdentNumberTextBlock</Name>
+      <Value>Ident Number</Value>
+    </Message>
+    <Message>
+      <Name>MediaNameTextBlock</Name>
+      <Value>Media Name</Value>
+    </Message>
+    <Message>
+      <Name>FileNameTextBlock</Name>
+      <Value>File Name</Value>
+    </Message>
+    <Message>
+      <Name>MaxMultiplicityTextBlock</Name>
+      <Value>Max Multiplicity</Value>
+    </Message>
+    <Message>
+      <Name>QueueWaitTimeOutTextBlock</Name>
+      <Value>Queue Wait TimeOut</Value>
+    </Message>
+    <Message>
+      <Name>WriteProtectTextBlock</Name>
+      <Value>Write Protect</Value>
+    </Message>
+  </Section>
+
+  <!-- Memory Buffer Media property page -->
+  <Section>
+    <Name>MemBufferMediaPropPage</Name>
+    <Message>
+      <Name>Title</Name>
+      <Value>Memory Buffer Media</Value>
+    </Message>
+    <Message>
+      <Name>UsageExpander</Name>
+      <Value>Usage</Value>
+    </Message>
+    <Message>
+      <Name>ReadBytesTextBlock</Name>
+      <Value>Read Bytes</Value>
+    </Message>
+    <Message>
+      <Name>WrittenBytesTextBlock</Name>
+      <Value>Written Bytes</Value>
+    </Message>
+    <Message>
+      <Name>ReadTickCountTextBlock</Name>
+      <Value>Read Tick Count</Value>
+    </Message>
+    <Message>
+      <Name>WriteTickCountTextBlock</Name>
+      <Value>Write Tick Count</Value>
+    </Message>
+    <Message>
+      <Name>ReadCountTextBlock</Name>
+      <Value>Read Count</Value>
+    </Message>
+    <Message>
+      <Name>WrittenCountTextBlock</Name>
+      <Value>Written Count</Value>
+    </Message>
+    <Message>
+      <Name>ConfigurationExpander</Name>
+      <Value>Configuration</Value>
+    </Message>
+    <Message>
+      <Name>EditButton</Name>
+      <Value>Edit</Value>
+    </Message>
+    <Message>
+      <Name>ApplyButton</Name>
+      <Value>Apply</Value>
+    </Message>
+    <Message>
+      <Name>DiscardButton</Name>
+      <Value>Discard</Value>
+    </Message>
+    <Message>
+      <Name>IdentNumberTextBlock</Name>
+      <Value>Ident Number</Value>
+    </Message>
+    <Message>
+      <Name>BytesCountTextBlock</Name>
+      <Value>Bytes Count</Value>
+    </Message>
+    <Message>
+      <Name>MediaNameTextBlock</Name>
+      <Value>Media Name</Value>
+    </Message>
+  </Section>
+
+  <!-- Dummy Media property page -->
+  <Section>
+    <Name>DummyMediaPropPage</Name>
+    <Message>
+      <Name>Title</Name>
+      <Value>Dummy Media</Value>
+    </Message>
+    <Message>
+      <Name>UsageExpander</Name>
+      <Value>Usage</Value>
+    </Message>
+    <Message>
+      <Name>ReadBytesTextBlock</Name>
+      <Value>Read Bytes</Value>
+    </Message>
+    <Message>
+      <Name>WrittenBytesTextBlock</Name>
+      <Value>Written Bytes</Value>
+    </Message>
+    <Message>
+      <Name>ReadTickCountTextBlock</Name>
+      <Value>Read Tick Count</Value>
+    </Message>
+    <Message>
+      <Name>WriteTickCountTextBlock</Name>
+      <Value>Write Tick Count</Value>
+    </Message>
+    <Message>
+      <Name>ReadCountTextBlock</Name>
+      <Value>Read Count</Value>
+    </Message>
+    <Message>
+      <Name>WrittenCountTextBlock</Name>
+      <Value>Written Count</Value>
+    </Message>
+    <Message>
+      <Name>ConfigurationExpander</Name>
+      <Value>Configuration</Value>
+    </Message>
+    <Message>
+      <Name>EditButton</Name>
+      <Value>Edit</Value>
+    </Message>
+    <Message>
+      <Name>ApplyButton</Name>
+      <Value>Apply</Value>
+    </Message>
+    <Message>
+      <Name>DiscardButton</Name>
+      <Value>Discard</Value>
+    </Message>
+    <Message>
+      <Name>IdentNumberTextBlock</Name>
+      <Value>Ident Number</Value>
+    </Message>
+    <Message>
+      <Name>MediaNameTextBlock</Name>
+      <Value>Media Name</Value>
+    </Message>
+  </Section>
+
+  <!-- Debug Media property page -->
+  <Section>
+    <Name>DebugMediaPropPage</Name>
+    <Message>
+      <Name>Title</Name>
+      <Value>Debug Media</Value>
+    </Message>
+    <Message>
+      <Name>ConfigurationExpander</Name>
+      <Value>Configuration</Value>
+    </Message>
+    <Message>
+      <Name>EditButton</Name>
+      <Value>Edit</Value>
+    </Message>
+    <Message>
+      <Name>ApplyButton</Name>
+      <Value>Apply</Value>
+    </Message>
+    <Message>
+      <Name>DiscardButton</Name>
+      <Value>Discard</Value>
+    </Message>
+    <Message>
+      <Name>IdentNumberTextBlock</Name>
+      <Value>Ident Number</Value>
+    </Message>
+    <Message>
+      <Name>MediaNameTextBlock</Name>
+      <Value>Media Name</Value>
+    </Message>
+    <Message>
+      <Name>TrapExpander</Name>
+      <Value>Trap</Value>
+    </Message>
+  </Section>
+
+  <!-- Main Window -->
+  <Section>
+    <Name>MainWindow</Name>
+    <Message>
+      <Name>Menu_Connection</Name>
+      <Value>_Connection</Value>
+    </Message>
+    <Message>
+      <Name>Menu_Login</Name>
+      <Value>Log_in</Value>
+    </Message>
+    <Message>
+      <Name>Menu_Logout</Name>
+      <Value>Log_out</Value>
+    </Message>
+    <Message>
+      <Name>Menu_Reload</Name>
+      <Value>_Reload</Value>
+    </Message>
+    <Message>
+      <Name>Menu_Verify</Name>
+      <Value>_Verify</Value>
+    </Message>
+    <Message>
+      <Name>Menu_Pulish</Name>
+      <Value>_Publish</Value>
+    </Message>
+    <Message>
+      <Name>Menu_Exit</Name>
+      <Value>_Exit</Value>
+    </Message>
+    <Message>
+      <Name>Menu_Help</Name>
+      <Value>_Help</Value>
+    </Message>
+    <Message>
+      <Name>Menu_About</Name>
+      <Value>_About</Value>
+    </Message>
+
+    <!-- Tree view context menu for controller node -->
+    <Message>
+      <Name>ContMenu_TVI_Controller_Select</Name>
+      <Value>_Select</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_Controller_Logout</Name>
+      <Value>_Logout</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_Controller_Reload</Name>
+      <Value>_Reload</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_Controller_AddTargetDevice</Name>
+      <Value>_Add Target Device</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_Controller_Paste</Name>
+      <Value>_Paste</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_Controller_Paste_Default</Name>
+      <Value>_Default</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_Controller_Paste_Advanced</Name>
+      <Value>_Advanced ...</Value>
+    </Message>
+
+    <!-- Tree view context menu for TargetDevice node -->
+    <Message>
+      <Name>ContMenu_TVI_TargetDevice_Select</Name>
+      <Value>_Select</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_TargetDevice_Start</Name>
+      <Value>St_art</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_TargetDevice_Stop</Name>
+      <Value>St_op</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_TargetDevice_AddTargetGroup</Name>
+      <Value>Add _Target Group</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_TargetDevice_AddNetworkPortal</Name>
+      <Value>Add _Network Portal</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_TargetDevice_Copy</Name>
+      <Value>_Copy</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_TargetDevice_Paste</Name>
+      <Value>_Paste</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_TargetDevice_Paste_Default</Name>
+      <Value>_Default</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_TargetDevice_Paste_Advanced</Name>
+      <Value>_Advanced ...</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_TargetDevice_Delete</Name>
+      <Value>_Delete</Value>
+    </Message>
+
+    <!-- Tree view context menu for TargetGroup node -->
+    <Message>
+      <Name>ContMenu_TVI_TargetGroup_Select</Name>
+      <Value>_Select</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_TargetGroup_Activate</Name>
+      <Value>_Activate</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_TargetGroup_Load</Name>
+      <Value>_Load</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_TargetGroup_Inactivate</Name>
+      <Value>_Inactivate</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_TargetGroup_Unload</Name>
+      <Value>_Unload</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_TargetGroup_AddTarget</Name>
+      <Value>Add _Target</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_TargetGroup_AddBlockDeviceLU</Name>
+      <Value>Add _Block Device LU</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_TargetGroup_Copy</Name>
+      <Value>_Copy</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_TargetGroup_Paste</Name>
+      <Value>_Paste</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_TargetGroup_Paste_Default</Name>
+      <Value>_Default</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_TargetGroup_Paste_Advanced</Name>
+      <Value>_Advanced ...</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_TargetGroup_Delete</Name>
+      <Value>_Delete</Value>
+    </Message>
+
+    <!-- Tree view context menu for Network Portal node -->
+    <Message>
+      <Name>ContMenu_TVI_NetworkPortal_Select</Name>
+      <Value>_Select</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_NetworkPortal_Copy</Name>
+      <Value>_Copy</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_NetworkPortal_Paste</Name>
+      <Value>_Paste</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_NetworkPortal_Delete</Name>
+      <Value>_Delete</Value>
+    </Message>
+
+    <!-- Tree view context menu for Target node -->
+    <Message>
+      <Name>ContMenu_TVI_Target_Select</Name>
+      <Value>_Select</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_Target_Copy</Name>
+      <Value>_Copy</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_Target_Delete</Name>
+      <Value>_Delete</Value>
+    </Message>
+
+    <!-- Tree view context menu for Block Device LU node -->
+    <Message>
+      <Name>ContMenu_TVI_BlockDeviceLU_Select</Name>
+      <Value>_Select</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_BlockDeviceLU_AddMemBufferMedia</Name>
+      <Value>Add _MemBuffer Media</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_BlockDeviceLU_AddPlainFileMedia</Name>
+      <Value>Add _Plain File Media</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_BlockDeviceLU_Copy</Name>
+      <Value>_Copy</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_BlockDeviceLU_Paste</Name>
+      <Value>_Paste</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_BlockDeviceLU_Paste_Default</Name>
+      <Value>_Default</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_BlockDeviceLU_Paste_Advanced</Name>
+      <Value>_Advanced</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_BlockDeviceLU_Delete</Name>
+      <Value>_Delete</Value>
+    </Message>
+
+    <!-- Tree view context menu for Dummy Device LU node -->
+    <Message>
+      <Name>ContMenu_TVI_DummyDeviceLU_Select</Name>
+      <Value>_Select</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_DummyDeviceLU_Delete</Name>
+      <Value>_Delete</Value>
+    </Message>
+
+    <!-- Tree view context menu for MemBuffer media node -->
+    <Message>
+      <Name>ContMenu_TVI_MemBufferMedia_Select</Name>
+      <Value>_Select</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_MemBufferMedia_Copy</Name>
+      <Value>_Copy</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_MemBufferMedia_Delete</Name>
+      <Value>_Delete</Value>
+    </Message>
+
+    <!-- Tree view context menu for Plain file media node -->
+    <Message>
+      <Name>ContMenu_TVI_PlainFileMedia_Select</Name>
+      <Value>_Select</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_PlainFileMedia_Copy</Name>
+      <Value>_Copy</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_PlainFileMedia_Delete</Name>
+      <Value>_Delete</Value>
+    </Message>
+
+    <!-- Tree view context menu for Dummy media node -->
+    <Message>
+      <Name>ContMenu_TVI_DummyMedia_Select</Name>
+      <Value>_Select</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_DummyMedia_Delete</Name>
+      <Value>_Delete</Value>
+    </Message>
+
+  </Section>
+
+</Messages>

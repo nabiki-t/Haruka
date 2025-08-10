@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Authors>nabiki_t</Authors>
+    <Company>nabiki_t</Company>
+    <Product>Haruka software storage.</Product>
+    <Description>Haruka software storage. Implementation of direct access block device logical unit compliant SBC-2.</Description>
+    <Copyright></Copyright>
+    <EnableNETAnalyzers>True</EnableNETAnalyzers>
+    <AnalysisLevel>6.0-all</AnalysisLevel>
+    <Title>Haruka software storage</Title>
+    <BaseOutputPath>..\Work</BaseOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <WarningLevel>5</WarningLevel>
+    <Tailcalls>True</Tailcalls>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>5</WarningLevel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="ModeParameter.fs" />
+    <Compile Include="SupportedOperationCodeConst.fs" />
+    <Compile Include="ScsiCDB.fs" />
+    <Compile Include="BlockDeviceTask.fs" />
+    <Compile Include="InternalIF.fs" />
+    <Compile Include="PRManager.fs" />
+    <Compile Include="ScsiTask.fs" />
+    <Compile Include="ScsiTeskForDummyDevice.fs" />
+    <Compile Include="SendErrorStatusTask.fs" />
+    <Compile Include="ConvertToCDB.fs" />
+    <Compile Include="BlockDeviceLU.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Commons\Commons.fsproj" />
+    <ProjectReference Include="..\Constants\Constants.fsproj" />
+  </ItemGroup>
+
+</Project>

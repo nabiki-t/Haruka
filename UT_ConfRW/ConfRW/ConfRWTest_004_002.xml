@@ -1,0 +1,28 @@
+<root namespace='Haruka.Test.UT.ConfRW_004_002' class='ReaderWriter' >
+  <form name='Test'>
+    <item name='C' selection='true' >
+      <item name='D_string_min' constraint='string' minvalue='MAX_TARGET_DEVICE_COUNT'/>
+      <item name='D_string_max' constraint='string' maxvalue='MAX_TARGET_DEVICE_COUNT'/>
+      <item name='D_byte_min' constraint='byte' minvalue='MAX_TARGET_DEVICE_COUNT'/>
+      <item name='D_byte_max' constraint='byte' maxvalue='MAX_TARGET_DEVICE_COUNT'/>
+      <item name='D_unsignedByte_min' constraint='unsignedByte' minvalue='MAX_TARGET_DEVICE_COUNT'/>
+      <item name='D_unsignedByte_max' constraint='unsignedByte' maxvalue='MAX_TARGET_DEVICE_COUNT'/>
+      <item name='D_int_min' constraint='int' minvalue='MAX_TARGET_DEVICE_COUNT'/>
+      <item name='D_int_max' constraint='int' maxvalue='MAX_TARGET_DEVICE_COUNT'/>
+      <item name='D_unsignedInt_min' constraint='unsignedInt' minvalue='MAX_TARGET_DEVICE_COUNT'/>
+      <item name='D_unsignedInt_max' constraint='unsignedInt' maxvalue='MAX_TARGET_DEVICE_COUNT'/>
+      <item name='D_long_min' constraint='long' minvalue='MAX_TARGET_DEVICE_COUNT'/>
+      <item name='D_long_max' constraint='long' maxvalue='MAX_TARGET_DEVICE_COUNT'/>
+      <item name='D_unsignedLong_min' constraint='unsignedLong' minvalue='MAX_TARGET_DEVICE_COUNT'/>
+      <item name='D_unsignedLong_max' constraint='unsignedLong' maxvalue='MAX_TARGET_DEVICE_COUNT'/>
+      <item name='D_short_min' constraint='short' minvalue='MAX_TARGET_DEVICE_COUNT'/>
+      <item name='D_short_max' constraint='short' maxvalue='MAX_TARGET_DEVICE_COUNT'/>
+      <item name='D_unsignedShort_min' constraint='unsignedShort' minvalue='MAX_TARGET_DEVICE_COUNT'/>
+      <item name='D_unsignedShort_max' constraint='unsignedShort' maxvalue='MAX_TARGET_DEVICE_COUNT'/>
+      <item name='D_double_min' constraint='double' minvalue='MAX_TARGET_DEVICE_COUNT'/>
+      <item name='D_double_max' constraint='double' maxvalue='MAX_TARGET_DEVICE_COUNT'/>
+      <item name='D_TPGT_T_min' constraint='TPGT_T' minvalue='MAX_TARGET_DEVICE_COUNT'/>
+      <item name='D_TPGT_T_max' constraint='TPGT_T' maxvalue='MAX_TARGET_DEVICE_COUNT'/>
+    </item>
+  </form>
+</root>

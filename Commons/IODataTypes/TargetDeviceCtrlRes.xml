@@ -1,0 +1,265 @@
+<!--
+==============================================================================
+== Haruka Software Storage.
+== Definition of message format expressing control response for TargetDevice.
+-->
+
+<root namespace='Haruka.IODataTypes.TargetDeviceCtrlRes' class='ReaderWriter' >
+  <form name='TargetDeviceCtrlRes'>
+    <item name='Response' selection='true' >
+
+      <!--
+      summary : Return data for TargetDeviceCtrlReq.GetActiveTargetGroups
+      ID : Target group ID which is activated.
+      Name : Target group name which is activated.
+      -->
+      <item name='ActiveTargetGroups' >
+        <item name='ActiveTGInfo' mincount='0' maxcount='MAX_TARGET_GROUP_COUNT_IN_TD' >
+          <item name='ID' constraint='TargetGroupID' />
+          <item name='Name' constraint='string' minvalue='0' maxvalue='MAX_TARGET_GROUP_NAME_STR_LENGTH' />
+        </item>
+      </item>
+
+      <!--
+      summary : Return data for TargetDeviceCtrlReq.GetLoadedTargetGroups
+                This list contains the target group which is both of activated or inactivated.
+      ID : Target group ID which is loaded.
+      Name : Target group name which is loaded.
+      -->
+      <item name='LoadedTargetGroups' >
+        <item name='LoadedTGInfo' mincount='0' maxcount='MAX_TARGET_GROUP_COUNT_IN_TD' >
+          <item name='ID' constraint='TargetGroupID' />
+          <item name='Name' constraint='string' minvalue='0' maxvalue='MAX_TARGET_GROUP_NAME_STR_LENGTH' />
+        </item>
+      </item>
+
+      <!--
+      summary : Return data for TargetDeviceCtrlReq.InactivateTargetGroup
+      ID : Target group ID of target group which has been inactivated.
+      Result : Always true.
+      ErrorMessage : Always empty.
+      -->
+      <item name='InactivateTargetGroupResult' >
+        <item name='ID' constraint='TargetGroupID' />
+        <item name='Result' constraint='boolean' />
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for TargetDeviceCtrlReq.ActivateTargetGroup
+      ID : Target group ID of target group which has been activated.
+      Result : True if it succeeded to activate, otherwise false.
+      ErrorMessage : If it failed to activate, return error message.
+      -->
+      <item name='ActivateTargetGroupResult' >
+        <item name='ID' constraint='TargetGroupID' />
+        <item name='Result' constraint='boolean' />
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for TargetDeviceCtrlReq.UnloadTargetGroup
+      ID : Target group ID of target group which has been unloaded.
+      Result : True if it succeeded to unloaded, otherwise false.
+      ErrorMessage : If it failed to unloaded, return error message.
+      -->
+      <item name='UnloadTargetGroupResult' >
+        <item name='ID' constraint='TargetGroupID' />
+        <item name='Result' constraint='boolean' />
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for TargetDeviceCtrlReq.LoadTargetGroup
+      ID : Target group ID of target group which has been loaded.
+      Result : True if it succeeded to loaded, otherwise false.
+      ErrorMessage : If it failed to loaded, return error message.
+      -->
+      <item name='LoadTargetGroupResult' >
+        <item name='ID' constraint='TargetGroupID' />
+        <item name='Result' constraint='boolean' />
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for TargetDeviceCtrlReq.SetLogParameters
+      Return value : True if it succeeded to update the parameters, otherwise false.
+      -->
+      <item name='SetLogParametersResult' constraint='boolean' />
+
+      <!--
+      summary : Return data for TargetDeviceCtrlReq.GetLogParameters
+      Return values : Current effective log parameter values.
+      -->
+      <item name='LogParameters' >
+        <item name='SoftLimit' constraint='unsignedInt' minvalue='LOGPARAM_MIN_SOFTLIMIT' maxvalue='LOGPARAM_MAX_SOFTLIMIT' />
+        <item name='HardLimit' constraint='unsignedInt' minvalue='LOGPARAM_MIN_HARDLIMIT' maxvalue='LOGPARAM_MAX_HARDLIMIT' />
+        <item name='LogLevel' constraint='LogLevel' />
+      </item>
+
+      <!--
+      summary : Return data for TargetDeviceCtrlReq.GetDeviceName
+      Return value : Device name.
+      -->
+      <item name='DeviceName' constraint='string' minvalue='0' maxvalue='MAX_DEVICE_NAME_STR_LENGTH' />
+
+      <!--
+      summary : Return data for TargetDeviceCtrlReq.GetSession
+      Return value : List of sessions information.
+      -->
+      <item name='SessionList' >
+        <item name='Session' mincount='0' maxcount='MAX_SESSION_COUNT_IN_TD'>
+          <item name='TargetGroupID' constraint='TargetGroupID' />
+          <item name='TargetNodeID' constraint='TNODEIDX_T' />
+          <item name='TSIH' constraint='TSIH_T' />
+          <item name='ITNexus' constraint='ITNEXUS' />
+          <item name='SessionParameters'>
+            <item name='MaxConnections' constraint='unsignedShort' minvalue='0' maxvalue='NEGOPARAM_MaxConnections' />
+            <item name='InitiatorAlias' constraint='string' minvalue='0' maxvalue='MAX_TARGET_ALIAS_STR_LENGTH' />
+            <item name='InitialR2T' constraint='boolean' />
+            <item name='ImmediateData' constraint='boolean' />
+            <item name='MaxBurstLength' constraint='unsignedInt' minvalue='NEGOPARAM_MIN_MaxBurstLength' maxvalue='NEGOPARAM_MAX_MaxBurstLength' />
+            <item name='FirstBurstLength' constraint='unsignedInt' minvalue='NEGOPARAM_MIN_FirstBurstLength' maxvalue='NEGOPARAM_MAX_FirstBurstLength' />
+            <item name='DefaultTime2Wait' constraint='unsignedShort' minvalue='NEGOPARAM_MIN_DefaultTime2Wait' maxvalue='NEGOPARAM_MAX_DefaultTime2Wait' />
+            <item name='DefaultTime2Retain' constraint='unsignedShort' minvalue='NEGOPARAM_MIN_DefaultTime2Retain' maxvalue='NEGOPARAM_MAX_DefaultTime2Retain' />
+            <item name='MaxOutstandingR2T' constraint='unsignedShort' minvalue='NEGOPARAM_MIN_MaxOutstandingR2T' maxvalue='NEGOPARAM_MAX_MaxOutstandingR2T' />
+            <item name='DataPDUInOrder' constraint='boolean' />
+            <item name='DataSequenceInOrder' constraint='boolean' />
+            <item name='ErrorRecoveryLevel' constraint='unsignedByte' minvalue='0' maxvalue='2' />
+          </item>
+          <item name='EstablishTime' constraint='DateTime' />
+        </item>
+      </item>
+
+      <!--
+      summary : Return data for TargetDeviceCtrlReq.DestructSession
+      TSIH : TSIH of session which has been destructed.
+      Result : True if it succeeded to destruct, otherwise false.
+      ErrorMessage : If it failed to destruct, return error message.
+      -->
+      <item name='DestructSessionResult' >
+        <item name='TSIH' constraint='TSIH_T' />
+        <item name='Result' constraint='boolean' />
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for TargetDeviceCtrlReq.GetConnection
+      Return value : List of connections information.
+
+      Resource counters (ReceiveBytesCount/SentBytesCount) are
+      aggregated in units of Constants.RECOUNTER_SPAN_SEC.
+      -->
+      <item name='ConnectionList' >
+        <item name='Connection' mincount='0' maxcount='MAX_CONNECTION_COUNT_IN_TD'>
+          <item name='TSIH' constraint='TSIH_T' />
+          <item name='ConnectionID' constraint='CID_T' />
+          <item name='ConnectionCount' constraint='CONCNT_T' />
+          <item name='ReceiveBytesCount' constraint='RESCOUNTER' mincount='0' maxcount='RESCOUNTER_MAX_VAL_COUNT' />
+          <item name='SentBytesCount' constraint='RESCOUNTER' mincount='0' maxcount='RESCOUNTER_MAX_VAL_COUNT' />
+          <item name='ConnectionParameters'>
+            <item name='AuthMethod' constraint='string' />
+            <item name='HeaderDigest' constraint='string' />
+            <item name='DataDigest' constraint='string' />
+            <item name='MaxRecvDataSegmentLength_I' constraint='unsignedInt' minvalue='NEGOPARAM_MIN_MaxRecvDataSegmentLength' maxvalue='NEGOPARAM_MAX_MaxRecvDataSegmentLength' />
+            <item name='MaxRecvDataSegmentLength_T' constraint='unsignedInt' minvalue='NEGOPARAM_MIN_MaxRecvDataSegmentLength' maxvalue='NEGOPARAM_MAX_MaxRecvDataSegmentLength' />
+          </item>
+          <item name='EstablishTime' constraint='DateTime' />
+        </item>
+      </item>
+
+      <!--
+      summary : Return data for TargetDeviceCtrlReq.GetLUStatus
+      Return value : Status information of specified LU.
+      
+      Resource counters (ReadBytesCount/WrittenBytesCount/ReadTickCount/WriteTickCount) are
+      aggregated in units of Constants.RECOUNTER_SPAN_SEC.
+      
+      ReadTickCount and WriteTickCount are measured in milliseconds.
+      
+      -->
+      <item name='LUStatus'>
+        <item name='LUN' constraint='LUN_T' />
+        <item name='ErrorMessage' constraint='string' />
+        <item name='LUStatus_Success' mincount='0' maxcount='1'>
+          <item name='ReadBytesCount' constraint='RESCOUNTER' mincount='0' maxcount='RESCOUNTER_MAX_VAL_COUNT' />
+          <item name='WrittenBytesCount' constraint='RESCOUNTER' mincount='0' maxcount='RESCOUNTER_MAX_VAL_COUNT' />
+          <item name='ReadTickCount' constraint='RESCOUNTER' mincount='0' maxcount='RESCOUNTER_MAX_VAL_COUNT' />
+          <item name='WriteTickCount' constraint='RESCOUNTER' mincount='0' maxcount='RESCOUNTER_MAX_VAL_COUNT' />
+          <item name='ACAStatus' mincount='0' maxcount='1' >
+            <item name='ITNexus' constraint='ITNEXUS' />
+            <item name='StatusCode' constraint='unsignedByte' />
+            <item name='SenseKey' constraint='unsignedByte' />
+            <item name='AdditionalSenseCode' constraint='unsignedShort' />
+            <item name='IsCurrent' constraint='boolean' />
+          </item>
+        </item>
+      </item>
+
+      <!--
+      summary : Return data for TargetDeviceCtrlReq.LUReset
+      LUN : LUN of LU which reseted.
+      Result : True if it succeeded to reset, otherwise false.
+      ErrorMessage : If it failed to reset, return error message.
+      -->
+      <item name='LUResetResult' >
+        <item name='LUN' constraint='LUN_T' />
+        <item name='Result' constraint='boolean' />
+        <item name='ErrorMessage' constraint='string' />
+      </item>
+
+      <!--
+      summary : Return data for TargetDeviceCtrlReq.GetMediaStatus
+      Return value : Status information of specified media.
+
+      Resource counters (ReadBytesCount/WrittenBytesCount/ReadTickCount/WriteTickCount) are
+      aggregated in units of Constants.RECOUNTER_SPAN_SEC.
+      
+      ReadTickCount and WriteTickCount are measured in milliseconds.
+      -->
+      <item name='MediaStatus' >
+        <item name='LUN' constraint='LUN_T' />
+        <item name='ID' constraint='MEDIAIDX_T' />
+        <item name='ErrorMessage' constraint='string' />
+        <item name='MediaStatus_Success' mincount='0' maxcount='1'>
+          <item name='ReadBytesCount' constraint='RESCOUNTER' mincount='0' maxcount='RESCOUNTER_MAX_VAL_COUNT' />
+          <item name='WrittenBytesCount' constraint='RESCOUNTER' mincount='0' maxcount='RESCOUNTER_MAX_VAL_COUNT' />
+          <item name='ReadTickCount' constraint='RESCOUNTER' mincount='0' maxcount='RESCOUNTER_MAX_VAL_COUNT' />
+          <item name='WriteTickCount' constraint='RESCOUNTER' mincount='0' maxcount='RESCOUNTER_MAX_VAL_COUNT' />
+        </item>
+      </item>
+
+      <!--
+      summary : Return data for HarukaCtrlerCtrlReq.MediaControlRequest
+      Result : True, if succeeded. Otherwise false.
+      ErrorMessage : Error message string. If succeeded, this value will be set empty.
+      -->
+      <item name='MediaControlResponse' >
+        <item name='LUN' constraint='LUN_T' />
+        <item name='ID' constraint='MEDIAIDX_T' />
+        <item name='ErrorMessage' constraint='string' />
+        <item name='Response' constraint='string' />
+      </item>
+
+      <!--
+      summary : It represents occurrence of unexpected error.
+      -->
+      <item name='UnexpectedError' constraint='string' />
+
+    </item>
+  </form>
+
+  <typedef name='RESCOUNTER' >
+      <item name='Time' constraint='DateTime' />
+      <item name='Value' constraint='long' />
+      <item name='Count' constraint='long' />
+  </typedef>
+
+  <typedef name='ITNEXUS'>
+    <item name='InitiatorName' constraint='iSCSIName' />
+    <item name='ISID' constraint='ISID' />
+    <item name='TargetName' constraint='iSCSIName' />
+    <item name='TPGT' constraint='TPGT_T' />
+  </typedef>
+
+</root>

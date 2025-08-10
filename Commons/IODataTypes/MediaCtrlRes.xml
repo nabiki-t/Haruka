@@ -1,0 +1,79 @@
+<!--
+==============================================================================
+== Haruka Software Storage.
+== Definition of message format expressing control response for media.
+-->
+
+<root namespace='Haruka.IODataTypes.MediaCtrlRes' class='ReaderWriter' >
+  <form name='MediaCtrlRes'>
+    <item name='Response' selection='true' >
+
+      <!-- Response for debug media request -->
+      <item name='Debug' selection='true' >
+
+        <!--
+          summary : Return data for MediaCtrlRes.GetAllTraps
+          Trap : Configured traps.
+        -->
+        <item name='AllTraps' >
+          <item name='Trap' mincount='0' maxcount='DEBUG_MEDIA_MAX_TRAP_COUNT' >
+            <item name='Event' selection='true'>
+              <item name='TestUnitReady' constraint='unit' />
+              <item name='ReadCapacity' constraint='unit' />
+              <item name='Read' >
+                <item name='StartLBA' constraint='unsignedLong' />
+                <item name='EndLBA' constraint='unsignedLong' />
+              </item>
+              <item name='Write' >
+                <item name='StartLBA' constraint='unsignedLong' />
+                <item name='EndLBA' constraint='unsignedLong' />
+              </item>
+              <item name='Format' constraint='unit' />
+            </item>
+            <item name='Action' selection='true'>
+              <item name='ACA' constraint='string' />
+              <item name='LUReset' constraint='string' />
+              <item name='Count' >
+                <item name='Index' constraint='int' />
+                <item name='Value' constraint='int' />
+              </item >
+              <item name='Delay' constraint='int' />
+            </item>
+          </item>
+        </item>
+
+        <!--
+          summary : Return data for MediaCtrlReq.AddTrap
+          Result : True if it succeeded to add a trap, otherwise false.
+          ErrorMessage : If it failed to add a trap, return error message.
+        -->
+        <item name='AddTrapResult' >
+          <item name='Result' constraint='boolean' />
+          <item name='ErrorMessage' constraint='string' />
+        </item>
+
+        <!--
+          summary : Return data for MediaCtrlReq.ClearTraps
+          Result : True if it succeeded to clear all traps, otherwise false.
+          ErrorMessage : If it failed to clear all traps, return error message.
+        -->
+        <item name='ClearTrapsResult' >
+          <item name='Result' constraint='boolean' />
+          <item name='ErrorMessage' constraint='string' />
+        </item>
+
+        <!--
+          summary : Return data for MediaCtrlReq.GetCounterValue
+          Return value : If the counter number that specified in MediaCtrlReq.GetCounterValue is registered, 
+                         it returns the countered value. 
+                         Otherwise, it always returns -1.
+        -->
+        <item name='CounterValue' constraint='int' />
+
+      </item>
+
+      <!-- Message returned when an error occurs -->
+      <item name='Unexpected' constraint='string' />
+    </item>
+  </form>
+</root>

@@ -1,0 +1,10 @@
+<root namespace='Haruka.Test.UT.ConfRW_002_ISID' class='ConfRW_UT002_ISID' >
+  <form name='Test'>
+    <item name='D1' constraint='ISID' />
+    <item name='D2' constraint='ISID' mincount='2' maxcount='3'/>
+    <item name='D3' constraint='ISID' mincount='0' maxcount='1'/>
+    <item name='D4' constraint='ISID' hidden='true'/>
+    <item name='D5' constraint='ISID' hidden='true' default='0x1234567890AB'/>
+    <item name='D7' constraint='ISID' mincount='0' maxcount='1' default='0x0123456789AB'/>
+  </form>
+</root>

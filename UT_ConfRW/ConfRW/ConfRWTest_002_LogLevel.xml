@@ -1,0 +1,10 @@
+<root namespace='Haruka.Test.UT.ConfRW_002_LogLevel' class='ConfRW_UT002_LogLevel' >
+  <form name='Test'>
+    <item name='D1' constraint='LogLevel' />
+    <item name='D2' constraint='LogLevel' mincount='2' maxcount='3'/>
+    <item name='D3' constraint='LogLevel' mincount='0' maxcount='1'/>
+    <item name='D4' constraint='LogLevel' hidden='true'/>
+    <item name='D5' constraint='LogLevel' hidden='true' default='WARNING'/>
+    <item name='D6' constraint='LogLevel' mincount='0' maxcount='1' default='VERBOSE'/>
+  </form>
+</root>

@@ -1,0 +1,149 @@
+﻿<Grid
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        MinWidth="350" MinHeight="100" >
+
+    <StackPanel>
+        <TextBlock Name="Title" Text="Block Device LU" VerticalAlignment="Top" Height="27" FontSize="18" Padding="0,0,0,0"/>
+
+        <!-- Usage -->
+        <Expander Name="UsageExpander" Header="Usages" Margin="10,10,5,2" VerticalAlignment="Top" IsExpanded="True" TabIndex="0">
+            <StackPanel>
+                <Grid Margin="10,0,0,0">
+                    <TextBlock Name="ReadBytesTextBlock" Text="Read Bytes" Margin="0,0,105,0" Padding="0,0,0,0" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Name="ReadBytesHeightTextBlock" Text="0K Bytes/s" Padding="0,0,0,0" HorizontalAlignment="Right" Width="150" TextAlignment="Right" TextTrimming="CharacterEllipsis" />
+                </Grid>
+                <Canvas Name="ReadBytesCanvas" Height="150" Margin="10,0,0,0" Background="White"/>
+                <Grid Margin="10,0,0,0">
+                    <TextBlock Name="WrittenBytesTextBlock" Text="Written Bytes" Margin="0,0,105,0" Padding="0,0,0,0" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Name="WrittenBytesHeightTextBlock" Text="0K Bytes/s" Padding="0,0,0,0" TextAlignment="Right" HorizontalAlignment="Right" Width="150" TextTrimming="CharacterEllipsis" />
+                </Grid>
+                <Canvas Name="WrittenBytesCanvas" Height="150" Margin="10,0,0,0" Background="White"/>
+                <Grid Margin="10,0,0,0">
+                    <TextBlock Name="ReadTickCountTextBlock" Text="Read Tick Count" Margin="0,0,105,0" Padding="0,0,0,0" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Name="ReadTickCountHeightTextBlock" Text="0 Ticks/access" Padding="0,0,0,0" TextAlignment="Right" HorizontalAlignment="Right" Width="150" TextTrimming="CharacterEllipsis" />
+                </Grid>
+                <Canvas Name="ReadTickCountCanvas" Height="150" Margin="10,0,0,0" Background="White"/>
+                <Grid Margin="10,0,0,0">
+                    <TextBlock Name="WriteTickCountTextBlock" Text="Write Tick Count" Margin="0,0,105,0" Padding="0,0,0,0" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Name="WriteTickCountHeightTextBlock" Text="0 Ticks/access" Padding="0,0,0,0" HorizontalAlignment="Right" Width="150" TextTrimming="CharacterEllipsis" TextAlignment="Right" />
+                </Grid>
+                <Canvas Name="WriteTickCountCanvas" Height="150" Margin="10,0,0,0" Background="White"/>
+                <Grid Margin="10,0,0,0">
+                    <TextBlock Name="ReadCountTextBlock" Text="Read Count" Margin="0,0,105,0" Padding="0,0,0,0" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Name="ReadCountHeightTextBlock" Text="0 Counts/s" Padding="0,0,0,0" HorizontalAlignment="Right" Width="150" TextTrimming="CharacterEllipsis" TextAlignment="Right" />
+                </Grid>
+                <Canvas Name="ReadCountCanvas" Height="150" Margin="10,0,0,0" Background="White"/>
+                <Grid Margin="10,0,0,0">
+                    <TextBlock Name="WrittenCountTextBlock" Text="Written Count" Margin="0,0,105,0" Padding="0,0,0,0" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Name="WrittenCountHeightTextBlock" Text="0 Counts/s" Padding="0,0,0,0" HorizontalAlignment="Right" Width="150" TextTrimming="CharacterEllipsis" TextAlignment="Right" />
+                </Grid>
+                <Canvas Name="WrittenCountCanvas" Height="150" Margin="10,0,0,0" Background="White"/>
+            </StackPanel>
+        </Expander>
+
+        <!-- Status -->
+        <Expander Name="StatusExpander" Header="Status" Margin="10,10,5,2" VerticalAlignment="Top" IsExpanded="True" TabIndex="0">
+            <StackPanel>
+                <TextBlock Name="OperationLabelTextBlock" Text="Operation" Margin="0,0,0,0" Padding="0,0,0,0" Foreground="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
+                
+                <Grid Margin="10,2,0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="4*" />
+                        <ColumnDefinition Width="6*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Name="LUResetTextBlock" Text="LU Reset" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <Button Name="LUResetButton" Grid.Column="1" Content="Reset" HorizontalAlignment="Right" Width="80"  />
+                </Grid>
+
+                <TextBlock Name="ACAStatusLabelTextBlock" Text="ACA Status" Margin="0,0,0,0" Padding="0,0,0,0" Foreground="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
+                <Grid Margin="10,2,0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="4*" />
+                        <ColumnDefinition Width="6*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Name="ACAStatusTextBlock" Text="ACA Status" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <TextBox Grid.Column="1" Name="ACAStatusTextBox" Text="0" Padding="2,2,2,2" VerticalAlignment="Center" IsEnabled="false" />
+                </Grid>
+                <Grid Margin="10,2,0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="4*" />
+                        <ColumnDefinition Width="6*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Name="ITNexusTextBlock" Text="I_T Nexus" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <TextBox Grid.Column="1" Name="ITNexusTextBox" Text="0" Padding="2,2,2,2" VerticalAlignment="Center" IsEnabled="false" />
+                </Grid>
+                <Grid Margin="10,2,0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="4*" />
+                        <ColumnDefinition Width="6*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Name="StatusCodeTextBlock" Text="Status" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <TextBox Grid.Column="1" Name="StatusCodeTextBox" Text="0" Padding="2,2,2,2" VerticalAlignment="Center" IsEnabled="false" />
+                </Grid>
+                <Grid Margin="10,2,0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="4*" />
+                        <ColumnDefinition Width="6*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Name="SenseKeyTextBlock" Text="Sense Key" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <TextBox Grid.Column="1" Name="SenseKeyTextBox" Text="0" Padding="2,2,2,2" VerticalAlignment="Center" IsEnabled="false" />
+                </Grid>
+                <Grid Margin="10,2,0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="4*" />
+                        <ColumnDefinition Width="6*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Name="AdditionalSenseCodeTextBlock" Text="Additional Sense Code" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <TextBox Grid.Column="1" Name="AdditionalSenseCodeTextBox" Text="0" Padding="2,2,2,2" VerticalAlignment="Center" IsEnabled="false" />
+                </Grid>
+                <Grid Margin="10,2,0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="4*" />
+                        <ColumnDefinition Width="6*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Name="CurrentErrorTextBlock" Text="Current Error" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <TextBox Grid.Column="1" Name="CurrentErrorTextBox" Text="0" Padding="2,2,2,2" VerticalAlignment="Center" IsEnabled="false" />
+                </Grid>
+            </StackPanel>
+        </Expander>
+        
+        <!-- Configuration -->
+        <Expander Name="ConfigurationExpander" Header="Configuration" Margin="10,10,5,2" VerticalAlignment="Top" IsExpanded="True" TabIndex="0">
+            <StackPanel>
+                <StackPanel Margin="5,2,0,2" Orientation="Horizontal">
+                    <Button Name="EditButton" Content="Edit" Width="60" Margin="5,2,5,2" TabIndex="1" />
+                    <Button Name="ApplyButton" Content="Apply" Width="60" Margin="5,2,5,2" TabIndex="2" />
+                    <Button Name="DiscardButton" Content="Discard" Width="60" Margin="5,2,5,2" TabIndex="3" />
+                </StackPanel>
+                <TextBlock Name="ErrorMessageLabel" Text="" Margin="5,2,0,2" TextTrimming="CharacterEllipsis"/>
+
+                <Grid Margin="5,2,0,2">
+                    <StackPanel>
+                        <Grid Margin="10,2,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4*" />
+                                <ColumnDefinition Width="6*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Name="LUNTextBlock" Text="LUN" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            <TextBox Grid.Column="1" Name="LUNTextBox" Text="0" Padding="2,2,2,2" />
+                        </Grid>
+                        <Grid Margin="10,2,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4*" />
+                                <ColumnDefinition Width="6*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Name="LUNameTextBlock" Text="LU Name" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            <TextBox Grid.Column="1" Name="LUNameTextBox" Text="0" Padding="2,2,2,2" />
+                        </Grid>
+
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Expander>
+
+    </StackPanel>
+</Grid>
+    

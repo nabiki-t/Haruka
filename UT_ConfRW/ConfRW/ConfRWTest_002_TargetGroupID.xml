@@ -1,0 +1,10 @@
+<root namespace='Haruka.Test.UT.ConfRW_002_TargetGroupID' class='ConfRW_UT002_TargetGroupID' >
+  <form name='Test'>
+    <item name='D1' constraint='TargetGroupID' minvalue='1' maxvalue='2'/>
+    <item name='D2' constraint='TargetGroupID' mincount='2' maxcount='3'/>
+    <item name='D3' constraint='TargetGroupID' mincount='0' maxcount='1'/>
+    <item name='D4' constraint='TargetGroupID' hidden='true'/>
+    <item name='D5' constraint='TargetGroupID' hidden='true' default='TG_99000099'/>
+    <item name='D6' constraint='TargetGroupID' mincount='0' maxcount='1' default='TG_98000098'/>
+  </form>
+</root>

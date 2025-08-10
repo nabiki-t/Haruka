@@ -1,0 +1,75 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <AnalysisLevel>6.0-all</AnalysisLevel>
+    <EnableNETAnalyzers>True</EnableNETAnalyzers>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <WarningLevel>5</WarningLevel>
+    <Tailcalls>True</Tailcalls>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>5</WarningLevel>
+    <Tailcalls>True</Tailcalls>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="Resource\Test003_en-US.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </None>
+    <None Include="Resource\Test002_en-US.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </None>
+    <None Include="Resource\Test001_en-US.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </None>
+    <None Include="Resource\Messages_en-US_test.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </None>
+    <None Include="Resource\Messages_es-ES_test.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </None>
+    <Compile Include="PooledBufferTest.fs" />
+    <Compile Include="WorkingQueueTest.fs" />
+    <Compile Include="StringTableTests.fs" />
+    <Compile Include="ConstantsTest.fs" />
+    <Compile Include="ExceptionsTest.fs" />
+    <Compile Include="FunctionsTest.fs" />
+    <Compile Include="KillerTest.fs" />
+    <Compile Include="PDUInterfaceTest.fs" />
+    <Compile Include="TypeDefsTest.fs" />
+    <Compile Include="IPConditionTest.fs" />
+    <Compile Include="CryptoTransceiverTest.fs" />
+    <Compile Include="CommandParserTest.fs" />
+    <Compile Include="ResCounterTest.fs" />
+    <Compile Include="ResponseFenceTest.fs" />
+    <Compile Include="main.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Commons\Commons.fsproj" />
+    <ProjectReference Include="..\Constants\Constants.fsproj" />
+    <ProjectReference Include="..\TestCommon\TestCommon.fsproj" />
+  </ItemGroup>
+
+</Project>

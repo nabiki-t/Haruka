@@ -1,0 +1,12 @@
+<root namespace='Haruka.Test.UT.ConfRW_002_unsignedInt' class='ConfRW_UT002_unsignedInt' >
+  <form name='Test'>
+    <item name='D1' constraint='unsignedInt' minvalue='1' maxvalue='2'/>
+    <item name='D2' constraint='unsignedInt' mincount='2' maxcount='3'/>
+    <item name='D3' constraint='unsignedInt' mincount='0' maxcount='1'/>
+    <item name='D4' constraint='unsignedInt' hidden='true'/>
+    <item name='D5' constraint='unsignedInt' hidden='true' default='99'/>
+    <item name='D6' constraint='unsignedInt' hidden='true' defaultref='MAX_TARGET_DEVICE_COUNT'/>
+    <item name='D7' constraint='unsignedInt' mincount='0' maxcount='1' default='98'/>
+    <item name='D8' constraint='unsignedInt' mincount='0' maxcount='1' defaultref='MAX_TARGET_DEVICE_COUNT'/>
+  </form>
+</root>

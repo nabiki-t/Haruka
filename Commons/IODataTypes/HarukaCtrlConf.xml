@@ -1,0 +1,24 @@
+<root namespace='Haruka.IODataTypes.HarukaCtrlConf' class='ReaderWriter' >
+  <form name='HarukaCtrl'>
+    <item name='RemoteCtrl' mincount='0' maxcount='1' >
+      <item name='PortNum' constraint='unsignedShort' minvalue='1' maxvalue='65535' />
+      <item name='Address' constraint='string' minvalue='1' maxvalue='MAX_CTRL_ADDRESS_STR_LENGTH' />
+      <item name='WhiteList' constraint='IPCondition' mincount='0' maxcount='MAX_IP_WHITELIST_COUNT' />
+    </item>
+    <item name='LogMaintenance' mincount='0' maxcount='1'>
+      <item name='OutputDest' selection='true'>
+        <item name='ToFile'>
+          <item name='TotalLimit' constraint='unsignedInt' minvalue='LOGMNT_MIN_TOTALLIMIT' maxvalue='LOGMNT_MAX_TOTALLIMIT' />
+          <item name='MaxFileCount' constraint='unsignedInt' minvalue='LOGMNT_MIN_MAXFILECOUNT' maxvalue='LOGMNT_MAX_MAXFILECOUNT' />
+          <item name='ForceSync' constraint='boolean' />
+        </item>
+        <item name='ToStdout' constraint='unsignedInt' minvalue='LOGMNT_MIN_TOTALLIMIT' maxvalue='LOGMNT_MAX_TOTALLIMIT' />
+      </item>
+    </item>
+    <item name='LogParameters' mincount='0' maxcount='1' >
+      <item name='SoftLimit' constraint='unsignedInt' minvalue='LOGPARAM_MIN_SOFTLIMIT' maxvalue='LOGPARAM_MAX_SOFTLIMIT' />
+      <item name='HardLimit' constraint='unsignedInt' minvalue='LOGPARAM_MIN_HARDLIMIT' maxvalue='LOGPARAM_MAX_HARDLIMIT' />
+      <item name='LogLevel' constraint='LogLevel' />
+    </item>
+  </form>
+</root>

@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+	<DrawingBrush x:Key="MediaDebug" Stretch="Uniform">
+		<DrawingBrush.Drawing>
+			<DrawingGroup>
+				<DrawingGroup.Children>
+					<GeometryDrawing Brush="#FFA54F00" Geometry="M 17.6557,14.2671C 24.3447,8.73684 37.9296,14.1262 47.9984,26.3046C 58.0673,38.483 60.8073,52.8387 54.1184,58.369C 47.4295,63.8993 33.8446,58.5099 23.7757,46.3315C 13.7068,34.1531 10.9668,19.7974 17.6557,14.2671 Z ">
+						<GeometryDrawing.Pen>
+							<Pen Thickness="6" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" Brush="#FF000000"/>
+						</GeometryDrawing.Pen>
+					</GeometryDrawing>
+					<GeometryDrawing Geometry="M 18.623,13.0152C 20.8033,10.1308 22.9837,7.24643 26.9809,5.6566C 30.9782,4.06678 36.7924,3.77153 41.4369,3.94187C 46.0815,4.11221 49.5564,4.74813 53.0313,5.38406">
+						<GeometryDrawing.Pen>
+							<Pen Thickness="6" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" Brush="#FF000000"/>
+						</GeometryDrawing.Pen>
+					</GeometryDrawing>
+					<GeometryDrawing Geometry="M 14.6972,17.1359C 11.8129,19.3162 8.92847,21.4966 7.33865,25.4938C 5.74883,29.4911 5.45358,35.3053 5.62392,39.9498C 5.79425,44.5944 6.43018,48.0693 7.06611,51.5442">
+						<GeometryDrawing.Pen>
+							<Pen Thickness="6" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" Brush="#FF000000"/>
+						</GeometryDrawing.Pen>
+					</GeometryDrawing>
+					<GeometryDrawing Brush="#FFA54F00" Geometry="M 19.6064,38.4271L 33.506,33.5214L 38.8887,18.5317">
+						<GeometryDrawing.Pen>
+							<Pen Thickness="6" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" Brush="#FF000000"/>
+						</GeometryDrawing.Pen>
+					</GeometryDrawing>
+					<GeometryDrawing Brush="#FFA54F00" Geometry="M 33.9148,33.5895L 53.5378,55.8697">
+						<GeometryDrawing.Pen>
+							<Pen Thickness="6" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" Brush="#FF000000"/>
+						</GeometryDrawing.Pen>
+					</GeometryDrawing>
+				</DrawingGroup.Children>
+			</DrawingGroup>
+		</DrawingBrush.Drawing>
+	</DrawingBrush>
+</ResourceDictionary>

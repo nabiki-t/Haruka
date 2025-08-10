@@ -1,0 +1,472 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Messages>
+  <Section>
+    <Message>
+      <Name>CHKMSG_BELONGS_MULTI_GROUP</Name>
+      <Value>A node can not belong to multiple target groups.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_CTRL_NODE_NOT_ROOT</Name>
+      <Value>Controller node must be the root node.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_DUPLICATE_LUN</Name>
+      <Value>LUN {0} duplicate.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_DUPLICATE_NETWORK_PORTAL_ID</Name>
+      <Value>Network portal ID {0} duplicate.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_DUPLICATE_TARGET_DEVICE_ID</Name>
+      <Value>Target device ID {0} duplicate.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_DUPLICATE_TARGET_GROUP_ID</Name>
+      <Value>Target group ID {0} duplicate.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_DUPLICATE_TARGET_ID</Name>
+      <Value>Target ID {0} duplicate.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_DUPLICATE_MEDIA_ID</Name>
+      <Value>Media ID {0} duplicate.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_DUPLICATE_TARGET_NAME</Name>
+      <Value>Target name {0} duplicate.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_BLOCKSIZE</Name>
+      <Value>Block size Value {0} is out of range. Must be {1} to {2}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_CHAP_AUTH_PASSWORD_FORMAT</Name>
+      <Value>CHAP password format is invalid.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_CHAP_AUTH_PASSWORD_OMIT</Name>
+      <Value>If target authentication is omitted, the target password must be blank.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_CHAP_AUTH_USERNAME_FORMAT</Name>
+      <Value>CHAP user name format is invalid. Must be follow iSCSI text-Value format specification ( Reffer RFC 3720 5.1 Text format ).</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_DEFAULTTIME2RETAIN</Name>
+      <Value>DefaultTime2Retain Value {0} is out of range. Must be {1} to {2}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_DEFAULTTIME2WAIT</Name>
+      <Value>DefaultTime2Wait Value {0} is out of range. Must be {1} to {2}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_MEDIA_ID_VALUE</Name>
+      <Value>Media ID is invalid. Must not be zero.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_FILE_NAME_LENGTH</Name>
+      <Value>File name length is invalid. Must be greater thatn or equal 1 and less than or equal {0}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_FIRSTBURSTLENGTH</Name>
+      <Value>FirstBurstLength Value {0} is out of range. Must be {1} to {2}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_LOGLEVEL</Name>
+      <Value>Invalid log level Value({0}).</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_LOGPARAM_HARDLIMIT</Name>
+      <Value>Log parameter hard limit Value {0} is out of range. Must be {1} to {2}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_LOGPARAM_MAXFILECOUNT</Name>
+      <Value>Log parameter max file count Value {0} is out of range. Must be {1} to {2}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_LOGPARAM_SOFTLIMIT</Name>
+      <Value>Log parameter soft limit Value {0} is out of range. Must be {1} to {2}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_LOGPARAM_TOTALLIMIT</Name>
+      <Value>Log parameter total limit Value {0} is out of range. Must be {1} to {2}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_LUN_CNT_IN_TARGET</Name>
+      <Value>Number of LUN in a target is invalid. Must be greater thatn or equal 1 and less than or equal {0}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_LUN_VALUE</Name>
+      <Value>LUN must not be zero.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_MAXBURSTLENGTH</Name>
+      <Value>MaxBurstLength Value {0} is out of range. Must be {1} to {2}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_MAXMULTIPLICITY</Name>
+      <Value>Max multiplicity Value {0} is out of range. Must be {1} to {2}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_MAXOUTSTANDINGR2T</Name>
+      <Value>MaxOutstandingR2T Value {0} is out of range. Must be {1} to {2}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_MAXRECVDATASEGMENTLENGTH</Name>
+      <Value>MaxRecvDataSegmentLength Value {0} is out of range. Must be {1} to {2}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_PARENT_TYPE</Name>
+      <Value>{0} node can not be child of  {1} node.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_PORT_NUMBER</Name>
+      <Value>Invalid iSCSI network portal TCP port number({0}).</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_RECEIVE_BUFFER_SIZE</Name>
+      <Value>ReceiveBufferSize must be greater than or equal 0.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_SEND_BUFFER_SIZE</Name>
+      <Value>SendBufferSize must be greater than or equal 0.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_IP_WHITELIST_TOO_LONG</Name>
+      <Value>Too many IP white list conditions count. Must be less than or equal {0}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_QUEUEWAITTIMEOUT</Name>
+      <Value>Queue wait timeout Value {0} is out of range. Must be {1} to {2}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_RELATION</Name>
+      <Value>Node {0} can not be child of node {1}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_REMOTE_CTRL_ADDRESS</Name>
+      <Value>Invalid remote control TCP port address({0}).</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_REMOTE_CTRL_PORT_NUM</Name>
+      <Value>Invalid remote control TCP port number({0}).</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_TARGET_NAME_FORMAT</Name>
+      <Value>Target name {0} is invalid. Must be follow iSCSI-name format specification ( Reffer RFC 3720 5.1 Text format ).</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_LOGPARAM_HARDLIMIT_LESS_THAN_SOFTLIMIT</Name>
+      <Value>Log parameter hard limit Value {0} must be greater than or equal soft limit Value {1}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_LU_NAME_TOO_LONG</Name>
+      <Value>LU name name is too long. Must be less than or equal {0}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_MISSING_LU</Name>
+      <Value>LU is missing. At least one LU node must be specified.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_MISSING_MEDIA</Name>
+      <Value>Media is missing. At least one media node must be specified.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_MISSING_NETWORK_PORTAL</Name>
+      <Value>Network portal is missing. At least one network portal node must be specified.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_MISSING_PARENT</Name>
+      <Value>{0} node can not be root node.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_ISOLATED_LU</Name>
+      <Value>Inaccessible LU exists.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_MISSING_TARGET</Name>
+      <Value>Target is missing. At least one target node must be specified.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_MISSING_TARGET_GROUP</Name>
+      <Value>Target group is missing. At least one target group node must be specified.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_OUT_OF_LU_COUNT_IN_TD</Name>
+      <Value>Number of LU in a target device exceed the limit. Must be less than or equal {1}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_OUT_OF_LU_COUNT_IN_TG</Name>
+      <Value>Number of LU in a target group exceed the limit. Must be less than or equal {1}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_OUT_OF_MEDIA_COUNT</Name>
+      <Value>Number of media exceed the limit. Must be less than or equal {1}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_OUT_OF_NETWORK_PORTAL_COUNT</Name>
+      <Value>Number of network portal in a target device exceed the limit. Must be less than or equal {1}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_OUT_OF_TARGET_COUNT_IN_TD</Name>
+      <Value>Number of target in a target device exceed the limit. Must be less than or equal {1}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_OUT_OF_TARGET_COUNT_IN_TG</Name>
+      <Value>Number of target in a target group exceed the limit. Must be less than or equal {1}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_OUT_OF_TARGET_DEVICE_COUNT</Name>
+      <Value>Number of target devices exceed the limit. Must be less than or equal {1}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_OUT_OF_TARGET_GROUP_COUNT</Name>
+      <Value>Number of target group exceed the limit. Must be less than or equal {1}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_TARGET_ADDRESS_TOO_LONG</Name>
+      <Value>Target address string is too long. Must be less than or equal {0}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_TARGET_ALIAS_TOO_LONG</Name>
+      <Value>Target alias string is too long. Must be less than or equal {0}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_TARGET_DEVICE_NAME_TOO_LONG</Name>
+      <Value>Target device name is too long. Must be less than or equal {0}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_TARGET_GROUP_NAME_TOO_LONG</Name>
+      <Value>Target group name is too long. Must be less than or equal {0}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_TOO_MANY_PARENT</Name>
+      <Value>{0} node can not have more than {1} parents.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_TOO_MANY_CHILD</Name>
+      <Value>{0} node can not have more than {1} child nodes.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_TOO_FEW_CHILD</Name>
+      <Value>{0} node must have at least {1} child nodes.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_UNSUPPORTED_TPGT_VALUE</Name>
+      <Value>TPGT must be zero.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_MEDIA_SIZE</Name>
+      <Value>Too large media size. Max value is {0}</Value>
+    </Message>
+    <Message>
+      <Name>EmptyAddress</Name>
+      <Value>Address is not specified.</Value>
+    </Message>
+    <Message>
+      <Name>EmptyPort</Name>
+      <Value>Port is not specified.</Value>
+    </Message>
+
+    <Message>
+      <Name>ERRMSG_FAILED_CONNECT</Name>
+      <Value>Failed to connect to the controller.</Value>
+    </Message>
+    <Message>
+      <Name>ERRMSG_FAILED_IDENT_TARGET_DEVICE</Name>
+      <Value>Unable to identify target device node which specified node ({0}) belongs to.</Value>
+    </Message>
+    <Message>
+      <Name>ERRMSG_FAILED_IDENT_TARGET_GROUP</Name>
+      <Value>Unable to identify target group node which specified node ({0}) belongs to.</Value>
+    </Message>
+    <Message>
+      <Name>ERRMSG_FAILED_LOGOUT</Name>
+      <Value>Failed to logout.</Value>
+    </Message>
+    <Message>
+      <Name>ERRMSG_FAILED_NO_OPERATION</Name>
+      <Value>Failed to send no operation request.</Value>
+    </Message>
+    <Message>
+      <Name>ERRMSG_FAILED_SET_LOGPARAM</Name>
+      <Value>Failed to set log parameters.</Value>
+    </Message>
+    <Message>
+      <Name>ERRMSG_FAILED_TERMINATE_TARGET_DEVICE</Name>
+      <Value>Failed to terminate target device.</Value>
+    </Message>
+    <Message>
+      <Name>ERRMSG_NODE_IS_NOT_TARGET_DEVICE</Name>
+      <Value>Specified node ID({0}) is not target device.</Value>
+    </Message>
+    <Message>
+      <Name>ERRMSG_TARGET_DEVICE_PROC_RUNNING</Name>
+      <Value>Target device process is runnning yet.</Value>
+    </Message>
+    <Message>
+      <Name>ERRMSG_TARGET_DEVICE_RUNNING</Name>
+      <Value>Target device process is still running.</Value>
+    </Message>
+    <Message>
+      <Name>ERRMSG_TARGET_DEVICE_NOT_RUNNING</Name>
+      <Value>Target device process is not running.</Value>
+    </Message>
+    <Message>
+      <Name>ERRMSG_TARGET_GROUP_LOADED</Name>
+      <Value>Specified target group is still loaded.</Value>
+    </Message>
+    <Message>
+      <Name>ERRMSG_UNEXPECTED_RESPONSE</Name>
+      <Value>Failed to send {0} request. Unexpected response was received.</Value>
+    </Message>
+    <Message>
+      <Name>ERRMSG_UNEXPEDTED_CONFIGURATION_ERROR</Name>
+      <Value>An unexpected configuration error was detected.</Value>
+    </Message>
+    <Message>
+      <Name>ERRMSG_VALIDATION_FAILED</Name>
+      <Value>A configuration error remains. Eliminate any configuration errors.</Value>
+    </Message>
+    <Message>
+      <Name>ERRMSG_TEMP_EXPORT_VERSION_MISMATCH</Name>
+      <Value>Temp export data version mismatch.</Value>
+    </Message>
+    <Message>
+      <Name>ERRMSG_TEMP_EXPORT_MISSING_ROOT</Name>
+      <Value>Temp export data has no root node.</Value>
+    </Message>
+    <Message>
+      <Name>FailedToConnect</Name>
+      <Value>Failed to connect server.</Value>
+    </Message>
+    <Message>
+      <Name>InvalidPortNumber</Name>
+      <Value>Invalid port number.</Value>
+    </Message>
+
+    <Message>
+      <Name>CMDERR_UNKNOWN_COMMAND</Name>
+      <Value>'{0}' is unknown. </Value>
+    </Message>
+    <Message>
+      <Name>CMDERR_LAST_ARG_VAL_MISSING</Name>
+      <Value>Missing value of the last argument.</Value>
+    </Message>
+    <Message>
+      <Name>CMDERR_INVALID_ARG_COUNT</Name>
+      <Value>Invalid arguments count. Expected {0} args.</Value>
+    </Message>
+    <Message>
+      <Name>CMDERR_INVALID_ARG_VALUE</Name>
+      <Value>Invalid value '{0}' was specified.</Value>
+    </Message>
+    <Message>
+      <Name>CMDERR_FAILED_CONNECT_CTRL</Name>
+      <Value>Failed connect to controller. {0}</Value>
+    </Message>
+    <Message>
+      <Name>CMDERR_CONNECTION_ERROR</Name>
+      <Value>Connection error. {0}</Value>
+    </Message>
+    <Message>
+      <Name>CMDERR_FAILED_LOGIN</Name>
+      <Value>Failed login to controller. {0}</Value>
+    </Message>
+    <Message>
+      <Name>CMDERR_UNEXPECTED_REQUEST_ERROR</Name>
+      <Value>Unexpected request error. {0}</Value>
+    </Message>
+    <Message>
+      <Name>CMDERR_UNEXPECTED_EDIT_ERROR</Name>
+      <Value>Unexpected error. {0}</Value>
+    </Message>
+
+    <Message>
+      <Name>CMDMSG_MISSING_NODE</Name>
+      <Value>Specified node({0}) does not exist.</Value>
+    </Message>
+    <Message>
+      <Name>CMDMSG_ADDPARAM_INITIATOR_USERNAME</Name>
+      <Value>Initiator user name(/iu) must be specified.</Value>
+    </Message>
+    <Message>
+      <Name>CMDMSG_ADDPARAM_INITIATOR_PASSWORD</Name>
+      <Value>Initiator password(/ip) must be specified.</Value>
+    </Message>
+    <Message>
+      <Name>CMDMSG_ADDPARAM_TARGET_USERNAME</Name>
+      <Value>Initiator user name(/tu) must be specified.</Value>
+    </Message>
+    <Message>
+      <Name>CMDMSG_ADDPARAM_TARGET_PASSWORD</Name>
+      <Value>Initiator password(/tp) must be specified.</Value>
+    </Message>
+    <Message>
+      <Name>CMDMSG_ADDPARAM_LUN</Name>
+      <Value>LUN(/l) must be specified.</Value>
+    </Message>
+    <Message>
+      <Name>CMDMSG_ADDPARAM_MISSING_LUN</Name>
+      <Value>Specified LUN does not exist.</Value>
+    </Message>
+    <Message>
+      <Name>CMDMSG_ADDPARAM_MEDIA_TYPE</Name>
+      <Value>Unknown Media type.</Value>
+    </Message>
+    <Message>
+      <Name>CMDMSG_CONFIG_MODIFIED</Name>
+      <Value>Configuration is modified but not pulished.</Value>
+    </Message>
+    <Message>
+      <Name>CMDMSG_ADDPARAM_LOGIN_PORT</Name>
+      <Value>Port number():</Value>
+    </Message>
+    <Message>
+      <Name>CMDMSG_MISSING_CHILD_NODE</Name>
+      <Value>There are no child nodes.</Value>
+    </Message>
+    <Message>
+      <Name>CMDMSG_MISSING_PARENT_NODE</Name>
+      <Value>There are no parent nodes.</Value>
+    </Message>
+    <Message>
+      <Name>CMDMSG_UNKNOWN_PARAMETER_NAME</Name>
+      <Value>Unknown value name was specified. Acceptable name is {0}.</Value>
+    </Message>
+    <Message>
+      <Name>CMDMSG_PARAMVAL_DATATYPE_MISMATCH</Name>
+      <Value>The specified parameter values have mismatched data types. The expected type is {0}.</Value>
+    </Message>
+    <Message>
+      <Name>CMDMSG_PARAMVAL_INVALID_PARAM_PATTERN</Name>
+      <Value>Invalid parameter specification.</Value>
+    </Message>
+    <Message>
+      <Name>CMDMSG_MISSING_CONFIGURABLE_VALUE</Name>
+      <Value>Current node has no configurable parameter values.</Value>
+    </Message>
+    <Message>
+      <Name>CMDMSG_ALL_VALIDATED</Name>
+      <Value>All configurations are vlidated.</Value>
+    </Message>
+    <Message>
+      <Name>CMDMSG_CTRL_NODE_NOT_DELETABLE</Name>
+      <Value>Controller node can not be delete.</Value>
+    </Message>
+    <Message>
+      <Name>CMDMSG_CONFIGURATION_PUBLISHED</Name>
+      <Value>All configurations are uploaded to the controller.</Value>
+    </Message>
+    <Message>
+      <Name>CMDMSG_LOG_PARAM_UPDATED</Name>
+      <Value>Log parameter updated.</Value>
+    </Message>
+    <Message>
+      <Name>CMDMSG_TOO_MANY_CHILD</Name>
+      <Value>Too many child nodes, can't add any more.</Value>
+    </Message>
+  </Section>
+</Messages>

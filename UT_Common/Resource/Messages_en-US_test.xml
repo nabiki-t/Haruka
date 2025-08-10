@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Messages>
+  <Section>
+    <Message>
+      <Name>TEST_MESSAGE_0</Name>
+      <Value>TEST_MESSAGE</Value>
+    </Message>
+    <Message>
+      <Name>TEST_MESSAGE_1</Name>
+      <Value>TEST_MESSAGE_{0}</Value>
+    </Message>
+    <Message>
+      <Name>TEST_MESSAGE_2</Name>
+      <Value>TEST_MESSAGE_{0}_{1}</Value>
+    </Message>
+    <Message>
+      <Name>TEST_MESSAGE_3</Name>
+      <Value>TEST_MESSAGE_{0}_{1}_{2}</Value>
+    </Message>
+    <Message>
+      <Name>TEST_MESSAGE_4</Name>
+      <Value>TEST_MESSAGE_{0}_{1}_{2}_{3}</Value>
+    </Message>
+    <Message>
+      <Name>TEST_MESSAGE_5</Name>
+      <Value>TEST_MESSAGE_{0}_{1}_{2}_{3}_{4}</Value>
+    </Message>
+  </Section>
+</Messages>

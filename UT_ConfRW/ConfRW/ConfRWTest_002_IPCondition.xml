@@ -1,0 +1,10 @@
+<root namespace='Haruka.Test.UT.ConfRW_002_IPCondition' class='ConfRW_UT002_IPCondition' >
+  <form name='Test'>
+    <item name='D1' constraint='IPCondition' />
+    <item name='D2' constraint='IPCondition' mincount='2' maxcount='3'/>
+    <item name='D3' constraint='IPCondition' mincount='0' maxcount='1'/>
+    <item name='D4' constraint='IPCondition' hidden='true'/>
+    <item name='D5' constraint='IPCondition' hidden='true' default='Multicast'/>
+    <item name='D7' constraint='IPCondition' mincount='0' maxcount='1' default='IPv6Linklocal'/>
+  </form>
+</root>

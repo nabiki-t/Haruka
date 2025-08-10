@@ -1,0 +1,10 @@
+<root namespace='Haruka.Test.UT.ConfRW_002_boolean' class='ConfRW_UT002_boolean' >
+  <form name='Test'>
+    <item name='D1' constraint='boolean' />
+    <item name='D2' constraint='boolean' mincount='2' maxcount='3'/>
+    <item name='D3' constraint='boolean' mincount='0' maxcount='1'/>
+    <item name='D4' constraint='boolean' hidden='true'/>
+    <item name='D5' constraint='boolean' hidden='true' default='false'/>
+    <item name='D6' constraint='boolean' mincount='0' maxcount='1' default='true'/>
+  </form>
+</root>

@@ -1,0 +1,27 @@
+<!--
+==============================================================================
+== Haruka Software Storage.
+== Definition of format for the templary export data.
+-->
+<root namespace='Haruka.IODataTypes.TempExport' class='ReaderWriter' >
+  <form name='ExportData'>
+    <item name='AppVersion'>
+      <item name='Major' constraint='unsignedInt' />
+      <item name='Minor' constraint='unsignedInt' />
+      <item name='Rivision' constraint='unsignedLong' />
+    </item>
+    <item name='RootNode' constraint='unsignedLong' />
+    <item name='Relationship' mincount='1' maxcount='200000'>
+      <item name='NodeID' constraint='unsignedLong' />
+      <item name='Child' constraint='unsignedLong' mincount='0' maxcount='1024' />
+    </item>
+    <item name='Node' mincount='1' maxcount='200000'>
+      <item name='TypeName' constraint='string' />
+      <item name='NodeID' constraint='unsignedLong' />
+      <item name='Values' mincount='0' maxcount='256' >
+        <item name='Name' constraint='string' />
+        <item name='Value' constraint='string' />
+      </item>
+    </item>
+  </form>
+</root>

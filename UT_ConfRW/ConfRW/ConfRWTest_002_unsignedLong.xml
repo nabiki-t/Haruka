@@ -1,0 +1,12 @@
+<root namespace='Haruka.Test.UT.ConfRW_002_unsignedLong' class='ConfRW_UT002_unsignedLong' >
+  <form name='Test'>
+    <item name='D1' constraint='unsignedLong' minvalue='1' maxvalue='2'/>
+    <item name='D2' constraint='unsignedLong' mincount='2' maxcount='3'/>
+    <item name='D3' constraint='unsignedLong' mincount='0' maxcount='1'/>
+    <item name='D4' constraint='unsignedLong' hidden='true'/>
+    <item name='D5' constraint='unsignedLong' hidden='true' default='99'/>
+    <item name='D6' constraint='unsignedLong' hidden='true' defaultref='MAX_TARGET_DEVICE_COUNT'/>
+    <item name='D7' constraint='unsignedLong' mincount='0' maxcount='1' default='98'/>
+    <item name='D8' constraint='unsignedLong' mincount='0' maxcount='1' defaultref='MAX_TARGET_DEVICE_COUNT'/>
+  </form>
+</root>

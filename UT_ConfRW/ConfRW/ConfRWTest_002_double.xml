@@ -1,0 +1,12 @@
+<root namespace='Haruka.Test.UT.ConfRW_002_double' class='ConfRW_UT002_double' >
+  <form name='Test'>
+    <item name='D1' constraint='double' minvalue='1' maxvalue='2'/>
+    <item name='D2' constraint='double' mincount='2' maxcount='3'/>
+    <item name='D3' constraint='double' mincount='0' maxcount='1'/>
+    <item name='D4' constraint='double' hidden='true'/>
+    <item name='D5' constraint='double' hidden='true' default='99'/>
+    <item name='D6' constraint='double' hidden='true' defaultref='MAX_TARGET_DEVICE_COUNT'/>
+    <item name='D7' constraint='double' mincount='0' maxcount='1' default='98'/>
+    <item name='D8' constraint='double' mincount='0' maxcount='1' defaultref='MAX_TARGET_DEVICE_COUNT'/>
+  </form>
+</root>

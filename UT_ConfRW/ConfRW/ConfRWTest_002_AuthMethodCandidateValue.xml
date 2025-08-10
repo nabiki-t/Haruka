@@ -1,0 +1,10 @@
+<root namespace='Haruka.Test.UT.ConfRW_002_AuthMethodCandidateValue' class='ConfRW_UT002_AuthMethodCandidateValue' >
+  <form name='Test'>
+    <item name='D1' constraint='AuthMethodCandidateValue' />
+    <item name='D2' constraint='AuthMethodCandidateValue' mincount='2' maxcount='3'/>
+    <item name='D3' constraint='AuthMethodCandidateValue' mincount='0' maxcount='1'/>
+    <item name='D4' constraint='AuthMethodCandidateValue' hidden='true'/>
+    <item name='D5' constraint='AuthMethodCandidateValue' hidden='true' default='SRP'/>
+    <item name='D6' constraint='AuthMethodCandidateValue' mincount='0' maxcount='1' default='SPKM1'/>
+  </form>
+</root>

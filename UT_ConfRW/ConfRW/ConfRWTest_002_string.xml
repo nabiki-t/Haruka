@@ -1,0 +1,13 @@
+<root namespace='Haruka.Test.UT.ConfRW_002_string' class='ConfRW_UT002_string' >
+  <form name='Test'>
+    <item name='D1' constraint='string' minvalue='2' maxvalue='5'/>
+    <item name='D2' constraint='string' pattern='^a.*c$'/>
+    <item name='D3' constraint='string' mincount='2' maxcount='3'/>
+    <item name='D4' constraint='string' mincount='0' maxcount='1'/>
+    <item name='D5' constraint='string' hidden='true'/>
+    <item name='D6' constraint='string' hidden='true' default='a01'/>
+    <item name='D7' constraint='string' hidden='true' defaultref='PRODUCT_NAME'/>
+    <item name='D8' constraint='string' mincount='0' maxcount='1' default='b01'/>
+    <item name='D9' constraint='string' mincount='0' maxcount='1' defaultref='PRODUCT_NAME'/>
+  </form>
+</root>

@@ -1,0 +1,162 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Messages>
+  <Section>
+    <Message>
+      <Name>MSG_MSGBOX_TITLE</Name>
+      <Value>Haruka</Value>
+    </Message>
+    <Message>
+      <Name>MSG_ALREADY_LOGGEDIN</Name>
+      <Value>Do you want to discard changes and log out?</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_PORTNO</Name>
+      <Value>Port number must be 1 to 65535.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_ADDRESS</Name>
+      <Value>Address length must be 1 to {0}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_TOTAL_LIMIT</Name>
+      <Value>Total Limit must be {0} to {1}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_MAX_FILE_COUNT</Name>
+      <Value>Max File Count must be {0} to {1}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_SOFT_LIMIT</Name>
+      <Value>Soft Limit must be {0} to {1}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_HARD_LIMIT</Name>
+      <Value>Hard Limit must be {0} to {1}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_LOG_PARAM_RESTRICT</Name>
+      <Value>Soft Limit must be smaller than or equal Hard Limit.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_TARGET_DEVICE_ID</Name>
+      <Value>Target device ID must be {0} to {1}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_TARGET_DEVICE_NAME</Name>
+      <Value>Target device name length must be less than or equal {0}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_MaxRecvDataSegmentLength</Name>
+      <Value>MaxRecvDataSegmentLength must be {0} to {1}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_MaxBurstLength</Name>
+      <Value>MaxBurstLength must be {0} to {1}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_FirstBurstLength</Name>
+      <Value>FirstBurstLength must be {0} to {1}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_DefaultTime2Wait</Name>
+      <Value>DefaultTime2Wait must be {0} to {1}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_DefaultTime2Retain</Name>
+      <Value>DefaultTime2Retain must be {0} to {1}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_MaxOutstandingR2T</Name>
+      <Value>MaxOutstandingR2T must be {0} to {1}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_NetworkPortalID</Name>
+      <Value>NetworkPortalID must be {0} to {1}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_TargetAddress</Name>
+      <Value>TargetAddress length must be less than or equal {0}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_ReceiveBufferSize</Name>
+      <Value>ReceiveBufferSize must be {0} to {1}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_SendBufferSize</Name>
+      <Value>SendBufferSize must be {0} to {1}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_TARGET_GROUP_ID</Name>
+      <Value>Target group ID must be {0} to {1}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_TARGET_GROUP_NAME</Name>
+      <Value>Target group name length must be less than or equal {1}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_TARGET_ID</Name>
+      <Value>Target ID must be {0} to {1}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_TARGET_NAME</Name>
+      <Value>Invalid target name. It must conform iSCSI name constraints.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_TARGET_ALIAS</Name>
+      <Value>Target device name length must be less than or equal {0}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_INITIATOR_USER_NAME</Name>
+      <Value>Invalid initiator user name. The string length must be 1 to {0}. And the characters allowed in the string are a-z, A-Z, 0-9, and, dot(.), hyphen(-), colon(:).</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_INITIATOR_PASSWORD</Name>
+      <Value>Invalid initiator password. The string length must be 1 to {0}. And the characters allowed in the string are a-z, A-Z, 0-9, and, dot(.), hyphen(-), colon(:).</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_TARGET_USER_NAME</Name>
+      <Value>Invalid target user name. The string length must be 1 to {0}. And the characters allowed in the string are a-z, A-Z, 0-9, and, dot(.), hyphen(-), colon(:).</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_TARGET_PASSWORD</Name>
+      <Value>Invalid target password. The string length must be 1 to {0}. And the characters allowed in the string are a-z, A-Z, 0-9, and, dot(.), hyphen(-), colon(:).</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_LUN</Name>
+      <Value>Invalid LUN value. The LUN must be specified in decimal or hexadecimal with a leading 0x.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_LU_NAME</Name>
+      <Value>LU name length must be 0 to {0}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_MEDIA_INDEX_NUMBER</Name>
+      <Value>Invalid Ident Number value.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_MEDIA_NAME</Name>
+      <Value>Media Name length must be 0 to {0}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_FILE_NAME</Name>
+      <Value>File Name length must be 0 to {0}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_QUEUE_WAIT_TIME</Name>
+      <Value>Invalid Queue Wait Time must be {0} to {1}.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_INVALID_MEMBUFFER_BYTES_COUNT</Name>
+      <Value>Bytes Count must be 0 to 18446744073709551615.</Value>
+    </Message>
+    <Message>
+      <Name>MSG_CONFIGURATION_MODIFIER</Name>
+      <Value>All changes will be discarded. Continue?</Value>
+    </Message>
+    <Message>
+      <Name>MSG_ABOUT</Name>
+      <Value>Haruka Software Storage. GUI Client version {0}.{1}.{2}</Value>
+    </Message>
+
+  </Section>
+</Messages>

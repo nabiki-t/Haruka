@@ -1,0 +1,10 @@
+<root namespace='Haruka.Test.UT.ConfRW_002_iSCSIName' class='ConfRW_UT002_iSCSIName' >
+  <form name='Test'>
+    <item name='D1' constraint='iSCSIName' />
+    <item name='D2' constraint='iSCSIName' mincount='2' maxcount='3'/>
+    <item name='D3' constraint='iSCSIName' mincount='0' maxcount='1'/>
+    <item name='D4' constraint='iSCSIName' hidden='true'/>
+    <item name='D5' constraint='iSCSIName' hidden='true' default='a01'/>
+    <item name='D6' constraint='iSCSIName' mincount='0' maxcount='1' default='b01'/>
+  </form>
+</root>

@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="ClientProc.fs" />
+    <Compile Include="iSCSI_Initiator.fs" />
+    <Compile Include="TestFunctions.fs" />
+    <Compile Include="iSCSI_LoginTest1.fs" />
+    <Compile Include="iSCSI_LoginTest2.fs" />
+    <Compile Include="ClientConfigTest.fs" />
+    <Compile Include="main.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="xunit" Version="2.5.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BlockDeviceLU\BlockDeviceLU.fsproj" />
+    <ProjectReference Include="..\Client\Client.fsproj" />
+    <ProjectReference Include="..\Commons\Commons.fsproj" />
+    <ProjectReference Include="..\Constants\Constants.fsproj" />
+    <ProjectReference Include="..\Controller\Controller.fsproj" />
+    <ProjectReference Include="..\SimpleMedia\SimpleMedia.fsproj" />
+    <ProjectReference Include="..\TargetDevice\TargetDevice.fsproj" />
+    <ProjectReference Include="..\TestCommon\TestCommon.fsproj" />
+  </ItemGroup>
+
+</Project>

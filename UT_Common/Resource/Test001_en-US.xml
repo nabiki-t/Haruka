@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Messages>
+  <Section>
+    <Message>
+      <Name>MSG001</Name>
+      <Value>TEST_MESSAGE_001</Value>
+    </Message>
+  </Section>
+  <Section>
+    <Name>SECTION001</Name>
+    <Message>
+      <Name>MSG001</Name>
+      <Value>TEST_MESSAGE_001_001</Value>
+    </Message>
+    <Message>
+      <Name>MSG001</Name>
+      <Value>TEST_MESSAGE_001_002</Value>
+    </Message>
+  </Section>
+  <Section>
+    <Message>
+      <Name>MSG001</Name>
+      <Value>TEST_MESSAGE_002</Value>
+    </Message>
+    <Message>
+      <Name>MSG002</Name>
+      <Value>TEST_MESSAGE_003</Value>
+    </Message>
+  </Section>
+  <Section>
+    <Name>SECTION001</Name>
+    <Message>
+      <Name>MSG002</Name>
+      <Value>TEST_MESSAGE_002_001</Value>
+    </Message>
+  </Section>
+</Messages>

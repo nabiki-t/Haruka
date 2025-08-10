@@ -1,0 +1,54 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <BaseOutputPath>..\Work</BaseOutputPath>
+    <Title>Haruka software storage</Title>
+    <Company>nabiki_t</Company>
+    <Authors>nabiki_t</Authors>
+    <Product>Haruka software storage.</Product>
+    <Description>Haruka software storage. Implementation of  commandline client function.</Description>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Tailcalls>True</Tailcalls>
+    <WarningLevel>5</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>5</WarningLevel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    
+    
+    
+    <None Include="TargetDevice.exe.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Compile Include="ConfigurationMaster.fs" />
+    <Compile Include="IscsiTextEncode.fs" />
+    <Compile Include="IscsiTaskOnePDUCommand.fs" />
+    <Compile Include="IscsiTaskScsiCommand.fs" />
+    <Compile Include="IscsiTaskTextNegociation.fs" />
+    <Compile Include="IscsiTCPSvPort.fs" />
+    <Compile Include="PDU.fs" />
+    <Compile Include="Connection.fs" />
+    <Compile Include="LoginNegociator.fs" />
+    <Compile Include="TaskRouter.fs" />
+    <Compile Include="Session.fs" />
+    <Compile Include="StatusMaster.fs" />
+    <Compile Include="main.fs" />
+  </ItemGroup>
+
+  <ItemGroup />
+
+  <ItemGroup>
+    <ProjectReference Include="..\BlockDeviceLU\BlockDeviceLU.fsproj" />
+    <ProjectReference Include="..\Commons\Commons.fsproj" />
+    <ProjectReference Include="..\Constants\Constants.fsproj" />
+    <ProjectReference Include="..\SimpleMedia\SimpleMedia.fsproj" />
+  </ItemGroup>
+
+</Project>

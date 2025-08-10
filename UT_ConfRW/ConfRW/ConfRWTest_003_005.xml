@@ -1,0 +1,12 @@
+<root namespace='Haruka.Test.UT.ConfRW_003_005' class='ReaderWriter' >
+  <form name='Test'>
+    <item name='R023_1' >
+      <item name='D1' constraint='int' />
+      <item name='R023_2' selection='true'>
+        <item name='D1_1' constraint='int' />
+        <item name='D1_2' constraint='string' />
+      </item>
+      <item name='D2' constraint='int' />
+    </item>
+  </form>
+</root>

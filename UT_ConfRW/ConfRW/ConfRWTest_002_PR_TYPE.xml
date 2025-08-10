@@ -1,0 +1,10 @@
+<root namespace='Haruka.Test.UT.ConfRW_002_PR_TYPE' class='ConfRW_UT002_PR_TYPE' >
+  <form name='Test'>
+    <item name='D1' constraint='PR_TYPE' />
+    <item name='D2' constraint='PR_TYPE' mincount='2' maxcount='3'/>
+    <item name='D3' constraint='PR_TYPE' mincount='0' maxcount='1'/>
+    <item name='D4' constraint='PR_TYPE' hidden='true'/>
+    <item name='D5' constraint='PR_TYPE' hidden='true' default='WRITE_EXCLUSIVE'/>
+    <item name='D6' constraint='PR_TYPE' mincount='0' maxcount='1' default='EXCLUSIVE_ACCESS_ALL_REGISTRANTS'/>
+  </form>
+</root>
