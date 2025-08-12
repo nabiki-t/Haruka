@@ -255,9 +255,7 @@ type Connection
         /// </remarks>
         override this.SendPDU ( pdu : ILogicalPDU ) : unit =
             let wloginfo = struct ( m_ObjID, ValueSome( m_CID ), ValueSome( m_Counter ), ValueSome( m_TSIH ), ValueSome( pdu.InitiatorTaskTag ), ValueNone )
-            //HLogger.Trace( LogID.I_TRACE, fun g -> g.Gen1( wloginfo, "GGGGG" ) )
             m_SendTask.Enqueue( fun () -> task {
-                //HLogger.Trace( LogID.I_TRACE, fun g -> g.Gen1( wloginfo, "HHHHH" ) )
                 try
                     let! result = this.SendPDUInternal( pdu )
                     if result.IsSome then
@@ -786,13 +784,11 @@ type Connection
     member private this.ReceivePDUInFullFeaturePhase () : Task<unit> =
 
         task {
+//            let wloginfo = struct ( m_ObjID, ValueSome( m_CID ), ValueSome( m_Counter ), ValueSome( m_TSIH ), ValueNone, ValueNone )
             let headerDigest = m_COParams.HeaderDigest.[0]
             let dataDigest = m_COParams.DataDigest.[0]
             let mrdsl_t = m_COParams.MaxRecvDataSegmentLength_T
 
-            let wloginfo = struct ( m_ObjID, ValueSome( m_CID ), ValueSome( m_Counter ), ValueSome( m_TSIH ), ValueNone, ValueNone )
-            HLogger.Trace( LogID.I_TRACE, fun g -> g.Gen1( wloginfo, sprintf "MaxRecvDataSegmentLength_I=%d" m_COParams.MaxRecvDataSegmentLength_I ) )
-            HLogger.Trace( LogID.I_TRACE, fun g -> g.Gen1( wloginfo, sprintf "MaxRecvDataSegmentLength_T=%d" m_COParams.MaxRecvDataSegmentLength_T ) )
 
             // If termination is requested, stop receive PDUs.
             while not m_Killer.IsNoticed do
@@ -802,9 +798,6 @@ type Connection
                     let! lpdu = PDU.Receive(
                         mrdsl_t, headerDigest, dataDigest, ValueSome m_TSIH, ValueSome m_CID, ValueSome m_Counter, m_StreamForRead, Standpoint.Target
                     )
-
-//                    let wloginfo = struct ( m_ObjID, ValueSome( m_CID ), ValueSome( m_Counter ), ValueSome( m_TSIH ), ValueSome( lpdu.InitiatorTaskTag ), ValueNone )
-                    //HLogger.Trace( LogID.I_TRACE, fun g -> g.Gen1( wloginfo, "AAAAA" ) )
 
                     let wByteCount = lpdu.ByteCount
                     if wByteCount.IsSome then
@@ -833,7 +826,6 @@ type Connection
                         // Push the received PDU into session component
 //                        m_ReceiveTask.Enqueue ( fun () ->
                             m_session.PushReceivedPDU m_CID lpdu
-//                                HLogger.Trace( LogID.I_TRACE, fun g -> g.Gen1( wloginfo, sprintf "BBBBB Get time=%d, Run time=%d, Wait time=%d, Queue length=%d" t1 t2 t3 ql ) )
 //                        )
 
                 with

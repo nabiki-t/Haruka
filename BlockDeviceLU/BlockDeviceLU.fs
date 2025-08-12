@@ -442,11 +442,7 @@ type BlockDeviceLU
                 // Request was ignored in LUReset.
                 HLogger.Trace( LogID.I_IGNORED_REQ_IN_LURESET, fun g -> g.Gen1( loginfo, "BlockDeviceLU.SCSICommand." ) )
             else
-                //HLogger.Trace( LogID.I_TRACE, fun g -> g.Gen1( loginfo, "CCCCC" ) )
                 m_TaskSetQueue.Enqueue( fun () ->
-                    //HLogger.Trace( LogID.I_TRACE, fun g ->
-                    //    g.Gen1( loginfo, sprintf "DDDDD %d" command.DataSegment.Length )
-                    //)
                     // If the value of the NACA bit cannot be determined, consider CA.
                     let mutable errNACAval : bool = false
                     try
@@ -1143,7 +1139,6 @@ type BlockDeviceLU
             match this.CheckUnitAttentionStatus bdTask with
             | ValueNone ->
                 // Execute this task
-                //HLogger.Trace( LogID.I_TRACE, fun g -> g.Gen1( loginfo, "EEEEE" ) )
                 m_ExecuteQueue.Enqueue( bdTask.Execute() )
                 TaskStatus.TASK_STAT_Running( bdTask )
 

@@ -141,7 +141,6 @@ type ScsiTask
                     let msg = sprintf "Scsi task has been started. Operation code=%s" ( CDBTypes.getName m_CDB.Type )
                     g.Gen1( m_LogInfo, msg )
                 )
-            //HLogger.Trace( LogID.I_TRACE, fun g -> g.Gen1( m_LogInfo, "FFFFF" ) )
 
             match m_CDB.Type with
             | ChangeAliases                             // SPC-3 6.2 CHANGE ALIASES command
