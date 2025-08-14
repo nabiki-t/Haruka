@@ -146,7 +146,7 @@ type IscsiTaskScsiCommand
             dops
             |> List.filter ( fun i -> i.TargetTransferTag = ttt )
             |> List.sortWith ( fun i1 i2 -> datasn_me.compare i1.DataSN i2.DataSN )
-        match wlist |> List.tryFindBack ( fun itr -> itr.F ) with
+        match wlist |> List.tryFindBack ( _.F ) with
         | None -> false
         | Some( itr ) ->
             let rec loop ( idx : DATASN_T ) : SCSIDataOutPDU list -> DATASN_T =
@@ -407,7 +407,7 @@ type IscsiTaskScsiCommand
             )
             ValueNone
         else
-            new IscsiTaskScsiCommand( objid, argSession, argCID, argCounter, ValueNone, [ argDataOutPDU ],Array.empty, DATARECVSTAT.UNSOLICITED, 0u, false )
+            new IscsiTaskScsiCommand( objid, argSession, argCID, argCounter, ValueNone, [ argDataOutPDU ], Array.empty, DATARECVSTAT.UNSOLICITED, 0u, false )
             |> ValueSome
 
     // ------------------------------------------------------------------------
@@ -456,7 +456,7 @@ type IscsiTaskScsiCommand
                     HLogger.Trace( LogID.W_DATA_PDU_IGNORED, fun g -> g.Gen1( loginfo, msg ) )
                     argTask // drop argPDU
 
-                elif wCommandPDU.IsSome && IscsiTaskScsiCommand.isAllDataReceived wDataPDU ( ttt_me.fromPrim 0xFFFFFFFFu ) then
+                elif wCommandPDU.IsSome && argPDU.F (* IscsiTaskScsiCommand.isAllDataReceived wDataPDU ( ttt_me.fromPrim 0xFFFFFFFFu ) *) then
                     // If SCSI Command PDU was already received and, all of unsolicided data are received,
                     // the status is transitioned to DATARECVSTAT.SOLICITED
                     let vR2T, nextSN = 
@@ -513,7 +513,7 @@ type IscsiTaskScsiCommand
                         argTask // drop argPDU
                     | Some( r2tidx ) ->
                         // Check all of solicited data-out PDUs in corresponding R2T are received or not.
-                        let wf = IscsiTaskScsiCommand.isAllDataReceived wDataPDU argPDU.TargetTransferTag
+                        let wf = argPDU.F // IscsiTaskScsiCommand.isAllDataReceived wDataPDU argPDU.TargetTransferTag
                         let nextR2TInfo, nextR2TSN =
                             if not wf then
                                 currentR2TPDUs, currentNextR2TSN
@@ -636,7 +636,8 @@ type IscsiTaskScsiCommand
                 argTask.NextR2TSNValue,
                 false
             )
-        elif IscsiTaskScsiCommand.isAllDataReceived argTask.SCSIDataOutPDUs ( ttt_me.fromPrim 0xFFFFFFFFu ) then
+        //elif IscsiTaskScsiCommand.isAllDataReceived argTask.SCSIDataOutPDUs ( ttt_me.fromPrim 0xFFFFFFFFu ) then
+        elif argPDU.F || ( argTask.SCSIDataOutPDUs |> List.exists ( _.F ) ) then
             // If all of unsolicided data are received,
             // the status is transitioned to DATARECVSTAT.SOLICITED
             let vR2T, nextSN = 

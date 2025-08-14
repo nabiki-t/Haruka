@@ -218,7 +218,7 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( ValueSome( itt_me.fromPrim 1u ) = r.InitiatorTaskTag ))
         Assert.True(( ValueNone = r.CmdSN ))
 
-
+(*
     [<Fact>]
     member _.isAllDataReceived_001() =
         let dli = [
@@ -387,7 +387,7 @@ type IscsiTaskScsiCommand_Test () =
         ]
         let result = PrivateCaller.Invoke< IscsiTaskScsiCommand >( "isAllDataReceived", dli, ttt_me.fromPrim 0xFFFFFFFFu ) :?> bool
         Assert.True( result )
-
+*)
     [<Fact>]
     member _.genR2TInfoForGap_001() =
         let result = PrivateCaller.Invoke< IscsiTaskScsiCommand >( "genR2TInfoForGap", 0u, 19u, 10u, 0u ) :?> r2tinfo list
@@ -958,6 +958,7 @@ type IscsiTaskScsiCommand_Test () =
             } )
         )
         let cmd = {
+            // All data is already received but F flag is false.
             IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
                 W = true;
                 F = false;
@@ -989,6 +990,7 @@ type IscsiTaskScsiCommand_Test () =
             } )
         )
         let cmd = {
+            // Unsolicited data PDU follows.
             IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
                 W = true;
                 F = false;
@@ -1002,7 +1004,7 @@ type IscsiTaskScsiCommand_Test () =
 
         let data = {
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
-                TargetTransferTag = ttt_me.fromPrim 0x0u
+                TargetTransferTag = ttt_me.fromPrim 0x0u                // TTT of unsolicited data pdu must be 0xFFFFFFFF
         }
 
         let task2 = IscsiTaskScsiCommand.ReceivedContinuationSCSIDataOutPDU( task1, data )
@@ -1019,6 +1021,7 @@ type IscsiTaskScsiCommand_Test () =
             } )
         )
         let cmd = {
+            // Unsolicited data PDU follows.
             IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
                 W = true;
                 F = false;
@@ -1030,6 +1033,7 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( DATARECVSTAT.UNSOLICITED = task1.Status ))
         Assert.True( ValueOption.isSome task1.SCSICommandPDU )
 
+        // The last unsolicited data is the PDU. However, not all data has been received.
         let data1 = {
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = true;
@@ -1058,6 +1062,7 @@ type IscsiTaskScsiCommand_Test () =
                     MaxBurstLength = 10u;
             } )
         )
+        // Unsolicited data PDU follows.
         let cmd = {
             IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
                 W = true;
@@ -1070,6 +1075,7 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( DATARECVSTAT.UNSOLICITED = task1.Status ))
         Assert.True( ValueOption.isSome task1.SCSICommandPDU )
 
+        // Unsolicited Data PDU. More Unsolicited Data PDUs follow.
         let data1 = {
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = false;
@@ -1096,6 +1102,7 @@ type IscsiTaskScsiCommand_Test () =
                     MaxBurstLength = 10u;
             } )
         )
+        // Unsolicited data PDU. Not SCSI command PDU.
         let data1 = {
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = false;
@@ -1108,6 +1115,7 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True( task1.IsSome )
         Assert.True( ValueOption.isNone task1.Value.SCSICommandPDU )
 
+        // The last unsolicited data PDU.
         let data2 = {
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = true;
@@ -1136,6 +1144,7 @@ type IscsiTaskScsiCommand_Test () =
                     MaxBurstLength = 10u;
             } )
         )
+        // No unsolicited data PDUs follow.
         let cmd = {
             IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
                 W = true;
@@ -1148,6 +1157,7 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( 3 = task1.R2TPDU.Length ))
         Assert.True(( DATARECVSTAT.SOLICITED = task1.Status ))
 
+        // Unexpected Unsolicited Data PDU.
         let data1 = {
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = false;
@@ -1173,6 +1183,7 @@ type IscsiTaskScsiCommand_Test () =
                     MaxBurstLength = 10u;
             } )
         )
+        // No unsolicited data PDUs follow.
         let cmd = {
             IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
                 W = true;
@@ -1191,6 +1202,7 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( datasn_me.fromPrim 2u = task1.R2TPDU.[2].sn ))
         Assert.True(( DATARECVSTAT.SOLICITED = task1.Status ))
 
+        // Solicited Data PDU with unexpected TTT.
         let data1 = {
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = false;
@@ -1216,6 +1228,7 @@ type IscsiTaskScsiCommand_Test () =
                     MaxBurstLength = 10u;
             } )
         )
+        // No unsolicited data PDUs follow.
         let cmd = {
             IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
                 W = true;
@@ -1234,6 +1247,7 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( datasn_me.fromPrim 2u = task1.R2TPDU.[2].sn ))
         Assert.True(( DATARECVSTAT.SOLICITED = task1.Status ))
 
+        // Respond to R2T PDU. No R2T is cleared.
         let data1 = {
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = false;
@@ -1268,6 +1282,8 @@ type IscsiTaskScsiCommand_Test () =
             } ),
             p_GetConnection = ( fun _ _ -> ValueSome( connStub ) )
         )
+
+        // No unsolicited data PDUs follow.
         let cmd = {
             IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
                 W = true;
@@ -1286,6 +1302,7 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( datasn_me.fromPrim 2u = task1.R2TPDU.[2].sn ))
         Assert.True(( DATARECVSTAT.SOLICITED = task1.Status ))
 
+        // Respond to R2T PDU. One R2T is cleared.
         let data1 = {
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = true;
@@ -1330,6 +1347,8 @@ type IscsiTaskScsiCommand_Test () =
             } ),
             p_GetConnection = ( fun _ _ -> ValueSome( connStub ) )
         )
+
+        // No unsolicited data PDUs follow.
         let cmd = {
             IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
                 W = true;
@@ -1346,6 +1365,8 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( 10u = task1.R2TPDU.[0].length ))
         Assert.True(( DATARECVSTAT.SOLICITED = task1.Status ))
 
+        // Respond to R2T PDU. All R2Ts are cleared.
+        // However, recovery R2T is generated.
         let data1 = {
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = true;
@@ -1383,13 +1404,15 @@ type IscsiTaskScsiCommand_Test () =
                 IscsiTaskScsiCommand_Test.defaultSessionParam with
                     InitialR2T = true;
                     MaxBurstLength = 10u;
-                    ErrorRecoveryLevel = 0uy;
+                    ErrorRecoveryLevel = 0uy;   // ErrorRecoveryLevel is 0
             } ),
             p_DestroySession = ( fun () ->
-                cnt <- 1
+                cnt <- 1                        // session is destroyed
             ),
             p_GetConnection = ( fun _ _ -> ValueSome( connStub ) )
         )
+
+        // No unsolicited data PDUs follow.
         let cmd = {
             IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
                 W = true;
@@ -1406,6 +1429,9 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( 10u = task1.R2TPDU.[0].length ))
         Assert.True(( DATARECVSTAT.SOLICITED = task1.Status ))
 
+        // Respond to R2T PDU. All R2Ts are cleared.
+        // However, recovery R2T is generated.
+        // ErrorRecoveryLevel is 0, so the session is destroyed.
         let data1 = {
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = true;
@@ -1430,6 +1456,7 @@ type IscsiTaskScsiCommand_Test () =
                     MaxBurstLength = 10u;
             } )
         )
+        // First SCSI command PDU.
         let cmd1 = {
             IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
                 I = true;
@@ -1440,14 +1467,8 @@ type IscsiTaskScsiCommand_Test () =
         let task1 = IscsiTaskScsiCommand.ReceivedNewSCSICommandPDU( sessStub, cid_me.fromPrim 0us, concnt_me.fromPrim 0, cmd1 )
         Assert.True( ValueOption.isSome task1.SCSICommandPDU )
 
-        let cmd2 = {
-            IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
-                I = true;
-                W = true;
-                ExpectedDataTransferLength = 40u;
-                DataSegment = PooledBuffer.RentAndInit 30;
-        }
-        let task2 = IscsiTaskScsiCommand.ReceivedContinuationSCSICommandPDU( task1, cmd2 )
+        // The second SCSI Command PDU was received.
+        let task2 = IscsiTaskScsiCommand.ReceivedContinuationSCSICommandPDU( task1, cmd1 )
         Assert.Same( task1, task2 )
 
     [<Fact>]
@@ -1456,10 +1477,12 @@ type IscsiTaskScsiCommand_Test () =
             p_GetTSIH = ( fun () -> tsih_me.zero ),
             p_GetSessionParameter = ( fun () -> {
                 IscsiTaskScsiCommand_Test.defaultSessionParam with
-                    InitialR2T = true;
+                    InitialR2T = true;      // InitialR2T is true.
                     MaxBurstLength = 10u;
             } )
         )
+
+        // First SCSI Data-Out PDU.
         let data1 = {
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = false;
@@ -1482,6 +1505,8 @@ type IscsiTaskScsiCommand_Test () =
                     false
                 )
 
+        // A SCSI Command PDU was received later.
+        // It is not expected to receive a SCSI Data-Out PDU before sending a R2T PDU.
         let cmd1 = {
             IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
                 W = true;
@@ -1498,10 +1523,12 @@ type IscsiTaskScsiCommand_Test () =
             p_GetTSIH = ( fun () -> tsih_me.zero ),
             p_GetSessionParameter = ( fun () -> {
                 IscsiTaskScsiCommand_Test.defaultSessionParam with
-                    InitialR2T = false;
+                    InitialR2T = false;     // InitialR2T is false.
                     MaxBurstLength = 10u;
             } )
         )
+
+        // First SCSI Data-Out PDU.
         let data1 = {
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = false;
@@ -1516,6 +1543,7 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( 1 = task1.Value.SCSIDataOutPDUs.Length ))
         Assert.Same( data1, task1.Value.SCSIDataOutPDUs.[0] )
 
+        // A SCSI Command PDU with W bit is true, no SCSI Data-Out PDUs are expected
         let cmd1 = {
             IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
                 W = false;
@@ -1536,6 +1564,8 @@ type IscsiTaskScsiCommand_Test () =
                     MaxBurstLength = 10u;
             } )
         )
+
+        // First unsolicited SCSI Data-Out PDU received.
         let data1 = {
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = true;
@@ -1551,6 +1581,7 @@ type IscsiTaskScsiCommand_Test () =
         Assert.Same( data1, task1.Value.SCSIDataOutPDUs.[0] )
         Assert.True(( DATARECVSTAT.UNSOLICITED = task1.Value.Status ))
 
+        // A SCSI Command PDU is received and an R2T is generated.
         let cmd1 = {
             IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
                 W = true;
@@ -1581,6 +1612,9 @@ type IscsiTaskScsiCommand_Test () =
                     MaxBurstLength = 10u;
             } )
         )
+
+        // First unsolicited SCSI Data-Out PDU received.
+        // However, the F bit is false.
         let data1 = {
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = false;
@@ -1596,9 +1630,62 @@ type IscsiTaskScsiCommand_Test () =
         Assert.Same( data1, task1.Value.SCSIDataOutPDUs.[0] )
         Assert.True(( DATARECVSTAT.UNSOLICITED = task1.Value.Status ))
 
+        // A SCSI Command PDU is received and an R2T is generated.
+        // The F bit of the subsequently received SCSI Command PDU is true.
         let cmd1 = {
             IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
                 W = true;
+                F = true;
+                ExpectedDataTransferLength = 40u;
+                DataSegment = PooledBuffer.RentAndInit 10;
+        }
+        let task2 = IscsiTaskScsiCommand.ReceivedContinuationSCSICommandPDU( task1.Value, cmd1 )
+        Assert.True( ValueOption.isSome task2.SCSICommandPDU )
+        Assert.True(( 1 = task2.SCSIDataOutPDUs.Length ))
+        Assert.True(( DATARECVSTAT.SOLICITED = task2.Status ))
+        Assert.True(( 2 = task2.R2TPDU.Length ))
+        Assert.True(( ttt_me.fromPrim 0u = task2.R2TPDU.[0].ttt ))
+        Assert.True(( datasn_me.fromPrim 0u = task2.R2TPDU.[0].sn ))
+        Assert.True(( 25u = task2.R2TPDU.[0].offset ))
+        Assert.True(( 10u = task2.R2TPDU.[0].length ))
+        Assert.True(( ttt_me.fromPrim 1u = task2.R2TPDU.[1].ttt ))
+        Assert.True(( datasn_me.fromPrim 1u = task2.R2TPDU.[1].sn ))
+        Assert.True(( 35u = task2.R2TPDU.[1].offset ))
+        Assert.True(( 5u = task2.R2TPDU.[1].length ))
+
+    [<Fact>]
+    member _.ReceivedContinuationSCSICommandPDU_006() =
+        let sessStub = new CSession_Stub(
+            p_GetTSIH = ( fun () -> tsih_me.zero ),
+            p_GetSessionParameter = ( fun () -> {
+                IscsiTaskScsiCommand_Test.defaultSessionParam with
+                    InitialR2T = false;
+                    MaxBurstLength = 10u;
+            } )
+        )
+
+        // First unsolicited SCSI Data-Out PDU received.
+        // However, the F bit is false.
+        let data1 = {
+            IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
+                F = false;
+                TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
+                DataSN = datasn_me.fromPrim 0u;
+                BufferOffset = 15u;
+                DataSegment = [| 0uy .. 9uy |] |> PooledBuffer.Rent;
+        }
+        let task1 = IscsiTaskScsiCommand.ReceivedNewSCSIDataOutPDU( sessStub, cid_me.fromPrim 0us, concnt_me.fromPrim 0, data1 )
+        Assert.True( task1.IsSome )
+        Assert.True( ValueOption.isNone task1.Value.SCSICommandPDU )
+        Assert.True(( 1 = task1.Value.SCSIDataOutPDUs.Length ))
+        Assert.Same( data1, task1.Value.SCSIDataOutPDUs.[0] )
+        Assert.True(( DATARECVSTAT.UNSOLICITED = task1.Value.Status ))
+
+        // A SCSI Command PDU with the F bit set to false was received.
+        let cmd1 = {
+            IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
+                W = true;
+                F = false;
                 ExpectedDataTransferLength = 40u;
                 DataSegment = PooledBuffer.RentAndInit 10;
         }
