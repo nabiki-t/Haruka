@@ -136,9 +136,6 @@ type iSCSI_LoginTest2_Fixture() =
 type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
     let g_CID0 = cid_me.zero
-    let g_CID1 = cid_me.fromPrim 1us
-    let g_CID2 = cid_me.fromPrim 2us
-    let g_CID3 = cid_me.fromPrim 3us
 
     let m_TD0_iSCSIPortNo = fx.TD0_iSCSIPortNo
     let m_TDx_iSCSIPortNo = fx.TDx_iSCSIPortNo
@@ -1763,3 +1760,224 @@ type aaaa() =
             let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
         }
+
+    [<Fact>]
+    member _.LoginNego_DefaultTime2Wait_001() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    ISID = GlbFunc.newISID();
+                    DefaultTime2Wait = 1us; // less than target value.
+            }
+            let connParam1 = m_defaultConnParam
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            Assert.True(( r1.Params.DefaultTime2Wait = 1us ))
+
+            // Haruka does not check DefaultTime2Wait value.
+            // Regardless of the negotiated result, the behavior remains the same.
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0 id
+            let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+        }
+
+    [<Fact>]
+    member _.LoginNego_DefaultTime2Wait_002() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    ISID = GlbFunc.newISID();
+                    DefaultTime2Wait = 3us; // greater than target value.
+            }
+            let connParam1 = m_defaultConnParam
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            Assert.True(( r1.Params.DefaultTime2Wait = 2us ))
+
+            // Haruka does not check DefaultTime2Wait value.
+            // Regardless of the negotiated result, the behavior remains the same.
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0 id
+            let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+        }
+
+    [<Fact>]
+    member _.LoginNego_DataPDUInOrder_001() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    ISID = GlbFunc.newISID();
+                    DataPDUInOrder = true;
+            }
+            let connParam1 = m_defaultConnParam
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            Assert.True(( r1.Params.DataPDUInOrder ))
+
+            // Haruka does not check DataPDUInOrder value.
+            // Regardless of the negotiated result, the behavior remains the same.
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0 id
+            let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+        }
+
+    [<Fact>]
+    member _.LoginNego_DataPDUInOrder_002() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    ISID = GlbFunc.newISID();
+                    DataPDUInOrder = false;
+            }
+            let connParam1 = m_defaultConnParam
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            Assert.False(( r1.Params.DataPDUInOrder ))
+
+            // Haruka does not check DataPDUInOrder value.
+            // Regardless of the negotiated result, the behavior remains the same.
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0 id
+            let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+        }
+
+    [<Fact>]
+    member _.LoginNego_DataSequenceInOrder_001() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    ISID = GlbFunc.newISID();
+                    DataSequenceInOrder = true;
+            }
+            let connParam1 = m_defaultConnParam
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            Assert.True(( r1.Params.DataSequenceInOrder ))
+
+            // Haruka does not check DataPDUInOrder value.
+            // Regardless of the negotiated result, the behavior remains the same.
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0 id
+            let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+        }
+
+    [<Fact>]
+    member _.LoginNego_DataSequenceInOrder_0021() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    ISID = GlbFunc.newISID();
+                    DataSequenceInOrder = false;
+            }
+            let connParam1 = m_defaultConnParam
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            Assert.False(( r1.Params.DataSequenceInOrder ))
+
+            // Haruka does not check DataPDUInOrder value.
+            // Regardless of the negotiated result, the behavior remains the same.
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0 id
+            let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+        }
+
+    [<Fact>]
+    member _.LoginNego_ErrorRecoveryLevel_001() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    ISID = GlbFunc.newISID();
+                    ErrorRecoveryLevel = 0uy;   // Test case where the initiator requests ErrorRecoveryLevel 0.
+            }
+            let connParam1 = m_defaultConnParam
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            Assert.True(( r1.Params.ErrorRecoveryLevel = 0uy ))
+
+            let accessLength = 4096u
+            let accessBlockCount = accessLength / m_MediaBlockSize  // Media block size must be 512 or 4096
+
+            // SCSI Write
+            let sendData = PooledBuffer.Empty
+            let writeCDB = scsiWrite10CDB ( uint16 accessBlockCount )
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK ( lun_me.fromPrim 1UL ) accessLength writeCDB sendData 0u id
+
+            // Receive R2T
+            let! rpdu2 = r1.ReceiveSpecific<R2TPDU> g_CID0
+
+            // SCSI Data-Out PDU ( 0 - 2047, F=true )
+            let sendData2 = PooledBuffer.RentAndInit ( int accessLength - 2048 )
+            let datasn = datasn_me.fromPrim 0u
+            do! r1.SendSCSIDataOutPDU g_CID0 true itt ( lun_me.fromPrim 1UL ) rpdu2.TargetTransferTag datasn 0u sendData2 id
+            sendData2.Return()
+
+            try
+                let! _ = r1.Receive g_CID0
+                Assert.Fail __LINE__
+            with
+            | :? SessionRecoveryException
+            | :? ConnectionErrorException ->
+                ()
+        }
+
+    [<Fact>]
+    member _.LoginNego_ErrorRecoveryLevel_002() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    ISID = GlbFunc.newISID();
+                    ErrorRecoveryLevel = 2uy;   // Test case where the initiator requests ErrorRecoveryLevel 2.
+            }
+            let connParam1 = m_defaultConnParam
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            Assert.True(( r1.Params.ErrorRecoveryLevel = 1uy )) // Target requires ErrorRecoveryLevel 1.
+
+            let accessLength = 4096u
+            let accessBlockCount = accessLength / m_MediaBlockSize  // Media block size must be 512 or 4096
+
+            // SCSI Write
+            let sendData = PooledBuffer.Empty
+            let writeCDB = scsiWrite10CDB ( uint16 accessBlockCount )
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK ( lun_me.fromPrim 1UL ) accessLength writeCDB sendData 0u id
+
+            // Receive R2T
+            let! rpdu2 = r1.ReceiveSpecific<R2TPDU> g_CID0
+            Assert.True(( rpdu2.InitiatorTaskTag = itt ))
+            Assert.True(( rpdu2.R2TSN = datasn_me.fromPrim 0u ))
+            Assert.True(( rpdu2.BufferOffset = 0u ))
+            Assert.True(( rpdu2.DesiredDataTransferLength = 4096u ))
+
+            // SCSI Data-Out PDU ( 0 - 2047, F=true )
+            let sendData2 = PooledBuffer.RentAndInit ( int accessLength - 2048 )
+            let datasn = datasn_me.fromPrim 0u
+            do! r1.SendSCSIDataOutPDU g_CID0 true itt ( lun_me.fromPrim 1UL ) rpdu2.TargetTransferTag datasn 0u sendData2 id
+            sendData2.Return()
+
+            // Receive recovery R2T
+            let! rpdu3 = r1.ReceiveSpecific<R2TPDU> g_CID0
+            Assert.True(( rpdu3.InitiatorTaskTag = itt ))
+            Assert.True(( rpdu3.R2TSN = datasn_me.fromPrim 1u ))
+            Assert.True(( rpdu3.BufferOffset = 2048u ))
+            Assert.True(( rpdu3.DesiredDataTransferLength = 2048u ))
+
+            // SCSI Data-Out PDU ( 2048 - 4095, F=true )
+            let sendData3 = PooledBuffer.RentAndInit ( int accessLength - 2048 )
+            let datasn = datasn_me.fromPrim 1u
+            do! r1.SendSCSIDataOutPDU g_CID0 true itt ( lun_me.fromPrim 1UL ) rpdu3.TargetTransferTag datasn 2048u sendData3 id
+            sendData3.Return()
+
+            // Receive SCSI Response
+            let! rpdu4 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu4.Status = ScsiCmdStatCd.GOOD ))
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0 id
+            let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+        }
+
