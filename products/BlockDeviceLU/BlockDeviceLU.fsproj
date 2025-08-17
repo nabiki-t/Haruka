@@ -10,7 +10,7 @@
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <AnalysisLevel>6.0-all</AnalysisLevel>
     <Title>Haruka software storage</Title>
-    <BaseOutputPath>..\Work</BaseOutputPath>
+    <BaseOutputPath>../../work</BaseOutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

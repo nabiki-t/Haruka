@@ -8,7 +8,7 @@
     <Company>nabiki_t</Company>
     <Product>Haruka software storage.</Product>
     <Description>Haruka software storage. Implementation of  commandline client function.</Description>
-    <BaseOutputPath>..\Work</BaseOutputPath>
+    <BaseOutputPath>../../work</BaseOutputPath>
     <AnalysisLevel>6.0-all</AnalysisLevel>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
   </PropertyGroup>

@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <AnalysisLevel>6.0-all</AnalysisLevel>
-    <BaseOutputPath>..\Work</BaseOutputPath>
+    <BaseOutputPath>../../work</BaseOutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

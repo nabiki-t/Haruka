@@ -5,7 +5,7 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>True</UseWPF>
     <UseWindowsForms>True</UseWindowsForms>
-    <BaseOutputPath>..\Work</BaseOutputPath>
+    <BaseOutputPath>../../work</BaseOutputPath>
     <ApplicationIcon>icon\Application.ico</ApplicationIcon>
   </PropertyGroup>
 

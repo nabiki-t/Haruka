@@ -7,7 +7,7 @@
     <Company>nabiki_t</Company>
     <Product>Haruka software storage.</Product>
     <Description>Haruka software storage. common library.</Description>
-    <BaseOutputPath>..\Work</BaseOutputPath>
+    <BaseOutputPath>../../work</BaseOutputPath>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <AnalysisLevel>6.0-all</AnalysisLevel>
   </PropertyGroup>
