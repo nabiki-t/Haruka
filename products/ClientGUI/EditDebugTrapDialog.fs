@@ -141,7 +141,8 @@ type EditDebugTrapDialog( m_Config : GUIConfig ) as this =
         | 1 ->  // LUReset
             m_MessageTextBox.IsEnabled <- true
             m_CountIndexTextBox.IsEnabled <- false
-        | 2 ->  // Count
+        | 2     // Count
+        | 3 ->  // Delay
             m_MessageTextBox.IsEnabled <- false
             m_CountIndexTextBox.IsEnabled <- true
         | _ ->
@@ -203,6 +204,11 @@ type EditDebugTrapDialog( m_Config : GUIConfig ) as this =
                         let r, v = Int32.TryParse m_CountIndexTextBox.Text
                         if r then v else 0
                     MediaCtrlReq.U_Count( counter )
+                | 3 ->  // Delay
+                    let counter =
+                        let r, v = Int32.TryParse m_CountIndexTextBox.Text
+                        if r then v else 0
+                    MediaCtrlReq.U_Delay( counter )
                 | _ ->  // This branch is never executed.
                     MediaCtrlReq.U_Count( 0 )
 
@@ -260,7 +266,8 @@ type EditDebugTrapDialog( m_Config : GUIConfig ) as this =
                 true
             | 1 ->  // LUReset
                 true
-            | 2 ->  // Count
+            | 2     // Count
+            | 3 ->  // Delay
                 let t = m_CountIndexTextBox.Text
                 if t.Length = 0 then
                     true

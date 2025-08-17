@@ -39,6 +39,7 @@
             <TextBlock>ACA</TextBlock>
             <TextBlock>LUReset</TextBlock>
             <TextBlock>Count</TextBlock>
+            <TextBlock>Delay</TextBlock>
         </ComboBox>
 
         <Grid Margin="10,180,10,0" VerticalAlignment="Top" >

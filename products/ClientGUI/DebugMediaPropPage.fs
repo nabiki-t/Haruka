@@ -341,6 +341,8 @@ type DebugMediaPropPage(
                     sprintf "LUReset( %s )" x
                 | MediaCtrlRes.U_Count( x ) ->
                     sprintf "Count( Index=%d, Value=%d )" x.Index x.Value
+                | MediaCtrlRes.U_Delay( x ) ->
+                    sprintf "Delay( milisec=%d )" x
 
             m_TrapListView.Items.Add {| Event = eventStr; Action = actionStr; |} |> ignore
 
