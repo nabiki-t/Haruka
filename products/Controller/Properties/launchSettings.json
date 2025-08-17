@@ -1,8 +1,7 @@
 {
   "profiles": {
     "Controller": {
-      "commandName": "Project",
-      "commandLineArgs": "SV D:\\MO\\F#\\Haruka\\a"
+      "commandName": "Project"
     }
   }
 }

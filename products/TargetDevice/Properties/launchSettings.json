@@ -1,9 +1,7 @@
 {
   "profiles": {
     "TargetDevice": {
-      "commandName": "Project",
-      "commandLineArgs": "D:\\NoBackup\\test\\a\\TD_00000001",
-      "workingDirectory": "D:\\NoBackup\\test"
+      "commandName": "Project"
     }
   }
 }
