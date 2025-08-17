@@ -20,20 +20,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="ConfigurationMasterTest.fs" />
-    <Compile Include="ConnectionTest.fs" />
-    <Compile Include="IscsiTaskOnePDUCommandTest.fs" />
-    <Compile Include="IscsiTaskScsiCommandTest.fs" />
-    <Compile Include="IscsiTaskTextNegociationTest.fs" />
-    <Compile Include="IscsiTextEncodeTest1.fs" />
-    <Compile Include="IscsiTextEncodeTest2.fs" />
-    <Compile Include="LoginNegociatorTest1.fs" />
-    <Compile Include="LoginNegociatorTest2.fs" />
-    <Compile Include="PDUTest.fs" />
-    <Compile Include="PortTest.fs" />
-    <Compile Include="SessionTest.fs" />
-    <Compile Include="StatusMasterTest.fs" />
-    <Compile Include="TaskRouterTest.fs" />
+    <Compile Include="BlockDeviceLUTest.fs" />
+    <Compile Include="ConvertToCDBTest.fs" />
+    <Compile Include="ModeParameterTest.fs" />
+    <Compile Include="PRManagerTest.fs" />
+    <Compile Include="PRManagerTest2.fs" />
+    <Compile Include="PRManagerTest3.fs" />
+    <Compile Include="ScsiTaskTest.fs" />
+    <Compile Include="SendErrorStatusTest.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
 
@@ -47,9 +41,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Commons\Commons.fsproj" />
-    <ProjectReference Include="..\Constants\Constants.fsproj" />
-    <ProjectReference Include="..\TargetDevice\TargetDevice.fsproj" />
+    <ProjectReference Include="..\..\products\BlockDeviceLU\BlockDeviceLU.fsproj" />
+    <ProjectReference Include="..\..\products\Commons\Commons.fsproj" />
+    <ProjectReference Include="..\..\products\Constants\Constants.fsproj" />
     <ProjectReference Include="..\TestCommon\TestCommon.fsproj" />
   </ItemGroup>
 

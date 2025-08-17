@@ -20,14 +20,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="BlockDeviceLUTest.fs" />
-    <Compile Include="ConvertToCDBTest.fs" />
-    <Compile Include="ModeParameterTest.fs" />
-    <Compile Include="PRManagerTest.fs" />
-    <Compile Include="PRManagerTest2.fs" />
-    <Compile Include="PRManagerTest3.fs" />
-    <Compile Include="ScsiTaskTest.fs" />
-    <Compile Include="SendErrorStatusTest.fs" />
+    <Compile Include="PlainFileMediaTest.fs" />
+    <Compile Include="MemBufferMediaTest.fs" />
+    <Compile Include="DummyMediaTest.fs" />
+    <Compile Include="DebugMediaTest.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
 
@@ -41,9 +37,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BlockDeviceLU\BlockDeviceLU.fsproj" />
-    <ProjectReference Include="..\Commons\Commons.fsproj" />
-    <ProjectReference Include="..\Constants\Constants.fsproj" />
+    <ProjectReference Include="..\..\products\Commons\Commons.fsproj" />
+    <ProjectReference Include="..\..\products\Constants\Constants.fsproj" />
+    <ProjectReference Include="..\..\products\SimpleMedia\SimpleMedia.fsproj" />
     <ProjectReference Include="..\TestCommon\TestCommon.fsproj" />
   </ItemGroup>
 

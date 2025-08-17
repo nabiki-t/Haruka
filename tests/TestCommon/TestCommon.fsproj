@@ -27,9 +27,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BlockDeviceLU\BlockDeviceLU.fsproj" />
-    <ProjectReference Include="..\Commons\Commons.fsproj" />
-    <ProjectReference Include="..\Constants\Constants.fsproj" />
+    <ProjectReference Include="..\..\products\BlockDeviceLU\BlockDeviceLU.fsproj" />
+    <ProjectReference Include="..\..\products\Commons\Commons.fsproj" />
+    <ProjectReference Include="..\..\products\Constants\Constants.fsproj" />
   </ItemGroup>
 
 </Project>

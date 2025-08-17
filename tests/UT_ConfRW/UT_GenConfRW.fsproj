@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -129,14 +129,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Commons\Commons.fsproj" />
-    <ProjectReference Include="..\Constants\Constants.fsproj" />
-    <ProjectReference Include="..\GenConfRW\GenConfRW.fsproj" />
+    <ProjectReference Include="..\..\products\Commons\Commons.fsproj" />
+    <ProjectReference Include="..\..\products\Constants\Constants.fsproj" />
+    <ProjectReference Include="..\..\products\GenConfRW\GenConfRW.fsproj" />
     <ProjectReference Include="..\TestCommon\TestCommon.fsproj" />
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="dotnet run --project ..\GenConfRW -c $(Configuration) ConfRW" />
+    <Exec Command="dotnet run --project ..\..\products\GenConfRW -c $(Configuration) ConfRW" />
   </Target>
 
 </Project>
