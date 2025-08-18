@@ -1267,21 +1267,10 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 I = true;
                 W = true;
                 R = false;
+                F = false;
                 InitiatorTaskTag = itt_me.fromPrim 1u;
                 CmdSN = cmdsn_me.fromPrim 2u;
                 ExpectedDataTransferLength = 40u;
-                DataSegment = PooledBuffer.RentAndInit 10;
-        }
-
-        // SCSI Command PDU(ITT=2)
-        let cmdpdu2 = {
-            Session_Test.defaultScsiCommandPDUValues with
-                I = true;
-                W = true;
-                R = false;
-                InitiatorTaskTag = itt_me.fromPrim 2u;
-                CmdSN = cmdsn_me.fromPrim 1u;
-                ExpectedDataTransferLength = 20u;
                 DataSegment = PooledBuffer.RentAndInit 10;
         }
 
@@ -1303,6 +1292,18 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 DataSN = datasn_me.fromPrim 1u;
                 BufferOffset = 20u;
                 DataSegment = PooledBuffer.RentAndInit 20;
+        }
+
+        // SCSI Command PDU(ITT=2)
+        let cmdpdu2 = {
+            Session_Test.defaultScsiCommandPDUValues with   // F = true;
+                I = true;
+                W = true;
+                R = false;
+                InitiatorTaskTag = itt_me.fromPrim 2u;
+                CmdSN = cmdsn_me.fromPrim 1u;
+                ExpectedDataTransferLength = 20u;
+                DataSegment = PooledBuffer.RentAndInit 10;
         }
 
         // SCSI Data-Out PDU(ITT=2)
@@ -1330,8 +1331,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                     Assert.True(( command.InitiatorTaskTag = itt_me.fromPrim 1u ))
                     Assert.True(( command.LUN = lun_me.zero ))
                     Assert.True(( data.Length = 2 ))
-                    Assert.True(( data.Item( 0 ).DataSegment |> PooledBuffer.length = 10 ))
-                    Assert.True(( data.Item( 1 ).DataSegment |> PooledBuffer.length = 20 ))
+                    Assert.True(( data.Item( 0 ).DataSegment |> PooledBuffer.length = 20 ))
+                    Assert.True(( data.Item( 1 ).DataSegment |> PooledBuffer.length = 10 ))
                 else
                     Assert.True(( source.CID = cid_me.fromPrim 1us ))
                     Assert.True(( command.ATTR = TaskATTRCd.SIMPLE_TASK ))
@@ -1346,7 +1347,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             )
 
         // Receive SCSI Data-Out PDU(ITT=1)
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) datapdu2
+        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) datapdu1
+        Assert.True(( sess.IsAlive ))
         Assert.True(( cnt = 0 ))
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 1 = iwq1.Count ))
@@ -1355,6 +1357,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
 
         // Receive SCSI Data-Out PDU(ITT=2)
         sess.PushReceivedPDU ( cid_me.fromPrim 1us ) datapdu3
+        Assert.True(( sess.IsAlive ))
         Assert.True(( cnt = 0 ))
         let iwq2 = Session_Test.GetWaitingQueue pc
         Assert.True(( 2 = iwq2.Count ))
@@ -1363,6 +1366,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
 
         // Receive SCSI Command PDU(ITT=1)
         sess.PushReceivedPDU ( cid_me.fromPrim 1us ) cmdpdu1
+        Assert.True(( sess.IsAlive ))
         Assert.True(( cnt = 0 ))
         let iwq3 = Session_Test.GetWaitingQueue pc
         Assert.True(( 2 = iwq3.Count ))
@@ -1370,7 +1374,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True(( cmdsn_me.fromPrim 0u = wexpcmdsn ))
 
         // Receive SCSI Data-Out PDU(ITT=1)
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) datapdu1
+        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) datapdu2
+        Assert.True(( sess.IsAlive ))
         Assert.True(( cnt = 1 ))
         let iwq4 = Session_Test.GetWaitingQueue pc
         Assert.True(( 1 = iwq4.Count ))
@@ -1379,6 +1384,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
 
         // Receive SCSI Command PDU(ITT=2)
         sess.PushReceivedPDU ( cid_me.fromPrim 1us ) cmdpdu2
+        Assert.True(( sess.IsAlive ))
         Assert.True(( cnt = 2 ))
         let iwq5 = Session_Test.GetWaitingQueue pc
         Assert.True(( 0 = iwq5.Count ))
