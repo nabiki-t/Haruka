@@ -81,6 +81,7 @@ type iSCSI_LoginTest2_Fixture() =
             client.RunCommand ( sprintf "set MAXRECVDATASEGMENTLENGTH %d" Constants.NEGOPARAM_MIN_MaxRecvDataSegmentLength ) "" "TD> "
             client.RunCommand ( sprintf "set MAXBURSTLENGTH %d" Constants.NEGOPARAM_MIN_MaxBurstLength ) "" "TD> "
             client.RunCommand ( sprintf "set FIRSTBURSTLENGTH %d" Constants.NEGOPARAM_MIN_FirstBurstLength ) "" "TD> "
+            client.RunCommand ( sprintf "set MAXOUTSTANDINGR2T %d" 16 ) "" "TD> "
             client.RunCommand "create targetgroup" "Created" "TD> "
             client.RunCommand ( sprintf "create networkportal /a ::1 /p %d" m_TDx_iSCSIPortNo.[i] ) "Created" "TD> "
             client.RunCommand "select 0" "" "TG> "
@@ -1981,3 +1982,127 @@ type aaaa() =
             Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
         }
 
+    [<Fact>]
+    member _.LoginNego_MaxOutstandingR2T_001() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    TargetName = "iqn.2020-05.example.com:target2-1";
+                    ISID = GlbFunc.newISID();
+                    InitialR2T = true;
+                    MaxBurstLength = Constants.NEGOPARAM_MIN_MaxBurstLength;        // 512
+                    FirstBurstLength = Constants.NEGOPARAM_MIN_FirstBurstLength;    // 512
+                    MaxOutstandingR2T = 1us;    // minimum, Target requires 16
+            }
+            let connParam1 = {
+                m_defaultConnParam with
+                    PortNo = m_TDx_iSCSIPortNo.[0]; // connect to TargetDevice 1
+            }
+
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            Assert.True(( r1.Params.MaxOutstandingR2T = 1us ))
+
+            let accessLength = 8192u    // expected R2T PDU count is 16.
+            let accessBlockCount = accessLength / m_MediaBlockSize  // Media block size must be 512 or 4096
+
+            // SCSI Write
+            let sendData = PooledBuffer.Empty
+            let writeCDB = scsiWrite10CDB ( uint16 accessBlockCount )
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK ( lun_me.fromPrim 1UL ) accessLength writeCDB sendData 0u id
+
+            for i= 0 to 15 do
+                // Receive R2T PDU
+                let! rpdu2 = r1.ReceiveSpecific<R2TPDU> g_CID0
+                Assert.True(( rpdu2.InitiatorTaskTag = itt ))
+                Assert.True(( rpdu2.R2TSN = datasn_me.fromPrim ( uint i ) ))
+                Assert.True(( rpdu2.BufferOffset = 512u * ( uint i ) ))
+                Assert.True(( rpdu2.DesiredDataTransferLength = 512u ))
+
+                // Immidiate NOP-Out
+                let! _ = r1.SendNOPOutPDU g_CID0 true ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+                let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
+
+                // SCSI Data-Out PDU
+                let sendData2 = PooledBuffer.RentAndInit 512
+                let datasn = datasn_me.fromPrim ( uint i )
+                do! r1.SendSCSIDataOutPDU g_CID0 true itt ( lun_me.fromPrim 1UL ) rpdu2.TargetTransferTag datasn rpdu2.BufferOffset sendData2 id
+                sendData2.Return()
+
+            // Receive SCSI Response
+            let! rpdu4 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu4.Status = ScsiCmdStatCd.GOOD ))
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0 id
+            let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+        }
+
+    [<Fact>]
+    member _.LoginNego_MaxOutstandingR2T_002() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    TargetName = "iqn.2020-05.example.com:target2-1";
+                    ISID = GlbFunc.newISID();
+                    InitialR2T = true;
+                    MaxBurstLength = Constants.NEGOPARAM_MIN_MaxBurstLength;        // 512
+                    FirstBurstLength = Constants.NEGOPARAM_MIN_FirstBurstLength;    // 512
+                    MaxOutstandingR2T = 32us;    // Target requires 16
+            }
+            let connParam1 = {
+                m_defaultConnParam with
+                    PortNo = m_TDx_iSCSIPortNo.[0]; // connect to TargetDevice 1
+            }
+
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            Assert.True(( r1.Params.MaxOutstandingR2T = 16us ))
+
+            let accessLength = 8192u    // expected R2T PDU count is 16.
+            let accessBlockCount = accessLength / m_MediaBlockSize  // Media block size must be 512 or 4096
+
+            // SCSI Write
+            let sendData = PooledBuffer.Empty
+            let writeCDB = scsiWrite10CDB ( uint16 accessBlockCount )
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK ( lun_me.fromPrim 1UL ) accessLength writeCDB sendData 0u id
+
+            // Receive first R2T PDU
+            let vR2TPDU = Array.zeroCreate<R2TPDU> 16
+            let! rpdu2 = r1.ReceiveSpecific<R2TPDU> g_CID0
+            vR2TPDU.[0] <- rpdu2
+            Assert.True(( rpdu2.InitiatorTaskTag = itt ))
+            Assert.True(( rpdu2.R2TSN = datasn_me.fromPrim 0u ))
+            Assert.True(( rpdu2.BufferOffset = 0u ))
+            Assert.True(( rpdu2.DesiredDataTransferLength = 512u ))
+
+            // Immidiate NOP-Out
+            let! _ = r1.SendNOPOutPDU g_CID0 true ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+
+            // receive following R2T PDUs
+            for i= 1 to 15 do
+                let! rpdu3 = r1.ReceiveSpecific<R2TPDU> g_CID0
+                vR2TPDU.[i] <- rpdu3
+                Assert.True(( rpdu3.InitiatorTaskTag = itt ))
+                Assert.True(( rpdu3.R2TSN = datasn_me.fromPrim ( uint i ) ))
+                Assert.True(( rpdu3.BufferOffset = 512u * ( uint i ) ))
+                Assert.True(( rpdu3.DesiredDataTransferLength = 512u ))
+
+            // Nop-In PDU, Response for Immidiate NOP-Out
+            let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
+
+            // send SCSI Data-Out PDUs
+            for i= 0 to 15 do
+                let sendData2 = PooledBuffer.RentAndInit 512
+                let datasn = datasn_me.fromPrim ( uint i )
+                do! r1.SendSCSIDataOutPDU g_CID0 true itt ( lun_me.fromPrim 1UL ) vR2TPDU.[i].TargetTransferTag datasn vR2TPDU.[i].BufferOffset sendData2 id
+                sendData2.Return()
+
+            // Receive SCSI Response
+            let! rpdu4 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu4.Status = ScsiCmdStatCd.GOOD ))
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0 id
+            let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+        }
