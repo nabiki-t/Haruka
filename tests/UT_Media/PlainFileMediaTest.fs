@@ -1550,6 +1550,8 @@ type PlainFileMedia_Test () =
             Assert.True(( x.StartsWith "Plain file media does not support media controls" ))
         | _ ->
             Assert.Fail __LINE__
+
+        k1.NoticeTerminate()
         GlbFunc.DeleteFile( testfname )
         GlbFunc.DeleteDir pDirName
         
@@ -1575,5 +1577,7 @@ type PlainFileMedia_Test () =
 
         let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
         Assert.True(( f.GetSubMedia() = [] ))
+
+        k1.NoticeTerminate()
         GlbFunc.DeleteFile( testfname )
         GlbFunc.DeleteDir pDirName
