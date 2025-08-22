@@ -157,7 +157,7 @@ let main ( args : string[] ) : int =
                 CreateDefaultConfig st cmd
                 0
             | InitMedia_PlainFile ->
-                if InitMedia.CreatePlainFile st cmd then
+                if InitMedia.CreatePlainFile stdout st cmd then
                     0
                 else
                     1   // failed

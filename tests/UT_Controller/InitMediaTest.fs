@@ -43,15 +43,11 @@ type InitMedia_Test () =
 
         let ms = new MemoryStream()
         let ws = new StreamWriter( ms )
-        let old_stdout = Console.Error
-        Console.SetOut ws
 
-        let r = InitMedia.CreatePlainFile st cmd
+        let r = InitMedia.CreatePlainFile ws st cmd
         Assert.True r
 
         ws.Flush()
-        Console.SetOut old_stdout
-
         ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
         let rs = new StreamReader( ms )
 
@@ -108,15 +104,11 @@ type InitMedia_Test () =
 
         let ms = new MemoryStream()
         let ws = new StreamWriter( ms )
-        let old_stdout = Console.Error
-        Console.SetOut ws
 
-        let r = InitMedia.CreatePlainFile st cmd
+        let r = InitMedia.CreatePlainFile ws st cmd
         Assert.False r
 
         ws.Flush()
-        Console.SetOut old_stdout
-
         ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
         let rs = new StreamReader( ms )
 
@@ -154,15 +146,11 @@ type InitMedia_Test () =
 
         let ms = new MemoryStream()
         let ws = new StreamWriter( ms )
-        let old_stdout = Console.Error
-        Console.SetOut ws
 
-        let r = InitMedia.CreatePlainFile st cmd
+        let r = InitMedia.CreatePlainFile ws st cmd
         Assert.False r
 
         ws.Flush()
-        Console.SetOut old_stdout
-
         ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
         let rs = new StreamReader( ms )
 
@@ -216,37 +204,38 @@ type InitMedia_Test () =
 
         let ms = new MemoryStream()
         let ws = new StreamWriter( ms )
-        let old_stdout = Console.Error
-        Console.SetOut ws
 
-        let r = InitMedia.CreatePlainFile st cmd
+        let r = InitMedia.CreatePlainFile ws st cmd
         Assert.False r
 
         ws.Flush()
-        Console.SetOut old_stdout
-
         ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
-        let rs = new StreamReader( ms )
+        let vLines = List< string >()
+        use rs = new StreamReader( ms )
+        while not rs.EndOfStream do
+            vLines.Add( rs.ReadLine() )
 
-        let m1 = InitMediaMessage.ReaderWriter.LoadString( rs.ReadLine() )
+        Assert.True(( vLines.Count = 4 ))
+
+        let m1 = InitMediaMessage.ReaderWriter.LoadString( vLines.[0] )
         match m1.LineType with
         | InitMediaMessage.U_Start _ ->
             ()
         | _ -> Assert.Fail __LINE__
 
-        let m2 = InitMediaMessage.ReaderWriter.LoadString( rs.ReadLine() )
+        let m2 = InitMediaMessage.ReaderWriter.LoadString( vLines.[1] )
         match m2.LineType with
         | InitMediaMessage.U_Progress x ->
             Assert.True(( x = 0uy ))
         | _ -> Assert.Fail __LINE__
 
-        let m1 = InitMediaMessage.ReaderWriter.LoadString( rs.ReadLine() )
+        let m1 = InitMediaMessage.ReaderWriter.LoadString( vLines.[2] )
         match m1.LineType with
         | InitMediaMessage.U_ErrorMessage _ ->
             ()
         | _ -> Assert.Fail __LINE__
 
-        let m5 = InitMediaMessage.ReaderWriter.LoadString( rs.ReadLine() )
+        let m5 = InitMediaMessage.ReaderWriter.LoadString( vLines.[3] )
         match m5.LineType with
         | InitMediaMessage.U_End x ->
             Assert.True(( x.StartsWith "failed" ))
