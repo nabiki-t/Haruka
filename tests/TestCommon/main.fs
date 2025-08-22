@@ -124,6 +124,11 @@ let ControllerStarter( workPath : string ) : int =
     stdout.Flush()
     stderr.Flush()
 
+    // change current directory to the parent of working path
+    let parentPath = Path.GetDirectoryName( workPath )
+    if parentPath <> null && parentPath <> "" then
+        Directory.SetCurrentDirectory parentPath
+
     // Delete working folder
     GlbFunc.DeleteDir workPath
 
