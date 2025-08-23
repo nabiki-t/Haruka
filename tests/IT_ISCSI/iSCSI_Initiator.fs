@@ -128,6 +128,12 @@ type iSCSI_Initiator(
     ///////////////////////////////////////////////////////////////////////////
     // public member
 
+    /// <summary>
+    ///  Add additional connection to the session.
+    /// </summary>
+    /// <param name="exp_ConnParams">
+    ///  Desired connection parameters.
+    /// </param>
     member _.AddConnection ( exp_ConnParams :  ConnParams ) : Task<unit> =
         task {
             let getCmdSN = fun () -> m_CmdSN |> cmdsn_me.fromPrim
@@ -158,8 +164,13 @@ type iSCSI_Initiator(
                  and  set( v : ITT_T ) = m_ITT <- itt_me.toPrim v
 
     /// <summary>
-    ///  Send SCSI command PDU to the initiator.
+    ///  Send SCSI command PDU to the target with test function.
     /// </summary>
+    /// <param name="updater">Function to modify the PDU before sending.</param>
+    /// <param name="fuz">
+    ///  The offset and length of the range to be destroyed.
+    ///  If this value is ValueNone, the PDU is sent without modification.
+    /// </param>
     /// <param name="cid">CID of the connection that is used to send the PDU.</param>
     /// <param name="argI">SCSICommandPDU I field value.</param>
     /// <param name="argF">SCSICommandPDU F field value.</param>
@@ -174,7 +185,9 @@ type iSCSI_Initiator(
     /// <returns>
     ///  The pair of ITT and CmdSN in sent PDU.
     /// </returns>
-    member _.SendSCSICommandPDU 
+    member this.SendSCSICommandPDU_Test
+        ( updater : SCSICommandPDU -> SCSICommandPDU )
+        ( fuz : ( uint * uint ) voption )
         ( cid : CID_T )
         ( argI : bool )
         ( argF : bool )
@@ -186,7 +199,6 @@ type iSCSI_Initiator(
         ( argScsiCDB : byte[] )
         ( argDataSegment : PooledBuffer )
         ( argBidirectionalExpectedReadDataLength : uint32 )
-        ( updater : SCSICommandPDU -> SCSICommandPDU )
         : Task< struct( ITT_T * CMDSN_T ) > =
         task {
             let con = m_Connections.[cid]
@@ -216,16 +228,25 @@ type iSCSI_Initiator(
                 let headerDigest = con.Params.HeaderDigest
                 let dataDigest = con.Params.DataDigest
                 let pdu2 = updater pdu
-                let! _ = PDU.SendPDU( mrdslt, headerDigest, dataDigest, ValueNone, ValueNone, ValueNone, m_ObjID, con.Connection, pdu2 )
-
+                let! _ = this.SendPDUWithFazzer mrdslt headerDigest dataDigest con.Connection pdu2 fuz
                 return struct( itt, cmdsn )
             finally
                 con.ReleaseSend()
         }
 
     /// <summary>
-    ///  Send Task management function request PDU to the initiator.
+    ///  Send SCSI command PDU to the target without test function.
     /// </summary>
+    member this.SendSCSICommandPDU = this.SendSCSICommandPDU_Test id ValueNone
+
+    /// <summary>
+    ///  Send Task management function request PDU to the target with test function.
+    /// </summary>
+    /// <param name="updater">Function to modify the PDU before sending.</param>
+    /// <param name="fuz">
+    ///  The offset and length of the range to be destroyed.
+    ///  If this value is ValueNone, the PDU is sent without modification.
+    /// </param>
     /// <param name="cid">CID of the connection that is used to send the PDU.</param>
     /// <param name="argI">TaskManagementFunctionRequestPDU I field value.</param>
     /// <param name="argFunction">TaskManagementFunctionRequestPDU Function field value.</param>
@@ -236,7 +257,9 @@ type iSCSI_Initiator(
     /// <returns>
     ///  The pair of ITT and CmdSN in sent PDU.
     /// </returns>
-    member _.SendTaskManagementFunctionRequestPDU
+    member this.SendTaskManagementFunctionRequestPDU_Test
+        ( updater : TaskManagementFunctionRequestPDU -> TaskManagementFunctionRequestPDU )
+        ( fuz : ( uint * uint ) voption )
         ( cid : CID_T )
         ( argI : bool )
         ( argFunction : TaskMgrReqCd )
@@ -244,7 +267,6 @@ type iSCSI_Initiator(
         ( argReferencedTaskTag : ITT_T )
         ( argRefCmdSN : CMDSN_T )
         ( argExpDataSN : DATASN_T )
-        ( updater : TaskManagementFunctionRequestPDU -> TaskManagementFunctionRequestPDU )
         : Task< struct( ITT_T * CMDSN_T ) > =
         task {
             let con = m_Connections.[cid]
@@ -270,15 +292,25 @@ type iSCSI_Initiator(
                 let headerDigest = con.Params.HeaderDigest
                 let dataDigest = con.Params.DataDigest
                 let pdu2 = updater pdu
-                let! _ = PDU.SendPDU( mrdslt, headerDigest, dataDigest, ValueNone, ValueNone, ValueNone, m_ObjID, con.Connection, pdu2 )
+                let! _ = this.SendPDUWithFazzer mrdslt headerDigest dataDigest con.Connection pdu2 fuz
                 return struct( itt, cmdsn );
             finally
                 con.ReleaseSend()
         }
 
     /// <summary>
-    ///  Send SCSI data out PDU to the initiator.
+    ///  Send Task management function request PDU to the target without test function.
     /// </summary>
+    member this.SendTaskManagementFunctionRequestPDU = this.SendTaskManagementFunctionRequestPDU_Test id ValueNone
+
+    /// <summary>
+    ///  Send SCSI data out PDU to the target with test function.
+    /// </summary>
+    /// <param name="updater">Function to modify the PDU before sending.</param>
+    /// <param name="fuz">
+    ///  The offset and length of the range to be destroyed.
+    ///  If this value is ValueNone, the PDU is sent without modification.
+    /// </param>
     /// <param name="cid">CID of the connection that is used to send the PDU.</param>
     /// <param name="argF">SCSIDataOutPDU F field value.</param>
     /// <param name="argLUN">SCSIDataOutPDU LUN field value.</param>
@@ -289,7 +321,9 @@ type iSCSI_Initiator(
     /// <returns>
     ///  The pair of ITT and CmdSN in sent PDU.
     /// </returns>
-    member _.SendSCSIDataOutPDU
+    member this.SendSCSIDataOutPDU_Test
+        ( updater : SCSIDataOutPDU -> SCSIDataOutPDU )
+        ( fuz : ( uint * uint ) voption )
         ( cid : CID_T )
         ( argF : bool )
         ( itt : ITT_T )
@@ -298,7 +332,6 @@ type iSCSI_Initiator(
         ( argDataSN : DATASN_T )
         ( argBufferOffset : uint32 )
         ( argDataSegment : PooledBuffer )
-        ( updater : SCSIDataOutPDU -> SCSIDataOutPDU )
         : Task<unit> =
         task {
             let con = m_Connections.[cid]
@@ -319,15 +352,25 @@ type iSCSI_Initiator(
                 let headerDigest = con.Params.HeaderDigest
                 let dataDigest = con.Params.DataDigest
                 let pdu2 = updater pdu
-                let! _ = PDU.SendPDU( mrdslt, headerDigest, dataDigest, ValueNone, ValueNone, ValueNone, m_ObjID, con.Connection, pdu2 )
+                let! _ = this.SendPDUWithFazzer mrdslt headerDigest dataDigest con.Connection pdu2 fuz
                 ()
             finally
                 con.ReleaseSend()
         }
 
     /// <summary>
-    ///  Send text request PDU to the initiator.
+    ///  Send SCSI data out PDU to the target with test function.
     /// </summary>
+    member this.SendSCSIDataOutPDU = this.SendSCSIDataOutPDU_Test id ValueNone
+
+    /// <summary>
+    ///  Send text request PDU to the target with test function.
+    /// </summary>
+    /// <param name="updater">Function to modify the PDU before sending.</param>
+    /// <param name="fuz">
+    ///  The offset and length of the range to be destroyed.
+    ///  If this value is ValueNone, the PDU is sent without modification.
+    /// </param>
     /// <param name="cid">CID of the connection that is used to send the PDU.</param>
     /// <param name="argI">TextRequestPDU I field value.</param>
     /// <param name="argF">TextRequestPDU F field value.</param>
@@ -338,7 +381,9 @@ type iSCSI_Initiator(
     /// <returns>
     ///  The pair of ITT and CmdSN in sent PDU.
     /// </returns>
-    member _.SendTextRequestPDU
+    member this.SendTextRequestPDU_Test
+        ( updater : TextRequestPDU -> TextRequestPDU )
+        ( fuz : ( uint * uint ) voption )
         ( cid : CID_T )
         ( argI : bool )
         ( argF : bool )
@@ -346,7 +391,6 @@ type iSCSI_Initiator(
         ( argLUN : LUN_T )
         ( argTargetTransferTag : TTT_T )
         ( argTextRequest : byte[] )
-        ( updater : TextRequestPDU -> TextRequestPDU )
         : Task< struct( ITT_T * CMDSN_T ) > =
         task {
             let con = m_Connections.[cid]
@@ -372,15 +416,25 @@ type iSCSI_Initiator(
                 let headerDigest = con.Params.HeaderDigest
                 let dataDigest = con.Params.DataDigest
                 let pdu2 = updater pdu
-                let! _ = PDU.SendPDU( mrdslt, headerDigest, dataDigest, ValueNone, ValueNone, ValueNone, m_ObjID, con.Connection, pdu2 )
+                let! _ = this.SendPDUWithFazzer mrdslt headerDigest dataDigest con.Connection pdu2 fuz
                 return struct( itt, cmdsn );
             finally
                 con.ReleaseSend()
         }
 
     /// <summary>
-    ///  Send logout request PDU to the initiator.
+    ///  Send text request PDU to the target without test function.
     /// </summary>
+    member this.SendTextRequestPDU = this.SendTextRequestPDU_Test id ValueNone
+
+    /// <summary>
+    ///  Send logout request PDU to the target with test function.
+    /// </summary>
+    /// <param name="updater">Function to modify the PDU before sending.</param>
+    /// <param name="fuz">
+    ///  The offset and length of the range to be destroyed.
+    ///  If this value is ValueNone, the PDU is sent without modification.
+    /// </param>
     /// <param name="cid">CID of the connection that is used to send the PDU.</param>
     /// <param name="argI">LogoutRequestPDU I field value.</param>
     /// <param name="argReasonCode">LogoutRequestPDU ReasonCode field value.</param>
@@ -388,12 +442,13 @@ type iSCSI_Initiator(
     /// <returns>
     ///  The pair of ITT and CmdSN in sent PDU.
     /// </returns>
-    member _.SendLogoutRequestPDU
+    member this.SendLogoutRequestPDU_Test
+        ( updater : LogoutRequestPDU -> LogoutRequestPDU )
+        ( fuz : ( uint * uint ) voption )
         ( cid : CID_T )
         ( argI : bool )
         ( argReasonCode : LogoutReqReasonCd )
         ( argCID : CID_T )
-        ( updater : LogoutRequestPDU -> LogoutRequestPDU )
         : Task< struct( ITT_T * CMDSN_T ) > =
         task {
             let con = m_Connections.[cid]
@@ -416,15 +471,25 @@ type iSCSI_Initiator(
                 let headerDigest = con.Params.HeaderDigest
                 let dataDigest = con.Params.DataDigest
                 let pdu2 = updater pdu
-                let! _ = PDU.SendPDU( mrdslt, headerDigest, dataDigest, ValueNone, ValueNone, ValueNone, m_ObjID, con.Connection, pdu2 )
+                let! _ = this.SendPDUWithFazzer mrdslt headerDigest dataDigest con.Connection pdu2 fuz
                 return struct( itt, cmdsn );
             finally
                 con.ReleaseSend()
         }
 
     /// <summary>
-    ///  Send SNACK request PDU to the initiator.
+    ///  Send logout request PDU to the target without test function.
     /// </summary>
+    member this.SendLogoutRequestPDU = this.SendLogoutRequestPDU_Test id ValueNone
+
+    /// <summary>
+    ///  Send SNACK request PDU to the target with test function.
+    /// </summary>
+    /// <param name="updater">Function to modify the PDU before sending.</param>
+    /// <param name="fuz">
+    ///  The offset and length of the range to be destroyed.
+    ///  If this value is ValueNone, the PDU is sent without modification.
+    /// </param>
     /// <param name="cid">CID of the connection that is used to send the PDU.</param>
     /// <param name="argType">SNACKRequestPDU Type field value.</param>
     /// <param name="argLUN">SNACKRequestPDU LUN field value.</param>
@@ -434,14 +499,15 @@ type iSCSI_Initiator(
     /// <returns>
     ///  The pair of ITT and CmdSN in sent PDU.
     /// </returns>
-    member _.SendSNACKRequestPDU
+    member this.SendSNACKRequestPDU_Test
+        ( updater : SNACKRequestPDU -> SNACKRequestPDU )
+        ( fuz : ( uint * uint ) voption )
         ( cid : CID_T )
         ( argType : SnackReqTypeCd )
         ( argLUN : LUN_T )
         ( argTargetTransferTag : TTT_T )
         ( argBegRun : uint32 )
         ( argRunLength : uint32 )
-        ( updater : SNACKRequestPDU -> SNACKRequestPDU )
         : Task< ITT_T > =
         task {
             let con = m_Connections.[cid]
@@ -462,15 +528,25 @@ type iSCSI_Initiator(
                 let headerDigest = con.Params.HeaderDigest
                 let dataDigest = con.Params.DataDigest
                 let pdu2 = updater pdu
-                let! _ = PDU.SendPDU( mrdslt, headerDigest, dataDigest, ValueNone, ValueNone, ValueNone, m_ObjID, con.Connection, pdu2 )
+                let! _ = this.SendPDUWithFazzer mrdslt headerDigest dataDigest con.Connection pdu2 fuz
                 return itt;
             finally
                 con.ReleaseSend()
         }
 
     /// <summary>
-    ///  Send NOP out PDU to the initiator.
+    ///  Send SNACK request PDU to the target without test function.
     /// </summary>
+    member this.SendSNACKRequestPDU = this.SendSNACKRequestPDU_Test id ValueNone
+
+    /// <summary>
+    ///  Send NOP out PDU to the target with test function.
+    /// </summary>
+    /// <param name="updater">Function to modify the PDU before sending.</param>
+    /// <param name="fuz">
+    ///  The offset and length of the range to be destroyed.
+    ///  If this value is ValueNone, the PDU is sent without modification.
+    /// </param>
     /// <param name="cid">CID of the connection that is used to send the PDU.</param>
     /// <param name="argI">NOPOutPDU I field value.</param>
     /// <param name="argLUN">NOPOutPDU LUN field value.</param>
@@ -479,13 +555,14 @@ type iSCSI_Initiator(
     /// <returns>
     ///  The pair of ITT and CmdSN in sent PDU.
     /// </returns>
-    member _.SendNOPOutPDU
+    member this.SendNOPOutPDU_Test
+        ( updater : NOPOutPDU -> NOPOutPDU )
+        ( fuz : ( uint * uint ) voption )
         ( cid : CID_T )
         ( argI : bool )
         ( argLUN : LUN_T )
         ( argTargetTransferTag : TTT_T )
         ( argPingData : PooledBuffer )
-        ( updater : NOPOutPDU -> NOPOutPDU )
         : Task< struct( ITT_T * CMDSN_T ) > =
         task {
             let con = m_Connections.[cid]
@@ -509,11 +586,16 @@ type iSCSI_Initiator(
                 let headerDigest = con.Params.HeaderDigest
                 let dataDigest = con.Params.DataDigest
                 let pdu2 = updater pdu
-                let! _ = PDU.SendPDU( mrdslt, headerDigest, dataDigest, ValueNone, ValueNone, ValueNone, m_ObjID, con.Connection, pdu2 )
+                let! _ = this.SendPDUWithFazzer mrdslt headerDigest dataDigest con.Connection pdu2 fuz
                 return struct( itt, cmdsn );
             finally
                 con.ReleaseSend()
         }
+
+    /// <summary>
+    ///  Send NOP out PDU to the target without test function.
+    /// </summary>
+    member this.SendNOPOutPDU = this.SendNOPOutPDU_Test id ValueNone
 
     /// <summary>
     ///  Receive response PDU.
@@ -618,6 +700,63 @@ type iSCSI_Initiator(
         m_Connections.Add( cid, iSCSI_Connection( conParams, r.Connection, r.ExpStatSN ) )
 
 
+    ///////////////////////////////////////////////////////////////////////////
+    // private member
+
+    /// <summary>
+    ///  Sends a PDU while destroying data in the specified range.
+    /// </summary>
+    /// <param name="argMaxRecvDataSegmentLength">
+    ///  The target's MaxRecvDataSegmentLength value reported by the target.
+    /// </param>
+    /// <param name="argHeaderDigest">
+    ///  Whether to use header digest.
+    /// </param>
+    /// <param name="argDataDigest">
+    ///  Whether to use data digest.
+    /// </param>
+    /// <param name="sock">
+    ///  The network stream to send the PDU.
+    /// </param>
+    /// <param name="argPDU">
+    ///  The PDU to send.
+    /// </param>
+    /// <param name="fuz">
+    ///  The offset and length of the range to be destroyed.
+    ///  If this value is ValueNone, the PDU is sent without modification.
+    /// </param>
+    member private _.SendPDUWithFazzer
+            ( argMaxRecvDataSegmentLength : uint32 )
+            ( argHeaderDigest : DigestType )
+            ( argDataDigest : DigestType )
+            ( sock : Stream )
+            ( argPDU : ILogicalPDU )
+            ( fuz : ( uint * uint ) voption ) : Task<unit> =
+        task {
+            match fuz with
+            | ValueSome( off, len ) ->
+                let off64 = int64 off
+                let len64 = int64 len
+
+                // Output the PDU to a MemoryStream in the form of sending it over the network.
+                use mb = new MemoryStream()
+                let! _ = PDU.SendPDU( argMaxRecvDataSegmentLength, argHeaderDigest, argDataDigest, ValueNone, ValueNone, ValueNone, m_ObjID, mb, argPDU )
+
+                // Overwrites the data in the specified range with random numbers.
+                if off64 < mb.Length then
+                    let wcnt = ( min mb.Length ( off64 + len64 ) ) - off64
+                    mb.Seek( off64, SeekOrigin.Begin ) |> ignore
+                    for _ = 0L to wcnt - 1L do
+                        mb.WriteByte( byte <| Random.Shared.Next() )
+
+                // Send the modified data to the network.
+                mb.Seek( 0L, SeekOrigin.Begin ) |> ignore
+                do! mb.CopyToAsync( sock )
+
+            | ValueNone ->
+                let! _ = PDU.SendPDU( argMaxRecvDataSegmentLength, argHeaderDigest, argDataDigest, ValueNone, ValueNone, ValueNone, m_ObjID, sock, argPDU )
+                ()
+        }
 
     ///////////////////////////////////////////////////////////////////////////
     // static public member
@@ -748,7 +887,7 @@ type iSCSI_Initiator(
                         |]
                     else
                         Array.Empty()
-                let! _ = sess.SendTextRequestPDU connParams.CID true false false lun_me.zero ( ttt_me.fromPrim 0xFFFFFFFFu ) textReq id
+                let! _ = sess.SendTextRequestPDU connParams.CID true false false lun_me.zero ( ttt_me.fromPrim 0xFFFFFFFFu ) textReq
                 let! wresppdu = sess.ReceiveSpecific<TextResponsePDU> connParams.CID
                 rv.Add wresppdu
 
@@ -770,7 +909,7 @@ type iSCSI_Initiator(
             let rd = buildResult keyValues2
 
             // Logout
-            let! _ = sess.SendLogoutRequestPDU connParams.CID false LogoutReqReasonCd.CLOSE_SESS connParams.CID id
+            let! _ = sess.SendLogoutRequestPDU connParams.CID false LogoutReqReasonCd.CLOSE_SESS connParams.CID
             let! _ = sess.ReceiveSpecific<LogoutResponsePDU> connParams.CID
 
             return rd
@@ -1514,6 +1653,30 @@ type iSCSI_Initiator(
             return lastSendExpStatSN
         }
 
+    /// <summary>
+    ///  Determine the parameter value from the negotiation result.
+    /// </summary>
+    /// <param name="defSessParams">
+    ///  Desired session parameters.
+    /// </param>
+    /// <param name="defConnParams">
+    ///  Desired connection parameters.
+    /// </param>
+    /// <param name="lastPDU_TSIH">
+    ///  TSIH value received from the target.
+    /// </param>
+    /// <param name="isLeadingCon">
+    ///  Login for leagind connection or not.
+    /// </param>
+    /// <param name="negoVal">
+    ///  Negotiated text key values.
+    /// </param>
+    /// <param name="negoStat">
+    ///  Negotiated text key values status.
+    /// </param>
+    /// <returns>
+    ///  Decided session parameters and connection parameters.
+    /// </returns>
     static member private DecideParameters
         ( defSessParams : SessParams )
         ( defConnParams : ConnParams )
@@ -1620,7 +1783,21 @@ type iSCSI_Initiator(
         }
         ( resultSessParams, resultConnParams )
 
-
+    /// <summary>
+    ///  Creates an empty LoginRequest PDU that can be used to request the next LoginResponse PDU in response to a LoginResponse PDU with the C bit set to 1.
+    /// </summary>
+    /// <param name="argCID">
+    ///  CID for connection to used receive the PDU.
+    /// </param>
+    /// <param name="resPDU">
+    ///  LoginResponse PDU with the C bit set to 1.
+    /// </param>
+    /// <param name="getCmdSN">
+    ///  The function to get current CmdSN value.
+    /// </param>
+    /// <returns>
+    ///  Created LoginRequest PDU.
+    /// </returns>
     static member private CreateLoginRequestPDUfromLoginResponsePDU ( argCID : CID_T ) ( resPDU : LoginResponsePDU ) ( getCmdSN : unit -> CMDSN_T ) : LoginRequestPDU =
         {
             T = false;
@@ -1638,3 +1815,5 @@ type iSCSI_Initiator(
             TextRequest = Array.empty;
             ByteCount = 0u; // not used
         }
+
+    

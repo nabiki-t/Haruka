@@ -106,7 +106,10 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     let g_CID2 = cid_me.fromPrim 2us
     let g_CID3 = cid_me.fromPrim 3us
 
-//    let m_Controller = fx.controllerProc
+    let g_LUN0 = lun_me.fromPrim 0UL
+    let g_LUN1 = lun_me.fromPrim 1UL
+    let g_DefTTT = ttt_me.fromPrim 0xFFFFFFFFu
+
     let m_iSCSIPortNo = fx.iSCSIPortNo
 
     // default session parameters
@@ -170,12 +173,12 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             Assert.True(( r.Params.TargetAlias = "target001" ))
 
             // Nop-Out
-            let! struct( itt1, cmdsn1 ) = r.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
             // Logout
-            let! struct( itt2, cmdsn2 ) = r.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0 id
+            let! _ = r.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
             let! rpdu2 = r.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
         }
@@ -374,12 +377,12 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             Assert.True(( r.Params.TargetAlias = "target002" ))
 
             // Nop-Out
-            let! struct( itt1, cmdsn1 ) = r.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 2UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 2UL ) g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
             // Logout
-            let! struct( itt2, cmdsn2 ) = r.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0 id
+            let! _ = r.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
             let! rpdu2 = r.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
         }
@@ -662,12 +665,12 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             Assert.True(( r.Params.TargetAlias = "target003" ))
 
             // Nop-Out
-            let! struct( itt1, cmdsn1 ) = r.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 3UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 3UL ) g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
             // Logout
-            let! struct( itt2, cmdsn2 ) = r.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0 id
+            let! _ = r.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
             let! rpdu2 = r.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
         }
@@ -834,7 +837,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
 
             // Logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0 id
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
 
@@ -846,12 +849,12 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r2 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam2
 
             // Nop-Out
-            let! _ = r2.SendNOPOutPDU g_CID1 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r2.SendNOPOutPDU g_CID1 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r2.ReceiveSpecific<NOPInPDU> g_CID1
             rpdu1.PingData.Return()
 
             // Logout
-            let! _ = r2.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_SESS g_CID1 id
+            let! _ = r2.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_SESS g_CID1
             let! rpdu2 = r2.ReceiveSpecific<LogoutResponsePDU> g_CID1
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
         }
@@ -878,7 +881,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
 
             // Logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0 id
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
 
@@ -924,13 +927,13 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection connParam1_2
 
             // Logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0 id
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID0 true ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+                let! _ = r1.SendNOPOutPDU g_CID0 true g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
             with
@@ -941,7 +944,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID1 true ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+                let! _ = r1.SendNOPOutPDU g_CID1 true g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
                 Assert.Fail __LINE__
             with
@@ -958,12 +961,12 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r3 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam2
 
             // Nop-Out
-            let! _ = r3.SendNOPOutPDU g_CID2 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r3.SendNOPOutPDU g_CID2 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu4 = r3.ReceiveSpecific<NOPInPDU> g_CID2
             rpdu4.PingData.Return()
 
             // Logout
-            let! _ = r3.SendLogoutRequestPDU g_CID2 false LogoutReqReasonCd.CLOSE_SESS g_CID2 id
+            let! _ = r3.SendLogoutRequestPDU g_CID2 false LogoutReqReasonCd.CLOSE_SESS g_CID2
             let! rpdu5 = r3.ReceiveSpecific<LogoutResponsePDU> g_CID2
             Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
         }
@@ -996,13 +999,13 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection connParam1_2
 
             // Logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0 id
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
             let! rpdu1 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu1.Response = LogoutResCd.SUCCESS ))
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID0 true ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+                let! _ = r1.SendNOPOutPDU g_CID0 true g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
             with
@@ -1013,7 +1016,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID1 true ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+                let! _ = r1.SendNOPOutPDU g_CID1 true g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
                 Assert.Fail __LINE__
             with
@@ -1064,13 +1067,13 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection connParam1_2
 
             // Log out sibling connections
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID1 id
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID1
             let! rpdu1 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu1.Response = LogoutResCd.SUCCESS ))
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID0 true ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+                let! _ = r1.SendNOPOutPDU g_CID0 true g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
             with
@@ -1081,7 +1084,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID1 true ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+                let! _ = r1.SendNOPOutPDU g_CID1 true g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
                 Assert.Fail __LINE__
             with
@@ -1098,12 +1101,12 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r3 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam2
 
             // Nop-Out
-            let! _ = r3.SendNOPOutPDU g_CID2 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r3.SendNOPOutPDU g_CID2 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu3 = r3.ReceiveSpecific<NOPInPDU> g_CID2
             rpdu3.PingData.Return()
 
             // Logout
-            let! _ = r3.SendLogoutRequestPDU g_CID2 false LogoutReqReasonCd.CLOSE_SESS g_CID2 id
+            let! _ = r3.SendLogoutRequestPDU g_CID2 false LogoutReqReasonCd.CLOSE_SESS g_CID2
             let! rpdu4 = r3.ReceiveSpecific<LogoutResponsePDU> g_CID2
             Assert.True(( rpdu4.Response = LogoutResCd.SUCCESS ))
         }
@@ -1136,13 +1139,13 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection connParam1_2
 
             // Log out sibling connections
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID1 id
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID1
             let! rpdu1 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu1.Response = LogoutResCd.SUCCESS ))
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID0 true ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+                let! _ = r1.SendNOPOutPDU g_CID0 true g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
             with
@@ -1153,7 +1156,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID1 true ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+                let! _ = r1.SendNOPOutPDU g_CID1 true g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
                 Assert.Fail __LINE__
             with
@@ -1198,13 +1201,13 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
 
             // Logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0 id
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+                let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
             with
@@ -1250,13 +1253,13 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
 
             // Logout
-            let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_CONN g_CID1 id
+            let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_CONN g_CID1
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID1
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID1 true ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+                let! _ = r1.SendNOPOutPDU g_CID1 true g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
                 Assert.Fail __LINE__
             with
@@ -1308,13 +1311,13 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection connParam1_2
 
             // Logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0 id
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID0 true ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+                let! _ = r1.SendNOPOutPDU g_CID0 true g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
             with
@@ -1324,7 +1327,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             r1.CloseConnection g_CID0
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID1 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID1 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID1
             rpdu1.PingData.Return()
 
@@ -1336,17 +1339,17 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection connParam1_3
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID2 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID2 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID2
             rpdu1.PingData.Return()
 
             // Logout( connection 1 )
-            let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_CONN g_CID1 id
+            let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_CONN g_CID1
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID1
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
 
             // Logout( connection 2 )
-            let! _ = r1.SendLogoutRequestPDU g_CID2 false LogoutReqReasonCd.CLOSE_CONN g_CID2 id
+            let! _ = r1.SendLogoutRequestPDU g_CID2 false LogoutReqReasonCd.CLOSE_CONN g_CID2
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID2
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
 
@@ -1380,13 +1383,13 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection connParam1_2
 
             // Logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0 id
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID0 true ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+                let! _ = r1.SendNOPOutPDU g_CID0 true g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
             with
@@ -1396,7 +1399,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             r1.CloseConnection g_CID0
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID1 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID1 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID1
             rpdu1.PingData.Return()
 
@@ -1408,22 +1411,22 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection connParam1_3
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID1 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID1 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID1
             rpdu1.PingData.Return()
 
             // Logout( connection 0 )
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0 id
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
 
             // Logout( connection 1 )
-            let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_CONN g_CID1 id
+            let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_CONN g_CID1
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID1
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
 
@@ -1457,13 +1460,13 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection connParam1_2
 
             // Logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID1 id
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID1
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID1 true ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+                let! _ = r1.SendNOPOutPDU g_CID1 true g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
                 Assert.Fail __LINE__
             with
@@ -1473,7 +1476,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             r1.CloseConnection g_CID1
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
@@ -1485,17 +1488,17 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection connParam1_3
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID2 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID2 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID2
             rpdu1.PingData.Return()
 
             // Logout( connection 0 )
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0 id
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
 
             // Logout( connection 2 )
-            let! _ = r1.SendLogoutRequestPDU g_CID2 false LogoutReqReasonCd.CLOSE_CONN g_CID2 id
+            let! _ = r1.SendLogoutRequestPDU g_CID2 false LogoutReqReasonCd.CLOSE_CONN g_CID2
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID2
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
 
@@ -1529,13 +1532,13 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection connParam1_2
 
             // Logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID1 id
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID1
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID1 true ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+                let! _ = r1.SendNOPOutPDU g_CID1 true g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
                 Assert.Fail __LINE__
             with
@@ -1545,7 +1548,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             r1.CloseConnection g_CID1
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
@@ -1557,22 +1560,22 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection connParam1_3
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID1 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID1 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID1
             rpdu1.PingData.Return()
 
             // Logout( connection 0 )
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0 id
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
 
             // Logout( connection 1 )
-            let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_CONN g_CID1 id
+            let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_CONN g_CID1
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID1
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
 
@@ -1620,7 +1623,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
@@ -1639,7 +1642,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
                 ()
 
             // Logout( connection 0 )
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0 id
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
 
@@ -1662,7 +1665,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
@@ -1678,17 +1681,17 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r2 = iSCSI_Initiator.CreateInitialSession sessParam2 connParam2
 
             // Nop-Out
-            let! _ = r2.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r2.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu2 = r2.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu2.PingData.Return()
 
             // Logout( sess r1 )
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0 id
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0
             let! rpdu3 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu3.Response = LogoutResCd.SUCCESS ))
 
             // Logout( sess r2 )
-            let! _ = r2.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0 id
+            let! _ = r2.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0
             let! rpdu3 = r2.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu3.Response = LogoutResCd.SUCCESS ))
 
@@ -1712,7 +1715,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
@@ -1730,7 +1733,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // Nop-Out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID0 true ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+                let! _ = r1.SendNOPOutPDU g_CID0 true g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
             with
@@ -1739,12 +1742,12 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
                 ()
 
             // Nop-Out
-            let! _ = r2.SendNOPOutPDU g_CID1 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r2.SendNOPOutPDU g_CID1 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu2 = r2.ReceiveSpecific<NOPInPDU> g_CID1
             rpdu2.PingData.Return()
 
             // Logout( sess r2 )
-            let! _ = r2.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_CONN g_CID1 id
+            let! _ = r2.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_CONN g_CID1
             let! rpdu3 = r2.ReceiveSpecific<LogoutResponsePDU> g_CID1
             Assert.True(( rpdu3.Response = LogoutResCd.SUCCESS ))
 
@@ -1768,12 +1771,12 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
             // Logout( sess r1 )
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0 id
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
 
@@ -1789,12 +1792,12 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r2 = iSCSI_Initiator.CreateInitialSession sessParam2 connParam2
 
             // Nop-Out
-            let! _ = r2.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r2.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu3 = r2.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu3.PingData.Return()
 
             // Logout( sess r2 )
-            let! _ = r2.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0 id
+            let! _ = r2.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0
             let! rpdu4 = r2.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu4.Response = LogoutResCd.SUCCESS ))
         }
@@ -1817,7 +1820,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
@@ -1829,17 +1832,17 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection connParam2
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID1 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID1 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID1
             rpdu2.PingData.Return()
 
             // Logout( conn0 )
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0 id
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0
             let! rpdu3 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu3.Response = LogoutResCd.SUCCESS ))
 
             // Logout( conn1 )
-            let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_CONN g_CID1 id
+            let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_CONN g_CID1
             let! rpdu4 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID1
             Assert.True(( rpdu4.Response = LogoutResCd.SUCCESS ))
 
@@ -1863,12 +1866,12 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
             // Logout( conn0 )
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0 id
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0
             let! rpdu3 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu3.Response = LogoutResCd.SUCCESS ))
 
@@ -1912,12 +1915,12 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection connParam2
 
             // Nop-Out ( conn0 )
-            let! _ = r1.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
             // Nop-Out ( conn1 )
-            let! _ = r1.SendNOPOutPDU g_CID1 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID1 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID1
             rpdu2.PingData.Return()
 
@@ -1926,12 +1929,12 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection connParam2
 
             // Nop-Out ( conn0 )
-            let! _ = r1.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu3.PingData.Return()
 
             // Nop-Out ( conn1 )
-            let! _ = r1.SendNOPOutPDU g_CID1 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID1 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu4 = r1.ReceiveSpecific<NOPInPDU> g_CID1
             rpdu4.PingData.Return()
 
@@ -1945,12 +1948,12 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
                 ()
 
             // Logout( conn0 )
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0 id
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0
             let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
 
             // Logout( conn1 )
-            let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_CONN g_CID1 id
+            let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_CONN g_CID1
             let! rpdu6 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID1
             Assert.True(( rpdu6.Response = LogoutResCd.SUCCESS ))
 
@@ -1974,7 +1977,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
 
             // Nop-Out ( conn0 )
-            let! _ = r1.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
@@ -1983,7 +1986,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection connParam1
 
             // Nop-Out ( conn0 )
-            let! _ = r1.SendNOPOutPDU g_CID0 false ( lun_me.fromPrim 1UL ) ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty id
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu3.PingData.Return()
 
@@ -1997,7 +2000,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
                 ()
 
             // Logout( conn0 )
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0 id
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0
             let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
         }
