@@ -81,6 +81,7 @@ type TaskRouter_Test () =
 
         k1, status_stub, session, taskRouter, lu1
 
+    // Test case when a login is attempted to an existing LU.
     [<Fact>]
     member _.Constructor_001() =
         let k1 = new HKiller() :> IKiller
@@ -96,7 +97,7 @@ type TaskRouter_Test () =
                     TargetName = "target001001";
                     TargetAlias = "";
                     TargetPortalGroupTag = tpgt_me.zero;
-                    LUN = [ lun_me.fromPrim 1UL ];
+                    LUN = [ lun_me.fromPrim 1UL ];              // Attempt to log in to LU1
                     Auth = TargetGroupConf.T_Auth.U_None();
                 };
                 InitiatorName = "initiator001";
@@ -115,13 +116,10 @@ type TaskRouter_Test () =
             }
 
         status_stub.p_GetLU <- ( fun argLUN ->
-            if argLUN = lun_me.fromPrim 1UL || argLUN = lun_me.fromPrim 0UL then
-                let r = new CLU_Stub()
-                r.dummy <- box argLUN
-                ValueSome( r :> ILU )
-            else
-                Assert.Fail __LINE__
-                ValueNone
+            Assert.True( ( argLUN = lun_me.fromPrim 1UL || argLUN = lun_me.fromPrim 0UL ) )
+            let r = new CLU_Stub()
+            r.dummy <- box argLUN
+            ValueSome( r :> ILU )   // Respond as if it exists
         )
         
         let taskRouter =
@@ -155,9 +153,9 @@ type TaskRouter_Test () =
 
         k1.NoticeTerminate()
 
-
+    // Test case when a login attempt is made specifying a non-existent LU.
     [<Fact>]
-    member _.Constructor_003() =
+    member _.Constructor_002() =
         let k1 = new HKiller() :> IKiller
         let status_stub = new CStatus_Stub()
         let session = new CSession_Stub()
@@ -171,7 +169,7 @@ type TaskRouter_Test () =
                     TargetName = "target001001";
                     TargetAlias = "";
                     TargetPortalGroupTag = tpgt_me.zero;
-                    LUN = [ lun_me.fromPrim 2UL ];
+                    LUN = [ lun_me.fromPrim 2UL ];              // Attempt to log in to LU2
                     Auth = TargetGroupConf.T_Auth.U_None();
                 };
                 InitiatorName = "initiator001";
@@ -190,7 +188,7 @@ type TaskRouter_Test () =
             }
         status_stub.p_GetLU <- ( fun lun -> 
             Assert.True(( lun = lun_me.fromPrim 2UL || lun = lun_me.fromPrim 0UL ))
-            ValueNone
+            ValueNone   // Respond as if it does not exist
         )
         
         try
@@ -216,9 +214,9 @@ type TaskRouter_Test () =
 
         k1.NoticeTerminate()
 
-
+    // Test case when logging in with two LUs specified
     [<Fact>]
-    member _.Constructor_006() =
+    member _.Constructor_003() =
         let k1 = new HKiller() :> IKiller
         let status_stub = new CStatus_Stub()
         let session = new CSession_Stub()
@@ -290,9 +288,9 @@ type TaskRouter_Test () =
 
         k1.NoticeTerminate()
 
-
+    // Test case when logging in with four LUs specified
     [<Fact>]
-    member _.Constructor_007() =
+    member _.Constructor_004() =
         let k1 = new HKiller() :> IKiller
         let status_stub = new CStatus_Stub()
         let session = new CSession_Stub()
@@ -375,6 +373,7 @@ type TaskRouter_Test () =
 
         k1.NoticeTerminate()
 
+    // Transfer AbortTask request to an existing LU
     [<Fact>]
     member _.AbortTask_001() =
         let k1, status_stub, session, taskRouter, lu1 =
@@ -390,17 +389,15 @@ type TaskRouter_Test () =
             wcnt <- 1
         )
 
-        try
-            let s1 = new CISCSITask_Stub()
-            s1.p_GetAllegiantConnection <- ( fun _ -> ( cid_me.fromPrim 1us, concnt_me.fromPrim 2 ) )
-            s1.p_GetInitiatorTaskTag <- ( fun _ -> ValueSome( itt_me.fromPrim 3u ) )
-            taskRouter.AbortTask s1 ( lun_me.fromPrim 3UL ) ( itt_me.fromPrim 4u )
-        with
-        | _ -> Assert.Fail __LINE__
+        let s1 = new CISCSITask_Stub()
+        s1.p_GetAllegiantConnection <- ( fun _ -> ( cid_me.fromPrim 1us, concnt_me.fromPrim 2 ) )
+        s1.p_GetInitiatorTaskTag <- ( fun _ -> ValueSome( itt_me.fromPrim 3u ) )
+        taskRouter.AbortTask s1 ( lun_me.fromPrim 3UL ) ( itt_me.fromPrim 4u )
         Assert.True( ( 1 = wcnt ) )
 
         k1.NoticeTerminate()
 
+    // Transferring an AbortTask request to a non-existent LU
     [<Fact>]
     member _.AbortTask_002() =
         let k1, status_stub, session, taskRouter, lu1 =
@@ -420,6 +417,7 @@ type TaskRouter_Test () =
 
         k1.NoticeTerminate()
 
+    // Transfer AbortTaskSet request to an existing LU
     [<Fact>]
     member _.AbortTaskSet_001() =
         let k1, status_stub, session, taskRouter, lu1 =
@@ -434,17 +432,15 @@ type TaskRouter_Test () =
             wcnt <- 1
         )
 
-        try
-            let s1 = new CISCSITask_Stub()
-            s1.p_GetAllegiantConnection <- ( fun _ -> ( cid_me.fromPrim 1us, concnt_me.fromPrim 2 ) )
-            s1.p_GetInitiatorTaskTag <- ( fun _ -> ValueSome( itt_me.fromPrim 3u ) )
-            taskRouter.AbortTaskSet s1 ( lun_me.fromPrim 3UL )
-        with
-        | _ -> Assert.Fail __LINE__
+        let s1 = new CISCSITask_Stub()
+        s1.p_GetAllegiantConnection <- ( fun _ -> ( cid_me.fromPrim 1us, concnt_me.fromPrim 2 ) )
+        s1.p_GetInitiatorTaskTag <- ( fun _ -> ValueSome( itt_me.fromPrim 3u ) )
+        taskRouter.AbortTaskSet s1 ( lun_me.fromPrim 3UL )
         Assert.True( ( 1 = wcnt ) )
 
         k1.NoticeTerminate()
 
+    // Transferring an AbortTaskSet request to a non-existent LU
     [<Fact>]
     member _.AbortTaskSet_002() =
         let k1, status_stub, session, taskRouter, lu1 =
@@ -464,6 +460,7 @@ type TaskRouter_Test () =
 
         k1.NoticeTerminate()
 
+    // Transfer ClearACA request to an existing LU
     [<Fact>]
     member _.ClearACA_001() =
         let k1, status_stub, session, taskRouter, lu1 =
@@ -478,17 +475,15 @@ type TaskRouter_Test () =
             wcnt <- 1
         )
 
-        try
-            let s1 = new CISCSITask_Stub()
-            s1.p_GetAllegiantConnection <- ( fun _ -> ( cid_me.fromPrim 1us, concnt_me.fromPrim 2 ) )
-            s1.p_GetInitiatorTaskTag <- ( fun _ -> ValueSome( itt_me.fromPrim 3u ) )
-            taskRouter.ClearACA s1 ( lun_me.fromPrim 3UL )
-        with
-        | _ -> Assert.Fail __LINE__
+        let s1 = new CISCSITask_Stub()
+        s1.p_GetAllegiantConnection <- ( fun _ -> ( cid_me.fromPrim 1us, concnt_me.fromPrim 2 ) )
+        s1.p_GetInitiatorTaskTag <- ( fun _ -> ValueSome( itt_me.fromPrim 3u ) )
+        taskRouter.ClearACA s1 ( lun_me.fromPrim 3UL )
         Assert.True( ( 1 = wcnt ) )
 
         k1.NoticeTerminate()
 
+    // Transferring an ClearACA request to a non-existent LU
     [<Fact>]
     member _.ClearACA_002() =
         let k1, status_stub, session, taskRouter, lu1 =
@@ -508,6 +503,7 @@ type TaskRouter_Test () =
 
         k1.NoticeTerminate()
 
+    // Transfer ClearTaskSet request to an existing LU
     [<Fact>]
     member _.ClearTaskSet_001() =
         let k1, status_stub, session, taskRouter, lu1 =
@@ -522,17 +518,15 @@ type TaskRouter_Test () =
             wcnt <- 1
         )
 
-        try
-            let s1 = new CISCSITask_Stub()
-            s1.p_GetAllegiantConnection <- ( fun _ -> ( cid_me.fromPrim 1us, concnt_me.fromPrim 2 ) )
-            s1.p_GetInitiatorTaskTag <- ( fun _ -> ValueSome( itt_me.fromPrim 3u ) )
-            taskRouter.ClearTaskSet s1 ( lun_me.fromPrim 3UL )
-        with
-        | _ -> Assert.Fail __LINE__
+        let s1 = new CISCSITask_Stub()
+        s1.p_GetAllegiantConnection <- ( fun _ -> ( cid_me.fromPrim 1us, concnt_me.fromPrim 2 ) )
+        s1.p_GetInitiatorTaskTag <- ( fun _ -> ValueSome( itt_me.fromPrim 3u ) )
+        taskRouter.ClearTaskSet s1 ( lun_me.fromPrim 3UL )
         Assert.True( ( 1 = wcnt ) )
 
         k1.NoticeTerminate()
 
+    // Transferring an ClearTaskSet request to a non-existent LU
     [<Fact>]
     member _.ClearTaskSet_002() =
         let k1, status_stub, session, taskRouter, lu1 =
@@ -552,6 +546,7 @@ type TaskRouter_Test () =
 
         k1.NoticeTerminate()
 
+    // Transfer LogicalUnitReset request to an existing LU
     [<Fact>]
     member _.LogicalUnitReset_001() =
         let k1, status_stub, session, taskRouter, lu1 =
@@ -566,17 +561,15 @@ type TaskRouter_Test () =
             wcnt <- 1
         )
 
-        try
-            let s1 = new CISCSITask_Stub()
-            s1.p_GetAllegiantConnection <- ( fun _ -> ( cid_me.fromPrim 1us, concnt_me.fromPrim 2 ) )
-            s1.p_GetInitiatorTaskTag <- ( fun _ -> ValueSome( itt_me.fromPrim 3u ) )
-            taskRouter.LogicalUnitReset s1 ( lun_me.fromPrim 3UL )
-        with
-        | _ -> Assert.Fail __LINE__
+        let s1 = new CISCSITask_Stub()
+        s1.p_GetAllegiantConnection <- ( fun _ -> ( cid_me.fromPrim 1us, concnt_me.fromPrim 2 ) )
+        s1.p_GetInitiatorTaskTag <- ( fun _ -> ValueSome( itt_me.fromPrim 3u ) )
+        taskRouter.LogicalUnitReset s1 ( lun_me.fromPrim 3UL )
         Assert.True( ( 1 = wcnt ) )
 
         k1.NoticeTerminate()
 
+    // Transferring an LogicalUnitReset request to a non-existent LU
     [<Fact>]
     member _.LogicalUnitReset_002() =
         let k1, status_stub, session, taskRouter, lu1 =
@@ -596,6 +589,7 @@ type TaskRouter_Test () =
 
         k1.NoticeTerminate()
 
+    // Transfer SCSICommand request to an existing LU
     [<Fact>]
     member _.SCSICommand_001() =
         let k1, status_stub, session, taskRouter, lu1 =
@@ -628,15 +622,12 @@ type TaskRouter_Test () =
             ByteCount = 0u;
         }
 
-        try
-            taskRouter.SCSICommand ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 2 ) argcmd []
-        with
-        | _ -> Assert.Fail __LINE__
+        taskRouter.SCSICommand ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 2 ) argcmd []
         Assert.True( ( 1 = wcnt ) )
 
         k1.NoticeTerminate()
-        Console.Error.Close()
 
+    // Transferring an SCSICommand request to a non-existent LU
     [<Fact>]
     member _.SCSICommand_002() =
         let k1, status_stub, session, taskRouter, lu1 =
@@ -669,8 +660,8 @@ type TaskRouter_Test () =
             Assert.Fail __LINE__
 
         k1.NoticeTerminate()
-        Console.Error.Close()
 
+    // Sends a SCSI response to the surviving session
     [<Fact>]
     member _.SendSCSIResponse_001() =
         let k1, status_stub, session, taskRouter, lu1 =
@@ -743,11 +734,13 @@ type TaskRouter_Test () =
 
         k1.NoticeTerminate()
 
+    // Sends a SCSI response to the terminated session.
     [<Fact>]
     member _.SendSCSIResponse_002() =
         let k1, status_stub, session, taskRouter, lu1 =
             TaskRouter_Test.createDefaultTaskRouter()
 
+        // Destroy the session first.
         k1.NoticeTerminate()
 
         session.p_SendSCSIResponse <-
@@ -782,6 +775,7 @@ type TaskRouter_Test () =
             4096u
             ResponseFenceNeedsFlag.R_Mode
 
+    // Sends a response other than SCSI response to the surviving session
     [<Fact>]
     member _.SendOtherResponse_001() =
         let k1, status_stub, session, taskRouter, lu1 =
@@ -811,6 +805,7 @@ type TaskRouter_Test () =
         k1.NoticeTerminate()
         Assert.True(( wcnt = 1 ))
 
+    // Sends a response other than SCSI response to the terminated session.
     [<Fact>]
     member _.SendOtherResponse_002() =
         let k1, status_stub, session, taskRouter, lu1 =
@@ -819,6 +814,7 @@ type TaskRouter_Test () =
         session.p_SendOtherResponsePDU <-
             ( fun cid counter pdu -> Assert.Fail __LINE__ )
 
+        // Destroy the session first.
         k1.NoticeTerminate()
 
         taskRouter.SendOtherResponse
@@ -834,6 +830,7 @@ type TaskRouter_Test () =
                 }
                 lun_me.zero
 
+    // Session recovery notification.
     [<Fact>]
     member _.NoticeSessionRecovery_001() =
         let k1, status_stub, session, taskRouter, lu1 =
@@ -847,6 +844,7 @@ type TaskRouter_Test () =
         Assert.True(( 1 = cnt ))
         k1.NoticeTerminate()
 
+    // Execution of the GetLUNs method when multiple LUs exist.
     [<Fact>]
     member _.GetLUNs_001() =
         let k1, status_stub, session, taskRouter, _ =
@@ -870,6 +868,7 @@ type TaskRouter_Test () =
         Assert.True(( expect = taskRouter.GetLUNs() ))
         k1.NoticeTerminate()
 
+    // Executing the GetLUNs method when the LU does not exist.
     [<Fact>]
     member _.GetLUNs_002() =
         let k1, status_stub, session, taskRouter, _ =
@@ -881,6 +880,7 @@ type TaskRouter_Test () =
         Assert.True(( expect = taskRouter.GetLUNs() ))
         k1.NoticeTerminate()
 
+    // Execution of the GetTaskQueueUsage method when no LUs exist.
     [<Fact>]
     member _.GetTaskQueueUsage_001() =
         let k1, status_stub, session, taskRouter, _ =
@@ -891,6 +891,7 @@ type TaskRouter_Test () =
         Assert.True(( 0 = taskRouter.GetTaskQueueUsage() ))
         k1.NoticeTerminate()
 
+    // Execution of the GetTaskQueueUsage method when only LU0 exists.
     [<Fact>]
     member _.GetTaskQueueUsage_002() =
         let k1, status_stub, session, taskRouter, _ =
@@ -907,6 +908,7 @@ type TaskRouter_Test () =
         Assert.True(( 0 = taskRouter.GetTaskQueueUsage() ))
         k1.NoticeTerminate()
 
+    // Execution of the GetLUNs method when LUs other than LU0 exist.
     [<Fact>]
     member _.GetTaskQueueUsage_003() =
         let k1, status_stub, session, taskRouter, _ =
@@ -932,6 +934,7 @@ type TaskRouter_Test () =
         Assert.True(( 98 = taskRouter.GetTaskQueueUsage() ))
         k1.NoticeTerminate()
 
+    // Execution of the GetLUNs method when there are multiple LUs other than LU0.
     [<Fact>]
     member _.GetTaskQueueUsage_004() =
         let k1, status_stub, session, taskRouter, _ =
