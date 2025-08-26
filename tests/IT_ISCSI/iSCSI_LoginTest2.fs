@@ -1420,68 +1420,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
         }
-(*
-type aaaa() =
 
-    let g_CID0 = cid_me.zero
-    let g_CID1 = cid_me.fromPrim 1us
-    let g_CID2 = cid_me.fromPrim 2us
-    let g_CID3 = cid_me.fromPrim 3us
-
-    let m_iSCSIPortNo = 3260
-
-    // default session parameters
-    let m_defaultSessParam = {
-        InitiatorName = "iqn.2020-05.example.com:initiator";
-        InitiatorAlias = "aaa";
-        TargetName = "iqn.1999-01.com.example:8361cca2-0ddf-4546-bf00-9ef92dea9b43";
-        TargetAlias = "";
-        ISID = isid_me.fromPrim 1UL;
-        TSIH = tsih_me.fromPrim 0us;
-        MaxConnections = 16us;
-        InitialR2T = false;
-        ImmediateData = true;
-        MaxBurstLength = 262144u;
-        FirstBurstLength = 262144u;
-        DefaultTime2Wait = 2us;
-        DefaultTime2Retain = 20us;
-        MaxOutstandingR2T = 16us;
-        DataPDUInOrder = false;
-        DataSequenceInOrder = false;
-        ErrorRecoveryLevel = 0uy;
-    }
-
-    // default connection parameters
-    let m_defaultConnParam = {
-        PortNo = m_iSCSIPortNo;
-        CID = g_CID0;
-        Initiator_UserName = "";
-        Initiator_Password = "";
-        Target_UserName = "";
-        Target_Password = "";
-        HeaderDigest = DigestType.DST_CRC32C;
-        DataDigest = DigestType.DST_CRC32C;
-        MaxRecvDataSegmentLength_I = 262144u;
-        MaxRecvDataSegmentLength_T = 262144u;
-    }
-
-    let scsiWrite10CDB ( transferLength : uint16 ) =
-        let w =
-            ( int16 ) transferLength
-            |> IPAddress.HostToNetworkOrder
-            |> BitConverter.GetBytes
-        [|
-            0x2Auy;                         // OPERATION CODE( Write 10 )
-            0x00uy;                         // WRPROTECT(000), DPO(0), FUA(0), FUA_NV(0)
-            0x00uy; 0x00uy; 0x00uy; 0x00uy; // LBA
-            0x00uy;                         // GROUP NUMBER(0)
-            w.[0]; w.[1];                   // TRANSFER LENGTH
-            0x02uy;                         // NACA(1), LINK(0)
-            0x00uy; 0x00uy; 0x00uy; 0x00uy; // padding
-            0x00uy; 0x00uy;
-        |]
-    let m_MediaBlockSize = 4096u
-*)
     // Test case where FirstBurstLength value is the minimum.
     // When sending data using SCSI Command PDU.
     [<Fact>]
