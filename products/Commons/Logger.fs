@@ -1635,7 +1635,7 @@ type HLogger() =
             ( LogID.E_TOO_MANY_CONNECTIONS,             "Too many connections in the session. MaxConnections={0}, Connection count={1}" )
             ( LogID.E_UNEXPECTED_PDU_IN_LOGIN_NEGOSEC,  "Unexpected PDU was received in login negosiation. Received PDU is {0}." )
             ( LogID.E_FAILED_RECEIVE_ALL_DATA_OUT_BYTES,"In SCSI write command, it failed to receive all of data-out bytes. It occurs session recovery when error recovery level is zero." )
-            ( LogID.E_STATSN_SIGNIFICANTLY_DIFFERENT,   "Current StatSN(=0x%08X) nad initiator's ExpStatSN(=0x%08X) are significantly different. In ErrorRecoverLevel=0, it occurs session recovery." )
+            ( LogID.E_STATSN_SIGNIFICANTLY_DIFFERENT,   "Current StatSN({0}) and initiator's ExpStatSN({1}) are significantly different. In ErrorRecoverLevel=0, it occurs session recovery." )
             ( LogID.E_MISSING_RSNACK_REQED_STATUS_PDU,  "R-SNACK requested SCSI response PDU is missing." )
             ( LogID.E_TASK_QUEUE_LIMIT_EXCEEDED,        "Task queue size limit exceeded." )
             ( LogID.E_TD_PROC_RETRY_COUNT_OVER,         "Target device process restart count was over. Abort the restart. Target Device ID={0}, Last process ID={1}" )
