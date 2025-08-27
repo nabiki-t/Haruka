@@ -633,6 +633,9 @@ type iSCSI_Initiator(
                 | :? LogoutResponsePDU as x ->
                     if x.StatSN = con.ExpStatSN then
                         con.IncrementExpStatSN()
+                | :? NOPInPDU as x ->
+                    if x.StatSN = con.ExpStatSN then
+                        con.IncrementExpStatSN()
                 | :? SCSIDataInPDU as x ->
                     if x.S && x.StatSN = con.ExpStatSN then
                         con.IncrementExpStatSN()
