@@ -1796,8 +1796,12 @@ module Constants =
         65535us
 
     /// In error recovery level zero, max differential of StatSN and ExpStatSN that occurs the session recovery.
+    /// It must be greater than BDLU_MAX_TASKSET_SIZE. 
+    /// If a value smaller than BDLU_MAX_TASKSET_SIZE is specified,
+    /// the execution of the command reported by MaxCmdSN cannot be guaranteed
+    /// if the queue becomes congested due to reasons on the initiator.
     let MAX_STATSN_DIFF : uint32 =
-        32u
+        256u
 
     /// Max network portal count in target device.
     let MAX_NETWORK_PORTAL_COUNT : int =
