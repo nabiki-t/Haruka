@@ -109,7 +109,8 @@ type iSCSI_Initiator(
     m_SessParams : SessParams,
     leadingConParams : ConnParams,
     firstExpStatSN : STATSN_T,
-    leadingConn : NetworkStream
+    leadingConn : NetworkStream,
+    initialCmdSNValue : CMDSN_T
 ) =
 
     let m_ObjID = objidx_me.NewID()
@@ -121,7 +122,8 @@ type iSCSI_Initiator(
         |> Array.map KeyValuePair
         |> Dictionary
 
-    let mutable m_CmdSN : uint32 = 0xFFFFFFFFu
+    let mutable m_CmdSN : uint32 =
+        cmdsn_me.toPrim initialCmdSNValue - 1u
     let mutable m_ITT : uint32 = 0xFFFFFFFFu
     
 
@@ -162,6 +164,19 @@ type iSCSI_Initiator(
     /// Get ITT property
     member _.ITT with get() = itt_me.fromPrim m_ITT
                  and  set( v : ITT_T ) = m_ITT <- itt_me.toPrim v
+
+    /// Skip CmdSN Value
+    member _.SkipCmdSN ( v : CMDSN_T ) : unit =
+        m_CmdSN <- m_CmdSN + ( cmdsn_me.toPrim v )
+
+    /// Rewind CmdSN Value
+    member _.RewindCmdSN ( v : CMDSN_T ) : unit =
+        m_CmdSN <- m_CmdSN - ( cmdsn_me.toPrim v )
+
+    /// Set next CmdSN Value
+    member _.SetNextCmdSN ( v : CMDSN_T ) : unit =
+        m_CmdSN <- ( cmdsn_me.toPrim v ) - 1u
+
 
     /// <summary>
     ///  Send SCSI command PDU to the target with test function.
@@ -811,12 +826,27 @@ type iSCSI_Initiator(
     ///  Created iSCSI initiator object.
     /// </returns>
     static member CreateInitialSession ( exp_SessParams : SessParams ) ( exp_ConnParams : ConnParams ) : Task<iSCSI_Initiator> =
+        iSCSI_Initiator.CreateInitialSessionWithInitialSmdSN exp_SessParams exp_ConnParams cmdsn_me.zero
+
+    /// <summary>
+    ///  Create session instance and login the leading connection.
+    /// </summary>
+    /// <param name="exp_SessParams">
+    ///  Desired session parameters.
+    /// </param>
+    /// <param name="exp_ConnParams">
+    ///  Desired connection parameters.
+    /// </param>
+    /// <returns>
+    ///  Created iSCSI initiator object.
+    /// </returns>
+    static member CreateInitialSessionWithInitialSmdSN ( exp_SessParams : SessParams ) ( exp_ConnParams : ConnParams ) ( initCmdSN : CMDSN_T ) : Task<iSCSI_Initiator> =
         task {
             let objID = objidx_me.NewID()
-            let getCmdSN = fun () -> cmdsn_me.zero
+            let getCmdSN = fun () -> initCmdSN
             let! sessParams, connParams, lastStatSN, conn =
                 iSCSI_Initiator.Login exp_SessParams exp_ConnParams objID getCmdSN ( itt_me.fromPrim 0u ) statsn_me.zero true false
-            return new iSCSI_Initiator( sessParams, connParams, statsn_me.Next lastStatSN, conn )
+            return new iSCSI_Initiator( sessParams, connParams, statsn_me.Next lastStatSN, conn, initCmdSN )
         }
 
     /// <summary>
@@ -876,7 +906,7 @@ type iSCSI_Initiator(
             }
             let! sessParams, connParams, lastStatSN, conn =
                 iSCSI_Initiator.Login swp exp_ConnParams objID getCmdSN ( itt_me.fromPrim 0u ) statsn_me.zero true true
-            let sess = new iSCSI_Initiator( sessParams, connParams, statsn_me.Next lastStatSN, conn )
+            let sess = new iSCSI_Initiator( sessParams, connParams, statsn_me.Next lastStatSN, conn, cmdsn_me.zero )
 
             // Send SendTargets text request
             let rv = List<TextResponsePDU>()

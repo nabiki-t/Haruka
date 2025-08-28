@@ -195,7 +195,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             sendData.Return()
 
             // Rewind the initiator's CmdSN value
-            r1.CmdSN <- cmdsn_0
+            r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
 
             // Re-send Nop-Out 2
             let sendData = PooledBuffer.RentAndInit 4096
@@ -221,13 +221,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
 
             // Nop-Out 1
-            let oldCmdSN1 = r1.CmdSN
             let! _, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu1_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu1_1.ExpCmdSN = cmdsn_me.fromPrim 1u ))
 
             // Rewind the initiator's CmdSN value
-            r1.CmdSN <- oldCmdSN1
+            r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
 
             // Re-send Nop-Out 1
             let! _, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -236,13 +235,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( pdu1_2.ExpCmdSN = cmdsn_me.fromPrim 1u ))
 
             // Nop-Out 2
-            let oldCmdSN2 = r1.CmdSN
             let! _, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu2_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu2_1.ExpCmdSN = cmdsn_me.fromPrim 2u ))
 
             // Rewind the initiator's CmdSN value
-            r1.CmdSN <- oldCmdSN2
+            r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
 
             // Send TaskMgrReq with same CmdSN as Nop-Out 2
             let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 false TaskMgrReqCd.ABORT_TASK g_LUN1 ( itt_me.fromPrim 1u ) ( cmdsn_me.fromPrim 1u ) ( datasn_me.fromPrim 0u )
@@ -251,13 +249,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( pdu2_2.ExpCmdSN = cmdsn_me.fromPrim 2u ))
 
             // Nop-Out 3
-            let oldCmdSN3 = r1.CmdSN
             let! _, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu3_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu3_1.ExpCmdSN = cmdsn_me.fromPrim 3u ))
 
             // Rewind the initiator's CmdSN value
-            r1.CmdSN <- oldCmdSN3
+            r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
 
             // Send Logout request with same CmdSN as Nop-Out 3
             let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
@@ -266,13 +263,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( pdu3_2.ExpCmdSN = cmdsn_me.fromPrim 3u ))
 
             // Nop-Out 4
-            let oldCmdSN4 = r1.CmdSN
             let! _, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu4_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu4_1.ExpCmdSN = cmdsn_me.fromPrim 4u ))
 
             // Rewind the initiator's CmdSN value
-            r1.CmdSN <- oldCmdSN4
+            r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
 
             // Send SCSI Command with same CmdSN as Nop-Out 4
             let writeCDB = scsiWrite10CDB 0us
@@ -282,19 +278,209 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( pdu4_2.ExpCmdSN = cmdsn_me.fromPrim 4u ))
 
             // Nop-Out 5
-            let oldCmdSN5 = r1.CmdSN
             let! _, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu5_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu5_1.ExpCmdSN = cmdsn_me.fromPrim 5u ))
 
             // Rewind the initiator's CmdSN value
-            r1.CmdSN <- oldCmdSN5
+            r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
 
             // Text request PDU with same CmdSN as Nop-Out 5
             let! _ = r1.SendTextRequestPDU g_CID0 false false false g_LUN1 g_DefTTT [||]
             let! pdu5_2 = r1.ReceiveSpecific<RejectPDU> g_CID0
             Assert.True(( pdu5_2.Reason = RejectResonCd.INVALID_PDU_FIELD ))
             Assert.True(( pdu5_2.ExpCmdSN = cmdsn_me.fromPrim 5u ))
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            ()
+        }
+
+    // Send until CmdSN reaches MaxCmdSN.
+    [<Fact>]
+    member _.CmdSN_MaxCmdSN_001() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    ISID = GlbFunc.newISID();
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
+
+            // Nop-Out 1
+            let! _, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu1_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu1_1.ExpCmdSN = cmdsn_me.fromPrim 1u ))
+
+            // Send SCSI Command PDU until CmdSN reaches MaxCmdSN.
+            let pduCount = ( cmdsn_me.toPrim pdu1_1.MaxCmdSN ) - ( cmdsn_me.toPrim pdu1_1.ExpCmdSN ) + 1u |> int
+            let vitt = Array.zeroCreate<ITT_T> pduCount
+            for i = 1 to pduCount do
+                let writeCDB = scsiWrite10CDB 1us
+                let! itt, _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
+                vitt.[ i - 1 ] <- itt
+
+                // Send immidiate Nop-Out PDU
+                let! _, _ = r1.SendNOPOutPDU g_CID0 true g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+                Assert.True(( pdu2.ExpCmdSN = pdu1_1.ExpCmdSN + ( cmdsn_me.fromPrim( uint i ) ) ))
+                Assert.True(( pdu2.MaxCmdSN = pdu1_1.MaxCmdSN ))
+
+            // Send Data-Out PDUs and receive SCSI Response PDUs
+            let sendData = PooledBuffer.RentAndInit( int m_MediaBlockSize )
+            for i = 0 to pduCount - 1 do
+                let! _ = r1.SendSCSIDataOutPDU g_CID0 true vitt.[i] g_LUN1 g_DefTTT datasn_me.zero 0u sendData
+                let! _ = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+                ()
+
+            // Send Nop-Out PDU
+            let! _, wcmdsn = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu2.MaxCmdSN = wcmdsn + ( cmdsn_me.fromPrim( Constants.BDLU_MAX_TASKSET_SIZE + 1u ) ) ))
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            ()
+        }
+
+    // Send CmdSN over MaxCmdSN.
+    [<Fact>]
+    member _.CmdSN_MaxCmdSN_002() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    ISID = GlbFunc.newISID();
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
+
+            // Nop-Out 1
+            let! _, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu1_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu1_1.ExpCmdSN = cmdsn_me.fromPrim 1u ))
+
+            // Send SCSI Command PDU until CmdSN reaches MaxCmdSN.
+            let pduCount = ( cmdsn_me.toPrim pdu1_1.MaxCmdSN ) - ( cmdsn_me.toPrim pdu1_1.ExpCmdSN ) + 1u |> int
+            let vitt = Array.zeroCreate<ITT_T> pduCount
+            for i = 1 to pduCount do
+                let writeCDB = scsiWrite10CDB 1us
+                let! itt, _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
+                vitt.[ i - 1 ] <- itt
+
+            // Send additional SCSI Command PDU with CmdSN overs MaxCmdSN.
+            let writeCDB = scsiWrite10CDB 1us
+            let! _, _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
+            let! _ = r1.ReceiveSpecific<RejectPDU> g_CID0
+
+            // Rewind the initiator's CmdSN value
+            r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
+
+            // Send Data-Out PDUs and receive SCSI Response PDUs
+            let sendData = PooledBuffer.RentAndInit( int m_MediaBlockSize )
+            for i = 0 to pduCount - 1 do
+                let! _ = r1.SendSCSIDataOutPDU g_CID0 true vitt.[i] g_LUN1 g_DefTTT datasn_me.zero 0u sendData
+                let! _ = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+                ()
+
+            // Send Nop-Out PDU
+            let! _, wcmdsn = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu2.MaxCmdSN = wcmdsn + ( cmdsn_me.fromPrim( Constants.BDLU_MAX_TASKSET_SIZE + 1u ) ) ))
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            ()
+        }
+
+    [<Fact>]
+    member _.CmdSN_CmdSN_Rewind_001() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    ISID = GlbFunc.newISID();
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSessionWithInitialSmdSN sessParam1 m_defaultConnParam ( cmdsn_me.fromPrim 0xFFFFFFFDu )
+
+            // Send some of Nop-Out PDU
+            let! _, cmdsn1 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( cmdsn1 = cmdsn_me.fromPrim 0xFFFFFFFDu ))
+            Assert.True(( pdu1.ExpCmdSN = cmdsn_me.fromPrim 0xFFFFFFFEu ))
+
+            let! _, cmdsn2 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( cmdsn2 = cmdsn_me.fromPrim 0xFFFFFFFEu ))
+            Assert.True(( pdu2.ExpCmdSN = cmdsn_me.fromPrim 0xFFFFFFFFu ))
+
+            let! _, cmdsn3 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( cmdsn3 = cmdsn_me.fromPrim 0xFFFFFFFFu ))
+            Assert.True(( pdu3.ExpCmdSN = cmdsn_me.fromPrim 0u ))
+
+            let! _, cmdsn4 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu4 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( cmdsn4 = cmdsn_me.fromPrim 0u ))
+            Assert.True(( pdu4.ExpCmdSN = cmdsn_me.fromPrim 1u ))
+
+            let! _, cmdsn5 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu5 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( cmdsn5 = cmdsn_me.fromPrim 1u ))
+            Assert.True(( pdu5.ExpCmdSN = cmdsn_me.fromPrim 2u ))
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            ()
+        }
+
+    // Send CmdSN in reverse order
+    [<Fact>]
+    member _.CmdSN_CmdSN_ReverseOder_001() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    ISID = GlbFunc.newISID();
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
+
+            // Nop-Out 1
+            let! _, cmdsn1 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( cmdsn1 = cmdsn_me.fromPrim 0u ))
+
+            // skip CmdSN=1
+            r1.SetNextCmdSN ( cmdsn_me.fromPrim 2u )
+
+            // Nop-Out 3
+            let sendData3 = PooledBuffer.RentAndInit 4096
+            sendData3.Array.[0] <- 3uy
+            let! _, cmdsn3 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT sendData3
+            sendData3.Return()
+            Assert.True(( cmdsn3 = cmdsn_me.fromPrim 2u ))
+
+            // Rewind to CmdSN=1
+            r1.SetNextCmdSN ( cmdsn_me.fromPrim 1u )
+
+            // Nop-Out 2
+            let sendData2 = PooledBuffer.RentAndInit 4096
+            sendData2.Array.[0] <- 2uy
+            let! _, cmdsn2 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT sendData2
+            sendData2.Return()
+            Assert.True(( cmdsn2 = cmdsn_me.fromPrim 1u ))
+
+            // Receive Nop-In 2
+            let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu2.ExpCmdSN = cmdsn_me.fromPrim 3u ))   // CmdSN=2 already received by the target
+            Assert.True(( pdu2.PingData.Array.[0] = 2uy ))
+
+            // Receive Nop-In 3
+            let! pdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu3.ExpCmdSN = cmdsn_me.fromPrim 3u ))
+            Assert.True(( pdu3.PingData.Array.[0] = 3uy ))
+
+            // skip CmdSN=2
+            r1.SetNextCmdSN ( cmdsn_me.fromPrim 3u )
 
             // logout
             let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
