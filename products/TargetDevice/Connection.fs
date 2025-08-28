@@ -233,9 +233,16 @@ type Connection
                 | _ as x ->
                     let wc = m_session.GetConnection m_CID m_Counter
                     if wc.IsSome then
-                        // If unexpected error was occures, drop this domain. It causes session recovery.
-                        HLogger.UnexpectedException( fun g -> g.GenExp( m_LogInfo, x ) )
-                        m_Killer.NoticeTerminate()
+                        match x with
+                        | :? ConnectionErrorException as y ->
+                            // If a communication error occurs, this connection is deleted, but the session continues to exist.
+                            HLogger.Trace( LogID.W_CONNECTION_ERROR, fun g -> g.Gen1( m_LogInfo, x.Message ) )
+                            ( this :> IConnection ).Close()
+                            m_session.RemoveConnection m_CID m_Counter
+                        | _ ->
+                            // If unexpected error was occures, drop this domain. It causes session recovery.
+                            HLogger.UnexpectedException( fun g -> g.GenExp( m_LogInfo, x ) )
+                            m_Killer.NoticeTerminate()
                     else
                         // If this connection is already removed, any exeptions are ignored.
                         ()
