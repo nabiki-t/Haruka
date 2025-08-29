@@ -458,14 +458,16 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Assert.True( r1 )
                 let pc = new PrivateCaller( sess )
                 Assert.True( ( pc.GetField( "m_ConnectionCounter" ) = box 1 ) )
-                sess.PushReceivedPDU ( cid_me.fromPrim 0us ) psus1
+                let conn1 = sess.GetConnection ( cid_me.fromPrim 0us ) ( concnt_me.fromPrim 1 )
+                sess.PushReceivedPDU conn1.Value psus1
 
                 do! ww.[0].WaitAsync()
 
                 let r2 = sess.AddNewConnection sp2 DateTime.UtcNow ( cid_me.fromPrim 1us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
                 Assert.True( r2 )
                 Assert.True( ( pc.GetField( "m_ConnectionCounter" ) = box 2 ) )
-                sess.PushReceivedPDU ( cid_me.fromPrim 1us ) psus2
+                let conn2 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 2 )
+                sess.PushReceivedPDU conn2.Value psus2
 
                 do! ww.[1].WaitAsync()
 
@@ -703,6 +705,64 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( ( pc.GetField( "m_ConnectionCounter" ) = box 0 ) )
 
     [<Fact>]
+    member _.RemoveConnection_004() =
+        // Create session object
+        let sess, pc, _, _, luStub, sp, cp =
+            Session_Test.CreateDefaultSessionObject
+                Session_Test.defaultSessionParam
+                Session_Test.defaultConnectionParam
+                ( cid_me.fromPrim 0us )
+                ( cmdsn_me.fromPrim 0u )
+                ( itt_me.fromPrim 0u )
+                false
+        let sp2, cp2 = GlbFunc.GetNetConn()
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 0us ) ( concnt_me.fromPrim 1 )
+
+        let r1 = sess.AddNewConnection sp2 DateTime.UtcNow ( cid_me.fromPrim 1us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
+        Assert.True r1
+        let conn2 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 2 )
+
+        let mutable cnt = 0
+        luStub.p_SCSICommand <- ( fun _ pdu _ ->
+            Assert.True(( pdu.CmdSN = cmdsn_me.fromPrim 2u ))
+            cnt <- 1
+        )
+
+        // Send SCSI Command PDU1
+        let scsicmd1 = {
+            Session_Test.defaultScsiCommandPDUValues with
+                I = false;
+                F = false;  // unresolved
+                CmdSN = cmdsn_me.fromPrim 1u;
+                ExpStatSN = statsn_me.fromPrim 1u;
+                InitiatorTaskTag = itt_me.fromPrim 1u;
+                ExpectedDataTransferLength = 10u;
+                DataSegment = PooledBuffer.Empty;
+        }
+        sess.PushReceivedPDU conn1.Value scsicmd1    // Still not running
+        Assert.True(( cnt = 0 ))
+
+        // Send SCSI Command PDU1
+        let scsicmd2 = {
+            Session_Test.defaultScsiCommandPDUValues with
+                I = false;
+                F = true;  // resolved
+                CmdSN = cmdsn_me.fromPrim 2u;
+                ExpStatSN = statsn_me.fromPrim 1u;
+                InitiatorTaskTag = itt_me.fromPrim 2u;
+                ExpectedDataTransferLength = 0u;
+                DataSegment = PooledBuffer.Empty;
+        }
+        sess.PushReceivedPDU conn2.Value scsicmd2    // Still not running
+        Assert.True(( cnt = 0 ))
+
+        sess.RemoveConnection ( cid_me.fromPrim 0us ) ( concnt_me.fromPrim 1 )
+        Assert.True(( cnt = 1 ))                    // scsicmd2 executed
+
+        sess.DestroySession()
+        GlbFunc.ClosePorts [| sp; sp2; cp; cp2; |]
+
+    [<Fact>]
     member _.ReinstateConnection_001() =
         let itNexus = new ITNexus( "abcI", isid_me.fromElem 0uy 1uy 2us 3uy 4us, "abcT", tpgt_me.zero )
         let sessParam = Session_Test.defaultSessionParam
@@ -713,41 +773,37 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         // Create session object
         let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
 
-        task {
-            let pc = new PrivateCaller( sess )
+        let pc = new PrivateCaller( sess )
 
-            let r1 = sess.AddNewConnection sps.[0] DateTime.UtcNow ( cid_me.fromPrim 0us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
-            Assert.True r1
-            let r2 = sess.AddNewConnection sps.[1] DateTime.UtcNow ( cid_me.fromPrim 1us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
-            Assert.True r2
-            let r3 = sess.AddNewConnection sps.[2] DateTime.UtcNow ( cid_me.fromPrim 2us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
-            Assert.True r3
+        let r1 = sess.AddNewConnection sps.[0] DateTime.UtcNow ( cid_me.fromPrim 0us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
+        Assert.True r1
+        let r2 = sess.AddNewConnection sps.[1] DateTime.UtcNow ( cid_me.fromPrim 1us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
+        Assert.True r2
+        let r3 = sess.AddNewConnection sps.[2] DateTime.UtcNow ( cid_me.fromPrim 2us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
+        Assert.True r3
 
-            let r4 = sess.ReinstateConnection sps.[3] DateTime.UtcNow ( cid_me.fromPrim 1us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
-            Assert.True r4
+        let r4 = sess.ReinstateConnection sps.[3] DateTime.UtcNow ( cid_me.fromPrim 1us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
+        Assert.True r4
 
-            Assert.True( ( pc.GetField( "m_ConnectionCounter" ) = box 4 ) )
-            Assert.True( sess.IsExistCID( cid_me.fromPrim 0us ) )
-            Assert.True( sess.IsExistCID( cid_me.fromPrim 1us ) )
-            Assert.True( sess.IsExistCID( cid_me.fromPrim 2us ) )
-            let m_CIDs = pc.GetField( "m_CIDs" ) :?> OptimisticLock< ImmutableDictionary< uint16, CIDInfo > >
-            Assert.True(( m_CIDs.obj.Count = 3 ))
-            Assert.False( ( pc.GetField( "m_Killer" ) :?> IKiller ).IsNoticed )
+        Assert.True( ( pc.GetField( "m_ConnectionCounter" ) = box 4 ) )
+        Assert.True( sess.IsExistCID( cid_me.fromPrim 0us ) )
+        Assert.True( sess.IsExistCID( cid_me.fromPrim 1us ) )
+        Assert.True( sess.IsExistCID( cid_me.fromPrim 2us ) )
+        let m_CIDs = pc.GetField( "m_CIDs" ) :?> OptimisticLock< ImmutableDictionary< uint16, CIDInfo > >
+        Assert.True(( m_CIDs.obj.Count = 3 ))
+        Assert.False( ( pc.GetField( "m_Killer" ) :?> IKiller ).IsNoticed )
 
-            try
-                let _ = sps.[1].ReadByte()
-                Assert.Fail __LINE__
-            with
-            | :? ObjectDisposedException ->
-                ()
+        try
+            let _ = sps.[1].ReadByte()
+            Assert.Fail __LINE__
+        with
+        | :? ObjectDisposedException ->
+            ()
 
-            sess.DestroySession()
-            GlbFunc.ClosePorts sps
-            sps |> Array.iter ( fun i -> i.Dispose() )
-            GlbFunc.ClosePorts cps
-        };
-        |> Functions.RunTaskSynchronously
-        |> ignore
+        sess.DestroySession()
+        GlbFunc.ClosePorts sps
+        sps |> Array.iter ( fun i -> i.Dispose() )
+        GlbFunc.ClosePorts cps
 
     [<Fact>]
     member _.ReinstateConnection_002() =
@@ -760,30 +816,26 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         // Create session object
         let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
 
-        task {
-            let pc = new PrivateCaller( sess )
+        let pc = new PrivateCaller( sess )
 
-            let r1 = sess.AddNewConnection sps.[0] DateTime.UtcNow ( cid_me.fromPrim 0us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
-            Assert.True r1
-            let r2 = sess.ReinstateConnection sps.[1] DateTime.UtcNow ( cid_me.fromPrim 1us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
-            Assert.True r2
-            let r3 = sess.ReinstateConnection sps.[2] DateTime.UtcNow ( cid_me.fromPrim 2us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
-            Assert.True r3
+        let r1 = sess.AddNewConnection sps.[0] DateTime.UtcNow ( cid_me.fromPrim 0us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
+        Assert.True r1
+        let r2 = sess.ReinstateConnection sps.[1] DateTime.UtcNow ( cid_me.fromPrim 1us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
+        Assert.True r2
+        let r3 = sess.ReinstateConnection sps.[2] DateTime.UtcNow ( cid_me.fromPrim 2us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
+        Assert.True r3
 
-            Assert.True( ( pc.GetField( "m_ConnectionCounter" ) = box 3 ) )
-            Assert.True( sess.IsExistCID( cid_me.fromPrim 0us ) )
-            Assert.True( sess.IsExistCID( cid_me.fromPrim 1us ) )
-            Assert.True( sess.IsExistCID( cid_me.fromPrim 2us ) )
-            let m_CIDs = pc.GetField( "m_CIDs" ) :?> OptimisticLock< ImmutableDictionary< uint16, CIDInfo > >
-            Assert.True(( m_CIDs.obj.Count = 3 ))
-            Assert.False( ( pc.GetField( "m_Killer" ) :?> IKiller ).IsNoticed )
+        Assert.True( ( pc.GetField( "m_ConnectionCounter" ) = box 3 ) )
+        Assert.True( sess.IsExistCID( cid_me.fromPrim 0us ) )
+        Assert.True( sess.IsExistCID( cid_me.fromPrim 1us ) )
+        Assert.True( sess.IsExistCID( cid_me.fromPrim 2us ) )
+        let m_CIDs = pc.GetField( "m_CIDs" ) :?> OptimisticLock< ImmutableDictionary< uint16, CIDInfo > >
+        Assert.True(( m_CIDs.obj.Count = 3 ))
+        Assert.False( ( pc.GetField( "m_Killer" ) :?> IKiller ).IsNoticed )
 
-            sess.DestroySession()
-            GlbFunc.ClosePorts sps
-            GlbFunc.ClosePorts cps
-        };
-        |> Functions.RunTaskSynchronously
-        |> ignore
+        sess.DestroySession()
+        GlbFunc.ClosePorts sps
+        GlbFunc.ClosePorts cps
 
     [<Fact>]
     member _.ReinstateConnection_003() =
@@ -807,6 +859,65 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         sp.Close()
 
     [<Fact>]
+    member _.ReinstateConnection_004() =
+        // Create session object
+        let sess, pc, _, _, luStub, sp, cp =
+            Session_Test.CreateDefaultSessionObject
+                Session_Test.defaultSessionParam
+                Session_Test.defaultConnectionParam
+                ( cid_me.fromPrim 0us )
+                ( cmdsn_me.fromPrim 0u )
+                ( itt_me.fromPrim 0u )
+                false
+        let sp2, cp2 = GlbFunc.GetNetConn()
+        let sp3, cp3 = GlbFunc.GetNetConn()
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 0us ) ( concnt_me.fromPrim 1 )
+
+        let r1 = sess.AddNewConnection sp2 DateTime.UtcNow ( cid_me.fromPrim 1us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
+        Assert.True r1
+        let conn2 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 2 )
+
+        let mutable cnt = 0
+        luStub.p_SCSICommand <- ( fun _ pdu _ ->
+            Assert.True(( pdu.CmdSN = cmdsn_me.fromPrim 2u ))
+            cnt <- 1
+        )
+
+        // Send SCSI Command PDU1
+        let scsicmd1 = {
+            Session_Test.defaultScsiCommandPDUValues with
+                I = false;
+                F = false;  // unresolved
+                CmdSN = cmdsn_me.fromPrim 1u;
+                ExpStatSN = statsn_me.fromPrim 1u;
+                InitiatorTaskTag = itt_me.fromPrim 1u;
+                ExpectedDataTransferLength = 10u;
+                DataSegment = PooledBuffer.Empty;
+        }
+        sess.PushReceivedPDU conn1.Value scsicmd1    // Still not running
+        Assert.True(( cnt = 0 ))
+
+        // Send SCSI Command PDU1
+        let scsicmd2 = {
+            Session_Test.defaultScsiCommandPDUValues with
+                I = false;
+                F = true;  // resolved
+                CmdSN = cmdsn_me.fromPrim 2u;
+                ExpStatSN = statsn_me.fromPrim 1u;
+                InitiatorTaskTag = itt_me.fromPrim 2u;
+                ExpectedDataTransferLength = 0u;
+                DataSegment = PooledBuffer.Empty;
+        }
+        sess.PushReceivedPDU conn2.Value scsicmd2    // Still not running
+        Assert.True(( cnt = 0 ))
+
+        let rs = sess.ReinstateConnection sp3 DateTime.UtcNow ( cid_me.fromPrim 0us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
+        Assert.True(( cnt = 1 ))                    // scsicmd2 executed
+
+        sess.DestroySession()
+        GlbFunc.ClosePorts [| sp; sp2; sp3; cp; cp2; cp3; |]
+
+    [<Fact>]
     member _.PushReceivedPDU_001() =
         let itNexus = new ITNexus( "abcI", isid_me.fromElem 0uy 1uy 2us 3uy 4us, "abcT", tpgt_me.zero )
         let sessParam = Session_Test.defaultSessionParam
@@ -822,54 +933,18 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 InitiatorTaskTag = itt_me.fromPrim 2u;
         }
 
-        task {
-            let r1 = sess.AddNewConnection sp DateTime.UtcNow ( cid_me.fromPrim 0us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
-            Assert.True r1
-            Assert.True( sess.IsExistCID( cid_me.fromPrim 0us ) )
+        let r1 = sess.AddNewConnection sp DateTime.UtcNow ( cid_me.fromPrim 0us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
+        Assert.True r1
+        Assert.True( sess.IsExistCID( cid_me.fromPrim 0us ) )
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 0us ) ( concnt_me.fromPrim 1 )
 
-            sess.DestroySession()
-            sess.PushReceivedPDU ( cid_me.fromPrim 0us ) noppdu2    // session is already terminated
-            sp.Close()
-            sp.Dispose()
+        sess.DestroySession()
+        sess.PushReceivedPDU conn1.Value noppdu2    // session is already terminated
+        sp.Close()
+        sp.Dispose()
 
-            cp.Close()
-            cp.Dispose()
-        };
-        |> Functions.RunTaskSynchronously
-        |> ignore
-
-    [<Fact>]
-    member _.PushReceivedPDU_002() =
-        let itNexus = new ITNexus( "abcI", isid_me.fromElem 0uy 1uy 2us 3uy 4us, "abcT", tpgt_me.zero )
-        let sessParam = Session_Test.defaultSessionParam
-        let killer = new HKiller()
-        let smStub, _ = Session_Test.GenDefaultStubs()
-        let sp, cp = GlbFunc.GetNetConn()
-
-        // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
-
-        let noppdu2 = {
-            Session_Test.defaultNopOUTPDUValues with
-                InitiatorTaskTag = itt_me.fromPrim 2u;
-        }
-
-        task {
-            let r1 = sess.AddNewConnection sp DateTime.UtcNow ( cid_me.fromPrim 0us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
-            Assert.True r1
-            Assert.True( sess.IsExistCID( cid_me.fromPrim 0us ) )
-
-            sess.PushReceivedPDU ( cid_me.fromPrim 1us ) noppdu2    // CID missing
-
-            sess.DestroySession()
-
-            sp.Close()
-            sp.Dispose()
-            cp.Close()
-            cp.Dispose()
-        };
-        |> Functions.RunTaskSynchronously
-        |> ignore
+        cp.Close()
+        cp.Dispose()
         
     [<Fact>]
     member _.PushReceivedPDU_003_Immidiate_NopOUT_001() =
@@ -893,9 +968,10 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let r1 = sess.AddNewConnection sp DateTime.UtcNow ( cid_me.fromPrim 0us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
         Assert.True r1
         Assert.True( sess.IsExistCID( cid_me.fromPrim 0us ) )
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 0us ) ( concnt_me.fromPrim 1 )
 
         // receive PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 0us ) noppdu2
+        sess.PushReceivedPDU conn1.Value noppdu2
 
         // receive Nop-IN PDU in the initiator
         let pdu2 =
@@ -922,6 +998,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 0us ) ( concnt_me.fromPrim 1 )
 
         // PDUs
         let secondpdu = {
@@ -931,7 +1008,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         }
 
         // do the test
-        sess.PushReceivedPDU ( cid_me.fromPrim 0us ) secondpdu
+        sess.PushReceivedPDU conn1.Value secondpdu
 
         Assert.True( ( killer :> IKiller ).IsNoticed )
 
@@ -949,6 +1026,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 0us ) ( concnt_me.fromPrim 1 )
 
         let secondpdu = {
             Session_Test.defaultNopOUTPDUValues with
@@ -964,7 +1042,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         cp.Dispose()    // Close connection
 
         // do the test
-        sess.PushReceivedPDU ( cid_me.fromPrim 0us ) secondpdu
+        sess.PushReceivedPDU conn1.Value secondpdu
 
         b.SignalAndWait()
 
@@ -982,6 +1060,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 0us ) ( concnt_me.fromPrim 1 )
 
         let pdu2 = {
             Session_Test.defaultNopOUTPDUValues with
@@ -993,10 +1072,10 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         }
 
         // do the test in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 0us ) pdu2
-        sess.PushReceivedPDU ( cid_me.fromPrim 0us ) pdu2
-        sess.PushReceivedPDU ( cid_me.fromPrim 0us ) pdu2
-        sess.PushReceivedPDU ( cid_me.fromPrim 0us ) pdu3
+        sess.PushReceivedPDU conn1.Value pdu2
+        sess.PushReceivedPDU conn1.Value pdu2
+        sess.PushReceivedPDU conn1.Value pdu2
+        sess.PushReceivedPDU conn1.Value pdu3
 
         // receive Nop-In PDU in the initiator
         let pdu2 =
@@ -1020,6 +1099,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 0us ) ( concnt_me.fromPrim 1 )
 
         let pdu2 = {
             Session_Test.defaultNopOUTPDUValues with
@@ -1038,14 +1118,14 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         }
 
         // Receive SCSI Command PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 0us ) cmdpdu
+        sess.PushReceivedPDU conn1.Value cmdpdu
 
         // SCSI Command PDU is queued.
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 1 = iwq1.Count ))
 
         // Receive Nop-OUT PDU that has ITT value same as the queued SCSI Command PDU in the target.
-        sess.PushReceivedPDU ( cid_me.fromPrim 0us ) pdu2
+        sess.PushReceivedPDU conn1.Value pdu2
 
         // Receive Reject response PDU in the initiator
         let pdu2 =
@@ -1072,6 +1152,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Gen SCSI Command PDU
         let pdu2 = Session_Test.defaultScsiCommandPDUValues
@@ -1092,7 +1173,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         )
 
         // Send SCSI Command PDU
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) pdu2
+        sess.PushReceivedPDU conn1.Value pdu2
 
         Assert.True(( cnt = 1 ))
                 
@@ -1113,6 +1194,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Gen SCSI Command PDU
         let cmdpdu = {
@@ -1151,7 +1233,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         )
 
         // Receive SCSI Command PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) cmdpdu
+        sess.PushReceivedPDU conn1.Value cmdpdu
 
         // Receive R2T PDU in the initiator
         let pdu2 =
@@ -1169,7 +1251,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True(( 1 = iwq1.Count ))
 
         // Receive SCSI Data-Out PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) datapdu
+        sess.PushReceivedPDU conn1.Value datapdu
         Assert.True(( 1 = cnt ))
 
         let iwq2 = Session_Test.GetWaitingQueue pc
@@ -1192,6 +1274,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Gen SCSI Command PDU
         let cmdpdu = {
@@ -1231,13 +1314,13 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             )
 
         // Receive SCSI Data-Out PDU
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) datapdu
+        sess.PushReceivedPDU conn1.Value datapdu
         Assert.True(( cnt = 0 ))
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 1 = iwq1.Count ))
 
         // Receive SCSI Command PDU
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) cmdpdu
+        sess.PushReceivedPDU conn1.Value cmdpdu
         Assert.True(( cnt = 1 ))
 
         let iwq2 = Session_Test.GetWaitingQueue pc
@@ -1260,6 +1343,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // SCSI Command PDU(ITT=1)
         let cmdpdu1 = {
@@ -1347,7 +1431,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             )
 
         // Receive SCSI Data-Out PDU(ITT=1)
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) datapdu1
+        sess.PushReceivedPDU conn1.Value datapdu1
         Assert.True(( sess.IsAlive ))
         Assert.True(( cnt = 0 ))
         let iwq1 = Session_Test.GetWaitingQueue pc
@@ -1356,7 +1440,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True(( cmdsn_me.fromPrim 0u = wexpcmdsn ))
 
         // Receive SCSI Data-Out PDU(ITT=2)
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) datapdu3
+        sess.PushReceivedPDU conn1.Value datapdu3
         Assert.True(( sess.IsAlive ))
         Assert.True(( cnt = 0 ))
         let iwq2 = Session_Test.GetWaitingQueue pc
@@ -1365,7 +1449,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True(( cmdsn_me.fromPrim 0u = wexpcmdsn ))
 
         // Receive SCSI Command PDU(ITT=1)
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) cmdpdu1
+        sess.PushReceivedPDU conn1.Value cmdpdu1
         Assert.True(( sess.IsAlive ))
         Assert.True(( cnt = 0 ))
         let iwq3 = Session_Test.GetWaitingQueue pc
@@ -1374,7 +1458,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True(( cmdsn_me.fromPrim 0u = wexpcmdsn ))
 
         // Receive SCSI Data-Out PDU(ITT=1)
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) datapdu2
+        sess.PushReceivedPDU conn1.Value datapdu2
         Assert.True(( sess.IsAlive ))
         Assert.True(( cnt = 1 ))
         let iwq4 = Session_Test.GetWaitingQueue pc
@@ -1383,7 +1467,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True(( cmdsn_me.fromPrim 0u = wexpcmdsn ))
 
         // Receive SCSI Command PDU(ITT=2)
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) cmdpdu2
+        sess.PushReceivedPDU conn1.Value cmdpdu2
         Assert.True(( sess.IsAlive ))
         Assert.True(( cnt = 2 ))
         let iwq5 = Session_Test.GetWaitingQueue pc
@@ -1408,6 +1492,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // SCSI Command PDU
         let cmdpdu = {
@@ -1431,7 +1516,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         }
 
         // Receive Text request PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) textpdu
+        sess.PushReceivedPDU conn1.Value textpdu
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 1 = iwq1.Count ))
 
@@ -1442,7 +1527,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( ( pdu2.Opcode = OpcodeCd.TEXT_RES ) )
 
         // Receive SCSI Command PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) cmdpdu
+        sess.PushReceivedPDU conn1.Value cmdpdu
 
         // Receive Reject response PDU in the initiator
         let pdu3 =
@@ -1472,6 +1557,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // SCSI Data-Out PDU
         let datapdu = {
@@ -1495,7 +1581,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         }
 
         // Receive Text request PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) textpdu
+        sess.PushReceivedPDU conn1.Value textpdu
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 1 = iwq1.Count ))
 
@@ -1506,7 +1592,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( ( pdu2.Opcode = OpcodeCd.TEXT_RES ) )
 
         // Receive SCSI Data-Out PDU in the target (failed)
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) datapdu
+        sess.PushReceivedPDU conn1.Value datapdu
 
         // Receive Reject response PDU in the initiator
         let pdu3 =
@@ -1536,6 +1622,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // SCSI Command PDU
         let cmdpdu = {
@@ -1549,7 +1636,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         }
 
         // Receive SCSI Comment PDU with immediate data.
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) cmdpdu
+        sess.PushReceivedPDU conn1.Value cmdpdu
 
         // Receive Reject response PDU in the initiator
         let pdu3 =
@@ -1573,6 +1660,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Task Management Function PDU
         let tmfpdu = {
@@ -1591,7 +1679,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         )
 
         // Receive Task Management Function Request PDU
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) tmfpdu
+        sess.PushReceivedPDU conn1.Value tmfpdu
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 0 = iwq1.Count ))
         Assert.True(( 1 = cnt ))
@@ -1610,6 +1698,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Task Management Function PDU
         let tmfpdu = {
@@ -1630,7 +1719,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         }
 
         // Receive Text request PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) textpdu
+        sess.PushReceivedPDU conn1.Value textpdu
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 1 = iwq1.Count ))
 
@@ -1646,7 +1735,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         )
 
         // Receive Task Management Function Request PDU in the target (failed)
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) tmfpdu
+        sess.PushReceivedPDU conn1.Value tmfpdu
 
         // Receive Reject response PDU in the initiator
         let pdu3 =
@@ -1672,6 +1761,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Logout request PDU
         let logoutpdu = {
@@ -1682,7 +1772,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         }
 
         // Receive Logout Request PDU
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) logoutpdu
+        sess.PushReceivedPDU conn1.Value logoutpdu
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 0 = iwq1.Count ))
 
@@ -1708,6 +1798,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Logout request PDU
         let logoutpdu = {
@@ -1729,7 +1820,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         }
         
         // Receive Text request PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) textpdu
+        sess.PushReceivedPDU conn1.Value textpdu
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 1 = iwq1.Count ))
 
@@ -1740,7 +1831,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( ( pdu2.Opcode = OpcodeCd.TEXT_RES ) )
 
         // Receive Logout Request PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) logoutpdu
+        sess.PushReceivedPDU conn1.Value logoutpdu
 
         // Receive Reject response PDU in the initiator
         let pdu3 =
@@ -1767,12 +1858,13 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // SNACK request PDU
         let snackpdu = Session_Test.defaultSNACKRequestPDUValues
 
         // Receive SNACK Request PDU
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) snackpdu
+        sess.PushReceivedPDU conn1.Value snackpdu
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 0 = iwq1.Count ))
 
@@ -1798,6 +1890,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Text Negotiation request PDU
         let txtpdu1 = {
@@ -1816,7 +1909,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             }
 
         // Receive text negotiation request PDU1
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) txtpdu1
+        sess.PushReceivedPDU conn1.Value txtpdu1
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 1 = iwq1.Count ))
 
@@ -1829,7 +1922,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True(( txtrespdu1.InitiatorTaskTag = itt_me.fromPrim 1u ))
 
         // Receive text negotiation request PDU2
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) txtpdu2
+        sess.PushReceivedPDU conn1.Value txtpdu2
 
         let iwq2 = Session_Test.GetWaitingQueue pc
         Assert.True(( 0 = iwq2.Count ))
@@ -1860,6 +1953,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // SCSI Command PDU
         let scsipdu = {
@@ -1882,12 +1976,12 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         }
         
         // Receive SCSI Command PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) scsipdu
+        sess.PushReceivedPDU conn1.Value scsipdu
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 1 = iwq1.Count ))
 
         // Receive Text request PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) textpdu
+        sess.PushReceivedPDU conn1.Value textpdu
 
         // Receive Reject response PDU in the initiator
         let pdu2 =
@@ -1914,6 +2008,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 false
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 0us ) ( concnt_me.fromPrim 1 )
 
         // pdus
         let noppdu2 = {
@@ -1925,7 +2020,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             }
 
         // receive second No-Out PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 0us ) noppdu2 
+        sess.PushReceivedPDU conn1.Value noppdu2 
 
         // receive second Nop-IN PDU in the initiator
         let pdu2 =
@@ -1956,6 +2051,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 false
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 0us ) ( concnt_me.fromPrim 1 )
 
         // pdus
         let noppdu2 = {
@@ -1967,7 +2063,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             }
 
         // receive second No-Out PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 0us ) noppdu2 
+        sess.PushReceivedPDU conn1.Value noppdu2 
 
         // receive second Nop-IN PDU in the initiator
         // Receive Reject response PDU in the initiator
@@ -1996,6 +2092,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 false
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 0us ) ( concnt_me.fromPrim 1 )
 
         // pdus
         let noppdu2 = {
@@ -2007,7 +2104,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             }
 
         // receive second No-Out PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 0us ) noppdu2 
+        sess.PushReceivedPDU conn1.Value noppdu2 
 
         // Receive Reject response PDU in the initiator
         let pdu2 =
@@ -2035,6 +2132,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 false
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Text Negotiation request PDU
         let txtpdu1 = {
@@ -2055,7 +2153,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             }
 
         // Receive text negotiation request PDU1 in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) txtpdu1
+        sess.PushReceivedPDU conn1.Value txtpdu1
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 1 = iwq1.Count ))
 
@@ -2070,7 +2168,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True(( txtrespdu1.StatSN = statsn_me.fromPrim 1u ) )
 
         // Receive text negotiation request PDU2
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) txtpdu2
+        sess.PushReceivedPDU conn1.Value txtpdu2
 
         let iwq2 = Session_Test.GetWaitingQueue pc
         Assert.True(( 0 = iwq2.Count ))
@@ -2103,6 +2201,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 false
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Text Negotiation request PDU
         let txtpdu1 = {
@@ -2115,7 +2214,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             }
 
         // Receive text negotiation request PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) txtpdu1
+        sess.PushReceivedPDU conn1.Value txtpdu1
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 0 = iwq1.Count ))
 
@@ -2142,6 +2241,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 false
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Text Negotiation request PDU
         let txtpdu1 = {
@@ -2164,7 +2264,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             }
 
         // Receive text negotiation request PDU1
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) txtpdu1
+        sess.PushReceivedPDU conn1.Value txtpdu1
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 1 = iwq1.Count ))
 
@@ -2175,7 +2275,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( ( pdu2.Opcode = OpcodeCd.TEXT_RES ) )
 
         // Receive text negotiation request PDU2 in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) txtpdu2
+        sess.PushReceivedPDU conn1.Value txtpdu2
 
         let iwq2 = Session_Test.GetWaitingQueue pc
         Assert.True(( 0 = iwq2.Count ))
@@ -2204,6 +2304,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 false
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Text Negotiation request PDU
         let txtpdu1 = {
@@ -2224,7 +2325,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             }
 
         // Receive text negotiation request1 PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) txtpdu1
+        sess.PushReceivedPDU conn1.Value txtpdu1
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 1 = iwq1.Count ))
 
@@ -2235,7 +2336,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( ( pdu2.Opcode = OpcodeCd.TEXT_RES ) )
 
         // Receive text negotiation request2 PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) txtpdu2
+        sess.PushReceivedPDU conn1.Value txtpdu2
 
         // Receive Reject response PDU in the initiator
         let pdu3 =
@@ -2262,6 +2363,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 false
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Text Negotiation request PDU
         let txtpdu1 = {
@@ -2282,14 +2384,14 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             }
 
         // Receive text negotiation request1 PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) txtpdu1
+        sess.PushReceivedPDU conn1.Value txtpdu1
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 1 = iwq1.Count ))
 
         // In this point initiator does no receive any response
 
         // Receive text negotiation request2 PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) txtpdu2
+        sess.PushReceivedPDU conn1.Value txtpdu2
 
         let iwq2 = Session_Test.GetWaitingQueue pc
         Assert.True(( 0 = iwq2.Count ))
@@ -2316,6 +2418,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 false
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Task Management Function PDU
         let tmfpdu = {
@@ -2336,7 +2439,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         )
 
         // Receive Task Management Function Request PDU
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) tmfpdu
+        sess.PushReceivedPDU conn1.Value tmfpdu
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 0 = iwq1.Count ))
         Assert.True(( 1 = cnt ))
@@ -2355,6 +2458,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 false
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Task Management Function PDU
         let tmfpdu = {
@@ -2371,7 +2475,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         )
 
         // Receive Task Management Function Request PDU
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) tmfpdu
+        sess.PushReceivedPDU conn1.Value tmfpdu
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 0 = iwq1.Count ))
         Assert.True(( 0 = cnt ))
@@ -2401,6 +2505,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 false
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Logout request PDU
         let logoutpdu = {
@@ -2414,7 +2519,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         }
 
         // Receive Logout Request PDU
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) logoutpdu
+        sess.PushReceivedPDU conn1.Value logoutpdu
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 0 = iwq1.Count ))
 
@@ -2456,6 +2561,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 false
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Logout request PDU
         let logoutpdu = {
@@ -2469,7 +2575,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         }
 
         // Receive Logout Request PDU
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) logoutpdu
+        sess.PushReceivedPDU conn1.Value logoutpdu
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 0 = iwq1.Count ))
 
@@ -2497,6 +2603,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 false
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // SCSI Command PDU
         let scsicmd = {
@@ -2526,7 +2633,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             )
 
         // Send SCSI Command PDU
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) scsicmd
+        sess.PushReceivedPDU conn1.Value scsicmd
         let iwq = Session_Test.GetWaitingQueue pc
         Assert.True(( 0 = iwq.Count ))
         Assert.True(( cnt = 1 ))
@@ -2545,6 +2652,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 false
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // SCSI Command PDU
         let scsicmd = {
@@ -2562,7 +2670,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         luStub.p_SCSICommand <- ( fun _ _ _ -> cnt <- 1 )
 
         // Send SCSI Command PDU
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) scsicmd
+        sess.PushReceivedPDU conn1.Value scsicmd
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 0 = iwq1.Count ))
 
@@ -2591,7 +2699,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 false
-
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         let mutable cnt = 0
         luStub.p_SCSICommand <- ( fun _ _ _ -> cnt <- 1 )
@@ -2604,7 +2712,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ExpStatSN = statsn_me.fromPrim 1u;
                 InitiatorTaskTag = itt_me.fromPrim 1u;
         }
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) nopoutpdu2
+        sess.PushReceivedPDU conn1.Value nopoutpdu2
         let struct( wexpcmdsn, _ )  = sess.UpdateMaxCmdSN()
         Assert.True(( wexpcmdsn = cmdsn_me.fromPrim 1u ))
         let iwq1 = Session_Test.GetWaitingQueue pc
@@ -2618,7 +2726,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ExpStatSN = statsn_me.fromPrim 1u;
                 InitiatorTaskTag = itt_me.fromPrim 2u;
         }
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) nopoutpdu3
+        sess.PushReceivedPDU conn1.Value nopoutpdu3
         let struct( wexpcmdsn, _ )  = sess.UpdateMaxCmdSN()
         Assert.True(( wexpcmdsn = cmdsn_me.fromPrim 1u ))
 
@@ -2633,7 +2741,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ExpStatSN = statsn_me.fromPrim 1u;
                 InitiatorTaskTag = itt_me.fromPrim 3u;
         }
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) nopoutpdu3
+        sess.PushReceivedPDU conn1.Value nopoutpdu3
         let struct( wexpcmdsn, _ )  = sess.UpdateMaxCmdSN()
         Assert.True(( wexpcmdsn = cmdsn_me.fromPrim 1u ))
 
@@ -2662,7 +2770,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 DataSegment = PooledBuffer.Empty;
         }
 
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) scsicmd
+        sess.PushReceivedPDU conn1.Value scsicmd
         let struct( wexpcmdsn, _ )  = sess.UpdateMaxCmdSN()
         Assert.True(( wexpcmdsn = cmdsn_me.fromPrim 4u ))
         let iwq4 = Session_Test.GetWaitingQueue pc
@@ -2678,7 +2786,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 BufferOffset = 0u;
                 DataSegment = PooledBuffer.RentAndInit 10;
         }
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) datapdu
+        sess.PushReceivedPDU conn1.Value datapdu
         let struct( wexpcmdsn, _ )  = sess.UpdateMaxCmdSN()
         Assert.True(( wexpcmdsn = cmdsn_me.fromPrim 4u ))
         let iwq5 = Session_Test.GetWaitingQueue pc
@@ -2729,6 +2837,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 false
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         let mutable cnt = 0
         luStub.p_SCSICommand <- ( fun _ _ _ -> cnt <- 1 )
@@ -2742,7 +2851,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 InitiatorTaskTag = itt_me.fromPrim 1u;
                 PingData = PooledBuffer.Empty;
         }
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) nopoutpdu2
+        sess.PushReceivedPDU conn1.Value nopoutpdu2
         let struct( wexpcmdsn, _ )  = sess.UpdateMaxCmdSN()
         Assert.True(( wexpcmdsn = cmdsn_me.fromPrim 1u ))
         let iwq1 = Session_Test.GetWaitingQueue pc
@@ -2760,7 +2869,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 DataSegment = PooledBuffer.Empty;
         }
 
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) scsicmd
+        sess.PushReceivedPDU conn1.Value scsicmd
         let iwq2 = Session_Test.GetWaitingQueue pc
         Assert.True(( 2 = iwq2.Count ))
         Assert.True(( 0 = cnt ))
@@ -2787,7 +2896,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 InitiatorTaskTag = itt_me.fromPrim 3u;
                 PingData = PooledBuffer.Empty;
         }
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) nopoutpdu3
+        sess.PushReceivedPDU conn1.Value nopoutpdu3
         let iwq3 = Session_Test.GetWaitingQueue pc
         Assert.True(( 2 = iwq3.Count ))
         Assert.True(( 0 = cnt ))
@@ -2813,7 +2922,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 BufferOffset = 0u;
                 DataSegment = PooledBuffer.RentAndInit 10;
         }
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) datapdu1
+        sess.PushReceivedPDU conn1.Value datapdu1
         let iwq4 = Session_Test.GetWaitingQueue pc
         Assert.True(( 2 = iwq4.Count ))
         Assert.True(( 0 = cnt ))
@@ -2840,7 +2949,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 InitiatorTaskTag = itt_me.fromPrim 5u;
                 PingData = PooledBuffer.Empty;
         }
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) nopoutpdu4
+        sess.PushReceivedPDU conn1.Value nopoutpdu4
         let iwq5 = Session_Test.GetWaitingQueue pc
         Assert.True(( 3 = iwq5.Count ))
 
@@ -2855,7 +2964,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 BufferOffset = 10u;
                 DataSegment = PooledBuffer.RentAndInit 10;
         }
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) datapdu2
+        sess.PushReceivedPDU conn1.Value datapdu2
         let iwq6 = Session_Test.GetWaitingQueue pc
         Assert.True(( 0 = iwq6.Count ))
 
@@ -2902,6 +3011,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Send SCSI Response and Data-In PDUs
         sess.SendSCSIResponse {
@@ -2938,7 +3048,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( ( pdu2.Opcode = OpcodeCd.SCSI_RES ) )
 
         // Receive Data/R2T SNACK Request PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) {
+        sess.PushReceivedPDU conn1.Value {
                 Type = SnackReqTypeCd.DATA_R2T;
                 LUN = lun_me.zero;
                 InitiatorTaskTag = itt_me.fromPrim 1u;
@@ -2965,7 +3075,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( ( pdu6.DataSN = datasn_me.fromPrim 2u ) )
 
         // Receive Data/R2T SNACK Request PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) {
+        sess.PushReceivedPDU conn1.Value {
             Type = SnackReqTypeCd.DATA_R2T;
             LUN = lun_me.zero;
             InitiatorTaskTag = itt_me.fromPrim 1u;
@@ -3010,9 +3120,10 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Receive SCSI Command PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) {
+        sess.PushReceivedPDU conn1.Value {
             Session_Test.defaultScsiCommandPDUValues with
                 I = false;
                 F = true;
@@ -3034,7 +3145,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             Assert.True( ( pdu3.R2TSN = datasn_me.fromPrim i ) )
 
         // Receive Data/R2T SNACK Request PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) {
+        sess.PushReceivedPDU conn1.Value {
             Type = SnackReqTypeCd.DATA_R2T;
             LUN = lun_me.zero;
             InitiatorTaskTag = itt_me.fromPrim 1u;
@@ -3061,7 +3172,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( ( pdu6.R2TSN = datasn_me.fromPrim 2u ) )
 
         // Receive Data/R2T SNACK Request PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) {
+        sess.PushReceivedPDU conn1.Value {
             Type = SnackReqTypeCd.DATA_R2T;
             LUN = lun_me.zero;
             InitiatorTaskTag = itt_me.fromPrim 1u;
@@ -3106,6 +3217,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 false
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         for i = 1 to 4 do
 
@@ -3124,7 +3236,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             )
 
             // Receive Task Management Request PDU in the target
-            sess.PushReceivedPDU ( cid_me.fromPrim 1us ) {
+            sess.PushReceivedPDU conn1.Value {
                 Session_Test.defaultTaskManagementRequestPDUValues with
                     I = false;
                     InitiatorTaskTag = itt_me.fromPrim ( uint32 i );
@@ -3144,7 +3256,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             Assert.True( ( pdu3.ExpCmdSN = cmdsn_me.fromPrim ( uint32 i + 1u ) ) )
 
         // Receive status SNACK Request PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) {
+        sess.PushReceivedPDU conn1.Value {
             Type = SnackReqTypeCd.STATUS;
             LUN = lun_me.zero;
             InitiatorTaskTag = itt_me.fromPrim 0xFFFFFFFFu;
@@ -3175,7 +3287,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( ( pdu5.ExpCmdSN = cmdsn_me.fromPrim 5u ) )
 
         // Receive status SNACK Request PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) {
+        sess.PushReceivedPDU conn1.Value {
             Type = SnackReqTypeCd.STATUS;
             LUN = lun_me.zero;
             InitiatorTaskTag = itt_me.fromPrim 1u;
@@ -3217,6 +3329,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Send SCSI Response and Data-In PDUs
         sess.SendSCSIResponse {
@@ -3268,7 +3381,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
 
         // Receive DataACK SNACK Request PDU in the target
         // (Acknowledge 0 to 3 Data-In PDUs)
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) {
+        sess.PushReceivedPDU conn1.Value {
             Type = SnackReqTypeCd.DATA_ACK;
             LUN = lun_me.zero;
             InitiatorTaskTag = itt_me.fromPrim 0xFFFFFFFFu;
@@ -3281,7 +3394,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
 
         // Receive Data/R2T SNACK Request PDU in the target
         // (Request to resend all of Data-In PDUs)
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) {
+        sess.PushReceivedPDU conn1.Value {
             Type = SnackReqTypeCd.DATA_R2T;
             LUN = lun_me.zero;
             InitiatorTaskTag = itt_me.fromPrim 1u;
@@ -3321,6 +3434,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Send SCSI Response and Data-In PDUs
         sess.SendSCSIResponse {
@@ -3368,7 +3482,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         }
 
         // Receive R-Data SNACK Request PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) {
+        sess.PushReceivedPDU conn1.Value {
             Type = SnackReqTypeCd.RDATA_SNACK;
             LUN = lun_me.zero;
             InitiatorTaskTag = itt_me.fromPrim 1u;
@@ -3416,7 +3530,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( cmdsn_me.fromPrim 0u )
                 ( itt_me.fromPrim 0u )
                 true
-        //let wguid = Guid.NewGuid()
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
 
         // Send Nop-In PDU( R-Mode Lock )
         sess.SendOtherResponsePDU 
@@ -3476,7 +3590,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         }
 
         // Receive R-Data SNACK Request PDU in the target
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) {
+        sess.PushReceivedPDU conn1.Value {
             Type = SnackReqTypeCd.RDATA_SNACK;
             LUN = lun_me.zero;
             InitiatorTaskTag = itt_me.fromPrim 2u;
@@ -3580,7 +3694,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let r1 = sess.AddNewConnection sp DateTime.UtcNow ( cid_me.fromPrim 1us ) netportidx_me.zero tpgt_me.zero conParam
         Assert.True r1
         Assert.True( sess.IsExistCID( cid_me.fromPrim 1us ) )
-        sess.PushReceivedPDU ( cid_me.fromPrim 1us ) scsicmd
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
+        sess.PushReceivedPDU conn1.Value scsicmd
 
         // receive Data-In PDU in the initiator
         let pdu1 =

@@ -205,7 +205,7 @@ type public CSession_Stub() =
     let mutable f_AddNewConnection : ( System.IO.Stream -> DateTime -> CID_T -> NETPORTIDX_T -> TPGT_T -> IscsiNegoParamCO -> bool  ) option = None
     let mutable f_ReinstateConnection : ( System.IO.Stream -> DateTime -> CID_T -> NETPORTIDX_T -> TPGT_T -> IscsiNegoParamCO -> bool  ) option = None
     let mutable f_RemoveConnection : ( CID_T -> CONCNT_T -> unit ) option = None
-    let mutable f_PushReceivedPDU : ( CID_T -> ILogicalPDU -> unit ) option = None
+    let mutable f_PushReceivedPDU : ( IConnection -> ILogicalPDU -> unit ) option = None
     let mutable f_UpdateMaxCmdSN : ( unit -> struct( CMDSN_T * CMDSN_T ) ) option = None
     let mutable f_GetConnection : ( CID_T -> CONCNT_T -> IConnection voption ) option = None
     let mutable f_GetAllConnections : ( unit -> IConnection array ) option = None
@@ -280,8 +280,8 @@ type public CSession_Stub() =
             f_ReinstateConnection.Value sock conTime newCID netPortIdx tpgt iSCSIParamsCO
         override _.RemoveConnection ( cid : CID_T ) ( concnt : CONCNT_T ) : unit =
             f_RemoveConnection.Value cid concnt
-        override _.PushReceivedPDU ( cid : CID_T ) ( pdu : ILogicalPDU ) : unit =
-            f_PushReceivedPDU.Value cid pdu
+        override _.PushReceivedPDU ( conn : IConnection ) ( pdu : ILogicalPDU ) : unit =
+            f_PushReceivedPDU.Value conn pdu
         override _.UpdateMaxCmdSN() : struct( CMDSN_T * CMDSN_T ) =
             f_UpdateMaxCmdSN.Value ()
         override _.GetConnection ( cid : CID_T ) ( counter : CONCNT_T ) : IConnection voption =

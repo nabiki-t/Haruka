@@ -180,19 +180,22 @@ type IscsiTaskScsiCommand
     /// </returns>
     static member private generateR2TInfo ( cmd : SCSICommandPDU ) ( dops :  SCSIDataOutPDU list ) ( mbl : uint32 ) : ( r2tinfo[] * uint32 ) =
         if cmd.W then
-            let startPos =
-                dops
-                |> List.fold ( fun m itr ->
-                    let itr_endpos = itr.BufferOffset + ( itr.DataSegment |> PooledBuffer.ulength )
-                    if itr.TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu && m < itr_endpos then
-                        itr_endpos
-                    else
-                        m
-                   ) ( cmd.DataSegment |> PooledBuffer.ulength )
-            let endPos = cmd.ExpectedDataTransferLength - 1u
             let v =
-                IscsiTaskScsiCommand.genR2TInfoForGap startPos endPos mbl 0u
-                |> List.toArray
+                if cmd.ExpectedDataTransferLength = 0u then
+                    [||]
+                else
+                    let startPos =
+                        dops
+                        |> List.fold ( fun m itr ->
+                            let itr_endpos = itr.BufferOffset + ( itr.DataSegment |> PooledBuffer.ulength )
+                            if itr.TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu && m < itr_endpos then
+                                itr_endpos
+                            else
+                                m
+                           ) ( cmd.DataSegment |> PooledBuffer.ulength )
+                    let endPos = cmd.ExpectedDataTransferLength - 1u
+                    IscsiTaskScsiCommand.genR2TInfoForGap startPos endPos mbl 0u
+                    |> List.toArray
             if v.Length = 0 then
                 Array.empty, 0u
             else

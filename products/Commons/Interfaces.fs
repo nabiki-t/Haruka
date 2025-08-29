@@ -1225,13 +1225,13 @@ type ISession =
     ///   and connection component pours received PDUs into session component,
     ///   instead of processing in connection component.
     /// </summary>
-    /// <param name="cid">
-    ///   CID of connection witch the PDU was received.
+    /// <param name="conn">
+    ///   The connection witch the PDU was received.
     /// </param>
     /// <param name="pdu">
     ///   Received PDU.
     /// </param>
-    abstract PushReceivedPDU : cid:CID_T -> pdu:ILogicalPDU -> unit
+    abstract PushReceivedPDU : conn:IConnection -> pdu:ILogicalPDU -> unit
 
     // ------------------------------------------------------------------------
     /// <summary>

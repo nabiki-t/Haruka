@@ -267,6 +267,14 @@ type Session
                     else
                         HLogger.Trace( LogID.I_CONNECTION_ALREADY_REMOVED, fun g -> g.Gen1( loginfo, m_I_TNexus.I_TNexusStr ) )
 
+                    ////////////////////////////////////////////////////////////////////////////////////////
+                    // If ErrorRecoveryLevel=2, tasks remaining in the queue must be left in preparation
+                    // for a task management function request with TASK REASSIGN.
+                    // However, since Haruka only supports ErrorRecoveryLevel up to 1, all tasks received
+                    // from the dropped connection will be deleted.
+                    ////////////////////////////////////////////////////////////////////////////////////////
+                    this.ExecuteTasks ValueNone
+
                     // Add new connection
                     this.AddConnection_Sub sock conTime newCID netPortIdx tpgt iSCSIParamsCO
             with
@@ -278,7 +286,7 @@ type Session
 
         // --------------------------------------------------------------------
         // Remove closed connection from this session.
-        override _.RemoveConnection ( cid : CID_T ) ( concnt : CONCNT_T ) : unit =
+        override this.RemoveConnection ( cid : CID_T ) ( concnt : CONCNT_T ) : unit =
             
             let loginfo = struct( m_ObjID, ValueSome cid, ValueSome concnt, ValueSome m_TSIH, ValueNone, ValueNone )
             if HLogger.IsVerbose then
@@ -305,17 +313,29 @@ type Session
                     else
                         HLogger.Trace( LogID.I_CONNECTION_REMOVED_IN_SESSION, fun g -> g.Gen1( loginfo, m_I_TNexus.I_TNexusStr ) )
 
+                    ////////////////////////////////////////////////////////////////////////////////////////
+                    // If ErrorRecoveryLevel=2, tasks remaining in the queue must be left in preparation
+                    // for a task management function request with TASK REASSIGN.
+                    // However, since Haruka only supports ErrorRecoveryLevel up to 1, all tasks received
+                    // from the dropped connection will be deleted.
+                    ////////////////////////////////////////////////////////////////////////////////////////
+                    this.ExecuteTasks ValueNone
+
+                    ////////////////////////////////////////////////////////////////////////////////////////
                     // If a connection is added between the time a connection is deleted above and
                     // the time the number is checked below,
                     // the number of connections will not be considered to have become 0.
+                    ////////////////////////////////////////////////////////////////////////////////////////
 
                     // If all of connection are removed, close this session
                     if m_CIDs.obj.Count = 0 then
                         HLogger.Trace( LogID.I_ALL_CONNECTION_CLOSED, fun g -> g.Gen1( loginfo, m_I_TNexus.I_TNexusStr ) )
 
+                        ////////////////////////////////////////////////////////////////////////////////////////
                         // If ErrorRecoveryLevel=2, session must retain while DefaultTime2Wait + DefaultTime2Retain second.
                         // But current implementation support ErrorRecoveryLevel=1, so if last connection has been closed,
                         // the session is closed immidiatry. (reffer iSCSI 3720 10.15.3 - 10.15.4 )
+                        ////////////////////////////////////////////////////////////////////////////////////////
 
                         m_Killer.NoticeTerminate()
             with
@@ -327,8 +347,8 @@ type Session
 
         // --------------------------------------------------------------------
         // Implementation of ISession.PushReceivedPDU
-        override this.PushReceivedPDU ( cid : CID_T ) ( pdu : ILogicalPDU ) : unit =
-            let loginfo = struct ( m_ObjID, ValueSome cid, ValueNone, ValueSome m_TSIH, ValueSome pdu.InitiatorTaskTag, ValueNone )
+        override this.PushReceivedPDU ( conn : IConnection ) ( pdu : ILogicalPDU ) : unit =
+            let loginfo = struct ( m_ObjID, ValueSome conn.CID, ValueSome conn.ConCounter, ValueSome m_TSIH, ValueSome pdu.InitiatorTaskTag, ValueNone )
             if HLogger.IsVerbose then
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "Session.PushReceivedPDU" ) )
 
@@ -337,29 +357,9 @@ type Session
                     // If session is already terminated, this request is ignored.
                     HLogger.Trace( LogID.I_SESSION_ALREADY_TERMINATED, fun g -> g.Gen0 loginfo )
                 else
-                    // search current connection information
-                    match m_CIDs.obj.TryGetValue( cid ) with
-                    | ( false, _ ) ->
-                        // If specified CID is missing, this PDU is silently ignored.
-                        HLogger.Trace( LogID.I_MISSING_CID, fun g -> g.Gen0 loginfo )
+                    // execute tasks
+                    this.ExecuteTasks ( ValueSome struct( conn, pdu ) )
 
-                    | ( true, cidInfo ) ->
-                        // execute tasks
-                        let runTaskCount =
-                            let runTask2 =
-                                this.UpdateProcessWaitQueue cidInfo pdu
-                                |> m_ProcessWaitQueue.Update
-                            for itr in runTask2 do
-                                itr()
-                            runTask2.Count
-
-                        // Decrement the number of running tasks.
-                        fun oldQ -> {
-                            oldQ with
-                                RunningCount = max 0 ( oldQ.RunningCount - runTaskCount )
-                        }
-                        |> m_ProcessWaitQueue.Update
-                        |> ignore
             with
             | :? SessionRecoveryException as x ->
                 HLogger.Trace( LogID.E_SESSION_RECOVERY, fun g -> g.Gen1( loginfo, x.Message ) )
@@ -798,43 +798,82 @@ type Session
 
     // ------------------------------------------------------------------------
     /// <summary>
-    ///   Update or insert an iSCSI task to m_ProcessWaitQueue, and execute runnable tasks.
+    ///  This function updates the task queue and executes any tasks that are executable.
     /// </summary>
-    /// <param name="cidInfo">
-    ///   Connection information that is received a PDU specified by pdu argument.
+    /// <param name="recvPDU">
+    ///  Received PDU information. Pair of the connection and Logical PDU.
     /// </param>
-    /// <param name="pdu">
-    ///   Received PDU.
+    member private this.ExecuteTasks ( recvPDU : struct( IConnection * ILogicalPDU ) voption ) : unit =
+        let runTaskCount =
+            // extracts executable tasks
+            let runTask2 =
+                this.UpdateProcessWaitQueue recvPDU
+                |> m_ProcessWaitQueue.Update
+
+            // run tasks
+            for itr in runTask2 do
+                itr()
+            runTask2.Count
+
+        // Decrement the number of running tasks.
+        fun oldQ -> {
+            oldQ with
+                RunningCount = max 0 ( oldQ.RunningCount - runTaskCount )
+        }
+        |> m_ProcessWaitQueue.Update
+        |> ignore
+
+    // ------------------------------------------------------------------------
+    /// <summary>
+    ///  This function insert a task into the queue based on the received PDU,
+    ///  extracts executable tasks, and deletes unnecessary tasks.
+    /// </summary>
+    /// <param name="recvPDU">
+    ///  Received PDU information. Pair of the connection and Logical PDU.
     /// </param>
-    member private this.UpdateProcessWaitQueue ( cidInfo : CIDInfo ) ( pdu : ILogicalPDU ) ( currentQ : ProcessWaitQueue ) :
+    /// <param name="currentQ">
+    ///  Current process wait queue.
+    /// </param>
+    /// <returns>
+    ///  Updated process wait queue and task to be executed.
+    /// </returns>
+    member private this.UpdateProcessWaitQueue 
+            ( recvPDU : struct( IConnection * ILogicalPDU ) voption )
+            ( currentQ : ProcessWaitQueue ) :
             struct ( ProcessWaitQueue * List< unit -> unit > ) =
-        let opcode = pdu.Opcode
-        let loginfo = struct ( m_ObjID, ValueSome cidInfo.CID, ValueSome cidInfo.Counter, ValueSome m_TSIH, ValueSome pdu.InitiatorTaskTag, ValueNone )
+        
+        let loginfo =
+            if recvPDU.IsSome then
+                let struct( wcon, wpdu ) = recvPDU.Value
+                struct ( m_ObjID, ValueSome wcon.CID, ValueSome wcon.ConCounter, ValueSome m_TSIH, ValueSome wpdu.InitiatorTaskTag, ValueNone )
+            else
+                struct ( m_ObjID, ValueNone, ValueNone, ValueSome m_TSIH, ValueNone, ValueNone )
 
         let struct ( refuseTask, nextWaitTaskList ) =
-            match opcode with
-            | OpcodeCd.NOP_OUT ->
-                this.UpdateProcessWaitQueue_NopIN cidInfo ( pdu :?> NOPOutPDU ) currentQ
-            | OpcodeCd.SCSI_TASK_MGR_REQ ->
-                this.UpdateProcessWaitQueue_TaskMgrReq cidInfo ( pdu :?> TaskManagementFunctionRequestPDU ) currentQ
-            | OpcodeCd.LOGOUT_REQ ->
-                this.UpdateProcessWaitQueue_Logout cidInfo ( pdu :?> LogoutRequestPDU ) currentQ
-            | OpcodeCd.SNACK ->
-                // SNACK PDU is inserted directly into vImmidiate_RunList variable.
+            if recvPDU.IsSome then
+                let struct( wcon, wpdu ) = recvPDU.Value
+                match wpdu.Opcode with
+                | OpcodeCd.NOP_OUT ->
+                    this.UpdateProcessWaitQueue_NopIN wcon ( wpdu :?> NOPOutPDU ) currentQ
+                | OpcodeCd.SCSI_TASK_MGR_REQ ->
+                    this.UpdateProcessWaitQueue_TaskMgrReq wcon ( wpdu :?> TaskManagementFunctionRequestPDU ) currentQ
+                | OpcodeCd.LOGOUT_REQ ->
+                    this.UpdateProcessWaitQueue_Logout wcon ( wpdu :?> LogoutRequestPDU ) currentQ
+                | OpcodeCd.SNACK ->
+                    // SNACK PDU is inserted directly into vImmidiate_RunList variable.
+                    None, currentQ.WaitingQueue
+                | OpcodeCd.SCSI_COMMAND ->
+                    this.UpdateProcessWaitQueue_SCSICommand wcon ( wpdu :?> SCSICommandPDU ) currentQ
+                | OpcodeCd.TEXT_REQ ->
+                    this.UpdateProcessWaitQueue_TextReq wcon ( wpdu :?> TextRequestPDU ) currentQ
+                | OpcodeCd.SCSI_DATA_OUT ->
+                    this.UpdateProcessWaitQueue_SCSIDataOut wcon ( wpdu :?> SCSIDataOutPDU ) currentQ
+                | _ ->
+                    let msg = sprintf "Unknown opcode(0x%02X)" ( byte wpdu.Opcode )
+                    HLogger.Trace( LogID.F_INTERNAL_ASSERTION, fun g -> g.Gen1( loginfo, msg ) )
+                    raise <| new InternalAssertionException( msg )
+            else
                 None, currentQ.WaitingQueue
-            | OpcodeCd.SCSI_COMMAND ->
-                this.UpdateProcessWaitQueue_SCSICommand cidInfo ( pdu :?> SCSICommandPDU ) currentQ
-            | OpcodeCd.TEXT_REQ ->
-                this.UpdateProcessWaitQueue_TextReq cidInfo ( pdu :?> TextRequestPDU ) currentQ
-            | OpcodeCd.SCSI_DATA_OUT ->
-                this.UpdateProcessWaitQueue_SCSIDataOut cidInfo ( pdu :?> SCSIDataOutPDU ) currentQ
-            | _ ->
-                let msg = sprintf "Unknown opcode(0x%02X)" ( byte opcode )
-                HLogger.Trace( LogID.F_INTERNAL_ASSERTION, fun g -> g.Gen1( loginfo, msg ) )
-                raise <| new InternalAssertionException( msg )
-
-        let msg = sprintf "nextWaitTaskList QueueLength=%d" nextWaitTaskList.Count
-        HLogger.Trace( LogID.V_TRACE, fun g -> g.Gen1( loginfo, msg ) )
 
         if refuseTask.IsSome then
             // If rejected, return the task to send reject and skip following process.
@@ -852,10 +891,12 @@ type Session
                 // and is not a unique identifier for identifying the task.
                 // So, SNACK PDU must not be inserted to m_ProcessWaitQueue.
                 // In addition, SNACK PDU is always handled as immediate task and it is always runnable alone.
-                if opcode = OpcodeCd.SNACK then 
-                    let iscsitask = new IscsiTaskOnePDUCommand( this :> ISession, cidInfo.CID, cidInfo.Counter, pdu, false ) :> IIscsiTask
-                    let struct( extask, _ ) = iscsitask.GetExecuteTask()
-                    wTaskList.Add extask
+                if recvPDU.IsSome then
+                    let struct( wcon, wpdu ) = recvPDU.Value
+                    if wpdu.Opcode = OpcodeCd.SNACK then 
+                        let iscsitask = new IscsiTaskOnePDUCommand( this :> ISession, wcon.CID, wcon.ConCounter, wpdu, false ) :> IIscsiTask
+                        let struct( extask, _ ) = iscsitask.GetExecuteTask()
+                        wTaskList.Add extask
 
                 let wwtl2 =
                     [|
@@ -878,9 +919,6 @@ type Session
                 )
                 wvidx
 
-            let msg = sprintf "nonImmidiateTaskIdx Length=%d" nonImmidiateTaskIdx.Count
-            HLogger.Trace( LogID.V_TRACE, fun g -> g.Gen1( loginfo, msg ) )
-
             // update ExpCmdSN
             let rec loop1 argCmdSN =
                 let r =
@@ -896,15 +934,45 @@ type Session
                     argCmdSN
             let nextExpCmdSN = loop1( currentQ.ExpCmdSN )
 
+            // Delete a task that no longer has a source connection
+            let nextWaitTaskList3 =
+                let wCIDs = m_CIDs.obj
+                nextWaitTaskList2
+                |> Array.filter ( fun itr ->
+                        let struct( cid, concnt ) = itr.Value.AllegiantConnection
+                        let r,v = wCIDs.TryGetValue cid
+                        if not r || v.Counter <> concnt then
+                            HLogger.Trace(
+                                LogID.W_ISCSI_TASK_REMOVED,
+                                fun g -> g.Gen3( loginfo, itr.Value.InitiatorTaskTag, itr.Value.CmdSN, "Connection removed" )
+                            )
+                            false
+                        else
+                            true
+                    )
+
+            let nonImmidiateTaskIdx2 =
+                if nextWaitTaskList3.Length = nextWaitTaskList2.Length then
+                    nonImmidiateTaskIdx
+                else
+                    // The referenced array has been updated and needs to be recreated.
+                    let wvidx = List<int>( nextWaitTaskList3.Length )
+                    nextWaitTaskList3
+                    |> Array.iteri ( fun idx itr ->
+                        if not( ValueOption.defaultValue true itr.Value.Immidiate ) then
+                            wvidx.Add idx
+                    )
+                    wvidx
+
             // Search non-immidiate executable task
-            // Note that the following process will update nextWaitTaskList2 as it proceeds.
+            // Note that the following process will update nextWaitTaskList3 as it proceeds.
             let rec loop2 ( argNextProcCmdSN : CMDSN_T ) ( li : List< unit -> unit > ) : CMDSN_T =
                 if nextExpCmdSN = argNextProcCmdSN || cmdsn_me.lessThan nextExpCmdSN argNextProcCmdSN then
                     argNextProcCmdSN
                 else
                     let currentCmdSNTaskIdx =
-                        nonImmidiateTaskIdx.FindAll ( fun itr ->
-                            let cmdsn = nextWaitTaskList2.[itr].Value.CmdSN
+                        nonImmidiateTaskIdx2.FindAll ( fun itr ->
+                            let cmdsn = nextWaitTaskList3.[itr].Value.CmdSN
                             ( ValueOption.isSome cmdsn && ValueOption.get cmdsn = argNextProcCmdSN )
                         )
                     
@@ -915,50 +983,46 @@ type Session
                     else
                         let executables = [|
                             for itr in currentCmdSNTaskIdx do
-                                if nextWaitTaskList2.[itr].Value.IsExecutable then
+                                if nextWaitTaskList3.[itr].Value.IsExecutable then
                                     yield itr
                         |]
                         if executables.Length <= 0 then
                             argNextProcCmdSN
                         else
                             for idx in executables do
-                                let struct( a, b ) = nextWaitTaskList2.[idx].Value.GetExecuteTask()
-                                nextWaitTaskList2.[idx] <- KeyValuePair( nextWaitTaskList2.[idx].Key, b )
+                                let struct( a, b ) = nextWaitTaskList3.[idx].Value.GetExecuteTask()
+                                nextWaitTaskList3.[idx] <- KeyValuePair( nextWaitTaskList3.[idx].Key, b )
                                 li.Add a
 
                             let removableCount =
                                 executables
-                                |> Array.sumBy ( fun itr -> if nextWaitTaskList2.[itr].Value.IsRemovable then 1 else 0 )
+                                |> Array.sumBy ( fun itr -> if nextWaitTaskList3.[itr].Value.IsRemovable then 1 else 0 )
 
                             if executables.Length = removableCount then
                                 loop2 ( argNextProcCmdSN + cmdsn_me.fromPrim 1u ) li
                             else
                                 argNextProcCmdSN
 
-            let nonImm_RunList = List< unit -> unit >( nonImmidiateTaskIdx.Count )
+            let nonImm_RunList = List< unit -> unit >( nonImmidiateTaskIdx2.Count )
             let nextNextProcCmdSN = loop2( currentQ.NextProcCmdSN ) nonImm_RunList
 
             // search removable task and delete that task
             let rmITT = 
-                nextWaitTaskList2
+                nextWaitTaskList3
                 |> Array.choose ( fun itr -> if itr.Value.IsRemovable then Some itr.Key else None )
-            let nextWaitTaskList3 =
+            let nextWaitTaskList4 =
                 let v =
-                    nextWaitTaskList2
+                    nextWaitTaskList3
                     |> Seq.filter ( fun itr -> Array.exists ( (=) itr.Key ) rmITT |> not )
                 v.ToImmutableDictionary()
 
             // gen executable task list
-//            let resultTaskList =
-//                nonImm_RunList
-//                |> Seq.append vImmidiate_RunList
-//                |> Seq.toArray
             let resultTaskList = List< unit -> unit >( vImmidiate_RunList.Count + nonImm_RunList.Count )
             resultTaskList.AddRange vImmidiate_RunList
             resultTaskList.AddRange nonImm_RunList
 
             let nextQ = {
-                WaitingQueue = nextWaitTaskList3;
+                WaitingQueue = nextWaitTaskList4;
                 RunningCount = currentQ.RunningCount + resultTaskList.Count;
                 ExpCmdSN = nextExpCmdSN;
                 MaxCmdSN = currentQ.MaxCmdSN;       // MaxCmdSN is updated to the latest value when the value is referenced.
@@ -993,8 +1057,8 @@ type Session
     /// <summary>
     ///   Update or insert a NopOUT iSCSI task to m_ProcessWaitQueue, and execute runnable tasks.
     /// </summary>
-    /// <param name="cidInfo">
-    ///   Connection information that is received a PDU specified by pdu argument.
+    /// <param name="conn">
+    ///   Connection that is received a PDU specified by pdu argument.
     /// </param>
     /// <param name="pdu">
     ///   Received PDU.
@@ -1002,9 +1066,9 @@ type Session
     /// <returns>
     ///   If received PDU is no acceptable, it returns task to send reject PDU, otherwise returns next task list status.
     /// </returns>
-    member private this.UpdateProcessWaitQueue_NopIN ( cidInfo : CIDInfo ) ( pdu : NOPOutPDU ) ( currentQ : ProcessWaitQueue ) : 
+    member private this.UpdateProcessWaitQueue_NopIN ( conn : IConnection ) ( pdu : NOPOutPDU ) ( currentQ : ProcessWaitQueue ) : 
             struct ( ( unit -> unit ) option * ImmutableDictionary< ITT_T, IIscsiTask > ) =
-        let loginfo = struct ( m_ObjID, ValueSome cidInfo.CID, ValueSome cidInfo.Counter, ValueSome m_TSIH, ValueSome pdu.InitiatorTaskTag, ValueNone )
+        let loginfo = struct ( m_ObjID, ValueSome conn.CID, ValueSome conn.ConCounter, ValueSome m_TSIH, ValueSome pdu.InitiatorTaskTag, ValueNone )
 
         if pdu.InitiatorTaskTag = itt_me.fromPrim 0xFFFFFFFFu then
             // Ping response PDU is silently ignored.
@@ -1015,7 +1079,7 @@ type Session
             // Reject and ignore
             let msg = sprintf "Invalid CmdSN value(0x%08X)." pdu.CmdSN
             HLogger.Trace( LogID.W_OTHER_PDU_IGNORED, fun g -> g.Gen1( loginfo, msg ) )
-            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection cidInfo.Connection pdu RejectResonCd.INVALID_PDU_FIELD
+            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
             Some refuseTask, currentQ.WaitingQueue
 
         elif currentQ.WaitingQueue.ContainsKey( pdu.InitiatorTaskTag ) then
@@ -1023,12 +1087,12 @@ type Session
                 let msg = sprintf "Specified ITT(0x%08X) is in alive." pdu.InitiatorTaskTag
                 g.Gen1( loginfo, msg )
             )
-            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection cidInfo.Connection pdu RejectResonCd.INVALID_PDU_FIELD
+            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
             Some refuseTask, currentQ.WaitingQueue
 
         else
             // Insert task to the process wait queue.
-            let task = new IscsiTaskOnePDUCommand( this :> ISession, cidInfo.CID, cidInfo.Counter, pdu, false ) :> IIscsiTask
+            let task = new IscsiTaskOnePDUCommand( this :> ISession, conn.CID, conn.ConCounter, pdu, false ) :> IIscsiTask
             None, currentQ.WaitingQueue.Add( pdu.InitiatorTaskTag, task )
 
     // ------------------------------------------------------------------------
@@ -1036,7 +1100,7 @@ type Session
     ///   Update or insert a task management request iSCSI task to m_ProcessWaitQueue, and execute runnable tasks.
     /// </summary>
     /// <param name="cidInfo">
-    ///   Connection information that is received a PDU specified by pdu argument.
+    ///   Connection that is received a PDU specified by pdu argument.
     /// </param>
     /// <param name="pdu">
     ///   Received PDU.
@@ -1044,9 +1108,9 @@ type Session
     /// <returns>
     ///   If received PDU is no acceptable, it returns task to send reject PDU, otherwise returns next task list status.
     /// </returns>
-    member private this.UpdateProcessWaitQueue_TaskMgrReq ( cidInfo : CIDInfo ) ( pdu : TaskManagementFunctionRequestPDU ) ( currentQ : ProcessWaitQueue ) : 
+    member private this.UpdateProcessWaitQueue_TaskMgrReq ( conn : IConnection ) ( pdu : TaskManagementFunctionRequestPDU ) ( currentQ : ProcessWaitQueue ) : 
             struct ( ( unit -> unit ) option * ImmutableDictionary< ITT_T, IIscsiTask > ) =
-        let loginfo = struct ( m_ObjID, ValueSome cidInfo.CID, ValueSome cidInfo.Counter, ValueSome m_TSIH, ValueSome pdu.InitiatorTaskTag, ValueNone )
+        let loginfo = struct ( m_ObjID, ValueSome conn.CID, ValueSome conn.ConCounter, ValueSome m_TSIH, ValueSome pdu.InitiatorTaskTag, ValueNone )
 
         if not <| this.CheckCmdSNValue pdu.I pdu.CmdSN currentQ then
             // Reject and ignore
@@ -1054,7 +1118,7 @@ type Session
                 let msg = sprintf "Invalid CmdSN value(0x%08X)." pdu.CmdSN
                 g.Gen1( loginfo, msg )
             )
-            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection cidInfo.Connection pdu RejectResonCd.INVALID_PDU_FIELD
+            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
             Some refuseTask, currentQ.WaitingQueue
 
         elif currentQ.WaitingQueue.ContainsKey pdu.InitiatorTaskTag then
@@ -1062,12 +1126,12 @@ type Session
                 let msg = sprintf "Specified ITT(0x%08X) is in alive." pdu.InitiatorTaskTag
                 g.Gen1( loginfo, msg )
             )
-            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection cidInfo.Connection pdu RejectResonCd.INVALID_PDU_FIELD
+            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
             Some refuseTask, currentQ.WaitingQueue
 
         else
             // Insert task to the process wait queue.
-            let task = new IscsiTaskOnePDUCommand( this :> ISession, cidInfo.CID, cidInfo.Counter, pdu, false ) :> IIscsiTask
+            let task = new IscsiTaskOnePDUCommand( this :> ISession, conn.CID, conn.ConCounter, pdu, false ) :> IIscsiTask
             None, currentQ.WaitingQueue.Add( pdu.InitiatorTaskTag, task )
 
     // ------------------------------------------------------------------------
@@ -1075,7 +1139,7 @@ type Session
     ///   Update or insert a logout request iSCSI task to m_ProcessWaitQueue, and execute runnable tasks.
     /// </summary>
     /// <param name="cidInfo">
-    ///   Connection information that is received a PDU specified by pdu argument.
+    ///   Connection that is received a PDU specified by pdu argument.
     /// </param>
     /// <param name="pdu">
     ///   Received PDU.
@@ -1083,9 +1147,9 @@ type Session
     /// <returns>
     ///   If received PDU is no acceptable, it returns task to send reject PDU, otherwise returns next task list status.
     /// </returns>
-    member private this.UpdateProcessWaitQueue_Logout ( cidInfo : CIDInfo ) ( pdu : LogoutRequestPDU ) ( currentQ : ProcessWaitQueue ) : 
+    member private this.UpdateProcessWaitQueue_Logout ( conn : IConnection ) ( pdu : LogoutRequestPDU ) ( currentQ : ProcessWaitQueue ) : 
             struct ( ( unit -> unit ) option * ImmutableDictionary< ITT_T, IIscsiTask > ) =
-        let loginfo = struct ( m_ObjID, ValueSome cidInfo.CID, ValueSome cidInfo.Counter, ValueSome m_TSIH, ValueSome pdu.InitiatorTaskTag, ValueNone )
+        let loginfo = struct ( m_ObjID, ValueSome conn.CID, ValueSome conn.ConCounter, ValueSome m_TSIH, ValueSome pdu.InitiatorTaskTag, ValueNone )
 
         if not <| this.CheckCmdSNValue pdu.I pdu.CmdSN currentQ then
             // Reject and ignore
@@ -1093,7 +1157,7 @@ type Session
                 let msg = sprintf "Invalid CmdSN value(0x%08X)." pdu.CmdSN
                 g.Gen1( loginfo, msg )
             )
-            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection cidInfo.Connection pdu RejectResonCd.INVALID_PDU_FIELD
+            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
             Some refuseTask, currentQ.WaitingQueue
 
         elif currentQ.WaitingQueue.ContainsKey pdu.InitiatorTaskTag then
@@ -1101,12 +1165,12 @@ type Session
                 let msg = sprintf "Specified ITT(0x%08X) is in alive." pdu.InitiatorTaskTag
                 g.Gen1( loginfo, msg )
             )
-            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection cidInfo.Connection pdu RejectResonCd.INVALID_PDU_FIELD
+            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
             Some refuseTask, currentQ.WaitingQueue
 
         else
             // Insert task to the process wait queue.
-            let task = new IscsiTaskOnePDUCommand( this :> ISession, cidInfo.CID, cidInfo.Counter, pdu, false ) :> IIscsiTask
+            let task = new IscsiTaskOnePDUCommand( this :> ISession, conn.CID, conn.ConCounter, pdu, false ) :> IIscsiTask
             None, currentQ.WaitingQueue.Add( pdu.InitiatorTaskTag, task )
 
     // ------------------------------------------------------------------------
@@ -1114,7 +1178,7 @@ type Session
     ///   Update or insert a SCSI Command request iSCSI task to m_ProcessWaitQueue, and execute runnable tasks.
     /// </summary>
     /// <param name="cidInfo">
-    ///   Connection information that is received a PDU specified by pdu argument.
+    ///   Connection that is received a PDU specified by pdu argument.
     /// </param>
     /// <param name="pdu">
     ///   Received PDU.
@@ -1122,16 +1186,16 @@ type Session
     /// <returns>
     ///   If received PDU is no acceptable, it returns task to send reject PDU, otherwise returns next task list status.
     /// </returns>
-    member private this.UpdateProcessWaitQueue_SCSICommand ( cidInfo : CIDInfo ) ( pdu : SCSICommandPDU ) ( currentQ : ProcessWaitQueue ) : 
+    member private this.UpdateProcessWaitQueue_SCSICommand ( conn : IConnection ) ( pdu : SCSICommandPDU ) ( currentQ : ProcessWaitQueue ) : 
             struct ( ( unit -> unit ) option * ImmutableDictionary< ITT_T, IIscsiTask > ) =
-        let loginfo = struct ( m_ObjID, ValueSome cidInfo.CID, ValueSome cidInfo.Counter, ValueSome m_TSIH, ValueSome pdu.InitiatorTaskTag, ValueNone )
+        let loginfo = struct ( m_ObjID, ValueSome conn.CID, ValueSome conn.ConCounter, ValueSome m_TSIH, ValueSome pdu.InitiatorTaskTag, ValueNone )
 
         if not <| this.CheckCmdSNValue pdu.I pdu.CmdSN currentQ then
             // Reject and ignore
             HLogger.Trace( LogID.W_SCSI_COMMAND_PDU_IGNORED, fun g ->
                 g.Gen1( loginfo, sprintf "Invalid CmdSN value(0x%08X)." pdu.CmdSN )
             )
-            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection cidInfo.Connection pdu RejectResonCd.INVALID_PDU_FIELD
+            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
             Some refuseTask, currentQ.WaitingQueue
 
         elif ( not m_sessionParameter.ImmediateData ) && ( 0 < PooledBuffer.length pdu.DataSegment ) then
@@ -1139,7 +1203,7 @@ type Session
             HLogger.Trace( LogID.W_SCSI_COMMAND_PDU_IGNORED, fun g ->
                 g.Gen1( loginfo, "ImmediateData was negotiated NO, but A SCSI Command PDU was received that had a non-zero length DataSegment." )
             )
-            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection cidInfo.Connection pdu RejectResonCd.INVALID_PDU_FIELD
+            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
             Some refuseTask, currentQ.WaitingQueue
 
         elif currentQ.WaitingQueue.ContainsKey pdu.InitiatorTaskTag |> not then
@@ -1147,8 +1211,8 @@ type Session
             let task = 
                 IscsiTaskScsiCommand.ReceivedNewSCSICommandPDU(
                     this :> ISession,
-                    cidInfo.CID,
-                    cidInfo.Counter,
+                    conn.CID,
+                    conn.ConCounter,
                     pdu
                 ) :> IIscsiTask
             None, currentQ.WaitingQueue.Add( pdu.InitiatorTaskTag, task )
@@ -1165,7 +1229,7 @@ type Session
                                 v.TaskTypeName
                     g.Gen1( loginfo, msg )
                 )
-                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection cidInfo.Connection pdu RejectResonCd.INVALID_PDU_FIELD
+                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
                 Some refuseTask, currentQ.WaitingQueue
             else
                 // Update existing iSCSI task object.
@@ -1181,8 +1245,8 @@ type Session
     /// <summary>
     ///   Update or insert a text negotiation request iSCSI task to m_ProcessWaitQueue, and execute runnable tasks.
     /// </summary>
-    /// <param name="cidInfo">
-    ///   Connection information that is received a PDU specified by pdu argument.
+    /// <param name="conn">
+    ///   Connection that is received a PDU specified by pdu argument.
     /// </param>
     /// <param name="pdu">
     ///   Received PDU.
@@ -1190,9 +1254,9 @@ type Session
     /// <returns>
     ///   If received PDU is no acceptable, it returns task to send reject PDU, otherwise returns next task list status.
     /// </returns>
-    member private this.UpdateProcessWaitQueue_TextReq ( cidInfo : CIDInfo ) ( pdu : TextRequestPDU ) ( currentQ : ProcessWaitQueue ) : 
+    member private this.UpdateProcessWaitQueue_TextReq ( conn : IConnection ) ( pdu : TextRequestPDU ) ( currentQ : ProcessWaitQueue ) : 
             struct ( ( unit -> unit ) option * ImmutableDictionary< ITT_T, IIscsiTask > ) =
-        let loginfo = struct ( m_ObjID, ValueSome cidInfo.CID, ValueSome cidInfo.Counter, ValueSome m_TSIH, ValueSome pdu.InitiatorTaskTag, ValueNone )
+        let loginfo = struct ( m_ObjID, ValueSome conn.CID, ValueSome conn.ConCounter, ValueSome m_TSIH, ValueSome pdu.InitiatorTaskTag, ValueNone )
 
         if not <| this.CheckCmdSNValue pdu.I pdu.CmdSN currentQ then
             // Reject and ignore
@@ -1200,7 +1264,7 @@ type Session
                 let msg = sprintf "Invalid CmdSN value(0x%08X)." pdu.CmdSN
                 g.Gen1( loginfo, msg )
             )
-            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection cidInfo.Connection pdu RejectResonCd.INVALID_PDU_FIELD
+            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
             Some refuseTask, currentQ.WaitingQueue
 
         elif currentQ.WaitingQueue.ContainsKey pdu.InitiatorTaskTag |> not then
@@ -1209,11 +1273,11 @@ type Session
                 IscsiTaskTextNegociation.UpdateNegoStatByReqPDU(
                     IscsiTaskTextNegociation.CreateWithInitParams(
                         this :> ISession,
-                        cidInfo.CID,
-                        cidInfo.Counter,
+                        conn.CID,
+                        conn.ConCounter,
                         pdu,
                         m_sessionParameter,
-                        cidInfo.Connection.CurrentParams
+                        conn.CurrentParams
                     ),
                     pdu
                 ) :> IIscsiTask
@@ -1231,7 +1295,7 @@ type Session
                             v.TaskTypeName
                     g.Gen1( loginfo, msg )
                 )
-                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection cidInfo.Connection pdu RejectResonCd.INVALID_PDU_FIELD
+                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
                 Some refuseTask, currentQ.WaitingQueue
 
             elif pdu.TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu then
@@ -1242,11 +1306,11 @@ type Session
                     IscsiTaskTextNegociation.UpdateNegoStatByReqPDU(
                         IscsiTaskTextNegociation.CreateWithInitParams(
                             this :> ISession,
-                            cidInfo.CID,
-                            cidInfo.Counter,
+                            conn.CID,
+                            conn.ConCounter,
                             pdu,
                             m_sessionParameter,
-                            cidInfo.Connection.CurrentParams
+                            conn.CurrentParams
                         ),
                         pdu
                     ) :> IIscsiTask
@@ -1257,7 +1321,7 @@ type Session
                 // it considers protocol error and causes negotiation reset.
                 HLogger.Trace( LogID.W_NEGOTIATION_RESET, fun g -> g.Gen2( loginfo, pdu.InitiatorTaskTag, "Unmatch immidiate flag value." ) )
                 let nextQ = currentQ.WaitingQueue.Remove pdu.InitiatorTaskTag
-                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection cidInfo.Connection pdu RejectResonCd.INVALID_PDU_FIELD
+                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
                 Some refuseTask, nextQ
 
             elif ( not pdu.I ) && ( ValueOption.isSome v.CmdSN ) && ( pdu.CmdSN = ( ValueOption.get v.CmdSN ) || cmdsn_me.lessThan pdu.CmdSN ( ValueOption.get v.CmdSN ) ) then
@@ -1265,7 +1329,7 @@ type Session
                 // it considers protocol error and causes negotiation reset.
                 HLogger.Trace( LogID.W_NEGOTIATION_RESET, fun g -> g.Gen2( loginfo, pdu.InitiatorTaskTag, "Invalid CmdSN value." ) )
                 let nextQ = currentQ.WaitingQueue.Remove pdu.InitiatorTaskTag
-                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection cidInfo.Connection pdu RejectResonCd.INVALID_PDU_FIELD
+                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
                 Some refuseTask, nextQ
 
             else
@@ -1281,8 +1345,8 @@ type Session
     /// <summary>
     ///   Update or insert a SCSI Data-Out iSCSI task to m_ProcessWaitQueue, and execute runnable tasks.
     /// </summary>
-    /// <param name="cidInfo">
-    ///   Connection information that is received a PDU specified by pdu argument.
+    /// <param name="conn">
+    ///   Connection that is received a PDU specified by pdu argument.
     /// </param>
     /// <param name="pdu">
     ///   Received PDU.
@@ -1290,23 +1354,23 @@ type Session
     /// <returns>
     ///   If received PDU is no acceptable, it returns task to send reject PDU, otherwise returns next task list status.
     /// </returns>
-    member private this.UpdateProcessWaitQueue_SCSIDataOut ( cidInfo : CIDInfo ) ( pdu : SCSIDataOutPDU ) ( currentQ : ProcessWaitQueue ) : 
+    member private this.UpdateProcessWaitQueue_SCSIDataOut ( conn : IConnection ) ( pdu : SCSIDataOutPDU ) ( currentQ : ProcessWaitQueue ) : 
             struct ( ( unit -> unit ) option * ImmutableDictionary< ITT_T, IIscsiTask > ) =
-        let loginfo = struct ( m_ObjID, ValueSome cidInfo.CID, ValueSome cidInfo.Counter, ValueSome m_TSIH, ValueSome pdu.InitiatorTaskTag, ValueNone )
+        let loginfo = struct ( m_ObjID, ValueSome conn.CID, ValueSome conn.ConCounter, ValueSome m_TSIH, ValueSome pdu.InitiatorTaskTag, ValueNone )
 
         if currentQ.WaitingQueue.ContainsKey pdu.InitiatorTaskTag |> not then
             let wtask =
                 IscsiTaskScsiCommand.ReceivedNewSCSIDataOutPDU(
                     this :> ISession,
-                    cidInfo.CID,
-                    cidInfo.Counter,
+                    conn.CID,
+                    conn.ConCounter,
                     pdu
                 )
             if wtask.IsSome then
                 None, currentQ.WaitingQueue.Add( pdu.InitiatorTaskTag, wtask.Value :> IIscsiTask )
             else
                 // Reject and ignore
-                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection cidInfo.Connection pdu RejectResonCd.INVALID_PDU_FIELD
+                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
                 Some refuseTask, currentQ.WaitingQueue
         else
             let v = currentQ.WaitingQueue.[ pdu.InitiatorTaskTag ]
@@ -1320,7 +1384,7 @@ type Session
                             v.TaskTypeName
                     g.Gen1( loginfo, msg )
                 )
-                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection cidInfo.Connection pdu RejectResonCd.INVALID_PDU_FIELD
+                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
                 Some refuseTask, currentQ.WaitingQueue
             else
                 // Update SCSI Command task object that has already received SCSI Command or SCSI Data-Out PDUs.

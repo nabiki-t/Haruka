@@ -224,6 +224,7 @@ type LogID =
     | W_UNIT_ATTENTION_EXISTED              = 0x30002E00
     | W_CONN_REJECTED_DUE_TO_WHITELIST      = 0x30002F00
     | W_CONNECTION_ERROR                    = 0x30003000
+    | W_ISCSI_TASK_REMOVED                  = 0x30003100
 
     | E_UNEXPECTED_ERROR                    = 0x40000000
     | E_FAILED_CREATE_PORTAD                = 0x40000100
@@ -1603,6 +1604,7 @@ type HLogger() =
             ( LogID.W_UNIT_ATTENTION_EXISTED,           "Unit Attention existed. UA={0}" )
             ( LogID.W_CONN_REJECTED_DUE_TO_WHITELIST,   "Connection rejected due to whilte list. Source address={0}, source port={1}." )
             ( LogID.W_CONNECTION_ERROR,                 "Communication error occured. Drop this connection. Message={0}." )
+            ( LogID.W_ISCSI_TASK_REMOVED,               "iSCSI task removed. ITT={0}, CmdSN={1}, Reason={2}." )
 
             ( LogID.E_UNEXPECTED_ERROR,                 "Unexpedted error. Exception={0}, message={1}" )
             ( LogID.E_FAILED_CREATE_PORTAD,             "Failed to create Port. index={0}" )

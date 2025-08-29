@@ -224,7 +224,7 @@ type Connection
                     m_StatSN <- firstPDU.ExpStatSN
 
                     // Push received first PDU to session component
-                    m_session.PushReceivedPDU m_CID firstPDU
+                    m_session.PushReceivedPDU this firstPDU
 
                     // Receive next PDU
                     do! this.ReceivePDUInFullFeaturePhase()
@@ -245,7 +245,8 @@ type Connection
                             m_Killer.NoticeTerminate()
                     else
                         // If this connection is already removed, any exeptions are ignored.
-                        ()
+                        HLogger.IgnoreException( fun g -> g.GenExp( m_LogInfo, x ) )
+
             } |> Functions.StartTask
 
         // ------------------------------------------------------------------------
@@ -832,7 +833,7 @@ type Connection
 
                         // Push the received PDU into session component
 //                        m_ReceiveTask.Enqueue ( fun () ->
-                            m_session.PushReceivedPDU m_CID lpdu
+                            m_session.PushReceivedPDU this lpdu
 //                        )
 
                 with

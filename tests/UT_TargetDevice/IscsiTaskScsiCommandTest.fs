@@ -588,6 +588,32 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( 0u = nsn ))
 
     [<Fact>]
+    member _.generateR2TInfo_009() =
+        let cmd = {
+            IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
+                ExpectedDataTransferLength = 0u;
+                DataSegment = PooledBuffer.Empty;
+        }
+        let data : SCSIDataOutPDU list = []
+        let r2t, nsn = PrivateCaller.Invoke< IscsiTaskScsiCommand >( "generateR2TInfo", cmd, data, 10u ) :?> ( r2tinfo[] * uint32 )
+        Assert.True(( 0 = r2t.Length ))
+        Assert.True(( 0u = nsn ))
+
+    [<Fact>]
+    member _.generateR2TInfo_010() =
+        let cmd = {
+            IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
+                ExpectedDataTransferLength = 1u;
+                DataSegment = PooledBuffer.Empty;
+        }
+        let data : SCSIDataOutPDU list = []
+        let r2t, nsn = PrivateCaller.Invoke< IscsiTaskScsiCommand >( "generateR2TInfo", cmd, data, 10u ) :?> ( r2tinfo[] * uint32 )
+        Assert.True(( 1 = r2t.Length ))
+        Assert.True(( r2t.[0].offset = 0u ))
+        Assert.True(( r2t.[0].length = 1u ))
+        Assert.True(( 1u = nsn ))
+
+    [<Fact>]
     member _.generateRecoveryR2TInfo_001() =
         let cmd = {
             IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with

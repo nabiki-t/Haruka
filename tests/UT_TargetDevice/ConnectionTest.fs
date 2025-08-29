@@ -194,9 +194,9 @@ type Connection_Test () =
         let mutable cnt2 = 0
         let wlock = new SemaphoreSlim( 1 )
 
-        sessStub.p_PushReceivedPDU <- ( fun cid pdu ->
+        sessStub.p_PushReceivedPDU <- ( fun argconn pdu ->
                 cnt <- cnt + 1
-                Assert.True(( cid = cid_me.fromPrim 0us ))
+                Assert.Same( con, argconn )
                 Assert.True(( pdu.Opcode = OpcodeCd.NOP_OUT ))
                 raise <| Exception( "" )
             )
@@ -238,9 +238,9 @@ type Connection_Test () =
         let mutable cnt = 0
         let wlock = new SemaphoreSlim( 1 )
 
-        sessStub.p_PushReceivedPDU <- ( fun cid pdu ->
+        sessStub.p_PushReceivedPDU <- ( fun argconn pdu ->
                 cnt <- cnt + 1
-                Assert.True(( cid = cid_me.fromPrim 0us ))
+                Assert.Same( con, argconn )
                 Assert.True(( pdu.Opcode = OpcodeCd.NOP_OUT ))
                 raise <| Exception( "" )
             )
