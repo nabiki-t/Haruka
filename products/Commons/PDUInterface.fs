@@ -1529,7 +1529,7 @@ type SNACKRequestPDU =
 type RejectPDU =
     {
         /// Reason field value.
-        Reason : RejectResonCd;
+        Reason : RejectReasonCd;
         /// StatSN field value.
         StatSN : STATSN_T;
         /// ExpCmdSN field value.

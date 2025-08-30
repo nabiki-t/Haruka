@@ -255,7 +255,7 @@ type SnackReqTypeCd =
 //=============================================================================
 // Reject PDU Reason values
 
-type RejectResonCd =
+type RejectReasonCd =
     /// Reject PDU Reason values : Data (payload) Digest Error
     | DATA_DIGEST_ERR = 0x02uy
     /// Reject PDU Reason values : SNACK Reject
@@ -2310,7 +2310,7 @@ module Constants =
         else
             errcont a
 
-    let getLogoutReqResonNameFromValue : ( LogoutReqReasonCd -> string ) =
+    let getLogoutReqReasonNameFromValue : ( LogoutReqReasonCd -> string ) =
         function
         | LogoutReqReasonCd.CLOSE_SESS -> "CLOSE_SESS"
         | LogoutReqReasonCd.CLOSE_CONN -> "CLOSE_CONN"
@@ -2357,45 +2357,45 @@ module Constants =
         | SnackReqTypeCd.RDATA_SNACK -> "RDATA_SNACK"
         | _ as x -> sprintf "Unknown SNACK request PDU Type value(0x%02X)" ( byte x )
 
-    let byteToRejectResonCd ( a : byte ) ( errcont : byte -> RejectResonCd ) : RejectResonCd =
-        if a = byte RejectResonCd.DATA_DIGEST_ERR then
-            RejectResonCd.DATA_DIGEST_ERR
-        elif a = byte RejectResonCd.SNACK_REJECT then
-            RejectResonCd.SNACK_REJECT
-        elif a = byte RejectResonCd.PROTOCOL_ERR then
-            RejectResonCd.PROTOCOL_ERR
-        elif a = byte RejectResonCd.COM_NOT_SUPPORT then
-            RejectResonCd.COM_NOT_SUPPORT
-        elif a = byte RejectResonCd.IMMIDIATE_COM_REJECT then
-            RejectResonCd.IMMIDIATE_COM_REJECT
-        elif a = byte RejectResonCd.TASK_IN_PROGRESS then
-            RejectResonCd.TASK_IN_PROGRESS
-        elif a = byte RejectResonCd.INVALID_DATA_ACK then
-            RejectResonCd.INVALID_DATA_ACK
-        elif a = byte RejectResonCd.INVALID_PDU_FIELD then
-            RejectResonCd.INVALID_PDU_FIELD
-        elif a = byte RejectResonCd.LONG_OPE_REJECT then
-            RejectResonCd.LONG_OPE_REJECT
-        elif a = byte RejectResonCd.NEGOTIATION_RESET then
-            RejectResonCd.NEGOTIATION_RESET
-        elif a = byte RejectResonCd.WAIT_FOR_LOGOUT then
-            RejectResonCd.WAIT_FOR_LOGOUT
+    let byteToRejectReasonCd ( a : byte ) ( errcont : byte -> RejectReasonCd ) : RejectReasonCd =
+        if a = byte RejectReasonCd.DATA_DIGEST_ERR then
+            RejectReasonCd.DATA_DIGEST_ERR
+        elif a = byte RejectReasonCd.SNACK_REJECT then
+            RejectReasonCd.SNACK_REJECT
+        elif a = byte RejectReasonCd.PROTOCOL_ERR then
+            RejectReasonCd.PROTOCOL_ERR
+        elif a = byte RejectReasonCd.COM_NOT_SUPPORT then
+            RejectReasonCd.COM_NOT_SUPPORT
+        elif a = byte RejectReasonCd.IMMIDIATE_COM_REJECT then
+            RejectReasonCd.IMMIDIATE_COM_REJECT
+        elif a = byte RejectReasonCd.TASK_IN_PROGRESS then
+            RejectReasonCd.TASK_IN_PROGRESS
+        elif a = byte RejectReasonCd.INVALID_DATA_ACK then
+            RejectReasonCd.INVALID_DATA_ACK
+        elif a = byte RejectReasonCd.INVALID_PDU_FIELD then
+            RejectReasonCd.INVALID_PDU_FIELD
+        elif a = byte RejectReasonCd.LONG_OPE_REJECT then
+            RejectReasonCd.LONG_OPE_REJECT
+        elif a = byte RejectReasonCd.NEGOTIATION_RESET then
+            RejectReasonCd.NEGOTIATION_RESET
+        elif a = byte RejectReasonCd.WAIT_FOR_LOGOUT then
+            RejectReasonCd.WAIT_FOR_LOGOUT
         else
             errcont a
 
-    let getRejectResonNameFomValue : ( RejectResonCd -> string ) =
+    let getRejectReasonNameFomValue : ( RejectReasonCd -> string ) =
         function
-        | RejectResonCd.DATA_DIGEST_ERR -> "DATA_DIGEST_ERR"
-        | RejectResonCd.SNACK_REJECT -> "SNACK_REJECT"
-        | RejectResonCd.PROTOCOL_ERR -> "PROTOCOL_ERR"
-        | RejectResonCd.COM_NOT_SUPPORT -> "COM_NOT_SUPPORT"
-        | RejectResonCd.IMMIDIATE_COM_REJECT -> "IMMIDIATE_COM_REJECT"
-        | RejectResonCd.TASK_IN_PROGRESS -> "TASK_IN_PROGRESS"
-        | RejectResonCd.INVALID_DATA_ACK -> "INVALID_DATA_ACK"
-        | RejectResonCd.INVALID_PDU_FIELD -> "INVALID_PDU_FIELD"
-        | RejectResonCd.LONG_OPE_REJECT -> "LONG_OPE_REJECT"
-        | RejectResonCd.NEGOTIATION_RESET -> "NEGOTIATION_RESET"
-        | RejectResonCd.WAIT_FOR_LOGOUT -> "WAIT_FOR_LOGOUT"
+        | RejectReasonCd.DATA_DIGEST_ERR -> "DATA_DIGEST_ERR"
+        | RejectReasonCd.SNACK_REJECT -> "SNACK_REJECT"
+        | RejectReasonCd.PROTOCOL_ERR -> "PROTOCOL_ERR"
+        | RejectReasonCd.COM_NOT_SUPPORT -> "COM_NOT_SUPPORT"
+        | RejectReasonCd.IMMIDIATE_COM_REJECT -> "IMMIDIATE_COM_REJECT"
+        | RejectReasonCd.TASK_IN_PROGRESS -> "TASK_IN_PROGRESS"
+        | RejectReasonCd.INVALID_DATA_ACK -> "INVALID_DATA_ACK"
+        | RejectReasonCd.INVALID_PDU_FIELD -> "INVALID_PDU_FIELD"
+        | RejectReasonCd.LONG_OPE_REJECT -> "LONG_OPE_REJECT"
+        | RejectReasonCd.NEGOTIATION_RESET -> "NEGOTIATION_RESET"
+        | RejectReasonCd.WAIT_FOR_LOGOUT -> "WAIT_FOR_LOGOUT"
         | _ as x -> sprintf "Unknown Reject PDU Reason value(0x%02X)" ( byte x )
 
     let byteToScsiCmdStatCd ( a : byte ) ( errcont : byte -> ScsiCmdStatCd ) : ScsiCmdStatCd =

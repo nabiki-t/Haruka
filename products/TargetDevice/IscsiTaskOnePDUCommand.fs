@@ -276,7 +276,7 @@ type IscsiTaskOnePDUCommand
         let reqPDU = m_Request :?> LogoutRequestPDU
 
         HLogger.Trace( LogID.I_LOGOUT_REQUESTED, fun g ->
-            g.Gen1( m_LogInfo, Constants.getLogoutReqResonNameFromValue reqPDU.ReasonCode )
+            g.Gen1( m_LogInfo, Constants.getLogoutReqReasonNameFromValue reqPDU.ReasonCode )
         )
         let defresp = {
             Response = LogoutResCd.SUCCESS;
@@ -337,7 +337,7 @@ type IscsiTaskOnePDUCommand
         if m_Session.SessionParameter.ErrorRecoveryLevel = 0uy then
             // if error recovery level is zero, SNACK request is not supported.
             HLogger.Trace( LogID.W_SNACK_REQ_REJECTED, fun g -> g.Gen0 m_LogInfo )
-            m_Session.RejectPDUByLogi m_AllegiantCID m_AllegiantConCounter m_Request RejectResonCd.COM_NOT_SUPPORT
+            m_Session.RejectPDUByLogi m_AllegiantCID m_AllegiantConCounter m_Request RejectReasonCd.COM_NOT_SUPPORT
         else
             match m_Session.GetConnection m_AllegiantCID m_AllegiantConCounter with
             | ValueNone ->
@@ -370,7 +370,7 @@ type IscsiTaskOnePDUCommand
         let pdus = conn.GetSentDataInPDUForSNACK snackpdu.InitiatorTaskTag ( datasn_me.fromPrim snackpdu.BegRun ) snackpdu.RunLength
         if pdus.Length = 0 then
             // If there are no specified PDUs, the SNACK PDU is rejected.
-            m_Session.RejectPDUByLogi m_AllegiantCID m_AllegiantConCounter snackpdu RejectResonCd.PROTOCOL_ERR
+            m_Session.RejectPDUByLogi m_AllegiantCID m_AllegiantConCounter snackpdu RejectReasonCd.PROTOCOL_ERR
         else
             // Resend PDUs
             for itr in pdus do
@@ -390,7 +390,7 @@ type IscsiTaskOnePDUCommand
         let pdus = conn.GetSentResponsePDUForSNACK ( statsn_me.fromPrim snackpdu.BegRun ) snackpdu.RunLength
         if pdus.Length = 0 then
             // If there are no specified PDUs, the SNACK PDU is rejected.
-            m_Session.RejectPDUByLogi m_AllegiantCID m_AllegiantConCounter snackpdu RejectResonCd.PROTOCOL_ERR
+            m_Session.RejectPDUByLogi m_AllegiantCID m_AllegiantConCounter snackpdu RejectReasonCd.PROTOCOL_ERR
         else
             for i in pdus do
                 m_Session.ResendPDU m_AllegiantCID m_AllegiantConCounter i

@@ -213,8 +213,8 @@ type public CSession_Stub() =
     let mutable f_IsAlive : ( unit -> bool ) option = None
     let mutable f_DestroySession : ( unit -> unit ) option = None
     let mutable f_SendSCSIResponse : ( SCSICommandPDU -> CID_T -> CONCNT_T -> uint32 -> iScsiSvcRespCd -> ScsiCmdStatCd -> PooledBuffer -> PooledBuffer -> uint32 -> ResponseFenceNeedsFlag -> unit ) option = None
-    let mutable f_RejectPDUByLogi : ( CID_T -> CONCNT_T -> ILogicalPDU -> RejectResonCd -> unit ) option = None
-    let mutable f_RejectPDUByHeader : ( CID_T -> CONCNT_T -> byte[] -> RejectResonCd -> unit ) option = None
+    let mutable f_RejectPDUByLogi : ( CID_T -> CONCNT_T -> ILogicalPDU -> RejectReasonCd -> unit ) option = None
+    let mutable f_RejectPDUByHeader : ( CID_T -> CONCNT_T -> byte[] -> RejectReasonCd -> unit ) option = None
     let mutable f_SendOtherResponsePDU : ( CID_T -> CONCNT_T -> ILogicalPDU -> unit ) option = None
     let mutable f_ResendPDU : ( CID_T -> CONCNT_T -> ILogicalPDU -> unit ) option = None
     let mutable f_ResendPDUForRSnack : ( CID_T -> CONCNT_T -> ILogicalPDU -> unit ) option = None
@@ -307,9 +307,9 @@ type public CSession_Stub() =
                 ( needResponseFence : ResponseFenceNeedsFlag ) :
                 unit =
             f_SendSCSIResponse.Value reqCmdPDU cid counter recvDataLength argRespCode argStatCode senseData resData allocationLength needResponseFence
-        override _.RejectPDUByLogi ( cid : CID_T ) ( counter : CONCNT_T ) ( pdu : ILogicalPDU ) ( argReason : RejectResonCd ) : unit =
+        override _.RejectPDUByLogi ( cid : CID_T ) ( counter : CONCNT_T ) ( pdu : ILogicalPDU ) ( argReason : RejectReasonCd ) : unit =
             f_RejectPDUByLogi.Value cid counter pdu argReason
-        override _.RejectPDUByHeader ( cid : CID_T ) ( counter : CONCNT_T ) ( header : byte[] ) ( argReason : RejectResonCd ) : unit =
+        override _.RejectPDUByHeader ( cid : CID_T ) ( counter : CONCNT_T ) ( header : byte[] ) ( argReason : RejectReasonCd ) : unit =
             f_RejectPDUByHeader.Value cid counter header argReason
         override _.SendOtherResponsePDU ( cid : CID_T ) ( counter : CONCNT_T ) ( pdu : ILogicalPDU ) : unit =
             f_SendOtherResponsePDU.Value cid counter pdu

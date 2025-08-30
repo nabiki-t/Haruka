@@ -1562,7 +1562,7 @@ type PDUInterface_Test () =
     member _.RejectPDU_001() =
         let pdu =
             {
-                Reason = RejectResonCd.COM_NOT_SUPPORT;
+                Reason = RejectReasonCd.COM_NOT_SUPPORT;
                 StatSN = statsn_me.fromPrim 0u;
                 ExpCmdSN = cmdsn_me.fromPrim 0u;
                 MaxCmdSN = cmdsn_me.fromPrim 0u;
@@ -1571,7 +1571,7 @@ type PDUInterface_Test () =
             } :> ILogicalPDU
         let r1 = pdu.UpdateTargetValues ( statsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 2u ) ( cmdsn_me.fromPrim 3u )
         Assert.True(( r1 = {
-                Reason = RejectResonCd.COM_NOT_SUPPORT;
+                Reason = RejectReasonCd.COM_NOT_SUPPORT;
                 StatSN = statsn_me.fromPrim 1u;
                 ExpCmdSN = cmdsn_me.fromPrim 2u;
                 MaxCmdSN = cmdsn_me.fromPrim 3u;
@@ -1583,7 +1583,7 @@ type PDUInterface_Test () =
     member _.RejectPDU_002() =
         let pdu =
             {
-                Reason = RejectResonCd.COM_NOT_SUPPORT;
+                Reason = RejectReasonCd.COM_NOT_SUPPORT;
                 StatSN = statsn_me.fromPrim 0u;
                 ExpCmdSN = cmdsn_me.fromPrim 0u;
                 MaxCmdSN = cmdsn_me.fromPrim 0u;
@@ -1592,7 +1592,7 @@ type PDUInterface_Test () =
             } :> ILogicalPDU
         let r2 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 4u ) ( cmdsn_me.fromPrim 5u ) ( cmdsn_me.fromPrim 6u )
         Assert.True(( r2 = {
-                Reason = RejectResonCd.COM_NOT_SUPPORT;
+                Reason = RejectReasonCd.COM_NOT_SUPPORT;
                 StatSN = statsn_me.fromPrim 0u;
                 ExpCmdSN = cmdsn_me.fromPrim 5u;
                 MaxCmdSN = cmdsn_me.fromPrim 6u;
@@ -1604,7 +1604,7 @@ type PDUInterface_Test () =
     member _.RejectPDU_003() =
         let pdu =
             {
-                Reason = RejectResonCd.COM_NOT_SUPPORT;
+                Reason = RejectReasonCd.COM_NOT_SUPPORT;
                 StatSN = statsn_me.fromPrim 0u;
                 ExpCmdSN = cmdsn_me.fromPrim 0u;
                 MaxCmdSN = cmdsn_me.fromPrim 0u;
@@ -1617,7 +1617,7 @@ type PDUInterface_Test () =
     member _.RejectPDU_004() =
         let pdu =
             {
-                Reason = RejectResonCd.COM_NOT_SUPPORT;
+                Reason = RejectReasonCd.COM_NOT_SUPPORT;
                 StatSN = statsn_me.fromPrim 0u;
                 ExpCmdSN = cmdsn_me.fromPrim 0u;
                 MaxCmdSN = cmdsn_me.fromPrim 0u;

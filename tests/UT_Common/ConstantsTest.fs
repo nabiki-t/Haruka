@@ -294,10 +294,10 @@ type Constants_Test () =
         Assert.True(( r2 = LogoutReqReasonCd.CLOSE_SESS ))
 
     [<Fact>]
-    member _.Test_getLogoutReqResonNameFromValue() =
-        Assert.True(( "CLOSE_SESS" = Constants.getLogoutReqResonNameFromValue LogoutReqReasonCd.CLOSE_SESS ))
-        Assert.True(( "CLOSE_CONN" = Constants.getLogoutReqResonNameFromValue LogoutReqReasonCd.CLOSE_CONN ))
-        Assert.True(( "RECOVERY" = Constants.getLogoutReqResonNameFromValue LogoutReqReasonCd.RECOVERY ))
+    member _.Test_getLogoutReqReasonNameFromValue() =
+        Assert.True(( "CLOSE_SESS" = Constants.getLogoutReqReasonNameFromValue LogoutReqReasonCd.CLOSE_SESS ))
+        Assert.True(( "CLOSE_CONN" = Constants.getLogoutReqReasonNameFromValue LogoutReqReasonCd.CLOSE_CONN ))
+        Assert.True(( "RECOVERY" = Constants.getLogoutReqReasonNameFromValue LogoutReqReasonCd.RECOVERY ))
 
     [<Fact>]
     member _.Test_LogoutResCd() =
@@ -350,36 +350,36 @@ type Constants_Test () =
         Assert.True(( "RDATA_SNACK" = Constants.getSnackReqTypeNameFromValue SnackReqTypeCd.RDATA_SNACK ))
 
     [<Fact>]
-    member _.Test_RejectResonCd() =
-        let values = Enum.GetValues( typeof<RejectResonCd> )
+    member _.Test_RejectReasonCd() =
+        let values = Enum.GetValues( typeof<RejectReasonCd> )
         for i = 0 to values.Length - 1 do
-            let v = values.GetValue( i ) :?> RejectResonCd
+            let v = values.GetValue( i ) :?> RejectReasonCd
             let r =
-                Constants.byteToRejectResonCd( byte v ) ( fun v2 ->
+                Constants.byteToRejectReasonCd( byte v ) ( fun v2 ->
                     Assert.Fail __LINE__
-                    RejectResonCd.DATA_DIGEST_ERR
+                    RejectReasonCd.DATA_DIGEST_ERR
                 )
             Assert.True(( r = v ))
         let r2 =
-            Constants.byteToRejectResonCd( 0xFFuy ) ( fun v2 ->
+            Constants.byteToRejectReasonCd( 0xFFuy ) ( fun v2 ->
                 Assert.True(( v2 = 0xFFuy ))
-                RejectResonCd.DATA_DIGEST_ERR
+                RejectReasonCd.DATA_DIGEST_ERR
             )
-        Assert.True(( r2 = RejectResonCd.DATA_DIGEST_ERR ))
+        Assert.True(( r2 = RejectReasonCd.DATA_DIGEST_ERR ))
 
     [<Fact>]
-    member _.Test_getRejectResonNameFomValue() =
-        Assert.True(( "DATA_DIGEST_ERR" = Constants.getRejectResonNameFomValue RejectResonCd.DATA_DIGEST_ERR ))
-        Assert.True(( "SNACK_REJECT" = Constants.getRejectResonNameFomValue RejectResonCd.SNACK_REJECT ))
-        Assert.True(( "PROTOCOL_ERR" = Constants.getRejectResonNameFomValue RejectResonCd.PROTOCOL_ERR ))
-        Assert.True(( "COM_NOT_SUPPORT" = Constants.getRejectResonNameFomValue RejectResonCd.COM_NOT_SUPPORT ))
-        Assert.True(( "IMMIDIATE_COM_REJECT" = Constants.getRejectResonNameFomValue RejectResonCd.IMMIDIATE_COM_REJECT ))
-        Assert.True(( "TASK_IN_PROGRESS" = Constants.getRejectResonNameFomValue RejectResonCd.TASK_IN_PROGRESS ))
-        Assert.True(( "INVALID_DATA_ACK" = Constants.getRejectResonNameFomValue RejectResonCd.INVALID_DATA_ACK ))
-        Assert.True(( "INVALID_PDU_FIELD" = Constants.getRejectResonNameFomValue RejectResonCd.INVALID_PDU_FIELD ))
-        Assert.True(( "LONG_OPE_REJECT" = Constants.getRejectResonNameFomValue RejectResonCd.LONG_OPE_REJECT ))
-        Assert.True(( "NEGOTIATION_RESET" = Constants.getRejectResonNameFomValue RejectResonCd.NEGOTIATION_RESET ))
-        Assert.True(( "WAIT_FOR_LOGOUT" = Constants.getRejectResonNameFomValue RejectResonCd.WAIT_FOR_LOGOUT ))
+    member _.Test_getRejectReasonNameFomValue() =
+        Assert.True(( "DATA_DIGEST_ERR" = Constants.getRejectReasonNameFomValue RejectReasonCd.DATA_DIGEST_ERR ))
+        Assert.True(( "SNACK_REJECT" = Constants.getRejectReasonNameFomValue RejectReasonCd.SNACK_REJECT ))
+        Assert.True(( "PROTOCOL_ERR" = Constants.getRejectReasonNameFomValue RejectReasonCd.PROTOCOL_ERR ))
+        Assert.True(( "COM_NOT_SUPPORT" = Constants.getRejectReasonNameFomValue RejectReasonCd.COM_NOT_SUPPORT ))
+        Assert.True(( "IMMIDIATE_COM_REJECT" = Constants.getRejectReasonNameFomValue RejectReasonCd.IMMIDIATE_COM_REJECT ))
+        Assert.True(( "TASK_IN_PROGRESS" = Constants.getRejectReasonNameFomValue RejectReasonCd.TASK_IN_PROGRESS ))
+        Assert.True(( "INVALID_DATA_ACK" = Constants.getRejectReasonNameFomValue RejectReasonCd.INVALID_DATA_ACK ))
+        Assert.True(( "INVALID_PDU_FIELD" = Constants.getRejectReasonNameFomValue RejectReasonCd.INVALID_PDU_FIELD ))
+        Assert.True(( "LONG_OPE_REJECT" = Constants.getRejectReasonNameFomValue RejectReasonCd.LONG_OPE_REJECT ))
+        Assert.True(( "NEGOTIATION_RESET" = Constants.getRejectReasonNameFomValue RejectReasonCd.NEGOTIATION_RESET ))
+        Assert.True(( "WAIT_FOR_LOGOUT" = Constants.getRejectReasonNameFomValue RejectReasonCd.WAIT_FOR_LOGOUT ))
 
     [<Fact>]
     member _.Test_ScsiCmdStatCd() =

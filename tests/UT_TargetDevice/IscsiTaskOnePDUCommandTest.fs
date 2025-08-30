@@ -244,7 +244,7 @@ type IscsiTaskOnePDUCommand_Test () =
                 cid_me.fromPrim 1us,
                 concnt_me.fromPrim 2,
                 {
-                    Reason = RejectResonCd.COM_NOT_SUPPORT;
+                    Reason = RejectReasonCd.COM_NOT_SUPPORT;
                     StatSN = statsn_me.fromPrim 0u;
                     ExpCmdSN = cmdsn_me.fromPrim 0u;
                     MaxCmdSN = cmdsn_me.fromPrim 0u;
@@ -271,7 +271,7 @@ type IscsiTaskOnePDUCommand_Test () =
                 cid_me.fromPrim 1us,
                 concnt_me.fromPrim 2,
                 {
-                    Reason = RejectResonCd.COM_NOT_SUPPORT;
+                    Reason = RejectReasonCd.COM_NOT_SUPPORT;
                     StatSN = statsn_me.fromPrim 0u;
                     ExpCmdSN = cmdsn_me.fromPrim 0u;
                     MaxCmdSN = cmdsn_me.fromPrim 0u;
@@ -1073,7 +1073,7 @@ type IscsiTaskOnePDUCommand_Test () =
                 Assert.True(( cid = cid_me.fromPrim 1us ))
                 Assert.True(( counter = concnt_me.fromPrim 2 ))
                 Assert.True(( pdu.Opcode = OpcodeCd.SNACK ))
-                Assert.True(( argReason = RejectResonCd.PROTOCOL_ERR ))
+                Assert.True(( argReason = RejectReasonCd.PROTOCOL_ERR ))
                 cnt <- cnt + 1
             ),
             p_GetSessionParameter = ( fun () -> {
@@ -1193,7 +1193,7 @@ type IscsiTaskOnePDUCommand_Test () =
                 Assert.True(( cid = cid_me.fromPrim 1us ))
                 Assert.True(( counter = concnt_me.fromPrim 2 ))
                 Assert.True(( pdu.Opcode = OpcodeCd.SNACK ))
-                Assert.True(( argReason = RejectResonCd.PROTOCOL_ERR ))
+                Assert.True(( argReason = RejectReasonCd.PROTOCOL_ERR ))
                 cnt <- cnt + 1
             ),
             p_GetSessionParameter = ( fun () -> {

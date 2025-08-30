@@ -4193,9 +4193,9 @@ type PDU_Test () =
 
      [<Fact>]
      member _.RejectPDU_002() =
-        for wreason in [| RejectResonCd.DATA_DIGEST_ERR; RejectResonCd.SNACK_REJECT; RejectResonCd.PROTOCOL_ERR; RejectResonCd.COM_NOT_SUPPORT;
-                        RejectResonCd.IMMIDIATE_COM_REJECT; RejectResonCd.TASK_IN_PROGRESS; RejectResonCd.INVALID_DATA_ACK; RejectResonCd.INVALID_PDU_FIELD;
-                        RejectResonCd.LONG_OPE_REJECT; RejectResonCd.NEGOTIATION_RESET; RejectResonCd.WAIT_FOR_LOGOUT |] do
+        for wreason in [| RejectReasonCd.DATA_DIGEST_ERR; RejectReasonCd.SNACK_REJECT; RejectReasonCd.PROTOCOL_ERR; RejectReasonCd.COM_NOT_SUPPORT;
+                        RejectReasonCd.IMMIDIATE_COM_REJECT; RejectReasonCd.TASK_IN_PROGRESS; RejectReasonCd.INVALID_DATA_ACK; RejectReasonCd.INVALID_PDU_FIELD;
+                        RejectReasonCd.LONG_OPE_REJECT; RejectReasonCd.NEGOTIATION_RESET; RejectReasonCd.WAIT_FOR_LOGOUT |] do
             use ms = new MemoryStream()
             let psus =
                 {
@@ -4692,7 +4692,7 @@ type PDU_Test () =
      member _.GetHeader_REJECT() =
         let pdu =
             {
-                Reason = RejectResonCd.IMMIDIATE_COM_REJECT;
+                Reason = RejectReasonCd.IMMIDIATE_COM_REJECT;
                 StatSN = statsn_me.fromPrim 0x41424344u;
                 ExpCmdSN = cmdsn_me.fromPrim 0x51525354u;
                 MaxCmdSN = cmdsn_me.fromPrim 0x61626364u;

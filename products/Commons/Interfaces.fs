@@ -1364,7 +1364,7 @@ type ISession =
             cid:CID_T ->
             counter:CONCNT_T ->
             pdu:ILogicalPDU ->
-            argReason:RejectResonCd ->
+            argReason:RejectReasonCd ->
             unit
 
     // ------------------------------------------------------------------------
@@ -1387,7 +1387,7 @@ type ISession =
             cid:CID_T ->
             counter:CONCNT_T ->
             header:byte[] ->
-            argReason:RejectResonCd ->
+            argReason:RejectReasonCd ->
             unit
 
     // ------------------------------------------------------------------------

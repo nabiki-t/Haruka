@@ -1133,7 +1133,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             |> Functions.RunTaskSynchronously
         Assert.True( ( pdu2.Opcode = OpcodeCd.REJECT ) )
         let rejectpdu = pdu2 :?> RejectPDU
-        Assert.True(( rejectpdu.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+        Assert.True(( rejectpdu.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
 
         let iwq2 = Session_Test.GetWaitingQueue pc
         Assert.True(( 1 = iwq2.Count ))
@@ -1535,7 +1535,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             |> Functions.RunTaskSynchronously
         Assert.True( ( pdu3.Opcode = OpcodeCd.REJECT ) )
         let rejectpdu = pdu3 :?> RejectPDU
-        Assert.True(( rejectpdu.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+        Assert.True(( rejectpdu.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
 
         let iwq2 = Session_Test.GetWaitingQueue pc
         Assert.True(( 1 = iwq2.Count ))
@@ -1600,7 +1600,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             |> Functions.RunTaskSynchronously
         Assert.True( ( pdu3.Opcode = OpcodeCd.REJECT ) )
         let rejectpdu = pdu3 :?> RejectPDU
-        Assert.True(( rejectpdu.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+        Assert.True(( rejectpdu.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
 
         let iwq2 = Session_Test.GetWaitingQueue pc
         Assert.True(( 1 = iwq2.Count ))
@@ -1644,7 +1644,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             |> Functions.RunTaskSynchronously
         Assert.True( ( pdu3.Opcode = OpcodeCd.REJECT ) )
         let rejectpdu = pdu3 :?> RejectPDU
-        Assert.True(( rejectpdu.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+        Assert.True(( rejectpdu.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
 
         sess.DestroySession()
         GlbFunc.ClosePorts [| sp; cp; |]
@@ -1743,7 +1743,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             |> Functions.RunTaskSynchronously
         Assert.True( ( pdu3.Opcode = OpcodeCd.REJECT ) )
         let rejectpdu = pdu3 :?> RejectPDU
-        Assert.True(( rejectpdu.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+        Assert.True(( rejectpdu.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
 
         Assert.True(( 0 = cnt ))
 
@@ -1839,7 +1839,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             |> Functions.RunTaskSynchronously
         Assert.True( ( pdu3.Opcode = OpcodeCd.REJECT ) )
         let rejectpdu = pdu3 :?> RejectPDU
-        Assert.True(( rejectpdu.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+        Assert.True(( rejectpdu.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
 
         let iwq2 = Session_Test.GetWaitingQueue pc
         Assert.True(( 1 = iwq2.Count ))
@@ -1874,7 +1874,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             |> Functions.RunTaskSynchronously
         Assert.True( ( pdu2.Opcode = OpcodeCd.REJECT ) )
         let rejectpdu = pdu2 :?> RejectPDU
-        Assert.True(( rejectpdu.Reason = RejectResonCd.COM_NOT_SUPPORT ))
+        Assert.True(( rejectpdu.Reason = RejectReasonCd.COM_NOT_SUPPORT ))
 
         sess.DestroySession()
         GlbFunc.ClosePorts [| sp; cp; |]
@@ -1989,7 +1989,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             |> Functions.RunTaskSynchronously
         Assert.True( ( pdu2.Opcode = OpcodeCd.REJECT ) )
         let rejectpdu = pdu2 :?> RejectPDU
-        Assert.True(( rejectpdu.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+        Assert.True(( rejectpdu.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
 
         let iwq2 = Session_Test.GetWaitingQueue pc
         Assert.True(( 1 = iwq2.Count ))
@@ -2072,7 +2072,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             |> Functions.RunTaskSynchronously
         Assert.True( ( pdu2.Opcode = OpcodeCd.REJECT ) )
         let rejectpdu = pdu2 :?> RejectPDU
-        Assert.True(( rejectpdu.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+        Assert.True(( rejectpdu.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
         Assert.True(( rejectpdu.ExpCmdSN = cmdsn_me.fromPrim 1u ))
 
         let cnt = ( Session_Test.GetWaitingQueue pc ).Count
@@ -2112,7 +2112,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             |> Functions.RunTaskSynchronously
         Assert.True( ( pdu2.Opcode = OpcodeCd.REJECT ) )
         let rejectpdu = pdu2 :?> RejectPDU
-        Assert.True(( rejectpdu.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+        Assert.True(( rejectpdu.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
         Assert.True(( rejectpdu.ExpCmdSN = cmdsn_me.fromPrim 1u ))
 
         let cnt = ( Session_Test.GetWaitingQueue pc ).Count
@@ -2224,7 +2224,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             |> Functions.RunTaskSynchronously
         Assert.True( ( pdu2.Opcode = OpcodeCd.REJECT ) )
         let rejectpdu = pdu2 :?> RejectPDU
-        Assert.True(( rejectpdu.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+        Assert.True(( rejectpdu.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
         Assert.True(( rejectpdu.ExpCmdSN = cmdsn_me.fromPrim 1u ))
 
         sess.DestroySession()
@@ -2344,7 +2344,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             |> Functions.RunTaskSynchronously
         Assert.True( ( pdu3.Opcode = OpcodeCd.REJECT ) )
         let rejectpdu = pdu3 :?> RejectPDU
-        Assert.True(( rejectpdu.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+        Assert.True(( rejectpdu.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
 
         let iwq2 = Session_Test.GetWaitingQueue pc
         Assert.True(( 0 = iwq2.Count ))
@@ -2402,7 +2402,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             |> Functions.RunTaskSynchronously
         Assert.True( ( pdu3.Opcode = OpcodeCd.REJECT ) )
         let rejectpdu = pdu3 :?> RejectPDU
-        Assert.True(( rejectpdu.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+        Assert.True(( rejectpdu.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
 
         sess.DestroySession()
         GlbFunc.ClosePorts [| sp; cp; |]
@@ -2486,7 +2486,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             |> Functions.RunTaskSynchronously
         Assert.True( ( pdu3.Opcode = OpcodeCd.REJECT ) )
         let rejectpdu = pdu3 :?> RejectPDU
-        Assert.True(( rejectpdu.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+        Assert.True(( rejectpdu.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
         Assert.True(( rejectpdu.ExpCmdSN = cmdsn_me.fromPrim 1u ))
         Assert.True(( rejectpdu.StatSN = statsn_me.fromPrim 1u ))
 
@@ -2583,7 +2583,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             |> Functions.RunTaskSynchronously
         Assert.True( ( pdu3.Opcode = OpcodeCd.REJECT ) )
         let rejectpdu = pdu3 :?> RejectPDU
-        Assert.True(( rejectpdu.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+        Assert.True(( rejectpdu.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
         Assert.True(( rejectpdu.ExpCmdSN = cmdsn_me.fromPrim 1u ))
         Assert.True(( rejectpdu.StatSN = statsn_me.fromPrim 1u ))
 
@@ -2678,7 +2678,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             |> Functions.RunTaskSynchronously
         Assert.True( ( pdu3.Opcode = OpcodeCd.REJECT ) )
         let rejectpdu = pdu3 :?> RejectPDU
-        Assert.True(( rejectpdu.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+        Assert.True(( rejectpdu.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
         Assert.True(( rejectpdu.ExpCmdSN = cmdsn_me.fromPrim 1u ))
         Assert.True(( rejectpdu.StatSN = statsn_me.fromPrim 1u ))
         Assert.True(( cnt = 0 ))
@@ -5280,7 +5280,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             ( cid_me.fromPrim 1us )     // connection missing
             ( concnt_me.fromPrim 1 )
             Session_Test.defaultScsiCommandPDUValues
-            RejectResonCd.DATA_DIGEST_ERR
+            RejectReasonCd.DATA_DIGEST_ERR
 
     [<Fact>]
     member _.RejectPDUByLogi_002() =
@@ -5299,7 +5299,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             ( cid_me.fromPrim 1us )
             ( concnt_me.fromPrim 1 )
             Session_Test.defaultScsiCommandPDUValues
-            RejectResonCd.DATA_DIGEST_ERR
+            RejectReasonCd.DATA_DIGEST_ERR
 
         // receive Reject PDU in the initiator
         let pdu3 =
@@ -5308,7 +5308,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( ( pdu3.Opcode = OpcodeCd.REJECT ) )
         let rejectpdu1 = pdu3 :?> RejectPDU
 
-        Assert.True(( rejectpdu1.Reason = RejectResonCd.DATA_DIGEST_ERR ))
+        Assert.True(( rejectpdu1.Reason = RejectReasonCd.DATA_DIGEST_ERR ))
         Assert.True(( rejectpdu1.StatSN = statsn_me.fromPrim 1u ))
         Assert.True(( rejectpdu1.HeaderData = PDU.GetHeader( Session_Test.defaultScsiCommandPDUValues ) ))
 
@@ -5332,7 +5332,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             ( cid_me.fromPrim 1us )     // connection missing
             ( concnt_me.fromPrim 1 )
             [| 0uy .. 47uy |]
-            RejectResonCd.DATA_DIGEST_ERR
+            RejectReasonCd.DATA_DIGEST_ERR
 
     [<Fact>]
     member _.RejectPDUByHeader_002() =
@@ -5351,7 +5351,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             ( cid_me.fromPrim 1us )
             ( concnt_me.fromPrim 1 )
             [| 0uy .. 47uy |]
-            RejectResonCd.DATA_DIGEST_ERR
+            RejectReasonCd.DATA_DIGEST_ERR
 
         // receive Reject PDU in the initiator
         let pdu3 =
@@ -5360,7 +5360,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( ( pdu3.Opcode = OpcodeCd.REJECT ) )
         let rejectpdu1 = pdu3 :?> RejectPDU
 
-        Assert.True(( rejectpdu1.Reason = RejectResonCd.DATA_DIGEST_ERR ))
+        Assert.True(( rejectpdu1.Reason = RejectReasonCd.DATA_DIGEST_ERR ))
         Assert.True(( rejectpdu1.StatSN = statsn_me.fromPrim 1u ))
         Assert.True(( rejectpdu1.HeaderData = [| 0uy .. 47uy |] ))
 
@@ -6079,7 +6079,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             ( cid_me.fromPrim 1us )
             ( concnt_me.fromPrim 1 )
             Session_Test.defaultNopOUTPDUValues
-            RejectResonCd.COM_NOT_SUPPORT
+            RejectReasonCd.COM_NOT_SUPPORT
 
         // R_Mode PDU is sent in immidiately under R_Mode lock
         let pdu1 =
@@ -6114,7 +6114,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             ( cid_me.fromPrim 1us )
             ( concnt_me.fromPrim 1 )
             Session_Test.defaultNopOUTPDUValues
-            RejectResonCd.COM_NOT_SUPPORT
+            RejectReasonCd.COM_NOT_SUPPORT
 
         [|
             fun () -> task {

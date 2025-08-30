@@ -966,7 +966,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // Reject
             let! rpdu3 = r1.ReceiveSpecific<RejectPDU> g_CID0
-            Assert.True(( rpdu3.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+            Assert.True(( rpdu3.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
             r1.CmdSN <- r1.CmdSN - ( cmdsn_me.fromPrim 1u )
 
             // logout
@@ -1118,7 +1118,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // Reject
             let! rpdu3 = r1.ReceiveSpecific<RejectPDU> g_CID0
-            Assert.True(( rpdu3.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+            Assert.True(( rpdu3.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
             r1.CmdSN <- r1.CmdSN - ( cmdsn_me.fromPrim 1u )
 
             // logout

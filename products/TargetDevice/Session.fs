@@ -661,7 +661,7 @@ type Session
 
         // ------------------------------------------------------------------------
         // Send reject PDU
-        override this.RejectPDUByLogi ( cid : CID_T ) ( counter : CONCNT_T ) ( pdu : ILogicalPDU ) ( argReason : RejectResonCd ) : unit =
+        override this.RejectPDUByLogi ( cid : CID_T ) ( counter : CONCNT_T ) ( pdu : ILogicalPDU ) ( argReason : RejectReasonCd ) : unit =
             // search current connection information
             match m_CIDs.obj.TryGetValue( cid ) with
             | true, cidInfo when cidInfo.Counter = counter ->
@@ -673,7 +673,7 @@ type Session
 
         // ------------------------------------------------------------------------
         // Send reject PDU to the initiator with header bytes data..
-        override this.RejectPDUByHeader ( cid : CID_T ) ( counter : CONCNT_T ) ( header : byte[] ) ( argReason : RejectResonCd ) : unit =
+        override this.RejectPDUByHeader ( cid : CID_T ) ( counter : CONCNT_T ) ( header : byte[] ) ( argReason : RejectReasonCd ) : unit =
             // search current connection information
             match m_CIDs.obj.TryGetValue( cid ) with
             | true, cidInfo when cidInfo.Counter = counter ->
@@ -1079,7 +1079,7 @@ type Session
             // Reject and ignore
             let msg = sprintf "Invalid CmdSN value(0x%08X)." pdu.CmdSN
             HLogger.Trace( LogID.W_OTHER_PDU_IGNORED, fun g -> g.Gen1( loginfo, msg ) )
-            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
+            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectReasonCd.INVALID_PDU_FIELD
             Some refuseTask, currentQ.WaitingQueue
 
         elif currentQ.WaitingQueue.ContainsKey( pdu.InitiatorTaskTag ) then
@@ -1087,7 +1087,7 @@ type Session
                 let msg = sprintf "Specified ITT(0x%08X) is in alive." pdu.InitiatorTaskTag
                 g.Gen1( loginfo, msg )
             )
-            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
+            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectReasonCd.INVALID_PDU_FIELD
             Some refuseTask, currentQ.WaitingQueue
 
         else
@@ -1118,7 +1118,7 @@ type Session
                 let msg = sprintf "Invalid CmdSN value(0x%08X)." pdu.CmdSN
                 g.Gen1( loginfo, msg )
             )
-            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
+            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectReasonCd.INVALID_PDU_FIELD
             Some refuseTask, currentQ.WaitingQueue
 
         elif currentQ.WaitingQueue.ContainsKey pdu.InitiatorTaskTag then
@@ -1126,7 +1126,7 @@ type Session
                 let msg = sprintf "Specified ITT(0x%08X) is in alive." pdu.InitiatorTaskTag
                 g.Gen1( loginfo, msg )
             )
-            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
+            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectReasonCd.INVALID_PDU_FIELD
             Some refuseTask, currentQ.WaitingQueue
 
         else
@@ -1157,7 +1157,7 @@ type Session
                 let msg = sprintf "Invalid CmdSN value(0x%08X)." pdu.CmdSN
                 g.Gen1( loginfo, msg )
             )
-            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
+            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectReasonCd.INVALID_PDU_FIELD
             Some refuseTask, currentQ.WaitingQueue
 
         elif currentQ.WaitingQueue.ContainsKey pdu.InitiatorTaskTag then
@@ -1165,7 +1165,7 @@ type Session
                 let msg = sprintf "Specified ITT(0x%08X) is in alive." pdu.InitiatorTaskTag
                 g.Gen1( loginfo, msg )
             )
-            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
+            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectReasonCd.INVALID_PDU_FIELD
             Some refuseTask, currentQ.WaitingQueue
 
         else
@@ -1195,7 +1195,7 @@ type Session
             HLogger.Trace( LogID.W_SCSI_COMMAND_PDU_IGNORED, fun g ->
                 g.Gen1( loginfo, sprintf "Invalid CmdSN value(0x%08X)." pdu.CmdSN )
             )
-            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
+            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectReasonCd.INVALID_PDU_FIELD
             Some refuseTask, currentQ.WaitingQueue
 
         elif ( not m_sessionParameter.ImmediateData ) && ( 0 < PooledBuffer.length pdu.DataSegment ) then
@@ -1203,7 +1203,7 @@ type Session
             HLogger.Trace( LogID.W_SCSI_COMMAND_PDU_IGNORED, fun g ->
                 g.Gen1( loginfo, "ImmediateData was negotiated NO, but A SCSI Command PDU was received that had a non-zero length DataSegment." )
             )
-            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
+            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectReasonCd.INVALID_PDU_FIELD
             Some refuseTask, currentQ.WaitingQueue
 
         elif currentQ.WaitingQueue.ContainsKey pdu.InitiatorTaskTag |> not then
@@ -1229,7 +1229,7 @@ type Session
                                 v.TaskTypeName
                     g.Gen1( loginfo, msg )
                 )
-                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
+                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectReasonCd.INVALID_PDU_FIELD
                 Some refuseTask, currentQ.WaitingQueue
             else
                 // Update existing iSCSI task object.
@@ -1264,7 +1264,7 @@ type Session
                 let msg = sprintf "Invalid CmdSN value(0x%08X)." pdu.CmdSN
                 g.Gen1( loginfo, msg )
             )
-            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
+            let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectReasonCd.INVALID_PDU_FIELD
             Some refuseTask, currentQ.WaitingQueue
 
         elif currentQ.WaitingQueue.ContainsKey pdu.InitiatorTaskTag |> not then
@@ -1295,7 +1295,7 @@ type Session
                             v.TaskTypeName
                     g.Gen1( loginfo, msg )
                 )
-                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
+                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectReasonCd.INVALID_PDU_FIELD
                 Some refuseTask, currentQ.WaitingQueue
 
             elif pdu.TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu then
@@ -1321,7 +1321,7 @@ type Session
                 // it considers protocol error and causes negotiation reset.
                 HLogger.Trace( LogID.W_NEGOTIATION_RESET, fun g -> g.Gen2( loginfo, pdu.InitiatorTaskTag, "Unmatch immidiate flag value." ) )
                 let nextQ = currentQ.WaitingQueue.Remove pdu.InitiatorTaskTag
-                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
+                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectReasonCd.INVALID_PDU_FIELD
                 Some refuseTask, nextQ
 
             elif ( not pdu.I ) && ( ValueOption.isSome v.CmdSN ) && ( pdu.CmdSN = ( ValueOption.get v.CmdSN ) || cmdsn_me.lessThan pdu.CmdSN ( ValueOption.get v.CmdSN ) ) then
@@ -1329,7 +1329,7 @@ type Session
                 // it considers protocol error and causes negotiation reset.
                 HLogger.Trace( LogID.W_NEGOTIATION_RESET, fun g -> g.Gen2( loginfo, pdu.InitiatorTaskTag, "Invalid CmdSN value." ) )
                 let nextQ = currentQ.WaitingQueue.Remove pdu.InitiatorTaskTag
-                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
+                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectReasonCd.INVALID_PDU_FIELD
                 Some refuseTask, nextQ
 
             else
@@ -1370,7 +1370,7 @@ type Session
                 None, currentQ.WaitingQueue.Add( pdu.InitiatorTaskTag, wtask.Value :> IIscsiTask )
             else
                 // Reject and ignore
-                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
+                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectReasonCd.INVALID_PDU_FIELD
                 Some refuseTask, currentQ.WaitingQueue
         else
             let v = currentQ.WaitingQueue.[ pdu.InitiatorTaskTag ]
@@ -1384,7 +1384,7 @@ type Session
                             v.TaskTypeName
                     g.Gen1( loginfo, msg )
                 )
-                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectResonCd.INVALID_PDU_FIELD
+                let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectReasonCd.INVALID_PDU_FIELD
                 Some refuseTask, currentQ.WaitingQueue
             else
                 // Update SCSI Command task object that has already received SCSI Command or SCSI Data-Out PDUs.
@@ -1408,7 +1408,7 @@ type Session
     /// <param name="argReason">
     ///   Reason code.
     /// </param>
-    member private this.RejectPDUByLogi_ToConnection ( conn : IConnection ) ( pdu : ILogicalPDU ) ( argReason : RejectResonCd ) : unit =
+    member private this.RejectPDUByLogi_ToConnection ( conn : IConnection ) ( pdu : ILogicalPDU ) ( argReason : RejectReasonCd ) : unit =
         // Generate original header data
         let headerData = PDU.GetHeader( pdu )
 
@@ -1428,7 +1428,7 @@ type Session
     /// <param name="argReason">
     ///   Reason code.
     /// </param>
-    member private _.RejectPDUByHeader_ToConnection ( conn : IConnection ) ( header : byte[] ) ( argReason : RejectResonCd ) : unit =
+    member private _.RejectPDUByHeader_ToConnection ( conn : IConnection ) ( header : byte[] ) ( argReason : RejectReasonCd ) : unit =
         // create reject pdu
         let rejectPDU = {
             Reason = argReason;

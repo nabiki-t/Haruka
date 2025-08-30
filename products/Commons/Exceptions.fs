@@ -1017,11 +1017,11 @@ type SessionRecoveryException( argMsg : string, m_TSIH : TSIH_T ) =
 /// <param name="argHeaderData">
 ///   The value that is set to HeaderData field in Reject PDU.
 /// </param>
-type RejectPDUException( argMsg : string, m_Reason : RejectResonCd, m_HeaderData : byte[] ) =
+type RejectPDUException( argMsg : string, m_Reason : RejectReasonCd, m_HeaderData : byte[] ) =
     inherit Exception( argMsg )
     
     /// Get Reason code property
-    member _.Reason : RejectResonCd =
+    member _.Reason : RejectReasonCd =
         m_Reason
 
     /// Get header data property

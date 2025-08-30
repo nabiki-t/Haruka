@@ -215,7 +215,7 @@ type PDU() =
                         | Standpoint.Target ->
                             // On target side, data digest error is handled by responding a reject PDU.
                             let header = Seq.append wbufBHS.ArraySegment wbufAllAHS.ArraySegment |> Seq.toArray
-                            raise <| RejectPDUException( "Data digest error. ", RejectResonCd.DATA_DIGEST_ERR, header )
+                            raise <| RejectPDUException( "Data digest error. ", RejectReasonCd.DATA_DIGEST_ERR, header )
                         | _ ->
                             // On initiator side, data digest error is handled by discarding received PDU.
                             raise <| DiscardPDUException( "Data digest error. Received PDU is discarded." )
@@ -224,7 +224,7 @@ type PDU() =
                     let msg = sprintf "Invalid Opcode(0x%02X)." v
                     HLogger.Trace( LogID.E_ISCSI_FORMAT_ERROR, fun g -> g.Gen1( loginfo, msg ) )
                     let header = Seq.append wbufBHS.ArraySegment wbufAllAHS.ArraySegment |> Seq.toArray
-                    raise <| RejectPDUException( msg, RejectResonCd.COM_NOT_SUPPORT, header )
+                    raise <| RejectPDUException( msg, RejectReasonCd.COM_NOT_SUPPORT, header )
                 )
 
                 // Check opcode
@@ -243,7 +243,7 @@ type PDU() =
                         HLogger.Trace( LogID.E_ISCSI_FORMAT_ERROR, fun g -> g.Gen1( loginfo, msg ) )
                         // If Opcode is invalid, it must return Reject PDU.
                         let header = Seq.append wbufBHS.ArraySegment wbufAllAHS.ArraySegment |> Seq.toArray
-                        raise <| RejectPDUException( msg, RejectResonCd.COM_NOT_SUPPORT, header )
+                        raise <| RejectPDUException( msg, RejectReasonCd.COM_NOT_SUPPORT, header )
                 | _ ->
                     if wOpcode <> OpcodeCd.NOP_IN && 
                         wOpcode <> OpcodeCd.SCSI_RES &&
@@ -1362,7 +1362,7 @@ type PDU() =
         // Create returing data structure.
         let wReasonByte = a.m_OpcodeSpecific0.[1]
         let retvalue = {
-            Reason = Constants.byteToRejectResonCd wReasonByte ( fun _ ->
+            Reason = Constants.byteToRejectReasonCd wReasonByte ( fun _ ->
                 let msg = sprintf "In Reject PDU, Reason(0x%02X) field value is invalid." wReasonByte
                 HLogger.Trace( LogID.E_ISCSI_FORMAT_ERROR, fun g -> g.Gen1( loginfo, msg ) )
                 raise <| SessionRecoveryException ( msg, wtsih )

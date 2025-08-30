@@ -192,7 +192,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _, cmdsn_1 = r1.SendNOPOutPDU_Test id ( ValueSome( 1024u, 2048u ) ) g_CID0 false g_LUN1 g_DefTTT sendData
             Assert.True(( cmdsn_1 = cmdsn_me.fromPrim 1u ))
             let! pdu1 = r1.ReceiveSpecific<RejectPDU> g_CID0
-            Assert.True(( pdu1.Reason = RejectResonCd.DATA_DIGEST_ERR ))
+            Assert.True(( pdu1.Reason = RejectReasonCd.DATA_DIGEST_ERR ))
             sendData.Return()
 
             // Rewind the initiator's CmdSN value
@@ -232,7 +232,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Re-send Nop-Out 1
             let! _, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu1_2 = r1.ReceiveSpecific<RejectPDU> g_CID0
-            Assert.True(( pdu1_2.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+            Assert.True(( pdu1_2.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
             Assert.True(( pdu1_2.ExpCmdSN = cmdsn_me.fromPrim 1u ))
 
             // Nop-Out 2
@@ -246,7 +246,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Send TaskMgrReq with same CmdSN as Nop-Out 2
             let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 false TaskMgrReqCd.ABORT_TASK g_LUN1 ( itt_me.fromPrim 1u ) ( cmdsn_me.fromPrim 1u ) ( datasn_me.fromPrim 0u )
             let! pdu2_2 = r1.ReceiveSpecific<RejectPDU> g_CID0
-            Assert.True(( pdu2_2.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+            Assert.True(( pdu2_2.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
             Assert.True(( pdu2_2.ExpCmdSN = cmdsn_me.fromPrim 2u ))
 
             // Nop-Out 3
@@ -260,7 +260,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Send Logout request with same CmdSN as Nop-Out 3
             let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
             let! pdu3_2 = r1.ReceiveSpecific<RejectPDU> g_CID0
-            Assert.True(( pdu3_2.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+            Assert.True(( pdu3_2.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
             Assert.True(( pdu3_2.ExpCmdSN = cmdsn_me.fromPrim 3u ))
 
             // Nop-Out 4
@@ -275,7 +275,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let writeCDB = scsiWrite10CDB 0us
             let! _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
             let! pdu4_2 = r1.ReceiveSpecific<RejectPDU> g_CID0
-            Assert.True(( pdu4_2.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+            Assert.True(( pdu4_2.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
             Assert.True(( pdu4_2.ExpCmdSN = cmdsn_me.fromPrim 4u ))
 
             // Nop-Out 5
@@ -289,7 +289,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Text request PDU with same CmdSN as Nop-Out 5
             let! _ = r1.SendTextRequestPDU g_CID0 false false false g_LUN1 g_DefTTT [||]
             let! pdu5_2 = r1.ReceiveSpecific<RejectPDU> g_CID0
-            Assert.True(( pdu5_2.Reason = RejectResonCd.INVALID_PDU_FIELD ))
+            Assert.True(( pdu5_2.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
             Assert.True(( pdu5_2.ExpCmdSN = cmdsn_me.fromPrim 5u ))
 
             // logout
@@ -1049,7 +1049,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Send SNACK request ( sendExpStatSN3 = sendExpStatSN1, Already acknowledged )
             do! r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.STATUS g_LUN1 g_DefITT g_DefTTT ( statsn_me.toPrim sendExpStatSN3 ) 1u
             let! pdu3 = r1.ReceiveSpecific<RejectPDU> g_CID0
-            Assert.True(( pdu3.Reason = RejectResonCd.PROTOCOL_ERR ))
+            Assert.True(( pdu3.Reason = RejectReasonCd.PROTOCOL_ERR ))
 
             // Send SNACK request ( sendExpStatSN2 )
             do! r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.STATUS g_LUN1 g_DefITT g_DefTTT ( statsn_me.toPrim sendExpStatSN2 ) 2u
