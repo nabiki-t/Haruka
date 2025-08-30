@@ -491,17 +491,40 @@ type Connection
         // ------------------------------------------------------------------------
         // Get SCSI Response PDUs for resend.
         override _.GetSentResponsePDUForSNACK ( begrun : STATSN_T ) ( runlength : uint32 ) : ILogicalPDU[] =
-            let oldsrp = m_ResendStat.obj.m_SentRespPDUs
-            [|
-                for struct( itr_StatSN, itr_PDU ) in oldsrp do
-                    if ( begrun = statsn_me.zero && runlength = 0u ) || ( statsn_me.lessThan begrun itr_StatSN ) || begrun = itr_StatSN then
-                        yield struct( itr_StatSN, itr_PDU )
-            |]
-            |> Array.sortWith ( fun struct( aStatSN, _ ) struct( bStatSN, _ ) ->
-                statsn_me.compare aStatSN bStatSN
-            )
-            |> if runlength > 0u then Array.truncate ( int runlength ) else id
-            |> Array.map ( fun struct( _, pdu ) -> pdu )
+            let oldsrp =
+                m_ResendStat.obj.m_SentRespPDUs
+                |> Seq.toArray
+                |> Array.sortWith ( fun struct( aStatSN, _ ) struct( bStatSN, _ ) ->
+                    statsn_me.compare aStatSN bStatSN
+                )
+            if oldsrp.Length = 0 then
+                [||]
+            else
+                let struct( minStatSN, _ ) = oldsrp.[0]
+                let struct( maxStatSN, _ ) = oldsrp.[ oldsrp.Length - 1 ]
+
+                let rv =
+                    if begrun = statsn_me.zero && runlength = 0u then
+                        // Reply with all unacknowledged statuses.
+                        oldsrp
+                    elif runlength = 0u then
+                        // Respond with a status of begrun or higher.
+                        if statsn_me.lessThan begrun minStatSN then
+                            [||]
+                        else
+                            oldsrp
+                            |> Array.filter ( fun struct( itr, _ ) -> begrun = itr || statsn_me.lessThan begrun itr )
+                    else
+                        // Returns a status that is greater than or equal to begrun and less than begrun+runlength.
+                        let es = begrun + statsn_me.fromPrim runlength
+                        let maxp1 = maxStatSN + ( statsn_me.fromPrim 1u )
+                        if statsn_me.lessThan begrun minStatSN || statsn_me.lessThan maxp1 es then
+                            [||]
+                        else
+                            oldsrp
+                            |> Array.filter ( fun struct( itr, _ ) -> ( begrun = itr || statsn_me.lessThan begrun itr ) && statsn_me.lessThan itr es )
+                rv
+                |> Array.map ( fun struct( _, pdu ) -> pdu )
 
         // ------------------------------------------------------------------------
         // Get SCSI Response PDU and Data-In PDUs for R-DATA SNACK

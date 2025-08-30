@@ -1126,31 +1126,7 @@ type Connection_Test () =
             )
         let pc = PrivateCaller( con )
 
-        let vSentRespPDUs =
-            [|
-                struct(
-                    statsn_me.fromPrim 0u,
-                    {
-                        Connection_Test.defaultSCSIResponsePDUValues with
-                            StatSN = statsn_me.fromPrim 0u;
-                    } :> ILogicalPDU
-                );
-                struct(
-                    statsn_me.fromPrim 1u,
-                    {
-                        Connection_Test.defaultSCSIResponsePDUValues with
-                            StatSN = statsn_me.fromPrim 1u;
-                    } :> ILogicalPDU
-                );
-                struct(
-                    statsn_me.fromPrim 2u,
-                    {
-                        Connection_Test.defaultSCSIResponsePDUValues with
-                            StatSN = statsn_me.fromPrim 2u;
-                    } :> ILogicalPDU
-                )
-            |]
-
+        let vSentRespPDUs = [||]
         let m_ResendStat = OptimisticLock< ResendStatusRec >({
             m_SentRespPDUs = vSentRespPDUs.ToImmutableArray()
             m_SentDataInPDUs = ImmutableArray< struct ( ITT_T * DATASN_T * ILogicalPDU ) >.Empty;
@@ -1159,9 +1135,7 @@ type Connection_Test () =
         pc.SetField( "m_ResendStat", m_ResendStat )
 
         let v = con.GetSentResponsePDUForSNACK ( statsn_me.fromPrim 1u ) 3u
-        Assert.True(( v.Length = 2 ))
-        Assert.True(( ( v.[0] :?> SCSIResponsePDU ).StatSN = statsn_me.fromPrim 1u ))
-        Assert.True(( ( v.[1] :?> SCSIResponsePDU ).StatSN = statsn_me.fromPrim 2u ))
+        Assert.True(( v.Length = 0 ))
         GlbFunc.ClosePorts [| sp; cp; |]
 
     [<Fact>]
@@ -1176,36 +1150,15 @@ type Connection_Test () =
 
         let vSentRespPDUs =
             [|
-                struct(
-                    statsn_me.fromPrim 0xFFFFFFFEu,
-                    {
-                        Connection_Test.defaultSCSIResponsePDUValues with
-                            StatSN = statsn_me.fromPrim 0xFFFFFFFEu;
-                    } :> ILogicalPDU
-                );
-                struct(
-                    statsn_me.fromPrim 0u,
-                    {
-                        Connection_Test.defaultSCSIResponsePDUValues with
-                            StatSN = statsn_me.fromPrim 0u;
-                    } :> ILogicalPDU
-                );
-                struct(
-                    statsn_me.fromPrim 1u,
-                    {
-                        Connection_Test.defaultSCSIResponsePDUValues with
-                            StatSN = statsn_me.fromPrim 1u;
-                    } :> ILogicalPDU
-                );
-                struct(
-                    statsn_me.fromPrim 2u,
-                    {
-                        Connection_Test.defaultSCSIResponsePDUValues with
-                            StatSN = statsn_me.fromPrim 2u;
-                    } :> ILogicalPDU
-                );
+                for i in [| 2u; 1u |] do
+                    yield struct(
+                        statsn_me.fromPrim i,
+                        {
+                            Connection_Test.defaultSCSIResponsePDUValues with
+                                StatSN = statsn_me.fromPrim i;
+                        } :> ILogicalPDU
+                    );
             |]
-
         let m_ResendStat = OptimisticLock< ResendStatusRec >({
             m_SentRespPDUs = vSentRespPDUs.ToImmutableArray()
             m_SentDataInPDUs = ImmutableArray< struct ( ITT_T * DATASN_T * ILogicalPDU ) >.Empty;
@@ -1213,10 +1166,11 @@ type Connection_Test () =
         })
         pc.SetField( "m_ResendStat", m_ResendStat )
 
-        let v = con.GetSentResponsePDUForSNACK ( statsn_me.fromPrim 0u ) 2u
+        let v = con.GetSentResponsePDUForSNACK ( statsn_me.fromPrim 0u ) 0u
         Assert.True(( v.Length = 2 ))
-        Assert.True(( ( v.[0] :?> SCSIResponsePDU ).StatSN = statsn_me.fromPrim 0u ))
-        Assert.True(( ( v.[1] :?> SCSIResponsePDU ).StatSN = statsn_me.fromPrim 1u ))
+        Assert.True(( ( v.[0] :?> SCSIResponsePDU ).StatSN = statsn_me.fromPrim 1u ))
+        Assert.True(( ( v.[1] :?> SCSIResponsePDU ).StatSN = statsn_me.fromPrim 2u ))
+
         GlbFunc.ClosePorts [| sp; cp; |]
 
     [<Fact>]
@@ -1231,36 +1185,15 @@ type Connection_Test () =
 
         let vSentRespPDUs =
             [|
-                struct(
-                    statsn_me.fromPrim 0xFFFFFFFEu,
-                    {
-                        Connection_Test.defaultSCSIResponsePDUValues with
-                            StatSN = statsn_me.fromPrim 0xFFFFFFFEu;
-                    } :> ILogicalPDU
-                );
-                struct(
-                    statsn_me.fromPrim 0u,
-                    {
-                        Connection_Test.defaultSCSIResponsePDUValues with
-                            StatSN = statsn_me.fromPrim 0u;
-                    } :> ILogicalPDU
-                );
-                struct(
-                    statsn_me.fromPrim 1u,
-                    {
-                        Connection_Test.defaultSCSIResponsePDUValues with
-                            StatSN = statsn_me.fromPrim 1u;
-                    } :> ILogicalPDU
-                );
-                struct(
-                    statsn_me.fromPrim 2u,
-                    {
-                        Connection_Test.defaultSCSIResponsePDUValues with
-                            StatSN = statsn_me.fromPrim 2u;
-                    } :> ILogicalPDU
-                );
+                for i in [| 4u; 3u; 2u |] do
+                    yield struct(
+                        statsn_me.fromPrim i,
+                        {
+                            Connection_Test.defaultSCSIResponsePDUValues with
+                                StatSN = statsn_me.fromPrim i;
+                        } :> ILogicalPDU
+                    );
             |]
-
         let m_ResendStat = OptimisticLock< ResendStatusRec >({
             m_SentRespPDUs = vSentRespPDUs.ToImmutableArray()
             m_SentDataInPDUs = ImmutableArray< struct ( ITT_T * DATASN_T * ILogicalPDU ) >.Empty;
@@ -1269,9 +1202,8 @@ type Connection_Test () =
         pc.SetField( "m_ResendStat", m_ResendStat )
 
         let v = con.GetSentResponsePDUForSNACK ( statsn_me.fromPrim 1u ) 0u
-        Assert.True(( v.Length = 2 ))
-        Assert.True(( ( v.[0] :?> SCSIResponsePDU ).StatSN = statsn_me.fromPrim 1u ))
-        Assert.True(( ( v.[1] :?> SCSIResponsePDU ).StatSN = statsn_me.fromPrim 2u ))
+        Assert.True(( v.Length = 0 ))
+
         GlbFunc.ClosePorts [| sp; cp; |]
 
     [<Fact>]
@@ -1286,36 +1218,15 @@ type Connection_Test () =
 
         let vSentRespPDUs =
             [|
-                struct(
-                    statsn_me.fromPrim 0xFFFFFFFEu,
-                    {
-                        Connection_Test.defaultSCSIResponsePDUValues with
-                            StatSN = statsn_me.fromPrim 0xFFFFFFFEu;
-                    } :> ILogicalPDU
-                );
-                struct(
-                    statsn_me.fromPrim 0u,
-                    {
-                        Connection_Test.defaultSCSIResponsePDUValues with
-                            StatSN = statsn_me.fromPrim 0u;
-                    } :> ILogicalPDU
-                );
-                struct(
-                    statsn_me.fromPrim 1u,
-                    {
-                        Connection_Test.defaultSCSIResponsePDUValues with
-                            StatSN = statsn_me.fromPrim 1u;
-                    } :> ILogicalPDU
-                );
-                struct(
-                    statsn_me.fromPrim 2u,
-                    {
-                        Connection_Test.defaultSCSIResponsePDUValues with
-                            StatSN = statsn_me.fromPrim 2u;
-                    } :> ILogicalPDU
-                );
+                for i in [| 4u; 3u; 2u |] do
+                    yield struct(
+                        statsn_me.fromPrim i,
+                        {
+                            Connection_Test.defaultSCSIResponsePDUValues with
+                                StatSN = statsn_me.fromPrim i;
+                        } :> ILogicalPDU
+                    );
             |]
-
         let m_ResendStat = OptimisticLock< ResendStatusRec >({
             m_SentRespPDUs = vSentRespPDUs.ToImmutableArray()
             m_SentDataInPDUs = ImmutableArray< struct ( ITT_T * DATASN_T * ILogicalPDU ) >.Empty;
@@ -1323,12 +1234,11 @@ type Connection_Test () =
         })
         pc.SetField( "m_ResendStat", m_ResendStat )
 
-        let v = con.GetSentResponsePDUForSNACK ( statsn_me.fromPrim 0u ) 0u
-        Assert.True(( v.Length = 4 ))
-        Assert.True(( ( v.[0] :?> SCSIResponsePDU ).StatSN = statsn_me.fromPrim 0xFFFFFFFEu ))
-        Assert.True(( ( v.[1] :?> SCSIResponsePDU ).StatSN = statsn_me.fromPrim 0u ))
-        Assert.True(( ( v.[2] :?> SCSIResponsePDU ).StatSN = statsn_me.fromPrim 1u ))
-        Assert.True(( ( v.[3] :?> SCSIResponsePDU ).StatSN = statsn_me.fromPrim 2u ))
+        let v = con.GetSentResponsePDUForSNACK ( statsn_me.fromPrim 3u ) 0u
+        Assert.True(( v.Length = 2 ))
+        Assert.True(( ( v.[0] :?> SCSIResponsePDU ).StatSN = statsn_me.fromPrim 3u ))
+        Assert.True(( ( v.[1] :?> SCSIResponsePDU ).StatSN = statsn_me.fromPrim 4u ))
+
         GlbFunc.ClosePorts [| sp; cp; |]
 
     [<Fact>]
@@ -1343,22 +1253,15 @@ type Connection_Test () =
 
         let vSentRespPDUs =
             [|
-                struct(
-                    statsn_me.fromPrim 1u,
-                    {
-                        Connection_Test.defaultSCSIResponsePDUValues with
-                            StatSN = statsn_me.fromPrim 1u;
-                    } :> ILogicalPDU
-                );
-                struct(
-                    statsn_me.fromPrim 2u,
-                    {
-                        Connection_Test.defaultSCSIResponsePDUValues with
-                            StatSN = statsn_me.fromPrim 2u;
-                    } :> ILogicalPDU
-                );
+                for i in [| 4u; 3u; 2u |] do
+                    yield struct(
+                        statsn_me.fromPrim i,
+                        {
+                            Connection_Test.defaultSCSIResponsePDUValues with
+                                StatSN = statsn_me.fromPrim i;
+                        } :> ILogicalPDU
+                    );
             |]
-
         let m_ResendStat = OptimisticLock< ResendStatusRec >({
             m_SentRespPDUs = vSentRespPDUs.ToImmutableArray()
             m_SentDataInPDUs = ImmutableArray< struct ( ITT_T * DATASN_T * ILogicalPDU ) >.Empty;
@@ -1366,9 +1269,80 @@ type Connection_Test () =
         })
         pc.SetField( "m_ResendStat", m_ResendStat )
 
-        let v = con.GetSentResponsePDUForSNACK ( statsn_me.fromPrim 3u ) 0u
+        let v = con.GetSentResponsePDUForSNACK ( statsn_me.fromPrim 1u ) 2u
         Assert.True(( v.Length = 0 ))
+
         GlbFunc.ClosePorts [| sp; cp; |]
+
+    [<Fact>]
+    member _.GetSentResponsePDUForSNACK_006() =
+        let _, _, _, sp, cp, con =
+            Connection_Test.createDefaultConnectionObj(
+                Connection_Test.defaultConnectionParam,
+                Connection_Test.defaultSessionParameter,
+                statsn_me.fromPrim 0u
+            )
+        let pc = PrivateCaller( con )
+
+        let vSentRespPDUs =
+            [|
+                for i in [| 4u; 3u; 2u |] do
+                    yield struct(
+                        statsn_me.fromPrim i,
+                        {
+                            Connection_Test.defaultSCSIResponsePDUValues with
+                                StatSN = statsn_me.fromPrim i;
+                        } :> ILogicalPDU
+                    );
+            |]
+        let m_ResendStat = OptimisticLock< ResendStatusRec >({
+            m_SentRespPDUs = vSentRespPDUs.ToImmutableArray()
+            m_SentDataInPDUs = ImmutableArray< struct ( ITT_T * DATASN_T * ILogicalPDU ) >.Empty;
+            m_R_SNACK_Request = ImmutableArray< struct( ITT_T * ( unit -> unit ) ) >.Empty;
+        })
+        pc.SetField( "m_ResendStat", m_ResendStat )
+
+        let v = con.GetSentResponsePDUForSNACK ( statsn_me.fromPrim 3u ) 3u
+        Assert.True(( v.Length = 0 ))
+
+        GlbFunc.ClosePorts [| sp; cp; |]
+
+    [<Fact>]
+    member _.GetSentResponsePDUForSNACK_007() =
+        let _, _, _, sp, cp, con =
+            Connection_Test.createDefaultConnectionObj(
+                Connection_Test.defaultConnectionParam,
+                Connection_Test.defaultSessionParameter,
+                statsn_me.fromPrim 0u
+            )
+        let pc = PrivateCaller( con )
+
+        let vSentRespPDUs =
+            [|
+                for i in [| 4u; 3u; 2u |] do
+                    yield struct(
+                        statsn_me.fromPrim i,
+                        {
+                            Connection_Test.defaultSCSIResponsePDUValues with
+                                StatSN = statsn_me.fromPrim i;
+                        } :> ILogicalPDU
+                    );
+            |]
+        let m_ResendStat = OptimisticLock< ResendStatusRec >({
+            m_SentRespPDUs = vSentRespPDUs.ToImmutableArray()
+            m_SentDataInPDUs = ImmutableArray< struct ( ITT_T * DATASN_T * ILogicalPDU ) >.Empty;
+            m_R_SNACK_Request = ImmutableArray< struct( ITT_T * ( unit -> unit ) ) >.Empty;
+        })
+        pc.SetField( "m_ResendStat", m_ResendStat )
+
+        let v = con.GetSentResponsePDUForSNACK ( statsn_me.fromPrim 2u ) 3u
+        Assert.True(( v.Length = 3 ))
+        Assert.True(( ( v.[0] :?> SCSIResponsePDU ).StatSN = statsn_me.fromPrim 2u ))
+        Assert.True(( ( v.[1] :?> SCSIResponsePDU ).StatSN = statsn_me.fromPrim 3u ))
+        Assert.True(( ( v.[2] :?> SCSIResponsePDU ).StatSN = statsn_me.fromPrim 4u ))
+
+        GlbFunc.ClosePorts [| sp; cp; |]
+
 
     [<Fact>]
     member _.GetSentSCSIResponsePDUForR_SNACK_001() =
