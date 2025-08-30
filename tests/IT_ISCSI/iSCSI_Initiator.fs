@@ -1,4 +1,9 @@
-﻿namespace Haruka.Test
+﻿//=============================================================================
+// Haruka Software Storage.
+// iSCSI_Initiator.fs : Implement the iSCSI Initiator function used in the integration test.
+//
+
+namespace Haruka.Test
 
 open System
 open System.Diagnostics
@@ -73,6 +78,34 @@ type iSCSI_Connection(
 
     member _.IncrementExpStatSN() =
         m_ExpStatSN <- statsn_me.Next m_ExpStatSN
+
+    /// <summary>
+    ///  Skip ExtStatSN Value.
+    /// </summary>
+    /// <param name="v">
+    ///  Number of ExtStatSN value to skip.
+    /// </param>
+    member _.SkipExtStatSN ( v : STATSN_T ) : unit =
+        m_ExpStatSN <- m_ExpStatSN + v
+
+    /// <summary>
+    ///  Rewind ExtStatSN Value.
+    /// </summary>
+    /// <param name="v">
+    ///  Number of ExtStatSN value to rewind.
+    /// </param>
+    member _.RewindExtStatSN ( v : STATSN_T ) : unit =
+        m_ExpStatSN <- m_ExpStatSN - v
+
+    /// <summary>
+    ///  Set next ExtStatSN Value
+    /// </summary>
+    /// <param name="v">
+    ///  ExtStatSN value to be used.
+    /// </param>
+    member _.SetNextExtStatSN ( v : STATSN_T ) : unit =
+        m_ExpStatSN <- v
+
 
     member _.WaitSend() =
         m_SendLock.WaitAsync()
@@ -165,15 +198,30 @@ type iSCSI_Initiator(
     member _.ITT with get() = itt_me.fromPrim m_ITT
                  and  set( v : ITT_T ) = m_ITT <- itt_me.toPrim v
 
-    /// Skip CmdSN Value
+    /// <summary>
+    ///  Skip CmdSN Value.
+    /// </summary>
+    /// <param name="v">
+    ///  Number of CmdSN value to skip.
+    /// </param>
     member _.SkipCmdSN ( v : CMDSN_T ) : unit =
         m_CmdSN <- m_CmdSN + ( cmdsn_me.toPrim v )
 
-    /// Rewind CmdSN Value
+    /// <summary>
+    ///  Rewind CmdSN Value.
+    /// </summary>
+    /// <param name="v">
+    ///  Number of CmdSN value to rewind.
+    /// </param>
     member _.RewindCmdSN ( v : CMDSN_T ) : unit =
         m_CmdSN <- m_CmdSN - ( cmdsn_me.toPrim v )
 
-    /// Set next CmdSN Value
+    /// <summary>
+    ///  Set next CmdSN Value
+    /// </summary>
+    /// <param name="v">
+    ///  CmdSN value to be used.
+    /// </param>
     member _.SetNextCmdSN ( v : CMDSN_T ) : unit =
         m_CmdSN <- ( cmdsn_me.toPrim v ) - 1u
 
@@ -186,17 +234,39 @@ type iSCSI_Initiator(
     ///  The offset and length of the range to be destroyed.
     ///  If this value is ValueNone, the PDU is sent without modification.
     /// </param>
-    /// <param name="cid">CID of the connection that is used to send the PDU.</param>
-    /// <param name="argI">SCSICommandPDU I field value.</param>
-    /// <param name="argF">SCSICommandPDU F field value.</param>
-    /// <param name="argR">SCSICommandPDU R field value.</param>
-    /// <param name="argW">SCSICommandPDU W field value.</param>
-    /// <param name="argATTR">SCSICommandPDU ATTR field value.</param>
-    /// <param name="argLUN">SCSICommandPDU LUN field value.</param>
-    /// <param name="argExpectedDataTransferLength">SCSICommandPDU ExpectedDataTransferLength field value.</param>
-    /// <param name="argScsiCDB">SCSICommandPDU ScsiCDB field value.</param>
-    /// <param name="argDataSegment">SCSICommandPDU DataSegment field value.</param>
-    /// <param name="argBidirectionalExpectedReadDataLength">SCSICommandPDU BidirectionalExpectedReadDataLength field value.</param>
+    /// <param name="cid">
+    ///  CID of the connection that is used to send the PDU.
+    /// </param>
+    /// <param name="argI">
+    ///  SCSICommandPDU I field value.
+    /// </param>
+    /// <param name="argF">
+    ///  SCSICommandPDU F field value.
+    /// </param>
+    /// <param name="argR">
+    ///  SCSICommandPDU R field value.
+    /// </param>
+    /// <param name="argW">
+    ///  SCSICommandPDU W field value.
+    /// </param>
+    /// <param name="argATTR">
+    ///  SCSICommandPDU ATTR field value.
+    /// </param>
+    /// <param name="argLUN">
+    ///  SCSICommandPDU LUN field value.
+    /// </param>
+    /// <param name="argExpectedDataTransferLength">
+    ///  SCSICommandPDU ExpectedDataTransferLength field value.
+    /// </param>
+    /// <param name="argScsiCDB">
+    ///  SCSICommandPDU ScsiCDB field value.
+    /// </param>
+    /// <param name="argDataSegment">
+    ///  SCSICommandPDU DataSegment field value.
+    /// </param>
+    /// <param name="argBidirectionalExpectedReadDataLength">
+    ///  SCSICommandPDU BidirectionalExpectedReadDataLength field value.
+    /// </param>
     /// <returns>
     ///  The pair of ITT and CmdSN in sent PDU.
     /// </returns>
@@ -257,18 +327,34 @@ type iSCSI_Initiator(
     /// <summary>
     ///  Send Task management function request PDU to the target with test function.
     /// </summary>
-    /// <param name="updater">Function to modify the PDU before sending.</param>
+    /// <param name="updater">
+    ///  Function to modify the PDU before sending.
+    /// </param>
     /// <param name="fuz">
     ///  The offset and length of the range to be destroyed.
     ///  If this value is ValueNone, the PDU is sent without modification.
     /// </param>
-    /// <param name="cid">CID of the connection that is used to send the PDU.</param>
-    /// <param name="argI">TaskManagementFunctionRequestPDU I field value.</param>
-    /// <param name="argFunction">TaskManagementFunctionRequestPDU Function field value.</param>
-    /// <param name="argLUN">TaskManagementFunctionRequestPDU LUN field value.</param>
-    /// <param name="argReferencedTaskTag">TaskManagementFunctionRequestPDU ReferencedTaskTag field value.</param>
-    /// <param name="argRefCmdSN">TaskManagementFunctionRequestPDU RefCmdSN field value.</param>
-    /// <param name="argExpDataSN">TaskManagementFunctionRequestPDU ExpDataSN field value.</param>
+    /// <param name="cid">
+    ///  CID of the connection that is used to send the PDU.
+    /// </param>
+    /// <param name="argI">
+    ///  TaskManagementFunctionRequestPDU I field value.
+    /// </param>
+    /// <param name="argFunction">
+    ///  TaskManagementFunctionRequestPDU Function field value.
+    /// </param>
+    /// <param name="argLUN">
+    ///  TaskManagementFunctionRequestPDU LUN field value.
+    /// </param>
+    /// <param name="argReferencedTaskTag">
+    ///  TaskManagementFunctionRequestPDU ReferencedTaskTag field value.
+    /// </param>
+    /// <param name="argRefCmdSN">
+    ///  TaskManagementFunctionRequestPDU RefCmdSN field value.
+    /// </param>
+    /// <param name="argExpDataSN">
+    ///  TaskManagementFunctionRequestPDU ExpDataSN field value.
+    /// </param>
     /// <returns>
     ///  The pair of ITT and CmdSN in sent PDU.
     /// </returns>
@@ -321,18 +407,34 @@ type iSCSI_Initiator(
     /// <summary>
     ///  Send SCSI data out PDU to the target with test function.
     /// </summary>
-    /// <param name="updater">Function to modify the PDU before sending.</param>
+    /// <param name="updater">
+    ///  Function to modify the PDU before sending.
+    /// </param>
     /// <param name="fuz">
     ///  The offset and length of the range to be destroyed.
     ///  If this value is ValueNone, the PDU is sent without modification.
     /// </param>
-    /// <param name="cid">CID of the connection that is used to send the PDU.</param>
-    /// <param name="argF">SCSIDataOutPDU F field value.</param>
-    /// <param name="argLUN">SCSIDataOutPDU LUN field value.</param>
-    /// <param name="argTargetTransferTag">SCSIDataOutPDU TargetTransferTag field value.</param>
-    /// <param name="argDataSN">SCSIDataOutPDU DataSN field value.</param>
-    /// <param name="argBufferOffset">SCSIDataOutPDU BufferOffset field value.</param>
-    /// <param name="argDataSegment">SCSIDataOutPDU DataSegment field value.</param>
+    /// <param name="cid">
+    ///  CID of the connection that is used to send the PDU.
+    /// </param>
+    /// <param name="argF">
+    ///  SCSIDataOutPDU F field value.
+    /// </param>
+    /// <param name="argLUN">
+    ///  SCSIDataOutPDU LUN field value.
+    /// </param>
+    /// <param name="argTargetTransferTag">
+    ///  SCSIDataOutPDU TargetTransferTag field value.
+    /// </param>
+    /// <param name="argDataSN">
+    ///  SCSIDataOutPDU DataSN field value.
+    /// </param>
+    /// <param name="argBufferOffset">
+    ///  SCSIDataOutPDU BufferOffset field value.
+    /// </param>
+    /// <param name="argDataSegment">
+    ///  SCSIDataOutPDU DataSegment field value.
+    /// </param>
     /// <returns>
     ///  The pair of ITT and CmdSN in sent PDU.
     /// </returns>
@@ -381,18 +483,34 @@ type iSCSI_Initiator(
     /// <summary>
     ///  Send text request PDU to the target with test function.
     /// </summary>
-    /// <param name="updater">Function to modify the PDU before sending.</param>
+    /// <param name="updater">
+    ///  Function to modify the PDU before sending.
+    /// </param>
     /// <param name="fuz">
     ///  The offset and length of the range to be destroyed.
     ///  If this value is ValueNone, the PDU is sent without modification.
     /// </param>
-    /// <param name="cid">CID of the connection that is used to send the PDU.</param>
-    /// <param name="argI">TextRequestPDU I field value.</param>
-    /// <param name="argF">TextRequestPDU F field value.</param>
-    /// <param name="argC">TextRequestPDU C field value.</param>
-    /// <param name="argLUN">TextRequestPDU LUN field value.</param>
-    /// <param name="argTargetTransferTag">TextRequestPDU TargetTransferTag field value.</param>
-    /// <param name="argTextRequest">TextRequestPDU TextRequest field value.</param>
+    /// <param name="cid">
+    ///  CID of the connection that is used to send the PDU.
+    /// </param>
+    /// <param name="argI">
+    ///  TextRequestPDU I field value.
+    /// </param>
+    /// <param name="argF">
+    ///  TextRequestPDU F field value.
+    /// </param>
+    /// <param name="argC">
+    ///  TextRequestPDU C field value.
+    /// </param>
+    /// <param name="argLUN">
+    ///  TextRequestPDU LUN field value.
+    /// </param>
+    /// <param name="argTargetTransferTag">
+    ///  TextRequestPDU TargetTransferTag field value.
+    /// </param>
+    /// <param name="argTextRequest">
+    ///  TextRequestPDU TextRequest field value.
+    /// </param>
     /// <returns>
     ///  The pair of ITT and CmdSN in sent PDU.
     /// </returns>
@@ -445,15 +563,25 @@ type iSCSI_Initiator(
     /// <summary>
     ///  Send logout request PDU to the target with test function.
     /// </summary>
-    /// <param name="updater">Function to modify the PDU before sending.</param>
+    /// <param name="updater">
+    ///  Function to modify the PDU before sending.
+    /// </param>
     /// <param name="fuz">
     ///  The offset and length of the range to be destroyed.
     ///  If this value is ValueNone, the PDU is sent without modification.
     /// </param>
-    /// <param name="cid">CID of the connection that is used to send the PDU.</param>
-    /// <param name="argI">LogoutRequestPDU I field value.</param>
-    /// <param name="argReasonCode">LogoutRequestPDU ReasonCode field value.</param>
-    /// <param name="argCID">LogoutRequestPDU CID field value.</param>
+    /// <param name="cid">
+    ///  CID of the connection that is used to send the PDU.
+    /// </param>
+    /// <param name="argI">
+    ///  LogoutRequestPDU I field value.
+    /// </param>
+    /// <param name="argReasonCode">
+    ///  LogoutRequestPDU ReasonCode field value.
+    /// </param>
+    /// <param name="argCID">
+    ///  LogoutRequestPDU CID field value.
+    /// </param>
     /// <returns>
     ///  The pair of ITT and CmdSN in sent PDU.
     /// </returns>
@@ -500,17 +628,34 @@ type iSCSI_Initiator(
     /// <summary>
     ///  Send SNACK request PDU to the target with test function.
     /// </summary>
-    /// <param name="updater">Function to modify the PDU before sending.</param>
+    /// <param name="updater">
+    ///  Function to modify the PDU before sending.
+    /// </param>
     /// <param name="fuz">
     ///  The offset and length of the range to be destroyed.
     ///  If this value is ValueNone, the PDU is sent without modification.
     /// </param>
-    /// <param name="cid">CID of the connection that is used to send the PDU.</param>
-    /// <param name="argType">SNACKRequestPDU Type field value.</param>
-    /// <param name="argLUN">SNACKRequestPDU LUN field value.</param>
-    /// <param name="argTargetTransferTag">SNACKRequestPDU TargetTransferTag field value.</param>
-    /// <param name="argBegRun">SNACKRequestPDU BegRun field value.</param>
-    /// <param name="argRunLength">SNACKRequestPDU RunLength field value.</param>
+    /// <param name="cid">
+    ///  CID of the connection that is used to send the PDU.
+    /// </param>
+    /// <param name="argType">
+    ///  SNACKRequestPDU Type field value.
+    /// </param>
+    /// <param name="argLUN">
+    ///  SNACKRequestPDU LUN field value.
+    /// </param>
+    /// <param name="argInitiatorTaskTag">
+    ///  SNACKRequestPDU InitiatorTaskTag field value.
+    /// </param>
+    /// <param name="argTargetTransferTag">
+    ///  SNACKRequestPDU TargetTransferTag field value.
+    /// </param>
+    /// <param name="argBegRun">
+    ///  SNACKRequestPDU BegRun field value.
+    /// </param>
+    /// <param name="argRunLength">
+    ///  SNACKRequestPDU RunLength field value.
+    /// </param>
     /// <returns>
     ///  The pair of ITT and CmdSN in sent PDU.
     /// </returns>
@@ -520,19 +665,19 @@ type iSCSI_Initiator(
         ( cid : CID_T )
         ( argType : SnackReqTypeCd )
         ( argLUN : LUN_T )
+        ( argInitiatorTaskTag : ITT_T )
         ( argTargetTransferTag : TTT_T )
         ( argBegRun : uint32 )
         ( argRunLength : uint32 )
-        : Task< ITT_T > =
+        : Task< unit > =
         task {
             let con = m_Connections.[cid]
             do! con.WaitSend()
             try
-                let itt = Interlocked.Increment( &m_ITT ) |> itt_me.fromPrim
                 let pdu = {
                     Type = argType;
                     LUN = argLUN;
-                    InitiatorTaskTag = itt;
+                    InitiatorTaskTag = argInitiatorTaskTag;
                     TargetTransferTag = argTargetTransferTag;
                     ExpStatSN = con.ExpStatSN;
                     BegRun = argBegRun;
@@ -544,7 +689,7 @@ type iSCSI_Initiator(
                 let dataDigest = con.Params.DataDigest
                 let pdu2 = updater pdu
                 let! _ = this.SendPDUWithFazzer mrdslt headerDigest dataDigest con.Connection pdu2 fuz
-                return itt;
+                ()
             finally
                 con.ReleaseSend()
         }
@@ -557,16 +702,28 @@ type iSCSI_Initiator(
     /// <summary>
     ///  Send NOP out PDU to the target with test function.
     /// </summary>
-    /// <param name="updater">Function to modify the PDU before sending.</param>
+    /// <param name="updater">
+    ///  Function to modify the PDU before sending.
+    /// </param>
     /// <param name="fuz">
     ///  The offset and length of the range to be destroyed.
     ///  If this value is ValueNone, the PDU is sent without modification.
     /// </param>
-    /// <param name="cid">CID of the connection that is used to send the PDU.</param>
-    /// <param name="argI">NOPOutPDU I field value.</param>
-    /// <param name="argLUN">NOPOutPDU LUN field value.</param>
-    /// <param name="argTargetTransferTag">NOPOutPDU TargetTransferTag field value.</param>
-    /// <param name="argPingData">NOPOutPDU PingData field value.</param>
+    /// <param name="cid">
+    ///  CID of the connection that is used to send the PDU.
+    /// </param>
+    /// <param name="argI">
+    ///  NOPOutPDU I field value.
+    /// </param>
+    /// <param name="argLUN">
+    ///  NOPOutPDU LUN field value.
+    /// </param>
+    /// <param name="argTargetTransferTag">
+    ///  NOPOutPDU TargetTransferTag field value.
+    /// </param>
+    /// <param name="argPingData">
+    ///  NOPOutPDU PingData field value.
+    /// </param>
     /// <returns>
     ///  The pair of ITT and CmdSN in sent PDU.
     /// </returns>
@@ -1035,16 +1192,16 @@ type iSCSI_Initiator(
                     NSG = LoginReqStateCd.SEQURITY;
                     VersionMax = 0x00uy;
                     VersionMin = 0x00uy;
-                    ISID = exp_SessParams.ISID; // イニシエータポートを識別する値を指定する
-                    TSIH = exp_SessParams.TSIH; // リーディングコネクションでは0、最後のログインレスポンスでターゲットが通知する。
-                                                // リーディングコネクション以外では、当該セッションのTSIHを使用する
-                    InitiatorTaskTag = itt;     // リーディングコネクションでは常に0、ネゴシエーションの間変化しない
-                                                // リーディングコネクション以外では、ログインフェーズ開始時に妥当なITTを使用する。
+                    ISID = exp_SessParams.ISID; // Specifies a value that identifies the initiator port.
+                    TSIH = exp_SessParams.TSIH; // 0 for the leading connection. Notified by the target in the last login response.
+                                                // For connections other than the leading connection, use the TSIH for that session.
+                    InitiatorTaskTag = itt;     // Always 0 for leading connection. Does not change during negotiation.
+                                                // For non-leading connections, use a valid ITT at the start of the login phase.
                     CID = exp_ConnParams.CID;
-                    CmdSN = getCmdSN();         // リーディングコネクションでは常に0、加算しない
-                                                // リーディングコネクション以外では、PDU送信時点におけるCmdSNの値を送る。加算しない。（即時コマンドと同じ）
-                    ExpStatSN = expStatSN;      // 最初は0、1PDU毎に1づつ加算する。StatSNの値が期待通りで無ければエラーとする
-                                                // コネクションの再構築を行う場合は、元のExpStatSNの値を引きつぐ。
+                    CmdSN = getCmdSN();         // Always 0 for leading connections. No addition.
+                                                // For connections other than the leading connection, the CmdSN value at the time of PDU transmission is sent. No increments are made. (Same as for immediate commands)
+                    ExpStatSN = expStatSN;      // It starts with 0. It is incremented by 1 for each PDU. If the StatSN value is not as expected, an error occurs.
+                                                // When a connection is re-established, the original ExpStatSN value is retained.
                     TextRequest = textReq;
                     ByteCount = 0u;             // not used
                 }

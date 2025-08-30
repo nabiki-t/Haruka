@@ -88,6 +88,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     let g_LUN0 = lun_me.fromPrim 0UL
     let g_LUN1 = lun_me.fromPrim 1UL
 
+    let g_DefITT = itt_me.fromPrim 0xFFFFFFFFu
     let g_DefTTT = ttt_me.fromPrim 0xFFFFFFFFu
 
     let iSCSIPortNo = fx.iSCSIPortNo
@@ -892,4 +893,179 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_SESS g_CID1
             let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID1
             ()
+        }
+
+    // Sequence of non-immediate commands.
+    [<Fact>]
+    member _.StatSN_Sequense_001() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    ISID = GlbFunc.newISID();
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
+
+            // Not-Out
+            for i = 0 to 9 do
+                let sendExpStatSN = r1.Connection( g_CID0 ).ExpStatSN
+                let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! pdu = r1.ReceiveSpecific<NOPInPDU> g_CID0
+                Assert.True(( pdu.StatSN = sendExpStatSN ))
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+        }
+
+    // the next command is sent without incrementing ExpStatSN.
+    [<Fact>]
+    member _.StatSN_LostResponse_001() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    ErrorRecoveryLevel = 1uy;
+                    ISID = GlbFunc.newISID();
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
+
+            // Send Nop-Out 1
+            let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
+            let sendData1 = PooledBuffer.RentAndInit 4096
+            sendData1.Array.[0] <- 1uy
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT sendData1
+            sendData1.Return()
+
+            // Receive Nop-In 1
+            let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
+            Assert.True(( pdu1.PingData.Array.[0] = 1uy ))
+
+            // rewind ExpStatSN
+            r1.Connection( g_CID0 ).RewindExtStatSN( statsn_me.fromPrim 1u )
+
+            // Send Nop-Out 2
+            let sendExpStatSN2 = r1.Connection( g_CID0 ).ExpStatSN  // same as sendExpStatSN1
+            let sendData2 = PooledBuffer.RentAndInit 4096
+            sendData2.Array.[0] <- 2uy
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT sendData2
+            sendData2.Return()
+
+            // Receive Nop-In 2
+            let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu2.StatSN = sendExpStatSN2 + ( statsn_me.fromPrim 1u ) ))
+            Assert.True(( pdu2.PingData.Array.[0] = 2uy ))
+
+            // Send SNACK request
+            do! r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.STATUS g_LUN1 g_DefITT g_DefTTT ( statsn_me.toPrim sendExpStatSN1 ) 1u
+
+            // Receive Nop-In 1
+            let! pdu1_2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu1_2.StatSN = sendExpStatSN1 ))
+            Assert.True(( pdu1_2.PingData.Array.[0] = 1uy ))
+
+            // rewind ExpStatSN
+            r1.Connection( g_CID0 ).SkipExtStatSN( statsn_me.fromPrim 1u )
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+        }
+
+    // Add ExpStatSN before receiving status.
+    [<Fact>]
+    member _.StatSN_Skip_001() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    ErrorRecoveryLevel = 1uy;
+                    ISID = GlbFunc.newISID();
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
+
+            // Send Nop-Out 1
+            let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
+            let! itt1, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+
+            // Receive Nop-In 1
+            let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
+            Assert.True(( pdu1.InitiatorTaskTag = itt1 ))
+
+            // skip ExpStatSN
+            r1.Connection( g_CID0 ).SkipExtStatSN( statsn_me.fromPrim 1u )
+
+            // Send Nop-Out 2
+            let sendExpStatSN2 = r1.Connection( g_CID0 ).ExpStatSN  // sendExpStatSN2 = sendExpStatSN1 + 2
+            let! itt2, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+
+            // Receive Nop-In 2
+            let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu2.StatSN = sendExpStatSN2 - ( statsn_me.fromPrim 1u ) ))
+            Assert.True(( pdu2.InitiatorTaskTag = itt2 ))
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+        }
+
+    // Resend request for received status.
+    [<Fact>]
+    member _.StatSN_Rewind_001() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    ErrorRecoveryLevel = 1uy;
+                    ISID = GlbFunc.newISID();
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
+
+            // Send Nop-Out 1
+            let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
+            let! itt1, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
+            Assert.True(( pdu1.InitiatorTaskTag = itt1 ))
+
+            // Send Nop-Out 2
+            let sendExpStatSN2 = r1.Connection( g_CID0 ).ExpStatSN
+            let! itt2, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu2.StatSN = sendExpStatSN2 ))
+            Assert.True(( pdu2.InitiatorTaskTag = itt2 ))
+
+            // rewind ExpStatSN
+            r1.Connection( g_CID0 ).RewindExtStatSN( statsn_me.fromPrim 2u )
+
+            // Send Nop-Out 3
+            let sendExpStatSN3 = r1.Connection( g_CID0 ).ExpStatSN  // sendExpStatSN3 = sendExpStatSN1
+            let! itt3, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu3.StatSN = sendExpStatSN2 + ( statsn_me.fromPrim 1u ) ))
+            Assert.True(( pdu3.InitiatorTaskTag = itt3 ))
+
+            // Send SNACK request ( sendExpStatSN3 = sendExpStatSN1, Already acknowledged )
+            do! r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.STATUS g_LUN1 g_DefITT g_DefTTT ( statsn_me.toPrim sendExpStatSN3 ) 1u
+            let! pdu3 = r1.ReceiveSpecific<RejectPDU> g_CID0
+            Assert.True(( pdu3.Reason = RejectResonCd.PROTOCOL_ERR ))
+
+            // Send SNACK request ( sendExpStatSN2 )
+            do! r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.STATUS g_LUN1 g_DefITT g_DefTTT ( statsn_me.toPrim sendExpStatSN2 ) 2u
+
+            // Receive Nop-In 2
+            let! pdu2_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu2_1.StatSN = sendExpStatSN2 ))
+            Assert.True(( pdu2.InitiatorTaskTag = itt2 ))
+
+            // Receive Nop-In 3
+            let! pdu3_2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu3_2.StatSN = sendExpStatSN2 + ( statsn_me.fromPrim 1u ) ))
+            Assert.True(( pdu3_2.InitiatorTaskTag = itt3 ))
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
         }
