@@ -104,8 +104,6 @@ type CtrlConnection_Test1() =
             with
             | :? SocketException ->
                 ()
-            | _ ->
-                Assert.Fail __LINE__
         }
         |> Functions.RunTaskSynchronously
 
@@ -258,14 +256,8 @@ type CtrlConnection_Test1() =
                 with
                 | :? RequestError as x ->
                     ()
-                | _ as x ->
-                    Assert.Fail __LINE__
 
-                try
-                    do! cc2.Logout()
-                with
-                | _ ->
-                    Assert.Fail __LINE__
+                do! cc2.Logout()
 
                 k.NoticeTerminate()
             }

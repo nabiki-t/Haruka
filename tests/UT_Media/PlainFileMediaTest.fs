@@ -319,44 +319,44 @@ type PlainFileMedia_Test () =
 
     [<Fact>]
     member this.Read_001() =
-        let pDirName = this.CreateTestDir "Read_001"
-        let testfname = Functions.AppendPathName pDirName "a.txt"
-        let stat_stub = new CStatus_Stub()
-        let conf : TargetGroupConf.T_PlainFile = {
-            IdentNumber = mediaidx_me.fromPrim 0u;
-            MediaName = "";
-            FileName = testfname;
-            MaxMultiplicity = 1u;
-            QueueWaitTimeOut = 1000;
-            WriteProtect = false;
-        }
-        let k1 = new HKiller() :> IKiller
-        let wBlockSize = int Constants.MEDIA_BLOCK_SIZE
-
-        do 
-            use s = File.CreateText( testfname )
-            s.Write( Array.zeroCreate<char>( wBlockSize * 8 ) )
-            s.Close()
-
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
-        let pr = new PrivateCaller( f )
-        let vfs = pr.GetField( "m_vfile" ) :?> FileStream[]
-
-        vfs.[0].Close()
-        vfs.[0].Dispose()
-        vfs.[0] <- new CFileStream_Stub( testfname, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite, 1, true ) :> FileStream
-
-        let sourcei : CommandSourceInfo =
-            {
-                I_TNexus = new ITNexus( "Initiator", isid_me.zero, "Target", tpgt_me.zero )
-                CID = cid_me.zero;
-                ConCounter = concnt_me.zero;
-                TSIH = tsih_me.zero;
-                ProtocolService = new CProtocolService_Stub() :> IProtocolService
-                SessionKiller = k1
-            }
-
         task {
+            let pDirName = this.CreateTestDir "Read_001"
+            let testfname = Functions.AppendPathName pDirName "a.txt"
+            let stat_stub = new CStatus_Stub()
+            let conf : TargetGroupConf.T_PlainFile = {
+                IdentNumber = mediaidx_me.fromPrim 0u;
+                MediaName = "";
+                FileName = testfname;
+                MaxMultiplicity = 1u;
+                QueueWaitTimeOut = 1000;
+                WriteProtect = false;
+            }
+            let k1 = new HKiller() :> IKiller
+            let wBlockSize = int Constants.MEDIA_BLOCK_SIZE
+
+            do 
+                use s = File.CreateText( testfname )
+                s.Write( Array.zeroCreate<char>( wBlockSize * 8 ) )
+                s.Close()
+
+            let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+            let pr = new PrivateCaller( f )
+            let vfs = pr.GetField( "m_vfile" ) :?> FileStream[]
+
+            vfs.[0].Close()
+            vfs.[0].Dispose()
+            vfs.[0] <- new CFileStream_Stub( testfname, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite, 1, true ) :> FileStream
+
+            let sourcei : CommandSourceInfo =
+                {
+                    I_TNexus = new ITNexus( "Initiator", isid_me.zero, "Target", tpgt_me.zero )
+                    CID = cid_me.zero;
+                    ConCounter = concnt_me.zero;
+                    TSIH = tsih_me.zero;
+                    ProtocolService = new CProtocolService_Stub() :> IProtocolService
+                    SessionKiller = k1
+                }
+
             try
                 let v = Array.zeroCreate<byte>( 1 * wBlockSize )
                 let! _ = f.Read ( itt_me.fromPrim 0u ) sourcei 8UL ( ArraySegment v )
@@ -392,57 +392,55 @@ type PlainFileMedia_Test () =
             let v = Array.zeroCreate<byte>( 8 * wBlockSize )
             let! r = f.Read ( itt_me.fromPrim 0u ) sourcei 0UL ( ArraySegment v )
             Assert.True(( r = v.Length ))
+
+            k1.NoticeTerminate()
+            GlbFunc.DeleteFile( testfname )
+            GlbFunc.DeleteDir pDirName
         }
-        |> GlbFunc.RunSync
-
-
-        k1.NoticeTerminate()
-        GlbFunc.DeleteFile( testfname )
-        GlbFunc.DeleteDir pDirName
 
     [<Fact>]
     member this.Read_002() =
-        let pDirName = this.CreateTestDir "Read_002"
-        let testfname = Functions.AppendPathName pDirName "a.txt"
-        let stat_stub = new CStatus_Stub()
-        let conf : TargetGroupConf.T_PlainFile = {
-            IdentNumber = mediaidx_me.fromPrim 0u;
-            MediaName = "";
-            FileName = testfname;
-            MaxMultiplicity = 1u;
-            QueueWaitTimeOut = 1000;
-            WriteProtect = false;
-        }
-        let k1 = new HKiller() :> IKiller
-        let wrand = new Random()
-        let wBlockSize = int Constants.MEDIA_BLOCK_SIZE
-
-        let wrotedata = Array.zeroCreate<byte>( wBlockSize * 8 )
-        wrand.NextBytes( wrotedata )
-        do 
-            use s = File.Create( testfname )
-            s.Write( wrotedata, 0, wrotedata.Length )
-            s.Close()
-
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
-        let pr = new PrivateCaller( f )
-        let vfs = pr.GetField( "m_vfile" ) :?> FileStream[]
-
-        vfs.[0].Close()
-        vfs.[0].Dispose()
-        vfs.[0] <- new CFileStream_Stub( testfname, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite, 1, true ) :> FileStream
-
-        let sourcei : CommandSourceInfo =
-            {
-                I_TNexus = new ITNexus( "Initiator", isid_me.zero, "Target", tpgt_me.zero )
-                CID = cid_me.zero;
-                ConCounter = concnt_me.zero;
-                TSIH = tsih_me.zero;
-                ProtocolService = new CProtocolService_Stub() :> IProtocolService
-                SessionKiller = k1
-            }
-
         task {
+            let pDirName = this.CreateTestDir "Read_002"
+            let testfname = Functions.AppendPathName pDirName "a.txt"
+            let stat_stub = new CStatus_Stub()
+            let conf : TargetGroupConf.T_PlainFile = {
+                IdentNumber = mediaidx_me.fromPrim 0u;
+                MediaName = "";
+                FileName = testfname;
+                MaxMultiplicity = 1u;
+                QueueWaitTimeOut = 1000;
+                WriteProtect = false;
+            }
+            let k1 = new HKiller() :> IKiller
+            let wrand = new Random()
+            let wBlockSize = int Constants.MEDIA_BLOCK_SIZE
+
+            let wrotedata = Array.zeroCreate<byte>( wBlockSize * 8 )
+            wrand.NextBytes( wrotedata )
+            do 
+                use s = File.Create( testfname )
+                s.Write( wrotedata, 0, wrotedata.Length )
+                s.Close()
+
+            let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+            let pr = new PrivateCaller( f )
+            let vfs = pr.GetField( "m_vfile" ) :?> FileStream[]
+
+            vfs.[0].Close()
+            vfs.[0].Dispose()
+            vfs.[0] <- new CFileStream_Stub( testfname, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite, 1, true ) :> FileStream
+
+            let sourcei : CommandSourceInfo =
+                {
+                    I_TNexus = new ITNexus( "Initiator", isid_me.zero, "Target", tpgt_me.zero )
+                    CID = cid_me.zero;
+                    ConCounter = concnt_me.zero;
+                    TSIH = tsih_me.zero;
+                    ProtocolService = new CProtocolService_Stub() :> IProtocolService
+                    SessionKiller = k1
+                }
+
             let buf = Array.zeroCreate<byte>( 1 * wBlockSize )
             let! r = f.Read ( itt_me.fromPrim 0u ) sourcei 0UL ( ArraySegment buf )
             Assert.True( ( buf = wrotedata.[ 0 * wBlockSize .. 1 * wBlockSize - 1 ] ))
@@ -462,13 +460,11 @@ type PlainFileMedia_Test () =
             let! r = f.Read ( itt_me.fromPrim 0u ) sourcei 6UL ( ArraySegment buf )
             Assert.True( ( buf = wrotedata.[ 6 * wBlockSize .. 8 * wBlockSize - 1 ] ))
             Assert.True(( r = buf.Length ))
+
+            k1.NoticeTerminate()
+            GlbFunc.DeleteFile( testfname )
+            GlbFunc.DeleteDir pDirName
         }
-        |> GlbFunc.RunSync
-
-
-        k1.NoticeTerminate()
-        GlbFunc.DeleteFile( testfname )
-        GlbFunc.DeleteDir pDirName
 
     [<Fact>]
     member this.Read_004() =
@@ -564,46 +560,46 @@ type PlainFileMedia_Test () =
 
     [<Fact>]
     member this.Read_005() =
-        let pDirName = this.CreateTestDir "Read_005"
-        let testfname = Functions.AppendPathName pDirName "a.txt"
-        let stat_stub = new CStatus_Stub()
-        let conf : TargetGroupConf.T_PlainFile = {
-            IdentNumber = mediaidx_me.fromPrim 0u;
-            MediaName = "";
-            FileName = testfname;
-            MaxMultiplicity = 1u;
-            QueueWaitTimeOut = 1000;
-            WriteProtect = false;
-        }
-        let k1 = new HKiller() :> IKiller
-
-        do 
-            use s = File.Create( testfname )
-            s.SetLength( 4096L )
-            s.Close()
-
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
-        let pr = new PrivateCaller( f )
-
-        let vfs = pr.GetField( "m_vfile" ) :?> FileStream[]
-
-        vfs.[0].Close()
-        vfs.[0].Dispose()
-        vfs.[0] <- new CFileStream_Stub( testfname, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite, 1, true ) :> FileStream
-
-        let sourcei : CommandSourceInfo =
-            {
-                I_TNexus = new ITNexus( "Initiator", isid_me.zero, "Target", tpgt_me.zero )
-                CID = cid_me.zero;
-                ConCounter = concnt_me.zero;
-                TSIH = tsih_me.zero;
-                ProtocolService = new CProtocolService_Stub() :> IProtocolService
-                SessionKiller = k1
-            }
-
-        let mutable cnt = 0
-
         task {
+            let pDirName = this.CreateTestDir "Read_005"
+            let testfname = Functions.AppendPathName pDirName "a.txt"
+            let stat_stub = new CStatus_Stub()
+            let conf : TargetGroupConf.T_PlainFile = {
+                IdentNumber = mediaidx_me.fromPrim 0u;
+                MediaName = "";
+                FileName = testfname;
+                MaxMultiplicity = 1u;
+                QueueWaitTimeOut = 1000;
+                WriteProtect = false;
+            }
+            let k1 = new HKiller() :> IKiller
+
+            do 
+                use s = File.Create( testfname )
+                s.SetLength( 4096L )
+                s.Close()
+
+            let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+            let pr = new PrivateCaller( f )
+
+            let vfs = pr.GetField( "m_vfile" ) :?> FileStream[]
+
+            vfs.[0].Close()
+            vfs.[0].Dispose()
+            vfs.[0] <- new CFileStream_Stub( testfname, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite, 1, true ) :> FileStream
+
+            let sourcei : CommandSourceInfo =
+                {
+                    I_TNexus = new ITNexus( "Initiator", isid_me.zero, "Target", tpgt_me.zero )
+                    CID = cid_me.zero;
+                    ConCounter = concnt_me.zero;
+                    TSIH = tsih_me.zero;
+                    ProtocolService = new CProtocolService_Stub() :> IProtocolService
+                    SessionKiller = k1
+                }
+
+            let mutable cnt = 0
+
             ( vfs.[0] :?> CFileStream_Stub ).PreRead <-
                 (
                     fun ( offset : int, count : int ) ->
@@ -615,12 +611,11 @@ type PlainFileMedia_Test () =
             let buf = Array.zeroCreate<byte>( 512 )
             let! r = f.Read ( itt_me.fromPrim 0u ) sourcei 0UL ( ArraySegment buf )
             Assert.True(( r = buf.Length ))
-        }
-        |> GlbFunc.RunSync
 
-        k1.NoticeTerminate()
-        GlbFunc.DeleteFile( testfname )
-        GlbFunc.DeleteDir pDirName
+            k1.NoticeTerminate()
+            GlbFunc.DeleteFile( testfname )
+            GlbFunc.DeleteDir pDirName
+        }
 
     [<Fact>]
     member this.Read_006() =
@@ -663,20 +658,19 @@ type PlainFileMedia_Test () =
 
         let mutable cnt = 0
 
-        task {
-            ( vfs.[0] :?> CFileStream_Stub ).PreRead <-
-                (
-                    fun ( offset : int, count : int ) ->
-                        cnt <- cnt + 1
-                        if cnt < 10 then
-                            raise( new IOException() )
-                        ( offset, count )
-                )
-            let buf = Array.zeroCreate<byte>( 512 )
-            let! r = f.Read ( itt_me.fromPrim 0u ) sourcei 0UL ( ArraySegment buf )
-            Assert.True(( r = buf.Length ))
-        }
-        |> GlbFunc.RunSync
+        ( vfs.[0] :?> CFileStream_Stub ).PreRead <-
+            (
+                fun ( offset : int, count : int ) ->
+                    cnt <- cnt + 1
+                    if cnt < 10 then
+                        raise( new IOException() )
+                    ( offset, count )
+            )
+        let buf = Array.zeroCreate<byte>( 512 )
+        let r =
+            f.Read ( itt_me.fromPrim 0u ) sourcei 0UL ( ArraySegment buf )
+            |> GlbFunc.RunSync
+        Assert.True(( r = buf.Length ))
 
         k1.NoticeTerminate()
         GlbFunc.DeleteFile( testfname )
@@ -792,34 +786,33 @@ type PlainFileMedia_Test () =
 
         let mutable cnt = 0
 
-        task {
-            ( vfs.[0] :?> CFileStream_Stub ).PreRead <-
-                (
-                    fun ( offset : int, count : int ) ->
-                        cnt <- cnt + 1
-                        match cnt with
-                        | 1 ->
-                            Assert.True( ( offset = 0 ))
-                            Assert.True( ( count = 512 ))
-                            ( 0, 100 )
-                        | 2 ->
-                            Assert.True( ( offset = 100 ))
-                            Assert.True( ( count = 412 ))
-                            ( 100, 50 )
-                        | 3 ->
-                            Assert.True( ( offset = 150 ))
-                            Assert.True( ( count = 362 ))
-                            ( 150, 362 )
-                        | _ ->
-                            Assert.Fail __LINE__
-                            ( 0, 0 )
-                )
-            let buf = Array.zeroCreate<byte>( 512 )
-            let! r = f.Read ( itt_me.fromPrim 0u ) sourcei 0UL ( ArraySegment buf )
-            Assert.True(( buf = wrotedata.[ 0 .. 511 ] ))
-            Assert.True(( r = buf.Length ))
-        }
-        |> GlbFunc.RunSync
+        ( vfs.[0] :?> CFileStream_Stub ).PreRead <-
+            (
+                fun ( offset : int, count : int ) ->
+                    cnt <- cnt + 1
+                    match cnt with
+                    | 1 ->
+                        Assert.True( ( offset = 0 ))
+                        Assert.True( ( count = 512 ))
+                        ( 0, 100 )
+                    | 2 ->
+                        Assert.True( ( offset = 100 ))
+                        Assert.True( ( count = 412 ))
+                        ( 100, 50 )
+                    | 3 ->
+                        Assert.True( ( offset = 150 ))
+                        Assert.True( ( count = 362 ))
+                        ( 150, 362 )
+                    | _ ->
+                        Assert.Fail __LINE__
+                        ( 0, 0 )
+            )
+        let buf = Array.zeroCreate<byte>( 512 )
+        let r =
+            f.Read ( itt_me.fromPrim 0u ) sourcei 0UL ( ArraySegment buf )
+            |> GlbFunc.RunSync
+        Assert.True(( buf = wrotedata.[ 0 .. 511 ] ))
+        Assert.True(( r = buf.Length ))
 
         k1.NoticeTerminate()
         GlbFunc.DeleteFile( testfname )
@@ -894,37 +887,37 @@ type PlainFileMedia_Test () =
 
     [<Fact>]
     member this.Write_001() =
-        let pDirName = this.CreateTestDir "Write_001"
-        let testfname = Functions.AppendPathName pDirName "a.txt"
-        let stat_stub = new CStatus_Stub()
-        let conf : TargetGroupConf.T_PlainFile = {
-            IdentNumber = mediaidx_me.fromPrim 0u;
-            MediaName = "";
-            FileName = testfname;
-            MaxMultiplicity = 1u;
-            QueueWaitTimeOut = 1000;
-            WriteProtect = false;
-        }
-        let k1 = new HKiller() :> IKiller
-        let wBlockSize = int Constants.MEDIA_BLOCK_SIZE
-
-        do 
-            use s = File.CreateText( testfname )
-            s.Write( Array.zeroCreate<char>( wBlockSize * 8 ) )
-            s.Close()
-
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
-        let sourcei : CommandSourceInfo =
-            {
-                I_TNexus = new ITNexus( "Initiator", isid_me.zero, "Target", tpgt_me.zero )
-                CID = cid_me.zero;
-                ConCounter = concnt_me.zero;
-                TSIH = tsih_me.zero;
-                ProtocolService = new CProtocolService_Stub() :> IProtocolService
-                SessionKiller = k1
-            }
-
         task {
+            let pDirName = this.CreateTestDir "Write_001"
+            let testfname = Functions.AppendPathName pDirName "a.txt"
+            let stat_stub = new CStatus_Stub()
+            let conf : TargetGroupConf.T_PlainFile = {
+                IdentNumber = mediaidx_me.fromPrim 0u;
+                MediaName = "";
+                FileName = testfname;
+                MaxMultiplicity = 1u;
+                QueueWaitTimeOut = 1000;
+                WriteProtect = false;
+            }
+            let k1 = new HKiller() :> IKiller
+            let wBlockSize = int Constants.MEDIA_BLOCK_SIZE
+
+            do 
+                use s = File.CreateText( testfname )
+                s.Write( Array.zeroCreate<char>( wBlockSize * 8 ) )
+                s.Close()
+
+            let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+            let sourcei : CommandSourceInfo =
+                {
+                    I_TNexus = new ITNexus( "Initiator", isid_me.zero, "Target", tpgt_me.zero )
+                    CID = cid_me.zero;
+                    ConCounter = concnt_me.zero;
+                    TSIH = tsih_me.zero;
+                    ProtocolService = new CProtocolService_Stub() :> IProtocolService
+                    SessionKiller = k1
+                }
+
             try
                 let v = Array.zeroCreate<byte>( 1 * wBlockSize )
                 let! _ = f.Write ( itt_me.fromPrim 0u ) sourcei 8UL 0UL ( ArraySegment v )
@@ -960,47 +953,46 @@ type PlainFileMedia_Test () =
             let v = Array.zeroCreate<byte>( 8 * wBlockSize )
             let! r = f.Write ( itt_me.fromPrim 0u ) sourcei 0UL 0UL ( ArraySegment v )
             Assert.True(( r = v.Length ))
-        }
-        |> GlbFunc.RunSync
 
-        k1.NoticeTerminate()
-        GlbFunc.DeleteFile( testfname )
-        GlbFunc.DeleteDir pDirName
+            k1.NoticeTerminate()
+            GlbFunc.DeleteFile( testfname )
+            GlbFunc.DeleteDir pDirName
+        }
 
     [<Fact>]
     member this.Write_002() =
-        let pDirName = this.CreateTestDir "Write_002"
-        let testfname = Functions.AppendPathName pDirName "a.txt"
-        let stat_stub = new CStatus_Stub()
-        let conf : TargetGroupConf.T_PlainFile = {
-            IdentNumber = mediaidx_me.fromPrim 0u;
-            MediaName = "";
-            FileName = testfname;
-            MaxMultiplicity = 1u;
-            QueueWaitTimeOut = 1000;
-            WriteProtect = false;
-        }
-        let k1 = new HKiller() :> IKiller
-        let wBlockSize = int Constants.MEDIA_BLOCK_SIZE
-        let wrand = new Random()
-
-        do 
-            use s = File.Create( testfname )
-            s.Write( Array.zeroCreate<byte>( wBlockSize * 8 ), 0, wBlockSize * 8 )
-            s.Close()
-
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
-        let sourcei : CommandSourceInfo =
-            {
-                I_TNexus = new ITNexus( "Initiator", isid_me.zero, "Target", tpgt_me.zero )
-                CID = cid_me.zero;
-                ConCounter = concnt_me.zero;
-                TSIH = tsih_me.zero;
-                ProtocolService = new CProtocolService_Stub() :> IProtocolService
-                SessionKiller = k1
-            }
-
         task {
+            let pDirName = this.CreateTestDir "Write_002"
+            let testfname = Functions.AppendPathName pDirName "a.txt"
+            let stat_stub = new CStatus_Stub()
+            let conf : TargetGroupConf.T_PlainFile = {
+                IdentNumber = mediaidx_me.fromPrim 0u;
+                MediaName = "";
+                FileName = testfname;
+                MaxMultiplicity = 1u;
+                QueueWaitTimeOut = 1000;
+                WriteProtect = false;
+            }
+            let k1 = new HKiller() :> IKiller
+            let wBlockSize = int Constants.MEDIA_BLOCK_SIZE
+            let wrand = new Random()
+
+            do 
+                use s = File.Create( testfname )
+                s.Write( Array.zeroCreate<byte>( wBlockSize * 8 ), 0, wBlockSize * 8 )
+                s.Close()
+
+            let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+            let sourcei : CommandSourceInfo =
+                {
+                    I_TNexus = new ITNexus( "Initiator", isid_me.zero, "Target", tpgt_me.zero )
+                    CID = cid_me.zero;
+                    ConCounter = concnt_me.zero;
+                    TSIH = tsih_me.zero;
+                    ProtocolService = new CProtocolService_Stub() :> IProtocolService
+                    SessionKiller = k1
+                }
+
             do
                 use s = new FileStream( testfname, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite, 1, true )
                 s.Write( Array.zeroCreate<byte>( wBlockSize * 8 ), 0, wBlockSize * 8 )
@@ -1076,12 +1068,11 @@ type PlainFileMedia_Test () =
                 let compbuf = Array.zeroCreate<byte>( wBlockSize * 8 )
                 Array.blit buf 0 compbuf ( wBlockSize * 6 ) ( wBlockSize * 2 )
                 Assert.True( ( compbuf = readdata ))
-        }
-        |> GlbFunc.RunSync
 
-        k1.NoticeTerminate()
-        GlbFunc.DeleteFile( testfname )
-        GlbFunc.DeleteDir pDirName
+            k1.NoticeTerminate()
+            GlbFunc.DeleteFile( testfname )
+            GlbFunc.DeleteDir pDirName
+        }
 
     [<Fact>]
     member this.Write_004() =
@@ -1221,20 +1212,19 @@ type PlainFileMedia_Test () =
 
         let mutable cnt = 0
 
-        task {
-            ( vfs.[0] :?> CFileStream_Stub ).PreWrite <-
-                (
-                    fun ( offset : int, count : int ) ->
-                        cnt <- cnt + 1
-                        if cnt = 1 then
-                            raise( new IOException() )
-                        ( offset, count )
-                )
-            let buf = Array.zeroCreate<byte>( 512 )
-            let! r = f.Write ( itt_me.fromPrim 0u ) sourcei 0UL 0UL ( ArraySegment buf )
-            Assert.True(( r = buf.Length ))
-        }
-        |> GlbFunc.RunSync
+        ( vfs.[0] :?> CFileStream_Stub ).PreWrite <-
+            (
+                fun ( offset : int, count : int ) ->
+                    cnt <- cnt + 1
+                    if cnt = 1 then
+                        raise( new IOException() )
+                    ( offset, count )
+            )
+        let buf = Array.zeroCreate<byte>( 512 )
+        let r =
+            f.Write ( itt_me.fromPrim 0u ) sourcei 0UL 0UL ( ArraySegment buf )
+            |> GlbFunc.RunSync
+        Assert.True(( r = buf.Length ))
 
         k1.NoticeTerminate()
         GlbFunc.DeleteFile( testfname )
@@ -1282,20 +1272,19 @@ type PlainFileMedia_Test () =
 
         let mutable cnt = 0
 
-        task {
-            ( vfs.[0] :?> CFileStream_Stub ).PreWrite <-
-                (
-                    fun ( offset : int, count : int ) ->
-                        cnt <- cnt + 1
-                        if cnt < 10 then
-                            raise( new IOException() )
-                        ( offset, count )
-                )
-            let buf = Array.zeroCreate<byte>( 512 )
-            let! r = f.Write ( itt_me.fromPrim 0u ) sourcei 0UL 0UL ( ArraySegment buf )
-            Assert.True(( r = buf.Length ))
-        }
-        |> GlbFunc.RunSync
+        ( vfs.[0] :?> CFileStream_Stub ).PreWrite <-
+            (
+                fun ( offset : int, count : int ) ->
+                    cnt <- cnt + 1
+                    if cnt < 10 then
+                        raise( new IOException() )
+                    ( offset, count )
+            )
+        let buf = Array.zeroCreate<byte>( 512 )
+        let r =
+            f.Write ( itt_me.fromPrim 0u ) sourcei 0UL 0UL ( ArraySegment buf )
+            |> GlbFunc.RunSync
+        Assert.True(( r = buf.Length ))
 
         k1.NoticeTerminate()
         GlbFunc.DeleteFile( testfname )

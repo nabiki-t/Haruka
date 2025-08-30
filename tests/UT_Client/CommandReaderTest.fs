@@ -42,17 +42,15 @@ type CommandReader_Test() =
         |> Functions.RunTaskSynchronously
 
     let RunInputCommandMethod_CommandInputError ( infile : TextReader ) ( accCommands : AcceptableCommand<CommandVarb> array ) ( resultmsg : string ) =
-        use outs = new StreamWriter( new MemoryStream() )
-        let st = new StringTable( "" )
         task {
+            use outs = new StreamWriter( new MemoryStream() )
+            let st = new StringTable( "" )
             try
                 let! _ = CommandReader.InputCommand infile outs st accCommands "--"
                 Assert.Fail __LINE__
             with
             | :? CommandInputError as x ->
                 Assert.True(( x.Message.StartsWith resultmsg ))
-            | _ ->
-                Assert.Fail __LINE__
         }
         |> Functions.RunTaskSynchronously
 
@@ -88,22 +86,20 @@ type CommandReader_Test() =
 
     [<Fact>]
     member _.InputCommand_003() =
-        let ms, ws, rs = GenCommandStream "aaa"
-        use outs = new StreamWriter( new MemoryStream() )
-        let st = new StringTable( "" )
-        let accCommands = exitAccCmd Array.empty [| "/y" |] Array.empty
-
         task {
+            let ms, ws, rs = GenCommandStream "aaa"
+            use outs = new StreamWriter( new MemoryStream() )
+            let st = new StringTable( "" )
+            let accCommands = exitAccCmd Array.empty [| "/y" |] Array.empty
+
             try
                 let! _ = CommandReader.InputCommand rs outs st accCommands "--"
                 Assert.Fail __LINE__
             with
             | :? CommandInputError as x ->
                 Assert.True(( x.Message.StartsWith "CMDERR_UNKNOWN_COMMAND" ))
-            | _ -> Assert.Fail __LINE__
+            GlbFunc.AllDispose [ ms; ws; rs; ]
         }
-        |> Functions.RunTaskSynchronously
-        GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
     member _.Exit_001() =

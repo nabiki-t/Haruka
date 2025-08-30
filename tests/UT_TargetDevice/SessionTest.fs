@@ -2544,8 +2544,6 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         | :? ObjectDisposedException
         | :? IOException -> 
             ()
-        | _ ->
-            Assert.Fail __LINE__
 
         sess.DestroySession()
         GlbFunc.ClosePorts [| sp; cp; |]

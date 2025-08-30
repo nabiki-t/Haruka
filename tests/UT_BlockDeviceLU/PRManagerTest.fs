@@ -1485,8 +1485,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException as x ->
             ()
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToBasicParameterList_002() =
@@ -1504,8 +1502,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToBasicParameterList_003() =
@@ -1523,8 +1519,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToBasicParameterList_004() =
@@ -1558,8 +1552,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToBasicParameterList_005() =
@@ -1593,8 +1585,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToBasicParameterList_006() =
@@ -1628,8 +1618,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToBasicParameterList_007() =
@@ -1647,26 +1635,22 @@ type PRManager_Test1 () =
             // Obsoleted
             0x00uy; 0x00uy;
         |]
-        try
-            let r = 
-                PrivateCaller.Invoke< PRManager >(
-                    "paramDataToBasicParameterList",
-                    PRManager_Test1.defaultSource,
-                    objidx_me.NewID(),
-                    lun_me.zero,
-                    itt_me.fromPrim 0u,
-                    uint32 paramData.Length,
-                    ( PooledBuffer.Rent paramData )
-                ) :?> BasicParameterList
-            Assert.True(( r.ReservationKey = resvkey_me.fromPrim 0x0102030405060708UL ))
-            Assert.True(( r.ServiceActionReservationKey = resvkey_me.fromPrim 0x1112131415161718UL ))
-            Assert.False(( r.SPEC_I_PT ))
-            Assert.True(( r.ALL_TG_PT ))
-            Assert.True(( r.APTPL ))
-            Assert.True(( r.TransportID.Length = 0 ))
-        with
-        | _ ->
-            Assert.Fail __LINE__
+        let r = 
+            PrivateCaller.Invoke< PRManager >(
+                "paramDataToBasicParameterList",
+                PRManager_Test1.defaultSource,
+                objidx_me.NewID(),
+                lun_me.zero,
+                itt_me.fromPrim 0u,
+                uint32 paramData.Length,
+                ( PooledBuffer.Rent paramData )
+            ) :?> BasicParameterList
+        Assert.True(( r.ReservationKey = resvkey_me.fromPrim 0x0102030405060708UL ))
+        Assert.True(( r.ServiceActionReservationKey = resvkey_me.fromPrim 0x1112131415161718UL ))
+        Assert.False(( r.SPEC_I_PT ))
+        Assert.True(( r.ALL_TG_PT ))
+        Assert.True(( r.APTPL ))
+        Assert.True(( r.TransportID.Length = 0 ))
 
     [<Fact>]
     member _.paramDataToBasicParameterList_008() =
@@ -1686,26 +1670,22 @@ type PRManager_Test1 () =
             // Additional parameter data
             0x00uy; 0x00uy; 0x00uy; 0x00uy;
         |]
-        try
-            let r = 
-                PrivateCaller.Invoke< PRManager >(
-                    "paramDataToBasicParameterList",
-                    PRManager_Test1.defaultSource,
-                    objidx_me.NewID(),
-                    lun_me.zero,
-                    itt_me.fromPrim 0u,
-                    uint32 paramData.Length,
-                    ( PooledBuffer.Rent paramData )
-                ) :?> BasicParameterList
-            Assert.True(( r.ReservationKey = resvkey_me.fromPrim 0x0102030405060708UL ))
-            Assert.True(( r.ServiceActionReservationKey = resvkey_me.fromPrim 0x1112131415161718UL ))
-            Assert.True(( r.SPEC_I_PT ))
-            Assert.True(( r.ALL_TG_PT ))
-            Assert.True(( r.APTPL ))
-            Assert.True(( r.TransportID.Length = 0 ))
-        with
-        | _ ->
-            Assert.Fail __LINE__
+        let r = 
+            PrivateCaller.Invoke< PRManager >(
+                "paramDataToBasicParameterList",
+                PRManager_Test1.defaultSource,
+                objidx_me.NewID(),
+                lun_me.zero,
+                itt_me.fromPrim 0u,
+                uint32 paramData.Length,
+                ( PooledBuffer.Rent paramData )
+            ) :?> BasicParameterList
+        Assert.True(( r.ReservationKey = resvkey_me.fromPrim 0x0102030405060708UL ))
+        Assert.True(( r.ServiceActionReservationKey = resvkey_me.fromPrim 0x1112131415161718UL ))
+        Assert.True(( r.SPEC_I_PT ))
+        Assert.True(( r.ALL_TG_PT ))
+        Assert.True(( r.APTPL ))
+        Assert.True(( r.TransportID.Length = 0 ))
 
     [<Fact>]
     member _.paramDataToBasicParameterList_009() =
@@ -1734,8 +1714,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( Functions.CompareStringHeader x.Message "Invalid FORMAT CODE value" = 0 ))
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToBasicParameterList_010() =
@@ -1764,8 +1742,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( Functions.CompareStringHeader x.Message "Invalid PROTOCOL IDENTIFIER value" = 0 ))
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToBasicParameterList_011() =
@@ -1800,8 +1776,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( Functions.CompareStringHeader x.Message "Invalid TransportID length" = 0 ))
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToBasicParameterList_012() =
@@ -1837,8 +1811,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( Functions.CompareStringHeader x.Message "Invalid  ADDITIONAL LENGTH value" = 0 ))
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToBasicParameterList_013() =
@@ -1874,8 +1846,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( Functions.CompareStringHeader x.Message "Invalid  ADDITIONAL LENGTH value" = 0 ))
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToBasicParameterList_014() =
@@ -1912,8 +1882,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( Functions.CompareStringHeader x.Message "Invalid  ADDITIONAL LENGTH value" = 0 ))
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToBasicParameterList_015() =
@@ -1949,8 +1917,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( Functions.CompareStringHeader x.Message "Invalid TransportID format" = 0 ))
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToBasicParameterList_016() =
@@ -1986,8 +1952,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( Functions.CompareStringHeader x.Message "Invalid TransportID format" = 0 ))
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToBasicParameterList_017() =
@@ -2037,8 +2001,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException ->
             Assert.Fail __LINE__
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToBasicParameterList_018() =
@@ -2082,8 +2044,6 @@ type PRManager_Test1 () =
             Assert.True(( ( snd r.TransportID.[0] ).IsNone ))
         with
         | :? SCSIACAException ->
-            Assert.Fail __LINE__
-        | _ ->
             Assert.Fail __LINE__
 
     [<Fact>]
@@ -2146,8 +2106,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( Functions.CompareStringHeader x.Message "TransportID is too long. " = 0 ))
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToBasicParameterList_020() =
@@ -2207,8 +2165,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.Message.Contains "TransportID is too long. " ))
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToBasicParameterList_021() =
@@ -2319,8 +2275,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException ->
             Assert.Fail __LINE__
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToBasicParameterList_022() =
@@ -2386,8 +2340,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException ->
             Assert.Fail __LINE__
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToMoveParameterList_001() =
@@ -2405,8 +2357,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( Functions.CompareStringHeader x.Message "Parameter length in" = 0 ))
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToMoveParameterList_002() =
@@ -2424,8 +2374,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( Functions.CompareStringHeader x.Message "Parameter length in" = 0 ))
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToMoveParameterList_003() =
@@ -2442,8 +2390,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( Functions.CompareStringHeader x.Message "Parameter length in" = 0 ))
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToMoveParameterList_004() =
@@ -2480,8 +2426,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( Functions.CompareStringHeader x.Message "Invalid TRANSPORTID PARAMETER DATA LENGTH" = 0 ))
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.paramDataToMoveParameterList_005() =
@@ -2522,8 +2466,6 @@ type PRManager_Test1 () =
             Assert.True(( ( snd r.TransportID ).IsNone ))
         with
         | :? SCSIACAException as x ->
-            Assert.Fail __LINE__
-        | _ ->
             Assert.Fail __LINE__
 
     [<Fact>]
@@ -2575,9 +2517,6 @@ type PRManager_Test1 () =
         with
         | :? SCSIACAException as x ->
             Assert.Fail __LINE__
-        | _ ->
-            Assert.Fail __LINE__
-
 
     static member m_decideACANoncompliant_001_data = [|
             [| ( { OperationCode = 0xA4uy; ServiceAction = 0x0Bus; ParameterListLength = 0u; Control = 0uy; } : ChangeAliasesCDB ) :> ICDB; |];

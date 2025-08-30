@@ -702,12 +702,7 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName2 targetGroupConf2
 
-        try
-            let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-            ()
-        with
-        | _ ->
-            Assert.Fail __LINE__
+        let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
 
         GlbFunc.DeleteDir pDirName
 
@@ -1027,12 +1022,7 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName2 targetGroupConf2
 
-        try
-            let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-            ()
-        with
-        | _ ->
-            Assert.Fail __LINE__
+        let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
 
         GlbFunc.DeleteDir pDirName
 

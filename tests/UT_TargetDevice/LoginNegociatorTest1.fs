@@ -1834,42 +1834,37 @@ type LoginNegociator_Test1 () =
 
     [<Fact>]
     member _.ReceiveLoginRequest_002() =
-        let sp, cp = GlbFunc.GetNetConn()
-        let stat1 =  new CStatus_Stub()
-
-        let k1 = new HKiller() :> IKiller
-        let pcon = new LoginNegociator( stat1, sp, DateTime.UtcNow, tpgt_me.zero, netportidx_me.zero, k1 )
-        let po2 = new PrivateCaller( pcon )
-
         task {
-            try
-                let beforePDU =
-                    {
-                        g_defaultLoginRequest with
-                            TextRequest =
-                                IscsiTextEncode.CreateTextKeyValueString
-                                    {
-                                        TextKeyValues.defaultTextKeyValues with
-                                            SessionType = TextValueType.Value( "Normal" );
-                                    }
-                                    {
-                                        TextKeyValuesStatus.defaultTextKeyValuesStatus with
-                                            NegoStat_SessionType = NegoStatusValue.NSG_WaitSend;
-                                    }
-                            
-                    }
-                let! rKeyVal, pdu =
-                    po2.Invoke( "ReceiveLoginRequest", beforePDU ) :?> Task<struct( TextKeyValues * LoginRequestPDU )>
-                Assert.True( ( pdu = beforePDU ) )
-                Assert.True( ( rKeyVal.SessionType = TextValueType.Value( "Normal" ) ) )
-            with
-            | _ as x ->
-                Assert.Fail ( __LINE__ + " : " + x.Message )
-            k1.NoticeTerminate()
-        }
-        |> Functions.RunTaskSynchronously
+            let sp, cp = GlbFunc.GetNetConn()
+            let stat1 =  new CStatus_Stub()
 
-        GlbFunc.ClosePorts [| sp; cp |]
+            let k1 = new HKiller() :> IKiller
+            let pcon = new LoginNegociator( stat1, sp, DateTime.UtcNow, tpgt_me.zero, netportidx_me.zero, k1 )
+            let po2 = new PrivateCaller( pcon )
+
+            let beforePDU =
+                {
+                    g_defaultLoginRequest with
+                        TextRequest =
+                            IscsiTextEncode.CreateTextKeyValueString
+                                {
+                                    TextKeyValues.defaultTextKeyValues with
+                                        SessionType = TextValueType.Value( "Normal" );
+                                }
+                                {
+                                    TextKeyValuesStatus.defaultTextKeyValuesStatus with
+                                        NegoStat_SessionType = NegoStatusValue.NSG_WaitSend;
+                                }
+                            
+                }
+            let! rKeyVal, pdu =
+                po2.Invoke( "ReceiveLoginRequest", beforePDU ) :?> Task<struct( TextKeyValues * LoginRequestPDU )>
+            Assert.True( ( pdu = beforePDU ) )
+            Assert.True( ( rKeyVal.SessionType = TextValueType.Value( "Normal" ) ) )
+
+            k1.NoticeTerminate()
+            GlbFunc.ClosePorts [| sp; cp |]
+        }
 
     [<Fact>]
     member _.ReceiveLoginRequest_003() =
@@ -2126,13 +2121,13 @@ type LoginNegociator_Test1 () =
 
     [<Fact>]
     member _.ReceiveLoginRequest_005() =
-        let sp, cp = GlbFunc.GetNetConn()
-        let stat1 =  new CStatus_Stub()
-        let k1 = new HKiller() :> IKiller
-        let pcon = new LoginNegociator( stat1, sp, DateTime.UtcNow, tpgt_me.zero, netportidx_me.zero, k1 )
-        let po2 = new PrivateCaller( pcon )
-
         task {
+            let sp, cp = GlbFunc.GetNetConn()
+            let stat1 =  new CStatus_Stub()
+            let k1 = new HKiller() :> IKiller
+            let pcon = new LoginNegociator( stat1, sp, DateTime.UtcNow, tpgt_me.zero, netportidx_me.zero, k1 )
+            let po2 = new PrivateCaller( pcon )
+
             try
                 let beforePDU =
                     {
@@ -2145,12 +2140,10 @@ type LoginNegociator_Test1 () =
             with
             | :? SessionRecoveryException as x ->
                 Assert.True( ( x.Message = "In iSCSI Login request PDU, Text request data is invalid." ) )
-            | _ as x ->
-                Assert.Fail ( __LINE__ + " : " + x.Message )
+
             k1.NoticeTerminate()
+            GlbFunc.ClosePorts [| sp; cp |]
         }
-        |> Functions.RunTaskSynchronously
-        GlbFunc.ClosePorts [| sp; cp |]
 
     [<Fact>]
     member _.SendNegotiationResponse_001() =

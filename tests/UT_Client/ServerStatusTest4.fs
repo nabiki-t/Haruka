@@ -222,10 +222,6 @@ type ServerStatus_Test4() =
                 with
                 | :? KeyNotFoundException ->
                     ()
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
-
-
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2644,8 +2640,6 @@ type ServerStatus_Test4() =
                 with
                 | :? EditError as x ->
                     Assert.True( x.Message.StartsWith "ERRMSG_FAILED_IDENT_TARGET_DEVICE" )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2710,8 +2704,6 @@ type ServerStatus_Test4() =
                 with
                 | :? EditError as x ->
                     Assert.True( x.Message.StartsWith "ERRMSG_FAILED_IDENT_TARGET_DEVICE" )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2834,8 +2826,6 @@ type ServerStatus_Test4() =
                 with
                 | :? EditError as x ->
                     Assert.True( x.Message.StartsWith "ERRMSG_FAILED_IDENT_TARGET_GROUP" )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2904,8 +2894,6 @@ type ServerStatus_Test4() =
                 with
                 | :? EditError as x ->
                     Assert.True( x.Message.StartsWith "ERRMSG_FAILED_IDENT_TARGET_GROUP" )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3263,11 +3251,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tdNodes2.Length = 1 ))
                 Assert.True(( ( tdNodes2.[0] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
 
-                try
-                    do! ss.CheckTargetDeviceUnloaded cc1 tdNodes2.[0]
-                with
-                | _ ->
-                    Assert.Fail __LINE__
+                do! ss.CheckTargetDeviceUnloaded cc1 tdNodes2.[0]
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3302,8 +3286,6 @@ type ServerStatus_Test4() =
                 with
                 | :? EditError as x ->
                     Assert.True(( x.Message.StartsWith "ERRMSG_TARGET_DEVICE_RUNNING" ))
-                | _ ->
-                    Assert.Fail __LINE__
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3506,11 +3488,7 @@ type ServerStatus_Test4() =
                 let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true :> IConfigFileNode
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
 
-                try
-                    do! ss.CheckTargetGroupUnloaded cc1 tgNode
-                with
-                | _ ->
-                    Assert.Fail __LINE__
+                do! ss.CheckTargetGroupUnloaded cc1 tgNode
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3551,9 +3529,6 @@ type ServerStatus_Test4() =
                 with
                 | :? EditError as x ->
                     Assert.True(( x.Message.StartsWith "ERRMSG_TARGET_GROUP_LOADED" ))
-                | _ ->
-                    Assert.Fail __LINE__
-
             }
         |]
         |> Functions.RunTaskInPallalel

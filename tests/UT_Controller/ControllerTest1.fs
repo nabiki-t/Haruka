@@ -156,9 +156,7 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.Login_002() =
@@ -206,9 +204,7 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.Login_003() =
@@ -243,9 +239,7 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.Logout_001() =
@@ -278,7 +272,6 @@ type Controller_Test1 () =
             c1.Close()
             con1.Close()
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.Logout_002() =
@@ -318,9 +311,7 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.Logout_003() =
@@ -356,9 +347,7 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.Logout_004() =
@@ -389,9 +378,7 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.NoOperation_001() =
@@ -418,9 +405,7 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.NoOperation_002() =
@@ -447,9 +432,7 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.NoOperation_003() =
@@ -477,9 +460,7 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.NoOperation_004() =
@@ -514,9 +495,7 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.NoOperation_005() =
@@ -552,9 +531,7 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.GetControllerConfig_001() =
@@ -582,9 +559,7 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.GetControllerConfig_002() =
@@ -615,17 +590,15 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.GetControllerConfig_003() =
-        let fname = Functions.AppendPathName dname Constants.CONTROLLER_CONF_FILE_NAME
-        let fname_bk = fname + "_bk"
-        File.Move( fname, fname_bk )
-        try
-            task {
+        task {
+            let fname = Functions.AppendPathName dname Constants.CONTROLLER_CONF_FILE_NAME
+            let fname_bk = fname + "_bk"
+            File.Move( fname, fname_bk )
+            try
                 use con1 = new TcpClient( "::1", portNum )
                 use c1 = con1.GetStream()
                 let! sessID = Controller_Test1.FirstLogin c1
@@ -649,20 +622,18 @@ type Controller_Test1 () =
                 c1.Close()
                 con1.Close()
 
-            }
-            |> Functions.RunTaskSynchronously
-        finally
-            File.Move( fname_bk, fname )
+            finally
+                File.Move( fname_bk, fname )
+        }
 
     [<Fact>]
     member _.GetControllerConfig_004() =
-        let fname = Functions.AppendPathName dname Constants.CONTROLLER_CONF_FILE_NAME
-        let fname_bk = fname + "_bk"
-        File.Move( fname, fname_bk )
-        Directory.CreateDirectory fname |> ignore
-
-        try
-            task {
+        task {
+            let fname = Functions.AppendPathName dname Constants.CONTROLLER_CONF_FILE_NAME
+            let fname_bk = fname + "_bk"
+            File.Move( fname, fname_bk )
+            Directory.CreateDirectory fname |> ignore
+            try
                 use con1 = new TcpClient( "::1", portNum )
                 use c1 = con1.GetStream()
                 let! sessID = Controller_Test1.FirstLogin c1
@@ -685,12 +656,10 @@ type Controller_Test1 () =
 
                 c1.Close()
                 con1.Close()
-
-            }
-            |> Functions.RunTaskSynchronously
-        finally
-            Directory.Delete fname
-            File.Move( fname_bk, fname )
+            finally
+                Directory.Delete fname
+                File.Move( fname_bk, fname )
+        }
 
     [<Fact>]
     member _.SetControllerConfig_001() =
@@ -721,18 +690,16 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.SetControllerConfig_002() =
-        let fname = Functions.AppendPathName dname Constants.CONTROLLER_CONF_FILE_NAME
-        let fname_bk = fname + "_bk"
-        File.Copy( fname, fname_bk )
+        task {
+            let fname = Functions.AppendPathName dname Constants.CONTROLLER_CONF_FILE_NAME
+            let fname_bk = fname + "_bk"
+            File.Copy( fname, fname_bk )
 
-        try
-            task {
+            try
                 use con1 = new TcpClient( "::1", portNum )
                 use c1 = con1.GetStream()
                 let! sessID = Controller_Test1.FirstLogin c1
@@ -761,20 +728,20 @@ type Controller_Test1 () =
 
                 let wdata = File.ReadAllText fname
                 Assert.True(( wdata = "AAAAAAAAAAAAAAAAAAAAAAAA" ))
-            }
-            |> Functions.RunTaskSynchronously
-        finally
-            File.Delete fname
-            File.Move( fname_bk, fname )
+
+            finally
+                File.Delete fname
+                File.Move( fname_bk, fname )
+        }
 
     [<Fact>]
     member _.SetControllerConfig_003() =
-        let fname = Functions.AppendPathName dname Constants.CONTROLLER_CONF_FILE_NAME
-        let fname_bk = fname + "_bk"
-        File.Move( fname, fname_bk )
+        task {
+            let fname = Functions.AppendPathName dname Constants.CONTROLLER_CONF_FILE_NAME
+            let fname_bk = fname + "_bk"
+            File.Move( fname, fname_bk )
 
-        try
-            task {
+            try
                 use con1 = new TcpClient( "::1", portNum )
                 use c1 = con1.GetStream()
                 let! sessID = Controller_Test1.FirstLogin c1
@@ -803,21 +770,20 @@ type Controller_Test1 () =
 
                 let wdata = File.ReadAllText fname
                 Assert.True(( wdata = "BBBBBBBBBBBBBBBBBBBBBBBB" ))
-            }
-            |> Functions.RunTaskSynchronously
-        finally
-            File.Delete fname
-            File.Move( fname_bk, fname )
+            finally
+                File.Delete fname
+                File.Move( fname_bk, fname )
+        }
 
     [<Fact>]
     member _.SetControllerConfig_004() =
-        let fname = Functions.AppendPathName dname Constants.CONTROLLER_CONF_FILE_NAME
-        let fname_bk = fname + "_bk"
-        File.Move( fname, fname_bk )
-        Directory.CreateDirectory fname |> ignore
+        task {
+            let fname = Functions.AppendPathName dname Constants.CONTROLLER_CONF_FILE_NAME
+            let fname_bk = fname + "_bk"
+            File.Move( fname, fname_bk )
+            Directory.CreateDirectory fname |> ignore
 
-        try
-            task {
+            try
                 use con1 = new TcpClient( "::1", portNum )
                 use c1 = con1.GetStream()
                 let! sessID = Controller_Test1.FirstLogin c1
@@ -843,11 +809,10 @@ type Controller_Test1 () =
 
                 c1.Close()
                 con1.Close()
-            }
-            |> Functions.RunTaskSynchronously
-        finally
-            Directory.Delete fname
-            File.Move( fname_bk, fname )
+            finally
+                Directory.Delete fname
+                File.Move( fname_bk, fname )
+        }
 
     [<Fact>]
     member _.GetTargetDeviceDir_001() =
@@ -875,9 +840,7 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.GetTargetDeviceDir_002() =
@@ -904,23 +867,21 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.GetTargetDeviceDir_003() =
-        let vdirname = [|
-            for i = 0 to ( Constants.MAX_TARGET_DEVICE_COUNT - 1 ) do
-                sprintf "%s%08d" Constants.TARGET_DEVICE_DIR_PREFIX i;
-        |]
-        vdirname
-        |> Array.iter ( fun itr ->
-            let tddname = Functions.AppendPathName dname itr
-            Directory.CreateDirectory tddname |> ignore
-        )
-
         task {
+            let vdirname = [|
+                for i = 0 to ( Constants.MAX_TARGET_DEVICE_COUNT - 1 ) do
+                    sprintf "%s%08d" Constants.TARGET_DEVICE_DIR_PREFIX i;
+            |]
+            vdirname
+            |> Array.iter ( fun itr ->
+                let tddname = Functions.AppendPathName dname itr
+                Directory.CreateDirectory tddname |> ignore
+            )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -947,28 +908,26 @@ type Controller_Test1 () =
             c1.Close()
             con1.Close()
 
+            vdirname
+            |> Array.iter ( fun itr ->
+                let tddname = Functions.AppendPathName dname itr
+                GlbFunc.DeleteDir tddname
+            )
         }
-        |> Functions.RunTaskSynchronously
-
-        vdirname
-        |> Array.iter ( fun itr ->
-            let tddname = Functions.AppendPathName dname itr
-            GlbFunc.DeleteDir tddname
-        )
 
     [<Fact>]
     member _.GetTargetDeviceDir_004() =
-        let vdirname = [|
-            for i = 0 to Constants.MAX_TARGET_DEVICE_COUNT + 10 do
-                sprintf "%s%08d" Constants.TARGET_DEVICE_DIR_PREFIX i;
-        |]
-        vdirname
-        |> Array.iter ( fun itr ->
-            let tddname = Functions.AppendPathName dname itr
-            Directory.CreateDirectory tddname |> ignore
-        )
-
         task {
+            let vdirname = [|
+                for i = 0 to Constants.MAX_TARGET_DEVICE_COUNT + 10 do
+                    sprintf "%s%08d" Constants.TARGET_DEVICE_DIR_PREFIX i;
+            |]
+            vdirname
+            |> Array.iter ( fun itr ->
+                let tddname = Functions.AppendPathName dname itr
+                Directory.CreateDirectory tddname |> ignore
+            )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -995,25 +954,23 @@ type Controller_Test1 () =
             c1.Close()
             con1.Close()
 
+            vdirname
+            |> Array.iter ( fun itr ->
+                let tddname = Functions.AppendPathName dname itr
+                GlbFunc.DeleteDir tddname
+            )
         }
-        |> Functions.RunTaskSynchronously
-
-        vdirname
-        |> Array.iter ( fun itr ->
-            let tddname = Functions.AppendPathName dname itr
-            GlbFunc.DeleteDir tddname
-        )
 
     [<Fact>]
     member _.GetTargetDeviceDir_005() =
-        let wtdid = tdid_me.fromPrim( 11111111u )
-        let tddname1 = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname1 |> ignore
-        let tddname2 =
-            Functions.AppendPathName dname "abcdefg"
-        Directory.CreateDirectory tddname2 |> ignore
-
         task {
+            let wtdid = tdid_me.fromPrim( 11111111u )
+            let tddname1 = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname1 |> ignore
+            let tddname2 =
+                Functions.AppendPathName dname "abcdefg"
+            Directory.CreateDirectory tddname2 |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1038,20 +995,18 @@ type Controller_Test1 () =
             c1.Close()
             con1.Close()
 
+            GlbFunc.DeleteDir tddname1
+            GlbFunc.DeleteDir tddname2
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteDir tddname1
-        GlbFunc.DeleteDir tddname2
 
     [<Fact>]
     member _.CreateTargetDeviceDir_001() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        if Directory.Exists tddname then GlbFunc.DeleteDir tddname
-        if File.Exists tddname then File.Delete tddname
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            if Directory.Exists tddname then GlbFunc.DeleteDir tddname
+            if File.Exists tddname then File.Delete tddname
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1081,19 +1036,17 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.CreateTargetDeviceDir_002() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        if Directory.Exists tddname then GlbFunc.DeleteDir tddname
-        if File.Exists tddname then File.Delete tddname
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            if Directory.Exists tddname then GlbFunc.DeleteDir tddname
+            if File.Exists tddname then File.Delete tddname
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1122,21 +1075,18 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.CreateTargetDeviceDir_003() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        if Directory.Exists tddname then GlbFunc.DeleteDir tddname
-        if File.Exists tddname then File.Delete tddname
-        Directory.CreateDirectory tddname |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            if Directory.Exists tddname then GlbFunc.DeleteDir tddname
+            if File.Exists tddname then File.Delete tddname
+            Directory.CreateDirectory tddname |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1165,30 +1115,27 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.CreateTargetDeviceDir_004() =
-        let vdirname = [|
-            for i = 0 to ( Constants.MAX_TARGET_DEVICE_COUNT - 2 ) do
-                sprintf "%08d" i;
-        |]
-        vdirname
-        |> Array.iter ( fun itr ->
-            let tddname = Functions.AppendPathName dname ( Constants.TARGET_DEVICE_DIR_PREFIX + itr )
-            Directory.CreateDirectory tddname |> ignore
-        )
-
-        let wtdid2 = tdid_me.fromPrim( 11110255u )
-        let wtdid3 = tdid_me.fromPrim( 22220256u )
-        let tddname2 = Functions.AppendPathName dname ( tdid_me.toString wtdid2 )
-        let tddname3 = Functions.AppendPathName dname ( tdid_me.toString wtdid3 )
-
         task {
+            let vdirname = [|
+                for i = 0 to ( Constants.MAX_TARGET_DEVICE_COUNT - 2 ) do
+                    sprintf "%08d" i;
+            |]
+            vdirname
+            |> Array.iter ( fun itr ->
+                let tddname = Functions.AppendPathName dname ( Constants.TARGET_DEVICE_DIR_PREFIX + itr )
+                Directory.CreateDirectory tddname |> ignore
+            )
+
+            let wtdid2 = tdid_me.fromPrim( 11110255u )
+            let wtdid3 = tdid_me.fromPrim( 22220256u )
+            let tddname2 = Functions.AppendPathName dname ( tdid_me.toString wtdid2 )
+            let tddname3 = Functions.AppendPathName dname ( tdid_me.toString wtdid3 )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1240,24 +1187,22 @@ type Controller_Test1 () =
             c1.Close()
             con1.Close()
 
+            vdirname
+            |> Array.iter ( fun itr ->
+                let tddname = Functions.AppendPathName dname ( Constants.TARGET_DEVICE_DIR_PREFIX + itr )
+                GlbFunc.DeleteDir tddname
+            )
+            GlbFunc.DeleteDir tddname2
+            GlbFunc.DeleteDir tddname3
         }
-        |> Functions.RunTaskSynchronously
-
-        vdirname
-        |> Array.iter ( fun itr ->
-            let tddname = Functions.AppendPathName dname ( Constants.TARGET_DEVICE_DIR_PREFIX + itr )
-            GlbFunc.DeleteDir tddname
-        )
-        GlbFunc.DeleteDir tddname2
-        GlbFunc.DeleteDir tddname3
 
     [<Fact>]
     member _.CreateTargetDeviceDir_005() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        File.WriteAllBytes( tddname, Array.empty )
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            File.WriteAllBytes( tddname, Array.empty )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1285,15 +1230,13 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            File.Delete tddname
         }
-        |> Functions.RunTaskSynchronously
-        File.Delete tddname
 
     [<Fact>]
     member _.DeleteTargetDeviceDir_001() =
-        let wtdid = tdid_me.Zero
         task {
+            let wtdid = tdid_me.Zero
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1321,14 +1264,12 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.DeleteTargetDeviceDir_002() =
-        let wtdid = tdid_me.Zero
         task {
+            let wtdid = tdid_me.Zero
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1355,17 +1296,15 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.DeleteTargetDeviceDir_003() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1392,21 +1331,19 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
 
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.DeleteTargetDeviceDir_004() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-        let fname = Functions.AppendPathName tddname "a.txt"
-        File.WriteAllBytes( fname, Array.empty )
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+            let fname = Functions.AppendPathName tddname "a.txt"
+            File.WriteAllBytes( fname, Array.empty )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1434,24 +1371,21 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
+            GlbFunc.DeleteFile fname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteDir tddname
-        GlbFunc.DeleteFile fname
 
     [<Fact>]
     member _.DeleteTargetDeviceDir_005() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-        let subDirName1 = Functions.AppendPathName tddname "d001"
-        Directory.CreateDirectory subDirName1 |> ignore
-        let fname1 = Functions.AppendPathName subDirName1 "a.txt"
-        File.WriteAllBytes( fname1, Array.empty )
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+            let subDirName1 = Functions.AppendPathName tddname "d001"
+            Directory.CreateDirectory subDirName1 |> ignore
+            let fname1 = Functions.AppendPathName subDirName1 "a.txt"
+            File.WriteAllBytes( fname1, Array.empty )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1478,16 +1412,14 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
 
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.GetTargetDeviceConfig_001() =
-        let wtdid = tdid_me.Zero
         task {
+            let wtdid = tdid_me.Zero
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1515,14 +1447,12 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.GetTargetDeviceConfig_002() =
-        let wtdid = tdid_me.Zero
         task {
+            let wtdid = tdid_me.Zero
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1549,17 +1479,15 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.GetTargetDeviceConfig_003() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1586,21 +1514,18 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-        GlbFunc.DeleteDir tddname
-
 
     [<Fact>]
     member _.GetTargetDeviceConfig_004() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        let fname = Functions.AppendPathName tddname Constants.TARGET_DEVICE_CONF_FILE_NAME
-        Directory.CreateDirectory tddname |> ignore
-        Directory.CreateDirectory fname |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            let fname = Functions.AppendPathName tddname Constants.TARGET_DEVICE_CONF_FILE_NAME
+            Directory.CreateDirectory tddname |> ignore
+            Directory.CreateDirectory fname |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1627,22 +1552,20 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.GetTargetDeviceConfig_005() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
-        let fname = Functions.AppendPathName tddname Constants.TARGET_DEVICE_CONF_FILE_NAME
-        let fdata = ( String.replicate 256 "a" ) + "<aaa><bbb>&\"\'&>><<"
-        File.WriteAllText( fname, fdata )
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
+            let fname = Functions.AppendPathName tddname Constants.TARGET_DEVICE_CONF_FILE_NAME
+            let fdata = ( String.replicate 256 "a" ) + "<aaa><bbb>&\"\'&>><<"
+            File.WriteAllText( fname, fdata )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1669,17 +1592,14 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteFile fname
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteFile fname
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.CreateTargetDeviceConfig_001() =
-        let wtdid = tdid_me.Zero
         task {
+            let wtdid = tdid_me.Zero
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1708,17 +1628,14 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.CreateTargetDeviceConfig_002() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        let fname = Functions.AppendPathName tddname Constants.TARGET_DEVICE_CONF_FILE_NAME
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            let fname = Functions.AppendPathName tddname Constants.TARGET_DEVICE_CONF_FILE_NAME
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1748,18 +1665,16 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.CreateTargetDeviceConfig_003() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        let fname = Functions.AppendPathName tddname Constants.TARGET_DEVICE_CONF_FILE_NAME
-        Directory.CreateDirectory tddname |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            let fname = Functions.AppendPathName tddname Constants.TARGET_DEVICE_CONF_FILE_NAME
+            Directory.CreateDirectory tddname |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1791,21 +1706,18 @@ type Controller_Test1 () =
 
             let wroteData = File.ReadAllText fname
             Assert.True(( wroteData = "abcdefg" ))
-
+            GlbFunc.DeleteFile fname
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteFile fname
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.CreateTargetDeviceConfig_004() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        let fname = Functions.AppendPathName tddname Constants.TARGET_DEVICE_CONF_FILE_NAME
-        Directory.CreateDirectory fname |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            let fname = Functions.AppendPathName tddname Constants.TARGET_DEVICE_CONF_FILE_NAME
+            Directory.CreateDirectory fname |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1834,21 +1746,18 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteDir tddname
-
 
     [<Fact>]
     member _.CreateTargetDeviceConfig_005() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        let fname = Functions.AppendPathName tddname Constants.TARGET_DEVICE_CONF_FILE_NAME
-        Directory.CreateDirectory tddname |> ignore
-        File.WriteAllText( fname , "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY" )
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            let fname = Functions.AppendPathName tddname Constants.TARGET_DEVICE_CONF_FILE_NAME
+            Directory.CreateDirectory tddname |> ignore
+            File.WriteAllText( fname , "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY" )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1881,16 +1790,14 @@ type Controller_Test1 () =
             let wroteData = File.ReadAllText fname
             Assert.True(( wroteData = "abcdefg000<abc>aa<bcd>b\'b\"b</bcd>&</abc>" ))
 
+            GlbFunc.DeleteFile fname
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteFile fname
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.GetTargetGroupID_001() =
-        let wtdid = tdid_me.Zero
         task {
+            let wtdid = tdid_me.Zero
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1918,14 +1825,12 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.GetTargetGroupID_002() =
-        let wtdid = tdid_me.Zero
         task {
+            let wtdid = tdid_me.Zero
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1951,18 +1856,15 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
-
 
     [<Fact>]
     member _.GetTargetGroupID_003() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1989,28 +1891,26 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.GetTargetGroupID_004() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
-        let vtgid =
-            [
-                for i = 1 to Constants.MAX_TARGET_GROUP_COUNT_IN_TD do
-                    yield GlbFunc.newTargetGroupID()
-            ]
-            |> List.sort
-
-        for itr in vtgid do
-            let fname = Functions.AppendPathName tddname ( tgid_me.toString itr )
-            File.WriteAllText( fname, "" )
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
+            let vtgid =
+                [
+                    for i = 1 to Constants.MAX_TARGET_GROUP_COUNT_IN_TD do
+                        yield GlbFunc.newTargetGroupID()
+                ]
+                |> List.sort
+
+            for itr in vtgid do
+                let fname = Functions.AppendPathName tddname ( tgid_me.toString itr )
+                File.WriteAllText( fname, "" )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2037,29 +1937,27 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.GetTargetGroupID_005() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
-        let vtgid =
-            [
-                for i = 1 to Constants.MAX_TARGET_GROUP_COUNT_IN_TD + 1 do
-                    yield GlbFunc.newTargetGroupID()
-            ]
-            |> List.sort
-
-        for itr in vtgid do
-            let fname = Functions.AppendPathName tddname ( tgid_me.toString itr )
-            File.WriteAllText( fname, "" )
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
+            let vtgid =
+                [
+                    for i = 1 to Constants.MAX_TARGET_GROUP_COUNT_IN_TD + 1 do
+                        yield GlbFunc.newTargetGroupID()
+                ]
+                |> List.sort
+
+            for itr in vtgid do
+                let fname = Functions.AppendPathName tddname ( tgid_me.toString itr )
+                File.WriteAllText( fname, "" )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2087,30 +1985,28 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.GetTargetGroupID_006() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
-        let wtgid1 = tgid_me.fromPrim( 11111111u )
-        let wtgid2 = tgid_me.fromPrim( 22222222u )
-
-        let fname1 = Functions.AppendPathName tddname ( tgid_me.toString wtgid1 )
-        Directory.CreateDirectory fname1 |> ignore
-
-        let fname2 = Functions.AppendPathName tddname ( tgid_me.toString wtgid2 )
-        File.WriteAllText( fname2, "" )
-
-        let fname3 = Functions.AppendPathName tddname "aaaaaaaa.txt"
-        File.WriteAllText( fname3, "" )
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
+            let wtgid1 = tgid_me.fromPrim( 11111111u )
+            let wtgid2 = tgid_me.fromPrim( 22222222u )
+
+            let fname1 = Functions.AppendPathName tddname ( tgid_me.toString wtgid1 )
+            Directory.CreateDirectory fname1 |> ignore
+
+            let fname2 = Functions.AppendPathName tddname ( tgid_me.toString wtgid2 )
+            File.WriteAllText( fname2, "" )
+
+            let fname3 = Functions.AppendPathName tddname "aaaaaaaa.txt"
+            File.WriteAllText( fname3, "" )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2137,16 +2033,15 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.GetTargetGroupConfig_001() =
-        let wtdid = tdid_me.Zero
-        let wtgid = tgid_me.fromPrim( 11111111u )
         task {
+            let wtdid = tdid_me.Zero
+            let wtgid = tgid_me.fromPrim( 11111111u )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2176,15 +2071,14 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.GetTargetGroupConfig_002() =
-        let wtdid = tdid_me.Zero
-        let wtgid = tgid_me.fromPrim( 11111111u )
         task {
+            let wtdid = tdid_me.Zero
+            let wtgid = tgid_me.fromPrim( 11111111u )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2213,18 +2107,16 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.GetTargetGroupConfig_003() =
-        let wtdid = tdid_me.Zero
-        let wtgid = tgid_me.fromPrim( 11111111u )
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let wtgid = tgid_me.fromPrim( 11111111u )
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2253,23 +2145,21 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.GetTargetGroupConfig_004() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
-        let wtgid = tgid_me.fromPrim( 11111111u )
-        let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
-        let fdata = ( String.replicate 256 "a" ) + "<aaa><bbb>&\"\'&>><<"
-        File.WriteAllText( fname, fdata )
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
+            let wtgid = tgid_me.fromPrim( 11111111u )
+            let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
+            let fdata = ( String.replicate 256 "a" ) + "<aaa><bbb>&\"\'&>><<"
+            File.WriteAllText( fname, fdata )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2297,24 +2187,21 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteFile fname
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteFile fname
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.GetTargetGroupConfig_005() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
-        let wtgid = tgid_me.fromPrim( 11111111u )
-        let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
-        Directory.CreateDirectory fname |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
+            let wtgid = tgid_me.fromPrim( 11111111u )
+            let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
+            Directory.CreateDirectory fname |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2343,16 +2230,13 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.GetAllTargetGroupConfig_001() =
-        let wtdid = tdid_me.Zero
         task {
+            let wtdid = tdid_me.Zero
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2380,14 +2264,12 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.GetAllTargetGroupConfig_002() =
-        let wtdid = tdid_me.Zero
         task {
+            let wtdid = tdid_me.Zero
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2414,17 +2296,15 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.GetAllTargetGroupConfig_003() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2451,23 +2331,21 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.GetAllTargetGroupConfig_004() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
-        let wtgid = tgid_me.fromPrim( 11111111u )
-        let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
-        let fdata = ( String.replicate 256 "a" ) + "<aaa><bbb>&\"\'&>><<"
-        File.WriteAllText( fname, fdata )
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
+            let wtgid = tgid_me.fromPrim( 11111111u )
+            let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
+            let fdata = ( String.replicate 256 "a" ) + "<aaa><bbb>&\"\'&>><<"
+            File.WriteAllText( fname, fdata )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2495,35 +2373,33 @@ type Controller_Test1 () =
             c1.Close()
             con1.Close()
 
+            GlbFunc.DeleteFile fname
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteFile fname
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.GetAllTargetGroupConfig_005() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
-        let vtgid =
-            [
-                for i = 1 to Constants.MAX_TARGET_GROUP_COUNT_IN_TD do
-                    yield GlbFunc.newTargetGroupID()
-            ]
-            |> List.sort
-        let tgconfdata =
-            [
-                for i = 1 to Constants.MAX_TARGET_GROUP_COUNT_IN_TD do
-                    yield sprintf "AAAAA %d BBBBB" i
-            ]
-
-        for i = 0 to Constants.MAX_TARGET_GROUP_COUNT_IN_TD - 1 do
-            let fname = Functions.AppendPathName tddname ( tgid_me.toString vtgid.[i] )
-            File.WriteAllText( fname, tgconfdata.[i] )
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
+            let vtgid =
+                [
+                    for i = 1 to Constants.MAX_TARGET_GROUP_COUNT_IN_TD do
+                        yield GlbFunc.newTargetGroupID()
+                ]
+                |> List.sort
+            let tgconfdata =
+                [
+                    for i = 1 to Constants.MAX_TARGET_GROUP_COUNT_IN_TD do
+                        yield sprintf "AAAAA %d BBBBB" i
+                ]
+
+            for i = 0 to Constants.MAX_TARGET_GROUP_COUNT_IN_TD - 1 do
+                let fname = Functions.AppendPathName tddname ( tgid_me.toString vtgid.[i] )
+                File.WriteAllText( fname, tgconfdata.[i] )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2552,35 +2428,32 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.GetAllTargetGroupConfig_006() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
-        let vtgid =
-            [
-                for i = 1 to Constants.MAX_TARGET_GROUP_COUNT_IN_TD + 1 do
-                    yield GlbFunc.newTargetGroupID()
-            ]
-            |> List.sort
-        let tgconfdata =
-            [
-                for i = 1 to Constants.MAX_TARGET_GROUP_COUNT_IN_TD + 1 do
-                    yield sprintf "AAAAA %d BBBBB" i
-            ]
-
-        for i = 0 to Constants.MAX_TARGET_GROUP_COUNT_IN_TD do
-            let fname = Functions.AppendPathName tddname ( tgid_me.toString vtgid.[i] )
-            File.WriteAllText( fname, tgconfdata.[i] )
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
+            let vtgid =
+                [
+                    for i = 1 to Constants.MAX_TARGET_GROUP_COUNT_IN_TD + 1 do
+                        yield GlbFunc.newTargetGroupID()
+                ]
+                |> List.sort
+            let tgconfdata =
+                [
+                    for i = 1 to Constants.MAX_TARGET_GROUP_COUNT_IN_TD + 1 do
+                        yield sprintf "AAAAA %d BBBBB" i
+                ]
+
+            for i = 0 to Constants.MAX_TARGET_GROUP_COUNT_IN_TD do
+                let fname = Functions.AppendPathName tddname ( tgid_me.toString vtgid.[i] )
+                File.WriteAllText( fname, tgconfdata.[i] )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2609,32 +2482,28 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteDir tddname
-
 
     [<Fact>]
     member _.GetAllTargetGroupConfig_007() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
-        let wtgid1 = tgid_me.fromPrim( 11111111u )
-        let wtgid2 = tgid_me.fromPrim( 22222222u )
-
-        let fname1 = Functions.AppendPathName tddname ( tgid_me.toString wtgid1 )
-        Directory.CreateDirectory fname1 |> ignore
-
-        let fname2 = Functions.AppendPathName tddname ( tgid_me.toString wtgid2 )
-        File.WriteAllText( fname2, "aaaa" )
-
-        let fname3 = Functions.AppendPathName tddname "aaaaaaaa.txt"
-        File.WriteAllText( fname3, "bbbb" )
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
+            let wtgid1 = tgid_me.fromPrim( 11111111u )
+            let wtgid2 = tgid_me.fromPrim( 22222222u )
+
+            let fname1 = Functions.AppendPathName tddname ( tgid_me.toString wtgid1 )
+            Directory.CreateDirectory fname1 |> ignore
+
+            let fname2 = Functions.AppendPathName tddname ( tgid_me.toString wtgid2 )
+            File.WriteAllText( fname2, "aaaa" )
+
+            let fname3 = Functions.AppendPathName tddname "aaaaaaaa.txt"
+            File.WriteAllText( fname3, "bbbb" )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2662,17 +2531,15 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.CreateTargetGroupConfig_001() =
-        let wtdid = tdid_me.Zero
-        let wtgid = tgid_me.fromPrim( 11111111u )
         task {
+            let wtdid = tdid_me.Zero
+            let wtgid = tgid_me.fromPrim( 11111111u )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2703,18 +2570,16 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.CreateTargetGroupConfig_002() =
-        let wtdid = tdid_me.Zero
-        let wtgid = tgid_me.fromPrim( 11111111u )
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
-
         task {
+            let wtdid = tdid_me.Zero
+            let wtgid = tgid_me.fromPrim( 11111111u )
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2746,19 +2611,17 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.CreateTargetGroupConfig_003() =
-        let wtdid = tdid_me.Zero
-        let wtgid = tgid_me.fromPrim( 11111111u )
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
-        Directory.CreateDirectory tddname |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let wtgid = tgid_me.fromPrim( 11111111u )
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
+            Directory.CreateDirectory tddname |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2793,21 +2656,19 @@ type Controller_Test1 () =
             let wroteData = File.ReadAllText fname
             Assert.True(( wroteData = "abcdefg" ))
 
+            GlbFunc.DeleteFile fname
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteFile fname
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.CreateTargetGroupConfig_004() =
-        let wtdid = tdid_me.Zero
-        let wtgid = tgid_me.fromPrim( 11111111u )
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
-        Directory.CreateDirectory fname |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let wtgid = tgid_me.fromPrim( 11111111u )
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
+            Directory.CreateDirectory fname |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2838,21 +2699,19 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.CreateTargetGroupConfig_005() =
-        let wtdid = tdid_me.Zero
-        let wtgid = tgid_me.fromPrim( 11111111u )
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
-        Directory.CreateDirectory tddname |> ignore
-        File.WriteAllText( fname , "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" )
-
         task {
+            let wtdid = tdid_me.Zero
+            let wtgid = tgid_me.fromPrim( 11111111u )
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
+            Directory.CreateDirectory tddname |> ignore
+            File.WriteAllText( fname , "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2887,31 +2746,29 @@ type Controller_Test1 () =
             let wroteData = File.ReadAllText fname
             Assert.True(( wroteData = "abcdefg000<abc>aa<bcd>b\'b\"b</bcd>&</abc>" ))
 
+            GlbFunc.DeleteFile fname
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteFile fname
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.CreateTargetGroupConfig_006() =
-        let wtdid = tdid_me.Zero
-        let wtgid1 = tgid_me.fromPrim( 11111111u )
-        let wtgid2 = tgid_me.fromPrim( 22222222u )
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
-        let vfname = [|
-            for i = 0 to ( Constants.MAX_TARGET_GROUP_COUNT_IN_TD - 2 ) do
-                tgid_me.fromPrim( uint32 i );
-        |]
-        vfname
-        |> Array.iter ( fun itr ->
-            let tgfname = Functions.AppendPathName tddname ( tgid_me.toString itr )
-            File.WriteAllText( tgfname , "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" )
-        )
-
         task {
+            let wtdid = tdid_me.Zero
+            let wtgid1 = tgid_me.fromPrim( 11111111u )
+            let wtgid2 = tgid_me.fromPrim( 22222222u )
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
+            let vfname = [|
+                for i = 0 to ( Constants.MAX_TARGET_GROUP_COUNT_IN_TD - 2 ) do
+                    tgid_me.fromPrim( uint32 i );
+            |]
+            vfname
+            |> Array.iter ( fun itr ->
+                let tgfname = Functions.AppendPathName tddname ( tgid_me.toString itr )
+                File.WriteAllText( tgfname , "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" )
+            )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2975,16 +2832,15 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.DeleteTargetGroupConfig_001() =
-        let wtdid = tdid_me.Zero
-        let wtgid = tgid_me.fromPrim( 11111111u )
         task {
+            let wtdid = tdid_me.Zero
+            let wtgid = tgid_me.fromPrim( 11111111u )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3015,13 +2871,13 @@ type Controller_Test1 () =
             c1.Close()
             con1.Close()
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.DeleteTargetGroupConfig_002() =
-        let wtdid = tdid_me.Zero
-        let wtgid = tgid_me.fromPrim( 11111111u )
         task {
+            let wtdid = tdid_me.Zero
+            let wtgid = tgid_me.fromPrim( 11111111u )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3049,18 +2905,16 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.DeleteTargetGroupConfig_003() =
-        let wtdid = tdid_me.Zero
-        let wtgid = tgid_me.fromPrim( 11111111u )
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let wtgid = tgid_me.fromPrim( 11111111u )
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3088,23 +2942,20 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.DeleteTargetGroupConfig_004() =
-        let wtdid = tdid_me.Zero
-        let wtgid = tgid_me.fromPrim( 11111111u )
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
-        let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
-        File.WriteAllText( fname , "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" )
-
         task {
+            let wtdid = tdid_me.Zero
+            let wtgid = tgid_me.fromPrim( 11111111u )
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
+            let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
+            File.WriteAllText( fname , "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3134,24 +2985,21 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteFile fname
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteFile fname
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.DeleteTargetGroupConfig_005() =
-        let wtdid = tdid_me.Zero
-        let wtgid = tgid_me.fromPrim( 11111111u )
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
-        let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
-        Directory.CreateDirectory fname |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let wtgid = tgid_me.fromPrim( 11111111u )
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
+            let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
+            Directory.CreateDirectory fname |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3181,16 +3029,15 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
+            GlbFunc.DeleteDir fname
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteDir fname
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.GetLUWorkDir_001() =
-        let wtdid = tdid_me.Zero
         task {
+            let wtdid = tdid_me.Zero
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3218,14 +3065,12 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.GetLUWorkDir_002() =
-        let wtdid = tdid_me.Zero
         task {
+            let wtdid = tdid_me.Zero
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3252,17 +3097,15 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.GetLUWorkDir_003() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        File.WriteAllBytes( tddname, [| 0uy |] )
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            File.WriteAllBytes( tddname, [| 0uy |] )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3289,19 +3132,16 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteFile tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteFile tddname
 
     [<Fact>]
     member _.GetLUWorkDir_004() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3328,27 +3168,24 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.GetLUWorkDir_005() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
-        let v = [|
-            ( lun_me.WorkDirName ( 0UL |> lun_me.fromPrim ) )
-            ( 0UL |> lun_me.fromPrim |> lun_me.toString )
-            ( Constants.LU_WORK_DIR_PREFIX + "aaaaa" )
-        |]
-        for itr in v do
-            File.WriteAllBytes( Functions.AppendPathName tddname itr, [| 0uy |] )
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
+            let v = [|
+                ( lun_me.WorkDirName ( 0UL |> lun_me.fromPrim ) )
+                ( 0UL |> lun_me.fromPrim |> lun_me.toString )
+                ( Constants.LU_WORK_DIR_PREFIX + "aaaaa" )
+            |]
+            for itr in v do
+                File.WriteAllBytes( Functions.AppendPathName tddname itr, [| 0uy |] )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3375,30 +3212,27 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.GetLUWorkDir_006() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
-        let v = [|
-            ( lun_me.WorkDirName ( 0UL |> lun_me.fromPrim ) )
-            ( 0UL |> lun_me.fromPrim |> lun_me.toString )
-            ( Constants.LU_WORK_DIR_PREFIX + "aaaaa" )
-        |]
-        for itr in v do
-            itr
-            |> Functions.AppendPathName tddname
-            |> Directory.CreateDirectory
-            |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
+            let v = [|
+                ( lun_me.WorkDirName ( 0UL |> lun_me.fromPrim ) )
+                ( 0UL |> lun_me.fromPrim |> lun_me.toString )
+                ( Constants.LU_WORK_DIR_PREFIX + "aaaaa" )
+            |]
+            for itr in v do
+                itr
+                |> Functions.AppendPathName tddname
+                |> Directory.CreateDirectory
+                |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3426,23 +3260,21 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.GetLUWorkDir_007() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        Directory.CreateDirectory tddname |> ignore
-
-        for i = 0 to Constants.MAX_LOGICALUNIT_COUNT_IN_TD - 1 do
-            let luwdirname1 = ( lun_me.WorkDirName ( i |> uint64 |> lun_me.fromPrim ) )
-            let luwdirname2 = Functions.AppendPathName tddname luwdirname1
-            Directory.CreateDirectory luwdirname2 |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            Directory.CreateDirectory tddname |> ignore
+
+            for i = 0 to Constants.MAX_LOGICALUNIT_COUNT_IN_TD - 1 do
+                let luwdirname1 = ( lun_me.WorkDirName ( i |> uint64 |> lun_me.fromPrim ) )
+                let luwdirname2 = Functions.AppendPathName tddname luwdirname1
+                Directory.CreateDirectory luwdirname2 |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3477,14 +3309,13 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.CreateLUWorkDir_001() =
-        let wtdid = tdid_me.Zero
         task {
+            let wtdid = tdid_me.Zero
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3514,17 +3345,15 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.CreateLUWorkDir_002() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        if Directory.Exists tddname then GlbFunc.DeleteDir tddname
+       task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            if Directory.Exists tddname then GlbFunc.DeleteDir tddname
 
-        task {
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3554,19 +3383,17 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.CreateLUWorkDir_003() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        let ludname = Functions.AppendPathName tddname ( lun_me.WorkDirName lun_me.zero )
-        if Directory.Exists tddname then GlbFunc.DeleteDir tddname
-        File.WriteAllLines( tddname, [| "a" |] )
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            let ludname = Functions.AppendPathName tddname ( lun_me.WorkDirName lun_me.zero )
+            if Directory.Exists tddname then GlbFunc.DeleteDir tddname
+            File.WriteAllLines( tddname, [| "a" |] )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3596,22 +3423,19 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteFile tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteFile tddname
 
     [<Fact>]
     member _.CreateLUWorkDir_004() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        let ludname = Functions.AppendPathName tddname ( lun_me.WorkDirName lun_me.zero )
-        if Directory.Exists tddname then GlbFunc.DeleteDir tddname
-        Directory.CreateDirectory tddname |> ignore
-        File.WriteAllLines( ludname, [| "a" |] )
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            let ludname = Functions.AppendPathName tddname ( lun_me.WorkDirName lun_me.zero )
+            if Directory.Exists tddname then GlbFunc.DeleteDir tddname
+            Directory.CreateDirectory tddname |> ignore
+            File.WriteAllLines( ludname, [| "a" |] )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3642,21 +3466,18 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.CreateLUWorkDir_005() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        let ludname = Functions.AppendPathName tddname ( lun_me.WorkDirName lun_me.zero )
-        if Directory.Exists tddname then GlbFunc.DeleteDir tddname
-        Directory.CreateDirectory tddname |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            let ludname = Functions.AppendPathName tddname ( lun_me.WorkDirName lun_me.zero )
+            if Directory.Exists tddname then GlbFunc.DeleteDir tddname
+            Directory.CreateDirectory tddname |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3686,22 +3507,19 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.CreateLUWorkDir_006() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        let ludname = Functions.AppendPathName tddname ( lun_me.WorkDirName lun_me.zero )
-        if Directory.Exists tddname then GlbFunc.DeleteDir tddname
-        Directory.CreateDirectory tddname |> ignore
-        Directory.CreateDirectory ludname |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            let ludname = Functions.AppendPathName tddname ( lun_me.WorkDirName lun_me.zero )
+            if Directory.Exists tddname then GlbFunc.DeleteDir tddname
+            Directory.CreateDirectory tddname |> ignore
+            Directory.CreateDirectory ludname |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3731,25 +3549,22 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.CreateLUWorkDir_007() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        if Directory.Exists tddname then GlbFunc.DeleteDir tddname
-        Directory.CreateDirectory tddname |> ignore
-
-        for i = 0 to Constants.MAX_LOGICALUNIT_COUNT_IN_TD - 2 do
-            let luwdirname1 = lun_me.WorkDirName( i |> uint64 |> lun_me.fromPrim )
-            let luwdirname2 = Functions.AppendPathName tddname luwdirname1
-            Directory.CreateDirectory luwdirname2 |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            if Directory.Exists tddname then GlbFunc.DeleteDir tddname
+            Directory.CreateDirectory tddname |> ignore
+
+            for i = 0 to Constants.MAX_LOGICALUNIT_COUNT_IN_TD - 2 do
+                let luwdirname1 = lun_me.WorkDirName( i |> uint64 |> lun_me.fromPrim )
+                let luwdirname2 = Functions.AppendPathName tddname luwdirname1
+                Directory.CreateDirectory luwdirname2 |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3810,16 +3625,13 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.DeleteLUWorkDir_001() =
-        let wtdid = tdid_me.Zero
         task {
+            let wtdid = tdid_me.Zero
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3849,14 +3661,12 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.DeleteLUWorkDir_002() =
-        let wtdid = tdid_me.Zero
         task {
+            let wtdid = tdid_me.Zero
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3885,20 +3695,18 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.DeleteLUWorkDir_003() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        let ludname = Functions.AppendPathName tddname ( lun_me.WorkDirName lun_me.zero )
-        if Directory.Exists ludname then GlbFunc.DeleteDir ludname
-        if Directory.Exists tddname then GlbFunc.DeleteDir tddname
-        File.WriteAllLines( tddname, [| "a" |] )
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            let ludname = Functions.AppendPathName tddname ( lun_me.WorkDirName lun_me.zero )
+            if Directory.Exists ludname then GlbFunc.DeleteDir ludname
+            if Directory.Exists tddname then GlbFunc.DeleteDir tddname
+            File.WriteAllLines( tddname, [| "a" |] )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3927,22 +3735,20 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteFile tddname
         }
-        |> Functions.RunTaskSynchronously
-        GlbFunc.DeleteFile tddname
 
     [<Fact>]
     member _.DeleteLUWorkDir_004() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        let ludname = Functions.AppendPathName tddname ( lun_me.WorkDirName lun_me.zero )
-        if Directory.Exists ludname then GlbFunc.DeleteDir ludname
-        if Directory.Exists tddname then GlbFunc.DeleteDir tddname
-        Directory.CreateDirectory tddname |> ignore
-        File.WriteAllLines( ludname, [| "a" |] )
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            let ludname = Functions.AppendPathName tddname ( lun_me.WorkDirName lun_me.zero )
+            if Directory.Exists ludname then GlbFunc.DeleteDir ludname
+            if Directory.Exists tddname then GlbFunc.DeleteDir tddname
+            Directory.CreateDirectory tddname |> ignore
+            File.WriteAllLines( ludname, [| "a" |] )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -3971,21 +3777,19 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.DeleteLUWorkDir_005() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        let ludname = Functions.AppendPathName tddname ( lun_me.WorkDirName lun_me.zero )
-        if Directory.Exists ludname then GlbFunc.DeleteDir ludname
-        if Directory.Exists tddname then GlbFunc.DeleteDir tddname
-        Directory.CreateDirectory tddname |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            let ludname = Functions.AppendPathName tddname ( lun_me.WorkDirName lun_me.zero )
+            if Directory.Exists ludname then GlbFunc.DeleteDir ludname
+            if Directory.Exists tddname then GlbFunc.DeleteDir tddname
+            Directory.CreateDirectory tddname |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -4015,22 +3819,20 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.DeleteLUWorkDir_006() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        let ludname = Functions.AppendPathName tddname ( lun_me.WorkDirName lun_me.zero )
-        if Directory.Exists ludname then GlbFunc.DeleteDir ludname
-        if Directory.Exists tddname then GlbFunc.DeleteDir tddname
-        Directory.CreateDirectory tddname |> ignore
-        Directory.CreateDirectory ludname |> ignore
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            let ludname = Functions.AppendPathName tddname ( lun_me.WorkDirName lun_me.zero )
+            if Directory.Exists ludname then GlbFunc.DeleteDir ludname
+            if Directory.Exists tddname then GlbFunc.DeleteDir tddname
+            Directory.CreateDirectory tddname |> ignore
+            Directory.CreateDirectory ludname |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -4060,29 +3862,27 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-        GlbFunc.DeleteDir tddname
 
     [<Fact>]
     member _.DeleteLUWorkDir_007() =
-        let wtdid = tdid_me.Zero
-        let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
-        let ludname = Functions.AppendPathName tddname ( lun_me.WorkDirName lun_me.zero )
-        if Directory.Exists ludname then GlbFunc.DeleteDir ludname
-        if Directory.Exists tddname then GlbFunc.DeleteDir tddname
-        Directory.CreateDirectory tddname |> ignore
-        Directory.CreateDirectory ludname |> ignore
-        let fname1 = Functions.AppendPathName ludname "a.txt"
-        let subdname = Functions.AppendPathName ludname "d001"
-        let fname2 = Functions.AppendPathName subdname "b.txt"
-
-        Directory.CreateDirectory subdname |> ignore
-        File.WriteAllText( fname1, "a" )
-        File.WriteAllText( fname2, "a" )
-
         task {
+            let wtdid = tdid_me.Zero
+            let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
+            let ludname = Functions.AppendPathName tddname ( lun_me.WorkDirName lun_me.zero )
+            if Directory.Exists ludname then GlbFunc.DeleteDir ludname
+            if Directory.Exists tddname then GlbFunc.DeleteDir tddname
+            Directory.CreateDirectory tddname |> ignore
+            Directory.CreateDirectory ludname |> ignore
+            let fname1 = Functions.AppendPathName ludname "a.txt"
+            let subdname = Functions.AppendPathName ludname "d001"
+            let fname2 = Functions.AppendPathName subdname "b.txt"
+
+            Directory.CreateDirectory subdname |> ignore
+            File.WriteAllText( fname1, "a" )
+            File.WriteAllText( fname2, "a" )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -4112,7 +3912,5 @@ type Controller_Test1 () =
 
             c1.Close()
             con1.Close()
-
+            GlbFunc.DeleteDir tddname
         }
-        |> Functions.RunTaskSynchronously
-        GlbFunc.DeleteDir tddname

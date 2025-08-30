@@ -27,8 +27,6 @@ type ConfNode_DebugMedia_Test() =
         with
         | :? ConfigurationError ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
         
         Assert.True(( ( n :> IMediaNode ).IdentNumber = mediaidx_me.fromPrim 1u ))
 
@@ -51,8 +49,6 @@ type ConfNode_DebugMedia_Test() =
         with
         | :? ConfigurationError ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
         
     [<Fact>]
     member _.Constractor_003() =
@@ -70,8 +66,6 @@ type ConfNode_DebugMedia_Test() =
         with
         | :? ConfigurationError ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.Constractor_004() =

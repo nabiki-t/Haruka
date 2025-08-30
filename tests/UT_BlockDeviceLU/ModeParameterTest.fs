@@ -45,7 +45,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Select6_002() =
@@ -57,7 +56,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Select6_003() =
@@ -69,7 +67,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Select6_004() =
@@ -81,7 +78,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Select6_004_1() =
@@ -93,7 +89,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Select6_005() =
@@ -105,7 +100,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Select6_006() =
@@ -117,7 +111,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Select6_007() =
@@ -129,7 +122,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Select6_008() =
@@ -170,7 +162,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Select6_011() =
@@ -310,7 +301,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.ReadCacheModePageByteData_002() =
@@ -331,7 +321,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.ReadCacheModePageByteData_003() =
@@ -352,7 +341,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.ReadCacheModePageByteData_004() =
@@ -389,7 +377,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.ReadControlModePageByteData_001() =
@@ -408,7 +395,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.ReadControlModePageByteData_002() =
@@ -427,7 +413,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.ReadControlModePageByteData_003() =
@@ -466,7 +451,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-        | _ -> Assert.Fail __LINE__
 
         Assert.True( mp.D_SENSE )
         Assert.False( mp.SWP )
@@ -506,7 +490,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.ReadInformationalExceptionsControlModePageByteData_002() =
@@ -525,7 +508,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.ReadInformationalExceptionsControlModePageByteData_003() =
@@ -558,7 +540,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Select10_001() =
@@ -569,7 +550,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Select10_002() =
@@ -581,7 +561,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Select10_003() =
@@ -593,7 +572,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Select10_004() =
@@ -605,7 +583,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Select10_004_1() =
@@ -617,7 +594,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Select10_005() =
@@ -629,7 +605,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Select10_006() =
@@ -641,7 +616,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Select10_007() =
@@ -653,7 +627,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Select10_008() =
@@ -672,7 +645,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Select10_009() =
@@ -693,7 +665,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Select10_010() =
@@ -754,7 +725,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Select10_014() =
@@ -1479,7 +1449,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Sense6_026() =
@@ -1490,7 +1459,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Sense6_027() =
@@ -1501,7 +1469,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Sense10_001() =
@@ -2554,7 +2521,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Sense10_042() =
@@ -2565,7 +2531,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Sense10_043() =
@@ -2576,7 +2541,6 @@ type ModeParameter_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Update_6_001() =

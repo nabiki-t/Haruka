@@ -281,8 +281,6 @@ type PRManager_Test3 () =
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INSUFFICIENT_REGISTRATION_RESOURCES ))
-        | _ ->
-            Assert.Fail __LINE__
 
         GlbFunc.DeleteFile fname
         k.NoticeTerminate()
@@ -342,8 +340,6 @@ type PRManager_Test3 () =
             Assert.True(( x.Status = ScsiCmdStatCd.CHECK_CONDITION ))
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
-        | _ ->
-            Assert.Fail __LINE__
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
         Assert.True(( prinfo.m_Type = WRITE_EXCLUSIVE_REGISTRANTS_ONLY ))
@@ -839,8 +835,6 @@ type PRManager_Test3 () =
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
-        | _ ->
-            Assert.Fail __LINE__
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
         Assert.True(( prinfo.m_Type = PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY ))
@@ -992,8 +986,6 @@ type PRManager_Test3 () =
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
-        | _ ->
-            Assert.Fail __LINE__
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
         Assert.True(( prinfo.m_Type = PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY ))
@@ -1130,8 +1122,6 @@ type PRManager_Test3 () =
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
-        | _ ->
-            Assert.Fail __LINE__
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
         Assert.True(( prinfo.m_Type = PR_TYPE.NO_RESERVATION ))
@@ -1185,8 +1175,6 @@ type PRManager_Test3 () =
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
-        | _ ->
-            Assert.Fail __LINE__
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
         Assert.True(( prinfo.m_Type = PR_TYPE.NO_RESERVATION ))
@@ -1483,8 +1471,6 @@ type PRManager_Test3 () =
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
-        | _ ->
-            Assert.Fail __LINE__
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
         Assert.True(( prinfo.m_Type = PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY ))
@@ -1548,8 +1534,6 @@ type PRManager_Test3 () =
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-        | _ ->
-            Assert.Fail __LINE__
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
         Assert.True(( prinfo.m_Type = PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY ))
@@ -1612,8 +1596,6 @@ type PRManager_Test3 () =
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-        | _ ->
-            Assert.Fail __LINE__
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
         Assert.True(( prinfo.m_Type = PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY ))
@@ -1676,8 +1658,6 @@ type PRManager_Test3 () =
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-        | _ ->
-            Assert.Fail __LINE__
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
         Assert.True(( prinfo.m_Type = PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY ))
@@ -1989,8 +1969,6 @@ type PRManager_Test3 () =
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INSUFFICIENT_REGISTRATION_RESOURCES ))
-        | _ ->
-            Assert.Fail __LINE__
 
         GlbFunc.DeleteFile fname
         k.NoticeTerminate()
@@ -2735,8 +2713,6 @@ type PRManager_Test3 () =
             Assert.True(( x.Status = ScsiCmdStatCd.CHECK_CONDITION ))
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INVALID_RELEASE_OF_PERSISTENT_RESERVATION ))
-        | _ ->
-            Assert.Fail __LINE__
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
         Assert.True(( prinfo.m_Type = PR_TYPE.EXCLUSIVE_ACCESS ))
@@ -2901,8 +2877,6 @@ type PRManager_Test3 () =
             Assert.True(( x.Status = ScsiCmdStatCd.CHECK_CONDITION ))
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INVALID_RELEASE_OF_PERSISTENT_RESERVATION ))
-        | _ ->
-            Assert.Fail __LINE__
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
         Assert.True(( prinfo.m_Type = PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS ))

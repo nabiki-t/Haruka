@@ -259,8 +259,6 @@ type IscsiTaskOnePDUCommand_Test () =
         with
         | :? InternalAssertionException as x ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.GetExecuteTask_001() =
@@ -290,8 +288,6 @@ type IscsiTaskOnePDUCommand_Test () =
         with
         | :? InternalAssertionException as x ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.GetExecuteTask_003_NopOut_002() =
@@ -340,8 +336,6 @@ type IscsiTaskOnePDUCommand_Test () =
         with
         | :? SessionRecoveryException as x ->
             ()
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.GetExecuteTask_005_NopOut_004() =

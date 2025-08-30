@@ -3019,8 +3019,6 @@ type BlockDeviceLU_Test () =
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member this.CheckOverlappedTask_003() =
@@ -3303,8 +3301,6 @@ type BlockDeviceLU_Test () =
             Assert.True(( x.Status = ScsiCmdStatCd.CHECK_CONDITION ))
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INVALID_MESSAGE_ERROR ))
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member this.AddNewScsiTaskToQueue_008() =
@@ -3362,8 +3358,6 @@ type BlockDeviceLU_Test () =
             Assert.True(( x.Status = ScsiCmdStatCd.CHECK_CONDITION ))
             Assert.True(( x.SenseKey = SenseKeyCd.ABORTED_COMMAND ))
             Assert.True(( x.ASC = ASCCd.OVERLAPPED_COMMANDS_ATTEMPTED ))
-        | _ as x ->
-            Assert.Fail ( __LINE__ + ":" + x.Message )
 
     [<Fact>]
     member this.EstablishNewACAStatus_001() =

@@ -110,8 +110,6 @@ type PDU_Test () =
             Assert.Fail __LINE__
         | :? ConnectionErrorException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "Connection closed."  ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSICommandPDU_003() =
@@ -142,8 +140,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "Invalid TotalAHSLength" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSICommandPDU_004() =
@@ -175,8 +171,6 @@ type PDU_Test () =
         with
         | :? ConnectionErrorException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "Connection closed" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
                
     [<Fact>]
     member _.SCSICommandPDU_005() =
@@ -212,8 +206,6 @@ type PDU_Test () =
         with
         | :? ConnectionErrorException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "Connection closed" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSICommandPDU_006() =
@@ -249,8 +241,6 @@ type PDU_Test () =
         with
         | :? ConnectionErrorException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "Header digest error" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSICommandPDU_007() =
@@ -288,8 +278,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "Invalid AHSType" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSICommandPDU_008() =
@@ -327,9 +315,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "AHSLength(" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
-
 
     [<Fact>]
     member _.SCSICommandPDU_009() =
@@ -365,8 +350,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In extended CDB AHS, AHSLength(" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSICommandPDU_010() =
@@ -404,8 +387,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Expected Bidirectional Read Data Length AHS, AHSLength" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSICommandPDU_011() =
@@ -446,8 +427,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "Data segment length(8) over MaxRecvDataSegmentLength(7). " ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSICommandPDU_012() =
@@ -486,8 +465,6 @@ type PDU_Test () =
         with
         | :? ConnectionErrorException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "Connection closed" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSICommandPDU_013() =
@@ -527,8 +504,6 @@ type PDU_Test () =
         with
         | :? ConnectionErrorException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "Connection closed" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSICommandPDU_014() =
@@ -569,8 +544,6 @@ type PDU_Test () =
         with
         | :? ConnectionErrorException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "Connection closed" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSICommandPDU_015() =
@@ -611,8 +584,6 @@ type PDU_Test () =
         with
         | :? RejectPDUException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "Data digest error" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSICommandPDU_016() =
@@ -653,8 +624,6 @@ type PDU_Test () =
         with
         | :? DiscardPDUException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "Data digest error. Received PDU is discarded." ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSICommandPDU_017() =
@@ -696,8 +665,6 @@ type PDU_Test () =
         with
         | :? RejectPDUException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "Invalid Opcode(0x3F). iSCSI target node" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSICommandPDU_018() =
@@ -739,8 +706,6 @@ type PDU_Test () =
         with
         | :? DiscardPDUException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "Invalid Opcode(0x00). iSCSI initiator node" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSICommandPDU_019() =
@@ -782,8 +747,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "Both W and F bit in SCSI" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSICommandPDU_020() =
@@ -825,8 +788,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "Both W and R bit in SCSI" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSICommandPDU_021() =
@@ -868,8 +829,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "Invalid ATTR(0x05)" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSICommandPDU_022() =
@@ -909,8 +868,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In bidirectional operation" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSICommandPDU_023() =
@@ -950,8 +907,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "If there are no following data PDU," ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSICommandPDU_024() =
@@ -985,31 +940,27 @@ type PDU_Test () =
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-        try
-            let recvPDU_logi = 
-                PDU.Receive( 8u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
-                |> Functions.RunTaskSynchronously
-            Assert.True( recvPDU_logi.Opcode = OpcodeCd.SCSI_COMMAND )
 
-            let pdu = recvPDU_logi :?> SCSICommandPDU
+        let recvPDU_logi = 
+            PDU.Receive( 8u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
+            |> Functions.RunTaskSynchronously
+        Assert.True( recvPDU_logi.Opcode = OpcodeCd.SCSI_COMMAND )
 
-            Assert.True( ( pdu.F = false ) )
-            Assert.True( ( pdu.R = true ) )
-            Assert.True( ( pdu.W = true ) )
-            Assert.True( ( pdu.ATTR = TaskATTRCd.ORDERED_TASK ) )
-            Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
-            Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ) )
-            Assert.True( ( pdu.ExpectedDataTransferLength = 0x00000010u ) )
-            Assert.True( ( pdu.CmdSN = cmdsn_me.fromPrim 0x10203040u ) )
-            Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 0x0F0E0D0Cu ) )
-            Assert.True( ( pdu.ScsiCDB = [| 0x00uy .. 0x16uy |] ) )
-            Assert.True( ( PooledBuffer.ValueEqualsWithArray pdu.DataSegment [| 0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; |] ) )
-            Assert.True( ( pdu.BidirectionalExpectedReadDataLength = 0xDEADBEEFu ) )
-            Assert.True( ( pdu.ByteCount = 84u ) )
+        let pdu = recvPDU_logi :?> SCSICommandPDU
 
-        with
-        | _ ->
-            Assert.Fail __LINE__
+        Assert.True( ( pdu.F = false ) )
+        Assert.True( ( pdu.R = true ) )
+        Assert.True( ( pdu.W = true ) )
+        Assert.True( ( pdu.ATTR = TaskATTRCd.ORDERED_TASK ) )
+        Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
+        Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ) )
+        Assert.True( ( pdu.ExpectedDataTransferLength = 0x00000010u ) )
+        Assert.True( ( pdu.CmdSN = cmdsn_me.fromPrim 0x10203040u ) )
+        Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 0x0F0E0D0Cu ) )
+        Assert.True( ( pdu.ScsiCDB = [| 0x00uy .. 0x16uy |] ) )
+        Assert.True( ( PooledBuffer.ValueEqualsWithArray pdu.DataSegment [| 0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; |] ) )
+        Assert.True( ( pdu.BidirectionalExpectedReadDataLength = 0xDEADBEEFu ) )
+        Assert.True( ( pdu.ByteCount = 84u ) )
             
     [<Fact>]
     member _.SCSICommandPDU_025() =
@@ -1110,31 +1061,27 @@ type PDU_Test () =
         Assert.True(( sendBytesCnt = 148u ))
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-        try
-            let recvPDU_logi = 
-                PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
-                |> Functions.RunTaskSynchronously
-            Assert.True( recvPDU_logi.Opcode = OpcodeCd.SCSI_COMMAND )
+        let recvPDU_logi = 
+            PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
+            |> Functions.RunTaskSynchronously
+        Assert.True( recvPDU_logi.Opcode = OpcodeCd.SCSI_COMMAND )
 
-            let pdu = recvPDU_logi :?> SCSICommandPDU
+        let pdu = recvPDU_logi :?> SCSICommandPDU
 
-            Assert.True( pdu.I )
-            Assert.True( pdu.F )
-            Assert.True( pdu.R )
-            Assert.True( pdu.W )
-            Assert.True( ( pdu.ATTR = TaskATTRCd.HEAD_OF_QUEUE_TASK ) )
-            Assert.True( ( pdu.LUN = lun_me.fromPrim 0xF0E1D2C3B4A59687UL ) )
-            Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 1u ) )
-            Assert.True( ( pdu.ExpectedDataTransferLength = 2u ) )
-            Assert.True( ( pdu.CmdSN = cmdsn_me.fromPrim 3u ) )
-            Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 4u ) )
-            Assert.True( ( pdu.ScsiCDB = Array.zeroCreate(20) ) )
-            Assert.True( ( PooledBuffer.ValueEqualsWithArray pdu.DataSegment [| 0x00uy .. 0x50uy |] ) )
-            Assert.True( ( pdu.BidirectionalExpectedReadDataLength = 0u ) )
-            Assert.True( ( pdu.ByteCount = 148u ) )
-        with
-        | _ ->
-            Assert.Fail __LINE__
+        Assert.True( pdu.I )
+        Assert.True( pdu.F )
+        Assert.True( pdu.R )
+        Assert.True( pdu.W )
+        Assert.True( ( pdu.ATTR = TaskATTRCd.HEAD_OF_QUEUE_TASK ) )
+        Assert.True( ( pdu.LUN = lun_me.fromPrim 0xF0E1D2C3B4A59687UL ) )
+        Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 1u ) )
+        Assert.True( ( pdu.ExpectedDataTransferLength = 2u ) )
+        Assert.True( ( pdu.CmdSN = cmdsn_me.fromPrim 3u ) )
+        Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 4u ) )
+        Assert.True( ( pdu.ScsiCDB = Array.zeroCreate(20) ) )
+        Assert.True( ( PooledBuffer.ValueEqualsWithArray pdu.DataSegment [| 0x00uy .. 0x50uy |] ) )
+        Assert.True( ( pdu.BidirectionalExpectedReadDataLength = 0u ) )
+        Assert.True( ( pdu.ByteCount = 148u ) )
          
     [<Fact>]
     member _.SCSIResponsePDU_001() =
@@ -1175,8 +1122,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In SCSI Response PDU, DataSegment" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSIResponsePDU_002() =
@@ -1227,8 +1172,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "o and u bit in SCSI response PDU" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSIResponsePDU_003() =
@@ -1279,8 +1222,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "O and U bit in SCSI response PDU" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSIResponsePDU_004() =
@@ -1331,8 +1272,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In SCSI response PDU, if Response field is not " ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
             
     [<Fact>]
     member _.SCSIResponsePDU_005() =
@@ -1373,8 +1312,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In SCSI Response PDU, SenseLength(43690) must be" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSIResponsePDU_006() =
@@ -1415,8 +1352,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In SCSI response PDU, Response(0xFF) field " ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSIResponsePDU_007() =
@@ -1457,8 +1392,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In SCSI response PDU, Status(0xFF) field" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSIResponsePDU_008() =
@@ -1531,8 +1464,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In SCSI response PDU, Status(0xFF) field" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSIResponsePDU_009() =
@@ -1604,8 +1535,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In SCSI response PDU, Status(0xFF) field" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSIResponsePDU_010() =
@@ -2489,8 +2418,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In R2T PDU, DesiredDataTransferLength must not be 0" ) = 0 ) |> ignore
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.R2TPDU_004() =
@@ -2616,8 +2543,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True(( x.Message.StartsWith "In Asyncronous message PDU, AsyncEvent(0x05)" ))
-        | _ ->
-            Assert.Fail __LINE__
             
     [<Fact>]
     member _.AsyncronousMessagePDU_002() =

@@ -40,7 +40,6 @@ type ServerStatus_Test2() =
                 with
                 | :? ConfigurationError as x ->
                     Assert.True(( x.Message.StartsWith "ERRMSG_VALIDATION_FAILED" ))
-                | _ -> Assert.Fail __LINE__
             }
         |]
         |> Functions.RunTaskInPallalel

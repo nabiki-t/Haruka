@@ -234,7 +234,6 @@ type IscsiTaskTextNegociation_Test () =
             Assert.Fail __LINE__
         with
         | :? SessionRecoveryException -> ()
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Constractor_006() =
@@ -264,7 +263,6 @@ type IscsiTaskTextNegociation_Test () =
             Assert.Fail __LINE__
         with
         | :? SessionRecoveryException -> ()
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Constractor_007() =
@@ -308,7 +306,6 @@ type IscsiTaskTextNegociation_Test () =
             Assert.Fail __LINE__
         with
         | :? SessionRecoveryException -> ()
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Constractor_008() =
@@ -389,7 +386,6 @@ type IscsiTaskTextNegociation_Test () =
             Assert.Fail __LINE__
         with
         | :? SessionRecoveryException -> ()
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Constractor_010() =
@@ -470,7 +466,6 @@ type IscsiTaskTextNegociation_Test () =
             Assert.Fail __LINE__
         with
         | :? SessionRecoveryException -> ()
-        | _ -> Assert.Fail __LINE__
 
     [<Fact>]
     member _.Constractor_012() =

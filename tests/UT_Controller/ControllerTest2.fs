@@ -308,16 +308,16 @@ type Controller_Test2 () =
 
     [<Fact>]
     member _.WaitRequests_001() =
-        let dname = Controller_Test1.CreateTestDir "WaitRequests_001"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "WaitRequests_003"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             for i = 0 to 5 do
                 let con = new TcpClient( "::1", portNum )
                 let c = con.GetStream()
@@ -346,11 +346,10 @@ type Controller_Test2 () =
                     ()
                 c.Close()
                 con.Close()
-        }
-        |> Functions.RunTaskSynchronously
 
-        k.NoticeTerminate()
-        GlbFunc.DeleteDir dname
+            k.NoticeTerminate()
+            GlbFunc.DeleteDir dname
+        }
 
     [<Fact>]
     member _.WaitRequests_002() =
@@ -373,16 +372,16 @@ type Controller_Test2 () =
 
     [<Fact>]
     member _.WaitRequests_003() =
-        let dname = Controller_Test1.CreateTestDir "WaitRequests_003"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "WaitRequests_003"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
 
@@ -400,35 +399,33 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.WaitRequests_004() =
-        let dname = Controller_Test1.CreateTestDir "WaitRequests_004"
-        let portNum = GlbFunc.nextTcpPortNo()
-
-        let fname = Functions.AppendPathName dname Constants.CONTROLLER_CONF_FILE_NAME
-        let conf : HarukaCtrlConf.T_HarukaCtrl = {
-            RemoteCtrl = Some {
-                PortNum = uint16 portNum;
-                Address = "::1"
-                WhiteList = [ IPCondition.Any ];
-            };
-            LogMaintenance = None;
-            LogParameters = None;
-        }
-        HarukaCtrlConf.ReaderWriter.WriteFile fname conf
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "WaitRequests_004"
+            let portNum = GlbFunc.nextTcpPortNo()
+
+            let fname = Functions.AppendPathName dname Constants.CONTROLLER_CONF_FILE_NAME
+            let conf : HarukaCtrlConf.T_HarukaCtrl = {
+                RemoteCtrl = Some {
+                    PortNum = uint16 portNum;
+                    Address = "::1"
+                    WhiteList = [ IPCondition.Any ];
+                };
+                LogMaintenance = None;
+                LogParameters = None;
+            }
+            HarukaCtrlConf.ReaderWriter.WriteFile fname conf
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
 
@@ -446,35 +443,33 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.WaitRequests_005() =
-        let dname = Controller_Test1.CreateTestDir "WaitRequests_005"
-        let portNum = GlbFunc.nextTcpPortNo()
-
-        let fname = Functions.AppendPathName dname Constants.CONTROLLER_CONF_FILE_NAME
-        let conf : HarukaCtrlConf.T_HarukaCtrl = {
-            RemoteCtrl = Some {
-                PortNum = uint16 portNum;
-                Address = "::1"
-                WhiteList = [ IPCondition.IPv4Linklocal ];
-            };
-            LogMaintenance = None;
-            LogParameters = None;
-        }
-        HarukaCtrlConf.ReaderWriter.WriteFile fname conf
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "WaitRequests_005"
+            let portNum = GlbFunc.nextTcpPortNo()
+
+            let fname = Functions.AppendPathName dname Constants.CONTROLLER_CONF_FILE_NAME
+            let conf : HarukaCtrlConf.T_HarukaCtrl = {
+                RemoteCtrl = Some {
+                    PortNum = uint16 portNum;
+                    Address = "::1"
+                    WhiteList = [ IPCondition.IPv4Linklocal ];
+                };
+                LogMaintenance = None;
+                LogParameters = None;
+            }
+            HarukaCtrlConf.ReaderWriter.WriteFile fname conf
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
 
@@ -487,27 +482,24 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
-
 
     [<Fact>]
     member _.GetTargetDeviceProcs_001() =
-        let dname = Controller_Test1.CreateTestDir "GetTargetDeviceProcs_001"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-        let tdid = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "GetTargetDeviceProcs_001"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+            let tdid = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -531,26 +523,24 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
-
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.GetTargetDeviceProcs_002() =
-        let dname = Controller_Test1.CreateTestDir "GetTargetDeviceProcs_002"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-        let tdid = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "GetTargetDeviceProcs_002"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+            let tdid = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -574,33 +564,31 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
-
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.GetTargetDeviceProcs_003() =
-        let dname = Controller_Test1.CreateTestDir "GetTargetDeviceProcs_003"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-
-        let tdid0 = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid0
-
-        let tdid1 = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid1
-
-        let tdid2 = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid2
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "GetTargetDeviceProcs_003"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+
+            let tdid0 = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid0
+
+            let tdid1 = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid1
+
+            let tdid2 = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid2
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -644,31 +632,29 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
-
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.GetTargetDeviceProcs_004() =
-        let dname = Controller_Test1.CreateTestDir "GetTargetDeviceProcs_004"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-
-        let tdids = [
-            for i = 0 to Constants.MAX_TARGET_DEVICE_COUNT - 1 do
-                yield GlbFunc.newTargetDeviceID()
-        ]
-        for itr in tdids do
-            Controller_Test1.CreateDefaultTDConf dname itr
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "GetTargetDeviceProcs_004"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+
+            let tdids = [
+                for i = 0 to Constants.MAX_TARGET_DEVICE_COUNT - 1 do
+                    yield GlbFunc.newTargetDeviceID()
+            ]
+            for itr in tdids do
+                Controller_Test1.CreateDefaultTDConf dname itr
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -693,37 +679,36 @@ type Controller_Test2 () =
             c1.Close()
             con1.Close()
 
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.GetTargetDeviceProcs_005() =
-        let dname = Controller_Test1.CreateTestDir "GetTargetDeviceProcs_005"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
-        let pc = PrivateCaller( tc )
-        let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-        let tdids = [
-            for i = 0 to Constants.MAX_TARGET_DEVICE_COUNT do
-                yield GlbFunc.newTargetDeviceID()
-        ]
-        for itr in tdids do
-            let pi = {
-                m_Proc = new Process();
-                m_LastStartTime = 0L;
-                m_RestartCount = 0;
-            }
-            m_TargetDeviceProcs.AddOrUpdate( tdid_me.toPrim itr, pi, ( fun k o -> pi ) ) |> ignore
-
         task {
+            let dname = Controller_Test1.CreateTestDir "GetTargetDeviceProcs_005"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
+            let pc = PrivateCaller( tc )
+            let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
+            let tdids = [
+                for i = 0 to Constants.MAX_TARGET_DEVICE_COUNT do
+                    yield GlbFunc.newTargetDeviceID()
+            ]
+            for itr in tdids do
+                let pi = {
+                    m_Proc = new Process();
+                    m_LastStartTime = 0L;
+                    m_RestartCount = 0;
+                }
+                m_TargetDeviceProcs.AddOrUpdate( tdid_me.toPrim itr, pi, ( fun k o -> pi ) ) |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -749,25 +734,23 @@ type Controller_Test2 () =
             c1.Close()
             con1.Close()
 
+            m_TargetDeviceProcs.Clear()
+            k.NoticeTerminate()
+            GlbFunc.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-
-        m_TargetDeviceProcs.Clear()
-        k.NoticeTerminate()
-        GlbFunc.DeleteDir dname
 
     [<Fact>]
     member _.KillTargetDeviceProc_001() =
-        let dname = Controller_Test1.CreateTestDir "KillTargetDeviceProc_001"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "KillTargetDeviceProc_001"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -797,27 +780,25 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
-
+            k.NoticeTerminate()
+            GlbFunc.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        GlbFunc.DeleteDir dname
 
     [<Fact>]
     member _.KillTargetDeviceProc_002() =
-        let dname = Controller_Test1.CreateTestDir "KillTargetDeviceProc_002"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-
-        let tdid0 = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid0
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "KillTargetDeviceProc_002"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+
+            let tdid0 = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid0
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -846,31 +827,29 @@ type Controller_Test2 () =
             c1.Close()
             con1.Close()
 
+            let pc = PrivateCaller( tc )
+            let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
+            Assert.True(( m_TargetDeviceProcs.Count = 0 ))
+
+            k.NoticeTerminate()
+            GlbFunc.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-
-        let pc = PrivateCaller( tc )
-        let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-        Assert.True(( m_TargetDeviceProcs.Count = 0 ))
-
-        k.NoticeTerminate()
-        GlbFunc.DeleteDir dname
 
     [<Fact>]
     member _.KillTargetDeviceProc_003() =
-        let dname = Controller_Test1.CreateTestDir "KillTargetDeviceProc_003"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-
-        let tdid0 = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid0
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "KillTargetDeviceProc_003"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+
+            let tdid0 = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid0
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -900,28 +879,26 @@ type Controller_Test2 () =
             c1.Close()
             con1.Close()
 
+            let pc = PrivateCaller( tc )
+            let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
+            Assert.True(( m_TargetDeviceProcs.Count = 1 ))
+
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-
-        let pc = PrivateCaller( tc )
-        let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-        Assert.True(( m_TargetDeviceProcs.Count = 1 ))
-
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.StartTargetDeviceProc_001() =
-        let dname = Controller_Test1.CreateTestDir "StartTargetDeviceProc_001"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "StartTargetDeviceProc_001"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -951,24 +928,22 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
-
+            k.NoticeTerminate()
+            GlbFunc.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        GlbFunc.DeleteDir dname
 
     [<Fact>]
     member _.StartTargetDeviceProc_002() =
-        let dname = Controller_Test1.CreateTestDir "StartTargetDeviceProc_002"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "StartTargetDeviceProc_002"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -998,31 +973,29 @@ type Controller_Test2 () =
             c1.Close()
             con1.Close()
 
+            let pc = PrivateCaller( tc )
+            let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
+            Assert.True(( m_TargetDeviceProcs.Count = 0 ))
+
+            k.NoticeTerminate()
+            GlbFunc.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-
-        let pc = PrivateCaller( tc )
-        let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-        Assert.True(( m_TargetDeviceProcs.Count = 0 ))
-
-        k.NoticeTerminate()
-        GlbFunc.DeleteDir dname
 
     [<Fact>]
     member _.StartTargetDeviceProc_003() =
-        let dname = Controller_Test1.CreateTestDir "StartTargetDeviceProc_003"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-
-        let tdid0 = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid0
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "StartTargetDeviceProc_003"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+
+            let tdid0 = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid0
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1051,31 +1024,29 @@ type Controller_Test2 () =
             c1.Close()
             con1.Close()
 
+            let pc = PrivateCaller( tc )
+            let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
+            Assert.True(( m_TargetDeviceProcs.Count = 1 ))
+
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-
-        let pc = PrivateCaller( tc )
-        let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-        Assert.True(( m_TargetDeviceProcs.Count = 1 ))
-
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.StartTargetDeviceProc_004() =
-        let dname = Controller_Test1.CreateTestDir "StartTargetDeviceProc_004"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
-        let tdid0 = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid0
-
         task {
+            let dname = Controller_Test1.CreateTestDir "StartTargetDeviceProc_004"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
+            let tdid0 = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid0
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1104,47 +1075,45 @@ type Controller_Test2 () =
             c1.Close()
             con1.Close()
 
+            let pc = PrivateCaller( tc )
+            let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
+            Assert.True(( m_TargetDeviceProcs.Count = 1 ))
+
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-
-        let pc = PrivateCaller( tc )
-        let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-        Assert.True(( m_TargetDeviceProcs.Count = 1 ))
-
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.StartTargetDeviceProc_005() =
-        let dname = Controller_Test1.CreateTestDir "StartTargetDeviceProc_005"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
-        let pc = PrivateCaller( tc )
-        let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-        Assert.True(( m_TargetDeviceProcs.Count = 0 ))
-
-        let tdid0 = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid0
-
-        let tdids = [
-            for i = 0 to Constants.MAX_TARGET_DEVICE_COUNT - 2 do
-                yield GlbFunc.newTargetDeviceID()
-        ]
-        for itr in tdids do
-            let pi = {
-                m_Proc = new Process();
-                m_LastStartTime = 0L;
-                m_RestartCount = 0;
-            }
-            m_TargetDeviceProcs.AddOrUpdate( tdid_me.toPrim itr, pi, ( fun k o -> pi ) ) |> ignore
-
         task {
+            let dname = Controller_Test1.CreateTestDir "StartTargetDeviceProc_005"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
+            let pc = PrivateCaller( tc )
+            let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
+            Assert.True(( m_TargetDeviceProcs.Count = 0 ))
+
+            let tdid0 = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid0
+
+            let tdids = [
+                for i = 0 to Constants.MAX_TARGET_DEVICE_COUNT - 2 do
+                    yield GlbFunc.newTargetDeviceID()
+            ]
+            for itr in tdids do
+                let pi = {
+                    m_Proc = new Process();
+                    m_LastStartTime = 0L;
+                    m_RestartCount = 0;
+                }
+                m_TargetDeviceProcs.AddOrUpdate( tdid_me.toPrim itr, pi, ( fun k o -> pi ) ) |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1173,50 +1142,48 @@ type Controller_Test2 () =
             c1.Close()
             con1.Close()
 
+            Assert.True(( m_TargetDeviceProcs.Count = Constants.MAX_TARGET_DEVICE_COUNT ))
+            let r, v = m_TargetDeviceProcs.TryGetValue( tdid_me.toPrim tdid0 )
+            Assert.True( r )
+            v.m_Proc.Kill()
+
+            m_TargetDeviceProcs.Clear()
+
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-
-        Assert.True(( m_TargetDeviceProcs.Count = Constants.MAX_TARGET_DEVICE_COUNT ))
-        let r, v = m_TargetDeviceProcs.TryGetValue( tdid_me.toPrim tdid0 )
-        Assert.True( r )
-        v.m_Proc.Kill()
-
-        m_TargetDeviceProcs.Clear()
-
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.StartTargetDeviceProc_006() =
-        let dname = Controller_Test1.CreateTestDir "StartTargetDeviceProc_006"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
-        let pc = PrivateCaller( tc )
-        let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-        Assert.True(( m_TargetDeviceProcs.Count = 0 ))
-
-        let tdid0 = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid0
-
-        let tdids = [
-            for i = 0 to Constants.MAX_TARGET_DEVICE_COUNT - 1 do
-                yield GlbFunc.newTargetDeviceID()
-        ]
-        for itr in tdids do
-            let pi = {
-                m_Proc = new Process();
-                m_LastStartTime = 0L;
-                m_RestartCount = 0;
-            }
-            m_TargetDeviceProcs.AddOrUpdate( tdid_me.toPrim itr, pi, ( fun k o -> pi ) ) |> ignore
-
         task {
+            let dname = Controller_Test1.CreateTestDir "StartTargetDeviceProc_006"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
+            let pc = PrivateCaller( tc )
+            let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
+            Assert.True(( m_TargetDeviceProcs.Count = 0 ))
+
+            let tdid0 = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid0
+
+            let tdids = [
+                for i = 0 to Constants.MAX_TARGET_DEVICE_COUNT - 1 do
+                    yield GlbFunc.newTargetDeviceID()
+            ]
+            for itr in tdids do
+                let pi = {
+                    m_Proc = new Process();
+                    m_LastStartTime = 0L;
+                    m_RestartCount = 0;
+                }
+                m_TargetDeviceProcs.AddOrUpdate( tdid_me.toPrim itr, pi, ( fun k o -> pi ) ) |> ignore
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1245,27 +1212,25 @@ type Controller_Test2 () =
             c1.Close()
             con1.Close()
 
+            Assert.True(( m_TargetDeviceProcs.Count = Constants.MAX_TARGET_DEVICE_COUNT ))
+            m_TargetDeviceProcs.Clear()
+
+            k.NoticeTerminate()
+            GlbFunc.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-
-        Assert.True(( m_TargetDeviceProcs.Count = Constants.MAX_TARGET_DEVICE_COUNT ))
-        m_TargetDeviceProcs.Clear()
-
-        k.NoticeTerminate()
-        GlbFunc.DeleteDir dname
 
     [<Fact>]
     member _.TargetDeviceCtrlRequest_001() =
-        let dname = Controller_Test1.CreateTestDir "TargetDeviceCtrlRequest_001"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "TargetDeviceCtrlRequest_001"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1301,24 +1266,22 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
-
+            k.NoticeTerminate()
+            GlbFunc.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        GlbFunc.DeleteDir dname
 
     [<Fact>]
     member _.TargetDeviceCtrlRequest_002() =
-        let dname = Controller_Test1.CreateTestDir "TargetDeviceCtrlRequest_002"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "TargetDeviceCtrlRequest_002"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1353,26 +1316,25 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+            k.NoticeTerminate()
+            GlbFunc.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        GlbFunc.DeleteDir dname
 
     [<Fact>]
     member _.TargetDeviceCtrlRequest_003() =
-        let dname = Controller_Test1.CreateTestDir "TargetDeviceCtrlRequest_003"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-
-        let tdid0 = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid0
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "TargetDeviceCtrlRequest_003"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+
+            let tdid0 = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid0
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1414,25 +1376,24 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.CreateMediaFile_001() =
-        let dname = Controller_Test1.CreateTestDir "CreateMediaFile_001"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-        let tdid = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "CreateMediaFile_001"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+            let tdid = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1462,34 +1423,33 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.CreateMediaFile_002() =
-        let dname = Controller_Test1.CreateTestDir "CreateMediaFile_002"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-        let tdid = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        let pc = PrivateCaller( tc )
-        let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
-
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
-        for i = 1 to Constants.INITMEDIA_MAX_MULTIPLICITY do
-            m_InitMediaProcs.Add(
-                0x1000000000000000UL + ( uint64 i ),
-                new MediaCreateProcStub( p_Progress = MC_PROGRESS.NotStarted, p_CreatedTime = DateTime.UtcNow )
-            )
-
         task {
+            let dname = Controller_Test1.CreateTestDir "CreateMediaFile_002"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+            let tdid = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            let pc = PrivateCaller( tc )
+            let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
+
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
+            for i = 1 to Constants.INITMEDIA_MAX_MULTIPLICITY do
+                m_InitMediaProcs.Add(
+                    0x1000000000000000UL + ( uint64 i ),
+                    new MediaCreateProcStub( p_Progress = MC_PROGRESS.NotStarted, p_CreatedTime = DateTime.UtcNow )
+                )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1517,35 +1477,34 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.CreateMediaFile_003() =
-        let dname = Controller_Test1.CreateTestDir "CreateMediaFile_003"
-        let portNum = GlbFunc.nextTcpPortNo()
-        let mfilename = Functions.AppendPathName dname "a.txt"
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-        let tdid = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        let pc = PrivateCaller( tc )
-        let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
-
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
-        for i = 1 to Constants.INITMEDIA_MAX_MULTIPLICITY - 1 do
-            m_InitMediaProcs.Add(
-                0x1000000000000000UL + ( uint64 i ),
-                new MediaCreateProcStub( p_Progress = MC_PROGRESS.NotStarted, p_CreatedTime = DateTime.UtcNow )
-            )
-
         task {
+            let dname = Controller_Test1.CreateTestDir "CreateMediaFile_003"
+            let portNum = GlbFunc.nextTcpPortNo()
+            let mfilename = Functions.AppendPathName dname "a.txt"
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+            let tdid = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            let pc = PrivateCaller( tc )
+            let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
+
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
+            for i = 1 to Constants.INITMEDIA_MAX_MULTIPLICITY - 1 do
+                m_InitMediaProcs.Add(
+                    0x1000000000000000UL + ( uint64 i ),
+                    new MediaCreateProcStub( p_Progress = MC_PROGRESS.NotStarted, p_CreatedTime = DateTime.UtcNow )
+                )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1578,43 +1537,42 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.CreateMediaFile_004() =
-        let dname = Controller_Test1.CreateTestDir "CreateMediaFile_004"
-        let portNum = GlbFunc.nextTcpPortNo()
-        let mfilename = Functions.AppendPathName dname "a.txt"
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-        let tdid = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        let pc = PrivateCaller( tc )
-        let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
-
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
-        m_InitMediaProcs.Add(
-            0x1000000000000001UL,
-            new MediaCreateProcStub(
-                p_Progress = MC_PROGRESS.NormalEnd( DateTime.UtcNow ),
-                p_CreatedTime = DateTime.UtcNow,
-                p_Kill = ( fun _ -> () )
-            )
-        )
-        for i = 2 to Constants.INITMEDIA_MAX_MULTIPLICITY do
-            m_InitMediaProcs.Add(
-                0x1000000000000000UL + ( uint64 i ),
-                new MediaCreateProcStub( p_Progress = MC_PROGRESS.NotStarted, p_CreatedTime = DateTime.UtcNow)
-            )
-
         task {
+            let dname = Controller_Test1.CreateTestDir "CreateMediaFile_004"
+            let portNum = GlbFunc.nextTcpPortNo()
+            let mfilename = Functions.AppendPathName dname "a.txt"
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+            let tdid = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            let pc = PrivateCaller( tc )
+            let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
+
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
+            m_InitMediaProcs.Add(
+                0x1000000000000001UL,
+                new MediaCreateProcStub(
+                    p_Progress = MC_PROGRESS.NormalEnd( DateTime.UtcNow ),
+                    p_CreatedTime = DateTime.UtcNow,
+                    p_Kill = ( fun _ -> () )
+                )
+            )
+            for i = 2 to Constants.INITMEDIA_MAX_MULTIPLICITY do
+                m_InitMediaProcs.Add(
+                    0x1000000000000000UL + ( uint64 i ),
+                    new MediaCreateProcStub( p_Progress = MC_PROGRESS.NotStarted, p_CreatedTime = DateTime.UtcNow)
+                )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1647,43 +1605,42 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.CreateMediaFile_005() =
-        let dname = Controller_Test1.CreateTestDir "CreateMediaFile_005"
-        let portNum = GlbFunc.nextTcpPortNo()
-        let mfilename = Functions.AppendPathName dname "a.txt"
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-        let tdid = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        let pc = PrivateCaller( tc )
-        let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
-
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
-        m_InitMediaProcs.Add(
-            0x1000000000000001UL,
-            new MediaCreateProcStub(
-                p_Progress = MC_PROGRESS.NotStarted,
-                p_CreatedTime = DateTime.UtcNow - TimeSpan( 0, 0, Constants.INITMEDIA_MAX_REMAIN_TIME + 1 ),
-                p_Kill = ( fun _ -> () )
-            )
-        )
-        for i = 2 to Constants.INITMEDIA_MAX_MULTIPLICITY do
-            m_InitMediaProcs.Add(
-                0x1000000000000000UL + ( uint64 i ),
-                new MediaCreateProcStub( p_Progress = MC_PROGRESS.NotStarted, p_CreatedTime = DateTime.UtcNow)
-            )
-
         task {
+            let dname = Controller_Test1.CreateTestDir "CreateMediaFile_005"
+            let portNum = GlbFunc.nextTcpPortNo()
+            let mfilename = Functions.AppendPathName dname "a.txt"
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+            let tdid = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            let pc = PrivateCaller( tc )
+            let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
+
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
+            m_InitMediaProcs.Add(
+                0x1000000000000001UL,
+                new MediaCreateProcStub(
+                    p_Progress = MC_PROGRESS.NotStarted,
+                    p_CreatedTime = DateTime.UtcNow - TimeSpan( 0, 0, Constants.INITMEDIA_MAX_REMAIN_TIME + 1 ),
+                    p_Kill = ( fun _ -> () )
+                )
+            )
+            for i = 2 to Constants.INITMEDIA_MAX_MULTIPLICITY do
+                m_InitMediaProcs.Add(
+                    0x1000000000000000UL + ( uint64 i ),
+                    new MediaCreateProcStub( p_Progress = MC_PROGRESS.NotStarted, p_CreatedTime = DateTime.UtcNow)
+                )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1716,25 +1673,24 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.GetInitMediaStatus_001() =
-        let dname = Controller_Test1.CreateTestDir "GetInitMediaStatus_001"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-        let tdid = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "GetInitMediaStatus_001"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+            let tdid = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1758,25 +1714,24 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.GetInitMediaStatus_002() =
-        let dname = Controller_Test1.CreateTestDir "GetInitMediaStatus_002"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-        let tdid = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "GetInitMediaStatus_002"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+            let tdid = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1798,40 +1753,39 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.GetInitMediaStatus_003() =
-        let dname = Controller_Test1.CreateTestDir "GetInitMediaStatus_003"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-        let tdid = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        let pc = PrivateCaller( tc )
-        let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
-
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
-        for i = 1 to Constants.INITMEDIA_MAX_MULTIPLICITY do
-            m_InitMediaProcs.Add(
-                0x1000000000000000UL + ( uint64 i ),
-                new MediaCreateProcStub(
-                    p_Progress = MC_PROGRESS.NotStarted,
-                    p_CreatedTime = DateTime.UtcNow,
-                    p_ErrorMessages = [ "a"; "b" ],
-                    p_PathName = "ccc",
-                    p_FileTypeStr = "ddd"
-                )
-            )
-
         task {
+            let dname = Controller_Test1.CreateTestDir "GetInitMediaStatus_003"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+            let tdid = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            let pc = PrivateCaller( tc )
+            let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
+
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
+            for i = 1 to Constants.INITMEDIA_MAX_MULTIPLICITY do
+                m_InitMediaProcs.Add(
+                    0x1000000000000000UL + ( uint64 i ),
+                    new MediaCreateProcStub(
+                        p_Progress = MC_PROGRESS.NotStarted,
+                        p_CreatedTime = DateTime.UtcNow,
+                        p_ErrorMessages = [ "a"; "b" ],
+                        p_PathName = "ccc",
+                        p_FileTypeStr = "ddd"
+                    )
+                )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1861,40 +1815,39 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.GetInitMediaStatus_004() =
-        let dname = Controller_Test1.CreateTestDir "GetInitMediaStatus_004"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-        let tdid = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        let pc = PrivateCaller( tc )
-        let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
-
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
-        for i = 1 to Constants.INITMEDIA_MAX_MULTIPLICITY do
-            m_InitMediaProcs.Add(
-                0x1000000000000000UL + ( uint64 i ),
-                new MediaCreateProcStub(
-                    p_Progress = MC_PROGRESS.ProgressCreation( 2uy ),
-                    p_CreatedTime = DateTime.UtcNow,
-                    p_ErrorMessages = [ "a" ],
-                    p_PathName = "ccc",
-                    p_FileTypeStr = "ddd"
-                )
-            )
-
         task {
+            let dname = Controller_Test1.CreateTestDir "GetInitMediaStatus_004"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+            let tdid = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            let pc = PrivateCaller( tc )
+            let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
+
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
+            for i = 1 to Constants.INITMEDIA_MAX_MULTIPLICITY do
+                m_InitMediaProcs.Add(
+                    0x1000000000000000UL + ( uint64 i ),
+                    new MediaCreateProcStub(
+                        p_Progress = MC_PROGRESS.ProgressCreation( 2uy ),
+                        p_CreatedTime = DateTime.UtcNow,
+                        p_ErrorMessages = [ "a" ],
+                        p_PathName = "ccc",
+                        p_FileTypeStr = "ddd"
+                    )
+                )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1924,40 +1877,39 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.GetInitMediaStatus_005() =
-        let dname = Controller_Test1.CreateTestDir "GetInitMediaStatus_005"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-        let tdid = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        let pc = PrivateCaller( tc )
-        let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
-
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
-        for i = 1 to Constants.INITMEDIA_MAX_MULTIPLICITY do
-            m_InitMediaProcs.Add(
-                0x1000000000000000UL + ( uint64 i ),
-                new MediaCreateProcStub(
-                    p_Progress = MC_PROGRESS.Recovery( 3uy ),
-                    p_CreatedTime = DateTime.UtcNow,
-                    p_ErrorMessages = [ "x" ],
-                    p_PathName = "ccc",
-                    p_FileTypeStr = "ddd"
-                )
-            )
-
         task {
+            let dname = Controller_Test1.CreateTestDir "GetInitMediaStatus_005"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+            let tdid = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            let pc = PrivateCaller( tc )
+            let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
+
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
+            for i = 1 to Constants.INITMEDIA_MAX_MULTIPLICITY do
+                m_InitMediaProcs.Add(
+                    0x1000000000000000UL + ( uint64 i ),
+                    new MediaCreateProcStub(
+                        p_Progress = MC_PROGRESS.Recovery( 3uy ),
+                        p_CreatedTime = DateTime.UtcNow,
+                        p_ErrorMessages = [ "x" ],
+                        p_PathName = "ccc",
+                        p_FileTypeStr = "ddd"
+                    )
+                )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -1987,42 +1939,41 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.GetInitMediaStatus_006() =
-        let dname = Controller_Test1.CreateTestDir "GetInitMediaStatus_006"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-        let tdid = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        let pc = PrivateCaller( tc )
-        let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
-
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
-        let mutable flg1 = 0
-        for i = 1 to Constants.INITMEDIA_MAX_MULTIPLICITY do
-            m_InitMediaProcs.Add(
-                0x1000000000000000UL + ( uint64 i ),
-                new MediaCreateProcStub(
-                    p_Progress = MC_PROGRESS.NormalEnd( DateTime.UtcNow ),
-                    p_CreatedTime = DateTime.UtcNow,
-                    p_ErrorMessages = [ "x" ],
-                    p_PathName = "ccc1",
-                    p_FileTypeStr = "ddd1",
-                    p_Kill = ( fun _ -> flg1 <- flg1 + 1; () )
-                )
-            )
-
         task {
+            let dname = Controller_Test1.CreateTestDir "GetInitMediaStatus_006"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+            let tdid = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            let pc = PrivateCaller( tc )
+            let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
+
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
+            let mutable flg1 = 0
+            for i = 1 to Constants.INITMEDIA_MAX_MULTIPLICITY do
+                m_InitMediaProcs.Add(
+                    0x1000000000000000UL + ( uint64 i ),
+                    new MediaCreateProcStub(
+                        p_Progress = MC_PROGRESS.NormalEnd( DateTime.UtcNow ),
+                        p_CreatedTime = DateTime.UtcNow,
+                        p_ErrorMessages = [ "x" ],
+                        p_PathName = "ccc1",
+                        p_FileTypeStr = "ddd1",
+                        p_Kill = ( fun _ -> flg1 <- flg1 + 1; () )
+                    )
+                )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2053,42 +2004,41 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.GetInitMediaStatus_007() =
-        let dname = Controller_Test1.CreateTestDir "GetInitMediaStatus_007"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-        let tdid = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        let pc = PrivateCaller( tc )
-        let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
-
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
-        let mutable flg1 = 0
-        for i = 1 to Constants.INITMEDIA_MAX_MULTIPLICITY do
-            m_InitMediaProcs.Add(
-                0x1000000000000000UL + ( uint64 i ),
-                new MediaCreateProcStub(
-                    p_Progress = MC_PROGRESS.AbnormalEnd( DateTime.UtcNow ),
-                    p_CreatedTime = DateTime.UtcNow,
-                    p_ErrorMessages = [ "x" ],
-                    p_PathName = "ccc1",
-                    p_FileTypeStr = "ddd1",
-                    p_Kill = ( fun _ -> flg1 <- flg1 + 1; () )
-                )
-            )
-
         task {
+            let dname = Controller_Test1.CreateTestDir "GetInitMediaStatus_007"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+            let tdid = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            let pc = PrivateCaller( tc )
+            let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
+
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
+            let mutable flg1 = 0
+            for i = 1 to Constants.INITMEDIA_MAX_MULTIPLICITY do
+                m_InitMediaProcs.Add(
+                    0x1000000000000000UL + ( uint64 i ),
+                    new MediaCreateProcStub(
+                        p_Progress = MC_PROGRESS.AbnormalEnd( DateTime.UtcNow ),
+                        p_CreatedTime = DateTime.UtcNow,
+                        p_ErrorMessages = [ "x" ],
+                        p_PathName = "ccc1",
+                        p_FileTypeStr = "ddd1",
+                        p_Kill = ( fun _ -> flg1 <- flg1 + 1; () )
+                    )
+                )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2119,42 +2069,42 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.GetInitMediaStatus_008() =
-        let dname = Controller_Test1.CreateTestDir "GetInitMediaStatus_008"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-        let tdid = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        let pc = PrivateCaller( tc )
-        let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
-
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
-        let mutable flg1 = 0
-        for i = 1 to Constants.INITMEDIA_MAX_MULTIPLICITY do
-            m_InitMediaProcs.Add(
-                0x1000000000000000UL + ( uint64 i ),
-                new MediaCreateProcStub(
-                    p_Progress = MC_PROGRESS.NotStarted,
-                    p_CreatedTime = DateTime.UtcNow - TimeSpan( 0, 0, Constants.INITMEDIA_MAX_REMAIN_TIME + 1 ),
-                    p_ErrorMessages = [ "x" ],
-                    p_PathName = "ccc2",
-                    p_FileTypeStr = "ddd2",
-                    p_Kill = ( fun _ -> flg1 <- flg1 + 1; () )
-                )
-            )
-
         task {
+            let dname = Controller_Test1.CreateTestDir "GetInitMediaStatus_008"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+            let tdid = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            let pc = PrivateCaller( tc )
+            let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
+
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
+            let mutable flg1 = 0
+            for i = 1 to Constants.INITMEDIA_MAX_MULTIPLICITY do
+                m_InitMediaProcs.Add(
+                    0x1000000000000000UL + ( uint64 i ),
+                    new MediaCreateProcStub(
+                        p_Progress = MC_PROGRESS.NotStarted,
+                        p_CreatedTime = DateTime.UtcNow - TimeSpan( 0, 0, Constants.INITMEDIA_MAX_REMAIN_TIME + 1 ),
+                        p_ErrorMessages = [ "x" ],
+                        p_PathName = "ccc2",
+                        p_FileTypeStr = "ddd2",
+                        p_Kill = ( fun _ -> flg1 <- flg1 + 1; () )
+                    )
+                )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2185,25 +2135,25 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.KillInitMediaProc_001() =
-        let dname = Controller_Test1.CreateTestDir "KillInitMediaProc_001"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-        let tdid = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "KillInitMediaProc_001"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+            let tdid = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2230,25 +2180,25 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.KillInitMediaProc_002() =
-        let dname = Controller_Test1.CreateTestDir "KillInitMediaProc_002"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-        let tdid = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
         task {
+            let dname = Controller_Test1.CreateTestDir "KillInitMediaProc_002"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+            let tdid = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2273,38 +2223,38 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.KillInitMediaProc_003() =
-        let dname = Controller_Test1.CreateTestDir "KillInitMediaProc_003"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-        let tdid = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        let pc = PrivateCaller( tc )
-        let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
-
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
-        let mutable flg1 = 0
-        m_InitMediaProcs.Add(
-            0x1000000000000000UL,
-            new MediaCreateProcStub(
-                p_Progress = MC_PROGRESS.NotStarted,
-                p_CreatedTime = DateTime.UtcNow,
-                p_Kill = ( fun _ -> flg1 <- flg1 + 1; () )
-            )
-        )
-
         task {
+            let dname = Controller_Test1.CreateTestDir "KillInitMediaProc_003"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+            let tdid = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            let pc = PrivateCaller( tc )
+            let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
+
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
+            let mutable flg1 = 0
+            m_InitMediaProcs.Add(
+                0x1000000000000000UL,
+                new MediaCreateProcStub(
+                    p_Progress = MC_PROGRESS.NotStarted,
+                    p_CreatedTime = DateTime.UtcNow,
+                    p_Kill = ( fun _ -> flg1 <- flg1 + 1; () )
+                )
+            )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2332,38 +2282,38 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.KillInitMediaProc_004() =
-        let dname = Controller_Test1.CreateTestDir "KillInitMediaProc_004"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-        let tdid = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        let pc = PrivateCaller( tc )
-        let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
-
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
-        let mutable flg1 = 0
-        m_InitMediaProcs.Add(
-            0x1000000000000000UL,
-            new MediaCreateProcStub(
-                p_Progress = MC_PROGRESS.NormalEnd( DateTime.UtcNow ),
-                p_CreatedTime = DateTime.UtcNow,
-                p_Kill = ( fun _ -> flg1 <- flg1 + 1; () )
-            )
-        )
-
         task {
+            let dname = Controller_Test1.CreateTestDir "KillInitMediaProc_004"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+            let tdid = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            let pc = PrivateCaller( tc )
+            let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
+
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
+            let mutable flg1 = 0
+            m_InitMediaProcs.Add(
+                0x1000000000000000UL,
+                new MediaCreateProcStub(
+                    p_Progress = MC_PROGRESS.NormalEnd( DateTime.UtcNow ),
+                    p_CreatedTime = DateTime.UtcNow,
+                    p_Kill = ( fun _ -> flg1 <- flg1 + 1; () )
+                )
+            )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2391,38 +2341,38 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.KillInitMediaProc_005() =
-        let dname = Controller_Test1.CreateTestDir "KillInitMediaProc_005"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-        let tdid = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        let pc = PrivateCaller( tc )
-        let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
-
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
-        let mutable flg1 = 0
-        m_InitMediaProcs.Add(
-            0x1000000000000000UL,
-            new MediaCreateProcStub(
-                p_Progress = MC_PROGRESS.AbnormalEnd( DateTime.UtcNow ),
-                p_CreatedTime = DateTime.UtcNow,
-                p_Kill = ( fun _ -> flg1 <- flg1 + 1; () )
-            )
-        )
-
         task {
+            let dname = Controller_Test1.CreateTestDir "KillInitMediaProc_005"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+            let tdid = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            let pc = PrivateCaller( tc )
+            let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
+
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
+            let mutable flg1 = 0
+            m_InitMediaProcs.Add(
+                0x1000000000000000UL,
+                new MediaCreateProcStub(
+                    p_Progress = MC_PROGRESS.AbnormalEnd( DateTime.UtcNow ),
+                    p_CreatedTime = DateTime.UtcNow,
+                    p_Kill = ( fun _ -> flg1 <- flg1 + 1; () )
+                )
+            )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2450,38 +2400,38 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.KillInitMediaProc_006() =
-        let dname = Controller_Test1.CreateTestDir "KillInitMediaProc_006"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-        let tdid = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        let pc = PrivateCaller( tc )
-        let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
-
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
-        let mutable flg1 = 0
-        m_InitMediaProcs.Add(
-            0x1000000000000000UL,
-            new MediaCreateProcStub(
-                p_Progress = MC_PROGRESS.NotStarted,
-                p_CreatedTime = DateTime.UtcNow - TimeSpan( 0, 0, Constants.INITMEDIA_MAX_REMAIN_TIME + 1 ),
-                p_Kill = ( fun _ -> flg1 <- flg1 + 1; () )
-            )
-        )
-
         task {
+            let dname = Controller_Test1.CreateTestDir "KillInitMediaProc_006"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+            let tdid = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            let pc = PrivateCaller( tc )
+            let m_InitMediaProcs = pc.GetField( "m_InitMediaProcs" ) :?> Dictionary< uint64, MediaCreateProc >
+
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
+            let mutable flg1 = 0
+            m_InitMediaProcs.Add(
+                0x1000000000000000UL,
+                new MediaCreateProcStub(
+                    p_Progress = MC_PROGRESS.NotStarted,
+                    p_CreatedTime = DateTime.UtcNow - TimeSpan( 0, 0, Constants.INITMEDIA_MAX_REMAIN_TIME + 1 ),
+                    p_Kill = ( fun _ -> flg1 <- flg1 + 1; () )
+                )
+            )
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2509,30 +2459,30 @@ type Controller_Test2 () =
 
             c1.Close()
             con1.Close()
+
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.OnExitChildProc_001() =
-        let dname = Controller_Test1.CreateTestDir "OnExitChildProc_001"
-        let portNum = GlbFunc.nextTcpPortNo()
-        Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
-
-        let tdid0 = GlbFunc.newTargetDeviceID()
-        Controller_Test1.CreateDefaultTDConf dname tdid0
-
-        let k = new HKiller() :> IKiller
-        let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-        tc.LoadInitialTargetDeviceProcs()
-        tc.WaitRequest()
-
-        let pc = PrivateCaller( tc )
-        let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-        Assert.True(( m_TargetDeviceProcs.Count = 1 ))
-
         task {
+            let dname = Controller_Test1.CreateTestDir "OnExitChildProc_001"
+            let portNum = GlbFunc.nextTcpPortNo()
+            Controller_Test1.CreateDefaultCtrlConf dname "::1" portNum
+
+            let tdid0 = GlbFunc.newTargetDeviceID()
+            Controller_Test1.CreateDefaultTDConf dname tdid0
+
+            let k = new HKiller() :> IKiller
+            let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
+            tc.LoadInitialTargetDeviceProcs()
+            tc.WaitRequest()
+
+            let pc = PrivateCaller( tc )
+            let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
+            Assert.True(( m_TargetDeviceProcs.Count = 1 ))
+
             use con1 = new TcpClient( "::1", portNum )
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
@@ -2561,15 +2511,13 @@ type Controller_Test2 () =
             c1.Close()
             con1.Close()
 
+            for i = 1 to 10 do
+                Assert.True(( m_TargetDeviceProcs.Count = 0 ))
+                if i <> 10 then Thread.Sleep 50
+
+            k.NoticeTerminate()
+            Controller_Test2.DeleteDir dname
         }
-        |> Functions.RunTaskSynchronously
-
-        for i = 1 to 10 do
-            Assert.True(( m_TargetDeviceProcs.Count = 0 ))
-            if i <> 10 then Thread.Sleep 50
-
-        k.NoticeTerminate()
-        Controller_Test2.DeleteDir dname
 
     [<Fact>]
     member _.OnExitChildProc_002() =

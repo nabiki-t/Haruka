@@ -1409,8 +1409,6 @@ type ServerStatus_Test1() =
             Assert.Fail __LINE__
         with
         | :? XmlException -> ()
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.ImportTemporaryDump_002() =
@@ -1446,8 +1444,6 @@ type ServerStatus_Test1() =
         with
         | :? EditError as x ->
             Assert.True(( x.Message.StartsWith "ERRMSG_TEMP_EXPORT_VERSION_MISMATCH" ))
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.ImportTemporaryDump_003() =
@@ -1483,8 +1479,6 @@ type ServerStatus_Test1() =
         with
         | :? EditError as x ->
             Assert.True(( x.Message.StartsWith "ERRMSG_TEMP_EXPORT_VERSION_MISMATCH" ))
-        | _ ->
-            Assert.Fail __LINE__
 
     static member m_ImportTemporaryDump_004_data = [|
         [| ClientConst.TEMPEXP_NN_Controller :> obj; "Haruka.Client.ConfNode_Controller" :> obj; |];
@@ -1570,8 +1564,6 @@ type ServerStatus_Test1() =
         with
         | :? EditError as x ->
             Assert.True(( x.Message.StartsWith "ERRMSG_TEMP_EXPORT_MISSING_ROOT" ))
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.ImportTemporaryDump_006() =
@@ -1607,8 +1599,6 @@ type ServerStatus_Test1() =
         with
         | :? KeyNotFoundException ->
             ()
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.ImportTemporaryDump_007() =

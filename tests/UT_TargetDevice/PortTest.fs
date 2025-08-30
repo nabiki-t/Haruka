@@ -37,12 +37,7 @@ type IscsiTCPSvPort_Test () =
                 WhiteList = [];
             }
         let k = new HKiller() :> IKiller
-        try
-            new IscsiTCPSvPort( stat, rNP, k ) :> IPort |> ignore
-        with
-        | _ ->
-            Assert.Fail __LINE__
-
+        new IscsiTCPSvPort( stat, rNP, k ) :> IPort |> ignore
         k.NoticeTerminate()
 
     [<Fact>]
@@ -222,19 +217,12 @@ type IscsiTCPSvPort_Test () =
         with
         | :? SocketException as x ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
 
         k1.NoticeTerminate()
 
-        try
-            let listener = new TcpListener( IPAddress.IPv6Loopback, portNo )
-            listener.Start()
-            listener.Stop()
-        with
-        | _ ->
-            Assert.Fail __LINE__
-
+        let listener = new TcpListener( IPAddress.IPv6Loopback, portNo )
+        listener.Start()
+        listener.Stop()
 
     [<Fact>]
     member _.CPort_006() =
@@ -285,15 +273,12 @@ type IscsiTCPSvPort_Test () =
                     w.[ 0 .. widx - 1 ]
                 else
                     w
-            try
-                swait.Wait()
-                use s = new TcpClient( addressStr, portNo )
-                s.Close()
-                swait.Wait()
-                swait.Release() |> ignore
-            with
-            | _ ->
-                Assert.Fail __LINE__
+
+            swait.Wait()
+            use s = new TcpClient( addressStr, portNo )
+            s.Close()
+            swait.Wait()
+            swait.Release() |> ignore
         
         k1.NoticeTerminate()
 

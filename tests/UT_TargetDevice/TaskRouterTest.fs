@@ -412,8 +412,6 @@ type TaskRouter_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( x.Message.Contains( "Unknown LU target" ) )
-        | _ ->
-            Assert.Fail __LINE__
 
         k1.NoticeTerminate()
 
@@ -455,8 +453,6 @@ type TaskRouter_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( x.Message.Contains( "Unknown LU target" ) )
-        | _ ->
-            Assert.Fail __LINE__
 
         k1.NoticeTerminate()
 
@@ -498,8 +494,6 @@ type TaskRouter_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( x.Message.Contains( "Unknown LU target" ) )
-        | _ ->
-            Assert.Fail __LINE__
 
         k1.NoticeTerminate()
 
@@ -541,8 +535,6 @@ type TaskRouter_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( x.Message.Contains( "Unknown LU target" ) )
-        | _ ->
-            Assert.Fail __LINE__
 
         k1.NoticeTerminate()
 
@@ -584,8 +576,6 @@ type TaskRouter_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( x.Message.Contains( "Unknown LU target" ) )
-        | _ ->
-            Assert.Fail __LINE__
 
         k1.NoticeTerminate()
 
@@ -656,8 +646,6 @@ type TaskRouter_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( x.Message.Contains( "Unknown LU target" ) )
-        | _ ->
-            Assert.Fail __LINE__
 
         k1.NoticeTerminate()
 

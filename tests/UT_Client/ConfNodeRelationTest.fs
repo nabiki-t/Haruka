@@ -106,14 +106,12 @@ type ConfNodeRelation_Test() =
             Assert.Fail __LINE__
         with
         | :? KeyNotFoundException -> ()
-        | _ -> Assert.Fail __LINE__
 
         try
             let _ = n.GetChild nid1
             Assert.Fail __LINE__
         with
         | :? KeyNotFoundException -> ()
-        | _ -> Assert.Fail __LINE__
 
 
     [<Fact>]
@@ -240,8 +238,6 @@ type ConfNodeRelation_Test() =
         with
         | :? KeyNotFoundException ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.AddRelation_003() =
@@ -259,8 +255,6 @@ type ConfNodeRelation_Test() =
         with
         | :? KeyNotFoundException ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.AddRelation_004() =
@@ -485,14 +479,12 @@ type ConfNodeRelation_Test() =
             Assert.Fail __LINE__
         with
         | :? KeyNotFoundException -> ()
-        | _ -> Assert.Fail __LINE__
 
         try
             let _ = n.GetChild nid1
             Assert.Fail __LINE__
         with
         | :? KeyNotFoundException -> ()
-        | _ -> Assert.Fail __LINE__
 
         let plist1 = n.GetParent nid2
         Assert.True( plist1.Length = 0 )
@@ -543,14 +535,12 @@ type ConfNodeRelation_Test() =
             Assert.Fail __LINE__
         with
         | :? KeyNotFoundException -> ()
-        | _ -> Assert.Fail __LINE__
 
         try
             let _ = n.GetChild nid2
             Assert.Fail __LINE__
         with
         | :? KeyNotFoundException -> ()
-        | _ -> Assert.Fail __LINE__
 
         let plist3 = n.GetParent nid3
         Assert.True( plist3.Length = 0 )
@@ -594,14 +584,12 @@ type ConfNodeRelation_Test() =
             Assert.Fail __LINE__
         with
         | :? KeyNotFoundException -> ()
-        | _ -> Assert.Fail __LINE__
 
         try
             let _ = n.GetChild nid2
             Assert.Fail __LINE__
         with
         | :? KeyNotFoundException -> ()
-        | _ -> Assert.Fail __LINE__
 
         let plist3 = n.GetParent nid3
         Assert.True( plist3.Length = 1 )
@@ -646,14 +634,12 @@ type ConfNodeRelation_Test() =
             Assert.Fail __LINE__
         with
         | :? KeyNotFoundException -> ()
-        | _ -> Assert.Fail __LINE__
 
         try
             let _ = n.GetChild nid2
             Assert.Fail __LINE__
         with
         | :? KeyNotFoundException -> ()
-        | _ -> Assert.Fail __LINE__
 
         let plist3 = n.GetParent nid3
         Assert.True( plist3.Length = 0 )
@@ -779,8 +765,6 @@ type ConfNodeRelation_Test() =
         with
         | :? KeyNotFoundException ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.GetNode_002() =
@@ -813,8 +797,6 @@ type ConfNodeRelation_Test() =
         with
         | :? KeyNotFoundException ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.GetChild_001() =
@@ -827,8 +809,6 @@ type ConfNodeRelation_Test() =
         with
         | :? KeyNotFoundException ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.GetChild_002() =
@@ -935,8 +915,6 @@ type ConfNodeRelation_Test() =
         with
         | :? KeyNotFoundException ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.GetChildNodeList_002() =
@@ -1077,8 +1055,6 @@ type ConfNodeRelation_Test() =
         with
         | :? KeyNotFoundException ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.GetParent_002() =
@@ -1185,8 +1161,6 @@ type ConfNodeRelation_Test() =
         with
         | :? KeyNotFoundException ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.GetParentNodeList_002() =
@@ -1728,16 +1702,13 @@ type ConfNodeRelation_Test() =
         n.AddRelation node2.NodeID node21.NodeID
         n.DeleteAllChildNodeList node1.NodeID
         Assert.True(( n.AllNodes.Count = 2 ))
-        try
-            let _ = n.GetNode node2.NodeID
-            Assert.True(( ( n.GetParent node2.NodeID ).Length = 0 ))
-            Assert.True(( ( n.GetChild node2.NodeID ).[0] = node21.NodeID ))
-            let _ = n.GetNode node21.NodeID
-            Assert.True(( ( n.GetParent node21.NodeID ).[0] = node2.NodeID ))
-            Assert.True(( ( n.GetChild node21.NodeID ).Length = 0 ))
-        with
-        | _ ->
-            Assert.Fail __LINE__
+
+        let _ = n.GetNode node2.NodeID
+        Assert.True(( ( n.GetParent node2.NodeID ).Length = 0 ))
+        Assert.True(( ( n.GetChild node2.NodeID ).[0] = node21.NodeID ))
+        let _ = n.GetNode node21.NodeID
+        Assert.True(( ( n.GetParent node21.NodeID ).[0] = node2.NodeID ))
+        Assert.True(( ( n.GetChild node21.NodeID ).Length = 0 ))
 
     [<Fact>]
     member _.DeleteAllChildNodeList_004() =
@@ -1759,13 +1730,10 @@ type ConfNodeRelation_Test() =
         n.AddRelation node2.NodeID node2.NodeID
         n.DeleteAllChildNodeList node1.NodeID
         Assert.True(( n.AllNodes.Count = 1 ))
-        try
-            let _ = n.GetNode node2.NodeID
-            Assert.True(( ( n.GetParent node2.NodeID ).[0] = node2.NodeID ))
-            Assert.True(( ( n.GetChild node2.NodeID ).[0] = node2.NodeID ))
-        with
-        | _ ->
-            Assert.Fail __LINE__
+
+        let _ = n.GetNode node2.NodeID
+        Assert.True(( ( n.GetParent node2.NodeID ).[0] = node2.NodeID ))
+        Assert.True(( ( n.GetChild node2.NodeID ).[0] = node2.NodeID ))
 
     [<Fact>]
     member _.DeleteAllChildNodeList_006() =
@@ -1781,16 +1749,13 @@ type ConfNodeRelation_Test() =
         n.AddRelation node3.NodeID node2.NodeID
         n.DeleteAllChildNodeList node1.NodeID
         Assert.True(( n.AllNodes.Count = 2 ))
-        try
-            let _ = n.GetNode node2.NodeID
-            Assert.True(( ( n.GetParent node2.NodeID ).[0] = node3.NodeID ))
-            Assert.True(( ( n.GetChild node2.NodeID ).[0] = node3.NodeID ))
-            let _ = n.GetNode node3.NodeID
-            Assert.True(( ( n.GetParent node3.NodeID ).[0] = node2.NodeID ))
-            Assert.True(( ( n.GetChild node3.NodeID ).[0] = node2.NodeID ))
-        with
-        | _ ->
-            Assert.Fail __LINE__
+
+        let _ = n.GetNode node2.NodeID
+        Assert.True(( ( n.GetParent node2.NodeID ).[0] = node3.NodeID ))
+        Assert.True(( ( n.GetChild node2.NodeID ).[0] = node3.NodeID ))
+        let _ = n.GetNode node3.NodeID
+        Assert.True(( ( n.GetParent node3.NodeID ).[0] = node2.NodeID ))
+        Assert.True(( ( n.GetChild node3.NodeID ).[0] = node2.NodeID ))
 
     [<Fact>]
     member _.DeleteAllChildNodeList_007() =
@@ -1809,19 +1774,16 @@ type ConfNodeRelation_Test() =
         n.AddRelation node4.NodeID node2.NodeID
         n.DeleteAllChildNodeList node1.NodeID
         Assert.True(( n.AllNodes.Count = 3 ))
-        try
-            let _ = n.GetNode node2.NodeID
-            Assert.True(( ( n.GetParent node2.NodeID ).[0] = node4.NodeID ))
-            Assert.True(( ( n.GetChild node2.NodeID ).[0] = node3.NodeID ))
-            let _ = n.GetNode node3.NodeID
-            Assert.True(( ( n.GetParent node3.NodeID ).[0] = node2.NodeID ))
-            Assert.True(( ( n.GetChild node3.NodeID ).[0] = node4.NodeID ))
-            let _ = n.GetNode node4.NodeID
-            Assert.True(( ( n.GetParent node4.NodeID ).[0] = node3.NodeID ))
-            Assert.True(( ( n.GetChild node4.NodeID ).[0] = node2.NodeID ))
-        with
-        | _ ->
-            Assert.Fail __LINE__
+
+        let _ = n.GetNode node2.NodeID
+        Assert.True(( ( n.GetParent node2.NodeID ).[0] = node4.NodeID ))
+        Assert.True(( ( n.GetChild node2.NodeID ).[0] = node3.NodeID ))
+        let _ = n.GetNode node3.NodeID
+        Assert.True(( ( n.GetParent node3.NodeID ).[0] = node2.NodeID ))
+        Assert.True(( ( n.GetChild node3.NodeID ).[0] = node4.NodeID ))
+        let _ = n.GetNode node4.NodeID
+        Assert.True(( ( n.GetParent node4.NodeID ).[0] = node3.NodeID ))
+        Assert.True(( ( n.GetChild node4.NodeID ).[0] = node2.NodeID ))
 
     [<Fact>]
     member _.DeleteAllChildNodeList_008() =
@@ -1851,13 +1813,10 @@ type ConfNodeRelation_Test() =
         n.AddRelation node2.NodeID node3.NodeID
         n.DeleteAllChildNodeList node2.NodeID
         Assert.True(( n.AllNodes.Count = 1 ))
-        try
-            let _ = n.GetNode node1.NodeID
-            Assert.True(( ( n.GetParent node1.NodeID ).Length = 0 ))
-            Assert.True(( ( n.GetChild node1.NodeID ).Length = 0 ))
-        with
-        | _ ->
-            Assert.Fail __LINE__
+
+        let _ = n.GetNode node1.NodeID
+        Assert.True(( ( n.GetParent node1.NodeID ).Length = 0 ))
+        Assert.True(( ( n.GetChild node1.NodeID ).Length = 0 ))
 
     [<Fact>]
     member _.DeleteAllChildNodeList_010() =
@@ -1876,16 +1835,13 @@ type ConfNodeRelation_Test() =
         n.AddRelation node3.NodeID node4.NodeID
         n.DeleteAllChildNodeList node3.NodeID
         Assert.True(( n.AllNodes.Count = 3 ))
-        try
-            let _ = n.GetNode node1.NodeID
-            Assert.True(( ( n.GetParent node1.NodeID ).Length = 0 ))
-            Assert.True(( ( n.GetChild node1.NodeID ).[0] = node2.NodeID ))
-            let _ = n.GetNode node2.NodeID
-            Assert.True(( ( n.GetParent node2.NodeID ).[0] = node1.NodeID ))
-            Assert.True(( ( n.GetChild node2.NodeID ).[0] = node4.NodeID ))
-            let _ = n.GetNode node4.NodeID
-            Assert.True(( ( n.GetParent node4.NodeID ).[0] = node2.NodeID ))
-            Assert.True(( ( n.GetChild node4.NodeID ).Length = 0 ))
-        with
-        | _ ->
-            Assert.Fail __LINE__
+
+        let _ = n.GetNode node1.NodeID
+        Assert.True(( ( n.GetParent node1.NodeID ).Length = 0 ))
+        Assert.True(( ( n.GetChild node1.NodeID ).[0] = node2.NodeID ))
+        let _ = n.GetNode node2.NodeID
+        Assert.True(( ( n.GetParent node2.NodeID ).[0] = node1.NodeID ))
+        Assert.True(( ( n.GetChild node2.NodeID ).[0] = node4.NodeID ))
+        let _ = n.GetNode node4.NodeID
+        Assert.True(( ( n.GetParent node4.NodeID ).[0] = node2.NodeID ))
+        Assert.True(( ( n.GetChild node4.NodeID ).Length = 0 ))

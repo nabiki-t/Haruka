@@ -1597,8 +1597,6 @@ type Connection_Test () =
         with
         | :? SessionRecoveryException as _ ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
 
         let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
         Assert.True(( m_SentRespPDUs.Length = 2 ))
@@ -1707,8 +1705,6 @@ type Connection_Test () =
         with
         | :? SessionRecoveryException as _ ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
 
         let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
         Assert.True(( m_SentRespPDUs.Length = 0 ))
@@ -2186,32 +2182,28 @@ type Connection_Test () =
 
         GlbFunc.ClosePorts [| sp; cp; |]
 
-        try
-            let result =
-                pc.Invoke( "SendPDUInternal", {
-                        Connection_Test.defaultSCSIDataInPDUValues with
-                            InitiatorTaskTag = itt_me.fromPrim 1u;
-                            Status = ScsiCmdStatCd.GOOD;
-                    } ) :?> Task< ( unit -> unit ) voption >
-                |> Functions.RunTaskSynchronously
+        let result =
+            pc.Invoke( "SendPDUInternal", {
+                    Connection_Test.defaultSCSIDataInPDUValues with
+                        InitiatorTaskTag = itt_me.fromPrim 1u;
+                        Status = ScsiCmdStatCd.GOOD;
+                } ) :?> Task< ( unit -> unit ) voption >
+            |> Functions.RunTaskSynchronously
 
-            Assert.True(( result.IsNone ))
+        Assert.True(( result.IsNone ))
 
-            let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
-            Assert.True(( m_SentDataInPDUs.Length = 1 ))
-            let struct( a, b, c ) = m_SentDataInPDUs.[0]
-            Assert.True(( a = itt_me.fromPrim 1u ))
-            Assert.True(( b = datasn_me.fromPrim 0u ))
-            Assert.True(( ( c :?> SCSIDataInPDU ).Status = ScsiCmdStatCd.GOOD ))
+        let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
+        Assert.True(( m_SentDataInPDUs.Length = 1 ))
+        let struct( a, b, c ) = m_SentDataInPDUs.[0]
+        Assert.True(( a = itt_me.fromPrim 1u ))
+        Assert.True(( b = datasn_me.fromPrim 0u ))
+        Assert.True(( ( c :?> SCSIDataInPDU ).Status = ScsiCmdStatCd.GOOD ))
 
-            let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-            Assert.True(( m_SentRespPDUs.Length = 0 ))
+        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
+        Assert.True(( m_SentRespPDUs.Length = 0 ))
 
-            let m_R_SNACK_Request = Connection_Test.getR_SNACK_Request con
-            Assert.True(( m_R_SNACK_Request.Length = 1 ))
-        with
-        | _ ->
-            Assert.Fail __LINE__
+        let m_R_SNACK_Request = Connection_Test.getR_SNACK_Request con
+        Assert.True(( m_R_SNACK_Request.Length = 1 ))
 
     [<Fact>]
     member _.SendPDUInternal_004() =
@@ -2354,36 +2346,32 @@ type Connection_Test () =
 
         GlbFunc.ClosePorts [| sp; cp; |]
 
-        try
-            let result =
-                pc.Invoke( "SendPDUInternal", {
-                    Connection_Test.defaultSCSIResponsePDUValues with
-                        InitiatorTaskTag = itt_me.fromPrim 1u;
-                        Status = ScsiCmdStatCd.GOOD;
-                        StatSN = statsn_me.fromPrim 0u;
-                } ) :?> Task< ( unit -> unit ) voption >
-                |> Functions.RunTaskSynchronously
+        let result =
+            pc.Invoke( "SendPDUInternal", {
+                Connection_Test.defaultSCSIResponsePDUValues with
+                    InitiatorTaskTag = itt_me.fromPrim 1u;
+                    Status = ScsiCmdStatCd.GOOD;
+                    StatSN = statsn_me.fromPrim 0u;
+            } ) :?> Task< ( unit -> unit ) voption >
+            |> Functions.RunTaskSynchronously
 
-            Assert.True(( result.IsSome ))
+        Assert.True(( result.IsSome ))
 
-            let m_R_SNACK_Request = Connection_Test.getR_SNACK_Request  con
-            Assert.True(( m_R_SNACK_Request.Length = 0 ))
+        let m_R_SNACK_Request = Connection_Test.getR_SNACK_Request  con
+        Assert.True(( m_R_SNACK_Request.Length = 0 ))
 
-            Assert.True(( cnt = 0 ))
-            result.Value()
-            Assert.True(( cnt = 1 ))
+        Assert.True(( cnt = 0 ))
+        result.Value()
+        Assert.True(( cnt = 1 ))
 
-            let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-            Assert.True(( m_SentRespPDUs.Length = 1 ))
-            let struct( rStatSN, rPDU ) = m_SentRespPDUs.[0]
-            Assert.True(( rStatSN = statsn_me.fromPrim 0u ))
-            Assert.True(( ( rPDU :?> SCSIResponsePDU ).Status = ScsiCmdStatCd.GOOD ))
+        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
+        Assert.True(( m_SentRespPDUs.Length = 1 ))
+        let struct( rStatSN, rPDU ) = m_SentRespPDUs.[0]
+        Assert.True(( rStatSN = statsn_me.fromPrim 0u ))
+        Assert.True(( ( rPDU :?> SCSIResponsePDU ).Status = ScsiCmdStatCd.GOOD ))
 
-            let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
-            Assert.True(( m_SentDataInPDUs.Length = 0 ))
-        with
-        | _ ->
-            Assert.Fail __LINE__
+        let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
+        Assert.True(( m_SentDataInPDUs.Length = 0 ))
 
     [<Fact>]
     member _.SendPDUInternal_007() =
@@ -2652,12 +2640,8 @@ type Connection_Test () =
         killer.NoticeTerminate()
         GlbFunc.ClosePorts [| sp; cp; |]
 
-        try
-            pc.Invoke( "ReceivePDUInFullFeaturePhase" ) :?> Task< unit >
-            |> Functions.RunTaskSynchronously
-        with
-        | _ ->
-            Assert.Fail __LINE__
+        pc.Invoke( "ReceivePDUInFullFeaturePhase" ) :?> Task< unit >
+        |> Functions.RunTaskSynchronously
 
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 0 ))
@@ -2934,8 +2918,6 @@ type Connection_Test () =
         with
         | :? ConnectionErrorException ->
             ()
-        | _ ->
-            Assert.Fail __LINE__
 
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 0 ))
@@ -3225,10 +3207,6 @@ type Connection_Test () =
                 Connection_Test.defaultSessionParameter,
                 statsn_me.fromPrim 0u
             )
-//        let mutable cnt = 0
-//        sessStub.p_RemoveConnection <- ( fun cid concnt ->
-//            cnt <- cnt + 1
-//        )
 
         con.Close()
 
@@ -3238,7 +3216,5 @@ type Connection_Test () =
         with
         | :? ObjectDisposedException ->
             ()
-
-//        Assert.True(( cnt = 1 ))
 
         GlbFunc.ClosePorts [| sp; cp; |]
