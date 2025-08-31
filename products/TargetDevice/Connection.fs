@@ -837,9 +837,12 @@ type Connection
                     // *** In following code, HasExpStatSN must be always true.
 
                     let curStatSN = m_StatSN
+                    let maxLimit = statsn_me.incr Constants.MAX_STATSN_DIFF curStatSN 
+                    let minLimit = statsn_me.decr Constants.MAX_STATSN_DIFF curStatSN
                     if  m_SWParams.ErrorRecoveryLevel = 0uy &&
                         lpdu.HasExpStatSN &&
-                        statsn_me.lessThan ( statsn_me.incr Constants.MAX_STATSN_DIFF lpdu.ExpStatSN ) curStatSN
+                        ( statsn_me.lessThan lpdu.ExpStatSN minLimit ||
+                          statsn_me.lessThan maxLimit lpdu.ExpStatSN )
                     then
                         // When current StatSN and initiator's ExpStatSN are significantly different,
                         // it occurs session recovery.

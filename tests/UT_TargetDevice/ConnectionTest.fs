@@ -2717,6 +2717,95 @@ type Connection_Test () =
                 Connection_Test.defaultConnectionParam,
                 {
                     Connection_Test.defaultSessionParameter with
+                        ErrorRecoveryLevel = 0uy;
+                },
+                statsn_me.fromPrim ( 0u - Constants.MAX_STATSN_DIFF - 1u )
+            )
+        let pc = PrivateCaller( con )
+
+        let mutable cnt = 0
+        sessStub.p_DestroySession <- ( fun () ->
+            cnt <- cnt + 1
+            killer.NoticeTerminate()
+        )
+        sessStub.p_PushReceivedPDU <- ( fun _ _ ->
+            Assert.Fail __LINE__
+        )
+
+        PDU.SendPDU( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objidx_me.NewID(), cp, {
+            Connection_Test.defaultNopOUTPDUValues with
+                ExpStatSN = statsn_me.zero;
+        } )
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        pc.Invoke( "ReceivePDUInFullFeaturePhase" ) :?> Task< unit >
+        |> Functions.RunTaskSynchronously
+
+        let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
+        Assert.True(( m_SentDataInPDUs.Length = 0 ))
+        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
+        Assert.True(( m_SentRespPDUs.Length = 0 ))
+        Assert.True(( cnt = 1 ))
+        GlbFunc.ClosePorts [| sp; cp; |]
+
+    [<Fact>]
+    member _.ReceivePDUInFullFeaturePhase_005() =
+        let _, sessStub, killer, sp, cp, con =
+            Connection_Test.createDefaultConnectionObj(
+                Connection_Test.defaultConnectionParam,
+                {
+                    Connection_Test.defaultSessionParameter with
+                        ErrorRecoveryLevel = 0uy;
+                },
+                statsn_me.fromPrim ( 0u - Constants.MAX_STATSN_DIFF - 0u )
+            )
+        let pc = PrivateCaller( con )
+
+        let mutable cnt = 0
+        sessStub.p_DestroySession <- ( fun () ->
+            Assert.Fail __LINE__
+        )
+        sessStub.p_PushReceivedPDU <- ( fun _ pdu ->
+            cnt <- cnt + 1
+            Assert.True(( pdu.Opcode = OpcodeCd.NOP_OUT ))
+            let nopoutPDU = pdu :?> NOPOutPDU
+            Assert.True(( nopoutPDU.LUN = lun_me.fromPrim 0x00000000000000EFUL ))
+            cp.Close()
+            cp.Dispose()
+            killer.NoticeTerminate()
+        )
+
+        PDU.SendPDU( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objidx_me.NewID(), cp, {
+            Connection_Test.defaultNopOUTPDUValues with
+                LUN = lun_me.fromPrim 0x00000000000000EFUL
+                ExpStatSN = statsn_me.zero;
+        } )
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        try
+            pc.Invoke( "ReceivePDUInFullFeaturePhase" ) :?> Task< unit >
+            |> Functions.RunTaskSynchronously
+        with
+        | :? ConnectionErrorException ->
+            ()
+
+        let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
+        Assert.True(( m_SentDataInPDUs.Length = 0 ))
+        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
+        Assert.True(( m_SentRespPDUs.Length = 0 ))
+        Assert.True(( cnt = 1 ))
+        GlbFunc.ClosePorts [| sp; cp; |]
+
+
+    [<Fact>]
+    member _.ReceivePDUInFullFeaturePhase_006() =
+        let _, sessStub, killer, sp, cp, con =
+            Connection_Test.createDefaultConnectionObj(
+                Connection_Test.defaultConnectionParam,
+                {
+                    Connection_Test.defaultSessionParameter with
                         ErrorRecoveryLevel = 1uy;
                 },
                 statsn_me.fromPrim ( Constants.MAX_STATSN_DIFF + 1u )
@@ -2760,7 +2849,7 @@ type Connection_Test () =
         GlbFunc.ClosePorts [| sp; cp; |]
 
     [<Fact>]
-    member _.ReceivePDUInFullFeaturePhase_005() =
+    member _.ReceivePDUInFullFeaturePhase_007() =
         let _, sessStub, killer, sp, cp, con =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
@@ -2824,7 +2913,7 @@ type Connection_Test () =
         GlbFunc.ClosePorts [| sp; cp; |]
 
     [<Fact>]
-    member _.ReceivePDUInFullFeaturePhase_006() =
+    member _.ReceivePDUInFullFeaturePhase_008() =
         let _, sessStub, killer, sp, cp, con =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
@@ -2871,7 +2960,7 @@ type Connection_Test () =
         GlbFunc.ClosePorts [| sp; cp; |]
 
     [<Fact>]
-    member _.ReceivePDUInFullFeaturePhase_007() =
+    member _.ReceivePDUInFullFeaturePhase_009() =
         let _, _, _, sp, cp, con =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
