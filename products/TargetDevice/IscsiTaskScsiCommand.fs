@@ -155,8 +155,8 @@ type IscsiTaskScsiCommand
                 | hd :: tl ->
                     if hd.DataSN = idx then
                         loop idx tl
-                    elif hd.DataSN = ( idx + datasn_me.fromPrim 1u ) then
-                        loop ( idx + datasn_me.fromPrim 1u ) tl
+                    elif hd.DataSN = ( datasn_me.next idx ) then
+                        loop ( datasn_me.next idx ) tl
                     else
                         idx
             let r = loop ( datasn_me.fromPrim 0xFFFFFFFFu ) wlist
@@ -201,7 +201,7 @@ type IscsiTaskScsiCommand
             else
                 let maxR2TSN =
                     v
-                    |> Array.fold ( fun m itr -> if datasn_me.lessThan m itr.sn then itr.sn else m ) ( datasn_me.fromPrim 0u )
+                    |> Array.fold ( fun m itr -> if datasn_me.lessThan m itr.sn then itr.sn else m ) ( datasn_me.zero )
                 ( v, datasn_me.toPrim maxR2TSN + 1u )
         else
             // If this command has no SCSI data-Out PDUs, it return empty array.

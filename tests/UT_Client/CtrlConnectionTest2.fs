@@ -1391,7 +1391,7 @@ type CtrlConnection_Test2() =
                 | :? RequestError as x ->
                     Assert.True(( x.Message.StartsWith "WWWWWWWWWWWWW" ))
                 | _ as x ->
-                    Assert.Fail __LINE__
+                    Assert.Fail ( __LINE__ + x.Message )
 
                 k.NoticeTerminate()
             }

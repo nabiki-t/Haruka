@@ -78,7 +78,7 @@ type ClientConfigTest() =
 
             Assert.True(( resp2.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
             Assert.True(( resp2.Status = ScsiCmdStatCd.GOOD ))
-            Assert.True(( resp2.ExpCmdSN = cmdsn1 + cmdsn_me.fromPrim 1u))
+            Assert.True(( resp2.ExpCmdSN = cmdsn_me.next cmdsn1 ))
 
             let blockcount =
                 BitConverter.ToInt64( resp1.DataSegment.Array, resp1.DataSegment.Offset + 0 )

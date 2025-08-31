@@ -793,6 +793,49 @@ type cmdsn_me =
         else
             1
 
+    /// <summary>
+    ///  Get next CmdSN value.
+    /// </summary>
+    /// <param name="s1">
+    ///  Current CmdSN value.
+    /// </param>
+    /// <returns>
+    ///  Current CmdSN + 1.
+    /// </returns>
+    static member inline next ( s1 : uint<cmdsn_me> ) : uint<cmdsn_me> =
+        s1 + ( cmdsn_me.fromPrim 1u )
+
+    /// <summary>
+    ///  Increment CmdSN value.
+    /// </summary>
+    /// <param name="v">
+    ///  Number to add
+    /// </param>
+    /// <param name="s1">
+    ///  CmdSN value to be added.
+    /// </param>
+    /// <returns>
+    ///  s1 + v
+    /// </returns>
+    static member inline incr ( v : uint ) ( s1 : uint<cmdsn_me> ) : uint<cmdsn_me> =
+        s1 + ( cmdsn_me.fromPrim v )
+
+    /// <summary>
+    ///  Decrement CmdSN value.
+    /// </summary>
+    /// <param name="v">
+    ///  Number to subtract
+    /// </param>
+    /// <param name="s1">
+    ///  CmdSN value to be subtracted.
+    /// </param>
+    /// <returns>
+    ///  s1 + v
+    /// </returns>
+    static member inline decr ( v : uint ) ( s1 : uint<cmdsn_me> ) : uint<cmdsn_me> =
+        s1 - ( cmdsn_me.fromPrim v )
+
+
 /// Data types of CmdSN
 type CMDSN_T = uint<cmdsn_me>
 
@@ -855,8 +898,47 @@ type statsn_me =
         else
             1
 
-    static member inline Next ( s1 : uint<statsn_me> ) : uint<statsn_me> =
+    /// <summary>
+    ///  Get next StatSN value.
+    /// </summary>
+    /// <param name="s1">
+    ///  Current StatSN value.
+    /// </param>
+    /// <returns>
+    ///  Current StatSN + 1.
+    /// </returns>
+    static member inline next ( s1 : uint<statsn_me> ) : uint<statsn_me> =
         s1 + ( statsn_me.fromPrim 1u )
+
+    /// <summary>
+    ///  Increment StatSN value.
+    /// </summary>
+    /// <param name="v">
+    ///  Number to add
+    /// </param>
+    /// <param name="s1">
+    ///  StatSN value to be added.
+    /// </param>
+    /// <returns>
+    ///  s1 + v
+    /// </returns>
+    static member inline incr ( v : uint ) ( s1 : uint<statsn_me> ) : uint<statsn_me> =
+        s1 + ( statsn_me.fromPrim v )
+
+    /// <summary>
+    ///  Decrement StatSN value.
+    /// </summary>
+    /// <param name="v">
+    ///  Number to subtract
+    /// </param>
+    /// <param name="s1">
+    ///  StatSN value to be subtracted.
+    /// </param>
+    /// <returns>
+    ///  s1 + v
+    /// </returns>
+    static member inline decr ( v : uint ) ( s1 : uint<statsn_me> ) : uint<statsn_me> =
+        s1 - ( statsn_me.fromPrim v )
 
 /// Data types of StatSN
 type STATSN_T = uint<statsn_me>
@@ -919,6 +1001,48 @@ type datasn_me =
            -1
         else
             1
+
+    /// <summary>
+    ///  Get next DataSN value.
+    /// </summary>
+    /// <param name="s1">
+    ///  Current DataSN value.
+    /// </param>
+    /// <returns>
+    ///  Current DataSN + 1.
+    /// </returns>
+    static member inline next ( s1 : uint<datasn_me> ) : uint<datasn_me> =
+        s1 + ( datasn_me.fromPrim 1u )
+
+    /// <summary>
+    ///  Increment DataSN value.
+    /// </summary>
+    /// <param name="v">
+    ///  Number to add
+    /// </param>
+    /// <param name="s1">
+    ///  DataSN value to be added.
+    /// </param>
+    /// <returns>
+    ///  s1 + v
+    /// </returns>
+    static member inline incr ( v : uint ) ( s1 : uint<datasn_me> ) : uint<datasn_me> =
+        s1 + ( datasn_me.fromPrim v )
+
+    /// <summary>
+    ///  Decrement DataSN value.
+    /// </summary>
+    /// <param name="v">
+    ///  Number to subtract
+    /// </param>
+    /// <param name="s1">
+    ///  DataSN value to be subtracted.
+    /// </param>
+    /// <returns>
+    ///  s1 + v
+    /// </returns>
+    static member inline decr ( v : uint ) ( s1 : uint<datasn_me> ) : uint<datasn_me> =
+        s1 - ( datasn_me.fromPrim v )
 
 /// Data types of DataSN / R2TSN
 type DATASN_T = uint<datasn_me>

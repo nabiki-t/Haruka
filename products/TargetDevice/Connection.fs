@@ -516,8 +516,8 @@ type Connection
                             |> Array.filter ( fun struct( itr, _ ) -> begrun = itr || statsn_me.lessThan begrun itr )
                     else
                         // Returns a status that is greater than or equal to begrun and less than begrun+runlength.
-                        let es = begrun + statsn_me.fromPrim runlength
-                        let maxp1 = maxStatSN + ( statsn_me.fromPrim 1u )
+                        let es = statsn_me.incr runlength begrun
+                        let maxp1 = statsn_me.next maxStatSN
                         if statsn_me.lessThan begrun minStatSN || statsn_me.lessThan maxp1 es then
                             [||]
                         else
@@ -671,7 +671,7 @@ type Connection
 
             // Increment StatSN value.
             if pdu.NeedIncrementStatSN() then
-                m_StatSN <- m_StatSN + ( statsn_me.fromPrim 1u )
+                m_StatSN <- statsn_me.next m_StatSN
 
             let struct( rSnackRequested, resultFunc, deletePDUinThisMethod ) =
                 m_ResendStat.Update ( fun oldStat -> 
@@ -839,7 +839,7 @@ type Connection
                     let curStatSN = m_StatSN
                     if  m_SWParams.ErrorRecoveryLevel = 0uy &&
                         lpdu.HasExpStatSN &&
-                        statsn_me.lessThan ( lpdu.ExpStatSN + ( statsn_me.fromPrim Constants.MAX_STATSN_DIFF ) ) curStatSN
+                        statsn_me.lessThan ( statsn_me.incr Constants.MAX_STATSN_DIFF lpdu.ExpStatSN ) curStatSN
                     then
                         // When current StatSN and initiator's ExpStatSN are significantly different,
                         // it occurs session recovery.

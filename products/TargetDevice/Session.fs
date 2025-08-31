@@ -134,7 +134,7 @@ type Session
         WaitingQueue = ImmutableDictionary< ITT_T, IIscsiTask >.Empty;
         RunningCount = 0;
         ExpCmdSN = newCmdSN;
-        MaxCmdSN = ( newCmdSN + cmdsn_me.fromPrim Constants.BDLU_MAX_TASKSET_SIZE );
+        MaxCmdSN = ( cmdsn_me.incr Constants.BDLU_MAX_TASKSET_SIZE newCmdSN );
         NextProcCmdSN = newCmdSN;
     })
 
@@ -381,9 +381,9 @@ type Session
                 // In that case, the command will not be accepted.
                 let wNextMaxCmdSN =
                     if Constants.BDLU_MAX_TASKSET_SIZE < ( uint32 curQLen ) then
-                        oldQ.ExpCmdSN - cmdsn_me.fromPrim 1u;
+                        cmdsn_me.decr 1u oldQ.ExpCmdSN
                     else
-                        oldQ.ExpCmdSN + cmdsn_me.fromPrim ( Constants.BDLU_MAX_TASKSET_SIZE - uint32 curQLen )
+                        cmdsn_me.incr ( Constants.BDLU_MAX_TASKSET_SIZE - uint32 curQLen ) oldQ.ExpCmdSN
 
                 // Depending on queue usage, calculated MaxCmdSN may be less than the MaxCmdSN reported previously.
                 // In this case, it always returns the larger value.
@@ -541,7 +541,7 @@ type Session
                                     DataSegment = argSendDataBytes.GetArraySegment ( int sp ) ( int seglen )
                                     ResponseFence = ResponseFenceNeedsFlag.Immediately;
                                 }
-                                loop ( sp + seglen ) ( cnt +  datasn_me.fromPrim 1u ) ( w :: li )
+                                loop ( sp + seglen ) ( datasn_me.next cnt ) ( w :: li )
                         loop 0u datasn_me.zero []
                     else
                         []
@@ -929,7 +929,7 @@ type Session
                         | ValueNone -> false
                     )
                 if r then
-                    loop1 ( argCmdSN + cmdsn_me.fromPrim 1u )
+                    loop1 ( cmdsn_me.next argCmdSN )
                 else
                     argCmdSN
             let nextExpCmdSN = loop1( currentQ.ExpCmdSN )
@@ -978,7 +978,7 @@ type Session
                     
                     if currentCmdSNTaskIdx.Count = 0 then
                         // If any CmdSN number is missing, skip this number
-                        loop2 ( argNextProcCmdSN + cmdsn_me.fromPrim 1u ) li
+                        loop2 ( cmdsn_me.next argNextProcCmdSN ) li
 
                     else
                         let executables = [|
@@ -999,7 +999,7 @@ type Session
                                 |> Array.sumBy ( fun itr -> if nextWaitTaskList3.[itr].Value.IsRemovable then 1 else 0 )
 
                             if executables.Length = removableCount then
-                                loop2 ( argNextProcCmdSN + cmdsn_me.fromPrim 1u ) li
+                                loop2 ( cmdsn_me.next argNextProcCmdSN ) li
                             else
                                 argNextProcCmdSN
 

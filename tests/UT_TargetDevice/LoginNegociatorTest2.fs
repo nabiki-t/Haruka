@@ -167,9 +167,9 @@ type LoginNegociator_Test2 () =
             Assert.True( ( recvPDU2.Opcode = OpcodeCd.LOGIN_RES ) );
             let recvPDU2L = recvPDU2 :?> LoginResponsePDU
             Assert.True( recvPDU2L.T = false )
-            Assert.True( recvPDU2L.ExpCmdSN = cmdsn_me.fromPrim 0u )
-            Assert.True( recvPDU2L.MaxCmdSN = cmdsn_me.fromPrim 0u )
-            Assert.True( recvPDU2L.StatSN = statsn_me.fromPrim 0u )
+            Assert.True( recvPDU2L.ExpCmdSN = cmdsn_me.zero )
+            Assert.True( recvPDU2L.MaxCmdSN = cmdsn_me.zero )
+            Assert.True( recvPDU2L.StatSN = statsn_me.zero )
 
             do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
                     {
@@ -189,8 +189,8 @@ type LoginNegociator_Test2 () =
             Assert.True( recvPDU3L.T = true )
             Assert.True( recvPDU3L.CSG = LoginReqStateCd.OPERATIONAL )
             Assert.True( recvPDU3L.NSG = LoginReqStateCd.FULL )
-            Assert.True( recvPDU3L.ExpCmdSN = cmdsn_me.fromPrim 0u )
-            Assert.True( recvPDU3L.MaxCmdSN = cmdsn_me.fromPrim 0u )
+            Assert.True( recvPDU3L.ExpCmdSN = cmdsn_me.zero )
+            Assert.True( recvPDU3L.MaxCmdSN = cmdsn_me.zero )
             Assert.True( recvPDU3L.StatSN = statsn_me.fromPrim 1u )
         }
 
@@ -267,7 +267,7 @@ type LoginNegociator_Test2 () =
                         LUN = lun_me.zero;
                         InitiatorTaskTag = itt_me.fromPrim 0ul;
                         TargetTransferTag = ttt_me.fromPrim 0u;
-                        CmdSN = cmdsn_me.fromPrim 0u;
+                        CmdSN = cmdsn_me.zero;
                         ExpStatSN = statsn_me.fromPrim 2u;
                         TextRequest = 
                             IscsiTextEncode.CreateTextKeyValueString
@@ -490,7 +490,7 @@ type LoginNegociator_Test2 () =
                         LUN = lun_me.zero;
                         InitiatorTaskTag = itt_me.fromPrim 0ul;
                         TargetTransferTag = ttt_me.fromPrim 0u;
-                        CmdSN = cmdsn_me.fromPrim 0u;
+                        CmdSN = cmdsn_me.zero;
                         ExpStatSN = statsn_me.fromPrim 2u;
                         TextRequest = 
                             IscsiTextEncode.CreateTextKeyValueString
@@ -614,9 +614,9 @@ type LoginNegociator_Test2 () =
                 Assert.True( ( recvPDU2.Opcode = OpcodeCd.LOGIN_RES ) );
                 let recvPDU2L = recvPDU2 :?> LoginResponsePDU
                 Assert.True( recvPDU2L.T = false )
-                Assert.True( recvPDU2L.ExpCmdSN = cmdsn_me.fromPrim 0u )
-                Assert.True( recvPDU2L.MaxCmdSN = cmdsn_me.fromPrim 0u )
-                Assert.True( recvPDU2L.StatSN = statsn_me.fromPrim 0u )
+                Assert.True( recvPDU2L.ExpCmdSN = cmdsn_me.zero )
+                Assert.True( recvPDU2L.MaxCmdSN = cmdsn_me.zero )
+                Assert.True( recvPDU2L.StatSN = statsn_me.zero )
 
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
                         {
@@ -635,9 +635,9 @@ type LoginNegociator_Test2 () =
                 Assert.True( recvPDU3L.T = true )
                 Assert.True( recvPDU3L.CSG = LoginReqStateCd.SEQURITY )
                 Assert.True( recvPDU3L.NSG = LoginReqStateCd.OPERATIONAL )
-                Assert.True( recvPDU3L.ExpCmdSN = cmdsn_me.fromPrim 0u )
-                Assert.True( recvPDU3L.MaxCmdSN = cmdsn_me.fromPrim 0u )
-                Assert.True( recvPDU3L.StatSN = statsn_me.fromPrim 0u )
+                Assert.True( recvPDU3L.ExpCmdSN = cmdsn_me.zero )
+                Assert.True( recvPDU3L.MaxCmdSN = cmdsn_me.zero )
+                Assert.True( recvPDU3L.StatSN = statsn_me.zero )
 
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
                         {
@@ -653,9 +653,9 @@ type LoginNegociator_Test2 () =
                 Assert.True( ( recvPDU4.Opcode = OpcodeCd.LOGIN_RES ) );
                 let recvPDU4L = recvPDU4 :?> LoginResponsePDU
                 Assert.True( recvPDU4L.T = false )
-                Assert.True( recvPDU4L.ExpCmdSN = cmdsn_me.fromPrim 0u )
-                Assert.True( recvPDU4L.MaxCmdSN = cmdsn_me.fromPrim 0u )
-                Assert.True( recvPDU4L.StatSN = statsn_me.fromPrim 0u )
+                Assert.True( recvPDU4L.ExpCmdSN = cmdsn_me.zero )
+                Assert.True( recvPDU4L.MaxCmdSN = cmdsn_me.zero )
+                Assert.True( recvPDU4L.StatSN = statsn_me.zero )
 
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
                         {
@@ -674,9 +674,9 @@ type LoginNegociator_Test2 () =
                 Assert.True( recvPDU5L.T = true )
                 Assert.True( recvPDU5L.CSG = LoginReqStateCd.OPERATIONAL )
                 Assert.True( recvPDU5L.NSG = LoginReqStateCd.FULL )
-                Assert.True( recvPDU5L.ExpCmdSN = cmdsn_me.fromPrim 0u )
-                Assert.True( recvPDU5L.MaxCmdSN = cmdsn_me.fromPrim 0u )
-                Assert.True( recvPDU5L.StatSN = statsn_me.fromPrim 0u )
+                Assert.True( recvPDU5L.ExpCmdSN = cmdsn_me.zero )
+                Assert.True( recvPDU5L.MaxCmdSN = cmdsn_me.zero )
+                Assert.True( recvPDU5L.StatSN = statsn_me.zero )
 
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
                         {
@@ -686,7 +686,7 @@ type LoginNegociator_Test2 () =
                             LUN = lun_me.zero;
                             InitiatorTaskTag = itt_me.fromPrim 0ul;
                             TargetTransferTag = ttt_me.fromPrim 0u;
-                            CmdSN = cmdsn_me.fromPrim 0u;
+                            CmdSN = cmdsn_me.zero;
                             ExpStatSN = statsn_me.fromPrim 2u;
                             TextRequest = 
                                 IscsiTextEncode.CreateTextKeyValueString
@@ -738,9 +738,9 @@ type LoginNegociator_Test2 () =
                 Assert.True( ( recvPDU2.Opcode = OpcodeCd.LOGIN_RES ) );
                 let recvPDU2L = recvPDU2 :?> LoginResponsePDU
                 Assert.True( recvPDU2L.T = false )
-                Assert.True( recvPDU2L.ExpCmdSN = cmdsn_me.fromPrim 0u )
-                Assert.True( recvPDU2L.MaxCmdSN = cmdsn_me.fromPrim 0u )
-                Assert.True( recvPDU2L.StatSN = statsn_me.fromPrim 0u )
+                Assert.True( recvPDU2L.ExpCmdSN = cmdsn_me.zero )
+                Assert.True( recvPDU2L.MaxCmdSN = cmdsn_me.zero )
+                Assert.True( recvPDU2L.StatSN = statsn_me.zero )
 
                 // Unexpected PDU
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
@@ -851,7 +851,7 @@ type LoginNegociator_Test2 () =
                             ReasonCode = LogoutReqReasonCd.CLOSE_CONN;   // Invalid reason
                             InitiatorTaskTag = itt_me.fromPrim 0u;
                             CID = cid_me.fromPrim 0us;
-                            CmdSN = cmdsn_me.fromPrim 0u;
+                            CmdSN = cmdsn_me.zero;
                             ExpStatSN = statsn_me.fromPrim 2u;
                             ByteCount = 0u;
                         }
@@ -893,7 +893,7 @@ type LoginNegociator_Test2 () =
                             LUN = lun_me.zero;
                             InitiatorTaskTag = itt_me.fromPrim 0u;
                             TargetTransferTag = ttt_me.fromPrim 0u;
-                            CmdSN = cmdsn_me.fromPrim 0u;
+                            CmdSN = cmdsn_me.zero;
                             ExpStatSN = statsn_me.fromPrim 2u;
                             TextRequest = 
                                 IscsiTextEncode.CreateTextKeyValueString
@@ -944,7 +944,7 @@ type LoginNegociator_Test2 () =
                             LUN = lun_me.zero;
                             InitiatorTaskTag = itt_me.fromPrim 0u;
                             TargetTransferTag = ttt_me.fromPrim 0u;
-                            CmdSN = cmdsn_me.fromPrim 0u;
+                            CmdSN = cmdsn_me.zero;
                             ExpStatSN = statsn_me.fromPrim 2u;
                             TextRequest = 
                                 IscsiTextEncode.CreateTextKeyValueString
@@ -1006,7 +1006,7 @@ type LoginNegociator_Test2 () =
                             LUN = lun_me.zero;
                             InitiatorTaskTag = itt_me.fromPrim 0u;
                             TargetTransferTag = ttt_me.fromPrim 0u;
-                            CmdSN = cmdsn_me.fromPrim 0u;
+                            CmdSN = cmdsn_me.zero;
                             ExpStatSN = statsn_me.fromPrim 2u;
                             TextRequest = Encoding.GetEncoding( "utf-8" ).GetBytes "SendTargets="
                             ByteCount = 0u;
@@ -1064,7 +1064,7 @@ type LoginNegociator_Test2 () =
                             LUN = lun_me.zero;
                             InitiatorTaskTag = itt_me.fromPrim 0u;
                             TargetTransferTag = ttt_me.fromPrim 0u;
-                            CmdSN = cmdsn_me.fromPrim 0u;
+                            CmdSN = cmdsn_me.zero;
                             ExpStatSN = statsn_me.fromPrim 2u;
                             TextRequest = Encoding.GetEncoding( "utf-8" ).GetBytes "SendTargets="
                             ByteCount = 0u;
@@ -1123,7 +1123,7 @@ type LoginNegociator_Test2 () =
                                 LUN = lun_me.zero;
                                 InitiatorTaskTag = itt_me.fromPrim 0u;
                                 TargetTransferTag = ttt_me.fromPrim 0u;
-                                CmdSN = cmdsn_me.fromPrim 0u;
+                                CmdSN = cmdsn_me.zero;
                                 ExpStatSN = statsn_me.fromPrim 2u;
                                 TextRequest = Encoding.GetEncoding( "utf-8" ).GetBytes "SendTargets="
                                 ByteCount = 0u;
@@ -1184,7 +1184,7 @@ type LoginNegociator_Test2 () =
                             LUN = lun_me.zero;
                             InitiatorTaskTag = itt_me.fromPrim 0u;
                             TargetTransferTag = ttt_me.fromPrim 0u;
-                            CmdSN = cmdsn_me.fromPrim 0u;
+                            CmdSN = cmdsn_me.zero;
                             ExpStatSN = statsn_me.fromPrim 2u;
                             TextRequest = Encoding.GetEncoding( "utf-8" ).GetBytes "SendTargets="
                             ByteCount = 0u;
@@ -1245,7 +1245,7 @@ type LoginNegociator_Test2 () =
                             LUN = lun_me.zero;
                             InitiatorTaskTag = itt_me.fromPrim 0u;
                             TargetTransferTag = ttt_me.fromPrim 0u;
-                            CmdSN = cmdsn_me.fromPrim 0u;
+                            CmdSN = cmdsn_me.zero;
                             ExpStatSN = statsn_me.fromPrim 2u;
                             TextRequest = Encoding.GetEncoding( "utf-8" ).GetBytes "aaaaaaaaaaaaaaaaaaaaa"
                             ByteCount = 0u;
@@ -1287,7 +1287,7 @@ type LoginNegociator_Test2 () =
                             LUN = lun_me.zero;
                             InitiatorTaskTag = itt_me.fromPrim 0ul;
                             TargetTransferTag = ttt_me.fromPrim 0u;
-                            CmdSN = cmdsn_me.fromPrim 0u;
+                            CmdSN = cmdsn_me.zero;
                             ExpStatSN = statsn_me.fromPrim 2u;
                             TextRequest = Encoding.GetEncoding( "utf-8" ).GetBytes "SendTargets=All"
                             ByteCount = 0u;
@@ -1353,7 +1353,7 @@ type LoginNegociator_Test2 () =
                             LUN = lun_me.zero;
                             InitiatorTaskTag = itt_me.fromPrim 0ul;
                             TargetTransferTag = ttt_me.fromPrim 0u;
-                            CmdSN = cmdsn_me.fromPrim 0u;
+                            CmdSN = cmdsn_me.zero;
                             ExpStatSN = statsn_me.fromPrim 2u;
                             TextRequest = Encoding.GetEncoding( "utf-8" ).GetBytes "SendTargets=All"
                             ByteCount = 0u;
@@ -1420,7 +1420,7 @@ type LoginNegociator_Test2 () =
                             LUN = lun_me.zero;
                             InitiatorTaskTag = itt_me.fromPrim 0ul;
                             TargetTransferTag = ttt_me.fromPrim 0u;
-                            CmdSN = cmdsn_me.fromPrim 0u;
+                            CmdSN = cmdsn_me.zero;
                             ExpStatSN = statsn_me.fromPrim 2u;
                             TextRequest = Encoding.GetEncoding( "utf-8" ).GetBytes "SendTargets=All"
                             ByteCount = 0u;
@@ -1487,7 +1487,7 @@ type LoginNegociator_Test2 () =
                             LUN = lun_me.zero;
                             InitiatorTaskTag = itt_me.fromPrim 0ul;
                             TargetTransferTag = ttt_me.fromPrim 0u;
-                            CmdSN = cmdsn_me.fromPrim 0u;
+                            CmdSN = cmdsn_me.zero;
                             ExpStatSN = statsn_me.fromPrim 2u;
                             TextRequest = Encoding.GetEncoding( "utf-8" ).GetBytes "SendTargets=All"
                             ByteCount = 0u;
@@ -1554,7 +1554,7 @@ type LoginNegociator_Test2 () =
                             LUN = lun_me.zero;
                             InitiatorTaskTag = itt_me.fromPrim 0ul;
                             TargetTransferTag = ttt_me.fromPrim 0u;
-                            CmdSN = cmdsn_me.fromPrim 0u;
+                            CmdSN = cmdsn_me.zero;
                             ExpStatSN = statsn_me.fromPrim 2u;
                             TextRequest = Encoding.GetEncoding( "utf-8" ).GetBytes "SendTargets=All"
                             ByteCount = 0u;

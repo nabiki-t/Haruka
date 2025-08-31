@@ -57,7 +57,7 @@ type IscsiTaskScsiCommand_Test () =
         LUN = lun_me.zero;
         InitiatorTaskTag = itt_me.fromPrim 1u;
         ExpectedDataTransferLength = 256u;
-        CmdSN = cmdsn_me.fromPrim 0u;
+        CmdSN = cmdsn_me.zero;
         ExpStatSN = statsn_me.fromPrim 1u;
         ScsiCDB = [| 0uy .. 15uy |];
         DataSegment = PooledBuffer.Rent [| 0uy .. 255uy |];
@@ -70,8 +70,8 @@ type IscsiTaskScsiCommand_Test () =
         LUN = lun_me.zero;
         InitiatorTaskTag = itt_me.fromPrim 1u;
         TargetTransferTag = ttt_me.fromPrim 0u;
-        ExpStatSN = statsn_me.fromPrim 0u;
-        DataSN = datasn_me.fromPrim 0u;
+        ExpStatSN = statsn_me.zero;
+        DataSN = datasn_me.zero;
         BufferOffset = 0u;
         DataSegment = PooledBuffer.Rent [| 0uy .. 255uy |];
         ByteCount = 0u;
@@ -175,7 +175,7 @@ type IscsiTaskScsiCommand_Test () =
                 false
             ) :> IIscsiTask
         Assert.True(( ValueSome( itt_me.fromPrim 1u ) = r.InitiatorTaskTag ))
-        Assert.True(( ValueSome( cmdsn_me.fromPrim 0u ) = r.CmdSN ))
+        Assert.True(( ValueSome( cmdsn_me.zero ) = r.CmdSN ))
 
     member _.InitiatorTaskTag_002() =
         let sessStub = new CSession_Stub(
@@ -223,7 +223,7 @@ type IscsiTaskScsiCommand_Test () =
         let result = PrivateCaller.Invoke< IscsiTaskScsiCommand >( "genR2TInfoForGap", 0u, 19u, 10u, 0u ) :?> r2tinfo list
         Assert.True((
             result = [
-                { offset = 0u; length = 10u; ttt = ttt_me.fromPrim 0u; sn = datasn_me.fromPrim 0u; isOutstanding = false; sendTime = new DateTime() };
+                { offset = 0u; length = 10u; ttt = ttt_me.fromPrim 0u; sn = datasn_me.zero; isOutstanding = false; sendTime = new DateTime() };
                 { offset = 10u; length = 10u; ttt = ttt_me.fromPrim 1u; sn = datasn_me.fromPrim 1u; isOutstanding = false; sendTime = new DateTime() };
             ]
         ))
@@ -266,7 +266,7 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( 10u = ( result.Item 1 ).offset ))
         Assert.True(( 10u = ( result.Item 1 ).length ))
         Assert.True(( ttt_me.fromPrim 0u = ( result.Item 1 ).ttt ))
-        Assert.True(( datasn_me.fromPrim 0u = ( result.Item 1 ).sn ))
+        Assert.True(( datasn_me.zero = ( result.Item 1 ).sn ))
         Assert.True(( 20u = ( result.Item 2 ).offset ))
         Assert.True(( 10u = ( result.Item 2 ).length ))
         Assert.True(( ttt_me.fromPrim 1u = ( result.Item 2 ).ttt ))
@@ -630,7 +630,7 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( 10u = p.R2TPDU.[0].offset ))
         Assert.True(( 10u = p.R2TPDU.[0].length ))
         Assert.True(( ttt_me.fromPrim 0u = p.R2TPDU.[0].ttt ))
-        Assert.True(( datasn_me.fromPrim 0u = p.R2TPDU.[0].sn ))
+        Assert.True(( datasn_me.zero = p.R2TPDU.[0].sn ))
         Assert.True(( 20u = p.R2TPDU.[1].offset ))
         Assert.True(( 10u = p.R2TPDU.[1].length ))
         Assert.True(( ttt_me.fromPrim 1u = p.R2TPDU.[1].ttt ))
@@ -894,7 +894,7 @@ type IscsiTaskScsiCommand_Test () =
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = true;
                 TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
-                DataSN = datasn_me.fromPrim 0u;
+                DataSN = datasn_me.zero;
                 BufferOffset = 20u;
                 DataSegment = [| 0uy .. 9uy |] |> PooledBuffer.Rent;
         }
@@ -936,7 +936,7 @@ type IscsiTaskScsiCommand_Test () =
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = false;
                 TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
-                DataSN = datasn_me.fromPrim 0u;
+                DataSN = datasn_me.zero;
                 BufferOffset = 20u;
                 DataSegment = [| 0uy .. 9uy |] |> PooledBuffer.Rent;
         }
@@ -963,7 +963,7 @@ type IscsiTaskScsiCommand_Test () =
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = false;
                 TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
-                DataSN = datasn_me.fromPrim 0u;
+                DataSN = datasn_me.zero;
                 BufferOffset = 0u;
                 DataSegment = [| 0uy .. 9uy |] |> PooledBuffer.Rent;
         }
@@ -1018,7 +1018,7 @@ type IscsiTaskScsiCommand_Test () =
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = false;
                 TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
-                DataSN = datasn_me.fromPrim 0u;
+                DataSN = datasn_me.zero;
                 BufferOffset = 20u;
                 DataSegment = [| 0uy .. 9uy |] |> PooledBuffer.Rent;
         }
@@ -1051,7 +1051,7 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( 0 = task1.SCSIDataOutPDUs.Length ))
         Assert.True(( 3 = task1.R2TPDU.Length ))
         Assert.True(( ttt_me.fromPrim 0u = task1.R2TPDU.[0].ttt ))
-        Assert.True(( datasn_me.fromPrim 0u = task1.R2TPDU.[0].sn ))
+        Assert.True(( datasn_me.zero = task1.R2TPDU.[0].sn ))
         Assert.True(( ttt_me.fromPrim 1u = task1.R2TPDU.[1].ttt ))
         Assert.True(( datasn_me.fromPrim 1u = task1.R2TPDU.[1].sn ))
         Assert.True(( ttt_me.fromPrim 2u = task1.R2TPDU.[2].ttt ))
@@ -1063,7 +1063,7 @@ type IscsiTaskScsiCommand_Test () =
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = false;
                 TargetTransferTag = ttt_me.fromPrim 10u;
-                DataSN = datasn_me.fromPrim 0u;
+                DataSN = datasn_me.zero;
                 BufferOffset = 20u;
                 DataSegment = [| 0uy .. 9uy |] |> PooledBuffer.Rent;
         }
@@ -1096,7 +1096,7 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( 0 = task1.SCSIDataOutPDUs.Length ))
         Assert.True(( 3 = task1.R2TPDU.Length ))
         Assert.True(( ttt_me.fromPrim 0u = task1.R2TPDU.[0].ttt ))
-        Assert.True(( datasn_me.fromPrim 0u = task1.R2TPDU.[0].sn ))
+        Assert.True(( datasn_me.zero = task1.R2TPDU.[0].sn ))
         Assert.True(( ttt_me.fromPrim 1u = task1.R2TPDU.[1].ttt ))
         Assert.True(( datasn_me.fromPrim 1u = task1.R2TPDU.[1].sn ))
         Assert.True(( ttt_me.fromPrim 2u = task1.R2TPDU.[2].ttt ))
@@ -1108,7 +1108,7 @@ type IscsiTaskScsiCommand_Test () =
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = false;
                 TargetTransferTag = ttt_me.fromPrim 0u;
-                DataSN = datasn_me.fromPrim 0u;
+                DataSN = datasn_me.zero;
                 BufferOffset = 10u;
                 DataSegment = [| 0uy .. 5uy |] |> PooledBuffer.Rent;
         }
@@ -1125,7 +1125,7 @@ type IscsiTaskScsiCommand_Test () =
         let connStub = new CConnection_Stub(
             p_NotifyR2TSatisfied = ( fun itt r2tsn ->
                 Assert.True(( itt = itt_me.fromPrim 1u ))
-                Assert.True(( r2tsn = datasn_me.fromPrim 0u ))
+                Assert.True(( r2tsn = datasn_me.zero ))
                 cnt2 <- 1
             )
         )
@@ -1151,7 +1151,7 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( 0 = task1.SCSIDataOutPDUs.Length ))
         Assert.True(( 3 = task1.R2TPDU.Length ))
         Assert.True(( ttt_me.fromPrim 0u = task1.R2TPDU.[0].ttt ))
-        Assert.True(( datasn_me.fromPrim 0u = task1.R2TPDU.[0].sn ))
+        Assert.True(( datasn_me.zero = task1.R2TPDU.[0].sn ))
         Assert.True(( ttt_me.fromPrim 1u = task1.R2TPDU.[1].ttt ))
         Assert.True(( datasn_me.fromPrim 1u = task1.R2TPDU.[1].sn ))
         Assert.True(( ttt_me.fromPrim 2u = task1.R2TPDU.[2].ttt ))
@@ -1163,7 +1163,7 @@ type IscsiTaskScsiCommand_Test () =
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = true;
                 TargetTransferTag = ttt_me.fromPrim 0u;
-                DataSN = datasn_me.fromPrim 0u;
+                DataSN = datasn_me.zero;
                 BufferOffset = 10u;
                 DataSegment = [| 0uy .. 9uy |] |> PooledBuffer.Rent;
         }
@@ -1189,7 +1189,7 @@ type IscsiTaskScsiCommand_Test () =
         let connStub = new CConnection_Stub(
             p_NotifyR2TSatisfied = ( fun itt r2tsn ->
                 Assert.True(( itt = itt_me.fromPrim 1u ))
-                Assert.True(( r2tsn = datasn_me.fromPrim 0u ))
+                Assert.True(( r2tsn = datasn_me.zero ))
                 cnt2 <- 1
             )
         )
@@ -1216,7 +1216,7 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( 0 = task1.SCSIDataOutPDUs.Length ))
         Assert.True(( 1 = task1.R2TPDU.Length ))
         Assert.True(( ttt_me.fromPrim 0u = task1.R2TPDU.[0].ttt ))
-        Assert.True(( datasn_me.fromPrim 0u = task1.R2TPDU.[0].sn ))
+        Assert.True(( datasn_me.zero = task1.R2TPDU.[0].sn ))
         Assert.True(( 30u = task1.R2TPDU.[0].offset ))
         Assert.True(( 10u = task1.R2TPDU.[0].length ))
         Assert.True(( DATARECVSTAT.SOLICITED = task1.Status ))
@@ -1227,7 +1227,7 @@ type IscsiTaskScsiCommand_Test () =
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = true;
                 TargetTransferTag = ttt_me.fromPrim 0u;
-                DataSN = datasn_me.fromPrim 0u;
+                DataSN = datasn_me.zero;
                 BufferOffset = 35u;
                 DataSegment = [| 0uy .. 4uy |] |> PooledBuffer.Rent;
         }
@@ -1250,7 +1250,7 @@ type IscsiTaskScsiCommand_Test () =
         let connStub = new CConnection_Stub(
             p_NotifyR2TSatisfied = ( fun itt r2tsn ->
                 Assert.True(( itt = itt_me.fromPrim 1u ))
-                Assert.True(( r2tsn = datasn_me.fromPrim 0u ))
+                Assert.True(( r2tsn = datasn_me.zero ))
                 cnt2 <- 1
             )
         )
@@ -1280,7 +1280,7 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( 0 = task1.SCSIDataOutPDUs.Length ))
         Assert.True(( 1 = task1.R2TPDU.Length ))
         Assert.True(( ttt_me.fromPrim 0u = task1.R2TPDU.[0].ttt ))
-        Assert.True(( datasn_me.fromPrim 0u = task1.R2TPDU.[0].sn ))
+        Assert.True(( datasn_me.zero = task1.R2TPDU.[0].sn ))
         Assert.True(( 30u = task1.R2TPDU.[0].offset ))
         Assert.True(( 10u = task1.R2TPDU.[0].length ))
         Assert.True(( DATARECVSTAT.SOLICITED = task1.Status ))
@@ -1292,7 +1292,7 @@ type IscsiTaskScsiCommand_Test () =
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = true;
                 TargetTransferTag = ttt_me.fromPrim 0u;
-                DataSN = datasn_me.fromPrim 0u;
+                DataSN = datasn_me.zero;
                 BufferOffset = 35u;
                 DataSegment = [| 0uy .. 4uy |] |> PooledBuffer.Rent;
         }
@@ -1343,7 +1343,7 @@ type IscsiTaskScsiCommand_Test () =
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = false;
                 TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
-                DataSN = datasn_me.fromPrim 0u;
+                DataSN = datasn_me.zero;
                 BufferOffset = 0u;
                 DataSegment = [| 0uy .. 9uy |] |> PooledBuffer.Rent;
         }
@@ -1389,7 +1389,7 @@ type IscsiTaskScsiCommand_Test () =
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = false;
                 TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
-                DataSN = datasn_me.fromPrim 0u;
+                DataSN = datasn_me.zero;
                 BufferOffset = 0u;
                 DataSegment = [| 0uy .. 9uy |] |> PooledBuffer.Rent;
         }
@@ -1426,7 +1426,7 @@ type IscsiTaskScsiCommand_Test () =
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = true;
                 TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
-                DataSN = datasn_me.fromPrim 0u;
+                DataSN = datasn_me.zero;
                 BufferOffset = 15u;
                 DataSegment = [| 0uy .. 9uy |] |> PooledBuffer.Rent;
         }
@@ -1450,7 +1450,7 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( DATARECVSTAT.SOLICITED = task2.Status ))
         Assert.True(( 2 = task2.R2TPDU.Length ))
         Assert.True(( ttt_me.fromPrim 0u = task2.R2TPDU.[0].ttt ))
-        Assert.True(( datasn_me.fromPrim 0u = task2.R2TPDU.[0].sn ))
+        Assert.True(( datasn_me.zero = task2.R2TPDU.[0].sn ))
         Assert.True(( 25u = task2.R2TPDU.[0].offset ))
         Assert.True(( 10u = task2.R2TPDU.[0].length ))
         Assert.True(( ttt_me.fromPrim 1u = task2.R2TPDU.[1].ttt ))
@@ -1475,7 +1475,7 @@ type IscsiTaskScsiCommand_Test () =
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = false;
                 TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
-                DataSN = datasn_me.fromPrim 0u;
+                DataSN = datasn_me.zero;
                 BufferOffset = 15u;
                 DataSegment = [| 0uy .. 9uy |] |> PooledBuffer.Rent;
         }
@@ -1501,7 +1501,7 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( DATARECVSTAT.SOLICITED = task2.Status ))
         Assert.True(( 2 = task2.R2TPDU.Length ))
         Assert.True(( ttt_me.fromPrim 0u = task2.R2TPDU.[0].ttt ))
-        Assert.True(( datasn_me.fromPrim 0u = task2.R2TPDU.[0].sn ))
+        Assert.True(( datasn_me.zero = task2.R2TPDU.[0].sn ))
         Assert.True(( 25u = task2.R2TPDU.[0].offset ))
         Assert.True(( 10u = task2.R2TPDU.[0].length ))
         Assert.True(( ttt_me.fromPrim 1u = task2.R2TPDU.[1].ttt ))
@@ -1526,7 +1526,7 @@ type IscsiTaskScsiCommand_Test () =
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = false;
                 TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
-                DataSN = datasn_me.fromPrim 0u;
+                DataSN = datasn_me.zero;
                 BufferOffset = 15u;
                 DataSegment = [| 0uy .. 9uy |] |> PooledBuffer.Rent;
         }
@@ -1604,7 +1604,7 @@ type IscsiTaskScsiCommand_Test () =
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = true;
                 TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
-                DataSN = datasn_me.fromPrim 0u;
+                DataSN = datasn_me.zero;
                 BufferOffset = 20u;
                 DataSegment = [| 0uy .. 19uy |] |> PooledBuffer.Rent;
         }
@@ -1668,7 +1668,7 @@ type IscsiTaskScsiCommand_Test () =
                     if cnt = 1 then
                         Assert.True(( 10u = r2t.BufferOffset ))
                         Assert.True(( 10u = r2t.DesiredDataTransferLength ))
-                        Assert.True(( datasn_me.fromPrim 0u = r2t.R2TSN ))
+                        Assert.True(( datasn_me.zero = r2t.R2TSN ))
                     else
                         Assert.True(( 20u = r2t.BufferOffset ))
                         Assert.True(( 10u = r2t.DesiredDataTransferLength ))
@@ -1699,7 +1699,7 @@ type IscsiTaskScsiCommand_Test () =
                 p_NotifyR2TSatisfied = ( fun itt r2tsn ->
                     cnt2 <- 1
                     Assert.True(( itt = itt_me.fromPrim 1u ))
-                    Assert.True(( r2tsn = datasn_me.fromPrim 0u ))
+                    Assert.True(( r2tsn = datasn_me.zero ))
                 )
             ) :> IConnection
             |> ValueSome
@@ -1715,7 +1715,7 @@ type IscsiTaskScsiCommand_Test () =
             IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with
                 F = true;
                 TargetTransferTag = ttt_me.fromPrim 0x0u;
-                DataSN = datasn_me.fromPrim 0u;
+                DataSN = datasn_me.zero;
                 BufferOffset = 10u;
                 DataSegment = [| 0uy .. 9uy |] |> PooledBuffer.Rent;
         }

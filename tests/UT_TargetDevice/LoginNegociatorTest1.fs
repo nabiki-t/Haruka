@@ -1588,9 +1588,9 @@ type LoginNegociator_Test1 () =
                 Assert.True( ( recvPDU2.Opcode = OpcodeCd.LOGIN_RES ) );
                 let recvPDU2L = recvPDU2 :?> LoginResponsePDU
                 Assert.True( recvPDU2L.T = false )
-                Assert.True( recvPDU2L.ExpCmdSN = cmdsn_me.fromPrim 0u )
-                Assert.True( recvPDU2L.MaxCmdSN = cmdsn_me.fromPrim 0u )
-                Assert.True( recvPDU2L.StatSN = statsn_me.fromPrim 0u )
+                Assert.True( recvPDU2L.ExpCmdSN = cmdsn_me.zero )
+                Assert.True( recvPDU2L.MaxCmdSN = cmdsn_me.zero )
+                Assert.True( recvPDU2L.StatSN = statsn_me.zero )
 
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
                         {
@@ -1609,9 +1609,9 @@ type LoginNegociator_Test1 () =
                 Assert.True( recvPDU3L.T = true )
                 Assert.True( recvPDU3L.CSG = LoginReqStateCd.SEQURITY )
                 Assert.True( recvPDU3L.NSG = LoginReqStateCd.OPERATIONAL )
-                Assert.True( recvPDU3L.ExpCmdSN = cmdsn_me.fromPrim 0u )
-                Assert.True( recvPDU3L.MaxCmdSN = cmdsn_me.fromPrim 0u )
-                Assert.True( recvPDU3L.StatSN = statsn_me.fromPrim 0u )
+                Assert.True( recvPDU3L.ExpCmdSN = cmdsn_me.zero )
+                Assert.True( recvPDU3L.MaxCmdSN = cmdsn_me.zero )
+                Assert.True( recvPDU3L.StatSN = statsn_me.zero )
 
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
                         {
@@ -1662,9 +1662,9 @@ type LoginNegociator_Test1 () =
                 Assert.True( ( recvPDU4.Opcode = OpcodeCd.LOGIN_RES ) );
                 let recvPDU4L = recvPDU4 :?> LoginResponsePDU
                 Assert.True( recvPDU4L.T = false )
-                Assert.True( recvPDU4L.ExpCmdSN = cmdsn_me.fromPrim 0u )
-                Assert.True( recvPDU4L.MaxCmdSN = cmdsn_me.fromPrim 0u )
-                Assert.True( recvPDU4L.StatSN = statsn_me.fromPrim 0u )
+                Assert.True( recvPDU4L.ExpCmdSN = cmdsn_me.zero )
+                Assert.True( recvPDU4L.MaxCmdSN = cmdsn_me.zero )
+                Assert.True( recvPDU4L.StatSN = statsn_me.zero )
 
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
                         {
@@ -1763,9 +1763,9 @@ type LoginNegociator_Test1 () =
                 Assert.True( ( recvPDU2.Opcode = OpcodeCd.LOGIN_RES ) );
                 let recvPDU2L = recvPDU2 :?> LoginResponsePDU
                 Assert.True( recvPDU2L.T = false )
-                Assert.True( recvPDU2L.ExpCmdSN = cmdsn_me.fromPrim 0u )
-                Assert.True( recvPDU2L.MaxCmdSN = cmdsn_me.fromPrim 0u )
-                Assert.True( recvPDU2L.StatSN = statsn_me.fromPrim 0u )
+                Assert.True( recvPDU2L.ExpCmdSN = cmdsn_me.zero )
+                Assert.True( recvPDU2L.MaxCmdSN = cmdsn_me.zero )
+                Assert.True( recvPDU2L.StatSN = statsn_me.zero )
 
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
                         {

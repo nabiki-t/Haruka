@@ -38,9 +38,9 @@ type Connection_Test () =
         LUN = lun_me.fromPrim 0x0001020304050607UL;
         InitiatorTaskTag = itt_me.fromPrim 0u;
         TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
-        StatSN = statsn_me.fromPrim 0u;
-        ExpCmdSN = cmdsn_me.fromPrim 0u;
-        MaxCmdSN = cmdsn_me.fromPrim 0u;
+        StatSN = statsn_me.zero;
+        ExpCmdSN = cmdsn_me.zero;
+        MaxCmdSN = cmdsn_me.zero;
         PingData = PooledBuffer.Empty;
     }
 
@@ -53,10 +53,10 @@ type Connection_Test () =
         Status = ScsiCmdStatCd.GOOD;
         InitiatorTaskTag = itt_me.fromPrim 0u;
         SNACKTag = snacktag_me.fromPrim 0u;
-        StatSN = statsn_me.fromPrim 0u;
-        ExpCmdSN = cmdsn_me.fromPrim 0u;
-        MaxCmdSN = cmdsn_me.fromPrim 0u;
-        ExpDataSN = datasn_me.fromPrim 0u;
+        StatSN = statsn_me.zero;
+        ExpCmdSN = cmdsn_me.zero;
+        MaxCmdSN = cmdsn_me.zero;
+        ExpDataSN = datasn_me.zero;
         BidirectionalReadResidualCount = 0u;
         ResidualCount = 0u;
         SenseLength = 0us;
@@ -79,7 +79,7 @@ type Connection_Test () =
         StatSN = statsn_me.zero;
         ExpCmdSN = cmdsn_me.zero;
         MaxCmdSN = cmdsn_me.zero;
-        DataSN = datasn_me.fromPrim 0u;
+        DataSN = datasn_me.zero;
         BufferOffset = 0u;
         ResidualCount = 0u;
         DataSegment = ArraySegment( [||], 0, 0 )
@@ -90,10 +90,10 @@ type Connection_Test () =
         LUN = lun_me.zero;
         InitiatorTaskTag = itt_me.fromPrim 0u;
         TargetTransferTag = ttt_me.fromPrim 0u;
-        StatSN = statsn_me.fromPrim 0u;
-        ExpCmdSN = cmdsn_me.fromPrim 0u;
-        MaxCmdSN = cmdsn_me.fromPrim 0u;
-        R2TSN = datasn_me.fromPrim 0u;
+        StatSN = statsn_me.zero;
+        ExpCmdSN = cmdsn_me.zero;
+        MaxCmdSN = cmdsn_me.zero;
+        R2TSN = datasn_me.zero;
         BufferOffset = 0u;
         DesiredDataTransferLength = 1u;
     }
@@ -188,7 +188,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let mutable cnt = 0
         let mutable cnt2 = 0
@@ -216,7 +216,7 @@ type Connection_Test () =
 
         PDU.SendPDU( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objidx_me.NewID(), cp, {
             Connection_Test.defaultNopOUTPDUValues with
-                ExpStatSN = statsn_me.fromPrim 0u;
+                ExpStatSN = statsn_me.zero;
         } )
         |> Functions.RunTaskSynchronously
         |> ignore
@@ -233,7 +233,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let mutable cnt = 0
         let wlock = new SemaphoreSlim( 1 )
@@ -257,7 +257,7 @@ type Connection_Test () =
 
         PDU.SendPDU( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objidx_me.NewID(), cp, {
             Connection_Test.defaultNopOUTPDUValues with
-                ExpStatSN = statsn_me.fromPrim 0u;
+                ExpStatSN = statsn_me.zero;
         } )
         |> Functions.RunTaskSynchronously
         |> ignore
@@ -296,7 +296,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let b = new Barrier( 2 )
         let dummyObj = CComponent_Stub()
@@ -318,7 +318,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let mutable cnt = 0
         let pc = PrivateCaller( con )
@@ -364,7 +364,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
 
         con.ReSendPDU( {
@@ -393,7 +393,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let b = new Barrier( 2 )
         let dummyObj = CComponent_Stub()
@@ -419,7 +419,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
 
         con.ReSendPDUForRSnack( {
@@ -454,7 +454,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let b = new Barrier( 2 )
         let dummyObj = CComponent_Stub()
@@ -479,7 +479,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         con.ReSendPDUForRSnack( {
                 Connection_Test.defaultSCSIResponsePDUValues with
@@ -516,7 +516,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         con.ReSendPDUForRSnack( {
                 Connection_Test.defaultSCSIDataInPDUValues with
@@ -553,7 +553,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
 
         Assert.True(( con.CurrentParams.MaxRecvDataSegmentLength_I = 4096u ))
@@ -572,19 +572,19 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
         let m_ResendStat = OptimisticLock< ResendStatusRec >({
             m_SentRespPDUs = ImmutableArray< struct( STATSN_T * ILogicalPDU ) >.Empty;
             m_SentDataInPDUs = ImmutableArray< struct ( ITT_T * DATASN_T * ILogicalPDU ) >
                                 .Empty
-                                .Add( struct ( itt_me.fromPrim 0u, datasn_me.fromPrim 0u, Connection_Test.defaultSCSIDataInPDUValues ) );
+                                .Add( struct ( itt_me.fromPrim 0u, datasn_me.zero, Connection_Test.defaultSCSIDataInPDUValues ) );
             m_R_SNACK_Request = ImmutableArray< struct( ITT_T *  ( unit -> unit ) ) >.Empty;
         })
         pc.SetField( "m_ResendStat", m_ResendStat )
 
-        con.NotifyR2TSatisfied ( itt_me.fromPrim 0u ) ( datasn_me.fromPrim 0u )
+        con.NotifyR2TSatisfied ( itt_me.fromPrim 0u ) ( datasn_me.zero )
 
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 0 ))
@@ -597,14 +597,14 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
         let vSentDataInPDU =
             [|
                 struct (
                     itt_me.fromPrim 0u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             A = false;
@@ -615,7 +615,7 @@ type Connection_Test () =
                 );
                 struct (
                     itt_me.fromPrim 1u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             A = false;
@@ -659,7 +659,7 @@ type Connection_Test () =
                 );
                 struct (
                     itt_me.fromPrim 2u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             A = false;
@@ -682,7 +682,7 @@ type Connection_Test () =
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 4 ))
 
-        let r1 = Seq.tryFind ( fun struct( a, b, _ ) -> a = itt_me.fromPrim 0u && b = datasn_me.fromPrim 0u ) m_SentDataInPDUs
+        let r1 = Seq.tryFind ( fun struct( a, b, _ ) -> a = itt_me.fromPrim 0u && b = datasn_me.zero ) m_SentDataInPDUs
         Assert.True r1.IsSome
 
         let r2 = Seq.tryFind ( fun struct( a, b, _ ) -> a = itt_me.fromPrim 1u && b = datasn_me.fromPrim 2u ) m_SentDataInPDUs
@@ -691,7 +691,7 @@ type Connection_Test () =
         let r3 = Seq.tryFind ( fun struct( a, b, _ ) -> a = itt_me.fromPrim 1u && b = datasn_me.fromPrim 3u ) m_SentDataInPDUs
         Assert.True r3.IsSome
 
-        let r4 = Seq.tryFind ( fun struct( a, b, _ ) -> a = itt_me.fromPrim 2u && b = datasn_me.fromPrim 0u ) m_SentDataInPDUs
+        let r4 = Seq.tryFind ( fun struct( a, b, _ ) -> a = itt_me.fromPrim 2u && b = datasn_me.zero ) m_SentDataInPDUs
         Assert.True r4.IsSome
 
         GlbFunc.ClosePorts [| sp; cp; |]
@@ -702,14 +702,14 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
         let vSentDataInPDU = 
             [|
                 struct (
                     itt_me.fromPrim 0u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             A = false;
@@ -733,7 +733,7 @@ type Connection_Test () =
         Assert.True(( m_SentDataInPDUs.Length = 1 ))
         let struct( a, b, _ ) = m_SentDataInPDUs.[0]
         Assert.True(( a = itt_me.fromPrim 0u ))
-        Assert.True(( b = datasn_me.fromPrim 0u ))
+        Assert.True(( b = datasn_me.zero ))
         GlbFunc.ClosePorts [| sp; cp; |]
 
     [<Fact>]
@@ -742,7 +742,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         con.NotifyDataAck ( ttt_me.fromPrim 2u ) ( lun_me.fromPrim 1UL ) ( datasn_me.fromPrim 2u )
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
@@ -755,7 +755,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -763,7 +763,7 @@ type Connection_Test () =
             [|
                 struct (
                     itt_me.fromPrim 0u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 0xFF00u;
@@ -771,7 +771,7 @@ type Connection_Test () =
                 );
                 struct (
                     itt_me.fromPrim 1u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 0xFF01u;
@@ -803,7 +803,7 @@ type Connection_Test () =
                 );
                 struct (
                     itt_me.fromPrim 4u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 0xFF05u;
@@ -830,14 +830,14 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
         let vSentDataInPDU =
             [|
                 struct (
                     itt_me.fromPrim 0u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 0xFF00u;
@@ -845,7 +845,7 @@ type Connection_Test () =
                 );
                 struct (
                     itt_me.fromPrim 1u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 0xFF01u;
@@ -870,7 +870,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let v = con.GetSentDataInPDUForSNACK ( itt_me.fromPrim 2u ) ( datasn_me.fromPrim 2u ) 1u
         Assert.True(( v.Length = 0 ))
@@ -882,7 +882,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -929,7 +929,7 @@ type Connection_Test () =
         })
         pc.SetField( "m_ResendStat", m_ResendStat )
 
-        let v = con.GetSentDataInPDUForSNACK ( itt_me.fromPrim 0u ) ( datasn_me.fromPrim 0u ) 0u
+        let v = con.GetSentDataInPDUForSNACK ( itt_me.fromPrim 0u ) ( datasn_me.zero ) 0u
         Assert.True(( v.Length = 4 ))
         Assert.True(( v.[0].InitiatorTaskTag = itt_me.fromPrim 0xFF00u ))
         Assert.True(( v.[1].InitiatorTaskTag = itt_me.fromPrim 0xFF01u ))
@@ -943,7 +943,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -1003,7 +1003,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -1050,7 +1050,7 @@ type Connection_Test () =
         })
         pc.SetField( "m_ResendStat", m_ResendStat )
 
-        let v = con.GetSentDataInPDUForSNACK ( itt_me.fromPrim 0u ) ( datasn_me.fromPrim 0u ) 3u
+        let v = con.GetSentDataInPDUForSNACK ( itt_me.fromPrim 0u ) ( datasn_me.zero ) 3u
         Assert.True(( v.Length = 3 ))
         Assert.True(( v.[0].InitiatorTaskTag = itt_me.fromPrim 0xFF00u ))
         Assert.True(( v.[1].InitiatorTaskTag = itt_me.fromPrim 0xFF01u ))
@@ -1063,7 +1063,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -1122,7 +1122,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -1144,7 +1144,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -1166,7 +1166,7 @@ type Connection_Test () =
         })
         pc.SetField( "m_ResendStat", m_ResendStat )
 
-        let v = con.GetSentResponsePDUForSNACK ( statsn_me.fromPrim 0u ) 0u
+        let v = con.GetSentResponsePDUForSNACK ( statsn_me.zero ) 0u
         Assert.True(( v.Length = 2 ))
         Assert.True(( ( v.[0] :?> SCSIResponsePDU ).StatSN = statsn_me.fromPrim 1u ))
         Assert.True(( ( v.[1] :?> SCSIResponsePDU ).StatSN = statsn_me.fromPrim 2u ))
@@ -1179,7 +1179,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -1212,7 +1212,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -1247,7 +1247,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -1280,7 +1280,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -1313,7 +1313,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -1350,7 +1350,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -1358,7 +1358,7 @@ type Connection_Test () =
             [|
                 struct (
                     itt_me.fromPrim 1u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 1u;
@@ -1374,7 +1374,7 @@ type Connection_Test () =
                 );
                 struct (
                     itt_me.fromPrim 2u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 2u;
@@ -1429,7 +1429,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -1437,7 +1437,7 @@ type Connection_Test () =
             [|
                 struct (
                     itt_me.fromPrim 2u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 2u;
@@ -1453,7 +1453,7 @@ type Connection_Test () =
                 );
                 struct (
                     itt_me.fromPrim 3u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 3u;
@@ -1506,7 +1506,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -1514,7 +1514,7 @@ type Connection_Test () =
             [|
                 struct (
                     itt_me.fromPrim 1u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 1u;
@@ -1530,7 +1530,7 @@ type Connection_Test () =
                 );
                 struct (
                     itt_me.fromPrim 2u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 2u;
@@ -1586,7 +1586,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -1634,7 +1634,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -1642,7 +1642,7 @@ type Connection_Test () =
             [|
                 struct (
                     itt_me.fromPrim 1u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 1u;
@@ -1658,7 +1658,7 @@ type Connection_Test () =
                 );
                 struct (
                     itt_me.fromPrim 2u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 2u;
@@ -1694,7 +1694,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -1702,7 +1702,7 @@ type Connection_Test () =
             [|
                 struct (
                     itt_me.fromPrim 1u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 1u;
@@ -1726,7 +1726,7 @@ type Connection_Test () =
                 );
                 struct (
                     itt_me.fromPrim  2u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 2u;
@@ -1773,7 +1773,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -1781,7 +1781,7 @@ type Connection_Test () =
             [|
                 struct (
                     itt_me.fromPrim 1u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultR2TPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 1u;
@@ -1805,7 +1805,7 @@ type Connection_Test () =
                 );
                 struct (
                     itt_me.fromPrim 2u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 2u;
@@ -1850,7 +1850,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
         let mutable cnt = 0
@@ -1887,7 +1887,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
         let mutable cnt = 0
@@ -1924,7 +1924,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
         let mutable cnt = 0
@@ -1971,7 +1971,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
         let mutable cnt = 0
@@ -2025,7 +2025,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         sessStub.p_UpdateMaxCmdSN <- ( fun () -> ( cmdsn_me.fromPrim 1u, cmdsn_me.fromPrim 2u ) )
         sessStub.p_RemoveConnection <- ( fun _ _ -> Assert.Fail __LINE__ )
@@ -2035,7 +2035,7 @@ type Connection_Test () =
             [|
                 struct (
                     itt_me.fromPrim 1u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 1u;
@@ -2065,7 +2065,7 @@ type Connection_Test () =
         Assert.True(( m_SentDataInPDUs.Length = 1 ))
         let struct( a, b, c ) = m_SentDataInPDUs.[0]
         Assert.True(( a = itt_me.fromPrim 1u ))
-        Assert.True(( b = datasn_me.fromPrim 0u ))
+        Assert.True(( b = datasn_me.zero ))
         Assert.True(( ( c :?> SCSIDataInPDU ).Status = ScsiCmdStatCd.GOOD ))
 
         let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
@@ -2089,7 +2089,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         sessStub.p_UpdateMaxCmdSN <- ( fun () -> ( cmdsn_me.fromPrim 1u, cmdsn_me.fromPrim 2u ) )
         sessStub.p_RemoveConnection <- ( fun _ _ -> Assert.Fail __LINE__ )
@@ -2109,7 +2109,7 @@ type Connection_Test () =
         Assert.True(( m_SentDataInPDUs.Length = 1 ))
         let struct( a, b, c ) = m_SentDataInPDUs.[0]
         Assert.True(( a = itt_me.fromPrim 1u ))
-        Assert.True(( b = datasn_me.fromPrim 0u ))
+        Assert.True(( b = datasn_me.zero ))
         Assert.True(( ( c :?> SCSIDataInPDU ).Status = ScsiCmdStatCd.GOOD ))
 
         let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
@@ -2133,7 +2133,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         sessStub.p_UpdateMaxCmdSN <- ( fun () -> ( cmdsn_me.fromPrim 1u, cmdsn_me.fromPrim 2u ) )
         sessStub.p_RemoveConnection <- ( fun _ _ -> Assert.Fail __LINE__ )
@@ -2170,7 +2170,7 @@ type Connection_Test () =
         Assert.True(( m_SentDataInPDUs.Length = 1 ))
         let struct( a, b, c ) = m_SentDataInPDUs.[0]
         Assert.True(( a = itt_me.fromPrim 1u ))
-        Assert.True(( b = datasn_me.fromPrim 0u ))
+        Assert.True(( b = datasn_me.zero ))
         Assert.True(( ( c :?> SCSIDataInPDU ).Status = ScsiCmdStatCd.GOOD ))
 
         let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
@@ -2185,7 +2185,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         sessStub.p_UpdateMaxCmdSN <- ( fun () -> ( cmdsn_me.fromPrim 1u, cmdsn_me.fromPrim 2u ) )
         sessStub.p_RemoveConnection <- ( fun _ _ -> Assert.Fail __LINE__ )
@@ -2194,12 +2194,12 @@ type Connection_Test () =
         let vSentRespPDUs =
             [|
                 struct(
-                    statsn_me.fromPrim 0u,
+                    statsn_me.zero,
                     {
                         Connection_Test.defaultSCSIResponsePDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 1u;
                             Status = ScsiCmdStatCd.ACA_ACTIVE;
-                            StatSN = statsn_me.fromPrim 0u;
+                            StatSN = statsn_me.zero;
                     } :> ILogicalPDU
                 );
             |]
@@ -2216,7 +2216,7 @@ type Connection_Test () =
                 Connection_Test.defaultSCSIResponsePDUValues with
                     InitiatorTaskTag = itt_me.fromPrim 1u;
                     Status = ScsiCmdStatCd.GOOD;
-                    StatSN = statsn_me.fromPrim 0u;
+                    StatSN = statsn_me.zero;
             } ) :?> Task< ( unit -> unit ) voption >
             |> Functions.RunTaskSynchronously
 
@@ -2228,7 +2228,7 @@ type Connection_Test () =
         let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
         Assert.True(( m_SentRespPDUs.Length = 1 ))
         let struct( rStatSN, rPDU ) = m_SentRespPDUs.[0]
-        Assert.True(( rStatSN = statsn_me.fromPrim 0u ))
+        Assert.True(( rStatSN = statsn_me.zero ))
         Assert.True(( ( rPDU :?> SCSIResponsePDU ).Status = ScsiCmdStatCd.GOOD ))
 
         Assert.True(( ( pc.GetField( "m_StatSN" ) :?> uint ) = 1u ))
@@ -2251,7 +2251,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         sessStub.p_UpdateMaxCmdSN <- ( fun () -> ( cmdsn_me.fromPrim 1u, cmdsn_me.fromPrim 2u ) )
         sessStub.p_RemoveConnection <- ( fun _ _ -> Assert.Fail __LINE__ )
@@ -2262,7 +2262,7 @@ type Connection_Test () =
                 Connection_Test.defaultSCSIResponsePDUValues with
                     InitiatorTaskTag = itt_me.fromPrim 1u;
                     Status = ScsiCmdStatCd.GOOD;
-                    StatSN = statsn_me.fromPrim 0u;
+                    StatSN = statsn_me.zero;
             } ) :?> Task< ( unit -> unit ) voption >
             |> Functions.RunTaskSynchronously
 
@@ -2273,7 +2273,7 @@ type Connection_Test () =
         let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
         Assert.True(( m_SentRespPDUs.Length = 1 ))
         let struct( rStatSN, rPDU ) = m_SentRespPDUs.[0]
-        Assert.True(( rStatSN = statsn_me.fromPrim 0u ))
+        Assert.True(( rStatSN = statsn_me.zero ))
         Assert.True(( ( rPDU :?> SCSIResponsePDU ).Status = ScsiCmdStatCd.GOOD ))
         Assert.True(( ( pc.GetField( "m_StatSN" ) :?> uint ) = 1u ))
 
@@ -2296,7 +2296,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         sessStub.p_UpdateMaxCmdSN <- ( fun () -> ( cmdsn_me.fromPrim 1u, cmdsn_me.fromPrim 2u ) )
         sessStub.p_RemoveConnection <- ( fun _ _ -> Assert.Fail __LINE__ )
@@ -2325,7 +2325,7 @@ type Connection_Test () =
                 Connection_Test.defaultSCSIResponsePDUValues with
                     InitiatorTaskTag = itt_me.fromPrim 1u;
                     Status = ScsiCmdStatCd.GOOD;
-                    StatSN = statsn_me.fromPrim 0u;
+                    StatSN = statsn_me.zero;
             } ) :?> Task< ( unit -> unit ) voption >
             |> Functions.RunTaskSynchronously
 
@@ -2341,7 +2341,7 @@ type Connection_Test () =
         let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
         Assert.True(( m_SentRespPDUs.Length = 1 ))
         let struct( rStatSN, rPDU ) = m_SentRespPDUs.[0]
-        Assert.True(( rStatSN = statsn_me.fromPrim 0u ))
+        Assert.True(( rStatSN = statsn_me.zero ))
         Assert.True(( ( rPDU :?> SCSIResponsePDU ).Status = ScsiCmdStatCd.GOOD ))
 
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
@@ -2353,7 +2353,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         sessStub.p_UpdateMaxCmdSN <- ( fun () -> ( cmdsn_me.fromPrim 1u, cmdsn_me.fromPrim 2u ) )
         sessStub.p_RemoveConnection <- ( fun _ _ -> Assert.Fail __LINE__ )
@@ -2363,11 +2363,11 @@ type Connection_Test () =
             [|
                 struct (
                     itt_me.fromPrim 1u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultR2TPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 1u;
-                            R2TSN = datasn_me.fromPrim 0u;
+                            R2TSN = datasn_me.zero;
                             BufferOffset = 0xFFu;
                     } :> ILogicalPDU
                 );
@@ -2384,7 +2384,7 @@ type Connection_Test () =
             pc.Invoke( "SendPDUInternal", {
                 Connection_Test.defaultR2TPDUValues with
                     InitiatorTaskTag = itt_me.fromPrim 1u;
-                    R2TSN = datasn_me.fromPrim 0u;
+                    R2TSN = datasn_me.zero;
                     BufferOffset = 0xAAu;
             } ) :?> Task< ( unit -> unit ) voption >
             |> Functions.RunTaskSynchronously
@@ -2394,7 +2394,7 @@ type Connection_Test () =
         Assert.True(( m_SentDataInPDUs.Length = 1 ))
         let struct( a, b, c ) = m_SentDataInPDUs.[0]
         Assert.True(( a = itt_me.fromPrim 1u ))
-        Assert.True(( b = datasn_me.fromPrim 0u ))
+        Assert.True(( b = datasn_me.zero ))
         Assert.True(( ( c :?> R2TPDU ).BufferOffset = 0xAAu ))
 
         let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
@@ -2419,7 +2419,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         sessStub.p_UpdateMaxCmdSN <- ( fun () -> ( cmdsn_me.fromPrim 1u, cmdsn_me.fromPrim 2u ) )
         sessStub.p_RemoveConnection <- ( fun _ _ -> Assert.Fail __LINE__ )
@@ -2429,7 +2429,7 @@ type Connection_Test () =
             pc.Invoke( "SendPDUInternal", {
                 Connection_Test.defaultR2TPDUValues with
                     InitiatorTaskTag = itt_me.fromPrim 1u;
-                    R2TSN = datasn_me.fromPrim 0u;
+                    R2TSN = datasn_me.zero;
                     BufferOffset = 0xAAu;
             } ) :?> Task< ( unit -> unit ) voption >
             |> Functions.RunTaskSynchronously
@@ -2439,7 +2439,7 @@ type Connection_Test () =
         Assert.True(( m_SentDataInPDUs.Length = 1 ))
         let struct( a, b, c ) = m_SentDataInPDUs.[0]
         Assert.True(( a = itt_me.fromPrim 1u ))
-        Assert.True(( b = datasn_me.fromPrim 0u ))
+        Assert.True(( b = datasn_me.zero ))
         Assert.True(( ( c :?> R2TPDU ).BufferOffset = 0xAAu ))
 
         let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
@@ -2465,7 +2465,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         sessStub.p_UpdateMaxCmdSN <- ( fun () -> ( cmdsn_me.fromPrim 1u, cmdsn_me.fromPrim 2u ) )
         sessStub.p_RemoveConnection <- ( fun cid concnt ->
@@ -2478,9 +2478,9 @@ type Connection_Test () =
             pc.Invoke( "SendPDUInternal", {
                 Response = LogoutResCd.SUCCESS;
                 InitiatorTaskTag = itt_me.fromPrim 0u;
-                StatSN = statsn_me.fromPrim 0u;
-                ExpCmdSN = cmdsn_me.fromPrim 0u;
-                MaxCmdSN = cmdsn_me.fromPrim 0u;
+                StatSN = statsn_me.zero;
+                ExpCmdSN = cmdsn_me.zero;
+                MaxCmdSN = cmdsn_me.zero;
                 Time2Wait = 0us;
                 Time2Retain = 0us;
                 CloseAllegiantConnection = true;
@@ -2495,7 +2495,7 @@ type Connection_Test () =
         let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
         Assert.True(( m_SentRespPDUs.Length = 1 ))
         let struct( rStatSN, rPDU ) = m_SentRespPDUs.[0]
-        Assert.True(( rStatSN = statsn_me.fromPrim 0u ))
+        Assert.True(( rStatSN = statsn_me.zero ))
         Assert.True(( ( rPDU :?> LogoutResponsePDU ).Response = LogoutResCd.SUCCESS ))
 
         let rpdu =
@@ -2516,7 +2516,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         sessStub.p_UpdateMaxCmdSN <- ( fun () -> ( cmdsn_me.fromPrim 1u, cmdsn_me.fromPrim 2u ) )
         let pc = PrivateCaller( con )
@@ -2525,9 +2525,9 @@ type Connection_Test () =
             pc.Invoke( "SendPDUInternal", {
                 Response = LogoutResCd.SUCCESS;
                 InitiatorTaskTag = itt_me.fromPrim 0u;
-                StatSN = statsn_me.fromPrim 0u;
-                ExpCmdSN = cmdsn_me.fromPrim 0u;
-                MaxCmdSN = cmdsn_me.fromPrim 0u;
+                StatSN = statsn_me.zero;
+                ExpCmdSN = cmdsn_me.zero;
+                MaxCmdSN = cmdsn_me.zero;
                 Time2Wait = 0us;
                 Time2Retain = 0us;
                 CloseAllegiantConnection = false;
@@ -2542,7 +2542,7 @@ type Connection_Test () =
         let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
         Assert.True(( m_SentRespPDUs.Length = 1 ))
         let struct( rStatSN, rPDU ) = m_SentRespPDUs.[0]
-        Assert.True(( rStatSN = statsn_me.fromPrim 0u ))
+        Assert.True(( rStatSN = statsn_me.zero ))
         Assert.True(( ( rPDU :?> LogoutResponsePDU ).Response = LogoutResCd.SUCCESS ))
 
         let rpdu =
@@ -2562,7 +2562,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         sessStub.p_UpdateMaxCmdSN <- ( fun () -> ( cmdsn_me.fromPrim 1u, cmdsn_me.fromPrim 2u ) )
         sessStub.p_RemoveConnection <- ( fun _ _ -> Assert.Fail __LINE__ )
@@ -2573,9 +2573,9 @@ type Connection_Test () =
                 LUN = lun_me.zero;
                 InitiatorTaskTag = itt_me.fromPrim 0xFFFFFFFFu;
                 TargetTransferTag = ttt_me.fromPrim 1u;
-                StatSN = statsn_me.fromPrim 0u;
-                ExpCmdSN = cmdsn_me.fromPrim 0u;
-                MaxCmdSN = cmdsn_me.fromPrim 0u;
+                StatSN = statsn_me.zero;
+                ExpCmdSN = cmdsn_me.zero;
+                MaxCmdSN = cmdsn_me.zero;
                 PingData = PooledBuffer.Empty;
             } ) :?> Task< ( unit -> unit ) voption >
             |> Functions.RunTaskSynchronously
@@ -2607,7 +2607,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -2646,7 +2646,7 @@ type Connection_Test () =
 
         PDU.SendPDU( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objidx_me.NewID(), cp, {
             Connection_Test.defaultNopOUTPDUValues with
-                ExpStatSN = statsn_me.fromPrim 0u;
+                ExpStatSN = statsn_me.zero;
         } )
         |> Functions.RunTaskSynchronously
         |> ignore
@@ -2691,7 +2691,7 @@ type Connection_Test () =
         PDU.SendPDU( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objidx_me.NewID(), cp, {
             Connection_Test.defaultNopOUTPDUValues with
                 LUN = lun_me.fromPrim 0x00000000000000EFUL
-                ExpStatSN = statsn_me.fromPrim 0u;
+                ExpStatSN = statsn_me.zero;
         } )
         |> Functions.RunTaskSynchronously
         |> ignore
@@ -2740,7 +2740,7 @@ type Connection_Test () =
         PDU.SendPDU( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objidx_me.NewID(), cp, {
             Connection_Test.defaultNopOUTPDUValues with
                 LUN = lun_me.fromPrim 0x00000000000000EFUL
-                ExpStatSN = statsn_me.fromPrim 0u;
+                ExpStatSN = statsn_me.zero;
         } )
         |> Functions.RunTaskSynchronously
         |> ignore
@@ -2768,7 +2768,7 @@ type Connection_Test () =
                     Connection_Test.defaultSessionParameter with
                         ErrorRecoveryLevel = 0uy;
                 },
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -2796,7 +2796,7 @@ type Connection_Test () =
         PDU.SendPDU( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objidx_me.NewID(), cp, {
             Connection_Test.defaultNopOUTPDUValues with
                 LUN = lun_me.fromPrim 0x00000000000000EFUL
-                ExpStatSN = statsn_me.fromPrim 0u;
+                ExpStatSN = statsn_me.zero;
         } )
         |> Functions.RunTaskSynchronously
         |> ignore
@@ -2804,7 +2804,7 @@ type Connection_Test () =
         PDU.SendPDU( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objidx_me.NewID(), cp, {
             Connection_Test.defaultNopOUTPDUValues with
                 LUN = lun_me.fromPrim 0x00000000000000FFUL
-                ExpStatSN = statsn_me.fromPrim 0u;
+                ExpStatSN = statsn_me.zero;
         } )
         |> Functions.RunTaskSynchronously
         |> ignore
@@ -2832,7 +2832,7 @@ type Connection_Test () =
                     Connection_Test.defaultSessionParameter with
                         ErrorRecoveryLevel = 1uy;
                 },
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -2879,7 +2879,7 @@ type Connection_Test () =
                     Connection_Test.defaultSessionParameter with
                         ErrorRecoveryLevel = 1uy;
                 },
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -2907,17 +2907,17 @@ type Connection_Test () =
                     Connection_Test.defaultSessionParameter with
                         ErrorRecoveryLevel = 1uy;
                 },
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
         let vSentRespPDUs =
             [|
                 struct(
-                    statsn_me.fromPrim 0u,
+                    statsn_me.zero,
                     {
                         Connection_Test.defaultSCSIResponsePDUValues with
-                            StatSN = statsn_me.fromPrim 0u;
+                            StatSN = statsn_me.zero;
                             InitiatorTaskTag = itt_me.fromPrim 10u;
                             ResponseFence = ResponseFenceNeedsFlag.W_Mode;
                     } :> ILogicalPDU
@@ -2954,11 +2954,11 @@ type Connection_Test () =
             [|
                 struct (
                     itt_me.fromPrim 10u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 10u;
-                            DataSN = datasn_me.fromPrim 0u;
+                            DataSN = datasn_me.zero;
                     } :> ILogicalPDU
                 );
                 struct (
@@ -2972,11 +2972,11 @@ type Connection_Test () =
                 );
                 struct (
                     itt_me.fromPrim 13u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 13u;
-                            DataSN = datasn_me.fromPrim 0u;
+                            DataSN = datasn_me.zero;
                     } :> ILogicalPDU
                 );
             |]
@@ -3011,7 +3011,7 @@ type Connection_Test () =
         Assert.True(( m_SentDataInPDUs.Length = 1 ))
         let struct( a, b, c ) = m_SentDataInPDUs.[0]
         Assert.True(( a = itt_me.fromPrim 13u ))
-        Assert.True(( b = datasn_me.fromPrim 0u ))
+        Assert.True(( b = datasn_me.zero ))
         Assert.True(( ( c :?> SCSIDataInPDU ).InitiatorTaskTag = itt_me.fromPrim 13u ))
         Assert.True(( cnt = 3 ))
         GlbFunc.ClosePorts [| sp; cp; |]
@@ -3025,7 +3025,7 @@ type Connection_Test () =
                     Connection_Test.defaultSessionParameter with
                         ErrorRecoveryLevel = 1uy;
                 },
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
@@ -3033,11 +3033,11 @@ type Connection_Test () =
             [|
                 struct (
                     itt_me.fromPrim 10u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 10u;
-                            DataSN = datasn_me.fromPrim 0u;
+                            DataSN = datasn_me.zero;
                     } :> ILogicalPDU
                 );
                 struct (
@@ -3051,11 +3051,11 @@ type Connection_Test () =
                 );
                 struct (
                     itt_me.fromPrim 13u,
-                    datasn_me.fromPrim 0u,
+                    datasn_me.zero,
                     {
                         Connection_Test.defaultSCSIDataInPDUValues with
                             InitiatorTaskTag = itt_me.fromPrim 13u;
-                            DataSN = datasn_me.fromPrim 0u;
+                            DataSN = datasn_me.zero;
                     } :> ILogicalPDU
                 );
             |]
@@ -3089,17 +3089,17 @@ type Connection_Test () =
                     Connection_Test.defaultSessionParameter with
                         ErrorRecoveryLevel = 1uy;
                 },
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
         let vSentRespPDUs =
             [|
                 struct(
-                    statsn_me.fromPrim 0u,
+                    statsn_me.zero,
                     {
                         Connection_Test.defaultSCSIResponsePDUValues with
-                            StatSN = statsn_me.fromPrim 0u;
+                            StatSN = statsn_me.zero;
                             InitiatorTaskTag = itt_me.fromPrim 10u;
                             ResponseFence = ResponseFenceNeedsFlag.W_Mode;
                     } :> ILogicalPDU
@@ -3137,17 +3137,17 @@ type Connection_Test () =
                     Connection_Test.defaultSessionParameter with
                         ErrorRecoveryLevel = 1uy;
                 },
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
         let pc = PrivateCaller( con )
 
         let vSentRespPDUs =
             [|
                 struct(
-                    statsn_me.fromPrim 0u,
+                    statsn_me.zero,
                     {
                         Connection_Test.defaultSCSIResponsePDUValues with
-                            StatSN = statsn_me.fromPrim 0u;
+                            StatSN = statsn_me.zero;
                             InitiatorTaskTag = itt_me.fromPrim 10u;
                             ResponseFence = ResponseFenceNeedsFlag.Immediately;
                     } :> ILogicalPDU
@@ -3179,7 +3179,7 @@ type Connection_Test () =
             Connection_Test.createDefaultConnectionObj(
                 Connection_Test.defaultConnectionParam,
                 Connection_Test.defaultSessionParameter,
-                statsn_me.fromPrim 0u
+                statsn_me.zero
             )
 
         con.Close()

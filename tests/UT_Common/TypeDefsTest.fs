@@ -125,7 +125,7 @@ type TypeDefs_Test () =
 
     [<Fact>]
     member _.cmdsn_me_fromPrim_001() =
-        Assert.True(( cmdsn_me.fromPrim 0u = 0u<cmdsn_me> ))
+        Assert.True(( cmdsn_me.zero = 0u<cmdsn_me> ))
         Assert.True(( cmdsn_me.fromPrim 1u = 1u<cmdsn_me> ))
         Assert.True(( cmdsn_me.fromPrim 0xFFFFFFFFu = 4294967295u<cmdsn_me> ))
 
@@ -171,8 +171,26 @@ type TypeDefs_Test () =
         Assert.True(( ( cmdsn_me.compare ( cmdsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 0x80000002u ) ) > 0 ))
 
     [<Fact>]
+    member _.cmdsn_me_next_001() =
+        Assert.True(( ( cmdsn_me.next ( cmdsn_me.fromPrim 1u ) ) = ( cmdsn_me.fromPrim 2u ) ))
+        Assert.True(( ( cmdsn_me.next ( cmdsn_me.zero ) ) = ( cmdsn_me.fromPrim 1u ) ))
+        Assert.True(( ( cmdsn_me.next ( cmdsn_me.fromPrim 0xFFFFFFFFu ) ) = ( cmdsn_me.zero ) ))
+
+    [<Fact>]
+    member _.cmdsn_me_incr_001() =
+        Assert.True(( ( cmdsn_me.incr 1u ( cmdsn_me.fromPrim 1u ) ) = ( cmdsn_me.fromPrim 2u ) ))
+        Assert.True(( ( cmdsn_me.incr 2u ( cmdsn_me.fromPrim 0xFFFFFFFFu ) ) = ( cmdsn_me.fromPrim 1u ) ))
+        Assert.True(( ( cmdsn_me.incr 0xFFFFFFFFu ( cmdsn_me.fromPrim 1u ) ) = ( cmdsn_me.zero ) ))
+
+    [<Fact>]
+    member _.cmdsn_me_decr_001() =
+        Assert.True(( ( cmdsn_me.decr 1u ( cmdsn_me.fromPrim 1u ) ) = ( cmdsn_me.zero ) ))
+        Assert.True(( ( cmdsn_me.decr 2u ( cmdsn_me.fromPrim 1u ) ) = ( cmdsn_me.fromPrim 0xFFFFFFFFu ) ))
+        Assert.True(( ( cmdsn_me.decr 0xFFFFFFFFu ( cmdsn_me.zero ) ) = ( cmdsn_me.fromPrim 1u ) ))
+
+    [<Fact>]
     member _.statsn_me_fromPrim_001() =
-        Assert.True(( statsn_me.fromPrim 0u = 0u<statsn_me> ))
+        Assert.True(( statsn_me.zero = 0u<statsn_me> ))
         Assert.True(( statsn_me.fromPrim 1u = 1u<statsn_me> ))
         Assert.True(( statsn_me.fromPrim 0xFFFFFFFFu = 4294967295u<statsn_me> ))
 
@@ -218,8 +236,26 @@ type TypeDefs_Test () =
         Assert.True(( ( statsn_me.compare ( statsn_me.fromPrim 1u ) ( statsn_me.fromPrim 0x80000002u ) ) > 0 ))
 
     [<Fact>]
+    member _.statsn_me_next_001() =
+        Assert.True(( ( statsn_me.next ( statsn_me.fromPrim 1u ) ) = ( statsn_me.fromPrim 2u ) ))
+        Assert.True(( ( statsn_me.next ( statsn_me.zero ) ) = ( statsn_me.fromPrim 1u ) ))
+        Assert.True(( ( statsn_me.next ( statsn_me.fromPrim 0xFFFFFFFFu ) ) = ( statsn_me.zero ) ))
+
+    [<Fact>]
+    member _.statsn_me_incr_001() =
+        Assert.True(( ( statsn_me.incr 1u ( statsn_me.fromPrim 1u ) ) = ( statsn_me.fromPrim 2u ) ))
+        Assert.True(( ( statsn_me.incr 2u ( statsn_me.fromPrim 0xFFFFFFFFu ) ) = ( statsn_me.fromPrim 1u ) ))
+        Assert.True(( ( statsn_me.incr 0xFFFFFFFFu ( statsn_me.fromPrim 1u ) ) = ( statsn_me.zero ) ))
+
+    [<Fact>]
+    member _.statsn_me_decr_001() =
+        Assert.True(( ( statsn_me.decr 1u ( statsn_me.fromPrim 1u ) ) = ( statsn_me.zero ) ))
+        Assert.True(( ( statsn_me.decr 2u ( statsn_me.fromPrim 1u ) ) = ( statsn_me.fromPrim 0xFFFFFFFFu ) ))
+        Assert.True(( ( statsn_me.decr 0xFFFFFFFFu ( statsn_me.zero ) ) = ( statsn_me.fromPrim 1u ) ))
+
+    [<Fact>]
     member _.datasn_me_fromPrim_001() =
-        Assert.True(( datasn_me.fromPrim 0u = 0u<datasn_me> ))
+        Assert.True(( datasn_me.zero = 0u<datasn_me> ))
         Assert.True(( datasn_me.fromPrim 1u = 1u<datasn_me> ))
         Assert.True(( datasn_me.fromPrim 0xFFFFFFFFu = 4294967295u<datasn_me> ))
 
@@ -264,6 +300,23 @@ type TypeDefs_Test () =
         Assert.True(( ( datasn_me.compare ( datasn_me.fromPrim 1u ) ( datasn_me.fromPrim 0x80000001u ) ) < 0 ))    // undefined
         Assert.True(( ( datasn_me.compare ( datasn_me.fromPrim 1u ) ( datasn_me.fromPrim 0x80000002u ) ) > 0 ))
 
+    [<Fact>]
+    member _.datasn_me_next_001() =
+        Assert.True(( ( datasn_me.next ( datasn_me.fromPrim 1u ) ) = ( datasn_me.fromPrim 2u ) ))
+        Assert.True(( ( datasn_me.next ( datasn_me.zero ) ) = ( datasn_me.fromPrim 1u ) ))
+        Assert.True(( ( datasn_me.next ( datasn_me.fromPrim 0xFFFFFFFFu ) ) = ( datasn_me.zero ) ))
+
+    [<Fact>]
+    member _.datasn_me_incr_001() =
+        Assert.True(( ( datasn_me.incr 1u ( datasn_me.fromPrim 1u ) ) = ( datasn_me.fromPrim 2u ) ))
+        Assert.True(( ( datasn_me.incr 2u ( datasn_me.fromPrim 0xFFFFFFFFu ) ) = ( datasn_me.fromPrim 1u ) ))
+        Assert.True(( ( datasn_me.incr 0xFFFFFFFFu ( datasn_me.fromPrim 1u ) ) = ( datasn_me.zero ) ))
+
+    [<Fact>]
+    member _.datasn_me_decr_001() =
+        Assert.True(( ( datasn_me.decr 1u ( datasn_me.fromPrim 1u ) ) = ( datasn_me.zero ) ))
+        Assert.True(( ( datasn_me.decr 2u ( datasn_me.fromPrim 1u ) ) = ( datasn_me.fromPrim 0xFFFFFFFFu ) ))
+        Assert.True(( ( datasn_me.decr 0xFFFFFFFFu ( datasn_me.zero ) ) = ( datasn_me.fromPrim 1u ) ))
 
     [<Fact>]
     member _.snacktag_me_fromPrim_001() =

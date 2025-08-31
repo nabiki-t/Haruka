@@ -110,7 +110,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             Session_Test.defaultNopOUTPDUValues with
                 I = nopOutImm;
                 CmdSN = firstCmdSN;
-                ExpStatSN = statsn_me.fromPrim 0u;
+                ExpStatSN = statsn_me.zero;
                 InitiatorTaskTag = nopOutITT;
                 PingData = PooledBuffer.Empty;
         }
@@ -127,11 +127,11 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True(( nopinpdu1.InitiatorTaskTag = nopOutITT ))
         Assert.True(( nopinpdu1.TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu ))
         Assert.True(( PooledBuffer.ValueEqualsWithArray nopinpdu1.PingData Array.empty ))
-        Assert.True( ( nopinpdu1.StatSN = statsn_me.fromPrim 0u ) )
+        Assert.True( ( nopinpdu1.StatSN = statsn_me.zero ) )
 
         let con = sess.GetConnection cid ( concnt_me.fromPrim 1 )
         Assert.True(( con.IsSome ))
-        let sentPDUs = con.Value.GetSentResponsePDUForSNACK( statsn_me.fromPrim 0u ) 0u
+        let sentPDUs = con.Value.GetSentResponsePDUForSNACK( statsn_me.zero ) 0u
         Assert.True(( sentPDUs.Length = 1 ))
         Assert.True(( sentPDUs.[0].Opcode = OpcodeCd.NOP_IN ))
         Assert.True(( sentPDUs.[0].InitiatorTaskTag = nopOutITT ))
@@ -160,9 +160,9 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         LUN = lun_me.fromPrim 0x0001020304050607UL;
         InitiatorTaskTag = itt_me.fromPrim 0u;
         TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
-        StatSN = statsn_me.fromPrim 0u;
-        ExpCmdSN = cmdsn_me.fromPrim 0u;
-        MaxCmdSN = cmdsn_me.fromPrim 0u;
+        StatSN = statsn_me.zero;
+        ExpCmdSN = cmdsn_me.zero;
+        MaxCmdSN = cmdsn_me.zero;
         PingData = PooledBuffer.Empty;
     }
 
@@ -175,7 +175,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         LUN = lun_me.zero;
         InitiatorTaskTag = itt_me.fromPrim 1u;
         ExpectedDataTransferLength = 256u;
-        CmdSN = cmdsn_me.fromPrim 0u;
+        CmdSN = cmdsn_me.zero;
         ExpStatSN = statsn_me.fromPrim 1u;
         ScsiCDB = [| 0uy .. 15uy |];
         DataSegment = PooledBuffer.Rent [| 0uy .. 255uy |];
@@ -192,10 +192,10 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Status = ScsiCmdStatCd.GOOD;
         InitiatorTaskTag = itt_me.fromPrim 0u;
         SNACKTag = snacktag_me.fromPrim 0u;
-        StatSN = statsn_me.fromPrim 0u;
-        ExpCmdSN = cmdsn_me.fromPrim 0u;
-        MaxCmdSN = cmdsn_me.fromPrim 0u;
-        ExpDataSN = datasn_me.fromPrim 0u;
+        StatSN = statsn_me.zero;
+        ExpCmdSN = cmdsn_me.zero;
+        MaxCmdSN = cmdsn_me.zero;
+        ExpDataSN = datasn_me.zero;
         BidirectionalReadResidualCount = 0u;
         ResidualCount = 0u;
         SenseLength = 0us;
@@ -210,8 +210,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         LUN = lun_me.zero;
         InitiatorTaskTag = itt_me.fromPrim 1u;
         TargetTransferTag = ttt_me.fromPrim 0u;
-        ExpStatSN = statsn_me.fromPrim 0u;
-        DataSN = datasn_me.fromPrim 0u;
+        ExpStatSN = statsn_me.zero;
+        DataSN = datasn_me.zero;
         BufferOffset = 0u;
         DataSegment = PooledBuffer.Rent [| 0uy .. 255uy |];
         ByteCount = 0u;
@@ -224,8 +224,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         LUN = lun_me.zero;
         InitiatorTaskTag = itt_me.fromPrim 1u;
         TargetTransferTag = ttt_me.fromPrim 0u;
-        CmdSN = cmdsn_me.fromPrim 0u;
-        ExpStatSN = statsn_me.fromPrim 0u;
+        CmdSN = cmdsn_me.zero;
+        ExpStatSN = statsn_me.zero;
         TextRequest = Array.empty;
         ByteCount = 0u;
     }
@@ -237,18 +237,18 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         InitiatorTaskTag = itt_me.fromPrim 1u;
         ReferencedTaskTag = itt_me.fromPrim 0u;
         CmdSN = cmdsn_me.fromPrim 1u;
-        ExpStatSN = statsn_me.fromPrim 0u;
+        ExpStatSN = statsn_me.zero;
         RefCmdSN = cmdsn_me.fromPrim 1u;
-        ExpDataSN = datasn_me.fromPrim 0u;
+        ExpDataSN = datasn_me.zero;
         ByteCount = 0u;
     }
 
     static member defaultTaskManagementResponsePDUValues = {
         Response = TaskMgrResCd.FUCTION_COMPLETE;
         InitiatorTaskTag = itt_me.fromPrim 0u;
-        StatSN = statsn_me.fromPrim 0u;
-        ExpCmdSN = cmdsn_me.fromPrim 0u;
-        MaxCmdSN = cmdsn_me.fromPrim 0u;
+        StatSN = statsn_me.zero;
+        ExpCmdSN = cmdsn_me.zero;
+        MaxCmdSN = cmdsn_me.zero;
         ResponseFence = ResponseFenceNeedsFlag.Immediately;
     }
 
@@ -257,8 +257,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         ReasonCode = LogoutReqReasonCd.CLOSE_CONN;
         InitiatorTaskTag = itt_me.fromPrim 1u;
         CID = cid_me.fromPrim 0us;
-        CmdSN = cmdsn_me.fromPrim 0u;
-        ExpStatSN = statsn_me.fromPrim 0u;
+        CmdSN = cmdsn_me.zero;
+        ExpStatSN = statsn_me.zero;
         ByteCount = 0u;
     }
 
@@ -267,7 +267,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         LUN = lun_me.zero;
         InitiatorTaskTag = itt_me.fromPrim 1u;
         TargetTransferTag = ttt_me.fromPrim 0u;
-        ExpStatSN = statsn_me.fromPrim 0u;
+        ExpStatSN = statsn_me.zero;
         BegRun = 0u;
         RunLength = 0u;
         ByteCount = 0u;
@@ -284,7 +284,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let smStub, _ = Session_Test.GenDefaultStubs()
         let cdt = DateTime.UtcNow
 
-        let s = new Session( smStub, cdt, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer )
+        let s = new Session( smStub, cdt, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer )
 
         Assert.True(( cdt = ( s :> ISession ).CreateDate ))
         Assert.True(( 3us = ( s :> ISession ).SessionParameter.MaxConnections ))
@@ -315,7 +315,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let sp, cp = GlbFunc.GetNetConn()
 
         // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
+        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer ) :> ISession
 
         let psus = {
             Session_Test.defaultNopOUTPDUValues with
@@ -372,7 +372,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let sp2, cp2 = GlbFunc.GetNetConn()
 
         // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
+        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer ) :> ISession
 
         let psus = {
             Session_Test.defaultNopOUTPDUValues with
@@ -431,7 +431,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let sp2, cp2 = GlbFunc.GetNetConn()
 
         // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
+        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer ) :> ISession
 
         let psus1 = {
             Session_Test.defaultNopOUTPDUValues with
@@ -515,7 +515,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let sp, cp = GlbFunc.GetNetConnV( 4 )
 
         // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
+        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer ) :> ISession
 
         let r1 = sess.AddNewConnection sp.[0] DateTime.UtcNow ( cid_me.fromPrim 0us ) netportidx_me.zero tpgt_me.zero Session_Test.defaultConnectionParam
         Assert.True( r1 )
@@ -551,7 +551,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let smStub, _ = Session_Test.GenDefaultStubs()
 
         // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
+        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer ) :> ISession
 
         use sp = new MemoryStream()
         sess.DestroySession()
@@ -570,7 +570,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let smStub, _ = Session_Test.GenDefaultStubs()
 
         // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
+        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer ) :> ISession
 
         // Notice terminate session
         sess.DestroySession()
@@ -590,7 +590,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let smStub, _ = Session_Test.GenDefaultStubs()
 
         // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
+        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer ) :> ISession
 
         sess.RemoveConnection ( cid_me.fromPrim 0us ) ( concnt_me.fromPrim 0 )
         let pc = new PrivateCaller( sess )
@@ -609,7 +609,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let sps, cps = GlbFunc.GetNetConnV( 5 )
 
         // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
+        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer ) :> ISession
 
         let pc = new PrivateCaller( sess )
 
@@ -695,7 +695,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let smStub, _ = Session_Test.GenDefaultStubs()
 
         // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
+        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer ) :> ISession
 
         // destroy session
         sess.DestroySession()
@@ -712,7 +712,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 0us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let sp2, cp2 = GlbFunc.GetNetConn()
@@ -771,7 +771,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let sps, cps = GlbFunc.GetNetConnV( 5 )
 
         // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
+        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer ) :> ISession
 
         let pc = new PrivateCaller( sess )
 
@@ -814,7 +814,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let sps, cps = GlbFunc.GetNetConnV( 3 )
 
         // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
+        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer ) :> ISession
 
         let pc = new PrivateCaller( sess )
 
@@ -845,7 +845,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let smStub, _ = Session_Test.GenDefaultStubs()
 
         // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
+        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer ) :> ISession
 
         // Notice terminate session
         sess.DestroySession()
@@ -866,7 +866,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 0us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let sp2, cp2 = GlbFunc.GetNetConn()
@@ -926,7 +926,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let sp, cp = GlbFunc.GetNetConn()
 
         // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
+        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer ) :> ISession
 
         let noppdu2 = {
             Session_Test.defaultNopOUTPDUValues with
@@ -955,7 +955,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let sp, cp = GlbFunc.GetNetConn()
 
         // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
+        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer ) :> ISession
         let pc = new PrivateCaller( sess )
 
         // pdus
@@ -995,7 +995,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 0us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 0us ) ( concnt_me.fromPrim 1 )
@@ -1023,7 +1023,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 0us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 0us ) ( concnt_me.fromPrim 1 )
@@ -1057,7 +1057,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 0us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 0us ) ( concnt_me.fromPrim 1 )
@@ -1096,7 +1096,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 0us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 0us ) ( concnt_me.fromPrim 1 )
@@ -1149,7 +1149,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -1162,7 +1162,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             ( fun ( source : CommandSourceInfo ) ( command : SCSICommandPDU ) ( data : SCSIDataOutPDU list ) ->
             Assert.True(( source.CID = cid_me.fromPrim 1us ))
             Assert.True(( command.ATTR = TaskATTRCd.SIMPLE_TASK ))
-            Assert.True(( command.CmdSN = cmdsn_me.fromPrim 0u ))
+            Assert.True(( command.CmdSN = cmdsn_me.zero ))
             Assert.True(( command.ExpectedDataTransferLength = 256u ))
             Assert.True(( command.BidirectionalExpectedReadDataLength = 0u ))
             Assert.True(( PooledBuffer.ValueEqualsWithArray command.DataSegment [| 0uy .. 255uy |] ))
@@ -1191,7 +1191,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 }
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -1221,7 +1221,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             ( fun ( source : CommandSourceInfo ) ( command : SCSICommandPDU ) ( data : SCSIDataOutPDU list ) ->
             Assert.True(( source.CID = cid_me.fromPrim 1us ))
             Assert.True(( command.ATTR = TaskATTRCd.SIMPLE_TASK ))
-            Assert.True(( command.CmdSN = cmdsn_me.fromPrim 0u ))
+            Assert.True(( command.CmdSN = cmdsn_me.zero ))
             Assert.True(( command.ExpectedDataTransferLength = 40u ))
             Assert.True(( command.BidirectionalExpectedReadDataLength = 0u ))
             Assert.True(( PooledBuffer.ValueEqualsWithArray command.DataSegment ( Array.zeroCreate( 10 ) ) ))
@@ -1271,7 +1271,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 }
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -1302,7 +1302,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             ( fun ( source : CommandSourceInfo ) ( command : SCSICommandPDU ) ( data : SCSIDataOutPDU list ) ->
                 Assert.True(( source.CID = cid_me.fromPrim 1us ))
                 Assert.True(( command.ATTR = TaskATTRCd.SIMPLE_TASK ))
-                Assert.True(( command.CmdSN = cmdsn_me.fromPrim 0u ))
+                Assert.True(( command.CmdSN = cmdsn_me.zero ))
                 Assert.True(( command.ExpectedDataTransferLength = 40u ))
                 Assert.True(( command.BidirectionalExpectedReadDataLength = 0u ))
                 Assert.True(( PooledBuffer.ValueEqualsWithArray command.DataSegment ( Array.zeroCreate( 10 ) ) ))
@@ -1340,7 +1340,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 }
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -1364,7 +1364,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 F = false;
                 InitiatorTaskTag = itt_me.fromPrim 1u;
                 TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
-                DataSN = datasn_me.fromPrim 0u;
+                DataSN = datasn_me.zero;
                 BufferOffset = 10u;
                 DataSegment = PooledBuffer.RentAndInit 10;
         }
@@ -1396,7 +1396,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 F = true;
                 InitiatorTaskTag = itt_me.fromPrim 2u;
                 TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
-                DataSN = datasn_me.fromPrim 0u;
+                DataSN = datasn_me.zero;
                 BufferOffset = 10u;
                 DataSegment = PooledBuffer.RentAndInit 10;
         }
@@ -1437,7 +1437,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let iwq1 = Session_Test.GetWaitingQueue pc
         Assert.True(( 1 = iwq1.Count ))
         let struct( wexpcmdsn, _ )  = sess.UpdateMaxCmdSN()
-        Assert.True(( cmdsn_me.fromPrim 0u = wexpcmdsn ))
+        Assert.True(( cmdsn_me.zero = wexpcmdsn ))
 
         // Receive SCSI Data-Out PDU(ITT=2)
         sess.PushReceivedPDU conn1.Value datapdu3
@@ -1446,7 +1446,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let iwq2 = Session_Test.GetWaitingQueue pc
         Assert.True(( 2 = iwq2.Count ))
         let struct( wexpcmdsn, _ )  = sess.UpdateMaxCmdSN()
-        Assert.True(( cmdsn_me.fromPrim 0u = wexpcmdsn ))
+        Assert.True(( cmdsn_me.zero = wexpcmdsn ))
 
         // Receive SCSI Command PDU(ITT=1)
         sess.PushReceivedPDU conn1.Value cmdpdu1
@@ -1455,7 +1455,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let iwq3 = Session_Test.GetWaitingQueue pc
         Assert.True(( 2 = iwq3.Count ))
         let struct( wexpcmdsn, _ )  = sess.UpdateMaxCmdSN()
-        Assert.True(( cmdsn_me.fromPrim 0u = wexpcmdsn ))
+        Assert.True(( cmdsn_me.zero = wexpcmdsn ))
 
         // Receive SCSI Data-Out PDU(ITT=1)
         sess.PushReceivedPDU conn1.Value datapdu2
@@ -1464,7 +1464,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let iwq4 = Session_Test.GetWaitingQueue pc
         Assert.True(( 1 = iwq4.Count ))
         let struct( wexpcmdsn, _ )  = sess.UpdateMaxCmdSN()
-        Assert.True(( cmdsn_me.fromPrim 0u = wexpcmdsn ))
+        Assert.True(( cmdsn_me.zero = wexpcmdsn ))
 
         // Receive SCSI Command PDU(ITT=2)
         sess.PushReceivedPDU conn1.Value cmdpdu2
@@ -1473,7 +1473,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let iwq5 = Session_Test.GetWaitingQueue pc
         Assert.True(( 0 = iwq5.Count ))
         let struct( wexpcmdsn, _ )  = sess.UpdateMaxCmdSN()
-        Assert.True(( cmdsn_me.fromPrim 0u = wexpcmdsn ))
+        Assert.True(( cmdsn_me.zero = wexpcmdsn ))
 
         sess.DestroySession()
         GlbFunc.ClosePorts [| sp; cp; |]
@@ -1489,7 +1489,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 }
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -1554,7 +1554,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 }
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -1565,7 +1565,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 F = false;
                 InitiatorTaskTag = itt_me.fromPrim 1u;
                 TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
-                DataSN = datasn_me.fromPrim 0u;
+                DataSN = datasn_me.zero;
                 BufferOffset = 10u;
                 DataSegment = PooledBuffer.RentAndInit 10;
         }
@@ -1619,7 +1619,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 }
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -1657,7 +1657,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -1695,7 +1695,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -1758,7 +1758,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -1795,7 +1795,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -1855,7 +1855,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -1887,7 +1887,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -1950,7 +1950,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -2005,7 +2005,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 0us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let conn1 = sess.GetConnection ( cid_me.fromPrim 0us ) ( concnt_me.fromPrim 1 )
@@ -2048,7 +2048,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 0us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let conn1 = sess.GetConnection ( cid_me.fromPrim 0us ) ( concnt_me.fromPrim 1 )
@@ -2057,7 +2057,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let noppdu2 = {
                 Session_Test.defaultNopOUTPDUValues with
                     I = false;
-                    CmdSN = cmdsn_me.fromPrim 0u;       // error
+                    CmdSN = cmdsn_me.zero;       // error
                     ExpStatSN = statsn_me.fromPrim 1u;
                     InitiatorTaskTag = itt_me.fromPrim 1u;
             }
@@ -2089,7 +2089,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 0us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let conn1 = sess.GetConnection ( cid_me.fromPrim 0us ) ( concnt_me.fromPrim 1 )
@@ -2129,7 +2129,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -2198,7 +2198,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -2209,7 +2209,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 I = false;
                 F = false;
                 InitiatorTaskTag = itt_me.fromPrim 1u;
-                CmdSN = cmdsn_me.fromPrim 0u;   // error
+                CmdSN = cmdsn_me.zero;   // error
                 TextRequest = Encoding.GetEncoding( "utf-8" ).GetBytes( "InitiatorAlias=AAA" )
             }
 
@@ -2238,7 +2238,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -2301,7 +2301,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -2360,7 +2360,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -2415,7 +2415,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -2455,7 +2455,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -2464,7 +2464,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let tmfpdu = {
             Session_Test.defaultTaskManagementRequestPDUValues with
                 I = false;
-                CmdSN = cmdsn_me.fromPrim 0u;   // Error
+                CmdSN = cmdsn_me.zero;   // Error
                 ExpStatSN = statsn_me.fromPrim 1u;
                 Function = TaskMgrReqCd.ABORT_TASK;
         }
@@ -2502,7 +2502,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -2556,7 +2556,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -2566,7 +2566,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             Session_Test.defaultLogoutRequestPDUValues with
                 I = false;
                 CID = cid_me.fromPrim 1us;
-                CmdSN = cmdsn_me.fromPrim 0u;   // Error
+                CmdSN = cmdsn_me.zero;   // Error
                 ExpStatSN = statsn_me.fromPrim 1u;
                 InitiatorTaskTag = itt_me.fromPrim 1u;
                 ReasonCode = LogoutReqReasonCd.CLOSE_CONN;
@@ -2598,7 +2598,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -2647,7 +2647,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -2657,7 +2657,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             Session_Test.defaultScsiCommandPDUValues with
                 I = false;
                 F = true;
-                CmdSN = cmdsn_me.fromPrim 0u;   // error
+                CmdSN = cmdsn_me.zero;   // error
                 ExpStatSN = statsn_me.fromPrim 1u;
                 InitiatorTaskTag = itt_me.fromPrim 1u;
                 ExpectedDataTransferLength = 10u;
@@ -2694,7 +2694,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -2832,7 +2832,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_T = 10u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -2916,7 +2916,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 InitiatorTaskTag = itt_me.fromPrim 2u;
                 TargetTransferTag = ttt_me.fromPrim 0u;
                 ExpStatSN = statsn_me.fromPrim 2u;
-                DataSN = datasn_me.fromPrim 0u;
+                DataSN = datasn_me.zero;
                 BufferOffset = 0u;
                 DataSegment = PooledBuffer.RentAndInit 10;
         }
@@ -2958,7 +2958,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 InitiatorTaskTag = itt_me.fromPrim 2u;
                 TargetTransferTag = ttt_me.fromPrim 1u;
                 ExpStatSN = statsn_me.fromPrim 2u;
-                DataSN = datasn_me.fromPrim 0u;
+                DataSN = datasn_me.zero;
                 BufferOffset = 10u;
                 DataSegment = PooledBuffer.RentAndInit 10;
         }
@@ -3006,7 +3006,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_I = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -3051,7 +3051,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 LUN = lun_me.zero;
                 InitiatorTaskTag = itt_me.fromPrim 1u;
                 TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
-                ExpStatSN = statsn_me.fromPrim 0u;
+                ExpStatSN = statsn_me.zero;
                 BegRun = 1u;
                 RunLength = 2u;
                 ByteCount = 0u;
@@ -3078,7 +3078,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             LUN = lun_me.zero;
             InitiatorTaskTag = itt_me.fromPrim 1u;
             TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
-            ExpStatSN = statsn_me.fromPrim 0u;
+            ExpStatSN = statsn_me.zero;
             BegRun = 2u;
             RunLength = 0u;
             ByteCount = 0u;
@@ -3115,7 +3115,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_T = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -3129,7 +3129,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 W = true;
                 InitiatorTaskTag = itt_me.fromPrim 1u;
                 ExpectedDataTransferLength = 256u;
-                CmdSN = cmdsn_me.fromPrim 0u;
+                CmdSN = cmdsn_me.zero;
                 DataSegment = PooledBuffer.Empty;
         }
 
@@ -3212,7 +3212,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_T = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -3324,7 +3324,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_I = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -3384,7 +3384,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             LUN = lun_me.zero;
             InitiatorTaskTag = itt_me.fromPrim 0xFFFFFFFFu;
             TargetTransferTag = receivedTTT;
-            ExpStatSN = statsn_me.fromPrim 0u;
+            ExpStatSN = statsn_me.zero;
             BegRun = 4u;
             RunLength = 0u;
             ByteCount = 0u;
@@ -3397,7 +3397,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             LUN = lun_me.zero;
             InitiatorTaskTag = itt_me.fromPrim 1u;
             TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
-            ExpStatSN = statsn_me.fromPrim 0u;
+            ExpStatSN = statsn_me.zero;
             BegRun = 0u;
             RunLength = 0u;
             ByteCount = 0u;
@@ -3429,7 +3429,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_I = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -3485,7 +3485,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             LUN = lun_me.zero;
             InitiatorTaskTag = itt_me.fromPrim 1u;
             TargetTransferTag = ttt_me.fromPrim 0xEFEFEFEFu;
-            ExpStatSN = statsn_me.fromPrim 0u;
+            ExpStatSN = statsn_me.zero;
             BegRun = 0u;
             RunLength = 0u;
             ByteCount = 0u;
@@ -3525,7 +3525,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_I = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 true
         let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
@@ -3650,7 +3650,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let sp, cp = GlbFunc.GetNetConn()
 
         // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
+        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer ) :> ISession
         let pc = new PrivateCaller( sess )
 
         let mutable cnt = 0
@@ -3680,8 +3680,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 F = true;
                 R = true;
                 W = true;
-                CmdSN = cmdsn_me.fromPrim 0u;
-                ExpStatSN = statsn_me.fromPrim 0u;
+                CmdSN = cmdsn_me.zero;
+                ExpStatSN = statsn_me.zero;
                 InitiatorTaskTag = itt_me.fromPrim 2u;
                 ExpectedDataTransferLength = 10u;
                 DataSegment = PooledBuffer.RentAndInit 15;       // over
@@ -3709,9 +3709,9 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( datain1.LUN = lun_me.zero )
         Assert.True( datain1.InitiatorTaskTag = itt_me.fromPrim 2u )
         Assert.True( datain1.TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu )
-        Assert.True( datain1.StatSN = statsn_me.fromPrim 0u )
+        Assert.True( datain1.StatSN = statsn_me.zero )
         Assert.True( datain1.ExpCmdSN = cmdsn_me.fromPrim 1u )
-        Assert.True( datain1.DataSN = datasn_me.fromPrim 0u )
+        Assert.True( datain1.DataSN = datasn_me.zero )
         Assert.True( datain1.BufferOffset = 0u )
         Assert.True( arDataSegment1.ToArray() = ( Array.zeroCreate<byte> 9 ) )
 
@@ -3732,7 +3732,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True(( scsirespdu1.Status = ScsiCmdStatCd.GOOD ))
         Assert.True(( scsirespdu1.InitiatorTaskTag = itt_me.fromPrim 2u ))
         Assert.True(( scsirespdu1.SNACKTag = snacktag_me.zero ))
-        Assert.True(( scsirespdu1.StatSN = statsn_me.fromPrim 0u ))
+        Assert.True(( scsirespdu1.StatSN = statsn_me.zero ))
         Assert.True(( scsirespdu1.ExpCmdSN = cmdsn_me.fromPrim 1u ))
         Assert.True(( scsirespdu1.ExpDataSN = datasn_me.fromPrim 1u ))
         Assert.True(( scsirespdu1.BidirectionalReadResidualCount = 1u ))
@@ -3762,7 +3762,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_T = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -3773,8 +3773,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 F = true;
                 R = true;
                 W = true;
-                CmdSN = cmdsn_me.fromPrim 0u;
-                ExpStatSN = statsn_me.fromPrim 0u;
+                CmdSN = cmdsn_me.zero;
+                ExpStatSN = statsn_me.zero;
                 InitiatorTaskTag = itt_me.fromPrim 2u;
                 ExpectedDataTransferLength = 20u;
                 DataSegment = PooledBuffer.RentAndInit 19;   // underflow
@@ -3807,9 +3807,9 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( datain1.LUN = lun_me.zero )
         Assert.True( datain1.InitiatorTaskTag = itt_me.fromPrim 2u )
         Assert.True( datain1.TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu )
-        Assert.True( datain1.StatSN = statsn_me.fromPrim 0u )
+        Assert.True( datain1.StatSN = statsn_me.zero )
         Assert.True( datain1.ExpCmdSN = cmdsn_me.fromPrim 1u )
-        Assert.True( datain1.DataSN = datasn_me.fromPrim 0u )
+        Assert.True( datain1.DataSN = datasn_me.zero )
         Assert.True( datain1.BufferOffset = 0u )
         Assert.True( arDataSegment1.ToArray() = Array.zeroCreate( 10 ) )
 
@@ -3858,7 +3858,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_T = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -3869,8 +3869,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 F = true;
                 R = true;
                 W = false;
-                CmdSN = cmdsn_me.fromPrim 0u;
-                ExpStatSN = statsn_me.fromPrim 0u;
+                CmdSN = cmdsn_me.zero;
+                ExpStatSN = statsn_me.zero;
                 InitiatorTaskTag = itt_me.fromPrim 2u;
                 ExpectedDataTransferLength = 15u;
                 DataSegment = PooledBuffer.Empty;
@@ -3903,9 +3903,9 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( datain1.LUN = lun_me.zero )
         Assert.True( datain1.InitiatorTaskTag = itt_me.fromPrim 2u )
         Assert.True( datain1.TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu )
-        Assert.True( datain1.StatSN = statsn_me.fromPrim 0u )
+        Assert.True( datain1.StatSN = statsn_me.zero )
         Assert.True( datain1.ExpCmdSN = cmdsn_me.fromPrim 1u )
-        Assert.True( datain1.DataSN = datasn_me.fromPrim 0u )
+        Assert.True( datain1.DataSN = datasn_me.zero )
         Assert.True( datain1.BufferOffset = 0u )
         Assert.True( arDataSegment.ToArray() = ( Array.zeroCreate<byte> 15 ) )
 
@@ -3954,7 +3954,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_T = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -3965,8 +3965,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 F = true;
                 R = true;
                 W = false;
-                CmdSN = cmdsn_me.fromPrim 0u;
-                ExpStatSN = statsn_me.fromPrim 0u;
+                CmdSN = cmdsn_me.zero;
+                ExpStatSN = statsn_me.zero;
                 InitiatorTaskTag = itt_me.fromPrim 2u;
                 ExpectedDataTransferLength = 16u;
                 DataSegment = PooledBuffer.Empty;
@@ -3999,9 +3999,9 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( datain1.LUN = lun_me.zero )
         Assert.True( datain1.InitiatorTaskTag = itt_me.fromPrim 2u )
         Assert.True( datain1.TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu )
-        Assert.True( datain1.StatSN = statsn_me.fromPrim 0u )
+        Assert.True( datain1.StatSN = statsn_me.zero )
         Assert.True( datain1.ExpCmdSN = cmdsn_me.fromPrim 1u )
-        Assert.True( datain1.DataSN = datasn_me.fromPrim 0u )
+        Assert.True( datain1.DataSN = datasn_me.zero )
         Assert.True( datain1.BufferOffset = 0u )
         Assert.True( arDataSegment.ToArray() = Array.zeroCreate( 10 ) )
 
@@ -4050,7 +4050,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_T = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -4061,8 +4061,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 F = true;
                 R = false;
                 W = true;
-                CmdSN = cmdsn_me.fromPrim 0u;
-                ExpStatSN = statsn_me.fromPrim 0u;
+                CmdSN = cmdsn_me.zero;
+                ExpStatSN = statsn_me.zero;
                 InitiatorTaskTag = itt_me.fromPrim 2u;
                 ExpectedDataTransferLength = 16u;
                 DataSegment = PooledBuffer.RentAndInit 18;       // overflow
@@ -4126,7 +4126,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_T = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -4137,8 +4137,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 F = true;
                 R = false;
                 W = true;
-                CmdSN = cmdsn_me.fromPrim 0u;
-                ExpStatSN = statsn_me.fromPrim 0u;
+                CmdSN = cmdsn_me.zero;
+                ExpStatSN = statsn_me.zero;
                 InitiatorTaskTag = itt_me.fromPrim 2u;
                 ExpectedDataTransferLength = 16u;
                 DataSegment = PooledBuffer.RentAndInit 13;       // underflow
@@ -4202,7 +4202,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_T = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -4213,8 +4213,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 F = true;
                 R = true;
                 W = false;
-                CmdSN = cmdsn_me.fromPrim 0u;
-                ExpStatSN = statsn_me.fromPrim 0u;
+                CmdSN = cmdsn_me.zero;
+                ExpStatSN = statsn_me.zero;
                 InitiatorTaskTag = itt_me.fromPrim 2u;
                 ExpectedDataTransferLength = 16u;
                 DataSegment = PooledBuffer.Empty;
@@ -4278,7 +4278,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_T = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -4289,8 +4289,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 F = true;
                 R = true;
                 W = false;
-                CmdSN = cmdsn_me.fromPrim 0u;
-                ExpStatSN = statsn_me.fromPrim 0u;
+                CmdSN = cmdsn_me.zero;
+                ExpStatSN = statsn_me.zero;
                 InitiatorTaskTag = itt_me.fromPrim 2u;
                 ExpectedDataTransferLength = 256u;
                 DataSegment = PooledBuffer.Empty;
@@ -4354,7 +4354,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_T = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -4365,8 +4365,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 F = true;
                 R = true;
                 W = false;
-                CmdSN = cmdsn_me.fromPrim 0u;
-                ExpStatSN = statsn_me.fromPrim 0u;
+                CmdSN = cmdsn_me.zero;
+                ExpStatSN = statsn_me.zero;
                 InitiatorTaskTag = itt_me.fromPrim 2u;
                 ExpectedDataTransferLength = 256u;
                 DataSegment = PooledBuffer.Empty;
@@ -4404,7 +4404,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True(( scsirespdu2.SNACKTag = snacktag_me.zero ))
         Assert.True(( scsirespdu2.StatSN = statsn_me.fromPrim 1u ))
         Assert.True(( scsirespdu2.ExpCmdSN = cmdsn_me.fromPrim 1u ))
-        Assert.True(( scsirespdu2.ExpDataSN = datasn_me.fromPrim 0u ))
+        Assert.True(( scsirespdu2.ExpDataSN = datasn_me.zero ))
         Assert.True(( scsirespdu2.BidirectionalReadResidualCount = 0u ))
         Assert.True(( scsirespdu2.ResidualCount = 225u ))     // This value does not reflect truncated at the iSCSI layer.
         Assert.True(( scsirespdu2.SenseLength = 30us ))
@@ -4430,7 +4430,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_T = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -4441,8 +4441,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 F = true;
                 R = true;
                 W = false;
-                CmdSN = cmdsn_me.fromPrim 0u;
-                ExpStatSN = statsn_me.fromPrim 0u;
+                CmdSN = cmdsn_me.zero;
+                ExpStatSN = statsn_me.zero;
                 InitiatorTaskTag = itt_me.fromPrim 2u;
                 ExpectedDataTransferLength = 256u;
                 DataSegment = PooledBuffer.Empty;
@@ -4475,9 +4475,9 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( datain1.LUN = lun_me.zero )
         Assert.True( datain1.InitiatorTaskTag = itt_me.fromPrim 2u )
         Assert.True( datain1.TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu )
-        Assert.True( datain1.StatSN = statsn_me.fromPrim 0u )
+        Assert.True( datain1.StatSN = statsn_me.zero )
         Assert.True( datain1.ExpCmdSN = cmdsn_me.fromPrim 1u )
-        Assert.True( datain1.DataSN = datasn_me.fromPrim 0u )
+        Assert.True( datain1.DataSN = datasn_me.zero )
         Assert.True( datain1.BufferOffset = 0u )
         Assert.True( arDataSegment.ToArray() = [| 0uy .. 29uy |] )
 
@@ -4526,7 +4526,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_T = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -4537,8 +4537,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 F = true;
                 R = true;
                 W = false;
-                CmdSN = cmdsn_me.fromPrim 0u;
-                ExpStatSN = statsn_me.fromPrim 0u;
+                CmdSN = cmdsn_me.zero;
+                ExpStatSN = statsn_me.zero;
                 InitiatorTaskTag = itt_me.fromPrim 2u;
                 ExpectedDataTransferLength = 256u;
                 DataSegment = PooledBuffer.Empty;
@@ -4574,9 +4574,9 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True(( datainpdu1.LUN = lun_me.zero ))
         Assert.True(( datainpdu1.InitiatorTaskTag = itt_me.fromPrim 2u ))
         Assert.True(( datainpdu1.TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu ))
-        Assert.True(( datainpdu1.StatSN = statsn_me.fromPrim 0u ))
+        Assert.True(( datainpdu1.StatSN = statsn_me.zero ))
         Assert.True(( datainpdu1.ExpCmdSN = cmdsn_me.fromPrim 1u ))
-        Assert.True(( datainpdu1.DataSN = datasn_me.fromPrim 0u ))
+        Assert.True(( datainpdu1.DataSN = datasn_me.zero ))
         Assert.True(( datainpdu1.BufferOffset = 0u ))
         Assert.True(( datainpdu1.ResidualCount = 0u ))
         Assert.True(( arDataSegment.ToArray() = [| 0uy .. 30uy |] ))
@@ -4626,7 +4626,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_T = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -4637,8 +4637,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 F = true;
                 R = true;
                 W = false;
-                CmdSN = cmdsn_me.fromPrim 0u;
-                ExpStatSN = statsn_me.fromPrim 0u;
+                CmdSN = cmdsn_me.zero;
+                ExpStatSN = statsn_me.zero;
                 InitiatorTaskTag = itt_me.fromPrim 2u;
                 ExpectedDataTransferLength = 256u;
                 DataSegment = PooledBuffer.Empty;
@@ -4674,9 +4674,9 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True(( datainpdu1.LUN = lun_me.zero ))
         Assert.True(( datainpdu1.InitiatorTaskTag = itt_me.fromPrim 2u ))
         Assert.True(( datainpdu1.TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu ))
-        Assert.True(( datainpdu1.StatSN = statsn_me.fromPrim 0u ))
+        Assert.True(( datainpdu1.StatSN = statsn_me.zero ))
         Assert.True(( datainpdu1.ExpCmdSN = cmdsn_me.fromPrim 1u ))
-        Assert.True(( datainpdu1.DataSN = datasn_me.fromPrim 0u ))
+        Assert.True(( datainpdu1.DataSN = datasn_me.zero ))
         Assert.True(( datainpdu1.BufferOffset = 0u ))
         Assert.True(( datainpdu1.ResidualCount = 0u ))
         Assert.True(( arDataSegment.ToArray() = [| 0uy .. 31uy |] ))
@@ -4726,7 +4726,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_T = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -4737,8 +4737,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 F = true;
                 R = true;
                 W = false;
-                CmdSN = cmdsn_me.fromPrim 0u;
-                ExpStatSN = statsn_me.fromPrim 0u;
+                CmdSN = cmdsn_me.zero;
+                ExpStatSN = statsn_me.zero;
                 InitiatorTaskTag = itt_me.fromPrim 2u;
                 ExpectedDataTransferLength = 256u;
                 DataSegment = PooledBuffer.Empty;
@@ -4774,9 +4774,9 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True(( datainpdu1.LUN = lun_me.zero ))
         Assert.True(( datainpdu1.InitiatorTaskTag = itt_me.fromPrim 2u ))
         Assert.True(( datainpdu1.TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu ))
-        Assert.True(( datainpdu1.StatSN = statsn_me.fromPrim 0u ))
+        Assert.True(( datainpdu1.StatSN = statsn_me.zero ))
         Assert.True(( datainpdu1.ExpCmdSN = cmdsn_me.fromPrim 1u ))
-        Assert.True(( datainpdu1.DataSN = datasn_me.fromPrim 0u ))
+        Assert.True(( datainpdu1.DataSN = datasn_me.zero ))
         Assert.True(( datainpdu1.BufferOffset = 0u ))
         Assert.True(( datainpdu1.ResidualCount = 0u ))
         Assert.True(( arDataSegment.ToArray() = [| 0uy .. 31uy |] ))
@@ -4798,7 +4798,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True(( datainpdu2.LUN = lun_me.zero ))
         Assert.True(( datainpdu2.InitiatorTaskTag = itt_me.fromPrim 2u ))
         Assert.True(( datainpdu2.TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu ))
-        Assert.True(( datainpdu2.StatSN = statsn_me.fromPrim 0u ))
+        Assert.True(( datainpdu2.StatSN = statsn_me.zero ))
         Assert.True(( datainpdu2.ExpCmdSN = cmdsn_me.fromPrim 1u ))
         Assert.True(( datainpdu2.DataSN = datasn_me.fromPrim 1u ))
         Assert.True(( datainpdu2.BufferOffset = 32u ))
@@ -4850,7 +4850,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_T = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -4861,8 +4861,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 F = true;
                 R = true;
                 W = false;
-                CmdSN = cmdsn_me.fromPrim 0u;
-                ExpStatSN = statsn_me.fromPrim 0u;
+                CmdSN = cmdsn_me.zero;
+                ExpStatSN = statsn_me.zero;
                 InitiatorTaskTag = itt_me.fromPrim 2u;
                 ExpectedDataTransferLength = 256u;
                 DataSegment = PooledBuffer.Empty;
@@ -4900,9 +4900,9 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( datain1.LUN = lun_me.zero )
         Assert.True( datain1.InitiatorTaskTag = itt_me.fromPrim 2u )
         Assert.True( datain1.TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu )
-        Assert.True( datain1.StatSN = statsn_me.fromPrim 0u )
+        Assert.True( datain1.StatSN = statsn_me.zero )
         Assert.True( datain1.ExpCmdSN = cmdsn_me.fromPrim 1u )
-        Assert.True( datain1.DataSN = datasn_me.fromPrim 0u )
+        Assert.True( datain1.DataSN = datasn_me.zero )
         Assert.True( datain1.BufferOffset = 0u )
         Assert.True( arDataSegment.ToArray() = [| 0uy .. 9uy |] )    // truncated by allocation length
 
@@ -4952,7 +4952,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_T = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -4963,8 +4963,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 F = true;
                 R = true;
                 W = false;
-                CmdSN = cmdsn_me.fromPrim 0u;
-                ExpStatSN = statsn_me.fromPrim 0u;
+                CmdSN = cmdsn_me.zero;
+                ExpStatSN = statsn_me.zero;
                 InitiatorTaskTag = itt_me.fromPrim 2u;
                 ExpectedDataTransferLength = 32u;
                 DataSegment = PooledBuffer.Empty;
@@ -4997,9 +4997,9 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( datain1.LUN = lun_me.zero )
         Assert.True( datain1.InitiatorTaskTag = itt_me.fromPrim 2u )
         Assert.True( datain1.TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu )
-        Assert.True( datain1.StatSN = statsn_me.fromPrim 0u )
+        Assert.True( datain1.StatSN = statsn_me.zero )
         Assert.True( datain1.ExpCmdSN = cmdsn_me.fromPrim 1u )
-        Assert.True( datain1.DataSN = datasn_me.fromPrim 0u )
+        Assert.True( datain1.DataSN = datasn_me.zero )
         Assert.True( datain1.BufferOffset = 0u )
         Assert.True( arDataSegment.ToArray() = [| 0uy .. 15uy |] )    // truncated by MaxBurstLength length
 
@@ -5048,7 +5048,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_T = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -5059,8 +5059,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 F = true;
                 R = true;
                 W = false;
-                CmdSN = cmdsn_me.fromPrim 0u;
-                ExpStatSN = statsn_me.fromPrim 0u;
+                CmdSN = cmdsn_me.zero;
+                ExpStatSN = statsn_me.zero;
                 InitiatorTaskTag = itt_me.fromPrim 2u;
                 ExpectedDataTransferLength = 16u;   // TOO SHORT
                 DataSegment = PooledBuffer.Empty;
@@ -5093,9 +5093,9 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( datain1.LUN = lun_me.zero )
         Assert.True( datain1.InitiatorTaskTag = itt_me.fromPrim 2u )
         Assert.True( datain1.TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu )
-        Assert.True( datain1.StatSN = statsn_me.fromPrim 0u )
+        Assert.True( datain1.StatSN = statsn_me.zero )
         Assert.True( datain1.ExpCmdSN = cmdsn_me.fromPrim 1u )
-        Assert.True( datain1.DataSN = datasn_me.fromPrim 0u )
+        Assert.True( datain1.DataSN = datasn_me.zero )
         Assert.True( datain1.BufferOffset = 0u )
         Assert.True( arDataSegment.ToArray() = [| 0uy .. 15uy |] )    // truncated by ExpectedDataTransferLength length
 
@@ -5144,7 +5144,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_T = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -5155,8 +5155,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 F = true;
                 R = true;
                 W = true;
-                CmdSN = cmdsn_me.fromPrim 0u;
-                ExpStatSN = statsn_me.fromPrim 0u;
+                CmdSN = cmdsn_me.zero;
+                ExpStatSN = statsn_me.zero;
                 InitiatorTaskTag = itt_me.fromPrim 2u;
                 ExpectedDataTransferLength = 16u;
                 DataSegment = PooledBuffer.Rent [| 0uy .. 15uy |];
@@ -5189,9 +5189,9 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( datain1.LUN = lun_me.zero )
         Assert.True( datain1.InitiatorTaskTag = itt_me.fromPrim 2u )
         Assert.True( datain1.TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu )
-        Assert.True( datain1.StatSN = statsn_me.fromPrim 0u )
+        Assert.True( datain1.StatSN = statsn_me.zero )
         Assert.True( datain1.ExpCmdSN = cmdsn_me.fromPrim 1u )
-        Assert.True( datain1.DataSN = datasn_me.fromPrim 0u )
+        Assert.True( datain1.DataSN = datasn_me.zero )
         Assert.True( datain1.BufferOffset = 0u )
         Assert.True( arDataSegment.ToArray() = [| 0uy .. 15uy |] )    // truncated by BidirectionalExpectedReadDataLength length
 
@@ -5233,7 +5233,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let smStub, luStub = Session_Test.GenDefaultStubs()
 
         // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
+        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer ) :> ISession
         let pc = new PrivateCaller( sess )
         
 
@@ -5244,8 +5244,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 F = true;
                 R = false;
                 W = true;
-                CmdSN = cmdsn_me.fromPrim 0u;
-                ExpStatSN = statsn_me.fromPrim 0u;
+                CmdSN = cmdsn_me.zero;
+                ExpStatSN = statsn_me.zero;
                 InitiatorTaskTag = itt_me.fromPrim 2u;
                 ExpectedDataTransferLength = 16u;
                 DataSegment = PooledBuffer.Rent [| 0uy .. 15uy |];
@@ -5273,7 +5273,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let smStub, luStub = Session_Test.GenDefaultStubs()
 
         // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
+        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer ) :> ISession
         let pc = new PrivateCaller( sess )
 
         sess.RejectPDUByLogi
@@ -5290,7 +5290,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -5325,7 +5325,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let smStub, luStub = Session_Test.GenDefaultStubs()
 
         // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
+        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer ) :> ISession
         let pc = new PrivateCaller( sess )
 
         sess.RejectPDUByHeader
@@ -5342,7 +5342,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -5376,7 +5376,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let smStub, luStub = Session_Test.GenDefaultStubs()
 
         // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
+        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer ) :> ISession
 
         // Send PDU from the target
         sess.SendOtherResponsePDU
@@ -5400,7 +5400,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let smStub, luStub = Session_Test.GenDefaultStubs()
 
         // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.fromPrim 0u, killer ) :> ISession
+        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer ) :> ISession
 
         // Send PDU from the target
         sess.SendOtherResponsePDU
@@ -5423,7 +5423,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -5457,7 +5457,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -5491,7 +5491,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Session_Test.defaultSessionParam
                 Session_Test.defaultConnectionParam
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -5561,7 +5561,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_I = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let rfl = pc.GetField( "m_RespFense" ) :?> ResponseFence
@@ -5617,7 +5617,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_I = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let rfl = pc.GetField( "m_RespFense" ) :?> ResponseFence
@@ -5691,7 +5691,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_I = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let rfl = pc.GetField( "m_RespFense" ) :?> ResponseFence
@@ -5765,7 +5765,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_I = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let rfl = pc.GetField( "m_RespFense" ) :?> ResponseFence
@@ -5839,7 +5839,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_I = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let rfl = pc.GetField( "m_RespFense" ) :?> ResponseFence
@@ -5851,9 +5851,9 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let tmrpdu = {
             Response = TaskMgrResCd.AUTH_FAILED;
             InitiatorTaskTag = itt_me.fromPrim 1u;
-            StatSN = statsn_me.fromPrim 0u;
-            ExpCmdSN = cmdsn_me.fromPrim 0u;
-            MaxCmdSN = cmdsn_me.fromPrim 0u
+            StatSN = statsn_me.zero;
+            ExpCmdSN = cmdsn_me.zero;
+            MaxCmdSN = cmdsn_me.zero
             ResponseFence = ResponseFenceNeedsFlag.R_Mode;
         }
 
@@ -5883,7 +5883,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_I = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let rfl = pc.GetField( "m_RespFense" ) :?> ResponseFence
@@ -5895,9 +5895,9 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let tmrpdu = {
             Response = TaskMgrResCd.AUTH_FAILED;
             InitiatorTaskTag = itt_me.fromPrim 1u;
-            StatSN = statsn_me.fromPrim 0u;
-            ExpCmdSN = cmdsn_me.fromPrim 0u;
-            MaxCmdSN = cmdsn_me.fromPrim 0u
+            StatSN = statsn_me.zero;
+            ExpCmdSN = cmdsn_me.zero;
+            MaxCmdSN = cmdsn_me.zero
             ResponseFence = ResponseFenceNeedsFlag.W_Mode;
         }
 
@@ -5944,7 +5944,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_I = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let rfl = pc.GetField( "m_RespFense" ) :?> ResponseFence
@@ -5956,9 +5956,9 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let tmrpdu = {
             Response = TaskMgrResCd.AUTH_FAILED;
             InitiatorTaskTag = itt_me.fromPrim 1u;
-            StatSN = statsn_me.fromPrim 0u;
-            ExpCmdSN = cmdsn_me.fromPrim 0u;
-            MaxCmdSN = cmdsn_me.fromPrim 0u
+            StatSN = statsn_me.zero;
+            ExpCmdSN = cmdsn_me.zero;
+            MaxCmdSN = cmdsn_me.zero
             ResponseFence = ResponseFenceNeedsFlag.R_Mode;
         }
 
@@ -6005,7 +6005,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_I = 32u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let rfl = pc.GetField( "m_RespFense" ) :?> ResponseFence
@@ -6017,9 +6017,9 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let tmrpdu = {
             Response = TaskMgrResCd.AUTH_FAILED;
             InitiatorTaskTag = itt_me.fromPrim 1u;
-            StatSN = statsn_me.fromPrim 0u;
-            ExpCmdSN = cmdsn_me.fromPrim 0u;
-            MaxCmdSN = cmdsn_me.fromPrim 0u
+            StatSN = statsn_me.zero;
+            ExpCmdSN = cmdsn_me.zero;
+            MaxCmdSN = cmdsn_me.zero
             ResponseFence = ResponseFenceNeedsFlag.W_Mode;
         }
 
@@ -6066,7 +6066,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_I = 512u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let rfl = pc.GetField( "m_RespFense" ) :?> ResponseFence
@@ -6101,7 +6101,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_I = 512u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let rfl = pc.GetField( "m_RespFense" ) :?> ResponseFence
@@ -6153,7 +6153,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_I = 512u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -6198,7 +6198,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_I = 512u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let rfl = pc.GetField( "m_RespFense" ) :?> ResponseFence
@@ -6248,7 +6248,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_I = 512u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let rfl = pc.GetField( "m_RespFense" ) :?> ResponseFence
@@ -6298,7 +6298,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_I = 512u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
 
@@ -6347,7 +6347,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_I = 512u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let rfl = pc.GetField( "m_RespFense" ) :?> ResponseFence
@@ -6398,7 +6398,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                         MaxRecvDataSegmentLength_I = 512u;
                 }
                 ( cid_me.fromPrim 1us )
-                ( cmdsn_me.fromPrim 0u )
+                ( cmdsn_me.zero )
                 ( itt_me.fromPrim 0u )
                 false
         let rfl = pc.GetField( "m_RespFense" ) :?> ResponseFence

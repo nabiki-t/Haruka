@@ -783,9 +783,9 @@ type TaskRouter_Test () =
             {
                 Response = TaskMgrResCd.FUCTION_COMPLETE;
                 InitiatorTaskTag = itt_me.fromPrim 0u;
-                StatSN = statsn_me.fromPrim 0u;
-                ExpCmdSN = cmdsn_me.fromPrim 0u;
-                MaxCmdSN = cmdsn_me.fromPrim 0u;
+                StatSN = statsn_me.zero;
+                ExpCmdSN = cmdsn_me.zero;
+                MaxCmdSN = cmdsn_me.zero;
                 ResponseFence = ResponseFenceNeedsFlag.R_Mode;
             }
             lun_me.zero
@@ -811,9 +811,9 @@ type TaskRouter_Test () =
                 {
                     Response = TaskMgrResCd.FUCTION_COMPLETE;
                     InitiatorTaskTag = itt_me.fromPrim 0u;
-                    StatSN = statsn_me.fromPrim 0u;
-                    ExpCmdSN = cmdsn_me.fromPrim 0u;
-                    MaxCmdSN = cmdsn_me.fromPrim 0u;
+                    StatSN = statsn_me.zero;
+                    ExpCmdSN = cmdsn_me.zero;
+                    MaxCmdSN = cmdsn_me.zero;
                     ResponseFence = ResponseFenceNeedsFlag.R_Mode;
                 }
                 lun_me.zero

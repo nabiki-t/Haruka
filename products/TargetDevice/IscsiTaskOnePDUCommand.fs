@@ -477,7 +477,7 @@ type IscsiTaskOnePDUCommand
                             DataSegment = ArraySegment( argSendDataBytes, int sp, int seglen )
                             ResponseFence = ResponseFenceNeedsFlag.Immediately;
                         }
-                        loop ( sp + seglen ) ( cnt +  datasn_me.fromPrim 1u ) ( w :: li )
+                        loop ( sp + seglen ) ( datasn_me.next cnt ) ( w :: li )
                 let startDataPos, startDataSN =
                     if someOfDI_Acked then
                         oldDataInPDUs.[0].BufferOffset, oldDataInPDUs.[0].DataSN
@@ -494,7 +494,7 @@ type IscsiTaskOnePDUCommand
                 SNACKTag = snacktag_me.fromPrim( ttt_me.toPrim snackpdu.TargetTransferTag )
                 ExpDataSN = 
                     if someOfDI_Acked then
-                        oldDataInPDUs.[0].DataSN + datasn_me.fromPrim ( uint32 newDataInPDUList.Length )
+                        datasn_me.incr ( uint32 newDataInPDUList.Length ) oldDataInPDUs.[0].DataSN
                     else
                         datasn_me.fromPrim( uint32 newDataInPDUList.Length );
                 ResponseData = 

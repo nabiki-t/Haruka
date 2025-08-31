@@ -2053,8 +2053,8 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
                     TSIH = tsih_me.fromPrim 0us;
                     InitiatorTaskTag = itt_me.fromPrim 0u;
                     CID = g_CID0;
-                    CmdSN = cmdsn_me.fromPrim 0u;
-                    ExpStatSN = statsn_me.fromPrim 0u;
+                    CmdSN = cmdsn_me.zero;
+                    ExpStatSN = statsn_me.zero;
                     TextRequest = textReq;
                     ByteCount = 0u;
                 }
@@ -2101,8 +2101,8 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
                     TSIH = tsih_me.fromPrim 0us;
                     InitiatorTaskTag = itt_me.fromPrim 0u;
                     CID = g_CID0;
-                    CmdSN = cmdsn_me.fromPrim 0u;
-                    ExpStatSN = statsn_me.fromPrim 0u;
+                    CmdSN = cmdsn_me.zero;
+                    ExpStatSN = statsn_me.zero;
                     TextRequest = textReq;
                     ByteCount = 0u;
                 }

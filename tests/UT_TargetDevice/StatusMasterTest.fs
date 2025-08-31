@@ -906,7 +906,7 @@ type StatusMaster_Test () =
         pc_sm.SetField( "m_Sessions", m_Sessions1 )
 
         // same I_T Nexus is already used.
-        let r = sm.CreateNewSession itn1 ( tsih_me.fromPrim 2us ) StatusMaster_Test.defaultSessParam ( cmdsn_me.fromPrim 0u )
+        let r = sm.CreateNewSession itn1 ( tsih_me.fromPrim 2us ) StatusMaster_Test.defaultSessParam ( cmdsn_me.zero )
         Assert.True(( r.IsNone ))
 
         GlbFunc.DeleteFile targetDeviceConfName
@@ -951,7 +951,7 @@ type StatusMaster_Test () =
         let itn2 = new ITNexus( "initiator002", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target002", tpgt_me.fromPrim 0us );
         let tsih2 = tsih_me.fromPrim ( uint16 Constants.MAX_SESSION_COUNT_IN_TD )
 
-        let r = sm.CreateNewSession itn2 tsih2 StatusMaster_Test.defaultSessParam ( cmdsn_me.fromPrim 0u )
+        let r = sm.CreateNewSession itn2 tsih2 StatusMaster_Test.defaultSessParam ( cmdsn_me.zero )
         Assert.True(( r.IsSome ))
         Assert.True(( r.Value.I_TNexus.Equals itn2 ))
 
@@ -998,7 +998,7 @@ type StatusMaster_Test () =
         let tsih2 = tsih_me.fromPrim ( uint16 Constants.MAX_SESSION_COUNT_IN_TD + 1us )
 
         // Session count per target device exceeds limits.
-        let r = sm.CreateNewSession itn2 tsih2 StatusMaster_Test.defaultSessParam ( cmdsn_me.fromPrim 0u )
+        let r = sm.CreateNewSession itn2 tsih2 StatusMaster_Test.defaultSessParam ( cmdsn_me.zero )
         Assert.True(( r.IsNone ))
 
         GlbFunc.DeleteFile targetDeviceConfName
@@ -1035,7 +1035,7 @@ type StatusMaster_Test () =
         let itn2 = new ITNexus( "initiator002", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target002", tpgt_me.fromPrim 0us )
         let tsih2 = tsih_me.fromPrim ( uint16 Constants.MAX_SESSION_COUNT_IN_TARGET )
 
-        let r = sm.CreateNewSession itn2 tsih2 StatusMaster_Test.defaultSessParam ( cmdsn_me.fromPrim 0u )
+        let r = sm.CreateNewSession itn2 tsih2 StatusMaster_Test.defaultSessParam ( cmdsn_me.zero )
         Assert.True(( r.IsSome ))
         Assert.True(( r.Value.I_TNexus.Equals itn2 ))
 
@@ -1074,7 +1074,7 @@ type StatusMaster_Test () =
         let tsih2 = tsih_me.fromPrim ( uint16 Constants.MAX_SESSION_COUNT_IN_TARGET + 1us )
 
         // Session count per target exceeds limits.
-        let r = sm.CreateNewSession itn2 tsih2 StatusMaster_Test.defaultSessParam ( cmdsn_me.fromPrim 0u )
+        let r = sm.CreateNewSession itn2 tsih2 StatusMaster_Test.defaultSessParam ( cmdsn_me.zero )
         Assert.True(( r.IsNone ))
 
         GlbFunc.DeleteFile targetDeviceConfName
@@ -1118,7 +1118,7 @@ type StatusMaster_Test () =
         let itn2 = new ITNexus( "initiator002", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target002", tpgt_me.fromPrim 0us )
         let tsih2 = tsih_me.fromPrim ( uint16 Constants.MAX_SESSION_COUNT_IN_LU )
 
-        let r = sm.CreateNewSession itn2 tsih2 StatusMaster_Test.defaultSessParam ( cmdsn_me.fromPrim 0u )
+        let r = sm.CreateNewSession itn2 tsih2 StatusMaster_Test.defaultSessParam ( cmdsn_me.zero )
         Assert.True(( r.IsSome ))
         Assert.True(( r.Value.I_TNexus.Equals itn2 ))
 
@@ -1166,7 +1166,7 @@ type StatusMaster_Test () =
         // Session count per LU exceeds limits.
         // if MAX_SESSION_COUNT_IN_TD <= MAX_SESSION_COUNT_IN_LU, 
         // it fails because it violates the per Target device limit, not the per LU limit.
-        let r = sm.CreateNewSession itn2 tsih2 StatusMaster_Test.defaultSessParam ( cmdsn_me.fromPrim 0u )
+        let r = sm.CreateNewSession itn2 tsih2 StatusMaster_Test.defaultSessParam ( cmdsn_me.zero )
         Assert.True(( r.IsNone ))
 
         GlbFunc.DeleteFile targetDeviceConfName
@@ -1203,7 +1203,7 @@ type StatusMaster_Test () =
         let itn2 = new ITNexus( "initiator002", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target002", tpgt_me.fromPrim 0us );
 
         // TSIH duplicate
-        let r = sm.CreateNewSession itn2 ( tsih_me.fromPrim 1us ) StatusMaster_Test.defaultSessParam ( cmdsn_me.fromPrim 0u )
+        let r = sm.CreateNewSession itn2 ( tsih_me.fromPrim 1us ) StatusMaster_Test.defaultSessParam ( cmdsn_me.zero )
         Assert.True(( r.IsNone ))
         let r2 = sm.GetSession ( tsih_me.fromPrim 1us )
         Assert.True(( r2.IsSome ))
@@ -1227,7 +1227,7 @@ type StatusMaster_Test () =
         let pc_sm = new PrivateCaller( sm )
 
         let itn2 = new ITNexus( "initiator002", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target002", tpgt_me.fromPrim 0us );
-        let r = sm.ReinstateSession itn2 ( tsih_me.fromPrim 2us ) StatusMaster_Test.defaultSessParam ( cmdsn_me.fromPrim 0u )
+        let r = sm.ReinstateSession itn2 ( tsih_me.fromPrim 2us ) StatusMaster_Test.defaultSessParam ( cmdsn_me.zero )
         Assert.True(( r = tsih_me.fromPrim 2us ))
 
         let m_Sessions2 = pc_sm.GetField( "m_Sessions" ) :?> OptimisticLock<ImmutableDictionary< TSIH_T, ISession >>
@@ -1265,7 +1265,7 @@ type StatusMaster_Test () =
             |> OptimisticLock
         pc_sm.SetField( "m_Sessions", m_sessions1 )
 
-        let r = sm.ReinstateSession itn1 ( tsih_me.fromPrim 1us ) StatusMaster_Test.defaultSessParam ( cmdsn_me.fromPrim 0u )
+        let r = sm.ReinstateSession itn1 ( tsih_me.fromPrim 1us ) StatusMaster_Test.defaultSessParam ( cmdsn_me.zero )
         Assert.True(( r = tsih_me.fromPrim 1us ))
 
         let m_Sessions2 = pc_sm.GetField( "m_Sessions" ) :?> OptimisticLock<ImmutableDictionary< TSIH_T, ISession >>

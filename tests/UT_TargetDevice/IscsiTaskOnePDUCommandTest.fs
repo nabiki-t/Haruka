@@ -111,7 +111,7 @@ type IscsiTaskOnePDUCommand_Test () =
         StatSN = statsn_me.zero;
         ExpCmdSN = cmdsn_me.zero;
         MaxCmdSN = cmdsn_me.zero;
-        DataSN = datasn_me.fromPrim 0u;
+        DataSN = datasn_me.zero;
         BufferOffset = 0u;
         ResidualCount = 0u;
         DataSegment = ArraySegment.Empty;
@@ -127,10 +127,10 @@ type IscsiTaskOnePDUCommand_Test () =
         Status = ScsiCmdStatCd.GOOD;
         InitiatorTaskTag = itt_me.fromPrim 0u;
         SNACKTag = snacktag_me.fromPrim 0u;
-        StatSN = statsn_me.fromPrim 0u;
-        ExpCmdSN = cmdsn_me.fromPrim 0u;
-        MaxCmdSN = cmdsn_me.fromPrim 0u;
-        ExpDataSN = datasn_me.fromPrim 0u;
+        StatSN = statsn_me.zero;
+        ExpCmdSN = cmdsn_me.zero;
+        MaxCmdSN = cmdsn_me.zero;
+        ExpDataSN = datasn_me.zero;
         BidirectionalReadResidualCount = 0u;
         ResidualCount = 0u;
         SenseLength = 0us;
@@ -227,7 +227,7 @@ type IscsiTaskOnePDUCommand_Test () =
         Assert.True(( iSCSITaskType.SNACK = r.TaskType ))
         Assert.True(( "SNACK" = r.TaskTypeName ))
         Assert.True(( ValueSome( itt_me.fromPrim 0u ) = r.InitiatorTaskTag ))
-        Assert.True(( ValueSome( cmdsn_me.fromPrim 0u ) = r.CmdSN ))
+        Assert.True(( ValueSome( cmdsn_me.zero ) = r.CmdSN ))
         Assert.True(( ValueSome( true ) = r.Immidiate ))
         Assert.True( r.IsExecutable )
         Assert.True(( struct( cid_me.fromPrim 1us, concnt_me.fromPrim 2 ) = r.AllegiantConnection ))
@@ -245,10 +245,10 @@ type IscsiTaskOnePDUCommand_Test () =
                 concnt_me.fromPrim 2,
                 {
                     Reason = RejectReasonCd.COM_NOT_SUPPORT;
-                    StatSN = statsn_me.fromPrim 0u;
-                    ExpCmdSN = cmdsn_me.fromPrim 0u;
-                    MaxCmdSN = cmdsn_me.fromPrim 0u;
-                    DataSN_or_R2TSN = datasn_me.fromPrim 0u;
+                    StatSN = statsn_me.zero;
+                    ExpCmdSN = cmdsn_me.zero;
+                    MaxCmdSN = cmdsn_me.zero;
+                    DataSN_or_R2TSN = datasn_me.zero;
                     HeaderData = Array.empty;
                 },
                 false
@@ -272,10 +272,10 @@ type IscsiTaskOnePDUCommand_Test () =
                 concnt_me.fromPrim 2,
                 {
                     Reason = RejectReasonCd.COM_NOT_SUPPORT;
-                    StatSN = statsn_me.fromPrim 0u;
-                    ExpCmdSN = cmdsn_me.fromPrim 0u;
-                    MaxCmdSN = cmdsn_me.fromPrim 0u;
-                    DataSN_or_R2TSN = datasn_me.fromPrim 0u;
+                    StatSN = statsn_me.zero;
+                    ExpCmdSN = cmdsn_me.zero;
+                    MaxCmdSN = cmdsn_me.zero;
+                    DataSN_or_R2TSN = datasn_me.zero;
                     HeaderData = Array.empty;
                 },
                 false
@@ -1118,7 +1118,7 @@ type IscsiTaskOnePDUCommand_Test () =
                         {
                             IscsiTaskOnePDUCommand_Test.defaultSCSIDataInPDUValues with
                                 F = false;
-                                DataSN = datasn_me.fromPrim 0u;
+                                DataSN = datasn_me.zero;
                         };
                         {
                             IscsiTaskOnePDUCommand_Test.defaultSCSIDataInPDUValues with
@@ -1143,7 +1143,7 @@ type IscsiTaskOnePDUCommand_Test () =
                     Assert.True(( pdu.Opcode = OpcodeCd.SCSI_DATA_IN ))
                     let wpdu = pdu :?> SCSIDataInPDU
                     Assert.True(( wpdu.F = false ))
-                    Assert.True(( wpdu.DataSN = datasn_me.fromPrim 0u ))
+                    Assert.True(( wpdu.DataSN = datasn_me.zero ))
                 elif cnt = 2 then
                     Assert.True(( pdu.Opcode = OpcodeCd.SCSI_DATA_IN ))
                     let wpdu = pdu :?> SCSIDataInPDU
@@ -1353,7 +1353,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                 SenseData = ArraySegment( [| 0uy .. 255uy |], 0, 256 );
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
-                                ExpDataSN = datasn_me.fromPrim 0u;
+                                ExpDataSN = datasn_me.zero;
                         }
                     )
             ),
@@ -1381,7 +1381,7 @@ type IscsiTaskOnePDUCommand_Test () =
                     Assert.True(( w.SNACKTag = snacktag_me.fromPrim 0xEEEEEEEEu ))
                     Assert.True(( w.StatSN = statsn_me.fromPrim 10u ))
                     Assert.True(( w.ExpCmdSN = cmdsn_me.fromPrim 11u ))
-                    Assert.True(( w.ExpDataSN = datasn_me.fromPrim 0u ))
+                    Assert.True(( w.ExpDataSN = datasn_me.zero ))
                     let ar = w.SenseData
                     Assert.True(( ar.ToArray() = [| 0uy .. 255uy |] ))
             ),
@@ -1431,7 +1431,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                 ResponseData = ArraySegment.Empty;
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
-                                ExpDataSN = datasn_me.fromPrim 0u;
+                                ExpDataSN = datasn_me.zero;
                         }
                     )
             ),
@@ -1459,7 +1459,7 @@ type IscsiTaskOnePDUCommand_Test () =
                     Assert.True(( w.SNACKTag = snacktag_me.fromPrim 0xEEEEEEEEu ))
                     Assert.True(( w.StatSN = statsn_me.fromPrim 10u ))
                     Assert.True(( w.ExpCmdSN = cmdsn_me.fromPrim 11u ))
-                    Assert.True(( w.ExpDataSN = datasn_me.fromPrim 0u ))
+                    Assert.True(( w.ExpDataSN = datasn_me.zero ))
                     let arSenseData = w.SenseData
                     let arResponseData = w.ResponseData
                     Assert.True(( arSenseData.ToArray() = Array.empty ))
@@ -1510,7 +1510,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                 ResponseData = ArraySegment( [| 0uy .. 253uy |], 0, 254 );
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
-                                ExpDataSN = datasn_me.fromPrim 0u;
+                                ExpDataSN = datasn_me.zero;
                                 ResponseFence = ResponseFenceNeedsFlag.W_Mode;
                         }
                     )
@@ -1539,7 +1539,7 @@ type IscsiTaskOnePDUCommand_Test () =
                     Assert.True(( w.SNACKTag = snacktag_me.fromPrim 0xEEEEEEEEu ))
                     Assert.True(( w.StatSN = statsn_me.fromPrim 10u ))
                     Assert.True(( w.ExpCmdSN = cmdsn_me.fromPrim 11u ))
-                    Assert.True(( w.ExpDataSN = datasn_me.fromPrim 0u ))
+                    Assert.True(( w.ExpDataSN = datasn_me.zero ))
                     let arSenseData = w.SenseData
                     let arResponseData = w.ResponseData
                     Assert.True(( arSenseData.ToArray() = Array.empty ))
@@ -1591,7 +1591,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                 ResponseData = ArraySegment( [| 0uy .. 254uy |], 0, 255 );
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
-                                ExpDataSN = datasn_me.fromPrim 0u;
+                                ExpDataSN = datasn_me.zero;
                         }
                     )
             ),
@@ -1621,7 +1621,7 @@ type IscsiTaskOnePDUCommand_Test () =
                         Assert.True(( w.A = false ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
                         Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xffffffffu ))
-                        Assert.True(( w.DataSN = datasn_me.fromPrim 0u ))
+                        Assert.True(( w.DataSN = datasn_me.zero ))
                         Assert.True(( w.BufferOffset = 0u ))
                         let arDataSegment = w.DataSegment
                         Assert.True(( arDataSegment.ToArray() = [| 0uy .. 254uy |] ))
@@ -1684,7 +1684,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                 ResponseData = ArraySegment( [| 0uy .. 255uy |], 0, 256 );
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
-                                ExpDataSN = datasn_me.fromPrim 0u;
+                                ExpDataSN = datasn_me.zero;
                         }
                     )
             ),
@@ -1714,7 +1714,7 @@ type IscsiTaskOnePDUCommand_Test () =
                         Assert.True(( w.A = false ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
                         Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xffffffffu ))
-                        Assert.True(( w.DataSN = datasn_me.fromPrim 0u ))
+                        Assert.True(( w.DataSN = datasn_me.zero ))
                         Assert.True(( w.BufferOffset = 0u ))
                         let arDataSegment = w.DataSegment
                         Assert.True(( arDataSegment.ToArray() = [| 0uy .. 255uy |] ))
@@ -1777,7 +1777,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                 ResponseData = ArraySegment( Array.zeroCreate( 257 ), 0, 257 );
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
-                                ExpDataSN = datasn_me.fromPrim 0u;
+                                ExpDataSN = datasn_me.zero;
                         }
                     )
             ),
@@ -1807,7 +1807,7 @@ type IscsiTaskOnePDUCommand_Test () =
                         Assert.True(( w.A = false ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
                         Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xffffffffu ))
-                        Assert.True(( w.DataSN = datasn_me.fromPrim 0u ))
+                        Assert.True(( w.DataSN = datasn_me.zero ))
                         Assert.True(( w.BufferOffset = 0u ))
                         let arDataSegment = w.DataSegment
                         Assert.True(( arDataSegment.Count = 256 ))
@@ -1881,7 +1881,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                 ResponseData = ArraySegment( Array.zeroCreate( 512 ), 0, 512 );
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
-                                ExpDataSN = datasn_me.fromPrim 0u;
+                                ExpDataSN = datasn_me.zero;
                         }
                     )
             ),
@@ -1911,7 +1911,7 @@ type IscsiTaskOnePDUCommand_Test () =
                         Assert.True(( w.A = false ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
                         Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xffffffffu ))
-                        Assert.True(( w.DataSN = datasn_me.fromPrim 0u ))
+                        Assert.True(( w.DataSN = datasn_me.zero ))
                         Assert.True(( w.BufferOffset = 0u ))
                         let arDataSegment = w.DataSegment
                         Assert.True(( arDataSegment.Count = 256 ))
@@ -1985,7 +1985,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                 ResponseData = ArraySegment( Array.zeroCreate( 513 ), 0, 513 );
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
-                                ExpDataSN = datasn_me.fromPrim 0u;
+                                ExpDataSN = datasn_me.zero;
                         }
                     )
             ),
@@ -2015,7 +2015,7 @@ type IscsiTaskOnePDUCommand_Test () =
                         Assert.True(( w.A = false ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
                         Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xffffffffu ))
-                        Assert.True(( w.DataSN = datasn_me.fromPrim 0u ))
+                        Assert.True(( w.DataSN = datasn_me.zero ))
                         Assert.True(( w.BufferOffset = 0u ))
                         let arDataSegment = w.DataSegment
                         Assert.True(( arDataSegment.Count = 256 ))
@@ -2100,7 +2100,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                     LUN = lun_me.fromPrim 0x3UL;
                                     InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
                                     TargetTransferTag = ttt_me.fromPrim 0xFEDCBA98u;
-                                    DataSN = datasn_me.fromPrim 0u;
+                                    DataSN = datasn_me.zero;
                                     BufferOffset = 0u;
                                     DataSegment = ArraySegment( Array.zeroCreate( 254 ), 0, 254 );
                             }
@@ -2112,7 +2112,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                 ResponseData = ArraySegment.Empty;
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
-                                ExpDataSN = datasn_me.fromPrim 0u;
+                                ExpDataSN = datasn_me.zero;
                         }
                     )
             ),
@@ -2140,7 +2140,7 @@ type IscsiTaskOnePDUCommand_Test () =
                     Assert.True(( w.SNACKTag = snacktag_me.fromPrim 0xEEEEEEEEu ))
                     Assert.True(( w.StatSN = statsn_me.fromPrim 10u ))
                     Assert.True(( w.ExpCmdSN = cmdsn_me.fromPrim 11u ))
-                    Assert.True(( w.ExpDataSN = datasn_me.fromPrim 0u ))
+                    Assert.True(( w.ExpDataSN = datasn_me.zero ))
                     let arSenseData = w.SenseData
                     let arResponseData = w.ResponseData
                     Assert.True(( arSenseData.ToArray() = Array.empty ))
@@ -2193,7 +2193,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                     LUN = lun_me.fromPrim 0x3UL;
                                     InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
                                     TargetTransferTag = ttt_me.fromPrim 0xFEDCBA98u;
-                                    DataSN = datasn_me.fromPrim 0u;
+                                    DataSN = datasn_me.zero;
                                     BufferOffset = 0u;
                                     DataSegment = ArraySegment( Array.zeroCreate( 255 ), 0, 255 );
                             }
@@ -2205,7 +2205,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                 ResponseData = ArraySegment.Empty;
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
-                                ExpDataSN = datasn_me.fromPrim 0u;
+                                ExpDataSN = datasn_me.zero;
                         }
                     )
             ),
@@ -2236,7 +2236,7 @@ type IscsiTaskOnePDUCommand_Test () =
                         Assert.True(( w.LUN = lun_me.fromPrim 0x3UL ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
                         Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xFEDCBA98u ))
-                        Assert.True(( w.DataSN = datasn_me.fromPrim 0u ))
+                        Assert.True(( w.DataSN = datasn_me.zero ))
                         Assert.True(( w.BufferOffset = 0u ))
                         let arDataSegment = w.DataSegment
                         Assert.True(( arDataSegment.ToArray().Length = 255 ))
@@ -2299,7 +2299,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                     LUN = lun_me.fromPrim 0x3UL;
                                     InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
                                     TargetTransferTag = ttt_me.fromPrim 0xFEDCBA98u;
-                                    DataSN = datasn_me.fromPrim 0u;
+                                    DataSN = datasn_me.zero;
                                     BufferOffset = 0u;
                                     DataSegment = ArraySegment( Array.zeroCreate( 257 ), 0, 257 );
                             }
@@ -2311,7 +2311,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                 ResponseData = ArraySegment.Empty;
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
-                                ExpDataSN = datasn_me.fromPrim 0u;
+                                ExpDataSN = datasn_me.zero;
                         }
                     )
             ),
@@ -2342,7 +2342,7 @@ type IscsiTaskOnePDUCommand_Test () =
                         Assert.True(( w.LUN = lun_me.zero ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
                         Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xffffffffu ))
-                        Assert.True(( w.DataSN = datasn_me.fromPrim 0u ))
+                        Assert.True(( w.DataSN = datasn_me.zero ))
                         Assert.True(( w.BufferOffset = 0u ))
                         let arDataSegment = w.DataSegment
                         Assert.True(( arDataSegment.ToArray().Length = 256 ))
@@ -2416,7 +2416,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                     F = false;
                                     A = false;
                                     InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
-                                    DataSN = datasn_me.fromPrim 0u;
+                                    DataSN = datasn_me.zero;
                                     BufferOffset = 0u;
                                     DataSegment = ArraySegment( warray, 0, 128 );
                             };
@@ -2437,7 +2437,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                 ResponseData = ArraySegment.Empty;
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
-                                ExpDataSN = datasn_me.fromPrim 0u;
+                                ExpDataSN = datasn_me.zero;
                         }
                     )
             ),
@@ -2465,7 +2465,7 @@ type IscsiTaskOnePDUCommand_Test () =
                     Assert.True(( w.SNACKTag = snacktag_me.fromPrim 0xEEEEEEEEu ))
                     Assert.True(( w.StatSN = statsn_me.fromPrim 10u ))
                     Assert.True(( w.ExpCmdSN = cmdsn_me.fromPrim 11u ))
-                    Assert.True(( w.ExpDataSN = datasn_me.fromPrim 0u ))
+                    Assert.True(( w.ExpDataSN = datasn_me.zero ))
                     let arSenseData = w.SenseData
                     let arResponseData = w.ResponseData
                     Assert.True(( arSenseData.ToArray() = Array.empty ))
@@ -2517,7 +2517,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                     F = false;
                                     A = false;
                                     InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
-                                    DataSN = datasn_me.fromPrim 0u;
+                                    DataSN = datasn_me.zero;
                                     BufferOffset = 0u;
                                     DataSegment = ArraySegment( warray, 0, 128 );
                             };
@@ -2538,7 +2538,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                 ResponseData = ArraySegment.Empty;
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
-                                ExpDataSN = datasn_me.fromPrim 0u;
+                                ExpDataSN = datasn_me.zero;
                         }
                     )
             ),
@@ -2569,7 +2569,7 @@ type IscsiTaskOnePDUCommand_Test () =
                         Assert.True(( w.LUN = lun_me.zero ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
                         Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xffffffffu ))
-                        Assert.True(( w.DataSN = datasn_me.fromPrim 0u ))
+                        Assert.True(( w.DataSN = datasn_me.zero ))
                         Assert.True(( w.BufferOffset = 0u ))
                         let arDataSegment = w.DataSegment
                         Assert.True(( arDataSegment.ToArray() = [| 0uy .. 255uy |] ))
@@ -2654,7 +2654,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                 ResponseData = ArraySegment.Empty;
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
-                                ExpDataSN = datasn_me.fromPrim 0u;
+                                ExpDataSN = datasn_me.zero;
                         }
                     )
             ),
@@ -2802,7 +2802,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                 ResponseData = ArraySegment.Empty;
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
-                                ExpDataSN = datasn_me.fromPrim 0u;
+                                ExpDataSN = datasn_me.zero;
                         }
                     )
             ),

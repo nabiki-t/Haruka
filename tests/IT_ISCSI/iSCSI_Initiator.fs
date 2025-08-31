@@ -77,7 +77,7 @@ type iSCSI_Connection(
     member _.ExpStatSN = m_ExpStatSN
 
     member _.IncrementExpStatSN() =
-        m_ExpStatSN <- statsn_me.Next m_ExpStatSN
+        m_ExpStatSN <- statsn_me.next m_ExpStatSN
 
     /// <summary>
     ///  Skip ExtStatSN Value.
@@ -1003,7 +1003,7 @@ type iSCSI_Initiator(
             let getCmdSN = fun () -> initCmdSN
             let! sessParams, connParams, lastStatSN, conn =
                 iSCSI_Initiator.Login exp_SessParams exp_ConnParams objID getCmdSN ( itt_me.fromPrim 0u ) statsn_me.zero true false
-            return new iSCSI_Initiator( sessParams, connParams, statsn_me.Next lastStatSN, conn, initCmdSN )
+            return new iSCSI_Initiator( sessParams, connParams, statsn_me.next lastStatSN, conn, initCmdSN )
         }
 
     /// <summary>
@@ -1063,7 +1063,7 @@ type iSCSI_Initiator(
             }
             let! sessParams, connParams, lastStatSN, conn =
                 iSCSI_Initiator.Login swp exp_ConnParams objID getCmdSN ( itt_me.fromPrim 0u ) statsn_me.zero true true
-            let sess = new iSCSI_Initiator( sessParams, connParams, statsn_me.Next lastStatSN, conn, cmdsn_me.zero )
+            let sess = new iSCSI_Initiator( sessParams, connParams, statsn_me.next lastStatSN, conn, cmdsn_me.zero )
 
             // Send SendTargets text request
             let rv = List<TextResponsePDU>()
@@ -1223,7 +1223,7 @@ type iSCSI_Initiator(
             if v.[0] = AuthMethodCandidateValue.AMC_CHAP then
                 // Need to authenticate
                 let! lastPDU2 =
-                    iSCSI_Initiator.SecurityNegotiation exp_SessParams exp_ConnParams ( statsn_me.Next lastPDU.StatSN ) objID getCmdSN itt conn
+                    iSCSI_Initiator.SecurityNegotiation exp_SessParams exp_ConnParams ( statsn_me.next lastPDU.StatSN ) objID getCmdSN itt conn
                 let! negoVal, negoStat, lastTSIH, lastStatSN =
                     iSCSI_Initiator.OperationalNegotiation exp_SessParams exp_ConnParams negoValue3 lastPDU2 objID getCmdSN itt conn isLeadingCon true
                 let sessParams, conParams =
@@ -1364,7 +1364,7 @@ type iSCSI_Initiator(
                             T = true;
                             NSG = LoginReqStateCd.OPERATIONAL;
                             CmdSN = getCmdSN();
-                            ExpStatSN = statsn_me.Next lastPDU1.StatSN;
+                            ExpStatSN = statsn_me.next lastPDU1.StatSN;
                             TextRequest = textReq;
                     }
                 let! _ = PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objID, conn, loginRequest3 )
@@ -1406,7 +1406,7 @@ type iSCSI_Initiator(
                             T = true;
                             NSG = LoginReqStateCd.OPERATIONAL;
                             CmdSN = getCmdSN();
-                            ExpStatSN = statsn_me.Next lastPDU1.StatSN;
+                            ExpStatSN = statsn_me.next lastPDU1.StatSN;
                             TextRequest = textReq;
                     }
                 let! _ = PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objID, conn, loginRequest3 )
@@ -1514,7 +1514,7 @@ type iSCSI_Initiator(
                     InitiatorTaskTag = itt;
                     CID = exp_ConnParams.CID;
                     CmdSN = cmdsn_me.zero;
-                    ExpStatSN = statsn_me.Next lastPDU.StatSN;
+                    ExpStatSN = statsn_me.next lastPDU.StatSN;
                     TextRequest = [||];
                     ByteCount = 0u; // not used
                 }
@@ -1538,7 +1538,7 @@ type iSCSI_Initiator(
 
                     // If T bit is not set, try to next one PDU
                     if not loginResponse.T then
-                        return LoopState.Continue( statsn_me.Next loginResponse.StatSN )
+                        return LoopState.Continue( statsn_me.next loginResponse.StatSN )
                     else
                         return LoopState.Terminate( loginResponse )
                 }
@@ -1619,14 +1619,14 @@ type iSCSI_Initiator(
 
                     // try to next
                     if not ( nextInitiatorTvalue && recvPDU.T ) then
-                        return LoopState.Continue( next_negoValue, next_negoStat, nextInitiatorTvalue, statsn_me.Next recvPDU.StatSN )
+                        return LoopState.Continue( next_negoValue, next_negoStat, nextInitiatorTvalue, statsn_me.next recvPDU.StatSN )
                     else
                         return LoopState.Terminate( next_negoValue, next_negoStat, recvPDU.TSIH, recvPDU.StatSN )
                 }
 
             let! lastPDU2 =
                 if not lastPDU.T then
-                    Functions.loopAsyncWithArgs waitTrance ( statsn_me.Next lastPDU.StatSN )
+                    Functions.loopAsyncWithArgs waitTrance ( statsn_me.next lastPDU.StatSN )
                 else
                     Task.FromResult lastPDU
 
@@ -1679,7 +1679,7 @@ type iSCSI_Initiator(
                 IscsiTextEncode.margeTextKeyValue Standpoint.Initiator currentNegoValues negoValue1 negoStat1 
 
 
-            return! Functions.loopAsyncWithArgs negoloop ( negoValue2, negoStat2, false, statsn_me.Next lastPDU2.StatSN )
+            return! Functions.loopAsyncWithArgs negoloop ( negoValue2, negoStat2, false, statsn_me.next lastPDU2.StatSN )
         }
 
     /// <summary>
@@ -1818,7 +1818,7 @@ type iSCSI_Initiator(
                             T = if cBitValue then false else argT;
                             NSG = if cBitValue || not argT then LoginReqStateCd.SEQURITY else defLoginReqPDU.NSG;   // If T is 0, NSG is reserved
                             CmdSN = getCmdSN();
-                            ExpStatSN = nextExpStatSN + statsn_me.fromPrim ( uint i );
+                            ExpStatSN = statsn_me.incr ( uint i ) nextExpStatSN;
                             TextRequest = sendTextResponses.[i];
                     }
                 let! _ = PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objID, conn, loginRequest )
@@ -1839,7 +1839,7 @@ type iSCSI_Initiator(
                         let msg = sprintf "Unexpected login response status(%s) was received." ( emptyLoginResponsePDU.Status.ToString() )
                         raise <| SessionRecoveryException ( msg, tsih_me.zero )
 
-            let lastSendExpStatSN = nextExpStatSN + statsn_me.fromPrim ( uint sendTextResponses.Length - 1u )
+            let lastSendExpStatSN = statsn_me.incr ( uint sendTextResponses.Length - 1u ) nextExpStatSN
             return lastSendExpStatSN
         }
 
@@ -2001,7 +2001,7 @@ type iSCSI_Initiator(
             InitiatorTaskTag = resPDU.InitiatorTaskTag;
             CID = argCID;
             CmdSN = getCmdSN();
-            ExpStatSN = resPDU.StatSN + statsn_me.fromPrim 1u;
+            ExpStatSN = statsn_me.next resPDU.StatSN;
             TextRequest = Array.empty;
             ByteCount = 0u; // not used
         }

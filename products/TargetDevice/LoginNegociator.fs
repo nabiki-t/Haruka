@@ -427,8 +427,8 @@ type LoginNegociator
                                     Response = LogoutResCd.SUCCESS;
                                     InitiatorTaskTag = logoutReq.InitiatorTaskTag;
                                     StatSN =  logoutReq.ExpStatSN;
-                                    ExpCmdSN = if logoutReq.I then logoutReq.CmdSN else logoutReq.CmdSN + ( cmdsn_me.fromPrim 1u );
-                                    MaxCmdSN = if logoutReq.I then logoutReq.CmdSN else logoutReq.CmdSN + ( cmdsn_me.fromPrim 1u );
+                                    ExpCmdSN = if logoutReq.I then logoutReq.CmdSN else cmdsn_me.next logoutReq.CmdSN;
+                                    MaxCmdSN = if logoutReq.I then logoutReq.CmdSN else cmdsn_me.next logoutReq.CmdSN;
                                     Time2Wait = 0us;
                                     Time2Retain = 0us;
                                     CloseAllegiantConnection = true;    // Close the connection
@@ -614,7 +614,7 @@ type LoginNegociator
                     if beforePDU2.I then
                         beforePDU2.CmdSN
                     else
-                        beforePDU2.CmdSN + ( cmdsn_me.fromPrim 1u )
+                        cmdsn_me.next beforePDU2.CmdSN
 
                 // send to empty text response PDU
                 let! _ =
@@ -640,7 +640,7 @@ type LoginNegociator
                     raise <| SessionRecoveryException ( "Unexpected PDU was received in discovery session.", tsih_me.zero )
 
                 let recvPDU = wnextTextPDU :?> TextRequestPDU
-                if recvPDU.ExpStatSN <> ( curStatSN2 + statsn_me.fromPrim 1u ) then
+                if recvPDU.ExpStatSN <> ( statsn_me.next curStatSN2 ) then
                     HLogger.Trace( LogID.E_PROTOCOL_ERROR, fun g -> g.Gen1( m_ObjID, Constants.getOpcodeNameFromValue wnextTextPDU.Opcode ) )
                     raise <| SessionRecoveryException ( "Unexpected ExpStatSN was received in discovery session.", tsih_me.zero )
 
@@ -650,7 +650,7 @@ type LoginNegociator
 
                 rv.Add recvPDU
                 if recvPDU.C then
-                    return LoopState.Continue( struct( recvPDU, ( curStatSN2 + statsn_me.fromPrim 1u ), rv ) )
+                    return LoopState.Continue( struct( recvPDU, ( statsn_me.next curStatSN2 ), rv ) )
                 else
                     return LoopState.Terminate()
             }
@@ -677,7 +677,7 @@ type LoginNegociator
                 HLogger.Trace( LogID.E_ISCSI_FORMAT_ERROR, fun g -> g.Gen1( m_ObjID, msg ) )
                 raise <| SessionRecoveryException ( msg, tsih_me.zero )
 
-            return ( reqs_opt.Value, recvPDU, ( curStatSN + statsn_me.fromPrim ( uint32 pduList.Length - 1u ) ) )
+            return ( reqs_opt.Value, recvPDU, ( statsn_me.incr ( uint32 pduList.Length - 1u ) curStatSN ) )
         }
 
 
@@ -728,7 +728,7 @@ type LoginNegociator
                         if recvPDU2.I then
                             recvPDU2.CmdSN
                         else
-                            recvPDU2.CmdSN + ( cmdsn_me.fromPrim 1u );
+                            cmdsn_me.next recvPDU2.CmdSN;
 
                     // Send Text Response PDU
                     let! _ = PDU.SendPDU( mrdsl_I, hDigest, dDigest, ValueNone, ValueNone, ValueNone, m_ObjID, m_NetStream, 
@@ -738,7 +738,7 @@ type LoginNegociator
                             LUN = lun_me.zero;
                             InitiatorTaskTag = recvPDU.InitiatorTaskTag;
                             TargetTransferTag = ttt_me.fromPrim 0u;
-                            StatSN = curStatSN + statsn_me.fromPrim ( uint32 idx );
+                            StatSN = statsn_me.incr ( uint32 idx ) curStatSN;
                             ExpCmdSN = nextCmdSN;
                             MaxCmdSN = nextCmdSN;
                             TextResponse = sendTextResponses.[idx];
@@ -767,7 +767,7 @@ type LoginNegociator
                             HLogger.Trace( LogID.E_PROTOCOL_ERROR, fun g -> g.Gen1( m_ObjID, Constants.getOpcodeNameFromValue wnextTextPDU.Opcode ) )
                             raise <| SessionRecoveryException ( "Unexpected CmdSN was received in discovery session.", tsih_me.zero )
 
-                        if emptyTextRequestPDU.ExpStatSN <> curStatSN + statsn_me.fromPrim ( uint32 ( idx + 1 ) ) then
+                        if emptyTextRequestPDU.ExpStatSN <> statsn_me.incr ( uint32 idx + 1u ) curStatSN then
                             HLogger.Trace( LogID.E_PROTOCOL_ERROR, fun g -> g.Gen1( m_ObjID, Constants.getOpcodeNameFromValue wnextTextPDU.Opcode ) )
                             raise <| SessionRecoveryException ( "Unexpected ExpStatSN was received in discovery session.", tsih_me.zero )
 
