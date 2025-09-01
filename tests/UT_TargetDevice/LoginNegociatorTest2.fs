@@ -126,12 +126,7 @@ type LoginNegociator_Test2 () =
                         ErrorRecoveryLevel = 0uy;
                 }
             )
-
-            //try
             Assert.True ( con.Start true )
-            //with
-            //| _ as _ ->
-            //    Assert.Fail __LINE__
             k1.NoticeTerminate()
         }
 
@@ -566,8 +561,6 @@ type LoginNegociator_Test2 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True(( x.Message = "Unsupported version is requested." ))
-                | _ ->
-                    Assert.Fail __LINE__
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -767,8 +760,6 @@ type LoginNegociator_Test2 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message.StartsWith "Unexpected PDU" )
-                | _ ->
-                    Assert.Fail __LINE__
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -808,8 +799,6 @@ type LoginNegociator_Test2 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message.StartsWith "Invalid PDU type in discovery session." )
-                | _ ->
-                    Assert.Fail __LINE__
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -868,8 +857,6 @@ type LoginNegociator_Test2 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message.StartsWith "Invalid logout reason" )
-                | _ ->
-                    Assert.Fail __LINE__
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -920,8 +907,6 @@ type LoginNegociator_Test2 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message.StartsWith "Invalid text key was received" )
-                | _ ->
-                    Assert.Fail __LINE__
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -975,8 +960,6 @@ type LoginNegociator_Test2 () =
                     with
                     | :? SessionRecoveryException as x ->
                         Assert.True( x.Message.StartsWith "Invalid SendTargets value was received in discovery session" )
-                    | _ ->
-                        Assert.Fail __LINE__
                 }
             |]
             |> Functions.RunTaskSynchronously
@@ -1099,8 +1082,6 @@ type LoginNegociator_Test2 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message.StartsWith "Unexpected PDU was received in discovery session." )
-                | _ ->
-                    Assert.Fail __LINE__
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -1160,8 +1141,6 @@ type LoginNegociator_Test2 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message.StartsWith "Unexpected ExpStatSN was received in discovery session." )
-                | _ ->
-                    Assert.Fail __LINE__
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -1221,8 +1200,6 @@ type LoginNegociator_Test2 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message.StartsWith "Unexpected CmdSN was received in discovery session." )
-                | _ ->
-                    Assert.Fail __LINE__
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -1263,8 +1240,6 @@ type LoginNegociator_Test2 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message.StartsWith "In iSCSI text request PDU, Text request data is invalid in discovery session." )
-                | _ ->
-                    Assert.Fail __LINE__
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -1329,8 +1304,6 @@ type LoginNegociator_Test2 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message.StartsWith "Unexpected PDU was received." )
-                | _ ->
-                    Assert.Fail __LINE__
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -1396,8 +1369,6 @@ type LoginNegociator_Test2 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message.StartsWith "Response of Text response PDU with" )
-                | _ ->
-                    Assert.Fail __LINE__
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -1463,8 +1434,6 @@ type LoginNegociator_Test2 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message.StartsWith "Response of Text response PDU with" )
-                | _ ->
-                    Assert.Fail __LINE__
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -1530,8 +1499,6 @@ type LoginNegociator_Test2 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message.StartsWith "Unexpected CmdSN was received" )
-                | _ ->
-                    Assert.Fail __LINE__
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -1597,8 +1564,6 @@ type LoginNegociator_Test2 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message.StartsWith "Unexpected ExpStatSN was received" )
-                | _ ->
-                    Assert.Fail __LINE__
             }
         |]
         |> Functions.RunTaskSynchronously

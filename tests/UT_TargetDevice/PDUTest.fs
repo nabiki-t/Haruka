@@ -107,7 +107,7 @@ type PDU_Test () =
             | :? ConnectionErrorException as y ->
                 Assert.True( ( Functions.CompareStringHeader y.Message "Connection closed."  ) = 0 ) |> ignore
             | _ ->
-            Assert.Fail __LINE__
+                Assert.Fail __LINE__
         | :? ConnectionErrorException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "Connection closed."  ) = 0 ) |> ignore
 
@@ -1585,9 +1585,6 @@ type PDU_Test () =
             | :? SessionRecoveryException as x ->
                 Assert.True( ( Functions.CompareStringHeader x.Message "In SCSI response PDU, Status(0xFF) field" ) = 0 )
                 reraise()
-            | _ as x ->
-                Assert.Fail __LINE__
-                reraise()
 
         Assert.True( recvPDU_logi.Opcode = OpcodeCd.SCSI_RES )
 
@@ -1652,8 +1649,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Task management function request PDU, TotalAHSLength" ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.TaskManagementFunctionRequestPDU_002() =
@@ -1689,8 +1684,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Task management function request PDU, DataSegmentLength must" ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.TaskManagementFunctionRequestPDU_003() =
@@ -1721,8 +1714,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Task management function request PDU, Function(" ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.TaskManagementFunctionRequestPDU_004() =
@@ -1764,8 +1755,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Task management function request PDU, If Function field is not" ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.TaskManagementFunctionRequestPDU_005() =
@@ -1799,27 +1788,23 @@ type PDU_Test () =
         Assert.True(( sendBytesCnt = 48u ))
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-        try
-            let recvPDU_logi = 
-                PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
-                |> Functions.RunTaskSynchronously
-            Assert.True( recvPDU_logi.Opcode = OpcodeCd.SCSI_TASK_MGR_REQ )
+        let recvPDU_logi = 
+            PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
+            |> Functions.RunTaskSynchronously
+        Assert.True( recvPDU_logi.Opcode = OpcodeCd.SCSI_TASK_MGR_REQ )
 
-            let pdu = recvPDU_logi :?> TaskManagementFunctionRequestPDU
+        let pdu = recvPDU_logi :?> TaskManagementFunctionRequestPDU
 
-            Assert.True( ( pdu.I = true ) )
-            Assert.True( ( pdu.Function = TaskMgrReqCd.CLEAR_TASK_SET ) )
-            Assert.True( ( pdu.LUN = lun_me.fromPrim 0x030405060708090AUL ) )
-            Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ) )
-            Assert.True( ( pdu.ReferencedTaskTag = itt_me.fromPrim 0xFFFFFFFFu ) )
-            Assert.True( ( pdu.CmdSN = cmdsn_me.fromPrim 0xDEADBEEFu ) )
-            Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 0xFEEEFEEEu ) )
-            Assert.True( ( pdu.RefCmdSN = cmdsn_me.fromPrim 0x11111111u ) )
-            Assert.True( ( pdu.ExpDataSN = datasn_me.fromPrim 0x22222222u ) )
-            Assert.True( ( pdu.ByteCount = 48u ) )
-        with
-        | _ as x ->
-            Assert.Fail __LINE__
+        Assert.True( ( pdu.I = true ) )
+        Assert.True( ( pdu.Function = TaskMgrReqCd.CLEAR_TASK_SET ) )
+        Assert.True( ( pdu.LUN = lun_me.fromPrim 0x030405060708090AUL ) )
+        Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ) )
+        Assert.True( ( pdu.ReferencedTaskTag = itt_me.fromPrim 0xFFFFFFFFu ) )
+        Assert.True( ( pdu.CmdSN = cmdsn_me.fromPrim 0xDEADBEEFu ) )
+        Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 0xFEEEFEEEu ) )
+        Assert.True( ( pdu.RefCmdSN = cmdsn_me.fromPrim 0x11111111u ) )
+        Assert.True( ( pdu.ExpDataSN = datasn_me.fromPrim 0x22222222u ) )
+        Assert.True( ( pdu.ByteCount = 48u ) )
 
     [<Fact>]
     member _.TaskManagementFunctionResponsePDU_001() =
@@ -1860,8 +1845,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Task management function response PDU, TotalAHSLength" ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.TaskManagementFunctionResponsePDU_002() =
@@ -1897,8 +1880,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Task management function response PDU, DataSegmentLength" ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.TaskManagementFunctionResponsePDU_003() =
@@ -1931,8 +1912,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Task management function response PDU, Response(0x" ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.TaskManagementFunctionResponsePDU_004() =
@@ -1962,22 +1941,18 @@ type PDU_Test () =
         Assert.True(( sendBytesCnt = 52u ))
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-        try
-            let recvPDU_logi = 
-                PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
-                |> Functions.RunTaskSynchronously
-            Assert.True( recvPDU_logi.Opcode = OpcodeCd.SCSI_TASK_MGR_RES )
+        let recvPDU_logi = 
+            PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
+            |> Functions.RunTaskSynchronously
+        Assert.True( recvPDU_logi.Opcode = OpcodeCd.SCSI_TASK_MGR_RES )
 
-            let pdu = recvPDU_logi :?> TaskManagementFunctionResponsePDU
+        let pdu = recvPDU_logi :?> TaskManagementFunctionResponsePDU
 
-            Assert.True( ( pdu.Response = TaskMgrResCd.FUCTION_COMPLETE ) )
-            Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ) )
-            Assert.True( ( pdu.StatSN = statsn_me.fromPrim 0xDEADBEEFu ) )
-            Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0xFEEEFEEEu ) )
-            Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0x11111111u ) )
-        with
-        | _ as x ->
-            Assert.Fail __LINE__
+        Assert.True( ( pdu.Response = TaskMgrResCd.FUCTION_COMPLETE ) )
+        Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ) )
+        Assert.True( ( pdu.StatSN = statsn_me.fromPrim 0xDEADBEEFu ) )
+        Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0xFEEEFEEEu ) )
+        Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0x11111111u ) )
 
     [<Fact>]
     member _.SCSIDataOutPDU_001() =
@@ -2010,25 +1985,21 @@ type PDU_Test () =
         Assert.True(( sendBytesCnt = 312u ))
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-        try
-            let recvPDU_logi = 
-                PDU.Receive( 255u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
-                |> Functions.RunTaskSynchronously
-            Assert.True( recvPDU_logi.Opcode = OpcodeCd.SCSI_DATA_OUT )
+        let recvPDU_logi = 
+            PDU.Receive( 255u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
+            |> Functions.RunTaskSynchronously
+        Assert.True( recvPDU_logi.Opcode = OpcodeCd.SCSI_DATA_OUT )
 
-            let pdu = recvPDU_logi :?> SCSIDataOutPDU
+        let pdu = recvPDU_logi :?> SCSIDataOutPDU
 
-            Assert.True( ( pdu.F = true ) )
-            Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
-            Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0xDEADBEEFu ) )
-            Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 0xFEEEFEEEu ) )
-            Assert.True( ( pdu.DataSN = datasn_me.fromPrim 0x11111111u ) )
-            Assert.True( ( pdu.BufferOffset = 0x22222222u ) )
-            Assert.True( ( PooledBuffer.ValueEqualsWithArray pdu.DataSegment [| 0x00uy .. 0xFEuy |] ) )
-            Assert.True( ( pdu.ByteCount = 312u ) )
-        with
-        | _ as x ->
-            Assert.Fail __LINE__
+        Assert.True( ( pdu.F = true ) )
+        Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
+        Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0xDEADBEEFu ) )
+        Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 0xFEEEFEEEu ) )
+        Assert.True( ( pdu.DataSN = datasn_me.fromPrim 0x11111111u ) )
+        Assert.True( ( pdu.BufferOffset = 0x22222222u ) )
+        Assert.True( ( PooledBuffer.ValueEqualsWithArray pdu.DataSegment [| 0x00uy .. 0xFEuy |] ) )
+        Assert.True( ( pdu.ByteCount = 312u ) )
 
     [<Fact>]
     member _.SCSIDataOutPDU_002() =
@@ -2061,25 +2032,21 @@ type PDU_Test () =
         Assert.True(( sendBytesCnt = 52u ))
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-        try
-            let recvPDU_logi = 
-                PDU.Receive( 255u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
-                |> Functions.RunTaskSynchronously
-            Assert.True( recvPDU_logi.Opcode = OpcodeCd.SCSI_DATA_OUT )
+        let recvPDU_logi = 
+            PDU.Receive( 255u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
+            |> Functions.RunTaskSynchronously
+        Assert.True( recvPDU_logi.Opcode = OpcodeCd.SCSI_DATA_OUT )
 
-            let pdu = recvPDU_logi :?> SCSIDataOutPDU
+        let pdu = recvPDU_logi :?> SCSIDataOutPDU
 
-            Assert.True( ( pdu.F = false ) )
-            Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
-            Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0xDEADBEEFu ) )
-            Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 0xFEEEFEEEu ) )
-            Assert.True( ( pdu.DataSN = datasn_me.fromPrim 0x11111111u ) )
-            Assert.True( ( pdu.BufferOffset = 0x22222222u ) )
-            Assert.True( ( PooledBuffer.length pdu.DataSegment = 0 ) )
-            Assert.True( ( pdu.ByteCount = 52u ) )
-        with
-        | _ as x ->
-            Assert.Fail __LINE__
+        Assert.True( ( pdu.F = false ) )
+        Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
+        Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0xDEADBEEFu ) )
+        Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 0xFEEEFEEEu ) )
+        Assert.True( ( pdu.DataSN = datasn_me.fromPrim 0x11111111u ) )
+        Assert.True( ( pdu.BufferOffset = 0x22222222u ) )
+        Assert.True( ( PooledBuffer.length pdu.DataSegment = 0 ) )
+        Assert.True( ( pdu.ByteCount = 52u ) )
 
     [<Fact>]
     member _.SCSIDataInPDU_001() =
@@ -2128,8 +2095,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In SCSI Data-In PDU, if S bit set to 1, F bit must be 1." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
             
     [<Fact>]
     member _.SCSIDataInPDU_002() =
@@ -2165,8 +2130,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In SCSI Data-In PDU, Status(0xBB" ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.SCSIDataInPDU_003() =
@@ -2207,32 +2170,28 @@ type PDU_Test () =
         Assert.True(( sendBytesCnt = 312u ))
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-        try
-            let recvPDU_logi = 
-                PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
-                |> Functions.RunTaskSynchronously
-            Assert.True( recvPDU_logi.Opcode = OpcodeCd.SCSI_DATA_IN )
+        let recvPDU_logi = 
+            PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
+            |> Functions.RunTaskSynchronously
+        Assert.True( recvPDU_logi.Opcode = OpcodeCd.SCSI_DATA_IN )
 
-            let pdu = recvPDU_logi :?> SCSIDataInPDU
+        let pdu = recvPDU_logi :?> SCSIDataInPDU
 
-            Assert.True( ( pdu.F = true ) )
-            Assert.True( ( pdu.A = true ) )
-            Assert.True( ( pdu.O = true ) )
-            Assert.True( ( pdu.U = true ) )
-            Assert.True( ( pdu.S = true ) )
-            Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
-            Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0xDEADBEEFu ) )
-            Assert.True( ( pdu.StatSN = statsn_me.fromPrim 0xFEEEFEEEu ) )
-            Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0x11111111u ) )
-            Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0x22222222u ) )
-            Assert.True( ( pdu.DataSN = datasn_me.fromPrim 0x33333333u ) )
-            Assert.True( ( pdu.BufferOffset = 0x44444444u ) )
-            Assert.True( ( pdu.ResidualCount = 0x55555555u ) )
-            let arDataSegment = pdu.DataSegment
-            Assert.True( ( arDataSegment.ToArray() = [| 0x00uy .. 0xFEuy |] ) )
-        with
-        | _ as x ->
-            Assert.Fail __LINE__
+        Assert.True( ( pdu.F = true ) )
+        Assert.True( ( pdu.A = true ) )
+        Assert.True( ( pdu.O = true ) )
+        Assert.True( ( pdu.U = true ) )
+        Assert.True( ( pdu.S = true ) )
+        Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
+        Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0xDEADBEEFu ) )
+        Assert.True( ( pdu.StatSN = statsn_me.fromPrim 0xFEEEFEEEu ) )
+        Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0x11111111u ) )
+        Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0x22222222u ) )
+        Assert.True( ( pdu.DataSN = datasn_me.fromPrim 0x33333333u ) )
+        Assert.True( ( pdu.BufferOffset = 0x44444444u ) )
+        Assert.True( ( pdu.ResidualCount = 0x55555555u ) )
+        let arDataSegment = pdu.DataSegment
+        Assert.True( ( arDataSegment.ToArray() = [| 0x00uy .. 0xFEuy |] ) )
 
     [<Fact>]
     member _.SCSIDataInPDU_004() =
@@ -2273,32 +2232,28 @@ type PDU_Test () =
         Assert.True(( sendBytesCnt = 312u ))
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-        try
-            let recvPDU_logi = 
-                PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
-                |> Functions.RunTaskSynchronously
-            Assert.True( recvPDU_logi.Opcode = OpcodeCd.SCSI_DATA_IN )
+        let recvPDU_logi = 
+            PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
+            |> Functions.RunTaskSynchronously
+        Assert.True( recvPDU_logi.Opcode = OpcodeCd.SCSI_DATA_IN )
 
-            let pdu = recvPDU_logi :?> SCSIDataInPDU
+        let pdu = recvPDU_logi :?> SCSIDataInPDU
 
-            Assert.True( ( pdu.F = false ) )
-            Assert.True( ( pdu.A = true ) )
-            Assert.True( ( pdu.O = false ) )
-            Assert.True( ( pdu.U = true ) )
-            Assert.True( ( pdu.S = false ) )
-            Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
-            Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0xDEADBEEFu ) )
-            Assert.True( ( pdu.StatSN = statsn_me.fromPrim 0xFEEEFEEEu ) )
-            Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0x11111111u ) )
-            Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0x22222222u ) )
-            Assert.True( ( pdu.DataSN = datasn_me.fromPrim 0x33333333u ) )
-            Assert.True( ( pdu.BufferOffset = 0x44444444u ) )
-            Assert.True( ( pdu.ResidualCount = 0x55555555u ) )
-            let arDataSegment = pdu.DataSegment
-            Assert.True( ( arDataSegment.ToArray() = [| 0x00uy .. 0xFEuy |] ) )
-        with
-        | _ as x ->
-            Assert.Fail __LINE__
+        Assert.True( ( pdu.F = false ) )
+        Assert.True( ( pdu.A = true ) )
+        Assert.True( ( pdu.O = false ) )
+        Assert.True( ( pdu.U = true ) )
+        Assert.True( ( pdu.S = false ) )
+        Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
+        Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0xDEADBEEFu ) )
+        Assert.True( ( pdu.StatSN = statsn_me.fromPrim 0xFEEEFEEEu ) )
+        Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0x11111111u ) )
+        Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0x22222222u ) )
+        Assert.True( ( pdu.DataSN = datasn_me.fromPrim 0x33333333u ) )
+        Assert.True( ( pdu.BufferOffset = 0x44444444u ) )
+        Assert.True( ( pdu.ResidualCount = 0x55555555u ) )
+        let arDataSegment = pdu.DataSegment
+        Assert.True( ( arDataSegment.ToArray() = [| 0x00uy .. 0xFEuy |] ) )
 
     [<Fact>]
     member _.R2TPDU_001() =
@@ -2339,8 +2294,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In R2T PDU, TotalAHSLength must be 0" ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.R2TPDU_002() =
@@ -2376,8 +2329,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In R2T PDU, DataSegmentLength must be 0" ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.R2TPDU_003() =
@@ -2458,8 +2409,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In R2T PDU, TargetTransferTag must not be 0xFFFFFFFF." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.R2TPDU_005() =
@@ -2492,25 +2441,21 @@ type PDU_Test () =
         Assert.True(( sendBytesCnt = 52u ))
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-        try
-            let recvPDU_logi = 
-                PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
-                |> Functions.RunTaskSynchronously
-            Assert.True( recvPDU_logi.Opcode = OpcodeCd.R2T )
+        let recvPDU_logi = 
+            PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
+            |> Functions.RunTaskSynchronously
+        Assert.True( recvPDU_logi.Opcode = OpcodeCd.R2T )
 
-            let pdu = recvPDU_logi :?> R2TPDU
+        let pdu = recvPDU_logi :?> R2TPDU
 
-            Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
-            Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0xDEADBEEFu ) )
-            Assert.True( ( pdu.StatSN =  statsn_me.fromPrim 0xFEEEFEEEu ) )
-            Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0x11111111u ) )
-            Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0x22222222u ) )
-            Assert.True( ( pdu.R2TSN = datasn_me.fromPrim 0x33333333u ) )
-            Assert.True( ( pdu.BufferOffset = 0x44444444u ) )
-            Assert.True( ( pdu.DesiredDataTransferLength = 0x55555555u ) )
-        with
-        | _ as x ->
-            Assert.Fail __LINE__
+        Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
+        Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0xDEADBEEFu ) )
+        Assert.True( ( pdu.StatSN =  statsn_me.fromPrim 0xFEEEFEEEu ) )
+        Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0x11111111u ) )
+        Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0x22222222u ) )
+        Assert.True( ( pdu.R2TSN = datasn_me.fromPrim 0x33333333u ) )
+        Assert.True( ( pdu.BufferOffset = 0x44444444u ) )
+        Assert.True( ( pdu.DesiredDataTransferLength = 0x55555555u ) )
 
     [<Fact>]
     member _.AsyncronousMessagePDU_001() =
@@ -2578,7 +2523,6 @@ type PDU_Test () =
         Assert.True(( sendBytesCnt = 316u ))
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-//        try
         let recvPDU_logi = 
             PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
             |> Functions.RunTaskSynchronously
@@ -2598,9 +2542,6 @@ type PDU_Test () =
         Assert.True( ( pdu.SenseLength = 0us ) )
         Assert.True( ( pdu.SenseData = Array.empty ) )
         Assert.True( ( pdu.ISCSIEventData = [| 0x00uy .. 0xFFuy |] ) )
-//        with
-//        | _ as x ->
-//            Assert.Fail __LINE__
             
     [<Fact>]
     member _.AsyncronousMessagePDU_003() =
@@ -2636,29 +2577,25 @@ type PDU_Test () =
         Assert.True(( sendBytesCnt = 568u ))
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-        try
-            let recvPDU_logi = 
-                PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
-                |> Functions.RunTaskSynchronously
-            Assert.True( recvPDU_logi.Opcode = OpcodeCd.ASYNC )
+        let recvPDU_logi = 
+            PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
+            |> Functions.RunTaskSynchronously
+        Assert.True( recvPDU_logi.Opcode = OpcodeCd.ASYNC )
 
-            let pdu = recvPDU_logi :?> AsyncronousMessagePDU
+        let pdu = recvPDU_logi :?> AsyncronousMessagePDU
 
-            Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
-            Assert.True( ( pdu.StatSN = statsn_me.fromPrim 0xFEEEFEEEu ) )
-            Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0x11111111u ) )
-            Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0x22222222u ) )
-            Assert.True( ( pdu.AsyncEvent = AsyncEventCd.SENCE_DATA ) )
-            Assert.True( ( pdu.AsyncVCode = 0uy ) )
-            Assert.True( ( pdu.Parameter1 = 0x1111us ) )
-            Assert.True( ( pdu.Parameter2 = 0x2222us ) )
-            Assert.True( ( pdu.Parameter3 = 0x3333us ) )
-            Assert.True( ( pdu.SenseLength = 254us ) )
-            Assert.True( ( pdu.SenseData = [| 0x00uy .. 0xFDuy |] ) )
-            Assert.True( ( pdu.ISCSIEventData = [| 0x00uy .. 0xFEuy |] ) )
-        with
-        | _ as x ->
-            Assert.Fail __LINE__
+        Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
+        Assert.True( ( pdu.StatSN = statsn_me.fromPrim 0xFEEEFEEEu ) )
+        Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0x11111111u ) )
+        Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0x22222222u ) )
+        Assert.True( ( pdu.AsyncEvent = AsyncEventCd.SENCE_DATA ) )
+        Assert.True( ( pdu.AsyncVCode = 0uy ) )
+        Assert.True( ( pdu.Parameter1 = 0x1111us ) )
+        Assert.True( ( pdu.Parameter2 = 0x2222us ) )
+        Assert.True( ( pdu.Parameter3 = 0x3333us ) )
+        Assert.True( ( pdu.SenseLength = 254us ) )
+        Assert.True( ( pdu.SenseData = [| 0x00uy .. 0xFDuy |] ) )
+        Assert.True( ( pdu.ISCSIEventData = [| 0x00uy .. 0xFEuy |] ) )
 
     [<Fact>]
     member _.TextRequestPDU_001() =
@@ -2700,8 +2637,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Text request PDU, if C bit set to 1, F bit must be 0." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.TextRequestPDU_002() =
@@ -2735,27 +2670,23 @@ type PDU_Test () =
         Assert.True(( sendBytesCnt = 52u ))
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-        try
-            let recvPDU_logi = 
-                PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
-                |> Functions.RunTaskSynchronously
-            Assert.True( recvPDU_logi.Opcode = OpcodeCd.TEXT_REQ )
+        let recvPDU_logi = 
+            PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
+            |> Functions.RunTaskSynchronously
+        Assert.True( recvPDU_logi.Opcode = OpcodeCd.TEXT_REQ )
 
-            let pdu = recvPDU_logi :?> TextRequestPDU
+        let pdu = recvPDU_logi :?> TextRequestPDU
 
-            Assert.True( ( pdu.I = true ) )
-            Assert.True( ( pdu.F = false ) )
-            Assert.True( ( pdu.C = true ) )
-            Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
-            Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0xFEEEFEEEu ) )
-            Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0x11111111u ) )
-            Assert.True( ( pdu.CmdSN = cmdsn_me.fromPrim 0x22222222u ) )
-            Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 0x33333333u ) )
-            Assert.True( ( pdu.TextRequest = Array.empty ) )
-            Assert.True( ( pdu.ByteCount = 52u ) )
-        with
-        | _ as x ->
-            Assert.Fail __LINE__
+        Assert.True( ( pdu.I = true ) )
+        Assert.True( ( pdu.F = false ) )
+        Assert.True( ( pdu.C = true ) )
+        Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
+        Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0xFEEEFEEEu ) )
+        Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0x11111111u ) )
+        Assert.True( ( pdu.CmdSN = cmdsn_me.fromPrim 0x22222222u ) )
+        Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 0x33333333u ) )
+        Assert.True( ( pdu.TextRequest = Array.empty ) )
+        Assert.True( ( pdu.ByteCount = 52u ) )
 
     [<Fact>]
     member _.TextRequestPDU_003() =
@@ -2789,27 +2720,23 @@ type PDU_Test () =
         Assert.True(( sendBytesCnt = 300u ))
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-        try
-            let recvPDU_logi = 
-                PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
-                |> Functions.RunTaskSynchronously
-            Assert.True( recvPDU_logi.Opcode = OpcodeCd.TEXT_REQ )
+        let recvPDU_logi = 
+            PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
+            |> Functions.RunTaskSynchronously
+        Assert.True( recvPDU_logi.Opcode = OpcodeCd.TEXT_REQ )
 
-            let pdu = recvPDU_logi :?> TextRequestPDU
+        let pdu = recvPDU_logi :?> TextRequestPDU
 
-            Assert.True( ( pdu.I = false ) )
-            Assert.True( ( pdu.F = true ) )
-            Assert.True( ( pdu.C = false ) )
-            Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
-            Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0xFEEEFEEEu ) )
-            Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0x11111111u ) )
-            Assert.True( ( pdu.CmdSN = cmdsn_me.fromPrim 0x22222222u ) )
-            Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 0x33333333u ) )
-            Assert.True( ( pdu.TextRequest = [| 0x00uy .. 0xF1uy |] ) )
-            Assert.True( ( pdu.ByteCount = 300u ) )
-        with
-        | _ as x ->
-            Assert.Fail __LINE__
+        Assert.True( ( pdu.I = false ) )
+        Assert.True( ( pdu.F = true ) )
+        Assert.True( ( pdu.C = false ) )
+        Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
+        Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0xFEEEFEEEu ) )
+        Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0x11111111u ) )
+        Assert.True( ( pdu.CmdSN = cmdsn_me.fromPrim 0x22222222u ) )
+        Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 0x33333333u ) )
+        Assert.True( ( pdu.TextRequest = [| 0x00uy .. 0xF1uy |] ) )
+        Assert.True( ( pdu.ByteCount = 300u ) )
 
     [<Fact>]
     member _.TextResponsePDU_001() =
@@ -2850,8 +2777,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Text response PDU, if C bit set to 1, F bit must be 0." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.TextResponsePDU_002() =
@@ -2884,26 +2809,22 @@ type PDU_Test () =
         Assert.True(( sendBytesCnt = 52u ))
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-        try
-            let recvPDU_logi = 
-                PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
-                |> Functions.RunTaskSynchronously
-            Assert.True( recvPDU_logi.Opcode = OpcodeCd.TEXT_RES )
+        let recvPDU_logi = 
+            PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
+            |> Functions.RunTaskSynchronously
+        Assert.True( recvPDU_logi.Opcode = OpcodeCd.TEXT_RES )
 
-            let pdu = recvPDU_logi :?> TextResponsePDU
+        let pdu = recvPDU_logi :?> TextResponsePDU
 
-            Assert.True( ( pdu.F = false ) )
-            Assert.True( ( pdu.C = true ) )
-            Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
-            Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0xFEEEFEEEu ) )
-            Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0x11111111u ) )
-            Assert.True( ( pdu.StatSN = statsn_me.fromPrim 0x22222222u ) )
-            Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0x33333333u ) )
-            Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0x44444444u ) )
-            Assert.True( ( pdu.TextResponse = Array.empty ) )
-        with
-        | _ as x ->
-            Assert.Fail __LINE__
+        Assert.True( ( pdu.F = false ) )
+        Assert.True( ( pdu.C = true ) )
+        Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
+        Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0xFEEEFEEEu ) )
+        Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0x11111111u ) )
+        Assert.True( ( pdu.StatSN = statsn_me.fromPrim 0x22222222u ) )
+        Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0x33333333u ) )
+        Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0x44444444u ) )
+        Assert.True( ( pdu.TextResponse = Array.empty ) )
 
     [<Fact>]
     member _.TextResponsePDU_003() =
@@ -2936,26 +2857,22 @@ type PDU_Test () =
         Assert.True(( sendBytesCnt = 312u ))
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-        try
-            let recvPDU_logi = 
-                PDU.Receive( 256u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
-                |> Functions.RunTaskSynchronously
-            Assert.True( recvPDU_logi.Opcode = OpcodeCd.TEXT_RES )
+        let recvPDU_logi = 
+            PDU.Receive( 256u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
+            |> Functions.RunTaskSynchronously
+        Assert.True( recvPDU_logi.Opcode = OpcodeCd.TEXT_RES )
 
-            let pdu = recvPDU_logi :?> TextResponsePDU
+        let pdu = recvPDU_logi :?> TextResponsePDU
 
-            Assert.True( ( pdu.F = true ) )
-            Assert.True( ( pdu.C = false ) )
-            Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
-            Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0xFEEEFEEEu ) )
-            Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0x11111111u ) )
-            Assert.True( ( pdu.StatSN = statsn_me.fromPrim 0x22222222u ) )
-            Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0x33333333u ) )
-            Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0x44444444u ) )
-            Assert.True( ( pdu.TextResponse = [| 0x00uy .. 0xFFuy |] ) )
-        with
-        | _ as x ->
-            Assert.Fail __LINE__
+        Assert.True( ( pdu.F = true ) )
+        Assert.True( ( pdu.C = false ) )
+        Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
+        Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0xFEEEFEEEu ) )
+        Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0x11111111u ) )
+        Assert.True( ( pdu.StatSN = statsn_me.fromPrim 0x22222222u ) )
+        Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0x33333333u ) )
+        Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0x44444444u ) )
+        Assert.True( ( pdu.TextResponse = [| 0x00uy .. 0xFFuy |] ) )
 
     [<Fact>]
     member _.LoginRequestPDU_001() =
@@ -3001,8 +2918,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Login request PDU, if C bit set to 1, T bit must be 0." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.LoginRequestPDU_002() =
@@ -3035,8 +2950,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Login request PDU, CSG(0x02) field value is invalid." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.LoginRequestPDU_003() =
@@ -3069,8 +2982,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Login request PDU, NSG(0x02) field value is invalid." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.LoginRequestPDU_004() =
@@ -3116,8 +3027,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Login request PDU, CSG(0x03) field value is invalid." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.LoginRequestPDU_005() =
@@ -3163,8 +3072,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Login request PDU, CSG(0x00) and NSG(0x00) fields value combination is invalid." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.LoginRequestPDU_006() =
@@ -3210,8 +3117,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Login request PDU, CSG(0x01) and NSG(0x01) fields value combination is invalid." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.LoginRequestPDU_007() =
@@ -3257,8 +3162,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Login request PDU, T(0xC0) field in ISID value is invalid." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.LoginRequestPDU_008() =
@@ -3296,35 +3199,31 @@ type PDU_Test () =
         Assert.True(( sendBytesCnt = 312u ))
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-        try
-            let recvPDU_logi = 
-                PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
-                |> Functions.RunTaskSynchronously
-            Assert.True( recvPDU_logi.Opcode = OpcodeCd.LOGIN_REQ )
+        let recvPDU_logi = 
+            PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
+            |> Functions.RunTaskSynchronously
+        Assert.True( recvPDU_logi.Opcode = OpcodeCd.LOGIN_REQ )
 
-            let pdu = recvPDU_logi :?> LoginRequestPDU
-            Assert.True( ( pdu.T = false ) )
-            Assert.True( ( pdu.C = true ) )
-            Assert.True( ( pdu.CSG = LoginReqStateCd.SEQURITY ) )
-            Assert.True( ( pdu.NSG = LoginReqStateCd.SEQURITY ) )
-            Assert.True( ( pdu.VersionMax = 0x11uy ) )
-            Assert.True( ( pdu.VersionMin = 0x22uy ) )
-            Assert.True( ( pdu.VersionMin = 0x22uy ) )
-            Assert.True( ( pdu.ISID |> isid_me.get_T = 0x00uy ) )
-            Assert.True( ( pdu.ISID |> isid_me.get_A = 0x11uy ) )
-            Assert.True( ( pdu.ISID |> isid_me.get_B = 0x2222us ) )
-            Assert.True( ( pdu.ISID |> isid_me.get_C = 0x44uy ) )
-            Assert.True( ( pdu.ISID |> isid_me.get_D = 0x5555us ) )
-            Assert.True( ( pdu.TSIH = tsih_me.fromPrim 0x6666us ) )
-            Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0xFEEEFEEEu ) )
-            Assert.True( ( pdu.CID = cid_me.fromPrim 0x1111us ) )
-            Assert.True( ( pdu.CmdSN = cmdsn_me.fromPrim 0x22222222u ) )
-            Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 0x33333333u ) )
-            Assert.True( ( pdu.TextRequest = [| 0x00uy .. 0xFFuy |] ) )
-            Assert.True( ( pdu.ByteCount = 312u ) )
-        with
-        | _ as x ->
-            Assert.Fail __LINE__
+        let pdu = recvPDU_logi :?> LoginRequestPDU
+        Assert.True( ( pdu.T = false ) )
+        Assert.True( ( pdu.C = true ) )
+        Assert.True( ( pdu.CSG = LoginReqStateCd.SEQURITY ) )
+        Assert.True( ( pdu.NSG = LoginReqStateCd.SEQURITY ) )
+        Assert.True( ( pdu.VersionMax = 0x11uy ) )
+        Assert.True( ( pdu.VersionMin = 0x22uy ) )
+        Assert.True( ( pdu.VersionMin = 0x22uy ) )
+        Assert.True( ( pdu.ISID |> isid_me.get_T = 0x00uy ) )
+        Assert.True( ( pdu.ISID |> isid_me.get_A = 0x11uy ) )
+        Assert.True( ( pdu.ISID |> isid_me.get_B = 0x2222us ) )
+        Assert.True( ( pdu.ISID |> isid_me.get_C = 0x44uy ) )
+        Assert.True( ( pdu.ISID |> isid_me.get_D = 0x5555us ) )
+        Assert.True( ( pdu.TSIH = tsih_me.fromPrim 0x6666us ) )
+        Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0xFEEEFEEEu ) )
+        Assert.True( ( pdu.CID = cid_me.fromPrim 0x1111us ) )
+        Assert.True( ( pdu.CmdSN = cmdsn_me.fromPrim 0x22222222u ) )
+        Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 0x33333333u ) )
+        Assert.True( ( pdu.TextRequest = [| 0x00uy .. 0xFFuy |] ) )
+        Assert.True( ( pdu.ByteCount = 312u ) )
 
     [<Fact>]
     member _.LoginResponsePDU_001() =
@@ -3370,8 +3269,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Login response PDU, if C bit set to 1, T bit must be 0." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.LoginResponsePDU_002() =
@@ -3404,8 +3301,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Login response PDU, CSG(0x02) field value is invalid." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.LoginResponsePDU_003() =
@@ -3438,8 +3333,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Login response PDU, NSG(0x02) field value is invalid." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.LoginResponsePDU_004() =
@@ -3485,8 +3378,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Login response PDU, CSG(0x03) field value is invalid." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.LoginResponsePDU_005() =
@@ -3532,8 +3423,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Login response PDU, CSG(0x00) and NSG(0x00) fields value combination is invalid." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.LoginResponsePDU_006() =
@@ -3579,8 +3468,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Login response PDU, CSG(0x01) and NSG(0x01) fields value combination is invalid." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.LoginResponsePDU_007() =
@@ -3626,8 +3513,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Login response PDU, T(0xC0) field in ISID value is invalid." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Theory>]
     [<InlineData( LoginResStatCd.SUCCESS )>]
@@ -3683,36 +3568,31 @@ type PDU_Test () =
         Assert.True(( sendBytesCnt = 304u ))
         ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
 
-        try
-            let recvPDU_logi = 
-                PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
-                |> Functions.RunTaskSynchronously
-            Assert.True( recvPDU_logi.Opcode = OpcodeCd.LOGIN_RES )
+        let recvPDU_logi = 
+            PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
+            |> Functions.RunTaskSynchronously
+        Assert.True( recvPDU_logi.Opcode = OpcodeCd.LOGIN_RES )
     
-            let pdu = recvPDU_logi :?> LoginResponsePDU
+        let pdu = recvPDU_logi :?> LoginResponsePDU
 
-            Assert.True( ( pdu.T = false ) )
-            Assert.True( ( pdu.C = true ) )
-            Assert.True( ( pdu.CSG = LoginReqStateCd.SEQURITY ) )
-            Assert.True( ( pdu.NSG = LoginReqStateCd.SEQURITY ) )
-            Assert.True( ( pdu.VersionMax = 0x11uy ) )
-            Assert.True( ( pdu.VersionActive = 0x22uy ) )
-            Assert.True( ( pdu.ISID |> isid_me.get_T = 0x00uy ) )
-            Assert.True( ( pdu.ISID |> isid_me.get_A = 0x11uy ) )
-            Assert.True( ( pdu.ISID |> isid_me.get_B = 0x2222us ) )
-            Assert.True( ( pdu.ISID |> isid_me.get_C = 0x44uy ) )
-            Assert.True( ( pdu.ISID |> isid_me.get_D = 0x5555us ) )
-            Assert.True( ( pdu.TSIH = tsih_me.fromPrim 0x6666us ) )
-            Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0xFEEEFEEEu ) )
-            Assert.True( ( pdu.StatSN = statsn_me.fromPrim 0x22222222u ) )
-            Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0x33333333u ) )
-            Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0x44444444u ) )
-            Assert.True( ( pdu.Status = wstat ) )
-            Assert.True( ( pdu.TextResponse = [| 0x00uy .. 0xFFuy |] ) )
-            ()
-        with
-        | _ as x ->
-            Assert.Fail __LINE__
+        Assert.True( ( pdu.T = false ) )
+        Assert.True( ( pdu.C = true ) )
+        Assert.True( ( pdu.CSG = LoginReqStateCd.SEQURITY ) )
+        Assert.True( ( pdu.NSG = LoginReqStateCd.SEQURITY ) )
+        Assert.True( ( pdu.VersionMax = 0x11uy ) )
+        Assert.True( ( pdu.VersionActive = 0x22uy ) )
+        Assert.True( ( pdu.ISID |> isid_me.get_T = 0x00uy ) )
+        Assert.True( ( pdu.ISID |> isid_me.get_A = 0x11uy ) )
+        Assert.True( ( pdu.ISID |> isid_me.get_B = 0x2222us ) )
+        Assert.True( ( pdu.ISID |> isid_me.get_C = 0x44uy ) )
+        Assert.True( ( pdu.ISID |> isid_me.get_D = 0x5555us ) )
+        Assert.True( ( pdu.TSIH = tsih_me.fromPrim 0x6666us ) )
+        Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0xFEEEFEEEu ) )
+        Assert.True( ( pdu.StatSN = statsn_me.fromPrim 0x22222222u ) )
+        Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0x33333333u ) )
+        Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0x44444444u ) )
+        Assert.True( ( pdu.Status = wstat ) )
+        Assert.True( ( pdu.TextResponse = [| 0x00uy .. 0xFFuy |] ) )
 
     [<Fact>]
     member _.LoginResponsePDU_009() =
@@ -3745,8 +3625,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Login response PDU, Status-Class and Status-Detail(0xFFFE) field value is invalid." ) =0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.LogoutRequestPDU_001() =
@@ -3787,8 +3665,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Logout request PDU, TotalAHSLength must be 0 and AHS must be empty." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.LogoutRequestPDU_002() =
@@ -3824,8 +3700,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Logout request PDU, DataSegmentLength must be 0 and DataSegment must be empty." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.LogoutRequestPDU_003() =
@@ -3857,24 +3731,20 @@ type PDU_Test () =
             Assert.True(( sendBytesCnt = 52u ))
             ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-            try
-                let recvPDU_logi = 
-                    PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
-                    |> Functions.RunTaskSynchronously
-                Assert.True( recvPDU_logi.Opcode = OpcodeCd.LOGOUT_REQ )
+            let recvPDU_logi = 
+                PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
+                |> Functions.RunTaskSynchronously
+            Assert.True( recvPDU_logi.Opcode = OpcodeCd.LOGOUT_REQ )
     
-                let pdu = recvPDU_logi :?> LogoutRequestPDU
+            let pdu = recvPDU_logi :?> LogoutRequestPDU
 
-                Assert.True( ( pdu.I = true ) )
-                Assert.True( ( pdu.ReasonCode = wreason ) )
-                Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0x11111111u ) )
-                Assert.True( ( pdu.CID = cid_me.fromPrim 0x2222us ) )
-                Assert.True( ( pdu.CmdSN = cmdsn_me.fromPrim 0x33333333u ) )
-                Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 0x44444444u ) )
-                Assert.True( ( pdu.ByteCount = 52u ) )
-            with
-            | _ as x ->
-                Assert.Fail __LINE__
+            Assert.True( ( pdu.I = true ) )
+            Assert.True( ( pdu.ReasonCode = wreason ) )
+            Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0x11111111u ) )
+            Assert.True( ( pdu.CID = cid_me.fromPrim 0x2222us ) )
+            Assert.True( ( pdu.CmdSN = cmdsn_me.fromPrim 0x33333333u ) )
+            Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 0x44444444u ) )
+            Assert.True( ( pdu.ByteCount = 52u ) )
 
     [<Fact>]
     member _.LogoutRequestPDU_004() =
@@ -3906,8 +3776,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Logout request PDU, ReasonCode(0x7F) field value is invalid." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.LogoutResponsePDU_001() =
@@ -3948,8 +3816,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Logout response PDU, TotalAHSLength must be 0 and AHS must be empty." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
     [<Fact>]
     member _.LogoutResponsePDU_002() =
@@ -3985,8 +3851,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Logout response PDU, DataSegmentLength must be 0 and DataSegment must be empty." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
  
      [<Fact>]
      member _.LogoutResponsePDU_003() =
@@ -4019,24 +3883,20 @@ type PDU_Test () =
             Assert.True(( sendBytesCnt = 52u ))
             ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-            try
-                let recvPDU_logi = 
-                    PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
-                    |> Functions.RunTaskSynchronously
-                Assert.True( recvPDU_logi.Opcode = OpcodeCd.LOGOUT_RES )
+            let recvPDU_logi = 
+                PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
+                |> Functions.RunTaskSynchronously
+            Assert.True( recvPDU_logi.Opcode = OpcodeCd.LOGOUT_RES )
     
-                let pdu = recvPDU_logi :?> LogoutResponsePDU
+            let pdu = recvPDU_logi :?> LogoutResponsePDU
 
-                Assert.True( ( pdu.Response = wreason ) )
-                Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0x11111111u ) )
-                Assert.True( ( pdu.StatSN = statsn_me.fromPrim 0x22222222u ) )
-                Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0x33333333u ) )
-                Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0x44444444u ) )
-                Assert.True( ( pdu.Time2Wait = 0x5555us ) )
-                Assert.True( ( pdu.Time2Retain = 0x6666us ) )
-            with
-            | _ as x ->
-                Assert.Fail __LINE__
+            Assert.True( ( pdu.Response = wreason ) )
+            Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0x11111111u ) )
+            Assert.True( ( pdu.StatSN = statsn_me.fromPrim 0x22222222u ) )
+            Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0x33333333u ) )
+            Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0x44444444u ) )
+            Assert.True( ( pdu.Time2Wait = 0x5555us ) )
+            Assert.True( ( pdu.Time2Retain = 0x6666us ) )
  
      [<Fact>]
      member _.LogoutResponsePDU_004() =
@@ -4069,8 +3929,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Logout response PDU, Response(0xFF) field value is invalid." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
      [<Fact>]
      member _.SNACKRequestPDU_001() =
@@ -4103,8 +3961,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In SNACK request PDU, Type(0x0F) field value is invalid." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
      [<Fact>]
      member _.SNACKRequestPDU_002() =
@@ -4137,25 +3993,21 @@ type PDU_Test () =
             Assert.True(( sendBytesCnt = 52u ))
             ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-            try
-                let recvPDU_logi = 
-                    PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
-                    |> Functions.RunTaskSynchronously
-                Assert.True( recvPDU_logi.Opcode = OpcodeCd.SNACK )
+            let recvPDU_logi = 
+                PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
+                |> Functions.RunTaskSynchronously
+            Assert.True( recvPDU_logi.Opcode = OpcodeCd.SNACK )
     
-                let pdu = recvPDU_logi :?> SNACKRequestPDU
+            let pdu = recvPDU_logi :?> SNACKRequestPDU
 
-                Assert.True( ( pdu.Type = wtype ) )
-                Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
-                Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0x11111111u ) )
-                Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0x22222222u ) )
-                Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 0x33333333u ) )
-                Assert.True( ( pdu.BegRun = 0x44444444u ) )
-                Assert.True( ( pdu.RunLength = 0x55555555u ) )
-                Assert.True( ( pdu.ByteCount = 52u ) )
-            with
-            | _ as x ->
-                Assert.Fail __LINE__
+            Assert.True( ( pdu.Type = wtype ) )
+            Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
+            Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0x11111111u ) )
+            Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0x22222222u ) )
+            Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 0x33333333u ) )
+            Assert.True( ( pdu.BegRun = 0x44444444u ) )
+            Assert.True( ( pdu.RunLength = 0x55555555u ) )
+            Assert.True( ( pdu.ByteCount = 52u ) )
 
      [<Fact>]
      member _.RejectPDU_001() =
@@ -4188,8 +4040,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In Reject PDU, Reason(0x00) field value is invalid." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
      [<Fact>]
      member _.RejectPDU_002() =
@@ -4222,23 +4072,19 @@ type PDU_Test () =
             Assert.True(( sendBytesCnt = 312u ))
             ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-            try
-                let recvPDU_logi = 
-                    PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
-                    |> Functions.RunTaskSynchronously
-                Assert.True( recvPDU_logi.Opcode = OpcodeCd.REJECT )
+            let recvPDU_logi = 
+                PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
+                |> Functions.RunTaskSynchronously
+            Assert.True( recvPDU_logi.Opcode = OpcodeCd.REJECT )
     
-                let pdu = recvPDU_logi :?> RejectPDU
+            let pdu = recvPDU_logi :?> RejectPDU
 
-                Assert.True( ( pdu.Reason = wreason ) )
-                Assert.True( ( pdu.StatSN = statsn_me.fromPrim 0x11111111u ) )
-                Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0x22222222u ) )
-                Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0x33333333u ) )
-                Assert.True( ( pdu.DataSN_or_R2TSN = datasn_me.fromPrim 0x44444444u ) )
-                Assert.True( ( pdu.HeaderData = [| 0x00uy .. 0xFFuy |] ) )
-            with
-            | _ as x ->
-                Assert.Fail __LINE__
+            Assert.True( ( pdu.Reason = wreason ) )
+            Assert.True( ( pdu.StatSN = statsn_me.fromPrim 0x11111111u ) )
+            Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0x22222222u ) )
+            Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0x33333333u ) )
+            Assert.True( ( pdu.DataSN_or_R2TSN = datasn_me.fromPrim 0x44444444u ) )
+            Assert.True( ( pdu.HeaderData = [| 0x00uy .. 0xFFuy |] ) )
 
      [<Fact>]
      member _.NOPOutPDU_001() =
@@ -4278,8 +4124,6 @@ type PDU_Test () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( Functions.CompareStringHeader x.Message "In NOP-Out PDU, if InitiatorTaskTag field is 0xFFFFFFFF, I bit must be set 1." ) = 0 ) |> ignore
-        | _ as x ->
-            Assert.Fail __LINE__
 
      [<Fact>]
      member _.NOPOutPDU_002() =
@@ -4312,25 +4156,21 @@ type PDU_Test () =
         Assert.True(( sendBytesCnt = 312u ))
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-        try
-            let recvPDU_logi = 
-                PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
-                |> Functions.RunTaskSynchronously
-            Assert.True( recvPDU_logi.Opcode = OpcodeCd.NOP_OUT )
+        let recvPDU_logi = 
+            PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Target )
+            |> Functions.RunTaskSynchronously
+        Assert.True( recvPDU_logi.Opcode = OpcodeCd.NOP_OUT )
     
-            let pdu = recvPDU_logi :?> NOPOutPDU
+        let pdu = recvPDU_logi :?> NOPOutPDU
 
-            Assert.True( ( pdu.I = true ) )
-            Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
-            Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0xF0F0F0F0u ) )
-            Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0xEEEEEEEEu ) )
-            Assert.True( ( pdu.CmdSN = cmdsn_me.fromPrim 0xDDDDDDDDu ) )
-            Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 0xCCCCCCCCu ) )
-            Assert.True( ( PooledBuffer.ValueEqualsWithArray pdu.PingData [| 0x00uy .. 0xFFuy |] ) )
-            Assert.True( ( pdu.ByteCount = 312u ) )
-        with
-        | _ as x ->
-            Assert.Fail __LINE__
+        Assert.True( ( pdu.I = true ) )
+        Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
+        Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0xF0F0F0F0u ) )
+        Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0xEEEEEEEEu ) )
+        Assert.True( ( pdu.CmdSN = cmdsn_me.fromPrim 0xDDDDDDDDu ) )
+        Assert.True( ( pdu.ExpStatSN = statsn_me.fromPrim 0xCCCCCCCCu ) )
+        Assert.True( ( PooledBuffer.ValueEqualsWithArray pdu.PingData [| 0x00uy .. 0xFFuy |] ) )
+        Assert.True( ( pdu.ByteCount = 312u ) )
 
      [<Fact>]
      member _.NOPInPDU_001() =
@@ -4361,24 +4201,20 @@ type PDU_Test () =
         Assert.True(( sendBytesCnt = 312u ))
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
-        try
-            let recvPDU_logi = 
-                PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
-                |> Functions.RunTaskSynchronously
-            Assert.True( recvPDU_logi.Opcode = OpcodeCd.NOP_IN )
+        let recvPDU_logi = 
+            PDU.Receive( 8192u, DigestType.DST_CRC32C, DigestType.DST_CRC32C, tsih1o, cid1o, cnt1o, ms, Standpoint.Initiator )
+            |> Functions.RunTaskSynchronously
+        Assert.True( recvPDU_logi.Opcode = OpcodeCd.NOP_IN )
     
-            let pdu = recvPDU_logi :?> NOPInPDU
+        let pdu = recvPDU_logi :?> NOPInPDU
 
-            Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
-            Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0xF0F0F0F0u ) )
-            Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0xEEEEEEEEu ) )
-            Assert.True( ( pdu.StatSN = statsn_me.fromPrim 0xDDDDDDDDu ) )
-            Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0xCCCCCCCCu ) )
-            Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0xBBBBBBBBu ) )
-            Assert.True( ( PooledBuffer.ValueEqualsWithArray pdu.PingData [| 0x00uy .. 0xFFuy |] ) )
-        with
-        | _ as x ->
-            Assert.Fail __LINE__
+        Assert.True( ( pdu.LUN = lun_me.fromPrim 0x0001020304050607UL ) )
+        Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0xF0F0F0F0u ) )
+        Assert.True( ( pdu.TargetTransferTag = ttt_me.fromPrim 0xEEEEEEEEu ) )
+        Assert.True( ( pdu.StatSN = statsn_me.fromPrim 0xDDDDDDDDu ) )
+        Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0xCCCCCCCCu ) )
+        Assert.True( ( pdu.MaxCmdSN = cmdsn_me.fromPrim 0xBBBBBBBBu ) )
+        Assert.True( ( PooledBuffer.ValueEqualsWithArray pdu.PingData [| 0x00uy .. 0xFFuy |] ) )
 
      [<Fact>]
      member _.GetHeader_NOP_IN() =

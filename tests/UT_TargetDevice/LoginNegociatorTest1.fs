@@ -161,8 +161,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? ConnectionErrorException as x ->
                     Assert.True( x.Message = "Connection closed." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -278,8 +276,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( ( x.Message = "In iSCSI Login request PDU, required text key does not exist." ) )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -323,8 +319,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( ( x.Message = "In iSCSI Login request PDU, Login Text Key data format error." ) )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -380,8 +374,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( ( x.Message = "In iSCSI Login request PDU, TargetName value should not be reserved value." ) )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -437,8 +429,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( ( x.Message = "In iSCSI Login request PDU, TargetName value is invalid. format error." ) )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
             
@@ -505,8 +495,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( ( x.Message = "In iSCSI Login request PDU, InitiatorName text key does not exist." ) )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -562,8 +550,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( ( x.Message = "In iSCSI Login request PDU, InitiatorName value is not iSCSI-name-value." ) )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -619,8 +605,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( ( x.Message = "In iSCSI Login request PDU, InitiatorName value is invalid." ) )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -676,8 +660,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( ( x.Message = "In iSCSI Login request PDU, SessionType value(aabcdefghi) is invalid." ) )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -733,8 +715,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( ( x.Message = "In iSCSI Login request PDU, SessionType value is invalid." ) )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -777,12 +757,7 @@ type LoginNegociator_Test1 () =
                     )
                     |> Functions.TaskIgnore
                 let! res =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res2 = res :?> LoginResponsePDU
                 Assert.True( ( res2.T = false ) );
@@ -806,8 +781,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( ( x.Message = "In iSCSI Login request PDU, if SessionType is not Discovery session, TargetName key should exist." ) )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -836,12 +809,7 @@ type LoginNegociator_Test1 () =
                     )
                     |> Functions.TaskIgnore
                 let! res =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res2 = res :?> LoginResponsePDU
                 Assert.True( ( res2.T = false ) );
@@ -865,8 +833,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( ( x.Message = "In iSCSI Login request PDU, required text key does not exist." ) )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -914,12 +880,7 @@ type LoginNegociator_Test1 () =
                     )
                     |> Functions.TaskIgnore
                 let! res =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res2 = res :?> LoginResponsePDU
                 Assert.True( ( res2.T = false ) );
@@ -943,8 +904,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True(( x.Message.StartsWith "Login failed. Specified session is missing." ))
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -992,12 +951,7 @@ type LoginNegociator_Test1 () =
                     )
                     |> Functions.TaskIgnore
                 let! res =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res2 = res :?> LoginResponsePDU
                 Assert.True( ( res2.T = false ) );
@@ -1021,8 +975,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True(( x.Message.StartsWith "Login failed. Specified session is missing." ))
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -1253,12 +1205,7 @@ type LoginNegociator_Test1 () =
                     )
                     |> Functions.TaskIgnore
                 let! res =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res2 = res :?> LoginResponsePDU
                 Assert.True( ( res2.T = false ) );
@@ -1282,8 +1229,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( ( x.Message = "Unsupported version is requested." ) )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -1342,12 +1287,7 @@ type LoginNegociator_Test1 () =
                     )
                     |> Functions.TaskIgnore
                 let! res =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res2 = res :?> LoginResponsePDU
                 Assert.True( ( res2.T = false ) );
@@ -1371,8 +1311,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( ( x.Message = "Unsupported version is requested." ) )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -1431,12 +1369,7 @@ type LoginNegociator_Test1 () =
                     )
                     |> Functions.TaskIgnore
                 let! res =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res2 = res :?> LoginResponsePDU
                 Assert.True( ( res2.T = false ) );
@@ -1596,12 +1529,7 @@ type LoginNegociator_Test1 () =
                     )
                     |> Functions.TaskIgnore
                 let! res =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res2 = res :?> LoginResponsePDU
                 Assert.True( ( res2.T = false ) );
@@ -1625,8 +1553,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( ( x.Message = "TargetName missing." ) )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -1720,8 +1646,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message = "Authentication required." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -2121,13 +2045,9 @@ type LoginNegociator_Test1 () =
             fun () -> task {
                 let pcon = new LoginNegociator( stat1, sp, DateTime.UtcNow, tpgt_me.zero, netportidx_me.zero, k1 )
                 let po2 = new PrivateCaller( pcon )
-                try
-                    let! rKeyVal, pdu = po2.Invoke( "ReceiveLoginRequest", g_defaultLoginRequest ) :?> Task<struct( TextKeyValues * LoginRequestPDU )>
-                    Assert.True( ( pdu = g_defaultLoginRequest ) )
-                    Assert.True( ( rKeyVal = TextKeyValues.defaultTextKeyValues ) )
-                with
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
+                let! rKeyVal, pdu = po2.Invoke( "ReceiveLoginRequest", g_defaultLoginRequest ) :?> Task<struct( TextKeyValues * LoginRequestPDU )>
+                Assert.True( ( pdu = g_defaultLoginRequest ) )
+                Assert.True( ( rKeyVal = TextKeyValues.defaultTextKeyValues ) )
                 k1.NoticeTerminate()
             }
 
@@ -2214,12 +2134,7 @@ type LoginNegociator_Test1 () =
         let initiator = 
             fun () -> task {
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res2 = res1 :?> LoginResponsePDU
                 Assert.True( ( res2.T = false ) );
@@ -2252,16 +2167,12 @@ type LoginNegociator_Test1 () =
             fun () -> task {
                 let pcon = new LoginNegociator( stat1, sp, DateTime.UtcNow, tpgt_me.zero, netportidx_me.zero, k1 )
                 let po2 = new PrivateCaller( pcon )
-                try
-                    let! rKeyVal, pdu =
-                        po2.Invoke( "ReceiveLoginRequest", pdu00 ) :?> Task<struct( TextKeyValues * LoginRequestPDU )>
-                    Assert.True( ( pdu = pdu01 ) )
-                    Assert.True( ( rKeyVal.SessionType = TextValueType.Value( "Normal" ) ) )
-                    Assert.True( ( rKeyVal.InitiatorName = TextValueType.Value( "init1" ) ) )
-                    Assert.True( ( rKeyVal.TargetName = TextValueType.Value( "target1" ) ) )
-                with
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
+                let! rKeyVal, pdu =
+                    po2.Invoke( "ReceiveLoginRequest", pdu00 ) :?> Task<struct( TextKeyValues * LoginRequestPDU )>
+                Assert.True( ( pdu = pdu01 ) )
+                Assert.True( ( rKeyVal.SessionType = TextValueType.Value( "Normal" ) ) )
+                Assert.True( ( rKeyVal.InitiatorName = TextValueType.Value( "init1" ) ) )
+                Assert.True( ( rKeyVal.TargetName = TextValueType.Value( "target1" ) ) )
                 k1.NoticeTerminate()
             }
 
@@ -2332,12 +2243,7 @@ type LoginNegociator_Test1 () =
         let initiator = 
             fun () -> task {
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res2 = res1 :?> LoginResponsePDU
                 Assert.True( ( res2.T = false ) );
@@ -2365,12 +2271,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res3 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res3.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res4 = res3 :?> LoginResponsePDU
                 Assert.True( ( res4.T = false ) );
@@ -2403,18 +2304,14 @@ type LoginNegociator_Test1 () =
             fun () -> task {
                 let pcon = new LoginNegociator( stat1, sp, DateTime.UtcNow, tpgt_me.zero, netportidx_me.zero, k1 )
                 let po2 = new PrivateCaller( pcon )
-                try
-                    let! rKeyVal, pdu =
-                        po2.Invoke( "ReceiveLoginRequest", pdu00 ) :?> Task<struct( TextKeyValues * LoginRequestPDU )>
-                    Assert.True( ( pdu = pdu02 ) )
-                    Assert.True( ( rKeyVal.SessionType = TextValueType.Value( "Normal" ) ) )
-                    Assert.True( ( rKeyVal.InitiatorName = TextValueType.Value( "init1" ) ) )
-                    Assert.True( ( rKeyVal.TargetName = TextValueType.Value( "target1" ) ) )
-                    Assert.True( ( rKeyVal.MaxConnections = TextValueType.Value( 5us ) ) )
-                    Assert.True( ( rKeyVal.InitiatorAlias = TextValueType.Value( "alias001" ) ) )
-                with
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
+                let! rKeyVal, pdu =
+                    po2.Invoke( "ReceiveLoginRequest", pdu00 ) :?> Task<struct( TextKeyValues * LoginRequestPDU )>
+                Assert.True( ( pdu = pdu02 ) )
+                Assert.True( ( rKeyVal.SessionType = TextValueType.Value( "Normal" ) ) )
+                Assert.True( ( rKeyVal.InitiatorName = TextValueType.Value( "init1" ) ) )
+                Assert.True( ( rKeyVal.TargetName = TextValueType.Value( "target1" ) ) )
+                Assert.True( ( rKeyVal.MaxConnections = TextValueType.Value( 5us ) ) )
+                Assert.True( ( rKeyVal.InitiatorAlias = TextValueType.Value( "alias001" ) ) )
                 k1.NoticeTerminate()
             }
 
@@ -2473,12 +2370,7 @@ type LoginNegociator_Test1 () =
         let initiator = 
             fun () -> task {
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res2 = res1 :?> LoginResponsePDU
                 Assert.True( ( res2.T = false ) );
@@ -2503,16 +2395,12 @@ type LoginNegociator_Test1 () =
             fun () -> task {
                 let pcon = new LoginNegociator( stat1, sp, DateTime.UtcNow, tpgt_me.zero, netportidx_me.zero, k1 )
                 let po2 = new PrivateCaller( pcon )
-                try
-                    let! rstat =
-                        let tsih : TSIH_T voption = ValueNone
-                        po2.Invoke( "SendNegotiationResponse", sendTextKey00, sendStatus00, false, tsih, recvPDU ) :?> Task<TextKeyValuesStatus>
-                    Assert.True( ( rstat.NegoStat_InitiatorName = NegoStatusValue.NSV_Negotiated ) )
-                    Assert.True( ( rstat.NegoStat_TargetName = NegoStatusValue.NSV_Negotiated ) )
-                    Assert.True( ( rstat.NegoStat_SessionType = NegoStatusValue.NSV_Negotiated ) )
-                with
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
+                let! rstat =
+                    let tsih : TSIH_T voption = ValueNone
+                    po2.Invoke( "SendNegotiationResponse", sendTextKey00, sendStatus00, false, tsih, recvPDU ) :?> Task<TextKeyValuesStatus>
+                Assert.True( ( rstat.NegoStat_InitiatorName = NegoStatusValue.NSV_Negotiated ) )
+                Assert.True( ( rstat.NegoStat_TargetName = NegoStatusValue.NSV_Negotiated ) )
+                Assert.True( ( rstat.NegoStat_SessionType = NegoStatusValue.NSV_Negotiated ) )
                 k1.NoticeTerminate()
             }
 
@@ -2600,17 +2488,13 @@ type LoginNegociator_Test1 () =
             fun () -> task {
                 let pcon = new LoginNegociator( stat1, sp, DateTime.UtcNow, tpgt_me.zero, netportidx_me.zero, k1 )
                 let po2 = new PrivateCaller( pcon )
-                try
-                    let! rstat =
-                        let tsih : TSIH_T voption = ValueNone
-                        po2.Invoke( "SendNegotiationResponse", sendTextKey00, sendStatus00, false, tsih, recvPDU ) :?> Task<TextKeyValuesStatus>
-                    Assert.True( ( rstat.NegoStat_InitiatorName = NegoStatusValue.NSV_Negotiated ) )
-                    Assert.True( ( rstat.NegoStat_TargetName = NegoStatusValue.NSV_Negotiated ) )
-                    Assert.True( ( rstat.NegoStat_TargetAlias = NegoStatusValue.NSV_Negotiated ) )
-                    Assert.True( ( rstat.NegoStat_SessionType = NegoStatusValue.NSV_Negotiated ) )
-                with
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
+                let! rstat =
+                    let tsih : TSIH_T voption = ValueNone
+                    po2.Invoke( "SendNegotiationResponse", sendTextKey00, sendStatus00, false, tsih, recvPDU ) :?> Task<TextKeyValuesStatus>
+                Assert.True( ( rstat.NegoStat_InitiatorName = NegoStatusValue.NSV_Negotiated ) )
+                Assert.True( ( rstat.NegoStat_TargetName = NegoStatusValue.NSV_Negotiated ) )
+                Assert.True( ( rstat.NegoStat_TargetAlias = NegoStatusValue.NSV_Negotiated ) )
+                Assert.True( ( rstat.NegoStat_SessionType = NegoStatusValue.NSV_Negotiated ) )
                 k1.NoticeTerminate()
             }
 
@@ -2645,12 +2529,7 @@ type LoginNegociator_Test1 () =
         let initiator = 
             fun () -> task {
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res2 = res1 :?> LoginResponsePDU
                 Assert.True( ( res2.T = false ) );
@@ -2693,8 +2572,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True(( x.Message.StartsWith "Response of Login response PDU with C bit set to 1" ))
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -2715,12 +2592,7 @@ type LoginNegociator_Test1 () =
         let initiator = 
             fun () -> task {
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res2 = res1 :?> LoginResponsePDU
                 Assert.True( ( res2.T = false ) );
@@ -2740,16 +2612,12 @@ type LoginNegociator_Test1 () =
             fun () -> task {
                 let pcon = new LoginNegociator( stat1, sp, DateTime.UtcNow, tpgt_me.zero, netportidx_me.zero, k1 )
                 let po2 = new PrivateCaller( pcon )
-                try
-                    let! rstat =
-                        let tsih : TSIH_T voption = ValueNone
-                        po2.Invoke( "SendNegotiationResponse", sendTextKey00, sendStatus00, false, tsih, recvPDU ) :?> Task<TextKeyValuesStatus>
-                    Assert.True( ( rstat.NegoStat_InitiatorName = NegoStatusValue.NSV_Negotiated ) )
-                    Assert.True( ( rstat.NegoStat_TargetName = NegoStatusValue.NSV_Negotiated ) )
-                    Assert.True( ( rstat.NegoStat_SessionType = NegoStatusValue.NSV_Negotiated ) )
-                with
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
+                let! rstat =
+                    let tsih : TSIH_T voption = ValueNone
+                    po2.Invoke( "SendNegotiationResponse", sendTextKey00, sendStatus00, false, tsih, recvPDU ) :?> Task<TextKeyValuesStatus>
+                Assert.True( ( rstat.NegoStat_InitiatorName = NegoStatusValue.NSV_Negotiated ) )
+                Assert.True( ( rstat.NegoStat_TargetName = NegoStatusValue.NSV_Negotiated ) )
+                Assert.True( ( rstat.NegoStat_SessionType = NegoStatusValue.NSV_Negotiated ) )
                 k1.NoticeTerminate()
             }
 
@@ -2775,12 +2643,7 @@ type LoginNegociator_Test1 () =
         let initiator = 
             fun () -> task {
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res2 = res1 :?> LoginResponsePDU
                 Assert.True( ( res2.T = true ) );
@@ -2801,16 +2664,12 @@ type LoginNegociator_Test1 () =
             fun () -> task {
                 let pcon = new LoginNegociator( stat1, sp, DateTime.UtcNow, tpgt_me.zero, netportidx_me.zero, k1 )
                 let po2 = new PrivateCaller( pcon )
-                try
-                    let! rstat =
-                        let tsih : TSIH_T voption = ValueSome ( tsih_me.fromPrim 987us )
-                        po2.Invoke( "SendNegotiationResponse", sendTextKey00, sendStatus00, true, tsih, recvPDU ) :?> Task<TextKeyValuesStatus>
-                    Assert.True( ( rstat.NegoStat_InitiatorName = NegoStatusValue.NSV_Negotiated ) )
-                    Assert.True( ( rstat.NegoStat_TargetName = NegoStatusValue.NSV_Negotiated ) )
-                    Assert.True( ( rstat.NegoStat_SessionType = NegoStatusValue.NSV_Negotiated ) )
-                with
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
+                let! rstat =
+                    let tsih : TSIH_T voption = ValueSome ( tsih_me.fromPrim 987us )
+                    po2.Invoke( "SendNegotiationResponse", sendTextKey00, sendStatus00, true, tsih, recvPDU ) :?> Task<TextKeyValuesStatus>
+                Assert.True( ( rstat.NegoStat_InitiatorName = NegoStatusValue.NSV_Negotiated ) )
+                Assert.True( ( rstat.NegoStat_TargetName = NegoStatusValue.NSV_Negotiated ) )
+                Assert.True( ( rstat.NegoStat_SessionType = NegoStatusValue.NSV_Negotiated ) )
                 k1.NoticeTerminate()
             }
 
@@ -2891,12 +2750,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res2 = res1 :?> LoginResponsePDU
                 Assert.True( ( res2.T = false ) );
@@ -2949,8 +2803,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message = "Unknown negotiation error." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -3034,12 +2886,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res2 = res1 :?> LoginResponsePDU
                 Assert.True( ( res2.T = false ) );
@@ -3063,8 +2910,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message = "AuthMethod mismatch" )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -3145,12 +2990,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res2 = res1 :?> LoginResponsePDU
                 Assert.True( ( res2.T = false ) );
@@ -3194,12 +3034,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res3 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res3.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res4 = res3 :?> LoginResponsePDU
                 Assert.True( ( res4.T = false ) );
@@ -3239,12 +3074,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res5 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res5.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res6 = res5 :?> LoginResponsePDU
                 Assert.True( ( res6.T = false ) );
@@ -3270,8 +3100,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? ConnectionErrorException as x ->
                     Assert.True( x.Message = "Connection closed." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -3343,12 +3171,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res1L = res1 :?> LoginResponsePDU
                 Assert.True( ( res1L.T = false ) );
@@ -3380,12 +3203,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res2 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res2.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res2L = res2 :?> LoginResponsePDU
                 Assert.True( ( res2L.T = false ) );
@@ -3427,12 +3245,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res3 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res3.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res3L = res3 :?> LoginResponsePDU
                 Assert.True( ( res3L.T = true ) );
@@ -3458,8 +3271,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? ConnectionErrorException as x ->
                     Assert.True( x.Message = "Connection closed." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -3531,12 +3342,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res1L = res1 :?> LoginResponsePDU
                 Assert.True( ( res1L.T = false ) );
@@ -3582,12 +3388,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res3 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res3.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res3L = res3 :?> LoginResponsePDU
                 Assert.True( ( res3L.T = true ) );
@@ -3613,8 +3414,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? ConnectionErrorException as x ->
                     Assert.True( x.Message = "Connection closed." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -3686,12 +3485,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res1L = res1 :?> LoginResponsePDU
                 Assert.True( ( res1L.T = false ) );
@@ -3749,8 +3543,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message = "Unknown negotiation error." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -3833,12 +3625,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res1L = res1 :?> LoginResponsePDU
                 Assert.True( ( res1L.Status = LoginResStatCd.SUCCESS ) );
@@ -3873,12 +3660,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res1L = res1 :?> LoginResponsePDU
                 Assert.True( ( res1L.Status = LoginResStatCd.AUTH_FAILURE ) );
@@ -3894,8 +3676,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message = "Protocol error. CHAP_A value is invalid." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -3978,12 +3758,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res1L = res1 :?> LoginResponsePDU
                 Assert.True( ( res1L.Status = LoginResStatCd.SUCCESS ) );
@@ -4017,12 +3792,7 @@ type LoginNegociator_Test1 () =
                     )
                     |> Functions.TaskIgnore
                 let! res2 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res2.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res2L = res2 :?> LoginResponsePDU
                 Assert.True( ( res2L.Status = LoginResStatCd.AUTH_FAILURE ) );
@@ -4038,8 +3808,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message = "Proposed CHAP_A value is not supported." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -4120,12 +3888,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res1L = res1 :?> LoginResponsePDU
                 Assert.True( ( res1L.Status = LoginResStatCd.SUCCESS ) );
@@ -4161,12 +3924,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res2 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res2.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res2L = res2 :?> LoginResponsePDU
                 Assert.True( ( res2L.Status = LoginResStatCd.SUCCESS ) );
@@ -4198,12 +3956,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res3 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res3.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res3L = res3 :?> LoginResponsePDU
                 Assert.True( ( res3L.Status = LoginResStatCd.SUCCESS ) );
@@ -4243,12 +3996,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res4 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res4.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res4L = res4 :?> LoginResponsePDU
                 Assert.True( ( res4L.Status = LoginResStatCd.AUTH_FAILURE ) );
@@ -4264,8 +4012,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message = "Protocol error. CHAP_N value is invalid." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -4348,12 +4094,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res1L = res1 :?> LoginResponsePDU
                 Assert.True( ( res1L.Status = LoginResStatCd.SUCCESS ) );
@@ -4389,12 +4130,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res3 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res3.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res3L = res3 :?> LoginResponsePDU
                 Assert.True( ( res3L.Status = LoginResStatCd.SUCCESS ) );
@@ -4434,12 +4170,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res4 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res4.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res4L = res4 :?> LoginResponsePDU
                 Assert.True( ( res4L.Status = LoginResStatCd.AUTH_FAILURE ) );
@@ -4455,8 +4186,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message = "Protocol error. CHAP_R value is invalid." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -4539,12 +4268,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res1L = res1 :?> LoginResponsePDU
                 Assert.True( ( res1L.Status = LoginResStatCd.SUCCESS ) );
@@ -4579,12 +4303,7 @@ type LoginNegociator_Test1 () =
                     )
                     |> Functions.TaskIgnore
                 let! res3 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res3.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res3L = res3 :?> LoginResponsePDU
                 Assert.True( ( res3L.Status = LoginResStatCd.SUCCESS ) );
@@ -4624,12 +4343,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res4 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome ccnt1, cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome ccnt1, cp, Standpoint.Initiator )
                 Assert.True( ( res4.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res4L = res4 :?> LoginResponsePDU
                 Assert.True( ( res4L.Status = LoginResStatCd.AUTH_FAILURE ) );
@@ -4645,8 +4359,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message = "Invalid user name or password." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -4729,12 +4441,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome ( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome ( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res1L = res1 :?> LoginResponsePDU
                 Assert.True( ( res1L.Status = LoginResStatCd.SUCCESS ) );
@@ -4770,12 +4477,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res3 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res3.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res3L = res3 :?> LoginResponsePDU
                 Assert.True( ( res3L.Status = LoginResStatCd.SUCCESS ) );
@@ -4822,12 +4524,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res4 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res4.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res4L = res4 :?> LoginResponsePDU
                 Assert.True( ( res4L.Status = LoginResStatCd.AUTH_FAILURE ) );
@@ -4843,8 +4540,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message = "Invalid user name or password." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -4927,12 +4622,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res1L = res1 :?> LoginResponsePDU
                 Assert.True( ( res1L.Status = LoginResStatCd.SUCCESS ) );
@@ -4968,12 +4658,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res3 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res3.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res3L = res3 :?> LoginResponsePDU
                 Assert.True( ( res3L.Status = LoginResStatCd.SUCCESS ) );
@@ -5022,12 +4707,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res4 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res4.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res4L = res4 :?> LoginResponsePDU
                 Assert.True( ( res4L.Status = LoginResStatCd.AUTH_FAILURE ) );
@@ -5043,8 +4723,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message = "Protocol error. CHAP_I value is invalid." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -5127,12 +4805,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res1L = res1 :?> LoginResponsePDU
                 Assert.True( ( res1L.Status = LoginResStatCd.SUCCESS ) );
@@ -5168,12 +4841,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res3 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res3.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res3L = res3 :?> LoginResponsePDU
                 Assert.True( ( res3L.Status = LoginResStatCd.SUCCESS ) );
@@ -5222,12 +4890,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res4 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res4.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res4L = res4 :?> LoginResponsePDU
                 Assert.True( ( res4L.Status = LoginResStatCd.AUTH_FAILURE ) );
@@ -5243,8 +4906,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message = "Protocol error. CHAP_C value is invalid." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -5327,12 +4988,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res1L = res1 :?> LoginResponsePDU
                 Assert.True( ( res1L.Status = LoginResStatCd.SUCCESS ) );
@@ -5368,12 +5024,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res3 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res3.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res3L = res3 :?> LoginResponsePDU
                 Assert.True( ( res3L.Status = LoginResStatCd.SUCCESS ) );
@@ -5422,12 +5073,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res4 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res4.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res4L = res4 :?> LoginResponsePDU
                 Assert.True( ( res4L.Status = LoginResStatCd.AUTH_FAILURE ) );
@@ -5443,8 +5089,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message = "Protocol error. CHAP_I or CHAP_C value is invalid." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -5526,12 +5170,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res1L = res1 :?> LoginResponsePDU
                 Assert.True( ( res1L.Status = LoginResStatCd.SUCCESS ) );
@@ -5567,12 +5206,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res3 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res3.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res3L = res3 :?> LoginResponsePDU
                 Assert.True( ( res3L.Status = LoginResStatCd.SUCCESS ) );
@@ -5621,12 +5255,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res4 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res4.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res4L = res4 :?> LoginResponsePDU
                 Assert.True( ( res4L.Status = LoginResStatCd.AUTH_FAILURE ) );
@@ -5642,8 +5271,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message = "Protocol error. CHAP_I or CHAP_C value is invalid." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -5727,12 +5354,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res1L = res1 :?> LoginResponsePDU
                 Assert.True( ( res1L.Status = LoginResStatCd.SUCCESS ) );
@@ -5768,12 +5390,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res3 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res3.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res3L = res3 :?> LoginResponsePDU
                 Assert.True( ( res3L.Status = LoginResStatCd.SUCCESS ) );
@@ -5820,12 +5437,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res4 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res4.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res4L = res4 :?> LoginResponsePDU
                 Assert.True( ( res4L.Status = LoginResStatCd.AUTH_FAILURE ) );
@@ -5841,8 +5453,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message = "Invalid user name or password." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -5924,12 +5534,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res1L = res1 :?> LoginResponsePDU
                 Assert.True( ( res1L.Status = LoginResStatCd.SUCCESS ) );
@@ -5965,12 +5570,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res3 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res3.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res3L = res3 :?> LoginResponsePDU
                 Assert.True( ( res3L.Status = LoginResStatCd.SUCCESS ) );
@@ -6029,12 +5629,7 @@ type LoginNegociator_Test1 () =
                         |]
 
                 let! res4 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res4.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res4L = res4 :?> LoginResponsePDU
                 Assert.True( ( res4L.Status = LoginResStatCd.SUCCESS ) );
@@ -6056,8 +5651,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? ConnectionErrorException as x ->
                     Assert.True( x.Message = "Connection closed." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -6140,12 +5733,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res1L = res1 :?> LoginResponsePDU
                 Assert.True( ( res1L.Status = LoginResStatCd.SUCCESS ) );
@@ -6181,12 +5769,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res3 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res3.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res3L = res3 :?> LoginResponsePDU
                 Assert.True( ( res3L.Status = LoginResStatCd.SUCCESS ) );
@@ -6237,12 +5820,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res4 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res4.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res4L = res4 :?> LoginResponsePDU
                 Assert.True( ( res4L.Status = LoginResStatCd.AUTH_FAILURE ) );
@@ -6258,8 +5836,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message = "Invalid user name or password." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -6342,12 +5918,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res1 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res1.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res1L = res1 :?> LoginResponsePDU
                 Assert.True( ( res1L.Status = LoginResStatCd.SUCCESS ) );
@@ -6383,12 +5954,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res3 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res3.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res3L = res3 :?> LoginResponsePDU
                 Assert.True( ( res3L.Status = LoginResStatCd.SUCCESS ) );
@@ -6435,12 +6001,7 @@ type LoginNegociator_Test1 () =
                     |> Functions.TaskIgnore
 
                 let! res4 =
-                    try
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
-                    with
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
-                        reraise()
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
                 Assert.True( ( res4.Opcode = OpcodeCd.LOGIN_RES ) );
                 let res4L = res4 :?> LoginResponsePDU
                 Assert.True( ( res4L.Status = LoginResStatCd.SUCCESS ) );
@@ -6458,8 +6019,6 @@ type LoginNegociator_Test1 () =
                 with
                 | :? ConnectionErrorException as x ->
                     Assert.True( x.Message = "Connection closed." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
                 k1.NoticeTerminate()
             }
 
@@ -6558,23 +6117,20 @@ type LoginNegociator_Test1 () =
                 true
         )
 
-        try
-            po2.Invoke(
-                "CreateOrAddNewConnection",
-                true,                   // isLeadingCon
-                false,                  // isConnRebuild
-                tsih_me.zero,           // dropSessionTSIH
-                tsih1,                  // newTSIH
-                i_tNext,                // i_tNextIdent
-                cid_me.fromPrim 15us,   // recvCID
-                cmdsn_me.fromPrim 111u, // newCmdSN
-                statsn_me.fromPrim 222u,// firstExpStatSN
-                argCOParam,             // iSCSIParamsCO : IscsiNegoParamCO
-                argSWParam              // iSCSIParamsSW
-            ) |> ignore
-        with
-        | _ as x ->
-            Assert.Fail ( __LINE__ + " : " + x.Message )
+        po2.Invoke(
+            "CreateOrAddNewConnection",
+            true,                   // isLeadingCon
+            false,                  // isConnRebuild
+            tsih_me.zero,           // dropSessionTSIH
+            tsih1,                  // newTSIH
+            i_tNext,                // i_tNextIdent
+            cid_me.fromPrim 15us,   // recvCID
+            cmdsn_me.fromPrim 111u, // newCmdSN
+            statsn_me.fromPrim 222u,// firstExpStatSN
+            argCOParam,             // iSCSIParamsCO : IscsiNegoParamCO
+            argSWParam              // iSCSIParamsSW
+        ) |> ignore
+
         k1.NoticeTerminate()
         GlbFunc.ClosePorts [| sp; cp |]
 
@@ -6648,23 +6204,19 @@ type LoginNegociator_Test1 () =
         let k1 = new HKiller() :> IKiller
         let pcon = new LoginNegociator( stat1, sp, DateTime.UtcNow, tpgt_me.zero, netportidx_me.zero, k1 )
         let po2 = new PrivateCaller( pcon )
-        try
-            po2.Invoke(
-                "CreateOrAddNewConnection",
-                true,                   // isLeadingCon
-                false,                  // isConnRebuild
-                tsih_me.fromPrim 99us,  // dropSessionTSIH
-                tsih_me.fromPrim 10us,  // newTSIH
-                i_tNext,                // i_tNextIdent
-                cid_me.fromPrim 15us,   // recvCID
-                cmdsn_me.fromPrim 123u, // newCmdSN
-                statsn_me.fromPrim 222u,// firstExpStatSN
-                argCOParam,             // iSCSIParamsCO : IscsiNegoParamCO
-                argSWParam              // iSCSIParamsSW
-            ) |> ignore
-        with
-        | _ as x ->
-            Assert.Fail ( __LINE__ + " : " + x.Message )
+        po2.Invoke(
+            "CreateOrAddNewConnection",
+            true,                   // isLeadingCon
+            false,                  // isConnRebuild
+            tsih_me.fromPrim 99us,  // dropSessionTSIH
+            tsih_me.fromPrim 10us,  // newTSIH
+            i_tNext,                // i_tNextIdent
+            cid_me.fromPrim 15us,   // recvCID
+            cmdsn_me.fromPrim 123u, // newCmdSN
+            statsn_me.fromPrim 222u,// firstExpStatSN
+            argCOParam,             // iSCSIParamsCO : IscsiNegoParamCO
+            argSWParam              // iSCSIParamsSW
+        ) |> ignore
         k1.NoticeTerminate()
         GlbFunc.ClosePorts [| sp; cp |]
        
@@ -6764,8 +6316,7 @@ type LoginNegociator_Test1 () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( x.Message.Contains "Consistency error. A different initiator attempted to log in to an existing session." )
-        | _ as x ->
-            Assert.Fail ( __LINE__ + " : " + x.Message )
+
         k1.NoticeTerminate()
         GlbFunc.ClosePorts [| sp; cp |]
 
@@ -6859,8 +6410,7 @@ type LoginNegociator_Test1 () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( x.Message = "Consistency error. May be specified connection is already exist." )
-        | _ as x ->
-            Assert.Fail ( __LINE__ + " : " + x.Message )
+
         k1.NoticeTerminate()
         GlbFunc.ClosePorts [| sp; cp |]
 
@@ -6923,23 +6473,20 @@ type LoginNegociator_Test1 () =
                 true
         )
 
-        try
-            po2.Invoke(
-                "CreateOrAddNewConnection",
-                false,                  // isLeadingCon
-                true,                   // isConnRebuild
-                tsih_me.zero,           // dropSessionTSIH
-                tsih_me.fromPrim 4us,   // newTSIH
-                i_tNext,                // i_tNextIdent
-                cid_me.fromPrim 15us,   // recvCID
-                cmdsn_me.fromPrim 124u, // newCmdSN
-                statsn_me.fromPrim 222u,// firstExpStatSN
-                argCOParam,             // iSCSIParamsCO : IscsiNegoParamCO
-                argSWParam              // iSCSIParamsSW
-            ) |> ignore
-        with
-        | _ as x ->
-            Assert.Fail ( __LINE__ + " : " + x.Message )
+        po2.Invoke(
+            "CreateOrAddNewConnection",
+            false,                  // isLeadingCon
+            true,                   // isConnRebuild
+            tsih_me.zero,           // dropSessionTSIH
+            tsih_me.fromPrim 4us,   // newTSIH
+            i_tNext,                // i_tNextIdent
+            cid_me.fromPrim 15us,   // recvCID
+            cmdsn_me.fromPrim 124u, // newCmdSN
+            statsn_me.fromPrim 222u,// firstExpStatSN
+            argCOParam,             // iSCSIParamsCO : IscsiNegoParamCO
+            argSWParam              // iSCSIParamsSW
+        ) |> ignore
+
         k1.NoticeTerminate()
         GlbFunc.ClosePorts [| sp; cp |]
 
@@ -7021,8 +6568,7 @@ type LoginNegociator_Test1 () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( x.Message = "Consistency error. May be specified connection is not exist." )
-        | _ as x ->
-            Assert.Fail ( __LINE__ + " : " + x.Message )
+
         k1.NoticeTerminate()
         GlbFunc.ClosePorts [| sp; cp |]
 
@@ -7085,23 +6631,20 @@ type LoginNegociator_Test1 () =
                 true
         )
 
-        try
-            po2.Invoke(
-                "CreateOrAddNewConnection",
-                false,                  // isLeadingCon
-                true,                   // isConnRebuild
-                tsih_me.zero,           // dropSessionTSIH
-                tsih_me.fromPrim 4us,   // newTSIH
-                i_tNext,                // i_tNextIdent
-                cid_me.fromPrim 12us,   // recvCID
-                cmdsn_me.fromPrim 111u, // newCmdSN
-                statsn_me.fromPrim 222u,// firstExpStatSN
-                argCOParam,             // iSCSIParamsCO : IscsiNegoParamCO
-                argSWParam              // iSCSIParamsSW
-            ) |> ignore
-        with
-        | _ as x ->
-            Assert.Fail ( __LINE__ + " : " + x.Message )
+        po2.Invoke(
+            "CreateOrAddNewConnection",
+            false,                  // isLeadingCon
+            true,                   // isConnRebuild
+            tsih_me.zero,           // dropSessionTSIH
+            tsih_me.fromPrim 4us,   // newTSIH
+            i_tNext,                // i_tNextIdent
+            cid_me.fromPrim 12us,   // recvCID
+            cmdsn_me.fromPrim 111u, // newCmdSN
+            statsn_me.fromPrim 222u,// firstExpStatSN
+            argCOParam,             // iSCSIParamsCO : IscsiNegoParamCO
+            argSWParam              // iSCSIParamsSW
+        ) |> ignore
+
         k1.NoticeTerminate()
         GlbFunc.ClosePorts [| sp; cp |]
 
@@ -7181,8 +6724,7 @@ type LoginNegociator_Test1 () =
         with
         | :? SessionRecoveryException as x ->
             Assert.True( ( x.Message = "Termination requested." ) )
-        | _ as x ->
-            Assert.Fail ( __LINE__ + " : " + x.Message )
+
         k1.NoticeTerminate()
         GlbFunc.ClosePorts [| sp; cp |]
 
@@ -7287,8 +6829,7 @@ type LoginNegociator_Test1 () =
                 with
                 | :? SessionRecoveryException as x ->
                     Assert.True( x.Message = "Authentication required." )
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
+
                 k1.NoticeTerminate()
             }
        
@@ -7498,8 +7039,7 @@ type LoginNegociator_Test1 () =
                     with
                     | :? SessionRecoveryException as x ->
                         Assert.True( x.Message = "Invalid text key was received." )
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
+
                     k1.NoticeTerminate()
                 }
        
@@ -7735,8 +7275,7 @@ type LoginNegociator_Test1 () =
                     with
                     | :? SessionRecoveryException as x ->
                         Assert.True( x.Message = "Invalid text key was received." )
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
+
                     k1.NoticeTerminate()
                 }
        
@@ -7918,8 +7457,7 @@ type LoginNegociator_Test1 () =
                     with
                     | :? SessionRecoveryException as x ->
                         Assert.True( x.Message = "Invalid text key was received." )
-                    | _ as x ->
-                        Assert.Fail ( __LINE__ + " : " + x.Message )
+
                     k1.NoticeTerminate()
                 }
        
@@ -8052,90 +7590,87 @@ type LoginNegociator_Test1 () =
                 let pcon = new LoginNegociator( stat1, sp, DateTime.UtcNow, tpgt_me.zero, netportidx_me.zero, k1 )
                 //let con = pcon :> ILoginNegociator
                 let po2 = new PrivateCaller( pcon )
-                try
-                    let! nextPDU, resultCO, resultSW =
-                        po2.Invoke(
-                            "OperationalNegotiation",
-                            true,            // isLeadingCon
-                            false,           // isConnRebuild
-                            argTargetConfig, // targetConfig
-                            {
-                                g_defaultLoginRequest with
-                                    CSG = LoginReqStateCd.OPERATIONAL;
-                                    TextRequest =
-                                        IscsiTextEncode.CreateTextKeyValueString
-                                            {
-                                                TextKeyValues.defaultTextKeyValues with
-                                                    HeaderDigest = TextValueType.Value( [| DigestType.DST_CRC32C; DigestType.DST_None |] );
-                                                    DataDigest = TextValueType.Value( [| DigestType.DST_CRC32C; DigestType.DST_None |] );
-                                                    MaxConnections = TextValueType.Value( 128us );
-                                                    InitiatorAlias = TextValueType.Value( "INITIATOR002" );
-                                                    InitialR2T = TextValueType.Value( true );
-                                                    ImmediateData = TextValueType.Value( true );
-                                                    MaxRecvDataSegmentLength_I = TextValueType.Value( 12345u );
-                                                    MaxBurstLength = TextValueType.Value( 23456u );
-                                                    FirstBurstLength = TextValueType.Value( 34567u );
-                                                    DefaultTime2Wait = TextValueType.Value( 5us );
-                                                    DefaultTime2Retain = TextValueType.Value( 6us );
-                                                    MaxOutstandingR2T = TextValueType.Value( 7us );
-                                                    DataPDUInOrder = TextValueType.Value( true );
-                                                    DataSequenceInOrder = TextValueType.Value( true );
-                                                    ErrorRecoveryLevel = TextValueType.Value( 0uy );
-                                            }
-                                            {
-                                                TextKeyValuesStatus.defaultTextKeyValuesStatus with
-                                                    NegoStat_HeaderDigest = NegoStatusValue.NSG_WaitSend;
-                                                    NegoStat_DataDigest = NegoStatusValue.NSG_WaitSend;
-                                                    NegoStat_MaxConnections = NegoStatusValue.NSG_WaitSend;
-                                                    NegoStat_InitiatorAlias = NegoStatusValue.NSG_WaitSend;
-                                                    NegoStat_InitialR2T = NegoStatusValue.NSG_WaitSend;
-                                                    NegoStat_ImmediateData = NegoStatusValue.NSG_WaitSend;
-                                                    NegoStat_MaxRecvDataSegmentLength_I = NegoStatusValue.NSG_WaitSend;
-                                                    NegoStat_MaxBurstLength = NegoStatusValue.NSG_WaitSend;
-                                                    NegoStat_FirstBurstLength = NegoStatusValue.NSG_WaitSend;
-                                                    NegoStat_DefaultTime2Wait = NegoStatusValue.NSG_WaitSend;
-                                                    NegoStat_DefaultTime2Retain = NegoStatusValue.NSG_WaitSend;
-                                                    NegoStat_MaxOutstandingR2T = NegoStatusValue.NSG_WaitSend;
-                                                    NegoStat_DataPDUInOrder = NegoStatusValue.NSG_WaitSend;
-                                                    NegoStat_DataSequenceInOrder = NegoStatusValue.NSG_WaitSend;
-                                                    NegoStat_ErrorRecoveryLevel = NegoStatusValue.NSG_WaitSend;
-                                            };
-                            },           // firstPDU
-                            argCOParam,  // coParam
-                            argSWParam,  // swParam
-                            true,        // isAuthentified
-                            ( tsih_me.fromPrim 99us )   // newTSIH
-                        ) :?> Task<struct ( LoginResponsePDU * IscsiNegoParamCO * IscsiNegoParamSW )>
 
-                    Assert.True( ( nextPDU :ILogicalPDU ).Opcode = OpcodeCd.LOGIN_RES );
-                    Assert.True( nextPDU.T = true )
-                    Assert.True( nextPDU.CSG = LoginReqStateCd.OPERATIONAL )
-                    Assert.True( nextPDU.NSG = LoginReqStateCd.FULL )
-                    Assert.True( nextPDU.TSIH = tsih_me.fromPrim 99us )
+                let! nextPDU, resultCO, resultSW =
+                    po2.Invoke(
+                        "OperationalNegotiation",
+                        true,            // isLeadingCon
+                        false,           // isConnRebuild
+                        argTargetConfig, // targetConfig
+                        {
+                            g_defaultLoginRequest with
+                                CSG = LoginReqStateCd.OPERATIONAL;
+                                TextRequest =
+                                    IscsiTextEncode.CreateTextKeyValueString
+                                        {
+                                            TextKeyValues.defaultTextKeyValues with
+                                                HeaderDigest = TextValueType.Value( [| DigestType.DST_CRC32C; DigestType.DST_None |] );
+                                                DataDigest = TextValueType.Value( [| DigestType.DST_CRC32C; DigestType.DST_None |] );
+                                                MaxConnections = TextValueType.Value( 128us );
+                                                InitiatorAlias = TextValueType.Value( "INITIATOR002" );
+                                                InitialR2T = TextValueType.Value( true );
+                                                ImmediateData = TextValueType.Value( true );
+                                                MaxRecvDataSegmentLength_I = TextValueType.Value( 12345u );
+                                                MaxBurstLength = TextValueType.Value( 23456u );
+                                                FirstBurstLength = TextValueType.Value( 34567u );
+                                                DefaultTime2Wait = TextValueType.Value( 5us );
+                                                DefaultTime2Retain = TextValueType.Value( 6us );
+                                                MaxOutstandingR2T = TextValueType.Value( 7us );
+                                                DataPDUInOrder = TextValueType.Value( true );
+                                                DataSequenceInOrder = TextValueType.Value( true );
+                                                ErrorRecoveryLevel = TextValueType.Value( 0uy );
+                                        }
+                                        {
+                                            TextKeyValuesStatus.defaultTextKeyValuesStatus with
+                                                NegoStat_HeaderDigest = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_DataDigest = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_MaxConnections = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_InitiatorAlias = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_InitialR2T = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_ImmediateData = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_MaxRecvDataSegmentLength_I = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_MaxBurstLength = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_FirstBurstLength = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_DefaultTime2Wait = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_DefaultTime2Retain = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_MaxOutstandingR2T = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_DataPDUInOrder = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_DataSequenceInOrder = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_ErrorRecoveryLevel = NegoStatusValue.NSG_WaitSend;
+                                        };
+                        },           // firstPDU
+                        argCOParam,  // coParam
+                        argSWParam,  // swParam
+                        true,        // isAuthentified
+                        ( tsih_me.fromPrim 99us )   // newTSIH
+                    ) :?> Task<struct ( LoginResponsePDU * IscsiNegoParamCO * IscsiNegoParamSW )>
 
-                    Assert.True( resultCO.AuthMethod = [| AuthMethodCandidateValue.AMC_CHAP; AuthMethodCandidateValue.AMC_None; |] ); // not negotiated
-                    Assert.True( resultCO.HeaderDigest = [| DigestType.DST_CRC32C |] );
-                    Assert.True( resultCO.DataDigest = [| DigestType.DST_CRC32C |] );
-                    Assert.True( resultCO.MaxRecvDataSegmentLength_I = 12345u );
-                    Assert.True( resultCO.MaxRecvDataSegmentLength_T = 8192u );
-                    Assert.True( resultSW.MaxConnections = 88us );
-                    Assert.True( resultSW.TargetConf = argTargetConfig );
-                    Assert.True( resultSW.InitiatorName = "initiator002" );
-                    Assert.True( resultSW.InitiatorAlias = "INITIATOR002" );
-                    Assert.True( resultSW.TargetPortalGroupTag = tpgt_me.fromPrim 99us );
-                    Assert.True( resultSW.InitialR2T = true );
-                    Assert.True( resultSW.ImmediateData = false );
-                    Assert.True( resultSW.MaxBurstLength = 23456u );
-                    Assert.True( resultSW.FirstBurstLength = 32768u );
-                    Assert.True( resultSW.DefaultTime2Wait = 2us );
-                    Assert.True( resultSW.DefaultTime2Retain = 6us );
-                    Assert.True( resultSW.MaxOutstandingR2T = 3us );
-                    Assert.True( resultSW.DataPDUInOrder = true );
-                    Assert.True( resultSW.DataSequenceInOrder = true );
-                    Assert.True( resultSW.ErrorRecoveryLevel = 0uy );
-                with
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
+                Assert.True( ( nextPDU :ILogicalPDU ).Opcode = OpcodeCd.LOGIN_RES );
+                Assert.True( nextPDU.T = true )
+                Assert.True( nextPDU.CSG = LoginReqStateCd.OPERATIONAL )
+                Assert.True( nextPDU.NSG = LoginReqStateCd.FULL )
+                Assert.True( nextPDU.TSIH = tsih_me.fromPrim 99us )
+
+                Assert.True( resultCO.AuthMethod = [| AuthMethodCandidateValue.AMC_CHAP; AuthMethodCandidateValue.AMC_None; |] ); // not negotiated
+                Assert.True( resultCO.HeaderDigest = [| DigestType.DST_CRC32C |] );
+                Assert.True( resultCO.DataDigest = [| DigestType.DST_CRC32C |] );
+                Assert.True( resultCO.MaxRecvDataSegmentLength_I = 12345u );
+                Assert.True( resultCO.MaxRecvDataSegmentLength_T = 8192u );
+                Assert.True( resultSW.MaxConnections = 88us );
+                Assert.True( resultSW.TargetConf = argTargetConfig );
+                Assert.True( resultSW.InitiatorName = "initiator002" );
+                Assert.True( resultSW.InitiatorAlias = "INITIATOR002" );
+                Assert.True( resultSW.TargetPortalGroupTag = tpgt_me.fromPrim 99us );
+                Assert.True( resultSW.InitialR2T = true );
+                Assert.True( resultSW.ImmediateData = false );
+                Assert.True( resultSW.MaxBurstLength = 23456u );
+                Assert.True( resultSW.FirstBurstLength = 32768u );
+                Assert.True( resultSW.DefaultTime2Wait = 2us );
+                Assert.True( resultSW.DefaultTime2Retain = 6us );
+                Assert.True( resultSW.MaxOutstandingR2T = 3us );
+                Assert.True( resultSW.DataPDUInOrder = true );
+                Assert.True( resultSW.DataSequenceInOrder = true );
+                Assert.True( resultSW.ErrorRecoveryLevel = 0uy );
                 k1.NoticeTerminate()
             }
        
@@ -8268,30 +7803,7 @@ type LoginNegociator_Test1 () =
                         }
                     )
                     |> Functions.TaskIgnore
-(*
-                let! recvPDU2 = 
-                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome tsih_me.zero, ValueSome cid_me.zero, ValueSome concnt_me.zero, cp, false )
-                Assert.True( ( recvPDU2.Opcode = OpcodeCd.LOGIN_RES ) );
-                let recvPDU2L = recvPDU2 :?> LoginResponsePDU
-                Assert.True( recvPDU2L.T = true )
-                Assert.True( recvPDU2L.CSG = LoginReqStateCd.OPERATIONAL )
-                Assert.True( recvPDU2L.NSG = LoginReqStateCd.FULL )
-                Assert.True( recvPDU2L.TSIH = tsih_me.fromPrim 199us )
 
-                // dummy ( full feature phase )
-                do! PDU.SendPDU(
-                        8192u,
-                        DigestType.DST_CRC32C,
-                        DigestType.DST_CRC32C,
-                        ValueSome( tsih1 ),
-                        ValueSome( cid1 ),
-                        ValueSome( ccnt1 ),
-                        objidx_me.NewID(),
-                        cp,
-                        g_defaultLoginRequest
-                    )
-                    |> Functions.TaskIgnore
-*)
             }
 
         let k1 = new HKiller() :> IKiller
@@ -8300,67 +7812,65 @@ type LoginNegociator_Test1 () =
                 let pcon = new LoginNegociator( stat1, sp, DateTime.UtcNow, tpgt_me.zero, netportidx_me.zero, k1 )
                 //let con = pcon :> ILoginNegociator
                 let po2 = new PrivateCaller( pcon )
-                try
-                    let! nextPDU, resultCO, resultSW =
-                        po2.Invoke(
-                            "OperationalNegotiation",
-                            true,            // isLeadingCon
-                            false,           // isConnRebuild
-                            argTargetConfig, // targetConfig
-                            {
-                                g_defaultLoginRequest with
-                                    CSG = LoginReqStateCd.OPERATIONAL;
-                                    TextRequest =
-                                        IscsiTextEncode.CreateTextKeyValueString
-                                            {
-                                                TextKeyValues.defaultTextKeyValues with
-                                                    InitiatorName = TextValueType.Value( "initiator002" );
-                                                    TargetName = TextValueType.Value( "target002" );
-                                                    SessionType = TextValueType.Value( "Normal" );
-                                            }
-                                            {
-                                                TextKeyValuesStatus.defaultTextKeyValuesStatus with
-                                                    NegoStat_InitiatorName = NegoStatusValue.NSG_WaitSend;
-                                                    NegoStat_TargetName = NegoStatusValue.NSG_WaitSend;
-                                                    NegoStat_SessionType = NegoStatusValue.NSG_WaitSend;
-                                            };
 
-                            },           // firstPDU
-                            argCOParam,  // coParam
-                            argSWParam,  // swParam
-                            false,       // isAuthentified
-                            ( tsih_me.fromPrim 199us )   // newTSIH
-                        ) :?> Task<struct ( LoginResponsePDU * IscsiNegoParamCO * IscsiNegoParamSW )>
+                let! nextPDU, resultCO, resultSW =
+                    po2.Invoke(
+                        "OperationalNegotiation",
+                        true,            // isLeadingCon
+                        false,           // isConnRebuild
+                        argTargetConfig, // targetConfig
+                        {
+                            g_defaultLoginRequest with
+                                CSG = LoginReqStateCd.OPERATIONAL;
+                                TextRequest =
+                                    IscsiTextEncode.CreateTextKeyValueString
+                                        {
+                                            TextKeyValues.defaultTextKeyValues with
+                                                InitiatorName = TextValueType.Value( "initiator002" );
+                                                TargetName = TextValueType.Value( "target002" );
+                                                SessionType = TextValueType.Value( "Normal" );
+                                        }
+                                        {
+                                            TextKeyValuesStatus.defaultTextKeyValuesStatus with
+                                                NegoStat_InitiatorName = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_TargetName = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_SessionType = NegoStatusValue.NSG_WaitSend;
+                                        };
 
-                    Assert.True( ( nextPDU :> ILogicalPDU ).Opcode = OpcodeCd.LOGIN_RES );
-                    Assert.True( nextPDU.T = true )
-                    Assert.True( nextPDU.CSG = LoginReqStateCd.OPERATIONAL )
-                    Assert.True( nextPDU.NSG = LoginReqStateCd.FULL )
-                    Assert.True( nextPDU.TSIH = tsih_me.fromPrim 199us )
+                        },           // firstPDU
+                        argCOParam,  // coParam
+                        argSWParam,  // swParam
+                        false,       // isAuthentified
+                        ( tsih_me.fromPrim 199us )   // newTSIH
+                    ) :?> Task<struct ( LoginResponsePDU * IscsiNegoParamCO * IscsiNegoParamSW )>
 
-                    Assert.True( resultCO.AuthMethod = [| AuthMethodCandidateValue.AMC_CHAP; AuthMethodCandidateValue.AMC_None |] ); // not negotiated
-                    Assert.True( resultCO.HeaderDigest = [| DigestType.DST_CRC32C |] );
-                    Assert.True( resultCO.DataDigest = [| DigestType.DST_CRC32C |] );
-                    Assert.True( resultCO.MaxRecvDataSegmentLength_I = 12345u );
-                    Assert.True( resultCO.MaxRecvDataSegmentLength_T = 8192u );
-                    Assert.True( resultSW.MaxConnections = 44us );
-                    Assert.True( resultSW.TargetConf = argTargetConfig );
-                    Assert.True( resultSW.InitiatorName = "initiator002" );
-                    Assert.True( resultSW.InitiatorAlias = "INITIATOR002" );
-                    Assert.True( resultSW.TargetPortalGroupTag = tpgt_me.fromPrim 99us );
-                    Assert.True( resultSW.InitialR2T = false );
-                    Assert.True( resultSW.ImmediateData = false );
-                    Assert.True( resultSW.MaxBurstLength = 23456u );
-                    Assert.True( resultSW.FirstBurstLength = 32768u );
-                    Assert.True( resultSW.DefaultTime2Wait = 2us );
-                    Assert.True( resultSW.DefaultTime2Retain = 6us );
-                    Assert.True( resultSW.MaxOutstandingR2T = 1us );
-                    Assert.True( resultSW.DataPDUInOrder = true );
-                    Assert.True( resultSW.DataSequenceInOrder = true );
-                    Assert.True( resultSW.ErrorRecoveryLevel = 0uy );
-                with
-                | _ as x ->
-                    Assert.Fail ( __LINE__ + " : " + x.Message )
+                Assert.True( ( nextPDU :> ILogicalPDU ).Opcode = OpcodeCd.LOGIN_RES );
+                Assert.True( nextPDU.T = true )
+                Assert.True( nextPDU.CSG = LoginReqStateCd.OPERATIONAL )
+                Assert.True( nextPDU.NSG = LoginReqStateCd.FULL )
+                Assert.True( nextPDU.TSIH = tsih_me.fromPrim 199us )
+
+                Assert.True( resultCO.AuthMethod = [| AuthMethodCandidateValue.AMC_CHAP; AuthMethodCandidateValue.AMC_None |] ); // not negotiated
+                Assert.True( resultCO.HeaderDigest = [| DigestType.DST_CRC32C |] );
+                Assert.True( resultCO.DataDigest = [| DigestType.DST_CRC32C |] );
+                Assert.True( resultCO.MaxRecvDataSegmentLength_I = 12345u );
+                Assert.True( resultCO.MaxRecvDataSegmentLength_T = 8192u );
+                Assert.True( resultSW.MaxConnections = 44us );
+                Assert.True( resultSW.TargetConf = argTargetConfig );
+                Assert.True( resultSW.InitiatorName = "initiator002" );
+                Assert.True( resultSW.InitiatorAlias = "INITIATOR002" );
+                Assert.True( resultSW.TargetPortalGroupTag = tpgt_me.fromPrim 99us );
+                Assert.True( resultSW.InitialR2T = false );
+                Assert.True( resultSW.ImmediateData = false );
+                Assert.True( resultSW.MaxBurstLength = 23456u );
+                Assert.True( resultSW.FirstBurstLength = 32768u );
+                Assert.True( resultSW.DefaultTime2Wait = 2us );
+                Assert.True( resultSW.DefaultTime2Retain = 6us );
+                Assert.True( resultSW.MaxOutstandingR2T = 1us );
+                Assert.True( resultSW.DataPDUInOrder = true );
+                Assert.True( resultSW.DataSequenceInOrder = true );
+                Assert.True( resultSW.ErrorRecoveryLevel = 0uy );
+
                 k1.NoticeTerminate()
             }
        
