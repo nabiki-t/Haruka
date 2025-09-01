@@ -1088,7 +1088,7 @@ type LoginNegociator_Test1 () =
         Functions.RunTaskInPallalel [| initiator; target; |]
         |> Functions.RunTaskSynchronously
         |> ignore
-        GlbFunc.ClosePorts [| sp; cp |] 
+        GlbFunc.ClosePorts [| sp; cp |]
         
     [<Fact>]
     member _.ProcessNomalSession_004() =
@@ -1148,15 +1148,76 @@ type LoginNegociator_Test1 () =
         |> Functions.RunTaskSynchronously
         |> ignore
         GlbFunc.ClosePorts [| sp; cp |]
-
+        
     [<Fact>]
     member _.ProcessNomalSession_005() =
         let sp, cp = GlbFunc.GetNetConn()
         let stat1 =  new CStatus_Stub()
-        stat1.p_GetTSIH <- ( fun _ -> tsih_me.fromPrim 2us )
+        stat1.p_GetTSIH <- ( fun _ -> tsih_me.fromPrim 2us ) // *** In target, search result from I_T next is exist, and it is matched.
         stat1.p_GetISCSINegoParamCO <- ( fun () -> g_defaultiSCSINegoParamCO )
-        stat1.p_GetISCSINegoParamSW <- ( fun () -> g_defaultiSCSINegoParamSW )
-        stat1.p_GenNewTSIH <- ( fun () -> tsih_me.fromPrim 20us )
+        stat1.p_GetSession <- ( fun _ -> ValueNone )
+
+        let initiator = 
+            fun () -> task {
+                do! PDU.SendPDU(
+                        8192u,
+                        DigestType.DST_None,
+                        DigestType.DST_None,
+                        ValueSome( tsih1 ),
+                        ValueSome( cid1 ),
+                        ValueSome( ccnt1 ),
+                        objidx_me.NewID(),
+                        cp,
+                        {
+                            g_defaultLoginRequest with
+                                TSIH = tsih_me.fromPrim 0x02us;                    // *** I->T TSIH is not 0
+                                TextRequest =
+                                    IscsiTextEncode.CreateTextKeyValueString
+                                        {
+                                            TextKeyValues.defaultTextKeyValues with
+                                                InitiatorName = TextValueType.Value( "init1" );
+                                                TargetName = TextValueType.Value( "target1" );
+                                                SessionType = TextValueType.Value( "Normal" );
+                                        }
+                                        {
+                                            TextKeyValuesStatus.defaultTextKeyValuesStatus with
+                                                NegoStat_InitiatorName = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_TargetName = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_SessionType = NegoStatusValue.NSG_WaitSend;
+                                        }
+                        }
+                    )
+                    |> Functions.TaskIgnore
+                }
+
+        let k1 = new HKiller() :> IKiller
+        let target = 
+            fun () -> task {
+                let con = new LoginNegociator( stat1, sp, DateTime.UtcNow, tpgt_me.zero, netportidx_me.zero, k1 ) :> ILoginNegociator
+                try
+                    con.Start true |> ignore
+                    Assert.Fail __LINE__
+                with
+                | _ as x ->
+                    Assert.True( ( x.Message.StartsWith "Missing session. Maybe it occurred consistency error" ) )
+                k1.NoticeTerminate()
+            }
+
+        Functions.RunTaskInPallalel [| initiator; target; |]
+        |> Functions.RunTaskSynchronously
+        |> ignore
+        GlbFunc.ClosePorts [| sp; cp |]
+        
+    [<Fact>]
+    member _.ProcessNomalSession_006() =
+        let sp, cp = GlbFunc.GetNetConn()
+        let stat1 =  new CStatus_Stub()
+        let sessStub = new CSession_Stub()
+        stat1.p_GetTSIH <- ( fun _ -> tsih_me.fromPrim 2us ) // *** In target, search result from I_T next is exist, and it is matched.
+        stat1.p_GetISCSINegoParamCO <- ( fun () -> g_defaultiSCSINegoParamCO )
+        stat1.p_GetSession <- ( fun _ -> ValueSome sessStub )
+        sessStub.p_GetSessionParameter <- ( fun () -> g_defaultiSCSINegoParamSW )
+        sessStub.p_GetAllConnections <- ( fun () -> [||] )  // connection missing
 
         let initiator = 
             fun () -> task {
@@ -1173,7 +1234,7 @@ type LoginNegociator_Test1 () =
                             g_defaultLoginRequest with
                                 VersionMax = 0x01uy;
                                 VersionMin = 0x01uy;                // VersionMin is not 0
-                                TSIH = tsih_me.fromPrim 0x00us;     // *** I->T TSIH is 0
+                                TSIH = tsih_me.fromPrim 0x02us;     // *** I->T TSIH is not 0
                                 TextRequest =
                                     IscsiTextEncode.CreateTextKeyValueString
                                         {
@@ -1230,9 +1291,252 @@ type LoginNegociator_Test1 () =
         |> Functions.RunTaskSynchronously
         |> ignore
         GlbFunc.ClosePorts [| sp; cp |]
+        
+    [<Fact>]
+    member _.ProcessNomalSession_007() =
+        let sp, cp = GlbFunc.GetNetConn()
+        let stat1 =  new CStatus_Stub()
+        let sessStub = new CSession_Stub()
+        let connStub = new CConnection_Stub()
+        stat1.p_GetTSIH <- ( fun _ -> tsih_me.fromPrim 2us ) // *** In target, search result from I_T next is exist, and it is matched.
+        stat1.p_GetISCSINegoParamCO <- ( fun () -> g_defaultiSCSINegoParamCO )
+        stat1.p_GetSession <- ( fun _ -> ValueSome sessStub )
+        sessStub.p_GetSessionParameter <- ( fun () -> g_defaultiSCSINegoParamSW )
+        sessStub.p_GetAllConnections <- ( fun () -> [| connStub |] )
+        connStub.p_CID <- ( fun () -> cid1 )
+        connStub.p_NextStatSN <- ( fun () -> statsn_me.fromPrim 999u )  // old connection StatSN=999
+
+        let initiator = 
+            fun () -> task {
+                do! PDU.SendPDU(
+                        8192u,
+                        DigestType.DST_None,
+                        DigestType.DST_None,
+                        ValueSome( tsih1 ),
+                        ValueSome( cid1 ),
+                        ValueSome( ccnt1 ),
+                        objidx_me.NewID(),
+                        cp,
+                        {
+                            g_defaultLoginRequest with
+                                VersionMax = 0x01uy;
+                                VersionMin = 0x01uy;                // VersionMin is not 0
+                                TSIH = tsih_me.fromPrim 0x02us;     // *** I->T TSIH is not 0
+                                CID = cid1;
+                                ExpStatSN = statsn_me.zero;         // initiator's ExpStatSN=0
+                                TextRequest =
+                                    IscsiTextEncode.CreateTextKeyValueString
+                                        {
+                                            TextKeyValues.defaultTextKeyValues with
+                                                InitiatorName = TextValueType.Value( "init1" );
+                                                TargetName = TextValueType.Value( "target1" );
+                                                SessionType = TextValueType.Value( "Normal" );
+                                        }
+                                        {
+                                            TextKeyValuesStatus.defaultTextKeyValuesStatus with
+                                                NegoStat_InitiatorName = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_TargetName = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_SessionType = NegoStatusValue.NSG_WaitSend;
+                                        }
+                        }
+                    )
+                    |> Functions.TaskIgnore
+                let! res =
+                    try
+                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
+                    with
+                    | _ as x ->
+                        Assert.Fail ( __LINE__ + " : " + x.Message )
+                        reraise()
+                Assert.True( ( res.Opcode = OpcodeCd.LOGIN_RES ) );
+                let res2 = res :?> LoginResponsePDU
+                Assert.True( ( res2.T = false ) );
+                Assert.True( ( res2.C = false ) );
+                Assert.True( ( res2.CSG = LoginReqStateCd.SEQURITY ) );
+                Assert.True( ( res2.NSG = LoginReqStateCd.SEQURITY ) );
+                Assert.True( ( res2.VersionActive = 0uy ) );
+                Assert.True( ( res2.VersionMax = 0uy ) );
+                Assert.True( ( res2.ISID = g_isid0 ) );
+                Assert.True( ( res2.InitiatorTaskTag = itt_me.fromPrim 0xFEEEFEEEu ) );
+                Assert.True( ( res2.Status = LoginResStatCd.UNSUPPORTED_VERSION ) );
+            }
+
+        let k1 = new HKiller() :> IKiller
+        let target = 
+            fun () -> task {
+                let con = new LoginNegociator( stat1, sp, DateTime.UtcNow, tpgt_me.zero, netportidx_me.zero, k1 ) :> ILoginNegociator
+                try
+                    con.Start true |> ignore
+                    Assert.Fail __LINE__
+                with
+                | :? SessionRecoveryException as x ->
+                    Assert.True( ( x.Message = "Unsupported version is requested." ) )
+                | _ as x ->
+                    Assert.Fail ( __LINE__ + " : " + x.Message )
+                k1.NoticeTerminate()
+            }
+
+        Functions.RunTaskInPallalel [| initiator; target; |]
+        |> Functions.RunTaskSynchronously
+        |> ignore
+        GlbFunc.ClosePorts [| sp; cp |]
+        
+    [<Fact>]
+    member _.ProcessNomalSession_008() =
+        let sp, cp = GlbFunc.GetNetConn()
+        let stat1 =  new CStatus_Stub()
+        let sessStub = new CSession_Stub()
+        let connStub = new CConnection_Stub()
+        stat1.p_GetTSIH <- ( fun _ -> tsih_me.fromPrim 2us ) // *** In target, search result from I_T next is exist, and it is matched.
+        stat1.p_GetISCSINegoParamCO <- ( fun () -> g_defaultiSCSINegoParamCO )
+        stat1.p_GetSession <- ( fun _ -> ValueSome sessStub )
+        sessStub.p_GetSessionParameter <- ( fun () -> g_defaultiSCSINegoParamSW )
+        sessStub.p_GetAllConnections <- ( fun () -> [| connStub |] )
+        connStub.p_CID <- ( fun () -> cid1 )
+        connStub.p_NextStatSN <- ( fun () -> statsn_me.fromPrim 999u )  // old connection StatSN=999
+
+        let initiator = 
+            fun () -> task {
+                do! PDU.SendPDU(
+                        8192u,
+                        DigestType.DST_None,
+                        DigestType.DST_None,
+                        ValueSome( tsih1 ),
+                        ValueSome( cid1 ),
+                        ValueSome( ccnt1 ),
+                        objidx_me.NewID(),
+                        cp,
+                        {
+                            g_defaultLoginRequest with
+                                VersionMax = 0x01uy;
+                                VersionMin = 0x01uy;                // VersionMin is not 0
+                                TSIH = tsih_me.fromPrim 0x02us;     // *** I->T TSIH is not 0
+                                CID = cid1;
+                                ExpStatSN = statsn_me.fromPrim 999u;    // initiator's ExpStatSN is same as target's StatSN 999.
+                                TextRequest =
+                                    IscsiTextEncode.CreateTextKeyValueString
+                                        {
+                                            TextKeyValues.defaultTextKeyValues with
+                                                InitiatorName = TextValueType.Value( "init1" );
+                                                TargetName = TextValueType.Value( "target1" );
+                                                SessionType = TextValueType.Value( "Normal" );
+                                        }
+                                        {
+                                            TextKeyValuesStatus.defaultTextKeyValuesStatus with
+                                                NegoStat_InitiatorName = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_TargetName = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_SessionType = NegoStatusValue.NSG_WaitSend;
+                                        }
+                        }
+                    )
+                    |> Functions.TaskIgnore
+                let! res =
+                    try
+                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), cp, Standpoint.Initiator )
+                    with
+                    | _ as x ->
+                        Assert.Fail ( __LINE__ + " : " + x.Message )
+                        reraise()
+                Assert.True( ( res.Opcode = OpcodeCd.LOGIN_RES ) );
+                let res2 = res :?> LoginResponsePDU
+                Assert.True( ( res2.T = false ) );
+                Assert.True( ( res2.C = false ) );
+                Assert.True( ( res2.CSG = LoginReqStateCd.SEQURITY ) );
+                Assert.True( ( res2.NSG = LoginReqStateCd.SEQURITY ) );
+                Assert.True( ( res2.VersionActive = 0uy ) );
+                Assert.True( ( res2.VersionMax = 0uy ) );
+                Assert.True( ( res2.ISID = g_isid0 ) );
+                Assert.True( ( res2.InitiatorTaskTag = itt_me.fromPrim 0xFEEEFEEEu ) );
+                Assert.True( ( res2.Status = LoginResStatCd.UNSUPPORTED_VERSION ) );
+            }
+
+        let k1 = new HKiller() :> IKiller
+        let target = 
+            fun () -> task {
+                let con = new LoginNegociator( stat1, sp, DateTime.UtcNow, tpgt_me.zero, netportidx_me.zero, k1 ) :> ILoginNegociator
+                try
+                    con.Start true |> ignore
+                    Assert.Fail __LINE__
+                with
+                | :? SessionRecoveryException as x ->
+                    Assert.True( ( x.Message = "Unsupported version is requested." ) )
+                k1.NoticeTerminate()
+            }
+
+        Functions.RunTaskInPallalel [| initiator; target; |]
+        |> Functions.RunTaskSynchronously
+        |> ignore
+        GlbFunc.ClosePorts [| sp; cp |]
+        
+    [<Fact>]
+    member _.ProcessNomalSession_009() =
+        let sp, cp = GlbFunc.GetNetConn()
+        let stat1 =  new CStatus_Stub()
+        let sessStub = new CSession_Stub()
+        let connStub = new CConnection_Stub()
+        stat1.p_GetTSIH <- ( fun _ -> tsih_me.fromPrim 2us ) // *** In target, search result from I_T next is exist, and it is matched.
+        stat1.p_GetISCSINegoParamCO <- ( fun () -> g_defaultiSCSINegoParamCO )
+        stat1.p_GetSession <- ( fun _ -> ValueSome sessStub )
+        sessStub.p_GetSessionParameter <- ( fun () -> g_defaultiSCSINegoParamSW )
+        sessStub.p_GetAllConnections <- ( fun () -> [| connStub |] )
+        connStub.p_CID <- ( fun () -> cid1 )
+        connStub.p_NextStatSN <- ( fun () -> statsn_me.fromPrim 999u )  // old connection StatSN=999
+
+        let initiator = 
+            fun () -> task {
+                do! PDU.SendPDU(
+                        8192u,
+                        DigestType.DST_None,
+                        DigestType.DST_None,
+                        ValueSome( tsih1 ),
+                        ValueSome( cid1 ),
+                        ValueSome( ccnt1 ),
+                        objidx_me.NewID(),
+                        cp,
+                        {
+                            g_defaultLoginRequest with
+                                TSIH = tsih_me.fromPrim 0x02us;     // *** I->T TSIH is not 0
+                                CID = cid1;
+                                ExpStatSN = statsn_me.fromPrim 444u;    // initiator's ExpStatSN is not 0 and diffier from target's StatSN.
+                                TextRequest =
+                                    IscsiTextEncode.CreateTextKeyValueString
+                                        {
+                                            TextKeyValues.defaultTextKeyValues with
+                                                InitiatorName = TextValueType.Value( "init1" );
+                                                TargetName = TextValueType.Value( "target1" );
+                                                SessionType = TextValueType.Value( "Normal" );
+                                        }
+                                        {
+                                            TextKeyValuesStatus.defaultTextKeyValuesStatus with
+                                                NegoStat_InitiatorName = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_TargetName = NegoStatusValue.NSG_WaitSend;
+                                                NegoStat_SessionType = NegoStatusValue.NSG_WaitSend;
+                                        }
+                        }
+                    )
+                    |> Functions.TaskIgnore
+            }
+
+        let k1 = new HKiller() :> IKiller
+        let target = 
+            fun () -> task {
+                let con = new LoginNegociator( stat1, sp, DateTime.UtcNow, tpgt_me.zero, netportidx_me.zero, k1 ) :> ILoginNegociator
+                try
+                    con.Start true |> ignore
+                    Assert.Fail __LINE__
+                with
+                | :? SessionRecoveryException as x ->
+                    Assert.True( ( x.Message.StartsWith "Invalid ExpStatSN(" ) )
+                k1.NoticeTerminate()
+            }
+
+        Functions.RunTaskInPallalel [| initiator; target; |]
+        |> Functions.RunTaskSynchronously
+        |> ignore
+        GlbFunc.ClosePorts [| sp; cp |]
 
     [<Fact>]
-    member _.ProcessNomalSession_006() =
+    member _.ProcessNomalSession_010() =
         let sp, cp = GlbFunc.GetNetConn()
         let stat1 =  new CStatus_Stub()
         stat1.p_GetTSIH <- ( fun _ -> tsih_me.fromPrim 2us )
@@ -1333,7 +1637,7 @@ type LoginNegociator_Test1 () =
 
 
     [<Fact>]
-    member _.ProcessNomalSession_008() =
+    member _.ProcessNomalSession_011() =
         let sp, cp = GlbFunc.GetNetConn()
         let stat1 =  new CStatus_Stub()
         stat1.p_GetTSIH <- ( fun _ -> tsih_me.fromPrim 2us )
@@ -1427,7 +1731,7 @@ type LoginNegociator_Test1 () =
         GlbFunc.ClosePorts [| sp; cp |]
 
     [<Fact>]
-    member _.ProcessNomalSession_009() =
+    member _.ProcessNomalSession_012() =
         let sp, cp = GlbFunc.GetNetConn()
         let stat1 =  new CStatus_Stub()
         stat1.p_GetTSIH <- ( fun _ -> tsih_me.fromPrim 2us )
@@ -1525,7 +1829,7 @@ type LoginNegociator_Test1 () =
         GlbFunc.ClosePorts [| sp; cp |]
 
     [<Fact>]
-    member _.ProcessNomalSession_010() =
+    member _.ProcessNomalSession_013() =
         let sp, cp = GlbFunc.GetNetConn()
         let stat1 =  new CStatus_Stub()
         stat1.p_GetTSIH <- ( fun _ -> tsih_me.fromPrim 0us )
@@ -1700,7 +2004,7 @@ type LoginNegociator_Test1 () =
         GlbFunc.ClosePorts [| sp; cp |]
 
     [<Fact>]
-    member _.ProcessNomalSession_011() =
+    member _.ProcessNomalSession_014() =
         let sp, cp = GlbFunc.GetNetConn()
         let stat1 =  new CStatus_Stub()
         stat1.p_GetTSIH <- ( fun _ -> tsih_me.fromPrim 0us )

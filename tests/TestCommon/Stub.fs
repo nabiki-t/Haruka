@@ -600,6 +600,7 @@ type public CConnection_Stub() =
     let mutable f_CurrentParams : ( unit -> IscsiNegoParamCO ) option = None
     let mutable f_TSIH : ( unit -> TSIH_T ) option = None
     let mutable f_CID : ( unit -> CID_T ) option = None
+    let mutable f_NextStatSN : ( unit -> STATSN_T ) option = None
     let mutable f_ConCounter : ( unit -> CONCNT_T ) option = None
     let mutable f_NetPortIdx : ( unit -> NETPORTIDX_T ) option = None
     let mutable f_Close : ( unit -> unit ) option = None
@@ -623,6 +624,7 @@ type public CConnection_Stub() =
     member _.p_CurrentParams with set v = f_CurrentParams <- Some( v )
     member _.p_TSIH with set v = f_TSIH <- Some( v )
     member _.p_CID with set v = f_CID <- Some( v )
+    member _.p_NextStatSN with set v = f_NextStatSN <- Some( v )
     member _.p_ConCounter with set v = f_ConCounter <- Some( v )
     member _.p_NetPortIdx with set v = f_NetPortIdx <- Some( v )
     member _.p_Close with set v = f_Close <- Some( v )
@@ -650,6 +652,8 @@ type public CConnection_Stub() =
             f_TSIH.Value()
         override _.CID with get() : CID_T =
             f_CID.Value()
+        override _.NextStatSN : STATSN_T =
+            f_NextStatSN.Value()
         override _.ConCounter with get() : CONCNT_T =
             f_ConCounter.Value()
         override _.NetPortIdx with get() : NETPORTIDX_T =

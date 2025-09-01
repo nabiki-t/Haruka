@@ -891,6 +891,12 @@ type IConnection =
 
     // ------------------------------------------------------------------------
     /// <summary>
+    ///   Get the next StatSN value to be used.
+    /// </summary>
+    abstract NextStatSN : STATSN_T
+
+    // ------------------------------------------------------------------------
+    /// <summary>
     ///   Get connection counter value of this connection
     /// </summary>
     abstract ConCounter : CONCNT_T

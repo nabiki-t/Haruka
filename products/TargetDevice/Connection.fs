@@ -171,6 +171,11 @@ type Connection
             m_CID
 
         // ------------------------------------------------------------------------
+        // Get the next StatSN value to be used.
+        override _.NextStatSN : STATSN_T =
+            m_StatSN
+
+        // ------------------------------------------------------------------------
         // Get connection counter value of this connection
         override _.ConCounter : CONCNT_T =
             m_Counter

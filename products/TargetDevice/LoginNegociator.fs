@@ -857,7 +857,22 @@ type LoginNegociator
                     let sessionPa = sessionIF.SessionParameter
 
                     // Receive CID is existing connection or not
-                    false, ( sessionIF.IsExistCID recvPDU.CID ), sessionPa
+                    let wOldConn = 
+                        sessionIF.GetAllConnections()
+                        |> Array.tryFind ( fun itr -> itr.CID = recvPDU.CID )
+
+                    // When an implicit logout of a connection is performed, the StatSN value is inherited from the previous connection.
+                    // Therefore, the initiator must set the next StatSN value to ExpStatSN.
+                    // Since the login sequence assumes ErrorRecoveLevel = 0, if there is a discrepancy, it is considered an error and the login is rejected.
+                    // Note that if ExpStatSN is 0, it is permitted because it indicates that the initiator believes the old connection no longer exists.
+                    if wOldConn.IsSome then
+                        let nextStatSN = wOldConn.Value.NextStatSN
+                        if  recvPDU.ExpStatSN <> statsn_me.zero && nextStatSN <> recvPDU.ExpStatSN then
+                            let msg = sprintf "Invalid ExpStatSN(%d) value. Expected %d." ( statsn_me.toPrim recvPDU.ExpStatSN ) ( statsn_me.toPrim nextStatSN )
+                            HLogger.Trace( LogID.E_ISCSI_FORMAT_ERROR, fun g -> g.Gen1( m_ObjID, msg ) )
+                            raise <| SessionRecoveryException ( msg, tsih_me.zero )
+
+                    false, wOldConn.IsSome, sessionPa
 
             let dropSessionTSIH, newTSIH =
                 if isLeadingCon then
