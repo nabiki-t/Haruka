@@ -222,20 +222,12 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             // login for same target
             let wv = Array.zeroCreate<iSCSI_Initiator> Constants.MAX_SESSION_COUNT_IN_TARGET
             for i = 1 to Constants.MAX_SESSION_COUNT_IN_TARGET do
-                let sessParam1 = {
-                    m_defaultSessParam with
-                        ISID = GlbFunc.newISID();
-                }
-                let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
+                let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
                 wv.[i-1] <- r1
 
             // add more aession and failed
-            let sessParam2 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
             try
-                let! _ = iSCSI_Initiator.CreateInitialSession sessParam2 m_defaultConnParam
+                let! _ = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
                 Assert.Fail __LINE__
             with
             | :? ConnectionErrorException
@@ -259,20 +251,14 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
                 let targetnamenum = ( i % int m_TargetCount ) + 1
                 let sessParam1 = {
                     m_defaultSessParam with
-                        ISID = GlbFunc.newISID();
                         TargetName = sprintf "iqn.2020-05.example.com:target%d" targetnamenum
                 }
                 let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
                 wv.[i] <- r1
 
-            let sessParam2 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
-
             // add more session and failed
             try
-                let! _ = iSCSI_Initiator.CreateInitialSession sessParam2 m_defaultConnParam
+                let! _ = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
                 Assert.Fail __LINE__
             with
             | :? ConnectionErrorException
@@ -292,15 +278,11 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         // MaxConnections value is always 16.
         task {
             // login for connection 0
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
             let connParam1 = {
                 m_defaultConnParam with
                     CID = cid_me.zero;
             }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam connParam1
 
             // add connection 1 to 16
             for i = 2 to int m_defaultSessParam.MaxConnections do
@@ -339,7 +321,6 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
                 let targetnamenum = ( i % int m_TargetCount ) + 1
                 let sessParam1 = {
                     m_defaultSessParam with
-                        ISID = GlbFunc.newISID();
                         TargetName = sprintf "iqn.2020-05.example.com:target%d" targetnamenum
                 }
                 let connParam1 = {
@@ -368,16 +349,12 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
     member _.LoginAllNetworkPortal_002() =
         task {
             // login for network portal 0
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
             let connParam1 = {
                 m_defaultConnParam with
                     CID = cid_me.zero;
                     PortNo = m_TD0_iSCSIPortNo.[0];
             }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam connParam1
 
             // add connection for network portal 1 to 16
             let wconcnt = min m_TD0_iSCSIPortNo.Length ( int m_defaultSessParam.MaxConnections )
@@ -421,7 +398,6 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
                     let sessParam1 = {
                         m_defaultSessParam with
                             TargetName = targetName;
-                            ISID = GlbFunc.newISID();
                     }
                     let connParam1 = {
                         m_defaultConnParam with
@@ -474,17 +450,13 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
     [<Fact>]
     member _.LoginNego_HeaderDigest_001() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
             let connParam1 = {
                 m_defaultConnParam with
                     CID = g_CID0;
                     HeaderDigest = DigestType.DST_None;
                     DataDigest = DigestType.DST_CRC32C;
             }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam connParam1
 
             Assert.True(( r1.Connection( g_CID0 ).Params.HeaderDigest = DigestType.DST_None ))
             Assert.True(( r1.Connection( g_CID0 ).Params.DataDigest = DigestType.DST_CRC32C ))
@@ -506,17 +478,13 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
     [<Fact>]
     member _.LoginNego_DataDigest_001() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
             let connParam1 = {
                 m_defaultConnParam with
                     CID = g_CID0;
                     HeaderDigest = DigestType.DST_CRC32C;
                     DataDigest = DigestType.DST_None;
             }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam connParam1
 
             Assert.True(( r1.Connection( g_CID0 ).Params.HeaderDigest = DigestType.DST_CRC32C ))
             Assert.True(( r1.Connection( g_CID0 ).Params.DataDigest = DigestType.DST_None ))
@@ -540,17 +508,13 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         task {
             let rand = Random()
             let mrdsl_i = Constants.NEGOPARAM_MIN_MaxRecvDataSegmentLength
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
             let connParam1 = {
                 m_defaultConnParam with
                     CID = g_CID0;
                     MaxRecvDataSegmentLength_I = mrdsl_i;
                     MaxRecvDataSegmentLength_T = 0u;
             }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam connParam1
             Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = mrdsl_i ))
             Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = Constants.NEGOPARAM_MAX_MaxRecvDataSegmentLength ))
 
@@ -584,17 +548,13 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         task {
             let rand = Random()
             let mrdsl_i = Constants.NEGOPARAM_DEF_MaxRecvDataSegmentLength
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
             let connParam1 = {
                 m_defaultConnParam with
                     CID = g_CID0;
                     MaxRecvDataSegmentLength_I = mrdsl_i;
                     MaxRecvDataSegmentLength_T = 0u;
             }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam connParam1
             Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = mrdsl_i ))
             Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = Constants.NEGOPARAM_MAX_MaxRecvDataSegmentLength ))
 
@@ -637,17 +597,13 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         task {
             let rand = Random()
             let mrdsl_i = Constants.NEGOPARAM_MAX_MaxRecvDataSegmentLength
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
             let connParam1 = {
                 m_defaultConnParam with
                     CID = g_CID0;
                     MaxRecvDataSegmentLength_I = mrdsl_i;
                     MaxRecvDataSegmentLength_T = 0u;
             }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam connParam1
             Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = mrdsl_i ))
             Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = Constants.NEGOPARAM_MAX_MaxRecvDataSegmentLength ))
 
@@ -682,7 +638,6 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let mrdsl_i = Constants.NEGOPARAM_MIN_MaxRecvDataSegmentLength
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target2-1";
             }
             let connParam1 = {
@@ -727,7 +682,6 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let mrdsl_i = Constants.NEGOPARAM_MAX_MaxRecvDataSegmentLength
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target2-1";
             }
             let connParam1 = {
@@ -783,11 +737,9 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let blockSize = m_MediaBlockSize
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     InitialR2T = false;
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             Assert.False(( r1.Params.InitialR2T ))
 
             // SCSI Write
@@ -815,11 +767,9 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let blockSize = m_MediaBlockSize
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     InitialR2T = true;
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             Assert.True(( r1.Params.InitialR2T ))
 
             // SCSI Write
@@ -854,12 +804,10 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let blockSize = m_MediaBlockSize
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     InitialR2T = false;
                     ImmediateData = true;
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             Assert.True(( r1.Params.ImmediateData ))
 
             // SCSI Write
@@ -884,12 +832,10 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let blockSize = m_MediaBlockSize
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     InitialR2T = false;
                     ImmediateData = true;
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             Assert.True(( r1.Params.ImmediateData ))
 
             // SCSI Write
@@ -917,12 +863,10 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let blockSize = m_MediaBlockSize
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     InitialR2T = false;
                     ImmediateData = false;
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             Assert.False(( r1.Params.ImmediateData ))
 
             // SCSI Write
@@ -950,12 +894,10 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let blockSize = m_MediaBlockSize
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     InitialR2T = false;
                     ImmediateData = false;
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             Assert.False(( r1.Params.ImmediateData ))
 
             // SCSI Write
@@ -981,12 +923,10 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let blockSize = m_MediaBlockSize
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     InitialR2T = true;
                     ImmediateData = true;
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             Assert.True(( r1.Params.ImmediateData ))
 
             // SCSI Write
@@ -1023,12 +963,10 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let blockSize = m_MediaBlockSize
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     InitialR2T = true;
                     ImmediateData = true;
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             Assert.True(( r1.Params.ImmediateData ))
 
             // SCSI Write
@@ -1063,12 +1001,10 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let blockSize = m_MediaBlockSize
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     InitialR2T = true;
                     ImmediateData = false;
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             Assert.False(( r1.Params.ImmediateData ))
 
             // SCSI Write
@@ -1102,12 +1038,10 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         task {
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     InitialR2T = true;
                     ImmediateData = false;
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             Assert.False(( r1.Params.ImmediateData ))
 
             // SCSI Write
@@ -1135,12 +1069,10 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         task {
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     InitialR2T = true;
                     MaxBurstLength = Constants.NEGOPARAM_MIN_MaxBurstLength;
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             let mbl = r1.Params.MaxBurstLength
             Assert.True(( mbl = Constants.NEGOPARAM_MIN_MaxBurstLength ))
 
@@ -1189,12 +1121,10 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let mbl = 8192u
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     InitialR2T = true;
                     MaxBurstLength = mbl;
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             Assert.True(( r1.Params.MaxBurstLength = mbl ))
 
             let accessLength = m_MediaBlockSize // 512 or 4096
@@ -1235,12 +1165,10 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let dataSegLen = 8192u
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     InitialR2T = true;
                     MaxBurstLength = Constants.NEGOPARAM_MAX_MaxBurstLength;    // 16777215
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             let mbl = r1.Params.MaxBurstLength
             Assert.True(( mbl = Constants.NEGOPARAM_MAX_MaxBurstLength ))
 
@@ -1308,12 +1236,10 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         task {
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     InitialR2T = true;
                     MaxBurstLength = Constants.NEGOPARAM_MIN_MaxBurstLength;
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             let mbl = r1.Params.MaxBurstLength
             Assert.True(( mbl = Constants.NEGOPARAM_MIN_MaxBurstLength ))
 
@@ -1353,12 +1279,10 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         task {
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     InitialR2T = true;
                     MaxBurstLength = Constants.NEGOPARAM_MAX_MaxBurstLength;    // 16777215
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             let mbl = r1.Params.MaxBurstLength
             let mrdsl_i = r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I
             Assert.True(( mbl = Constants.NEGOPARAM_MAX_MaxBurstLength ))
@@ -1402,7 +1326,6 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         task {
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     InitialR2T = true;
                     MaxBurstLength = Constants.NEGOPARAM_MAX_MaxBurstLength;    // 16777215
                     TargetName = "iqn.2020-05.example.com:target2-1";
@@ -1428,13 +1351,11 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         task {
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     InitialR2T = false;
                     MaxBurstLength = 4096u;
                     FirstBurstLength = Constants.NEGOPARAM_MIN_FirstBurstLength;    // 512
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             let fbl = r1.Params.FirstBurstLength
             Assert.True(( fbl = Constants.NEGOPARAM_MIN_FirstBurstLength ))
 
@@ -1477,13 +1398,11 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         task {
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     InitialR2T = false;
                     MaxBurstLength = 4096u;
                     FirstBurstLength = Constants.NEGOPARAM_MIN_FirstBurstLength;    // 512
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             let fbl = r1.Params.FirstBurstLength
             Assert.True(( fbl = Constants.NEGOPARAM_MIN_FirstBurstLength ))
 
@@ -1531,13 +1450,11 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         task {
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     InitialR2T = false;
                     MaxBurstLength = 4096u;
                     FirstBurstLength = Constants.NEGOPARAM_MIN_FirstBurstLength;    // 512
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             let fbl = r1.Params.FirstBurstLength
             Assert.True(( fbl = Constants.NEGOPARAM_MIN_FirstBurstLength ))
 
@@ -1573,13 +1490,11 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         task {
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     InitialR2T = false;
                     MaxBurstLength = Constants.NEGOPARAM_MAX_MaxRecvDataSegmentLength;
                     FirstBurstLength = Constants.NEGOPARAM_MAX_FirstBurstLength;    // 16777215
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             let fbl = r1.Params.FirstBurstLength
             Assert.True(( fbl = Constants.NEGOPARAM_MAX_FirstBurstLength ))
 
@@ -1622,13 +1537,11 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         task {
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     InitialR2T = false;
                     MaxBurstLength = Constants.NEGOPARAM_MAX_MaxRecvDataSegmentLength;
                     FirstBurstLength = Constants.NEGOPARAM_MAX_FirstBurstLength;    // 16777215
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             let fbl = r1.Params.FirstBurstLength
             Assert.True(( fbl = Constants.NEGOPARAM_MAX_FirstBurstLength ))
 
@@ -1663,7 +1576,6 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let sessParam1 = {
                 m_defaultSessParam with
                     TargetName = "iqn.2020-05.example.com:target2-1";
-                    ISID = GlbFunc.newISID();
                     InitialR2T = false;
                     FirstBurstLength = Constants.NEGOPARAM_MAX_FirstBurstLength;    // 16777215
             }
@@ -1709,11 +1621,9 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         task {
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     DefaultTime2Wait = 1us; // less than target value.
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             Assert.True(( r1.Params.DefaultTime2Wait = 1us ))
 
             // Haruka does not check DefaultTime2Wait value.
@@ -1730,11 +1640,9 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         task {
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     DefaultTime2Wait = 3us; // greater than target value.
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             Assert.True(( r1.Params.DefaultTime2Wait = 2us ))
 
             // Haruka does not check DefaultTime2Wait value.
@@ -1751,11 +1659,9 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         task {
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     DataPDUInOrder = true;
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             Assert.True(( r1.Params.DataPDUInOrder ))
 
             // Haruka does not check DataPDUInOrder value.
@@ -1772,11 +1678,9 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         task {
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     DataPDUInOrder = false;
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             Assert.False(( r1.Params.DataPDUInOrder ))
 
             // Haruka does not check DataPDUInOrder value.
@@ -1793,11 +1697,9 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         task {
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     DataSequenceInOrder = true;
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             Assert.True(( r1.Params.DataSequenceInOrder ))
 
             // Haruka does not check DataPDUInOrder value.
@@ -1814,11 +1716,9 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         task {
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     DataSequenceInOrder = false;
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             Assert.False(( r1.Params.DataSequenceInOrder ))
 
             // Haruka does not check DataPDUInOrder value.
@@ -1835,11 +1735,9 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         task {
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     ErrorRecoveryLevel = 0uy;   // Test case where the initiator requests ErrorRecoveryLevel 0.
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             Assert.True(( r1.Params.ErrorRecoveryLevel = 0uy ))
 
             let accessLength = 4096u
@@ -1873,11 +1771,9 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         task {
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     ErrorRecoveryLevel = 2uy;   // Test case where the initiator requests ErrorRecoveryLevel 2.
             }
-            let connParam1 = m_defaultConnParam
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             Assert.True(( r1.Params.ErrorRecoveryLevel = 1uy )) // Target requires ErrorRecoveryLevel 1.
 
             let accessLength = 4096u
@@ -1930,7 +1826,6 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let sessParam1 = {
                 m_defaultSessParam with
                     TargetName = "iqn.2020-05.example.com:target2-1";
-                    ISID = GlbFunc.newISID();
                     InitialR2T = true;
                     MaxBurstLength = Constants.NEGOPARAM_MIN_MaxBurstLength;        // 512
                     FirstBurstLength = Constants.NEGOPARAM_MIN_FirstBurstLength;    // 512
@@ -1986,7 +1881,6 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let sessParam1 = {
                 m_defaultSessParam with
                     TargetName = "iqn.2020-05.example.com:target2-1";
-                    ISID = GlbFunc.newISID();
                     InitialR2T = true;
                     MaxBurstLength = Constants.NEGOPARAM_MIN_MaxBurstLength;        // 512
                     FirstBurstLength = Constants.NEGOPARAM_MIN_FirstBurstLength;    // 512

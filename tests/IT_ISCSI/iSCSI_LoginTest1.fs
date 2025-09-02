@@ -157,7 +157,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target1"; // No auth required
             }
             let connParam = {
@@ -193,7 +192,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target1"; // No auth required
             }
             let connParam = {
@@ -221,7 +219,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target1"; // No auth required
             }
             let connParam = {
@@ -249,7 +246,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target2"; // Both auth required
             }
             let connParam = {
@@ -277,7 +273,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target2"; // Both auth required
             }
             let connParam = {
@@ -305,7 +300,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target2"; // Both auth required
             }
             let connParam = {
@@ -333,7 +327,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target2"; // Both auth required
             }
             let connParam = {
@@ -361,7 +354,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target2"; // Both auth required
             }
             let connParam = {
@@ -397,7 +389,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target2"; // Both auth required
             }
             let connParam = {
@@ -425,7 +416,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target2"; // Both auth required
             }
             let connParam = {
@@ -453,7 +443,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target2"; // Both auth required
             }
             let connParam = {
@@ -481,7 +470,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target2"; // Both auth required
             }
             let connParam = {
@@ -509,7 +497,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target2"; // Both auth required
             }
             let connParam = {
@@ -537,7 +524,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target2"; // Both auth required
             }
             let connParam = {
@@ -565,7 +551,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target2"; // Both auth required
             }
             let connParam = {
@@ -593,7 +578,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target2"; // Both auth required
             }
             let connParam = {
@@ -621,7 +605,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target3"; // Initiator auth required
             }
             let connParam = {
@@ -649,7 +632,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target3"; // Initiator auth required
             }
             let connParam = {
@@ -685,7 +667,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target3"; // Initiator auth required
             }
             let connParam = {
@@ -713,7 +694,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target3"; // Initiator auth required
             }
             let connParam = {
@@ -741,7 +721,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target3"; // Initiator auth required
             }
             let connParam = {
@@ -769,7 +748,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target3"; // Initiator auth required
             }
             let connParam = {
@@ -797,7 +775,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TargetName = "iqn.2020-05.example.com:target3"; // Initiator auth required
             }
             let connParam = {
@@ -821,20 +798,13 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.Logout_SessClose_LastOne_001() =
         task {
-            let wisid = GlbFunc.newISID();
             let sessParam1 = {
                 m_defaultSessParam with         // create new session
-                    ISID = wisid;
-                    TSIH = tsih_me.fromPrim 0us;
-                    
-            }
-            let connParam1 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
+                    ISID = GlbFunc.newISID();
             }
 
             // login
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam1 m_defaultConnParam cmdsn_me.zero
 
             // Logout
             let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
@@ -842,11 +812,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
 
             // login( Session reconstruction, reuse ISID, TSIH=0 )
-            let connParam2 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
-            let! r2 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam2
+            let! r2 = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam1 { m_defaultConnParam with CID = g_CID1 } cmdsn_me.zero
 
             // Nop-Out
             let! _ = r2.SendNOPOutPDU g_CID1 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -865,33 +831,17 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.Logout_SessClose_LastOne_002() =
         task {
-            let wisid = GlbFunc.newISID();
-            let sessParam1 = {
-                m_defaultSessParam with         // create new session
-                    ISID = wisid;
-                    TSIH = tsih_me.fromPrim 0us;
-                    
-            }
-            let connParam1 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
-            }
-
-            // login
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Logout
             let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
+            r1.RemoveConnectionEntry g_CID0 |> ignore
 
             // login( Add connection to same session, reuse ISID nad TSIH )
-            let connParam2 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
             try
-                do! r1.AddConnection connParam2
+                do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
                 Assert.Fail __LINE__
             with
             | :? SessionRecoveryException
@@ -905,25 +855,17 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.Logout_SessClose_NotLastOne_001() =
         task {
-            let wisid = GlbFunc.newISID();
             let sessParam1 = {
                 m_defaultSessParam with         // create new session
-                    ISID = wisid;
-                    TSIH = tsih_me.fromPrim 0us;
+                    ISID = GlbFunc.newISID();
             }
 
             // login
-            let connParam1_1 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1_1
+            let connParam1_1 = { m_defaultConnParam with CID = g_CID0; }
+            let! r1 = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam1 connParam1_1 cmdsn_me.zero
 
             // Add connection to existing session
-            let connParam1_2 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
+            let connParam1_2 = { m_defaultConnParam with CID = g_CID1; }
             do! r1.AddConnection connParam1_2
 
             // Logout
@@ -954,11 +896,8 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             r1.CloseConnection g_CID1
 
             // login( Session reconstruction, reuse ISID, TSIH=0 )
-            let connParam2 = {
-                m_defaultConnParam with
-                    CID = g_CID2;
-            }
-            let! r3 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam2
+            let connParam2 = { m_defaultConnParam with CID = g_CID2; }
+            let! r3 = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam1 connParam2 cmdsn_me.zero
 
             // Nop-Out
             let! _ = r3.SendNOPOutPDU g_CID2 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -977,26 +916,9 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.Logout_SessClose_NotLastOne_002() =
         task {
-            let wisid = GlbFunc.newISID();
-            let sessParam1 = {
-                m_defaultSessParam with         // create new session
-                    ISID = wisid;
-                    TSIH = tsih_me.fromPrim 0us;
-            }
-
-            // login
-            let connParam1_1 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1_1
-
-            // Add connection to existing session
-            let connParam1_2 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
-            do! r1.AddConnection connParam1_2
+            // Login and add a connection to existing session.
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
 
             // Logout
             let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
@@ -1025,13 +947,9 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
                 ()
             r1.CloseConnection g_CID1
 
-            // login( Add connection to same session, reuse ISID nad TSIH )
-            let connParam2 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
+            // login( Add connection to same session )
             try
-                do! r1.AddConnection connParam2
+                do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
                 Assert.Fail __LINE__
             with
             | :? SessionRecoveryException
@@ -1045,25 +963,16 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.Logout_SessClose_NotLastOne_LogoutSibling_001() =
         task {
-            let wisid = GlbFunc.newISID();
             let sessParam1 = {
                 m_defaultSessParam with         // create new session
-                    ISID = wisid;
-                    TSIH = tsih_me.fromPrim 0us;
+                    ISID = GlbFunc.newISID();
             }
 
             // login
-            let connParam1_1 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1_1
+            let! r1 = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam1 m_defaultConnParam cmdsn_me.zero
 
             // Add connection to existing session
-            let connParam1_2 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
+            let connParam1_2 = { m_defaultConnParam with CID = g_CID1; }
             do! r1.AddConnection connParam1_2
 
             // Log out sibling connections
@@ -1094,11 +1003,8 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             r1.CloseConnection g_CID1
 
             // login( Session reconstruction, reuse ISID, TSIH=0 )
-            let connParam2 = {
-                m_defaultConnParam with
-                    CID = g_CID2;
-            }
-            let! r3 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam2
+            let connParam2 = { m_defaultConnParam with CID = g_CID2; }
+            let! r3 = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam1 connParam2 cmdsn_me.zero
 
             // Nop-Out
             let! _ = r3.SendNOPOutPDU g_CID2 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -1117,26 +1023,9 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.Logout_SessClose_NotLastOne_LogoutSibling_002() =
         task {
-            let wisid = GlbFunc.newISID();
-            let sessParam1 = {
-                m_defaultSessParam with         // create new session
-                    ISID = wisid;
-                    TSIH = tsih_me.fromPrim 0us;
-            }
-
-            // login
-            let connParam1_1 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1_1
-
-            // Add connection to existing session
-            let connParam1_2 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
-            do! r1.AddConnection connParam1_2
+            // Login and add a connection to existing session.
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            do! r1.AddConnection { m_defaultConnParam with CID = g_CID1; }
 
             // Log out sibling connections
             let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID1
@@ -1166,11 +1055,8 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             r1.CloseConnection g_CID1
 
             // login( Add connection to same session )
-            let connParam2 = {
-                m_defaultConnParam with
-                    CID = g_CID2;
-            }
             try
+                let connParam2 = { m_defaultConnParam with CID = g_CID2; }
                 do! r1.AddConnection connParam2
                 Assert.Fail __LINE__
             with
@@ -1185,20 +1071,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.Logout_ConnClose_LastOne_001() =
         task {
-            let wisid = GlbFunc.newISID();
-            let sessParam1 = {
-                m_defaultSessParam with         // create new session
-                    ISID = wisid;
-                    TSIH = tsih_me.fromPrim 0us;
-                    
-            }
-            let connParam1 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
-            }
-
-            // login
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Logout
             let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0
@@ -1237,20 +1110,8 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.Logout_ConnClose_LastOne_002() =
         task {
-            let wisid = GlbFunc.newISID();
-            let sessParam1 = {
-                m_defaultSessParam with         // create new session
-                    ISID = wisid;
-                    TSIH = tsih_me.fromPrim 0us;
-                    
-            }
-            let connParam1 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
-
-            // login
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let connParam1 = { m_defaultConnParam with CID = g_CID1; }
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam connParam1
 
             // Logout
             let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_CONN g_CID1
@@ -1289,26 +1150,9 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.Logout_ConnClose_NotLastOne_001() =
         task {
-            let wisid = GlbFunc.newISID();
-            let sessParam1 = {
-                m_defaultSessParam with         // create new session
-                    ISID = wisid;
-                    TSIH = tsih_me.fromPrim 0us;
-            }
-
-            // login
-            let connParam1_1 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1_1
-
-            // Add connection to existing session
-            let connParam1_2 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
-            do! r1.AddConnection connParam1_2
+            // Login and add a connection to existing session.
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
 
             // Logout
             let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0
@@ -1361,26 +1205,9 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.Logout_ConnClose_NotLastOne_002() =
         task {
-            let wisid = GlbFunc.newISID();
-            let sessParam1 = {
-                m_defaultSessParam with         // create new session
-                    ISID = wisid;
-                    TSIH = tsih_me.fromPrim 0us;
-            }
-
-            // login
-            let connParam1_1 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1_1
-
-            // Add connection to existing session
-            let connParam1_2 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
-            do! r1.AddConnection connParam1_2
+            // Login and add a connection to existing session
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
 
             // Logout
             let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0
@@ -1438,26 +1265,9 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.Logout_ConnClose_NotLastOne_LogoutSibling_001() =
         task {
-            let wisid = GlbFunc.newISID();
-            let sessParam1 = {
-                m_defaultSessParam with         // create new session
-                    ISID = wisid;
-                    TSIH = tsih_me.fromPrim 0us;
-            }
-
-            // login
-            let connParam1_1 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1_1
-
-            // Add connection to existing session
-            let connParam1_2 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
-            do! r1.AddConnection connParam1_2
+            // Login and add a connection to existing session.
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
 
             // Logout
             let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID1
@@ -1510,26 +1320,9 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.Logout_ConnClose_NotLastOne_LogoutSibling_002() =
         task {
-            let wisid = GlbFunc.newISID();
-            let sessParam1 = {
-                m_defaultSessParam with         // create new session
-                    ISID = wisid;
-                    TSIH = tsih_me.fromPrim 0us;
-            }
-
-            // login
-            let connParam1_1 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1_1
-
-            // Add connection to existing session
-            let connParam1_2 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
-            do! r1.AddConnection connParam1_2
+            // login and add a connection to existing session.
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
 
             // Logout
             let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID1
@@ -1552,11 +1345,8 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
-            // Add connection to the session
-            let connParam1_3 = {
-                m_defaultConnParam with
-                    CID = g_CID1;  // same CID as the logouted connection.
-            }
+            // Add connection to the session. same CID as the logouted connection.
+            let connParam1_3 = { m_defaultConnParam with CID = g_CID1; }
             do! r1.AddConnection connParam1_3
 
             // Nop-Out
@@ -1588,15 +1378,10 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         task {
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     TSIH = tsih_me.fromPrim 1us;    // other than 0
             }
-            let connParam1_1 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
-            }
             try
-                let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1_1
+                let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
                 Assert.Fail __LINE__
             with
             | :? ConnectionErrorException
@@ -1610,31 +1395,26 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.SessMgr_LoginToNonExistentSess_002() =
         task {
-            let wisid = GlbFunc.newISID();
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = wisid;
+                    ISID = GlbFunc.newISID();
                     TSIH = tsih_me.fromPrim 0us;
             }
-            let connParam1 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let connParam1 = { m_defaultConnParam with CID = g_CID0; }
+            let! r1 = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam1 connParam1 cmdsn_me.zero
 
             // Nop-Out
             let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
-            // login
+            // login ( same ISID, new TSIH )
             let sessParam2 = {
-                m_defaultSessParam with
-                    ISID = wisid;                   // Known ISID
-                    TSIH = r1.Params.TSIH + ( tsih_me.fromPrim 1us );   // New TSIH
+                sessParam1 with
+                    TSIH = r1.Params.TSIH + ( tsih_me.fromPrim 1us );
             }
             try
-                let! _ = iSCSI_Initiator.CreateInitialSession sessParam2 connParam1
+                let! _ = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam2 connParam1 cmdsn_me.zero
                 Assert.Fail __LINE__
             with
             | :? ConnectionErrorException
@@ -1653,32 +1433,16 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.SessMgr_LoginNewSess_001() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-                    TSIH = tsih_me.fromPrim 0us;
-            }
-            let connParam1 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            // login session r1
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out
             let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
-            let sessParam2 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-                    TSIH = tsih_me.fromPrim 0us;
-            }
-            let connParam2 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
-            }
-            let! r2 = iSCSI_Initiator.CreateInitialSession sessParam2 connParam2
+            // login session r2 ( Notice, ISID is different from r1 )
+            let! r2 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out
             let! _ = r2.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -1702,34 +1466,21 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.SessMgr_SessionReEstablishment_001() =
         task {
-            let wisid = GlbFunc.newISID()
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = wisid;
-                    TSIH = tsih_me.fromPrim 0us;
+                    ISID = GlbFunc.newISID();
             }
-            let connParam1 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let connParam1 = { m_defaultConnParam with CID = g_CID0; }
+            let! r1 = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam1 connParam1 cmdsn_me.zero
 
             // Nop-Out
             let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
-
-            let sessParam2 = {
-                m_defaultSessParam with
-                    ISID = wisid;
-                    TSIH = tsih_me.fromPrim 0us;
-            }
-            let connParam2 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
-            let! r2 = iSCSI_Initiator.CreateInitialSession sessParam2 connParam2
+            // login ( same ISID with r1 )
+            let connParam2 = { m_defaultConnParam with CID = g_CID1; }
+            let! r2 = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam1 connParam2 cmdsn_me.zero
 
             // Nop-Out(failed)
             try
@@ -1758,17 +1509,11 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.SessMgr_SessionReEstablishment_002() =
         task {
-            let wisid = GlbFunc.newISID()
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = wisid;
-                    TSIH = tsih_me.fromPrim 0us;
+                    ISID = GlbFunc.newISID();
             }
-            let connParam1 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam1 m_defaultConnParam cmdsn_me.zero
 
             // Nop-Out
             let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -1780,16 +1525,8 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
 
-            let sessParam2 = {
-                m_defaultSessParam with
-                    ISID = wisid;
-                    TSIH = tsih_me.fromPrim 0us;
-            }
-            let connParam2 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
-            }
-            let! r2 = iSCSI_Initiator.CreateInitialSession sessParam2 connParam2
+            // login ( same ISID with r1, same CID )
+            let! r2 = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam1 m_defaultConnParam cmdsn_me.zero
 
             // Nop-Out
             let! _ = r2.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -1807,17 +1544,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.SessMgr_AddConnectionToSession_001() =
         task {
-            let wisid = GlbFunc.newISID()
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = wisid;
-                    TSIH = tsih_me.fromPrim 0us;
-            }
-            let connParam1 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out
             let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -1825,10 +1552,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             rpdu1.PingData.Return()
 
             // Add connection
-            let connParam2 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
+            let connParam2 = { m_defaultConnParam with CID = g_CID1; }
             do! r1.AddConnection connParam2
 
             // Nop-Out
@@ -1853,17 +1577,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.SessMgr_AddConnectionToSession_002() =
         task {
-            let wisid = GlbFunc.newISID()
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = wisid;
-                    TSIH = tsih_me.fromPrim 0us;
-            }
-            let connParam1 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out
             let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -1876,12 +1590,8 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             Assert.True(( rpdu3.Response = LogoutResCd.SUCCESS ))
 
             // Add connection ( failed )
-            let connParam2 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
             try
-                do! r1.AddConnection connParam2
+                do! r1.AddConnection { m_defaultConnParam with CID = g_CID1; }
                 Assert.Fail __LINE__
             with
             | :? ConnectionErrorException
@@ -1895,24 +1605,9 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.SessMgr_ConnectionReEstablish_001() =
         task {
-            let wisid = GlbFunc.newISID()
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = wisid;
-                    TSIH = tsih_me.fromPrim 0us;
-            }
-            let connParam1 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
-
-            // Add connection
-            let connParam2 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
-            do! r1.AddConnection connParam2
+            // Login and add a connection to the session.
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
 
             // Nop-Out ( conn0 )
             let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -1926,7 +1621,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // connection re-establish
             let oldConn = r1.RemoveConnectionEntry g_CID1
-            do! r1.AddConnection connParam2
+            do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
 
             // Nop-Out ( conn0 )
             let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -1964,17 +1659,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.SessMgr_ConnectionReEstablish_002() =
         task {
-            let wisid = GlbFunc.newISID()
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = wisid;
-                    TSIH = tsih_me.fromPrim 0us;
-            }
-            let connParam1 = {
-                m_defaultConnParam with
-                    CID = g_CID0;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out ( conn0 )
             let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -1983,7 +1668,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // connection re-establish
             let oldConn = r1.RemoveConnectionEntry g_CID0
-            do! r1.AddConnection connParam1
+            do! r1.AddConnection m_defaultConnParam
 
             // Nop-Out ( conn0 )
             let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -2010,12 +1695,9 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.Login_InvalidTargetName_002() =
         task {
-            let wisid = GlbFunc.newISID()
             let sessParam1 = {
                 m_defaultSessParam with
                     TargetName = "aaaaaaaaaaaaaaaaa";
-                    ISID = wisid;
-                    TSIH = tsih_me.fromPrim 0us;
             }
             try
                 let! _ = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam

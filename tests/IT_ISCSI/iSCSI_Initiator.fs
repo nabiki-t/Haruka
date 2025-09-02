@@ -172,8 +172,16 @@ type iSCSI_Initiator(
     member _.AddConnection ( exp_ConnParams :  ConnParams ) : Task<unit> =
         task {
             let getCmdSN = fun () -> m_CmdSN |> cmdsn_me.fromPrim
+
+            let r, v = m_Connections.TryGetValue exp_ConnParams.CID
+            let wStatSN =
+                if r then
+                    m_Connections.Remove exp_ConnParams.CID |> ignore
+                    v.ExpStatSN
+                else
+                    statsn_me.zero
             let! _, connParams, lastStatSN, conn =
-                iSCSI_Initiator.Login m_SessParams exp_ConnParams m_ObjID getCmdSN ( itt_me.fromPrim m_ITT ) statsn_me.zero false false
+                iSCSI_Initiator.Login m_SessParams exp_ConnParams m_ObjID getCmdSN ( itt_me.fromPrim m_ITT ) wStatSN false false
             m_Connections.Add( exp_ConnParams.CID, iSCSI_Connection( connParams, conn, lastStatSN ) )
         }
 
@@ -971,10 +979,10 @@ type iSCSI_Initiator(
             raise <| TestException( "The controller process terminated abnormally." )
 
     /// <summary>
-    ///  Create session instance and login the leading connection.
+    ///  Create session instance and login the leading connection. ISID will be newly issued.
     /// </summary>
     /// <param name="exp_SessParams">
-    ///  Desired session parameters.
+    ///  Desired session parameters. ISID field value is ignored.
     /// </param>
     /// <param name="exp_ConnParams">
     ///  Desired connection parameters.
@@ -982,8 +990,16 @@ type iSCSI_Initiator(
     /// <returns>
     ///  Created iSCSI initiator object.
     /// </returns>
+    /// <remarks>
+    ///  Regardless of the value of the ISID field in exp_SessParams, a new ISID will be generated.
+    ///  If the ISID needs to be explicitly specified, use the CreateInitialSessionWithInitialCmdSN method.
+    /// </remarks>
     static member CreateInitialSession ( exp_SessParams : SessParams ) ( exp_ConnParams : ConnParams ) : Task<iSCSI_Initiator> =
-        iSCSI_Initiator.CreateInitialSessionWithInitialSmdSN exp_SessParams exp_ConnParams cmdsn_me.zero
+        let sesParam = {
+            exp_SessParams with
+                ISID = GlbFunc.newISID();
+        }
+        iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sesParam exp_ConnParams cmdsn_me.zero
 
     /// <summary>
     ///  Create session instance and login the leading connection.
@@ -997,7 +1013,7 @@ type iSCSI_Initiator(
     /// <returns>
     ///  Created iSCSI initiator object.
     /// </returns>
-    static member CreateInitialSessionWithInitialSmdSN ( exp_SessParams : SessParams ) ( exp_ConnParams : ConnParams ) ( initCmdSN : CMDSN_T ) : Task<iSCSI_Initiator> =
+    static member CreateInitialSessionWithInitialCmdSN ( exp_SessParams : SessParams ) ( exp_ConnParams : ConnParams ) ( initCmdSN : CMDSN_T ) : Task<iSCSI_Initiator> =
         task {
             let objID = objidx_me.NewID()
             let getCmdSN = fun () -> initCmdSN
