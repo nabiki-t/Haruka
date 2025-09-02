@@ -150,12 +150,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.CmdSN_Sequense_001() =
         task {
-            // login
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Not-Out
             for i = 0 to 9 do
@@ -174,15 +169,11 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.CmdSN_DiscardPDU_001() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out 1
             let! _, cmdsn_0 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
-            Assert.True(( cmdsn_0 = cmdsn_me.fromPrim 0u ))
+            Assert.True(( cmdsn_0 = cmdsn_me.zero ))
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
 
             // Nop-Out 2
@@ -215,11 +206,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.CmdSN_RetransPDU_001() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out 1
             let! _, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -244,7 +231,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
 
             // Send TaskMgrReq with same CmdSN as Nop-Out 2
-            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 false TaskMgrReqCd.ABORT_TASK g_LUN1 ( itt_me.fromPrim 1u ) ( cmdsn_me.fromPrim 1u ) ( datasn_me.fromPrim 0u )
+            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 false TaskMgrReqCd.ABORT_TASK g_LUN1 ( itt_me.fromPrim 1u ) ( cmdsn_me.fromPrim 1u ) ( datasn_me.zero )
             let! pdu2_2 = r1.ReceiveSpecific<RejectPDU> g_CID0
             Assert.True(( pdu2_2.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
             Assert.True(( pdu2_2.ExpCmdSN = cmdsn_me.fromPrim 2u ))
@@ -302,11 +289,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.CmdSN_MaxCmdSN_001() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out 1
             let! _, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -324,7 +307,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 // Send immidiate Nop-Out PDU
                 let! _, _ = r1.SendNOPOutPDU g_CID0 true g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
-                Assert.True(( pdu2.ExpCmdSN = pdu1_1.ExpCmdSN + ( cmdsn_me.fromPrim( uint i ) ) ))
+                Assert.True(( pdu2.ExpCmdSN = cmdsn_me.incr ( uint i ) pdu1_1.ExpCmdSN ))
                 Assert.True(( pdu2.MaxCmdSN = pdu1_1.MaxCmdSN ))
 
             // Send Data-Out PDUs and receive SCSI Response PDUs
@@ -337,7 +320,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Send Nop-Out PDU
             let! _, wcmdsn = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
-            Assert.True(( pdu2.MaxCmdSN = wcmdsn + ( cmdsn_me.fromPrim( Constants.BDLU_MAX_TASKSET_SIZE + 1u ) ) ))
+            Assert.True(( pdu2.MaxCmdSN = cmdsn_me.incr ( Constants.BDLU_MAX_TASKSET_SIZE + 1u ) wcmdsn ))
 
             // logout
             let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
@@ -349,11 +332,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.CmdSN_MaxCmdSN_002() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out 1
             let! _, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -386,7 +365,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Send Nop-Out PDU
             let! _, wcmdsn = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
-            Assert.True(( pdu2.MaxCmdSN = wcmdsn + ( cmdsn_me.fromPrim( Constants.BDLU_MAX_TASKSET_SIZE + 1u ) ) ))
+            Assert.True(( pdu2.MaxCmdSN = cmdsn_me.incr ( Constants.BDLU_MAX_TASKSET_SIZE + 1u ) wcmdsn ))
 
             // logout
             let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
@@ -401,7 +380,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 m_defaultSessParam with
                     ISID = GlbFunc.newISID();
             }
-            let! r1 = iSCSI_Initiator.CreateInitialSessionWithInitialSmdSN sessParam1 m_defaultConnParam ( cmdsn_me.fromPrim 0xFFFFFFFDu )
+            let! r1 = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam1 m_defaultConnParam ( cmdsn_me.fromPrim 0xFFFFFFFDu )
 
             // Send some of Nop-Out PDU
             let! _, cmdsn1 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -417,11 +396,11 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _, cmdsn3 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn3 = cmdsn_me.fromPrim 0xFFFFFFFFu ))
-            Assert.True(( pdu3.ExpCmdSN = cmdsn_me.fromPrim 0u ))
+            Assert.True(( pdu3.ExpCmdSN = cmdsn_me.zero ))
 
             let! _, cmdsn4 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu4 = r1.ReceiveSpecific<NOPInPDU> g_CID0
-            Assert.True(( cmdsn4 = cmdsn_me.fromPrim 0u ))
+            Assert.True(( cmdsn4 = cmdsn_me.zero ))
             Assert.True(( pdu4.ExpCmdSN = cmdsn_me.fromPrim 1u ))
 
             let! _, cmdsn5 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -439,16 +418,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.CmdSN_ReverseOder_001() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out 1
             let! _, cmdsn1 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
-            Assert.True(( cmdsn1 = cmdsn_me.fromPrim 0u ))
+            Assert.True(( cmdsn1 = cmdsn_me.zero ))
 
             // skip CmdSN=1
             r1.SetNextCmdSN ( cmdsn_me.fromPrim 2u )
@@ -493,27 +468,18 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.CmdSN_MultiSession_001() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
-
-            let sessParam2 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
-            let! r2 = iSCSI_Initiator.CreateInitialSession sessParam2 m_defaultConnParam
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            let! r2 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out 1 at session 1
             let! _, cmdsn1_1 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
-            Assert.True(( cmdsn1_1 = cmdsn_me.fromPrim 0u ))
+            Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
             // Nop-Out 1 at session 2
             let! _, cmdsn2_1 = r2.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r2.ReceiveSpecific<NOPInPDU> g_CID0
-            Assert.True(( cmdsn2_1 = cmdsn_me.fromPrim 0u ))
+            Assert.True(( cmdsn2_1 = cmdsn_me.zero ))
 
             // Nop-Out 2 at session 1
             let! _, cmdsn1_2 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -543,29 +509,19 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _ = r2.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
             let! _ = r2.ReceiveSpecific<LogoutResponsePDU> g_CID0
             ()
-
         }
 
     // Multi connections
     [<Fact>]
     member _.CmdSN_MultiConnections_001() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
-
-            let connParam2 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
-            do! r1.AddConnection connParam2
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
 
             // Nop-Out 1 at connection 0
             let! _, cmdsn1_1 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
-            Assert.True(( cmdsn1_1 = cmdsn_me.fromPrim 0u ))
+            Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
             // Nop-Out 1 at connection 1
             let! _, cmdsn2_1 = r1.SendNOPOutPDU g_CID1 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -602,22 +558,13 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.CmdSN_ReconnectConnection_001() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
-
-            let connParam2 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
-            do! r1.AddConnection connParam2
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
 
             // Nop-Out 1 at connection 0
             let! _, cmdsn1_1 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
-            Assert.True(( cmdsn1_1 = cmdsn_me.fromPrim 0u ))
+            Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
             // Nop-Out 1 at connection 1
             let! _, cmdsn2_1 = r1.SendNOPOutPDU g_CID1 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -653,22 +600,13 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.CmdSN_ReconnectConnection_002() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
-
-            let connParam2 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
-            do! r1.AddConnection connParam2
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
 
             // Nop-Out 1 at connection 0
             let! _, cmdsn1_1 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
-            Assert.True(( cmdsn1_1 = cmdsn_me.fromPrim 0u ))
+            Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
             // Nop-Out 1 at connection 1
             let! _, cmdsn2_1 = r1.SendNOPOutPDU g_CID1 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -701,22 +639,13 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.CmdSN_ReconnectConnection_003() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
-
-            let connParam2 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
-            do! r1.AddConnection connParam2
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
 
             // Nop-Out 1 at connection 0
             let! _, cmdsn1_1 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
-            Assert.True(( cmdsn1_1 = cmdsn_me.fromPrim 0u ))
+            Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
             // Nop-Out 1 at connection 1
             let! _, cmdsn2_1 = r1.SendNOPOutPDU g_CID1 false g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -749,7 +678,6 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
         task {
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     ErrorRecoveryLevel = 1uy;
             }
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
@@ -757,7 +685,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Nop-Out 1
             let! _, cmdsn1_1 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
-            Assert.True(( cmdsn1_1 = cmdsn_me.fromPrim 0u ))
+            Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
             // logout connection 0
             let! _, cmdsn_logout = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0
@@ -770,7 +698,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Nop-Out 2
             let! _, cmdsn1_2 = r2.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r2.ReceiveSpecific<NOPInPDU> g_CID0
-            Assert.True(( cmdsn1_2 = cmdsn_me.fromPrim 0u ))
+            Assert.True(( cmdsn1_2 = cmdsn_me.zero ))
 
             // logout
             let! _ = r2.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
@@ -784,7 +712,6 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
         task {
             let sessParam1 = {
                 m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
                     ErrorRecoveryLevel = 1uy;
             }
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
@@ -792,7 +719,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Nop-Out 1
             let! _, cmdsn1_1 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
-            Assert.True(( cmdsn1_1 = cmdsn_me.fromPrim 0u ))
+            Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
             // Drop connection 0
             r1.CloseConnection g_CID0
@@ -803,7 +730,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Nop-Out 2
             let! _, cmdsn1_2 = r2.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r2.ReceiveSpecific<NOPInPDU> g_CID0
-            Assert.True(( cmdsn1_2 = cmdsn_me.fromPrim 0u ))
+            Assert.True(( cmdsn1_2 = cmdsn_me.zero ))
 
             // logout
             let! _ = r2.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
@@ -815,22 +742,13 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.CmdSN_ReconnectConnection_006() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
-
-            let connParam2 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
-            do! r1.AddConnection connParam2
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
 
             // Nop-Out 1 at connection 0
             let! _, cmdsn1_1 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
-            Assert.True(( cmdsn1_1 = cmdsn_me.fromPrim 0u ))
+            Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
             // Send SCSI Command PDU at connection 0
             let writeCDB = scsiWrite10CDB 1us
@@ -858,22 +776,13 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.CmdSN_ReconnectConnection_007() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
-
-            let connParam2 = {
-                m_defaultConnParam with
-                    CID = g_CID1;
-            }
-            do! r1.AddConnection connParam2
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
 
             // Nop-Out 1 at connection 0
             let! _, cmdsn1_1 = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
-            Assert.True(( cmdsn1_1 = cmdsn_me.fromPrim 0u ))
+            Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
             // Send SCSI Command PDU at connection 0
             let writeCDB = scsiWrite10CDB 1us
@@ -899,11 +808,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.StatSN_Sequense_001() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ISID = GlbFunc.newISID();
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Not-Out
             for i = 0 to 9 do
@@ -925,7 +830,6 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let sessParam1 = {
                 m_defaultSessParam with
                     ErrorRecoveryLevel = 1uy;
-                    ISID = GlbFunc.newISID();
             }
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
 
@@ -953,7 +857,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Receive Nop-In 2
             let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
-            Assert.True(( pdu2.StatSN = sendExpStatSN2 + ( statsn_me.fromPrim 1u ) ))
+            Assert.True(( pdu2.StatSN = statsn_me.next sendExpStatSN2 ))
             Assert.True(( pdu2.PingData.Array.[0] = 2uy ))
 
             // Send SNACK request
@@ -980,7 +884,6 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let sessParam1 = {
                 m_defaultSessParam with
                     ErrorRecoveryLevel = 1uy;
-                    ISID = GlbFunc.newISID();
             }
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
 
@@ -1002,7 +905,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Receive Nop-In 2
             let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
-            Assert.True(( pdu2.StatSN = sendExpStatSN2 - ( statsn_me.fromPrim 1u ) ))
+            Assert.True(( pdu2.StatSN = statsn_me.decr 1u sendExpStatSN2 ))
             Assert.True(( pdu2.InitiatorTaskTag = itt2 ))
 
             // logout
@@ -1018,7 +921,6 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let sessParam1 = {
                 m_defaultSessParam with
                     ErrorRecoveryLevel = 1uy;
-                    ISID = GlbFunc.newISID();
             }
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
 
@@ -1043,7 +945,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let sendExpStatSN3 = r1.Connection( g_CID0 ).ExpStatSN  // sendExpStatSN3 = sendExpStatSN1
             let! itt3, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
-            Assert.True(( pdu3.StatSN = sendExpStatSN2 + ( statsn_me.fromPrim 1u ) ))
+            Assert.True(( pdu3.StatSN = statsn_me.next sendExpStatSN2 ))
             Assert.True(( pdu3.InitiatorTaskTag = itt3 ))
 
             // Send SNACK request ( sendExpStatSN3 = sendExpStatSN1, Already acknowledged )
@@ -1061,11 +963,375 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Receive Nop-In 3
             let! pdu3_2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
-            Assert.True(( pdu3_2.StatSN = sendExpStatSN2 + ( statsn_me.fromPrim 1u ) ))
+            Assert.True(( pdu3_2.StatSN = statsn_me.next sendExpStatSN2 ))
             Assert.True(( pdu3_2.InitiatorTaskTag = itt3 ))
 
             // logout
             let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
             let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+        }
+
+    // Sequence of non-immediate commands.
+    [<Fact>]
+    member _.StatSN_Immidiate_001() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+
+            // Not-Out 1 (non-immidiate)
+            let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
+            let! _, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty
+            let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
+
+            // Not-Out 2 (immidiate)
+            let sendExpStatSN2 = r1.Connection( g_CID0 ).ExpStatSN
+            Assert.True(( sendExpStatSN2 = statsn_me.next sendExpStatSN1 ))
+            let! _, _ = r1.SendNOPOutPDU g_CID0 true g_LUN1 ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty
+            let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu2.StatSN = sendExpStatSN2 ))
+
+            // Not-Out 3 (non-immidiate)
+            let sendExpStatSN3 = r1.Connection( g_CID0 ).ExpStatSN
+            Assert.True(( sendExpStatSN3 = statsn_me.next sendExpStatSN2 ))
+            let! _, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty
+            let! pdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu3.StatSN = sendExpStatSN3 ))
+
+            // Not-Out 4 (immidiate)
+            let sendExpStatSN4 = r1.Connection( g_CID0 ).ExpStatSN
+            Assert.True(( sendExpStatSN4 = statsn_me.next sendExpStatSN3 ))
+            let! _, _ = r1.SendNOPOutPDU g_CID0 true g_LUN1 ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty
+            let! pdu4 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu4.StatSN = sendExpStatSN4 ))
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+        }
+
+    // Multi connections
+    [<Fact>]
+    member _.StatSN_MultiConnections_001() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
+
+            // Nop-Out 1 at connection 0
+            let sendExpStatSN0_1 = r1.Connection( g_CID0 ).ExpStatSN
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu0_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu0_1.StatSN = sendExpStatSN0_1 ))
+
+            // Nop-Out 1 at connection 1
+            let sendExpStatSN1_1 = r1.Connection( g_CID1 ).ExpStatSN
+            let! _ = r1.SendNOPOutPDU g_CID1 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu1_1 = r1.ReceiveSpecific<NOPInPDU> g_CID1
+            Assert.True(( pdu1_1.StatSN = sendExpStatSN1_1 ))
+
+            // Nop-Out 2 at connection 0
+            let sendExpStatSN0_2 = r1.Connection( g_CID0 ).ExpStatSN
+            Assert.True(( sendExpStatSN0_2 = statsn_me.next sendExpStatSN0_1 ))
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu0_2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu0_2.StatSN = sendExpStatSN0_2 ))
+
+            // Nop-Out 2 at connection 1
+            let sendExpStatSN1_2 = r1.Connection( g_CID1 ).ExpStatSN
+            Assert.True(( sendExpStatSN1_2 = statsn_me.next sendExpStatSN1_1 ))
+            let! _ = r1.SendNOPOutPDU g_CID1 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu1_2 = r1.ReceiveSpecific<NOPInPDU> g_CID1
+            Assert.True(( pdu1_2.StatSN = sendExpStatSN1_2 ))
+
+            // Nop-Out 3 at connection 0
+            let sendExpStatSN0_3 = r1.Connection( g_CID0 ).ExpStatSN
+            Assert.True(( sendExpStatSN0_3 = statsn_me.next sendExpStatSN0_2 ))
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu0_3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu0_3.StatSN = sendExpStatSN0_3 ))
+
+            // Nop-Out 3 at connection 1
+            let sendExpStatSN1_3 = r1.Connection( g_CID1 ).ExpStatSN
+            Assert.True(( sendExpStatSN1_3 = statsn_me.next sendExpStatSN1_2 ))
+            let! _ = r1.SendNOPOutPDU g_CID1 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu1_3 = r1.ReceiveSpecific<NOPInPDU> g_CID1
+            Assert.True(( pdu1_3.StatSN = sendExpStatSN1_3 ))
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            ()
+        }
+
+    // Too little ExpStatSN
+    [<Fact>]
+    member _.StatSN_MaxStatSNDiff_001() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    ErrorRecoveryLevel = 0uy;
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
+
+            // Nop-Out 1
+            let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
+
+            // Nop-Out 2
+            let tobeNextStatSN2 = statsn_me.next pdu1.StatSN
+            let sendExpStatSN2 = statsn_me.decr Constants.MAX_STATSN_DIFF tobeNextStatSN2
+            r1.Connection( g_CID0 ).SetNextExtStatSN sendExpStatSN2
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu2.StatSN = statsn_me.next sendExpStatSN1 ))
+
+            // Nop-Out 3
+            let tobeNextStatSN3 = statsn_me.next pdu2.StatSN
+            let sendExpStatSN3 = statsn_me.decr ( Constants.MAX_STATSN_DIFF + 1u ) tobeNextStatSN3
+            r1.Connection( g_CID0 ).SetNextExtStatSN sendExpStatSN3
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            try
+                let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
+                Assert.Fail __LINE__
+            with
+            | :? SessionRecoveryException
+            | :? ConnectionErrorException ->
+                ()
+        }
+
+    // Excessive ExpStatSN
+    [<Fact>]
+    member _.StatSN_MaxStatSNDiff_002() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    ErrorRecoveryLevel = 0uy;
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
+
+            // Nop-Out 1
+            let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
+
+            // Nop-Out 2
+            let tobeNextStatSN2 = statsn_me.next pdu1.StatSN
+            let sendExpStatSN2 = statsn_me.incr Constants.MAX_STATSN_DIFF tobeNextStatSN2
+            r1.Connection( g_CID0 ).SetNextExtStatSN sendExpStatSN2
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu2.StatSN = statsn_me.next sendExpStatSN1 ))
+
+            // Nop-Out 3
+            let tobeNextStatSN3 = statsn_me.next pdu2.StatSN
+            let sendExpStatSN3 = statsn_me.incr ( Constants.MAX_STATSN_DIFF + 1u ) tobeNextStatSN3
+            r1.Connection( g_CID0 ).SetNextExtStatSN sendExpStatSN3
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            try
+                let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
+                Assert.Fail __LINE__
+            with
+            | :? SessionRecoveryException
+            | :? ConnectionErrorException ->
+                ()
+        }
+
+    // Reconnecting a connection. Reconnect after logout.
+    [<Fact>]
+    member _.StatSN_ReconnectConnection_001() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
+
+            // Some of Nop-Out
+            for i = 0 to 10 do
+                let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
+                ()
+
+            // Nop-Out 1
+            let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
+
+            // logout connection 0
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID0
+            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+
+            // Re-connect connection 0
+            r1.RemoveConnectionEntry g_CID0 |> ignore
+            do! r1.AddConnection m_defaultConnParam
+
+            // Nop-Out 2
+            let sendExpStatSN2 = r1.Connection( g_CID0 ).ExpStatSN
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu2.StatSN = sendExpStatSN2 ))
+
+            // Reconnecting the connection resets StatSN back to the beginning.
+            Assert.True(( statsn_me.lessThan sendExpStatSN2 sendExpStatSN1 ))
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            ()
+        }
+
+    // Reconnecting a connection. Reconnect after drop the connection.
+    [<Fact>]
+    member _.StatSN_ReconnectConnection_002() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
+
+            // Some of Nop-Out
+            for i = 0 to 10 do
+                let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
+                ()
+
+            // Nop-Out 1
+            let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
+
+            // Drop connection 0
+            r1.CloseConnection g_CID0
+
+            // Re-connect connection 0
+            do! r1.AddConnection m_defaultConnParam
+
+            // Nop-Out 2
+            let sendExpStatSN2 = r1.Connection( g_CID0 ).ExpStatSN
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu2.StatSN = sendExpStatSN2 ))
+
+            // Reconnecting the connection resets StatSN back to the beginning.
+            Assert.True(( statsn_me.lessThan sendExpStatSN2 sendExpStatSN1 ))
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            ()
+        }
+
+    // Reconnecting a connection.  Reconnect with implicit logout. Initial ExpStatSN=0.
+    [<Fact>]
+    member _.StatSN_ReconnectConnection_003() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
+
+            // Some of Nop-Out
+            for i = 0 to 10 do
+                let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
+                ()
+
+            // Nop-Out 1
+            let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
+
+            // This pattern is considered an implicit logout from the target's perspective.
+            // However, since ExpStatSN is set to 0, the initiator considers this to be a reconnection after logging out.
+            // Therefore, the target will accept the reconnection with StatSN reset to 0.
+
+            // Re-connect connection 0
+            r1.RemoveConnectionEntry g_CID0 |> ignore   // reset ExpStatSN value
+            do! r1.AddConnection m_defaultConnParam     // start with ExpStatSN=0
+
+            // Nop-Out 2
+            let sendExpStatSN2 = r1.Connection( g_CID0 ).ExpStatSN
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu2.StatSN = sendExpStatSN2 ))
+
+            // Reconnecting the connection resets StatSN back to the beginning.
+            Assert.True(( statsn_me.lessThan sendExpStatSN2 sendExpStatSN1 ))
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            ()
+        }
+
+    // Reconnecting a connection.  Reconnect with implicit logout.
+    [<Fact>]
+    member _.StatSN_ReconnectConnection_004() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
+
+            // Some of Nop-Out
+            for i = 0 to 10 do
+                let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
+                ()
+
+            // Nop-Out 1
+            let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
+
+            // Re-connect connection 0
+            do! r1.AddConnection m_defaultConnParam     // Inherits the value of ExpStatSN
+
+            // Nop-Out 2
+            let sendExpStatSN2 = r1.Connection( g_CID0 ).ExpStatSN
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu2.StatSN = sendExpStatSN2 ))
+
+            // StatSN value is not reset
+            Assert.True(( statsn_me.lessThan sendExpStatSN1 sendExpStatSN2 ))
+
+            // logout
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            ()
+        }
+
+    // Reconnecting a connection.  Reconnect with implicit logout. Fake ExpStatSN.
+    [<Fact>]
+    member _.StatSN_ReconnectConnection_005() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
+
+            // Some of Nop-Out
+            for i = 0 to 10 do
+                let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
+                ()
+
+            // Nop-Out 1
+            let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
+
+            // Re-connect connection 0
+            r1.Connection( g_CID0 ).SkipExtStatSN( statsn_me.fromPrim 1u )
+            try
+                do! r1.AddConnection m_defaultConnParam     // Inherits the value of ExpStatSN
+                Assert.Fail __LINE__
+            with
+            | :? SessionRecoveryException
+            | :? ConnectionErrorException ->
+                ()
+
+            // logout. Connection 1 is still alive.
+            let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_SESS g_CID1
+            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID1
+            ()
         }
