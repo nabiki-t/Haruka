@@ -95,19 +95,23 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     let m_MediaSize = fx.MediaSize
     let m_MediaBlockSize = fx.MediaBlockSize
 
-    let scsiWrite10CDB ( transferLength : uint16 ) =
-        let w =
+    let scsiWrite10CDB ( lba : uint32 ) ( transferLength : uint16 ) =
+        let wlba =
+            ( int32 ) lba
+            |> IPAddress.HostToNetworkOrder
+            |> BitConverter.GetBytes
+        let wtl =
             ( int16 ) transferLength
             |> IPAddress.HostToNetworkOrder
             |> BitConverter.GetBytes
         [|
-            0x2Auy;                         // OPERATION CODE( Write 10 )
-            0x00uy;                         // WRPROTECT(000), DPO(0), FUA(0), FUA_NV(0)
-            0x00uy; 0x00uy; 0x00uy; 0x00uy; // LBA
-            0x00uy;                         // GROUP NUMBER(0)
-            w.[0]; w.[1];                   // TRANSFER LENGTH
-            0x02uy;                         // NACA(1), LINK(0)
-            0x00uy; 0x00uy; 0x00uy; 0x00uy; // padding
+            0x2Auy;                                 // OPERATION CODE( Write 10 )
+            0x00uy;                                 // WRPROTECT(000), DPO(0), FUA(0), FUA_NV(0)
+            wlba.[0]; wlba.[1]; wlba.[2]; wlba.[3]; // LBA
+            0x00uy;                                 // GROUP NUMBER(0)
+            wtl.[0]; wtl.[1];                       // TRANSFER LENGTH
+            0x00uy;                                 // NACA(0), LINK(0)
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;         // padding
             0x00uy; 0x00uy;
         |]
 
@@ -259,7 +263,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
 
             // Send SCSI Command with same CmdSN as Nop-Out 4
-            let writeCDB = scsiWrite10CDB 0us
+            let writeCDB = scsiWrite10CDB 0u 0us
             let! _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
             let! pdu4_2 = r1.ReceiveSpecific<RejectPDU> g_CID0
             Assert.True(( pdu4_2.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
@@ -300,7 +304,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let pduCount = ( cmdsn_me.toPrim pdu1_1.MaxCmdSN ) - ( cmdsn_me.toPrim pdu1_1.ExpCmdSN ) + 1u |> int
             let vitt = Array.zeroCreate<ITT_T> pduCount
             for i = 1 to pduCount do
-                let writeCDB = scsiWrite10CDB 1us
+                let writeCDB = scsiWrite10CDB 0u 1us
                 let! itt, _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
                 vitt.[ i - 1 ] <- itt
 
@@ -343,12 +347,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let pduCount = ( cmdsn_me.toPrim pdu1_1.MaxCmdSN ) - ( cmdsn_me.toPrim pdu1_1.ExpCmdSN ) + 1u |> int
             let vitt = Array.zeroCreate<ITT_T> pduCount
             for i = 1 to pduCount do
-                let writeCDB = scsiWrite10CDB 1us
+                let writeCDB = scsiWrite10CDB 0u 1us
                 let! itt, _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
                 vitt.[ i - 1 ] <- itt
 
             // Send additional SCSI Command PDU with CmdSN overs MaxCmdSN.
-            let writeCDB = scsiWrite10CDB 1us
+            let writeCDB = scsiWrite10CDB 0u 1us
             let! _, _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
             let! _ = r1.ReceiveSpecific<RejectPDU> g_CID0
 
@@ -751,7 +755,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
             // Send SCSI Command PDU at connection 0
-            let writeCDB = scsiWrite10CDB 1us
+            let writeCDB = scsiWrite10CDB 0u 1us
             let! _, cmdsn_sc = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
             Assert.True(( cmdsn_sc = cmdsn_me.fromPrim 1u ))
 
@@ -785,7 +789,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
             // Send SCSI Command PDU at connection 0
-            let writeCDB = scsiWrite10CDB 1us
+            let writeCDB = scsiWrite10CDB 0u 1us
             let! _, cmdsn_sc = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
             Assert.True(( cmdsn_sc = cmdsn_me.fromPrim 1u ))
 
@@ -1334,4 +1338,39 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_SESS g_CID1
             let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID1
             ()
+        }
+
+    [<Fact>]
+    member _.StatSN_CheckCondition_001() =
+        task {
+            let sendData = PooledBuffer.Rent( int m_MediaBlockSize )
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+
+            // SCSI Write command ( failed )
+            let writeCDB = scsiWrite10CDB 0xFFFFFFFFu 1us
+            let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
+            let! _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB sendData 0u
+            let! pdu1 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
+            Assert.True(( pdu1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // Send TaskMgrReq for clear ACA
+            let sendExpStatSN2 = r1.Connection( g_CID0 ).ExpStatSN
+            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 false TaskMgrReqCd.CLEAR_ACA g_LUN1 ( itt_me.fromPrim 0xFFFFFFFFu ) cmdsn_me.zero datasn_me.zero
+            let! pdu2 = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
+            Assert.True(( pdu2.StatSN = sendExpStatSN2 ))
+            Assert.True(( pdu2.Response = TaskMgrResCd.FUCTION_COMPLETE ))
+
+            // SCSI Write command ( succeed )
+            let writeCDB = scsiWrite10CDB 0u 1us
+            let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
+            let! _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB sendData 0u
+            let! pdu1 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
+            Assert.True(( pdu1.Status = ScsiCmdStatCd.GOOD ))
+
+            // logout.
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            sendData.Return()
         }
