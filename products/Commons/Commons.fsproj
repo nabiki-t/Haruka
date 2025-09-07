@@ -49,15 +49,15 @@
     <Content Include="IODataTypes\InitMediaMessage.xml" />
     <Content Include="IODataTypes\TempExport.xml" />
     <Compile Include="PooledBuffer.fs" />
-    <Compile Include="Functions.fs" />
     <Compile Include="OptimisticLock.fs" />
     <Compile Include="WorkingQueue.fs" />
     <Compile Include="ResCounter.fs" />
+    <Compile Include="ResponseFence.fs" />
+    <Compile Include="Functions.fs" />
     <Compile Include="PDUInterface.fs" />
     <Compile Include="Interfaces.fs" />
     <Compile Include="Exceptions.fs" />
     <Compile Include="Logger.fs" />
-    <Compile Include="ResponseFence.fs" />
     <Compile Include="StringTable.fs" />
     <Compile Include="CommandParser.fs" />
     <Compile Include="Killer.fs" />

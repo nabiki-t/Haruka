@@ -19,8 +19,9 @@ namespace Haruka.Commons
 
 open System
 open System.Buffers
-open Haruka.Constants
 open System.Runtime.CompilerServices
+
+open Haruka.Constants
 
 //=============================================================================
 // Interface definition

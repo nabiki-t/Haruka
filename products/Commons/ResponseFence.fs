@@ -17,10 +17,31 @@ namespace Haruka.Commons
 open System
 open System.Collections.Generic
 open System.Collections.Immutable
+open System.Runtime.CompilerServices
 
 //=============================================================================
 // declaration
 
+/// Whether response fence is required
+[<Struct; IsReadOnly>]
+type ResponseFenceNeedsFlag =
+    /// This PDU is not used at response.
+    | Irrelevant
+    /// This response PDU is always sent immediately
+    | Immediately
+    /// response fence is not required, but the other PDU required response fence is sending,
+    /// This PDU must be wait complete sending that other PDU.
+    | R_Mode
+    /// response fence is required.
+    | W_Mode
+
+    /// convert ResponseFenceNeedsFlag value to string
+    static member toString : ( ResponseFenceNeedsFlag -> string ) =
+        function
+        | Irrelevant  -> "Irrelevant"
+        | Immediately  -> "Immediately"
+        | R_Mode  -> "R_Mode"
+        | W_Mode  -> "W_Mode"
 
 /// Internal record type of ResponseFenceLock class.
 [<NoComparison>]
@@ -118,6 +139,33 @@ type ResponseFence() =
             )
         if runTask.IsSome then
             runTask.Value()
+
+    /// <summary>
+    ///  Acquires a lock according to the requested lock type and executes the task.
+    /// </summary>
+    /// <param name="lockType">
+    ///  The type of lock to acquire.
+    /// </param>
+    /// <param name="argTask">
+    ///  The next procedure that must be executed.
+    /// </param>
+    member this.Lock ( lockType : ResponseFenceNeedsFlag ) ( argTask : ( unit -> unit ) ) : unit =
+        match lockType with
+        | ResponseFenceNeedsFlag.Irrelevant ->
+            ()  // Silentry ignore
+
+        | ResponseFenceNeedsFlag.Immediately ->
+            // Run task immidiatly without response fence lock
+            argTask()
+
+        | ResponseFenceNeedsFlag.R_Mode ->
+            // Need R-Mode lock at response fence.
+            this.NormalLock argTask
+
+        | ResponseFenceNeedsFlag.W_Mode ->
+            // Need W-Mode lock at response fence.
+            this.RFLock argTask
+
 
     /// <summary>
     ///  Free the acquired lock.

@@ -498,15 +498,47 @@ type Session
                     else
                         SPDTL
                         |> min ( uint32 allocationLength )
-                        |> min mbl
+                        //|> min mbl    これは違う
                         |> min ( if bidirectCmd then berdl else edtl )
 
                 // data length of SCSI response PDU
                 let dataPDUList =
-                    if mrdsl_I - 2u < realSendDataLength || resData.Count > 0 then
-                        // If the sense data is longer than MaxRecvDataSegmentLength, use the SCSI Data-In PDU.
+                    if resData.Count > 0 || mrdsl_I - 2u < realSendDataLength then
                         // Normal response data that is not sense data, always uses SCSI Data-In PDUs.
+                        // Or, if the sense data is longer than MaxRecvDataSegmentLength, use the SCSI Data-In PDU.
 
+                        let pduSegs = Session.DivideRespDataSegment realSendDataLength mbl mrdsl_I
+                        pduSegs
+                        |> List.mapi ( fun cnt struct( dpos, dlen, fflag ) ->
+                            {
+                                F = fflag;
+                                A = if m_sessionParameter.ErrorRecoveryLevel > 0uy then fflag else false;
+                                O = false;  // ignored
+                                U = false;  // ignored
+                                S = false;  // Haruka does not use this flag
+                                Status = ScsiCmdStatCd.GOOD;  // ignored
+                                LUN =
+                                    if m_sessionParameter.ErrorRecoveryLevel > 0uy && fflag then
+                                        lun
+                                    else
+                                        lun_me.zero;
+                                InitiatorTaskTag = itt;
+                                TargetTransferTag =
+                                    if m_sessionParameter.ErrorRecoveryLevel > 0uy && fflag then
+                                        this.GenerateTTTValue()
+                                    else
+                                        ttt_me.fromPrim 0xffffffffu;
+                                StatSN = statsn_me.zero;
+                                ExpCmdSN = cmdsn_me.zero;
+                                MaxCmdSN = cmdsn_me.zero;
+                                DataSN = datasn_me.fromPrim( uint cnt );
+                                BufferOffset = dpos;
+                                ResidualCount = 0u;
+                                DataSegment = argSendDataBytes.GetArraySegment ( int dpos ) ( int dlen )
+                                ResponseFence = ResponseFenceNeedsFlag.Immediately;
+                            } :> ILogicalPDU
+                        )
+#if false
                         // Divite sendDataBytes to some of Data-In PDUs
                         let rec loop sp cnt ( li : ILogicalPDU list ) =
                             if sp >= realSendDataLength then
@@ -543,6 +575,8 @@ type Session
                                 }
                                 loop ( sp + seglen ) ( datasn_me.next cnt ) ( w :: li )
                         loop 0u datasn_me.zero []
+
+#endif
                     else
                         []
 
@@ -632,29 +666,12 @@ type Session
                 HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "SCSI response PDU ResponseFence = %s" (( resp :?> SCSIResponsePDU ).ResponseFence.ToString()) )
 #endif
 
-                resp :: dataPDUList
-                |> List.rev
+                dataPDUList
                 |> List.iter ( fun itrPdu ->
-                    match itrPdu.NeedResponseFence with
-                    | ResponseFenceNeedsFlag.Irrelevant ->
-                        ()  // Silentry ignore
-
-                    | ResponseFenceNeedsFlag.Immediately ->
-                        // Send PDU immidiatly without response fence lock
-                        conInfo.Connection.SendPDU itrPdu
-
-                    | ResponseFenceNeedsFlag.R_Mode ->
-                        // Need R-Mode lock at response fence.
-                        m_RespFense.NormalLock ( fun () ->
-                            conInfo.Connection.SendPDU itrPdu
-                        )
-
-                    | ResponseFenceNeedsFlag.W_Mode ->
-                        // Need W-Mode lock at response fence.
-                        m_RespFense.RFLock ( fun () ->
-                            conInfo.Connection.SendPDU itrPdu
-                        )
+                    m_RespFense.Lock itrPdu.NeedResponseFence ( fun () -> conInfo.Connection.SendPDU itrPdu )
                 )
+                m_RespFense.Lock resp.NeedResponseFence ( fun () -> conInfo.Connection.SendPDU resp )
+
             | _ ->
                 // Silentry ignore
                 ()
@@ -1466,7 +1483,7 @@ type Session
         match m_CIDs.obj.TryGetValue( cid ) with
         | true, cidInfo when cidInfo.Counter = counter ->
             // Send response PDU procedure
-            let wf () =
+            m_RespFense.Lock pdu.NeedResponseFence ( fun () ->
                 match sendType with
                 | SendOtherPDUType.NORMAL ->
                     cidInfo.Connection.SendPDU pdu
@@ -1474,22 +1491,7 @@ type Session
                     cidInfo.Connection.ReSendPDU pdu
                 | SendOtherPDUType.R_SNACK_RESEND ->
                     cidInfo.Connection.ReSendPDUForRSnack pdu
-
-            match pdu.NeedResponseFence with
-            | ResponseFenceNeedsFlag.Irrelevant ->
-                () // silently ignore
-            | ResponseFenceNeedsFlag.Immediately ->
-                wf()
-            | ResponseFenceNeedsFlag.R_Mode ->
-                // Need R-Mode lock at response fence
-                if HLogger.IsVerbose then
-                    HLogger.Trace( LogID.V_TRACE, fun g -> g.Gen1( m_ObjID, "Response Fence Lock(R_Mode)" ) )
-                m_RespFense.NormalLock( wf )
-            | ResponseFenceNeedsFlag.W_Mode ->
-                // Need W-Mode lock at response fence
-                if HLogger.IsVerbose then
-                    HLogger.Trace( LogID.V_TRACE, fun g -> g.Gen1( m_ObjID, "Response Fence Lock(W_Mode)" ) )
-                m_RespFense.RFLock( wf )
+            )
         | _ ->
             ()
 
@@ -1497,7 +1499,7 @@ type Session
     /// <summary>
     ///   Generate unique value used to TTT.
     /// </summary>
-    member _.GenerateTTTValue() : TTT_T =
+    member private _.GenerateTTTValue() : TTT_T =
         let rec loop() =
             let v = Interlocked.Increment( &m_TTTGen )
             if v = 0xFFFFFFFFu then
@@ -1505,3 +1507,47 @@ type Session
             else
                 v
         ttt_me.fromPrim( loop() )
+
+    // ------------------------------------------------------------------------
+    /// <summary>
+    ///  Determines the response data segment to be placed in each Data-In PDU.
+    /// </summary>
+    /// <param name="sendDataLength">
+    ///  Response data byte length
+    /// </param>
+    /// <param name="mbl">
+    ///  MaxBurstLength value.
+    /// </param>
+    /// <param name="mrdsl">
+    ///  MaxRecvDataSegmentLength value of the initiatoer side.
+    /// </param>
+    /// <returns>
+    ///  pair of start position, length and F bit value.
+    /// </returns>
+    static member private DivideRespDataSegment( sendDataLength : uint32 ) ( mbl : uint32 ) ( mrdsl : uint32 )  : struct ( uint32 * uint32 * bool ) list =
+//        let acc2 = List< struct ( uint32 * uint32 * bool ) >()
+        let rec processBursts ( burstStart : uint32 ) ( acc1 : struct ( uint32 * uint32 * bool ) list ) =
+            if burstStart < sendDataLength then
+                let remaining = sendDataLength - burstStart
+                let burstSize = min remaining mbl
+                let rec processPDUs ( pduOffset : uint32 ) ( acc2 : struct ( uint32 * uint32 * bool ) list ) =
+                    if pduOffset < burstSize then
+                        let remainInBurst = burstSize - pduOffset
+                        let pduSize = min remainInBurst mrdsl
+                        let isLastInBurst = ( pduOffset + pduSize ) = burstSize
+                        let nextAcc = struct ( burstStart + pduOffset, pduSize, isLastInBurst ) :: acc2
+//                        acc2.Add struct ( burstStart + pduOffset, pduSize, isLastInBurst )
+                        processPDUs ( pduOffset + pduSize ) nextAcc
+                    else
+                        acc2
+                processPDUs 0u acc1
+                |> processBursts ( burstStart + burstSize )
+            else
+                acc1
+        if sendDataLength > 0u && mbl > 0u && mrdsl > 0u then
+            processBursts 0u [] |> List.rev
+        else
+            []
+//        acc2
+
+

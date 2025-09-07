@@ -1243,24 +1243,22 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let mbl = r1.Params.MaxBurstLength
             Assert.True(( mbl = Constants.NEGOPARAM_MIN_MaxBurstLength ))
 
-            let accessLength =
-                if m_MediaBlockSize > mbl then
-                    m_MediaBlockSize        // 4096
-                else
-                    m_MediaBlockSize * 2u   // 512*2
+            let accessLength = 4096u
             let accessBlockCount = accessLength / m_MediaBlockSize
+            let dataPDUCount = 4096u / 512u
 
             // SCSI Read
             let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
 
             // SCSI Data-In
-            // According to the iSCSI protocol specifications, a target cannot transmit data exceeding MaxBurstLength.
-            let! rpdu2 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
-            Assert.True(( rpdu2.InitiatorTaskTag = itt ))
-            Assert.True(( rpdu2.DataSN = datasn_me.zero ))
-            Assert.True(( rpdu2.BufferOffset = 0u ))
-            Assert.True(( rpdu2.DataSegment.Count = int mbl ))
+            for i = 0u to dataPDUCount - 1u do
+                let! rpdu2 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+                Assert.True(( rpdu2.InitiatorTaskTag = itt ))
+                Assert.True(( rpdu2.F ))
+                Assert.True(( rpdu2.DataSN = datasn_me.fromPrim i ))
+                Assert.True(( rpdu2.BufferOffset = i * 512u ))
+                Assert.True(( rpdu2.DataSegment.Count = int mbl ))
 
             // SCSI Response
             let! rpdu3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0

@@ -981,3 +981,35 @@ type ResponseFence_Test1() =
         Assert.True(( rfl.LockStatus = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
+
+    [<Fact>]
+    member _.Lock_Irrelevant_001() =
+        let wli = List<int>()
+        let rfl = ResponseFence()
+        rfl.Lock ResponseFenceNeedsFlag.Irrelevant ( fun () -> wli.Add 0 )
+        Assert.True(( wli.Count = 0 ))
+        Assert.True(( rfl.LockStatus = 0L ))
+
+    [<Fact>]
+    member _.Lock_Immediately_001() =
+        let wli = List<int>()
+        let rfl = ResponseFence()
+        rfl.Lock ResponseFenceNeedsFlag.Immediately ( fun () -> wli.Add 0 )
+        Assert.True(( wli.Count = 1 ))
+        Assert.True(( rfl.LockStatus = 0L ))
+
+    [<Fact>]
+    member _.Lock_R_Mode_001() =
+        let wli = List<int>()
+        let rfl = ResponseFence()
+        rfl.Lock ResponseFenceNeedsFlag.R_Mode ( fun () -> wli.Add 0 )
+        Assert.True(( wli.Count = 1 ))
+        Assert.True(( rfl.LockStatus = 1L ))
+
+    [<Fact>]
+    member _.Lock_W_Mode_001() =
+        let wli = List<int>()
+        let rfl = ResponseFence()
+        rfl.Lock ResponseFenceNeedsFlag.W_Mode ( fun () -> wli.Add 0 )
+        Assert.True(( wli.Count = 1 ))
+        Assert.True(( rfl.LockStatus = -1L ))

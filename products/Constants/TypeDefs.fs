@@ -18,27 +18,6 @@ open System.Collections.Generic
 //=============================================================================
 // Type definition
 
-/// Whether response fence is required
-[<Struct; IsReadOnly>]
-type ResponseFenceNeedsFlag =
-    /// This PDU is not used at response.
-    | Irrelevant
-    /// This response PDU is always sent immediately
-    | Immediately
-    /// response fence is not required, but the other PDU required response fence is sending,
-    /// This PDU must be wait complete sending that other PDU.
-    | R_Mode
-    /// response fence is required.
-    | W_Mode
-
-    /// convert ResponseFenceNeedsFlag value to string
-    static member toString : ( ResponseFenceNeedsFlag -> string ) =
-        function
-        | Irrelevant  -> "Irrelevant"
-        | Immediately  -> "Immediately"
-        | R_Mode  -> "R_Mode"
-        | W_Mode  -> "W_Mode"
-
 /// Log message level
 [<Struct; IsReadOnly>]
 type LogLevel =

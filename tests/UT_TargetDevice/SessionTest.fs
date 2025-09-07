@@ -4983,7 +4983,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             32u
             ResponseFenceNeedsFlag.R_Mode
 
-        // receive Data-In PDU in the initiator
+        // receive Data-In PDU 1 in the initiator
         let pdu1 =
             PDU.Receive( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, cp, Standpoint.Initiator )
             |> Functions.RunTaskSynchronously
@@ -5001,7 +5001,27 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( datain1.ExpCmdSN = cmdsn_me.fromPrim 1u )
         Assert.True( datain1.DataSN = datasn_me.zero )
         Assert.True( datain1.BufferOffset = 0u )
-        Assert.True( arDataSegment.ToArray() = [| 0uy .. 15uy |] )    // truncated by MaxBurstLength length
+        Assert.True( arDataSegment.ToArray() = [| 0uy .. 15uy |] )
+
+        // receive Data-In PDU 2 in the initiator
+        let pdu1 =
+            PDU.Receive( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, cp, Standpoint.Initiator )
+            |> Functions.RunTaskSynchronously
+
+        Assert.True( ( pdu1.Opcode = OpcodeCd.SCSI_DATA_IN ) )
+        let datain1 = pdu1 :?> SCSIDataInPDU
+        let arDataSegment = datain1.DataSegment
+
+        Assert.True( datain1.F )
+        Assert.False( datain1.S )
+        Assert.True( datain1.LUN = lun_me.zero )
+        Assert.True( datain1.InitiatorTaskTag = itt_me.fromPrim 2u )
+        Assert.True( datain1.TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu )
+        Assert.True( datain1.StatSN = statsn_me.zero )
+        Assert.True( datain1.ExpCmdSN = cmdsn_me.fromPrim 1u )
+        Assert.True( datain1.DataSN = datasn_me.fromPrim 1u )
+        Assert.True( datain1.BufferOffset = 16u )
+        Assert.True( arDataSegment.ToArray() = [| 16uy .. 31uy |] )
 
         // receive SCSI response PDU in the initiator
         let pdu3 =
@@ -5022,9 +5042,9 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True(( scsirespdu3.SNACKTag = snacktag_me.zero ))
         Assert.True(( scsirespdu3.StatSN = statsn_me.fromPrim 1u ))
         Assert.True(( scsirespdu3.ExpCmdSN = cmdsn_me.fromPrim 1u ))
-        Assert.True(( scsirespdu3.ExpDataSN = datasn_me.fromPrim 1u ))
+        Assert.True(( scsirespdu3.ExpDataSN = datasn_me.fromPrim 2u ))
         Assert.True(( scsirespdu3.BidirectionalReadResidualCount = 0u ))
-        Assert.True(( scsirespdu3.ResidualCount = 0u ))   // ResidualCount is not reflect truncation by MaxBurstLength.
+        Assert.True(( scsirespdu3.ResidualCount = 0u ))
         Assert.True(( scsirespdu3.SenseLength = 0us ))
         Assert.True(( arSenseData.ToArray() = Array.empty ))
         Assert.True(( arResponseData.ToArray() = Array.empty ))
@@ -6437,3 +6457,53 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
 
         sess.DestroySession()
         GlbFunc.ClosePorts [| sp; cp; |]
+
+    [<Fact>]
+    member _.DivideRespDataSegment_001() =
+        let r = PrivateCaller.Invoke< Session >( "DivideRespDataSegment", 0u, 0u, 0u ) :?> struct ( uint32 * uint32 * bool ) list
+        Assert.True(( r.Length = 0 ))
+
+    [<Fact>]
+    member _.DivideRespDataSegment_002() =
+        let r = PrivateCaller.Invoke< Session >( "DivideRespDataSegment", 50u, 100u, 100u ) :?> struct ( uint32 * uint32 * bool ) list
+        Assert.True(( r.Length = 1 ))
+        Assert.True(( r.[0] = struct( 0u, 50u, true ) ))
+
+    [<Fact>]
+    member _.DivideRespDataSegment_003() =
+        let r = PrivateCaller.Invoke< Session >( "DivideRespDataSegment", 100u, 100u, 100u ) :?> struct ( uint32 * uint32 * bool ) list
+        Assert.True(( r.Length = 1 ))
+        Assert.True(( r.[0] = struct( 0u, 100u, true ) ))
+
+    [<Fact>]
+    member _.DivideRespDataSegment_004() =
+        let r = PrivateCaller.Invoke< Session >( "DivideRespDataSegment", 200u, 100u, 100u ) :?> struct ( uint32 * uint32 * bool ) list
+        Assert.True(( r.Length = 2 ))
+        Assert.True(( r.[0] = struct( 0u, 100u, true ) ))
+        Assert.True(( r.[1] = struct( 100u, 100u, true ) ))
+
+    [<Fact>]
+    member _.DivideRespDataSegment_005() =
+        let r = PrivateCaller.Invoke< Session >( "DivideRespDataSegment", 300u, 200u, 100u ) :?> struct ( uint32 * uint32 * bool ) list
+        Assert.True(( r.Length = 3 ))
+        Assert.True(( r.[0] = struct( 0u, 100u, false ) ))
+        Assert.True(( r.[1] = struct( 100u, 100u, true ) ))
+        Assert.True(( r.[2] = struct( 200u, 100u, true ) ))
+
+    [<Fact>]
+    member _.DivideRespDataSegment_006() =
+        let r = PrivateCaller.Invoke< Session >( "DivideRespDataSegment", 300u, 100u, 200u ) :?> struct ( uint32 * uint32 * bool ) list
+        Assert.True(( r.Length = 3 ))
+        Assert.True(( r.[0] = struct( 0u, 100u, true ) ))
+        Assert.True(( r.[1] = struct( 100u, 100u, true ) ))
+        Assert.True(( r.[2] = struct( 200u, 100u, true ) ))
+
+    [<Fact>]
+    member _.DivideRespDataSegment_007() =
+        let r = PrivateCaller.Invoke< Session >( "DivideRespDataSegment", 300u, 120u, 80u ) :?> struct ( uint32 * uint32 * bool ) list
+        Assert.True(( r.Length = 5 ))
+        Assert.True(( r.[0] = struct( 0u, 80u, false ) ))
+        Assert.True(( r.[1] = struct( 80u, 40u, true ) ))
+        Assert.True(( r.[2] = struct( 120u, 80u, false ) ))
+        Assert.True(( r.[3] = struct( 200u, 40u, true ) ))
+        Assert.True(( r.[4] = struct( 240u, 60u, true ) ))
