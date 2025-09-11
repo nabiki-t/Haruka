@@ -23,6 +23,9 @@ open Haruka.IODataTypes
 open Haruka.Commons
 open Haruka.Client
 
+//=============================================================================
+// Class implementation
+
 /// <summary>
 ///  Data type for status list.
 /// </summary>

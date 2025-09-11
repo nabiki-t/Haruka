@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.BlockDeviceLU
+﻿//=============================================================================
+// Haruka Software Storage.
+// PRManagerTest.fs : Test cases for PRManager class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.BlockDeviceLU
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -14,10 +25,14 @@ open Haruka.Commons
 open Haruka.BlockDeviceLU
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
 
 type PRManager_Test1 () =
 
-    // 
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
+
     let cdesForIsBlockedByPersistentReservation : ( bool * bool * bool * bool * bool * ICDB )[] = 
         [|
             true,  true,  false, true,  true,  ( { OperationCode = 0xA4uy; ServiceAction = 0x0Bus; ParameterListLength = 0u; Control = 0uy; } : ChangeAliasesCDB );
@@ -168,6 +183,9 @@ type PRManager_Test1 () =
         let w1 = Functions.AppendPathName ( Path.GetTempPath() ) "PRManager_Test1"
         GlbFunc.CreateDir w1 |> ignore
         w1
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member this.LoadPRFile_001() =

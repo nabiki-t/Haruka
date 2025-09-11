@@ -6,9 +6,6 @@
 //=============================================================================
 // Namespace declaration
 
-/// <summary>
-///   Definitions of exception globaly used in Haruka project.
-/// </summary>
 namespace Haruka.Commons
 
 //=============================================================================
@@ -19,7 +16,7 @@ open System.Text
 open Haruka.Constants
 
 //=============================================================================
-// Type Declaration
+// Type definition
 
 /// <summary>
 /// It defines data type of argument that is passed to SendErrorStatusTask class
@@ -42,7 +39,7 @@ type commandSpecificSenseDataDesc = {
 }
 
 /// <summary>
-//  Field pointer sense key specific data type used in senseKeySpecificSenseDataDesc type.
+///  Field pointer sense key specific data type used in senseKeySpecificSenseDataDesc type.
 /// </summary>
 /// <see>SPC-3 4.5.2.4.2</see>
 type fieldPointerSenseKeySpecificData = {
@@ -967,10 +964,10 @@ type InConnectionRecoveryException( argMsg : string ) =
 /// <param name="argMsg">
 ///   A message string that descripts cource of exception.
 /// </param>
-/// <param name="argTSIH">
+/// <param name="m_TSIH">
 ///   TSIH identifying the session which connection that is source of exception belongings to.
 /// </param>
-/// <param name="argCID">
+/// <param name="m_CID">
 ///   CID identifying the connection that is source of the exception.
 ///   Connection represented by this CID should be dropped.
 /// </param>
@@ -994,7 +991,7 @@ type ConnectionErrorException( argMsg : string, m_TSIH : TSIH_T, m_CID : CID_T )
 /// <param name="argMsg">
 ///   A message string that descripts cource of exception.
 /// </param>
-/// <param name="argTSIH">
+/// <param name="m_TSIH">
 ///   TSIH identifying the session that is source of exception.
 ///   Session represented by the TSIH should be dropped.
 /// </param>
@@ -1011,10 +1008,10 @@ type SessionRecoveryException( argMsg : string, m_TSIH : TSIH_T ) =
 /// <param name="argMsg">
 ///   A message string that descripts cource of exception.
 /// </param>
-/// <param name="argReason">
+/// <param name="m_Reason">
 ///   The value that is set to Reason field in Reject PDU.
 /// </param>
-/// <param name="argHeaderData">
+/// <param name="m_HeaderData">
 ///   The value that is set to HeaderData field in Reject PDU.
 /// </param>
 type RejectPDUException( argMsg : string, m_Reason : RejectReasonCd, m_HeaderData : byte[] ) =
@@ -1052,19 +1049,19 @@ type InternalAssertionException( argMsg : string ) =
 ///   Target send recovery R2T PDU to the initiator.
 ///   *ErrorRecoverLevel=1
 /// </summary>
-/// <param name="cid">
+/// <param name="m_CID">
 ///   Connection ID that received PDUs.
 /// </param>
-/// <param name="counter">
+/// <param name="m_Counter">
 ///   Connection ID counter that received PDUs.
 /// </param>
-/// <param name="argStatus">
+/// <param name="m_Status">
 ///   SCSI result status.
 /// </param>
-/// <param name="argSenseKey">
+/// <param name="m_SenseKey">
 ///   A sense key value of established ACA.
 /// </param>
-/// <param name="argASC">
+/// <param name="m_ASC">
 ///   An additional sense code value of established ACA.
 /// </param>
 /// <param name="argMsg">
@@ -1093,6 +1090,9 @@ type SCSIStatusException
 /// </param>
 /// <param name="m_SenseData">
 ///   Sense data.
+/// </param>
+/// <param name="m_Message">
+///   Message string.
 /// </param>
 type SCSIACAException
     (

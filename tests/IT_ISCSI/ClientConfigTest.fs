@@ -1,21 +1,34 @@
-﻿namespace Haruka.Test.IT.ISCSI
+﻿//=============================================================================
+// Haruka Software Storage.
+// iSCSI_LoginTest1.fs : Test cases for client configuration functions.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.IT.ISCSI
+
+//=============================================================================
+// Import declaration
 
 open System
-open System.Threading
 open System.Threading.Tasks
 open System.IO
-open System.Diagnostics
-open System.Net.Sockets
+open System.Net
 
 open Xunit
 
 open Haruka.Constants
 open Haruka.Commons
-open Haruka.TargetDevice
 open Haruka.Test
-open System.Net
+
+//=============================================================================
+// Class implementation
 
 type ClientConfigTest() =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     let workPath =
         let tempPath = Path.GetTempPath()
@@ -93,6 +106,9 @@ type ClientConfigTest() =
 
             return struct( blockcount, blockSize )
         }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     // Test the interaction between configuration changes by the client and access by the initiator.
     [<Fact>]

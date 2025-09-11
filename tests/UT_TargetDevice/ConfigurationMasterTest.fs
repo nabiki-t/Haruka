@@ -1,22 +1,34 @@
-﻿namespace Haruka.Test.UT.TargetDevice
+﻿//=============================================================================
+// Haruka Software Storage.
+// ConfigurationMasterTest.fs : Test cases for ConfigurationMaster class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.TargetDevice
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
 
 open Xunit
 
-open System.Text
-
 open Haruka.Constants
 open Haruka.Commons
 open Haruka.IODataTypes
 open Haruka.TargetDevice
-open Haruka.IODataTypes
 open Haruka.Test
 
-
+//=============================================================================
+// Class implementation
 
 type ConfigurationMaster_Test () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     let getAllTagetConf ( tgc : ( TargetGroupConf.T_TargetGroup * IKiller ) [] ) =
         [
@@ -91,6 +103,9 @@ type ConfigurationMaster_Test () =
 
     member _.GetTestDirName ( caseName : string ) =
         Functions.AppendPathName ( Path.GetTempPath() ) "ConfigurationMaster_Test_" + caseName
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member this.LoadConfig_001() =

@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.TargetDevice
+﻿//=============================================================================
+// Haruka Software Storage.
+// LoginNegociatorTest1.fs : Test cases for LoginNegociator class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.TargetDevice
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.Text
@@ -14,8 +25,13 @@ open Haruka.IODataTypes
 open Haruka.TargetDevice
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
 
 type LoginNegociator_Test1 () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     let g_isid0 = isid_me.zero;
 
@@ -82,6 +98,9 @@ type LoginNegociator_Test1 () =
         let lock = GlbFunc.LogParamUpdateLock()
         HLogger.SetLogParameters( 100u, 100u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
         lock.Release() |> ignore
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.New_CLoginNegociator_001() =

@@ -1,11 +1,24 @@
-﻿namespace Haruka.Test
+﻿//=============================================================================
+// Haruka Software Storage.
+// Glbfunc.fs : Implementation for ClientProc class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.Diagnostics
-open System.IO
 
 open Haruka.Constants
 open Haruka.Commons
+
+//=============================================================================
+// Class implementation
 
 // Haruka CLI client process wrapper.
 type ClientProc ( address : string, portNumber : int, workPath : string ) =

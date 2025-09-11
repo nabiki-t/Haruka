@@ -19,13 +19,19 @@ open System.Text.RegularExpressions
 open Haruka.Constants
 open Haruka.Commons
 
+//=============================================================================
+// Class implementation
+
 /// <summary>
 ///  EditTargetNameDialog class.
 /// </summary>
 /// <param name="m_Config">
 ///  Loaded configurations for GUI client.
 /// </param>
-type EditTargetNameDialog( m_Config : GUIConfig, m_OldTargetName ) as this =
+/// <param name="m_OldTargetName">
+///  Current configured target name..
+/// </param>
+type EditTargetNameDialog( m_Config : GUIConfig, m_OldTargetName : string ) as this =
 
     /// Load XAML resouces for dialog window.
     let m_Window = m_Config.UIElem.Get( PropertyViewIndex.PVI_EDIT_TARGET_NAME ) :?> Window
@@ -149,9 +155,6 @@ type EditTargetNameDialog( m_Config : GUIConfig, m_OldTargetName ) as this =
     /// <summary>
     ///  Display the window
     /// </summary>
-    /// <param name="apl">
-    ///  The application class object.
-    /// </param>
     /// <remarks>
     ///  This method will not return until the window is closed.
     /// </remarks>

@@ -3,7 +3,13 @@
 // Stub.fs : Defines stub classes for debug use.
 // 
 
+//=============================================================================
+// Namespace declaration
+
 namespace Haruka.Test
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.Threading.Tasks
@@ -13,6 +19,12 @@ open Haruka.Commons
 open Haruka.BlockDeviceLU
 open Haruka.IODataTypes
 
+//=============================================================================
+// Type definition
+
+/// <summary>
+///  Default stub class for IIscsiTask.
+/// </summary>
 type public CISCSITask_Stub() =
 
     let mutable f_GetTaskType : ( unit -> iSCSITaskType ) option = None
@@ -60,6 +72,9 @@ type public CISCSITask_Stub() =
         override _.Executed with get() =
             f_Executed.Value ()
 
+/// <summary>
+///  Default stub class for IConfiguration.
+/// </summary>
 type public CConfiguration_Stub() =
 
     let mutable f_Terminate : ( unit -> unit ) option = None
@@ -111,6 +126,9 @@ type public CConfiguration_Stub() =
         override _.DeviceName with get() =
             f_GetDeviceName.Value ()
 
+/// <summary>
+///  Default stub class for IStatus.
+/// </summary>
 type public CStatus_Stub() =
 
     let mutable f_Terminate : ( unit -> unit ) option = None
@@ -194,6 +212,9 @@ type public CStatus_Stub() =
         override _.Start() : unit =
             f_Start.Value()
 
+/// <summary>
+///  Default stub class for ISession.
+/// </summary>
 type public CSession_Stub() =
 
     let mutable f_Terminate : ( unit -> unit ) option = None
@@ -322,6 +343,9 @@ type public CSession_Stub() =
         override _.NoticeUnlockResponseFence ( mode : ResponseFenceNeedsFlag ) : unit =
             f_NoticeUnlockResponseFence.Value mode
 
+/// <summary>
+///  Default stub class for IProtocolService.
+/// </summary>
 type public CProtocolService_Stub() =
 
     let mutable f_Terminate : ( unit -> unit ) option = None
@@ -396,6 +420,9 @@ type public CProtocolService_Stub() =
         override _.GetTaskQueueUsage() : int =
             f_GetTaskQueueUsage.Value ()
 
+/// <summary>
+///  Default stub class for ILU.
+/// </summary>
 type public CLU_Stub() =
 
     let mutable f_Terminate : ( unit -> unit ) option = None
@@ -463,6 +490,9 @@ type public CLU_Stub() =
         override _.GetTaskQueueUsage ( tsih : TSIH_T ) : int =
             f_GetTaskQueueUsage.Value tsih
 
+/// <summary>
+///  Default stub class for IMedia.
+/// </summary>
 type public CMedia_Stub() =
 
     let mutable f_Initialize : ( unit -> unit ) option = None
@@ -559,6 +589,9 @@ type public CMedia_Stub() =
             f_GetWriteTickCount.Value ()
         override _.GetSubMedia() = f_GetSubMedia.Value()
         
+/// <summary>
+///  Default stub class for IPort.
+/// </summary>
 type public CPort_Stub() =
 
     let mutable f_Terminate : ( unit -> unit ) option = None
@@ -578,6 +611,9 @@ type public CPort_Stub() =
         override _.NetworkPortal with get() =
             f_GetNetworkPortal.Value ()
 
+/// <summary>
+///  Default stub class for ILoginNegociator.
+/// </summary>
 type public CLoginNegociator_Stub() =
 
     let mutable f_Terminate : ( unit -> unit ) option = None
@@ -592,8 +628,10 @@ type public CLoginNegociator_Stub() =
             f_Terminate.Value ()
         override _.Start ( runSync : bool ) : bool =
             f_Start.Value runSync
-
         
+/// <summary>
+///  Default stub class for IConnection.
+/// </summary>
 type public CConnection_Stub() =
 
     let mutable f_ConnectedDate : ( unit -> DateTime ) option = None
@@ -689,6 +727,9 @@ type public CConnection_Stub() =
         override _.GetSentBytesCount() =
             f_GetSentBytesCount.Value()
 
+/// <summary>
+///  Default stub class for IKiller.
+/// </summary>
 type public CKiller_Stub() =
     let mutable f_Add : ( IComponent -> unit ) option = None
     let mutable f_NoticeTerminate : ( unit -> unit ) option = None
@@ -703,12 +744,18 @@ type public CKiller_Stub() =
         override _.NoticeTerminate() = f_NoticeTerminate.Value()
         override _.IsNoticed = f_IsNoticed.Value()
 
+/// <summary>
+///  Default stub class for IComponent.
+/// </summary>
 type public CComponent_Stub() =
     let mutable f_Terminate : ( unit -> unit ) option = None
     member _.p_Terminate with set v = f_Terminate <- Some( v )
     interface IComponent with
         override _.Terminate() = f_Terminate.Value()
 
+/// <summary>
+///  Default stub class for IInternalLU.
+/// </summary>
 type public CInternalLU_Stub() =
 
     let mutable f_LUInterface : ( unit -> ILU ) option = None

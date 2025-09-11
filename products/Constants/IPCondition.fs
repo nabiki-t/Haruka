@@ -8,10 +8,15 @@
 
 namespace Haruka.Constants
 
+//=============================================================================
+// Import declaration
+
 open System
 open System.Net
 open System.Net.Sockets
 
+//=============================================================================
+// Type definition
 
 /// Specify the constraints that an IP address must meet.
 type IPCondition =
@@ -337,7 +342,7 @@ type IPCondition =
     /// <param name="adr">
     ///  Input string. It must be IPv4 adderess or IPv6 address.
     /// </param>
-    /// <param name="adr">
+    /// <param name="mask">
     ///  Input string. It must be IPv4 adderess mask pattern or IPv6 address mask pattern.
     /// </param>
     /// <returns>

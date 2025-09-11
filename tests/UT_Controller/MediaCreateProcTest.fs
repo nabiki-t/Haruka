@@ -1,10 +1,18 @@
-﻿namespace Haruka.Test.UT.Controller
+﻿//=============================================================================
+// Haruka Software Storage.
+// MediaCreateProcTest.fs : Test cases for MediaCreateProc class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Controller
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
-open System.Threading.Tasks
-open System.Text
-open System.Net.Sockets
 
 open Xunit
 
@@ -16,8 +24,13 @@ open Haruka.IODataTypes
 open System.Diagnostics
 open System.Threading
 
+//=============================================================================
+// Class implementation
 
 type MediaCreateProc_Test () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     do
         let lock = GlbFunc.LogParamUpdateLock()
@@ -35,7 +48,8 @@ type MediaCreateProc_Test () =
         GlbFunc.CreateDir dname |> ignore
         dname
 
-
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.Constractor_001() =

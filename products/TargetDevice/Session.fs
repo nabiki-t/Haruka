@@ -16,9 +16,6 @@ namespace Haruka.TargetDevice
 open System
 open System.IO
 open System.Threading
-open System.Threading.Tasks
-open System.Threading.Tasks.Dataflow
-open System.Collections.Concurrent
 open System.Collections.Generic
 open System.Collections.Immutable
 
@@ -81,6 +78,8 @@ type ProcessWaitQueue =
 
     }
 
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///   Session class definition.
@@ -158,7 +157,6 @@ type Session
     //=========================================================================
     // Interface method
 
-    /// <inheritdoc />
     interface ISession with
 
         // --------------------------------------------------------------------
@@ -491,14 +489,11 @@ type Session
                         // So, sense data should always be stored in the SCSI Response PDU.
                         // But, if the limit is exceeded, truncate the sense data so that it can be stored in the response PDU.
                         SPDTL
-//                            |> min ( uint32 allocationLength )
                         |> min ( mbl - 2u )
-                        //|> min ( if bidirectCmd then ( berdl - 2u ) else ( edtl - 2u ) )
                         |> min ( mrdsl_I - 2u )
                     else
                         SPDTL
                         |> min ( uint32 allocationLength )
-                        //|> min mbl    これは違う
                         |> min ( if bidirectCmd then berdl else edtl )
 
                 // data length of SCSI response PDU
@@ -538,45 +533,6 @@ type Session
                                 ResponseFence = ResponseFenceNeedsFlag.Immediately;
                             } :> ILogicalPDU
                         )
-#if false
-                        // Divite sendDataBytes to some of Data-In PDUs
-                        let rec loop sp cnt ( li : ILogicalPDU list ) =
-                            if sp >= realSendDataLength then
-                                li
-                            else
-                                let seglen = min mrdsl_I ( realSendDataLength - sp )
-                                let lastPDUFlag = sp + mrdsl_I >= realSendDataLength
-                                let w : ILogicalPDU = {
-                                    F = lastPDUFlag;
-                                    A = if m_sessionParameter.ErrorRecoveryLevel > 0uy then lastPDUFlag else false;
-                                    O = false;  // ignored
-                                    U = false;  // ignored
-                                    S = false;  // Haruka does not use this flag
-                                    Status = ScsiCmdStatCd.GOOD;  // ignored
-                                    LUN =
-                                        if m_sessionParameter.ErrorRecoveryLevel > 0uy && lastPDUFlag then
-                                            lun
-                                        else
-                                            lun_me.zero;
-                                    InitiatorTaskTag = itt;
-                                    TargetTransferTag =
-                                        if m_sessionParameter.ErrorRecoveryLevel > 0uy && lastPDUFlag then
-                                            this.GenerateTTTValue()
-                                        else
-                                            ttt_me.fromPrim 0xffffffffu;
-                                    StatSN = statsn_me.zero;
-                                    ExpCmdSN = cmdsn_me.zero;
-                                    MaxCmdSN = cmdsn_me.zero;
-                                    DataSN = cnt;
-                                    BufferOffset = sp;
-                                    ResidualCount = 0u;
-                                    DataSegment = argSendDataBytes.GetArraySegment ( int sp ) ( int seglen )
-                                    ResponseFence = ResponseFenceNeedsFlag.Immediately;
-                                }
-                                loop ( sp + seglen ) ( datasn_me.next cnt ) ( w :: li )
-                        loop 0u datasn_me.zero []
-
-#endif
                     else
                         []
 
@@ -641,30 +597,6 @@ type Session
                     ResponseFence = needResponseFence;
                     DataInBuffer = argSendDataBytes;
                 }
-#if false
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "writeOnlyCmd = %b" writeOnlyCmd )
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "edtl = %d" edtl )
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "recvDataLength = %d" recvDataLength )
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "SPDTL = %d" SPDTL )
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "SCSI response PDU o = %b" ( resp :?> SCSIResponsePDU ).o )
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "SCSI response PDU u = %b" ( resp :?> SCSIResponsePDU ).u )
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "SCSI response PDU O = %b" ( resp :?> SCSIResponsePDU ).O )
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "SCSI response PDU U = %b" ( resp :?> SCSIResponsePDU ).U )
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "SCSI response PDU Response = %d" ( byte ( resp :?> SCSIResponsePDU ).Response ) )
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "SCSI response PDU Status = %d" ( byte ( resp :?> SCSIResponsePDU ).Status ) )
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "SCSI response PDU InitiatorTaskTag = %d" ( resp :?> SCSIResponsePDU ).InitiatorTaskTag )
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "SCSI response PDU SNACKTag = %d" ( resp :?> SCSIResponsePDU ).SNACKTag )
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "SCSI response PDU StatSN = %d" ( resp :?> SCSIResponsePDU ).StatSN )
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "SCSI response PDU ExpCmdSN = %d" ( resp :?> SCSIResponsePDU ).ExpCmdSN )
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "SCSI response PDU MaxCmdSN = %d" ( resp :?> SCSIResponsePDU ).MaxCmdSN )
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "SCSI response PDU ExpDataSN = %d" ( resp :?> SCSIResponsePDU ).ExpDataSN )
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "SCSI response PDU BidirectionalReadResidualCount = %d" ( resp :?> SCSIResponsePDU ).BidirectionalReadResidualCount )
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "SCSI response PDU ResidualCount = %d" ( resp :?> SCSIResponsePDU ).ResidualCount )
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "SCSI response PDU SenseLength = %d" ( resp :?> SCSIResponsePDU ).SenseLength )
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "SCSI response PDU SenseData.Length = %d" ( resp :?> SCSIResponsePDU ).SenseData.Count  )
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "SCSI response PDU ResponseData.Length = %d" ( resp :?> SCSIResponsePDU ).ResponseData.Count  )
-                HLogger.Trace1( LogID.V_TRACE, loginfo, sprintf "SCSI response PDU ResponseFence = %s" (( resp :?> SCSIResponsePDU ).ResponseFence.ToString()) )
-#endif
 
                 dataPDUList
                 |> List.iter ( fun itrPdu ->
@@ -739,6 +671,9 @@ type Session
     /// <param name="sock">
     ///  Socket of the newly established connection.
     /// </param>
+    /// <param name="conTime">
+    ///  Connected date time.
+    /// </param>
     /// <param name="newCID">
     ///  Connection ID of the new connection.
     /// </param>
@@ -750,9 +685,6 @@ type Session
     /// </param>
     /// <param name="iSCSIParamsCO">
     ///  Negociated connection only parameters.
-    /// </param>
-    /// <param name="nextFirstPDU">
-    ///  Next PDU data, that have to be processed by newly created connection.
     /// </param>
     member private this.AddConnection_Sub
         ( sock : Stream )
@@ -1057,6 +989,9 @@ type Session
     /// <param name="argCmdSN">
     ///   CmdSN value.
     /// </param>
+    /// <param name="currentQ">
+    ///   Current process wait queue.
+    /// </param>
     /// <returns>
     ///   It specified CmdSN is acceptable returns true, otherwise false.
     /// </returns>
@@ -1079,6 +1014,9 @@ type Session
     /// </param>
     /// <param name="pdu">
     ///   Received PDU.
+    /// </param>
+    /// <param name="currentQ">
+    ///   Current process wait queue.
     /// </param>
     /// <returns>
     ///   If received PDU is no acceptable, it returns task to send reject PDU, otherwise returns next task list status.
@@ -1116,11 +1054,14 @@ type Session
     /// <summary>
     ///   Update or insert a task management request iSCSI task to m_ProcessWaitQueue, and execute runnable tasks.
     /// </summary>
-    /// <param name="cidInfo">
+    /// <param name="conn">
     ///   Connection that is received a PDU specified by pdu argument.
     /// </param>
     /// <param name="pdu">
     ///   Received PDU.
+    /// </param>
+    /// <param name="currentQ">
+    ///   Current process wait queue.
     /// </param>
     /// <returns>
     ///   If received PDU is no acceptable, it returns task to send reject PDU, otherwise returns next task list status.
@@ -1155,11 +1096,14 @@ type Session
     /// <summary>
     ///   Update or insert a logout request iSCSI task to m_ProcessWaitQueue, and execute runnable tasks.
     /// </summary>
-    /// <param name="cidInfo">
+    /// <param name="conn">
     ///   Connection that is received a PDU specified by pdu argument.
     /// </param>
     /// <param name="pdu">
     ///   Received PDU.
+    /// </param>
+    /// <param name="currentQ">
+    ///   Current process wait queue.
     /// </param>
     /// <returns>
     ///   If received PDU is no acceptable, it returns task to send reject PDU, otherwise returns next task list status.
@@ -1194,11 +1138,14 @@ type Session
     /// <summary>
     ///   Update or insert a SCSI Command request iSCSI task to m_ProcessWaitQueue, and execute runnable tasks.
     /// </summary>
-    /// <param name="cidInfo">
+    /// <param name="conn">
     ///   Connection that is received a PDU specified by pdu argument.
     /// </param>
     /// <param name="pdu">
     ///   Received PDU.
+    /// </param>
+    /// <param name="currentQ">
+    ///   Current process wait queue.
     /// </param>
     /// <returns>
     ///   If received PDU is no acceptable, it returns task to send reject PDU, otherwise returns next task list status.
@@ -1267,6 +1214,9 @@ type Session
     /// </param>
     /// <param name="pdu">
     ///   Received PDU.
+    /// </param>
+    /// <param name="currentQ">
+    ///   Current process wait queue.
     /// </param>
     /// <returns>
     ///   If received PDU is no acceptable, it returns task to send reject PDU, otherwise returns next task list status.
@@ -1368,6 +1318,9 @@ type Session
     /// <param name="pdu">
     ///   Received PDU.
     /// </param>
+    /// <param name="currentQ">
+    ///   Current process wait queue.
+    /// </param>
     /// <returns>
     ///   If received PDU is no acceptable, it returns task to send reject PDU, otherwise returns next task list status.
     /// </returns>
@@ -1419,8 +1372,8 @@ type Session
     /// <param name="conn">
     ///   Interface of connection object.
     /// </param>
-    /// <param name="header">
-    ///   Header bytes data of rejected PDU that is sent to the initiator.
+    /// <param name="pdu">
+    ///   The rejected PDU that is sent to the initiator.
     /// </param>
     /// <param name="argReason">
     ///   Reason code.
@@ -1475,7 +1428,7 @@ type Session
     /// <param name="pdu">
     ///   SCSI Response or SCSI Data-In PDU that generated by R-SNACK request.
     /// </param>
-    /// </param name="sendType">
+    /// <param name="sendType">
     ///   send pdu type.
     /// </param>
     member private _.SendOtherPDU_sub ( cid : CID_T ) ( counter : CONCNT_T ) ( pdu : ILogicalPDU ) ( sendType : SendOtherPDUType ) : unit =
@@ -1525,7 +1478,6 @@ type Session
     ///  pair of start position, length and F bit value.
     /// </returns>
     static member private DivideRespDataSegment( sendDataLength : uint32 ) ( mbl : uint32 ) ( mrdsl : uint32 )  : struct ( uint32 * uint32 * bool ) list =
-//        let acc2 = List< struct ( uint32 * uint32 * bool ) >()
         let rec processBursts ( burstStart : uint32 ) ( acc1 : struct ( uint32 * uint32 * bool ) list ) =
             if burstStart < sendDataLength then
                 let remaining = sendDataLength - burstStart
@@ -1536,7 +1488,6 @@ type Session
                         let pduSize = min remainInBurst mrdsl
                         let isLastInBurst = ( pduOffset + pduSize ) = burstSize
                         let nextAcc = struct ( burstStart + pduOffset, pduSize, isLastInBurst ) :: acc2
-//                        acc2.Add struct ( burstStart + pduOffset, pduSize, isLastInBurst )
                         processPDUs ( pduOffset + pduSize ) nextAcc
                     else
                         acc2
@@ -1548,6 +1499,3 @@ type Session
             processBursts 0u [] |> List.rev
         else
             []
-//        acc2
-
-

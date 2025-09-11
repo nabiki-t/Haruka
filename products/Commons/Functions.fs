@@ -20,12 +20,11 @@ open System.Threading
 open System.Threading.Tasks
 open System.Collections.Generic
 open System.Collections.Frozen
-open System.Buffers
 
 open Haruka.Constants
 
 //=============================================================================
-// Function definition
+// Type definition
 
 /// <summary>
 ///   Definitions of type that is used at Functions.loopAsyncWithArgs function.
@@ -35,6 +34,9 @@ type LoopState< 'a, 'b > =
     | Continue of 'a
     /// Specifies that a function call is terminated
     | Terminate of 'b
+
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///   Definitions of global functions globaly used in Haruka project.
@@ -177,7 +179,7 @@ type Functions() =
     /// <param name="init">
     ///   CRC32 initial value.
     /// </param>
-    /// </param name="v">
+    /// <param name="v">
     ///   Byte array
     /// </param>
     /// <param name="s">
@@ -204,7 +206,7 @@ type Functions() =
     /// <param name="init">
     ///   CRC32 initial value.
     /// </param>
-    /// </param name="v">
+    /// <param name="v">
     ///   Byte array
     /// </param>
     /// <param name="s">
@@ -232,7 +234,7 @@ type Functions() =
     /// <param name="init">
     ///   CRC32 initial value.
     /// </param>
-    /// </param name="v">
+    /// <param name="v">
     ///   Byte array
     /// </param>
     /// <param name="s">
@@ -948,7 +950,7 @@ type Functions() =
     /// </param>
     /// <returns>
     ///   Appended path name, separated \ or / character.
-    /// </param>
+    /// </returns>
     static member AppendPathName ( p1 : string ) ( p2 : string ) : string =
         Functions.OptimizePathName( Path.Join( p1, p2 ) )
 
@@ -961,7 +963,7 @@ type Functions() =
     /// </param>
     /// <returns>
     ///   Parent directory name of specified path.
-    /// </param>
+    /// </returns>
     static member GetParentName ( p1 : string ) : string =
         Functions.AppendPathName p1 ".."
 
@@ -974,7 +976,7 @@ type Functions() =
     /// </param>
     /// <returns>
     ///   Optimized path name.
-    /// </param>
+    /// </returns>
     static member OptimizePathName ( p1 : string ) : string =
         if p1.Length <= 0 then
             ""
@@ -1392,15 +1394,17 @@ type Functions() =
     ///   Given value of LoopState.Terminate
     /// </returns>
     /// <code>
+    /// <![CDATA[
     ///   let loop1 ( s : int ) : Task<LoopState<int, string>> =
     ///     task {
-    ///       if s < 10 then
+    ///       if s &lt; 10 then
     ///         return Continue( s + 1 )
     ///       else
     ///         return Terminate( sprintf "%d" s )
     ///     }
     ///   let! r = loopAsyncWithArgs loop1 0
     ///   printfn "r = %s" r
+    /// ]]>
     /// </code>
     static member loopAsyncWithArgs ( f : ( 'a -> Task<LoopState<'a,'b>> ) ) ( init : 'a ) : Task<'b> =
         task {
@@ -1800,16 +1804,16 @@ type Functions() =
     ///  string sequence 2
     /// </param>
     /// <returns>
-    ///  If a < b, it returns negative value. If a > b, it returns positive value. Otherwise 0.
+    ///  If a is less than b, it returns negative value. If a is greater than b, it returns positive value. Otherwise 0.
     /// </returns>
     /// <code>
-    ///  > CompareMultiLevelKey [| "a" |] [| "a" |];;
+    ///  CompareMultiLevelKey [| "a" |] [| "a" |];;
     ///  val it: int = 0
-    ///  > CompareMultiLevelKey [| "b" |] [| "a" |];;
+    ///  CompareMultiLevelKey [| "b" |] [| "a" |];;
     ///  val it: int = 1
-    ///  > CompareMultiLevelKey [| "a"; "c" |] [| "a" |];;
+    ///  CompareMultiLevelKey [| "a"; "c" |] [| "a" |];;
     ///  val it: int = 1
-    ///  > CompareMultiLevelKey [| "a" |] [| "a"; "c" |];;
+    ///  CompareMultiLevelKey [| "a" |] [| "a"; "c" |];;
     ///  val it: int = -1
     /// </code>
     static member CompareMultiLevelKey ( a : string seq ) ( b : string seq ) : int =

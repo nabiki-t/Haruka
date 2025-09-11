@@ -19,7 +19,6 @@ open System.Text.RegularExpressions
 open Haruka.Constants
 open Haruka.Commons
 
-
 //=============================================================================
 // Type definition
 
@@ -73,6 +72,9 @@ type EnteredValue =
     | EV_String of string
     | EV_LUN of LUN_T
     | EV_NoValue
+
+//=============================================================================
+// Class implementation
 
 /// <summary>
 /// Entered command and value

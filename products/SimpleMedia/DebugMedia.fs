@@ -21,6 +21,9 @@ open Haruka.Constants
 open Haruka.Commons
 open Haruka.IODataTypes
 
+//=============================================================================
+// Type definition
+
 /// <summary>
 ///  Indicates when a debug action should occur.
 /// </summary>
@@ -41,7 +44,7 @@ type private DebugAction =
     | Delay of int  // ignored for TestUnitReady and ReadCapacity event.
 
 //=============================================================================
-// Class definition
+// Class implementation
 
 /// <summary>
 ///  DebugMedia class definition.
@@ -383,6 +386,9 @@ type DebugMedia
     /// <summary>
     ///  Do action. Delay action is also executed.
     /// </summary>
+    /// <param name="source">
+    ///  Information about the source of the command.
+    /// </param>
     /// <param name="a">
     ///  Debug action.
     /// </param>
@@ -398,6 +404,9 @@ type DebugMedia
     /// <summary>
     ///  Execute any action other than the Delay action.
     /// </summary>
+    /// <param name="source">
+    ///  Information about the source of the command.
+    /// </param>
     /// <param name="a">
     ///  Debug action.
     /// </param>
@@ -455,6 +464,9 @@ type DebugMedia
     /// <summary>
     ///  Convert internal structure to MediaCtrlRes.T_Trap record.
     /// </summary>
+    /// <param name="counter">
+    ///  debug counter
+    /// </param>
     /// <param name="de">
     ///  Debug event data
     /// </param>

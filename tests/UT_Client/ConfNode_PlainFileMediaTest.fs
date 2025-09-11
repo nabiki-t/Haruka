@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.Client
+﻿//=============================================================================
+// Haruka Software Storage.
+// ConfNode_PlainFileMediaTest.fs : Test cases for ConfNode_PlainFileMedia class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Client
+
+//=============================================================================
+// Import declaration
 
 open System
 
@@ -10,7 +21,13 @@ open Haruka.Client
 open Haruka.IODataTypes
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
+
 type ConfNode_PlainFileMedia_Test() =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     let defaultConf : TargetGroupConf.T_PlainFile = {
         IdentNumber = mediaidx_me.fromPrim 1u;
@@ -20,6 +37,9 @@ type ConfNode_PlainFileMedia_Test() =
         QueueWaitTimeOut = Constants.PLAINFILE_MIN_QUEUEWAITTIMEOUT;
         WriteProtect = true;
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.Constractor_001() =

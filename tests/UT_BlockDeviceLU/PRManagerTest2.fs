@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.BlockDeviceLU
+﻿//=============================================================================
+// Haruka Software Storage.
+// PRManagerTest2.fs : Test cases for PRManager class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.BlockDeviceLU
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -13,7 +24,14 @@ open Haruka.BlockDeviceLU
 open Haruka.IODataTypes
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
+
 type PRManager_Test2 () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
+
     let defaultSource =  {
         I_TNexus = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us );
         CID = cid_me.zero;
@@ -96,6 +114,9 @@ type PRManager_Test2 () =
         while ( File.Exists fname ) && cnt < 200 do
             Thread.Sleep 5
             cnt <- cnt + 1
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member this.Register_001() =

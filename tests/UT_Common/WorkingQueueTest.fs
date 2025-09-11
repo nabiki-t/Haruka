@@ -1,17 +1,30 @@
-﻿namespace Haruka.Test.UT.Commons
+﻿//=============================================================================
+// Haruka Software Storage.
+// WorkingQueueTest.fs : Test cases for WorkingQueue class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Commons
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.Threading
-open System.Threading.Tasks
-open System.IO
 
 open Xunit
 
-open Haruka.Constants
 open Haruka.Commons
-open Haruka.Test
+
+//=============================================================================
+// Class implementation
 
 type WorkingQueue_Test() =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.Enqueue_001() =

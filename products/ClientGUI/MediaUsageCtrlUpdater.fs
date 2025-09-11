@@ -12,14 +12,15 @@ namespace Haruka.ClientGUI
 // Import declaration
 
 open System
-open System.Windows
 open System.Windows.Controls
-open System.Collections.Generic
 
 open Haruka.Constants
 open Haruka.IODataTypes
 open Haruka.Commons
 open Haruka.Client
+
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///  MediaUsageCtrlUpdater class.
@@ -95,11 +96,17 @@ type MediaUsageCtrlUpdater (
     /// <summary>
     ///  Update session tree.
     /// </summary>
-    /// <param name="sess">
-    ///  Loaded session information.
+    /// <param name="readBytesCount">
+    ///  Statistics about bytes read.
     /// </param>
-    /// <param name="conn">
-    ///  Loaded connection information.
+    /// <param name="writtenBytesCount">
+    ///  Statistics about bytes written.
+    /// </param>
+    /// <param name="readTickCount">
+    ///  Statistics about the tick time it takes to read.
+    /// </param>
+    /// <param name="writeTickCount">
+    ///  Statistics about the tick time it takes to written.
     /// </param>
     member _.Update 
             ( readBytesCount : TargetDeviceCtrlRes.T_RESCOUNTER list ) 

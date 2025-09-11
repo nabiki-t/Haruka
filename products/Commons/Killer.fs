@@ -13,7 +13,6 @@ namespace Haruka.Commons
 
 open System
 open System.Collections.Immutable
-open System.Threading
 
 //=============================================================================
 // Type definition
@@ -28,6 +27,10 @@ type KillerRec =
         m_SubObjs : ImmutableList< IComponent >;
     }
 
+//=============================================================================
+// Class implementation
+
+/// HKiller class notice terminate request to objects.
 type HKiller() = 
 
     /// Killer target object

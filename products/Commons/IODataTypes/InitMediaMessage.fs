@@ -2,7 +2,13 @@
 // Haruka Software Storage.
 // Definition of ReaderWriter configuration reader/writer function.
 
+//=============================================================================
+// Namespace declaration
+
 namespace Haruka.IODataTypes.InitMediaMessage
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -12,6 +18,9 @@ open System.Xml
 open System.Xml.Schema
 open System.Xml.Linq
 open Haruka.Constants
+
+//=============================================================================
+// Type definition
 
 type [<NoComparison>]T_OutputLine = {
     LineType : T_LineType;
@@ -23,6 +32,9 @@ and [<NoComparison>]T_LineType =
     | U_Progress of uint8
     | U_End of string
     | U_ErrorMessage of string
+
+//=============================================================================
+// Class implementation
 
 ///  ReaderWriter class imprements read and write function of configuration.
 type ReaderWriter() =

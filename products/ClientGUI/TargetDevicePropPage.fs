@@ -16,13 +16,14 @@ open System.Windows
 open System.Windows.Controls
 open System.Windows.Threading
 open System.ComponentModel
-open System.Collections.Generic
 
 open Haruka.Constants
 open Haruka.IODataTypes
 open Haruka.Commons
 open Haruka.Client
 
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///  TargetDevicePropPage class.
@@ -33,14 +34,14 @@ open Haruka.Client
 /// <param name="m_PropPage">
 ///  The grid object for this property page that is loaded from the XAML file.
 /// </param>
-/// <param name="m_TreeViewItem">
-///  The TreeViewItem of the TreeView on the MainWindow that corresponds to this property page.
-/// </param>
 /// <param name="m_MainWindow">
 ///  The main window object.
 /// </param>
 /// <param name="m_ServerStatus">
 ///  Server status object.
+/// </param>
+/// <param name="m_CtrlConnection">
+///  Connection.
 /// </param>
 /// <param name="m_NodeID">
 ///  node ID.
@@ -162,7 +163,6 @@ type TargetDevicePropPage(
     ///////////////////////////////////////////////////////////////////////////
     // IPropPageInterface interface
 
-    /// <inheritdoc />
     interface IPropPageInterface with
 
         // Get loaded property page UI object.
@@ -631,6 +631,9 @@ type TargetDevicePropPage(
     /// <param name="actived">
     ///  The target device process is activated or not.
     ///  If the target device is stopped, the all of controllers of current log parameters are disabled.
+    /// </param>
+    /// <param name="modified">
+    ///  Whether the configuration has been modified.
     /// </param>
     /// <param name="logParam">
     ///  Log parameters should be set to the controller.

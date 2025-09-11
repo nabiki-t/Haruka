@@ -23,7 +23,7 @@ open Haruka.Commons
 open Haruka.IODataTypes
 
 //=============================================================================
-// Class definition
+// Class implementation
 
 /// <summary>
 ///  PlainFileMedia class definition.

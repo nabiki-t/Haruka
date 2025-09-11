@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.Media
+﻿//=============================================================================
+// Haruka Software Storage.
+// PlainFileMediaTest.fs : Test cases for PlainFileMedia class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Media
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -12,6 +23,9 @@ open Haruka.Commons
 open Haruka.Test
 open Haruka.Media
 open Haruka.IODataTypes
+
+//=============================================================================
+// Type definition
 
 type CFileStream_Stub
     (
@@ -43,7 +57,13 @@ type CFileStream_Stub
         let wOffset, wCount = this.PreWrite( offset, count )
         base.WriteAsync( buffer, wOffset, wCount, c )
 
+//=============================================================================
+// Class implementation
+
 type PlainFileMedia_Test () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     do
         let lock = GlbFunc.LogParamUpdateLock()
@@ -54,6 +74,9 @@ type PlainFileMedia_Test () =
         let w1 = Functions.AppendPathName ( Path.GetTempPath() ) "PlainFileMedia_Test_" + caseName
         GlbFunc.CreateDir w1 |> ignore
         w1
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member this.Constructor_001() =

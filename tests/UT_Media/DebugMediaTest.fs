@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.Media
+﻿//=============================================================================
+// Haruka Software Storage.
+// DebugMediaTest.fs : Test cases for DebugMedia class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Media
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.Threading.Tasks
@@ -11,7 +22,13 @@ open Haruka.Commons
 open Haruka.Test
 open Haruka.Media
 
+//=============================================================================
+// Class implementation
+
 type DebugMedia_Test () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     let defaultCommandSource = {
         I_TNexus = new ITNexus( "initiator", isid_me.zero, "target", tpgt_me.zero )
@@ -101,6 +118,9 @@ type DebugMedia_Test () =
         let lock = GlbFunc.LogParamUpdateLock()
         HLogger.SetLogParameters( 100u, 100u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
         lock.Release() |> ignore
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.Constructor_001() =

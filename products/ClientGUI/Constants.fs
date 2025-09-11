@@ -16,6 +16,9 @@ open System.Windows
 
 open Haruka.Constants
 
+//=============================================================================
+// Type definition
+
 /// <summary>
 ///  Data type that represents result of dialog.
 /// </summary>

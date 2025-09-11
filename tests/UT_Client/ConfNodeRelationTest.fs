@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.Client
+﻿//=============================================================================
+// Haruka Software Storage.
+// ConfNodeRelationTest.fs : Test cases for ConfNodeRelation class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Client
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.Collections
@@ -6,11 +17,12 @@ open System.Collections.Generic
 
 open Xunit
 
-open Haruka.Constants
-open Haruka.Commons
 open Haruka.Client
 open Haruka.IODataTypes
 open Haruka.Test
+
+//=============================================================================
+// Type definition
 
 type DummyNode( m_NodeID : CONFNODE_T, m_TypeName : string ) =
     interface IConfigureNode with
@@ -42,8 +54,13 @@ type DummyNode2( m_NodeID : CONFNODE_T, m_TypeName : string ) =
         override _.SortKey : string list = []
         override _.TempExportData : TempExport.T_Node = { TypeName = ""; NodeID = 0UL; Values = []; }
 
+//=============================================================================
+// Class implementation
 
 type ConfNodeRelation_Test() =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.Constractor_001() =

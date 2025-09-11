@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.BlockDeviceLU
+﻿//=============================================================================
+// Haruka Software Storage.
+// ModeParameterTest.fs : Test cases for ModeParameter class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.BlockDeviceLU
+
+//=============================================================================
+// Import declaration
 
 open System
 
@@ -9,8 +20,13 @@ open Haruka.Commons
 open Haruka.BlockDeviceLU
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
 
 type ModeParameter_Test () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     let cmdSource = {
         I_TNexus = new ITNexus( "INIT", isid_me.zero, "TARG", tpgt_me.zero );
@@ -35,6 +51,8 @@ type ModeParameter_Test () =
             lun_me.zero
         )
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.Select6_001() =

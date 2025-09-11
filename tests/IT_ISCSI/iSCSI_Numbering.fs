@@ -1,21 +1,28 @@
-﻿namespace Haruka.Test.IT.ISCSI
+﻿//=============================================================================
+// Haruka Software Storage.
+// iSCSI_Numbering.fs : Test cases for iSCSI numbering.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.IT.ISCSI
+
+//=============================================================================
+// Import declaration
 
 open System
-open System.Threading
-open System.Threading.Tasks
 open System.IO
-open System.Diagnostics
-open System.Net.Sockets
+open System.Net
 
 open Xunit
 
 open Haruka.Constants
 open Haruka.Commons
-open Haruka.TargetDevice
 open Haruka.Test
-open Xunit.Abstractions
-open System.Text
-open System.Net
+
+//=============================================================================
+// Class implementation
 
 [<CollectionDefinition( "iSCSI_Numbering" )>]
 type iSCSI_Numbering_Fixture() =
@@ -81,6 +88,9 @@ type iSCSI_Numbering_Fixture() =
 [<Collection( "iSCSI_Numbering" )>]
 type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
+
     let g_CID0 = cid_me.zero
     let g_CID1 = cid_me.fromPrim 1us
     let g_CID2 = cid_me.fromPrim 2us
@@ -112,6 +122,22 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             wtl.[0]; wtl.[1];                       // TRANSFER LENGTH
             0x00uy;                                 // NACA(0), LINK(0)
             0x00uy; 0x00uy; 0x00uy; 0x00uy;         // padding
+            0x00uy; 0x00uy;
+        |]
+
+    let scsiRead10CDB ( transferLength : uint16 ) =
+        let w =
+            ( int16 ) transferLength
+            |> IPAddress.HostToNetworkOrder
+            |> BitConverter.GetBytes
+        [|
+            0x28uy;                         // OPERATION CODE( Read 10 )
+            0x00uy;                         // RDPROTECT(000), DPO(0), FUA(0), FUA_NV(0)
+            0x00uy; 0x00uy; 0x00uy; 0x00uy; // LBA
+            0x00uy;                         // GROUP NUMBER(0)
+            w.[0]; w.[1];                   // TRANSFER LENGTH
+            0x00uy;                         // NACA(0), LINK(0)
+            0x00uy; 0x00uy; 0x00uy; 0x00uy; // padding
             0x00uy; 0x00uy;
         |]
 
@@ -149,6 +175,9 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
         MaxRecvDataSegmentLength_I = 4096u;
         MaxRecvDataSegmentLength_T = 4096u;
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     // Sequence of non-immediate commands.
     [<Fact>]
@@ -1373,4 +1402,56 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
             let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
             sendData.Return()
+        }
+
+    [<Fact>]
+    member _.DataSN_Read_NoDataPDU_001() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+
+            // SCSI Read
+            let readCDB = scsiRead10CDB ( uint16 0us )
+            let! _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 0u readCDB PooledBuffer.Empty 0u
+
+            // SCSI Response
+            let! rpdu3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu3.Status = ScsiCmdStatCd.GOOD ))
+
+            // logout.
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            ()
+        }
+
+    [<Fact>]
+    member _.DataSN_Read_OneDataPDU_001() =
+        task {
+            let conParam = {
+                m_defaultConnParam with
+                    MaxRecvDataSegmentLength_I = 4096u;
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            let accessLength = 4096u
+            let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
+            //let pduCount = 1u
+
+            // SCSI Read
+            let readCDB = scsiRead10CDB ( uint16 accessBlockcount )
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
+
+            // SCSI Data-In
+            let! rpdu2 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+            Assert.True(( rpdu2.InitiatorTaskTag = itt ))
+            Assert.True(( rpdu2.DataSN = datasn_me.zero ))
+            Assert.True(( rpdu2.BufferOffset = 0u ))
+            Assert.True(( rpdu2.DataSegment.Count = int accessLength ))
+
+            // SCSI Response
+            let! rpdu3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu3.Status = ScsiCmdStatCd.GOOD ))
+
+            // logout.
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            ()
         }

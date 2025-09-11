@@ -6,23 +6,19 @@
 //=============================================================================
 // Namespace declaration
 
-/// <summary>
-///   Definitions of interface, that is implemented by components,
-///   and types used in interface argments etc.
-///   There interface defines responsibility of component and relationship between components.
-/// </summary>
 namespace Haruka.Commons
-
-open System
-open System.Threading.Tasks
-open Haruka.Constants
-open Haruka.IODataTypes
 
 //=============================================================================
 // Import declaration
 
+open System
+open System.Threading.Tasks
+
+open Haruka.Constants
+open Haruka.IODataTypes
+
 //=============================================================================
-// Record definition
+// Type definition
 
 /// iSCSI Negotiable parameters( Connection only parameter )
 [<NoComparison>]
@@ -288,9 +284,6 @@ type IProtocolService =
     /// <param name="counter">
     ///   Connection counter value of connection that connecting to the initiator.
     /// </param>
-    /// <param name="bidirectCmd">
-    ///   If SCSI command specified by reqCmdPDU is bidirectional command, this argument is set true.
-    /// </param>
     /// <param name="recvDataLength">
     ///   Received output data length, transfered by the SCSI command specified by reqCmdPDU.
     /// </param>
@@ -300,16 +293,19 @@ type IProtocolService =
     /// <param name="argStatCode">
     ///   SCSI status code that will be transferd to the initiator.
     /// </param>
+    /// <param name="senseData">
+    ///   Sense data that will be transfered to the initiator.
+    /// </param>
     /// <param name="resData">
     ///   All of response data.
     ///   This data may include mode than the receive buffer in the initiator
     ///   specified by allocationLength parameter.
     /// </param>
-    /// <param name="senseData">
-    ///   Sense data that will be transfered to the initiator.
-    /// </param>
     /// <param name="allocationLength">
     ///   Receive buffer size in the initiator, that is specify by SCSI command.
+    /// </param>
+    /// <param name="needResponseFence">
+    ///   Specify the type of lock based on ResponseFence.
     /// </param>
     /// <remarks>
     ///   This function run in asyncnously.
@@ -366,9 +362,6 @@ type IProtocolService =
     /// </summary>
     /// <param name="msg">
     ///   A message string that descripts cource of this session recovery.
-    /// </param>
-    /// <param name="stackTrace">
-    ///   A stack trace message that descripts cource of this session recovery.
     /// </param>
     abstract NoticeSessionRecovery : msg:string -> unit
 
@@ -502,12 +495,12 @@ type IMedia =
     /// </returns>
     /// <remarks>
     /// <code>
-    ///     Media |<======================================================================================>| ...... (A)
-    ///           |<...... argLBA*(Block Size) ......>|<========== Data to be read =========>| .....................(B)
+    ///     Media |-======================================================================================-| ...... (A)
+    ///           |-...... argLBA*(Block Size) ......-|-========== Data to be read =========-| .....................(B)
     ///                                                               ||
     ///                                                               \/
-    ///                      |<... buffer.Offset ....>|<=========== buffer.Count ===========>| .................... (C)
-    ///     In memory buffer |<=====================================================================>|
+    ///                      |-... buffer.Offset ....-|-=========== buffer.Count ===========-| .................... (C)
+    ///     In memory buffer |-=====================================================================-|
     ///  Data to be read in media is range (B), and that is represented by argLBA and buffer.Count.
     ///  Read data is must be written to a part of in memory buffer, range (C), that is represented by buffer.Offset and buffer.Count.
     /// </code>
@@ -542,12 +535,12 @@ type IMedia =
     ///   The bytes sequense to written is data.Array.[ data.Offset ] to data.Array.[ data.Offset + data.Count - 1 ].
     ///   Above data have to be written to argLBA * (Block Size) in the media. 
     ///   <code>
-    ///                      |<... buffer.Offset ....>|<=========== buffer.Count ===========>| .................... (A)
-    ///     In memory buffer |<=====================================================================>|
+    ///                      |-... buffer.Offset ....-|-=========== buffer.Count ===========-| .................... (A)
+    ///     In memory buffer |-=====================================================================-|
     ///                                                               ||
     ///                                                               \/
-    ///     Media |<======================================================================================>| ...... (B)
-    ///           |<.. argLBA*(Block Size)+offset ...>|<========== Overwritten range =======>| .....................(C)
+    ///     Media |-======================================================================================-| ...... (B)
+    ///           |-.. argLBA*(Block Size)+offset ...-|-========== Overwritten range =======-| .....................(C)
 
     ///     Data to be written is range of (A). That is the area represents by data.Offset and data.Count in data.Array.
     ///     Range (B) is all of the media.
@@ -917,9 +910,6 @@ type IConnection =
     /// <summary>
     ///   Process all of the full feature phase requests.
     /// </summary>
-    /// <param name="firstPDU">
-    ///   Received first PDU of full feature phase.
-    /// </param>
     abstract StartFullFeaturePhase : unit -> unit
 
     // ------------------------------------------------------------------------
@@ -972,7 +962,7 @@ type IConnection =
     /// <param name="itt">
     ///   ITT of R2T PDU which all of Data-Out PDU were received.
     /// </param>
-    /// <param name="itt">
+    /// <param name="datasn">
     ///   DataSN of R2T PDU which all of Data-Out PDU were received.
     /// </param>
     abstract NotifyR2TSatisfied :
@@ -1050,6 +1040,9 @@ type IConnection =
     /// </summary>
     /// <param name="itt">
     ///   Initiator Task Tag
+    /// </param>
+    /// <param name="cont">
+    ///   Next procedure.
     /// </param>
     abstract R_SNACKRequest :
             itt:ITT_T ->
@@ -1146,7 +1139,7 @@ type ISession =
     /// <param name="newCID">
     ///   Connection ID of the new connection.
     /// </param>
-    /// <param name="m_NetPortIdx">
+    /// <param name="netPortIdx">
     ///   Network portal index number where this connection was established.
     /// </param>
     /// <param name="tpgt">
@@ -1154,9 +1147,6 @@ type ISession =
     /// </param>
     /// <param name="iSCSIParamsCO">
     ///   Negociated connection only parameters.
-    /// </param>
-    /// <param name="nextFirstPDU">
-    ///   Next PDU data, that have to be processed by newly created connection.
     /// </param>
     /// <returns>
     ///   If succeed to add new connection, true is returned.
@@ -1186,7 +1176,7 @@ type ISession =
     /// <param name="newCID">
     ///   Connection ID of the new connection.
     /// </param>
-    /// <param name="m_NetPortIdx">
+    /// <param name="netPortIdx">
     ///   Network portal index number where this connection was established.
     /// </param>
     /// <param name="tpgt">
@@ -1194,9 +1184,6 @@ type ISession =
     /// </param>
     /// <param name="iSCSIParamsCO">
     ///   Negociated connection only parameters.
-    /// </param>
-    /// <param name="nextFirstPDU">
-    ///   Next PDU data, that have to be processed by newly created connection.
     /// </param>
     /// <returns>
     ///   If succeed to add new connection, true is returned.
@@ -1219,7 +1206,7 @@ type ISession =
     /// <param name="cid">
     ///   CID value of closed connection.
     /// </param>
-    /// <param name="cid">
+    /// <param name="concnt">
     ///   Connection counter value of closed connection.
     /// </param>
     abstract RemoveConnection : cid:CID_T -> concnt:CONCNT_T -> unit
@@ -1310,9 +1297,6 @@ type ISession =
     /// <param name="counter">
     ///   Connection counter value of connection that connecting to the initiator.
     /// </param>
-    /// <param name="bidirectCmd">
-    ///   If SCSI command specified by reqCmdPDU is bidirectional command, this argument is set true.
-    /// </param>
     /// <param name="recvDataLength">
     ///   Received output data length, transfered by the SCSI command specified by reqCmdPDU.
     /// </param>
@@ -1332,6 +1316,9 @@ type ISession =
     /// </param>
     /// <param name="allocationLength">
     ///   Receive buffer size in the initiator, that is specify by SCSI command.
+    /// </param>
+    /// <param name="needResponseFence">
+    ///   Specify the type of lock based on ResponseFence.
     /// </param>
     /// <remarks>
     ///   This function run in asyncnously.
@@ -1755,9 +1742,6 @@ type IStatus =
     /// <summary>
     ///   Get I_T Nexus that can access to specified LUN.
     /// </summary>
-    /// <param name="iName">
-    ///   Initiator name.
-    /// </param>
     /// <param name="lun">
     ///   LUN.
     /// </param>
@@ -1848,9 +1832,6 @@ type IStatus =
     /// <summary>
     ///   Create Media object.
     /// </summary>
-    /// <param name="peripheralType">
-    ///   Peripheral type value, that specify create media object.
-    /// </param>
     /// <param name="confInfo">
     ///   Configuration information that pass to created media object.
     /// </param>

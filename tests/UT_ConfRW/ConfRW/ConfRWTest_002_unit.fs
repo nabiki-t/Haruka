@@ -2,7 +2,13 @@
 // Haruka Software Storage.
 // Definition of ConfRW_UT002_unit configuration reader/writer function.
 
+//=============================================================================
+// Namespace declaration
+
 namespace Haruka.Test.UT.ConfRW_002_unit
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -13,12 +19,18 @@ open System.Xml.Schema
 open System.Xml.Linq
 open Haruka.Constants
 
+//=============================================================================
+// Type definition
+
 type [<NoComparison>]T_Test = {
     D1 : unit;
     D2 : unit list;
     D3 : unit option;
     D4 : unit;
 }
+
+//=============================================================================
+// Class implementation
 
 ///  ConfRW_UT002_unit class imprements read and write function of configuration.
 type ConfRW_UT002_unit() =

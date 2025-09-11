@@ -4,12 +4,10 @@
 // ResponseFence class realize iSCSI Response Fence (defined in RFC5048 3.3) mechanism.
 //
 
-
 //=============================================================================
 // Namespace declaration
 
 namespace Haruka.Commons
-
 
 //=============================================================================
 // Import declaration
@@ -20,7 +18,7 @@ open System.Collections.Immutable
 open System.Runtime.CompilerServices
 
 //=============================================================================
-// declaration
+// Type definition
 
 /// Whether response fence is required
 [<Struct; IsReadOnly>]
@@ -58,6 +56,9 @@ type ResponseFenceRec = {
     /// waiting tasks count.( It must equal ( Seq.length m_Tasks ) )
     m_QueueedTaskCount : int;
 }
+
+//=============================================================================
+// Class implementation
 
 /// Implementing iSCSI Response Fence (defined in RFC5048 3.3) mechanism.
 type ResponseFence() =

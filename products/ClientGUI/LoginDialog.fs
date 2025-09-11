@@ -12,11 +12,7 @@ namespace Haruka.ClientGUI
 // Import declaration
 
 open System
-open System.IO
-open System.Xml
-open System.Xaml
 open System.Windows
-open System.Windows.Markup
 open System.Windows.Controls
 open System.Threading
 open System.Threading.Tasks
@@ -27,6 +23,9 @@ open Haruka.Constants
 open Haruka.IODataTypes
 open Haruka.Commons
 open Haruka.Client
+
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///  LoginDialog class.
@@ -108,9 +107,6 @@ type LoginDialog( m_Config : GUIConfig ) as this =
     /// <summary>
     ///  Display the window
     /// </summary>
-    /// <param name="apl">
-    ///  The application class object.
-    /// </param>
     /// <remarks>
     ///  This method will not return until the window is closed.
     /// </remarks>
@@ -151,9 +147,6 @@ type LoginDialog( m_Config : GUIConfig ) as this =
     /// <summary>
     ///  THe dialog window had been closed.
     /// </summary>
-    /// <param name="e">
-    ///  event argument
-    /// </param>
     member private _.OnClosed_Window () : unit =
         m_BKTaskQueue.Stop()
 

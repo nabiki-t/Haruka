@@ -12,11 +12,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <WarningLevel>5</WarningLevel>
     <Tailcalls>True</Tailcalls>
+    <OtherFlags>--warnon:3390</OtherFlags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <WarningLevel>5</WarningLevel>
     <Tailcalls>True</Tailcalls>
+    <OtherFlags>--warnon:3390</OtherFlags>
   </PropertyGroup>
 
   <ItemGroup>

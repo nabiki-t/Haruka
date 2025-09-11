@@ -1,21 +1,33 @@
-﻿namespace Haruka.Test.UT.Client
+﻿//=============================================================================
+// Haruka Software Storage.
+// CommandReaderTest.fs : Test cases for CommandReader class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Client
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
-open System.Collections.Generic
-open System.Text
-open System.Text.RegularExpressions
 
 open Xunit
 
 open Haruka.Constants
 open Haruka.Commons
 open Haruka.Client
-open Haruka.IODataTypes
 open Haruka.Test
+
+//=============================================================================
+// Class implementation
 
 type CommandReader_Test() =
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     let GenCommandStream ( txt : string ) =
         let ms = new MemoryStream()
@@ -53,6 +65,9 @@ type CommandReader_Test() =
                 Assert.True(( x.Message.StartsWith resultmsg ))
         }
         |> Functions.RunTaskSynchronously
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.InputCommand_001() =

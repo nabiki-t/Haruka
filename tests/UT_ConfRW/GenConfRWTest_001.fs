@@ -1,10 +1,18 @@
-﻿namespace Haruka.Test.UT.GenConfRW
+﻿//=============================================================================
+// Haruka Software Storage.
+// GenConfRWTest_001.fs : Test cases for GenConfRW module.
+//
 
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.GenConfRW
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
-open System.Threading
-open System.Text
 
 open Xunit
 
@@ -14,14 +22,21 @@ open Haruka.Test
 open Haruka.Test.UT
 open System.Net
 
-
+//=============================================================================
+// Class implementation
 
 type GenConfRW_Test_001 () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     member _.CreateTestDir() =
         let w1 = Functions.AppendPathName ( Path.GetTempPath() ) "GenConfRW_Test_001"
         GlbFunc.CreateDir w1 |> ignore
         w1
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member this.FileRead_001() =

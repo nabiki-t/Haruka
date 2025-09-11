@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.Client
+﻿//=============================================================================
+// Haruka Software Storage.
+// ConfNode_NetworkPortalTest.fs : Test cases for ConfNode_NetworkPortal class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Client
+
+//=============================================================================
+// Import declaration
 
 open System
 
@@ -10,7 +21,13 @@ open Haruka.Client
 open Haruka.IODataTypes
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
+
 type ConfNode_NetworkPortal_Test() =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     let defaultConf : TargetDeviceConf.T_NetworkPortal = {
         IdentNumber = netportidx_me.fromPrim 0u;
@@ -29,6 +46,9 @@ type ConfNode_NetworkPortal_Test() =
         LogParameters = None;
         DeviceName = "abc";
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.Constractor_001() =

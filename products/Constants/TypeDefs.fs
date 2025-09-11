@@ -429,7 +429,8 @@ type TPGT_T = uint16<tpgt_me>
 ///  Internally, lun is represented by uint64.
 ///  However, legal LUN values ​​are between 0 and 255.
 ///  LUN value is defined as "FIRST LEVEL(0xXXXX) - SECOND LEVEL(0xXXXX) - THIRD LEVEL(0xXXXX) - FOURTH LEVEL(0xXXXX)" in SAM-2.
-///  The internal representation is handled as "(FOURTH LEVEL <<< 48) ||| (THIRD LEVEL <<< 32) ||| (SECOND LEVEL <<< 16) ||| FIRST LEVEL".
+///  The internal representation is handled as 0xFFFFTTTTSSSSIIII.
+///  Where FFFF is FOURTH LEVEL, TTTT is THIRD LEVEL, SSSS is SECOND LEVEL and IIII is FIRST LEVEL".
 ///  The values ​​at each level are in network byte order.
 /// </remarks>
 [<Measure>]

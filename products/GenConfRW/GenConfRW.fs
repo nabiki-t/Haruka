@@ -1,7 +1,10 @@
 ﻿//=============================================================================
 // Haruka Software Storage.
 // GenConfRW.fs : Configuration XML document reader/writer program generator.
-// 
+//
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -11,6 +14,9 @@ open System.Xml.Schema
 open System.Xml.Linq
 open System.Reflection
 open Haruka.Constants
+
+//=============================================================================
+// module implementation
 
 /// Validator for the definition file of the XML document to be input and output.
 let inputXSD = "<?xml version='1.0' encoding='UTF-8'?>
@@ -291,6 +297,9 @@ let convSimpleValueTypeName ( elem : XElement ) ( ignoreCount : bool ) : string 
 /// <summary>
 ///  Recursively generate type declarations for the specified node and all child nodes.
 /// </summary>
+/// <param name="outfile">
+///  output destination.
+/// </param>
 /// <param name="isFirst">
 ///  elem is first node or not.
 /// </param>
@@ -383,11 +392,17 @@ let GenElementTagStr ( refType : string ) ( elem : XElement ) ( ignoreCount : bo
 /// <summary>
 ///  Generate XSD string for the specified node.
 /// </summary>
+/// <param name="outfile">
+///  output destination.
+/// </param>
 /// <param name="elem">
 ///   XML "item" node.
 /// </param>
-/// <param name="param">
+/// <param name="indent">
 ///   Indent count.
+/// </param>
+/// <param name="parentIsSelection">
+///   Whether the parent node is a selection.
 /// </param>
 /// <returns>
 ///   Close tag string that must be appended after generating the XSD string for the child node.
@@ -650,6 +665,9 @@ let OutputOwnNode ( outfile : TextWriter ) ( elem : XElement ) ( indent : int ) 
 /// <summary>
 ///  Recursively generate XSD string for the specified node and all child nodes.
 /// </summary>
+/// <param name="outfile">
+///  output destination.
+/// </param>
 /// <param name="isroot">
 ///   If true, this node is the root node.
 /// </param>
@@ -658,6 +676,9 @@ let OutputOwnNode ( outfile : TextWriter ) ( elem : XElement ) ( indent : int ) 
 /// </param>
 /// <param name="indent">
 ///   Indent count.
+/// </param>
+/// <param name="parentIsSelection">
+///   Whether the parent node is a selection.
 /// </param>
 let rec OutputXSD ( outfile : TextWriter ) ( isroot : bool ) ( elem : XElement ) ( indent : int ) ( parentIsSelection : bool ) : unit =
     let closeTag, currentIsSelection =
@@ -945,6 +966,9 @@ let genSetDefaultValueStr_Default ( constraintStr : string ) : string =
 /// <summary>
 ///  Recursively generate reader code for the specified node and all child nodes.
 /// </summary>
+/// <param name="outfile">
+///  output destination.
+/// </param>
 /// <param name="className">
 ///   Class name specified in the root node.
 /// </param>
@@ -1078,6 +1102,9 @@ let rec OutputReaderCode ( outfile : TextWriter ) ( className : string ) ( elem 
 /// <summary>
 ///  Generate converter code for single value at specified node.
 /// </summary>
+/// <param name="outfile">
+///  output destination.
+/// </param>
 /// <param name="indent">
 ///   Indent level on the F# source code.
 /// </param>
@@ -1325,6 +1352,9 @@ let callWriteFuncStr ( outfile : TextWriter ) ( indent : int ) ( className : str
 /// <summary>
 ///  Recursively generate converter code for the specified node and all child nodes.
 /// </summary>
+/// <param name="outfile">
+///  output destination.
+/// </param>
 /// <param name="className">
 ///   Class name specified in the root node.
 /// </param>
@@ -1453,7 +1483,13 @@ let Convert ( infile : TextReader ) ( outfile : TextWriter ) : int =
     fprintfn outfile "// Haruka Software Storage."
     fprintfn outfile "// Definition of %s configuration reader/writer function." classStr
     fprintfn outfile ""
+    fprintfn outfile "//============================================================================="
+    fprintfn outfile "// Namespace declaration"
+    fprintfn outfile ""
     fprintfn outfile "namespace %s" namespaceStr
+    fprintfn outfile ""
+    fprintfn outfile "//============================================================================="
+    fprintfn outfile "// Import declaration"
     fprintfn outfile ""
     fprintfn outfile "open System"
     fprintfn outfile "open System.IO"
@@ -1464,12 +1500,18 @@ let Convert ( infile : TextReader ) ( outfile : TextWriter ) : int =
     fprintfn outfile "open System.Xml.Linq"
     fprintfn outfile "open Haruka.Constants"
     fprintfn outfile ""
+    fprintfn outfile "//============================================================================="
+    fprintfn outfile "// Type definition"
+    fprintfn outfile ""
 
     // Output data type defifnition
     for itr in elemRoot.Elements() do
         convXMLtoSCode outfile ( itr = firstElem ) itr
 
     // Outpu class name
+    fprintfn outfile "//============================================================================="
+    fprintfn outfile "// Class implementation"
+    fprintfn outfile ""
     fprintfn outfile "///  %s class imprements read and write function of configuration." classStr
     fprintfn outfile "type %s() =" classStr
 

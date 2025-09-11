@@ -62,7 +62,6 @@ type ConfigurationMaster( m_WorkDirPath : string, killer : IKiller ) as this =
     //=========================================================================
     // Interface method
 
-    /// <inheritdoc />
     interface IConfiguration with
 
         // --------------------------------------------------------------------
@@ -241,6 +240,9 @@ type ConfigurationMaster( m_WorkDirPath : string, killer : IKiller ) as this =
     ///   It Loads the system master configuration file,
     ///   and parses the XML file and returns internal config data structure.
     /// </summary>
+    /// <param name="workDirPath">
+    ///   Path name of the working folder.
+    /// </param>
     /// <param name="objId">
     ///   Identifier of configuration master instance.
     /// </param>

@@ -1,6 +1,6 @@
 ﻿//=============================================================================
 // Haruka Software Storage.
-// MemBuffer.fs : Defines MemBuffer class.
+// MemBufferMedia.fs : Defines MemBufferMedia class.
 // MemBuffer class implement RAM disk functionality.
 // 
 
@@ -13,8 +13,6 @@ namespace Haruka.Media
 // Import declaration
 
 open System
-open System.IO
-open System.Threading
 open System.Threading.Tasks
 open System.Diagnostics
 
@@ -23,7 +21,7 @@ open Haruka.Commons
 open Haruka.IODataTypes
 
 //=============================================================================
-// Class definition
+// Class implementation
 
 /// <summary>
 ///  MemBufferMedia class definition.

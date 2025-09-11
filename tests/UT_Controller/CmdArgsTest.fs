@@ -1,18 +1,31 @@
-﻿namespace Haruka.Test.UT.Controller
+﻿//=============================================================================
+// Haruka Software Storage.
+// CmdArgsTest.fs : Test cases for CmdArgs class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Controller
+
+//=============================================================================
+// Import declaration
 
 open System
-open System.IO
-open System.Collections.Generic
 
 open Xunit
 
 open Haruka.Constants
 open Haruka.Commons
 open Haruka.Controller
-open Haruka.IODataTypes
-open Haruka.Test
+
+//=============================================================================
+// Class implementation
 
 type CmdArgs_Test () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.CmdArgs_001() =

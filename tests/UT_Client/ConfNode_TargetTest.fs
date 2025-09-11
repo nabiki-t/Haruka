@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.Client
+﻿//=============================================================================
+// Haruka Software Storage.
+// ConfNode_TargetTest.fs : Test cases for ConfNode_Target class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Client
+
+//=============================================================================
+// Import declaration
 
 open System
 
@@ -10,7 +21,13 @@ open Haruka.Client
 open Haruka.IODataTypes
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
+
 type ConfNode_Target_Test() =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     let defaultConf : TargetGroupConf.T_Target = {
         IdentNumber = tnodeidx_me.fromPrim 1u;
@@ -20,6 +37,9 @@ type ConfNode_Target_Test() =
         LUN = [ lun_me.fromPrim 1UL ];
         Auth = TargetGroupConf.U_None();
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.Constractor_001() =

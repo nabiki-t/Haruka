@@ -13,17 +13,13 @@ namespace Haruka.Client
 
 open System
 open System.Collections.Generic
-open System.Threading
-open System.Threading.Tasks
-open System.Xml
-open System.Xml.Schema
 
 open Haruka.Constants
 open Haruka.Commons
 open Haruka.IODataTypes
 
 //=============================================================================
-// Type definition
+// Class implementation
 
 /// <summary>
 ///  Target device node used at the configurations.
@@ -34,7 +30,7 @@ open Haruka.IODataTypes
 /// <param name="m_ConfNodes">
 ///  Configuration nodes holder.
 /// </param>
-/// <param name="argNodeID">
+/// <param name="m_NodeID">
 ///  Node ID of this node.
 /// </param>
 /// <param name="m_NetworkPortal">
@@ -59,9 +55,6 @@ type ConfNode_NetworkPortal(
     /// </param>
     /// <param name="newNodeID">
     ///  Node ID should be set this node.
-    /// </param>
-    /// <param name="newNPID">
-    ///  Network portal ID should be set this node.
     /// </param>
     /// <param name="tempExp">
     ///  Temp export format data.
@@ -90,7 +83,6 @@ type ConfNode_NetworkPortal(
     //=========================================================================
     // Interface method
 
-    /// <inheritdoc />
     interface IConfigureNode with
         
         // --------------------------------------------------------------------

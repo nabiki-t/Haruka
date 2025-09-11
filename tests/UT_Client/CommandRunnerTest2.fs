@@ -1,12 +1,19 @@
-﻿namespace Haruka.Test.UT.Client
+﻿//=============================================================================
+// Haruka Software Storage.
+// CommandRunnerTest2.fs : Test cases for CommandRunner class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Client
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
-open System.Collections.Generic
-open System.Text
-open System.Text.RegularExpressions
 open System.Threading.Tasks
-open System.Net
 open System.Net.Sockets
 
 open Xunit
@@ -17,8 +24,13 @@ open Haruka.Client
 open Haruka.IODataTypes
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
 
 type CommandRunner_Test2() =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     let GenCommandStream ( txt : string ) =
         let ms = new MemoryStream()
@@ -72,6 +84,9 @@ type CommandRunner_Test2() =
             HardLimit = 0u;
             LogLevel = LogLevel.LOGLEVEL_INFO;
         }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.exit_001() =

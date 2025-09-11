@@ -2,7 +2,13 @@
 // Haruka Software Storage.
 // Definition of ConfRW_UT002_PR_TYPE configuration reader/writer function.
 
+//=============================================================================
+// Namespace declaration
+
 namespace Haruka.Test.UT.ConfRW_002_PR_TYPE
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -13,6 +19,9 @@ open System.Xml.Schema
 open System.Xml.Linq
 open Haruka.Constants
 
+//=============================================================================
+// Type definition
+
 type [<NoComparison>]T_Test = {
     D1 : PR_TYPE;
     D2 : PR_TYPE list;
@@ -21,6 +30,9 @@ type [<NoComparison>]T_Test = {
     D5 : PR_TYPE;
     D6 : PR_TYPE;
 }
+
+//=============================================================================
+// Class implementation
 
 ///  ConfRW_UT002_PR_TYPE class imprements read and write function of configuration.
 type ConfRW_UT002_PR_TYPE() =

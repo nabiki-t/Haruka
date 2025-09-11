@@ -29,9 +29,8 @@ open Haruka.IODataTypes
 type RequestError( m_Message : string ) =
     inherit Exception( m_Message )
 
-
 //=============================================================================
-// Class declaration
+// Class implementation
 
 /// <summary>
 ///  Definition of CtrlConnection class.
@@ -39,16 +38,10 @@ type RequestError( m_Message : string ) =
 /// <param name="m_MessageTable">
 ///  Message resource reader.
 /// </param>
-/// <pasram name="m_Receiver">
-///  encrypt receiver object.
-/// </param>
-/// <pasram name="m_Sender">
-///  encrypt sender object.
-/// </param>
-/// <pasram name="m_Stream">
+/// <param name="m_Stream">
 ///  Network stream.
 /// </param>
-/// <pasram name="m_SessionID">
+/// <param name="m_SessionID">
 ///  Negosiated session ID.
 /// </param>
 type CtrlConnection(
@@ -80,7 +73,7 @@ type CtrlConnection(
     
     /// <summary>
     ///  Connect to controller and returns instance of CtrlConnection class.
-    /// <summary>
+    /// </summary>
     /// <param name="messageTable">
     ///  Message resource reader.
     /// </param>
@@ -117,7 +110,7 @@ type CtrlConnection(
 
     /// <summary>
     ///  Login to controller and create instance of CtrlConnection class.
-    /// <summary>
+    /// </summary>
     /// <param name="messageTable">
     ///  Message resource reader.
     /// </param>
@@ -336,7 +329,7 @@ type CtrlConnection(
     /// <param name="conf">
     ///  Controller configuration data that should be send to the controller.
     /// </param>
-    abstract SetControllerConfig : HarukaCtrlConf.T_HarukaCtrl -> Task
+    abstract SetControllerConfig : conf:HarukaCtrlConf.T_HarukaCtrl -> Task
     default this.SetControllerConfig conf =
         let req = HarukaCtrlerCtrlReq.U_SetControllerConfig({
             SessionID = m_SessionID;
@@ -385,7 +378,7 @@ type CtrlConnection(
     /// <param name="tdid">
     ///  Target device ID that should be created.
     /// </param>
-    abstract CreateTargetDeviceDir : TDID_T -> Task
+    abstract CreateTargetDeviceDir : tdid:TDID_T -> Task
     default this.CreateTargetDeviceDir tdid =
         let req = HarukaCtrlerCtrlReq.U_CreateTargetDeviceDir({
             SessionID = m_SessionID;
@@ -410,7 +403,7 @@ type CtrlConnection(
     /// <param name="tdid">
     ///  Target device ID that should be created.
     /// </param>
-    abstract DeleteTargetDeviceDir : TDID_T -> Task
+    abstract DeleteTargetDeviceDir : tdid:TDID_T -> Task
     default this.DeleteTargetDeviceDir tdid =
         let req = HarukaCtrlerCtrlReq.U_DeleteTargetDeviceDir({
             SessionID = m_SessionID;
@@ -438,7 +431,7 @@ type CtrlConnection(
     /// <returns>
     ///  Target device configuration data.
     /// </returns>
-    abstract GetTargetDeviceConfig : TDID_T -> Task< TargetDeviceConf.T_TargetDevice >
+    abstract GetTargetDeviceConfig : tdid:TDID_T -> Task< TargetDeviceConf.T_TargetDevice >
     default this.GetTargetDeviceConfig tdid =
         let req = HarukaCtrlerCtrlReq.U_GetTargetDeviceConfig({
             SessionID = m_SessionID;
@@ -471,7 +464,7 @@ type CtrlConnection(
     /// <param name="config">
     ///  Target device configuration data that should be sent to the controller.
     /// </param>
-    abstract CreateTargetDeviceConfig : TDID_T -> TargetDeviceConf.T_TargetDevice -> Task
+    abstract CreateTargetDeviceConfig : tdid:TDID_T -> config:TargetDeviceConf.T_TargetDevice -> Task
     default this.CreateTargetDeviceConfig tdid config =
         let confStr =
             fun () -> TargetDeviceConf.ReaderWriter.ToString config
@@ -503,7 +496,7 @@ type CtrlConnection(
     /// <returns>
     ///  List of target group IDs that belongings to specified target device.
     /// </returns>
-    abstract GetTargetGroupID : TDID_T -> Task<TGID_T list>
+    abstract GetTargetGroupID : tdid:TDID_T -> Task<TGID_T list>
     default this.GetTargetGroupID tdid =
         let req = HarukaCtrlerCtrlReq.U_GetTargetGroupID({
             SessionID = m_SessionID;
@@ -538,7 +531,7 @@ type CtrlConnection(
     /// <returns>
     ///  Target group configuration data.
     /// </returns>
-    abstract GetTargetGroupConfig : TDID_T -> TGID_T -> Task<TargetGroupConf.T_TargetGroup>
+    abstract GetTargetGroupConfig : tdid:TDID_T -> tgid:TGID_T -> Task<TargetGroupConf.T_TargetGroup>
     default this.GetTargetGroupConfig tdid tgid =
         let req = HarukaCtrlerCtrlReq.U_GetTargetGroupConfig({
             SessionID = m_SessionID;
@@ -572,7 +565,7 @@ type CtrlConnection(
     /// <returns>
     ///  All tTarget group configuration data.
     /// </returns>
-    abstract GetAllTargetGroupConfig : TDID_T -> Task<TargetGroupConf.T_TargetGroup list>
+    abstract GetAllTargetGroupConfig : tdid:TDID_T -> Task<TargetGroupConf.T_TargetGroup list>
     default this.GetAllTargetGroupConfig tdid =
         let req = HarukaCtrlerCtrlReq.U_GetAllTargetGroupConfig({
             SessionID = m_SessionID;
@@ -612,7 +605,7 @@ type CtrlConnection(
     /// <param name="config">
     ///  Target group configuration data that should be uploaded to the controller.
     /// </param>
-    abstract CreateTargetGroupConfig : TDID_T -> TargetGroupConf.T_TargetGroup -> Task
+    abstract CreateTargetGroupConfig : tdid:TDID_T -> config:TargetGroupConf.T_TargetGroup -> Task
     default this.CreateTargetGroupConfig tdid config =
         let tgconfStr =
             fun () -> TargetGroupConf.ReaderWriter.ToString config
@@ -645,7 +638,7 @@ type CtrlConnection(
     /// <param name="tgid">
     ///  Target group ID should be uploaded configuration data.
     /// </param>
-    abstract DeleteTargetGroupConfig : TDID_T -> TGID_T -> Task
+    abstract DeleteTargetGroupConfig : tdid:TDID_T -> tgid:TGID_T -> Task
     default this.DeleteTargetGroupConfig tdid tgid =
         let req = HarukaCtrlerCtrlReq.U_DeleteTargetGroupConfig({
             SessionID = m_SessionID;
@@ -674,7 +667,7 @@ type CtrlConnection(
     /// <returns>
     ///  LUNs list that have own working directory.
     /// </returns>
-    abstract GetLUWorkDir : TDID_T -> Task< LUN_T list >
+    abstract GetLUWorkDir : tdid:TDID_T -> Task< LUN_T list >
     default this.GetLUWorkDir tdid =
         let req = HarukaCtrlerCtrlReq.U_GetLUWorkDir({
             SessionID = m_SessionID;
@@ -706,7 +699,7 @@ type CtrlConnection(
     /// <param name="lun">
     ///  LUN of LU that should be created own working directory.
     /// </param>
-    abstract CreateLUWorkDir : TDID_T -> LUN_T -> Task
+    abstract CreateLUWorkDir : tdid:TDID_T -> lun:LUN_T -> Task
     default this.CreateLUWorkDir tdid lun =
         let req = HarukaCtrlerCtrlReq.U_CreateLUWorkDir({
             SessionID = m_SessionID;
@@ -735,7 +728,7 @@ type CtrlConnection(
     /// <param name="lun">
     ///  LUN of LU that should be deleted own working directory.
     /// </param>
-    abstract DeleteLUWorkDir : TDID_T -> LUN_T -> Task
+    abstract DeleteLUWorkDir : tdid:TDID_T -> lun:LUN_T -> Task
     default this.DeleteLUWorkDir tdid lun =
         let req = HarukaCtrlerCtrlReq.U_DeleteLUWorkDir({
             SessionID = m_SessionID;
@@ -785,7 +778,7 @@ type CtrlConnection(
     /// <param name="tdid">
     ///  Target device ID which process should be killed.
     /// </param>
-    abstract KillTargetDeviceProc : TDID_T -> Task
+    abstract KillTargetDeviceProc : tdid:TDID_T -> Task
     default this.KillTargetDeviceProc tdid =
         let req = HarukaCtrlerCtrlReq.U_KillTargetDeviceProc({
             SessionID = m_SessionID;
@@ -810,7 +803,7 @@ type CtrlConnection(
     /// <param name="tdid">
     ///  Target device ID which process should be started.
     /// </param>
-    abstract StartTargetDeviceProc : TDID_T -> Task
+    abstract StartTargetDeviceProc : tdid:TDID_T -> Task
     default this.StartTargetDeviceProc tdid =
         let req = HarukaCtrlerCtrlReq.U_StartTargetDeviceProc({
             SessionID = m_SessionID;
@@ -841,7 +834,7 @@ type CtrlConnection(
     /// <returns>
     ///  Process identifier of the started InitMedia process.
     /// </returns>
-    abstract CreateMediaFile_PlainFile : string -> int64 -> Task<uint64>
+    abstract CreateMediaFile_PlainFile : fileName:string -> fileSize:int64 -> Task<uint64>
     default this.CreateMediaFile_PlainFile fileName fileSize =
         let req = HarukaCtrlerCtrlReq.U_CreateMediaFile({
             SessionID = m_SessionID;
@@ -892,10 +885,10 @@ type CtrlConnection(
     /// <summary>
     ///  Send KillInitMediaProc request to the controller.
     /// </summary>
-    /// <param name="uint64">
+    /// <param name="pid">
     ///  Process identifier of the InitMedia process that will be terminated.
     /// </param>
-    abstract KillInitMediaProc : uint64 -> Task
+    abstract KillInitMediaProc : pid:uint64 -> Task
     default this.KillInitMediaProc pid =
         let req = HarukaCtrlerCtrlReq.U_KillInitMediaProc({
             SessionID = m_SessionID;
@@ -921,7 +914,7 @@ type CtrlConnection(
     /// <returns>
     ///  List of target group IDs and names that have been activated.
     /// </returns>
-    abstract GetActiveTargetGroups : TDID_T -> Task< TargetDeviceCtrlRes.T_ActiveTGInfo list >
+    abstract GetActiveTargetGroups : tdid:TDID_T -> Task< TargetDeviceCtrlRes.T_ActiveTGInfo list >
     default this.GetActiveTargetGroups tdid =
         task {
             let! tdCtrlResult =
@@ -946,7 +939,7 @@ type CtrlConnection(
     /// <returns>
     ///  List of target group IDs and names that have been loaded.
     /// </returns>
-    abstract GetLoadedTargetGroups : TDID_T -> Task< TargetDeviceCtrlRes.T_LoadedTGInfo list >
+    abstract GetLoadedTargetGroups : tdid:TDID_T -> Task< TargetDeviceCtrlRes.T_LoadedTGInfo list >
     default this.GetLoadedTargetGroups tdid =
         task {
             let! tdCtrlResult =
@@ -971,7 +964,7 @@ type CtrlConnection(
     /// <param name="tgid">
     ///  Target group ID which should be inactivated.
     /// </param>
-    abstract InactivateTargetGroup : TDID_T -> TGID_T -> Task
+    abstract InactivateTargetGroup : tdid:TDID_T -> tgid:TGID_T -> Task
     default this.InactivateTargetGroup tdid tgid =
         task {
             let! tdCtrlResult =
@@ -1000,7 +993,7 @@ type CtrlConnection(
     /// <param name="tgid">
     ///  Target group ID which should be activated.
     /// </param>
-    abstract ActivateTargetGroup : TDID_T -> TGID_T -> Task
+    abstract ActivateTargetGroup : tdid:TDID_T -> tgid:TGID_T -> Task
     default this.ActivateTargetGroup tdid tgid =
         task {
             let! tdCtrlResult =
@@ -1028,7 +1021,7 @@ type CtrlConnection(
     /// <param name="tgid">
     ///  Target group ID which should be unloaded.
     /// </param>
-    abstract UnloadTargetGroup : TDID_T -> TGID_T -> Task
+    abstract UnloadTargetGroup : tdid:TDID_T -> tgid:TGID_T -> Task
     default this.UnloadTargetGroup tdid tgid =
         task {
             let! tdCtrlResult =
@@ -1056,7 +1049,7 @@ type CtrlConnection(
     /// <param name="tgid">
     ///  Target group ID which should be unloaded.
     /// </param>
-    abstract LoadTargetGroup : TDID_T -> TGID_T -> Task
+    abstract LoadTargetGroup : tdid:TDID_T -> tgid:TGID_T -> Task
     default this.LoadTargetGroup tdid tgid =
         task {
             let! tdCtrlResult =
@@ -1084,7 +1077,7 @@ type CtrlConnection(
     /// <param name="logConf">
     ///  Log parameters.
     /// </param>
-    abstract SetLogParameters : TDID_T -> TargetDeviceConf.T_LogParameters -> Task
+    abstract SetLogParameters : tdid:TDID_T -> logConf:TargetDeviceConf.T_LogParameters -> Task
     default this.SetLogParameters tdid logConf =
         task {
             let! tdCtrlResult =
@@ -1113,7 +1106,7 @@ type CtrlConnection(
     /// <returns>
     ///  Currentry effective log parameters in specified target device.
     /// </returns>
-    abstract GetLogParameters : TDID_T -> Task< TargetDeviceConf.T_LogParameters >
+    abstract GetLogParameters : tdid:TDID_T -> Task< TargetDeviceConf.T_LogParameters >
     default this.GetLogParameters tdid =
         task {
             let! tdCtrlResult =
@@ -1142,7 +1135,7 @@ type CtrlConnection(
     /// <returns>
     ///  target device name.
     /// </returns>
-    abstract GetDeviceName : TDID_T -> Task< string >
+    abstract GetDeviceName : tdid:TDID_T -> Task< string >
     default this.GetDeviceName tdid =
         task {
             let! tdCtrlResult =
@@ -1167,7 +1160,7 @@ type CtrlConnection(
     /// <returns>
     ///  Retrieved session list.
     /// </returns>
-    abstract GetSession_InTargetDevice : TDID_T -> Task< TargetDeviceCtrlRes.T_Session list >
+    abstract GetSession_InTargetDevice : tdid:TDID_T -> Task< TargetDeviceCtrlRes.T_Session list >
     default this.GetSession_InTargetDevice tdid =
         task {
             let! tdSessList =
@@ -1196,7 +1189,7 @@ type CtrlConnection(
     /// <returns>
     ///  Retrieved session list.
     /// </returns>
-    abstract GetSession_InTargetGroup : TDID_T -> TGID_T -> Task< TargetDeviceCtrlRes.T_Session list >
+    abstract GetSession_InTargetGroup : tdid:TDID_T -> tgid:TGID_T -> Task< TargetDeviceCtrlRes.T_Session list >
     default this.GetSession_InTargetGroup tdid tgid =
         task {
             let! tdSessList =
@@ -1226,7 +1219,7 @@ type CtrlConnection(
     /// <returns>
     ///  Retrieved session list.
     /// </returns>
-    abstract GetSession_InTarget : TDID_T -> TNODEIDX_T -> Task< TargetDeviceCtrlRes.T_Session list >
+    abstract GetSession_InTarget : tdid:TDID_T -> tid:TNODEIDX_T -> Task< TargetDeviceCtrlRes.T_Session list >
     default this.GetSession_InTarget tdid tid =
         task {
             let! tdSessList =
@@ -1253,7 +1246,7 @@ type CtrlConnection(
     /// <param name="tsih">
     ///  TSIH value that specify which session should be destructed.
     /// </param>
-    abstract DestructSession : TDID_T -> TSIH_T -> Task
+    abstract DestructSession : tdid:TDID_T -> tsih:TSIH_T -> Task
     default this.DestructSession tdid tsih =
         task {
             let! tdSessList =
@@ -1284,7 +1277,7 @@ type CtrlConnection(
     /// <remarks>
     ///  Resource counters (ReceiveBytesCount/SentBytesCount) are aggregated in units of Constants.RECOUNTER_SPAN_SEC.
     /// </remarks>
-    abstract GetConnection_InTargetDevice : TDID_T -> Task< TargetDeviceCtrlRes.T_Connection list >
+    abstract GetConnection_InTargetDevice : tdid:TDID_T -> Task< TargetDeviceCtrlRes.T_Connection list >
     default this.GetConnection_InTargetDevice tdid =
         task {
             let! conList =
@@ -1316,7 +1309,7 @@ type CtrlConnection(
     /// <remarks>
     ///  Resource counters (ReceiveBytesCount/SentBytesCount) are aggregated in units of Constants.RECOUNTER_SPAN_SEC.
     /// </remarks>
-    abstract GetConnection_InNetworkPortal : TDID_T -> NETPORTIDX_T -> Task< TargetDeviceCtrlRes.T_Connection list >
+    abstract GetConnection_InNetworkPortal : tdid:TDID_T -> npid:NETPORTIDX_T -> Task< TargetDeviceCtrlRes.T_Connection list >
     default this.GetConnection_InNetworkPortal tdid npid =
         task {
             let! conList =
@@ -1349,7 +1342,7 @@ type CtrlConnection(
     /// <remarks>
     ///  Resource counters (ReceiveBytesCount/SentBytesCount) are aggregated in units of Constants.RECOUNTER_SPAN_SEC.
     /// </remarks>
-    abstract GetConnection_InTargetGroup : TDID_T -> TGID_T -> Task< TargetDeviceCtrlRes.T_Connection list >
+    abstract GetConnection_InTargetGroup : tdid:TDID_T -> tgid:TGID_T -> Task< TargetDeviceCtrlRes.T_Connection list >
     default this.GetConnection_InTargetGroup tdid tgid =
         task {
             let! conList =
@@ -1382,7 +1375,7 @@ type CtrlConnection(
     /// <remarks>
     ///  Resource counters (ReceiveBytesCount/SentBytesCount) are aggregated in units of Constants.RECOUNTER_SPAN_SEC.
     /// </remarks>
-    abstract GetConnection_InTarget : TDID_T -> TNODEIDX_T -> Task< TargetDeviceCtrlRes.T_Connection list >
+    abstract GetConnection_InTarget : tdid:TDID_T -> tid:TNODEIDX_T -> Task< TargetDeviceCtrlRes.T_Connection list >
     default this.GetConnection_InTarget tdid tid =
         task {
             let! conList =
@@ -1415,7 +1408,7 @@ type CtrlConnection(
     /// <remarks>
     ///  Resource counters (ReceiveBytesCount/SentBytesCount) are aggregated in units of Constants.RECOUNTER_SPAN_SEC.
     /// </remarks>
-    abstract GetConnection_InSession : TDID_T -> TSIH_T -> Task< TargetDeviceCtrlRes.T_Connection list >
+    abstract GetConnection_InSession : tdid:TDID_T -> tsih:TSIH_T -> Task< TargetDeviceCtrlRes.T_Connection list >
     default this.GetConnection_InSession tdid tsih =
         task {
             let! conList =
@@ -1450,7 +1443,7 @@ type CtrlConnection(
     ///  aggregated in units of Constants.RECOUNTER_SPAN_SEC.
     ///  ReadTickCount and WriteTickCount are measured in milliseconds.
     /// </remarks>
-    abstract GetLUStatus : TDID_T -> LUN_T -> Task< TargetDeviceCtrlRes.T_LUStatus_Success >
+    abstract GetLUStatus : tdid:TDID_T -> lun:LUN_T -> Task< TargetDeviceCtrlRes.T_LUStatus_Success >
     default this.GetLUStatus tdid lun =
         task {
             let! conList =
@@ -1480,7 +1473,7 @@ type CtrlConnection(
     /// <param name="lun">
     ///  LUN that specifies a LU should be reset.
     /// </param>
-    abstract LUReset : TDID_T -> LUN_T -> Task
+    abstract LUReset : tdid:TDID_T -> lun:LUN_T -> Task
     default this.LUReset tdid lun =
         task {
             let! resetResult =
@@ -1519,7 +1512,7 @@ type CtrlConnection(
     ///  aggregated in units of Constants.RECOUNTER_SPAN_SEC.
     ///  ReadTickCount and WriteTickCount are measured in milliseconds.
     /// </remarks>
-    abstract GetMediaStatus : TDID_T -> LUN_T -> MEDIAIDX_T -> Task< TargetDeviceCtrlRes.T_MediaStatus_Success >
+    abstract GetMediaStatus : tdid:TDID_T -> lun:LUN_T -> mediaid:MEDIAIDX_T -> Task< TargetDeviceCtrlRes.T_MediaStatus_Success >
     default this.GetMediaStatus tdid lun mediaid =
         task {
             let! mstat =
@@ -1557,7 +1550,7 @@ type CtrlConnection(
     /// <returns>
     ///  Registared traps.
     /// </returns>
-    abstract DebugMedia_GetAllTraps : TDID_T -> LUN_T -> MEDIAIDX_T -> Task< MediaCtrlRes.T_Trap list >
+    abstract DebugMedia_GetAllTraps : tdid:TDID_T -> lun:LUN_T -> mediaid:MEDIAIDX_T -> Task< MediaCtrlRes.T_Trap list >
     default this.DebugMedia_GetAllTraps tdid lun mediaid =
         task {
             let reqData = MediaCtrlReq.U_Debug(
@@ -1597,7 +1590,7 @@ type CtrlConnection(
     /// <returns>
     ///  Registared traps.
     /// </returns>
-    abstract DebugMedia_AddTrap : TDID_T -> LUN_T -> MEDIAIDX_T -> MediaCtrlReq.T_Event -> MediaCtrlReq.T_Action -> Task
+    abstract DebugMedia_AddTrap : tdid:TDID_T -> lun:LUN_T -> mediaid:MEDIAIDX_T -> event:MediaCtrlReq.T_Event -> action:MediaCtrlReq.T_Action -> Task
     default this.DebugMedia_AddTrap tdid lun mediaid event action =
         task {
             let reqData = MediaCtrlReq.U_Debug(
@@ -1632,7 +1625,7 @@ type CtrlConnection(
     /// <returns>
     ///  Registared traps.
     /// </returns>
-    abstract DebugMedia_ClearTraps : TDID_T -> LUN_T -> MEDIAIDX_T -> Task
+    abstract DebugMedia_ClearTraps : tdid:TDID_T -> lun:LUN_T -> mediaid:MEDIAIDX_T -> Task
     default this.DebugMedia_ClearTraps tdid lun mediaid =
         task {
             let reqData = MediaCtrlReq.U_Debug(
@@ -1670,7 +1663,7 @@ type CtrlConnection(
     /// <returns>
     ///  Registared traps.
     /// </returns>
-    abstract DebugMedia_GetCounterValue : TDID_T -> LUN_T -> MEDIAIDX_T -> int -> Task< int >
+    abstract DebugMedia_GetCounterValue : tdid:TDID_T -> lun:LUN_T -> mediaid:MEDIAIDX_T -> counterno:int -> Task< int >
     default this.DebugMedia_GetCounterValue tdid lun mediaid counterno =
         task {
             let reqData = MediaCtrlReq.U_Debug(

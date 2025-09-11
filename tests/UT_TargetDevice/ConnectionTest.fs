@@ -1,9 +1,19 @@
-﻿namespace Haruka.Test.UT.TargetDevice
+﻿//=============================================================================
+// Haruka Software Storage.
+// ConnectionTest.fs : Test cases for Connection class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.TargetDevice
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.Threading
 open System.Threading.Tasks
-open System.Collections.Generic
 open System.Collections.Immutable
 
 open Xunit
@@ -14,9 +24,13 @@ open Haruka.IODataTypes
 open Haruka.TargetDevice
 open Haruka.Test
 
-
+//=============================================================================
+// Class implementation
 
 type Connection_Test () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     do
         let lock = GlbFunc.LogParamUpdateLock()
@@ -181,6 +195,9 @@ type Connection_Test () =
         let pc = PrivateCaller( con )
         let m_ResendStat = pc.GetField( "m_ResendStat" ) :?> OptimisticLock< ResendStatusRec >
         m_ResendStat.obj.m_R_SNACK_Request
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.StartFullFeaturePhase_001() =

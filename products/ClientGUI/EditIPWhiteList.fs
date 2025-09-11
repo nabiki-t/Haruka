@@ -17,15 +17,18 @@ open System.Windows.Controls
 open System.Net
 
 open Haruka.Constants
-open Haruka.IODataTypes
-open Haruka.Commons
-open Haruka.Client
+
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///  EditIPWhiteListDialog class.
 /// </summary>
 /// <param name="m_Config">
 ///  Loaded configurations for GUI client.
+/// </param>
+/// <param name="m_Initial">
+///  Current configured IPCondition value.
 /// </param>
 type EditIPWhiteListDialog( m_Config : GUIConfig, m_Initial : IPCondition option ) as this =
 

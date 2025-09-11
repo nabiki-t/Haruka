@@ -26,8 +26,7 @@ open Haruka.Commons
 open Haruka.IODataTypes
 
 //=============================================================================
-// Type definition
-
+// Class implementation
 
 /// <summary>
 ///   LoginNegociator class sends/receives login request/response PDU and performs iSCSI login procedure.
@@ -79,7 +78,6 @@ type LoginNegociator
     //=========================================================================
     // Interface method
 
-    /// <inheritdoc />
     interface ILoginNegociator with
 
         // --------------------------------------------------------------------
@@ -1579,10 +1577,6 @@ type LoginNegociator
     ///   If target node needs to authentification and sequrity negotiation is ommited,
     ///   this connection must be dropped.
     /// </param>
-    /// <param name="isDiscoverySession">
-    ///   If this operational negotiation is performed for discovery session,
-    ///   this value must be true, otherwise false.
-    /// </param>
     /// <param name="newTSIH">
     ///   The TSIH value to be sent in the last PDU of the login sequence.
     /// </param>
@@ -2029,9 +2023,6 @@ type LoginNegociator
     /// <param name="firstExpStatSN">
     ///   ExpStatSN value of the first login request PDU.
     ///   This value is used to only connection recovery.
-    /// </param>
-    /// <param name="nextFirstPDU">
-    ///   Received first PDU of full feature phase.
     /// </param>
     /// <param name="iSCSIParamsCO">
     ///   Negiciated iSCSI connection only parameters.

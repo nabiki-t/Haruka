@@ -6,9 +6,6 @@
 //=============================================================================
 // Namespace declaration
 
-/// <summary>
-///   Definitions of constant values, that used commonly in Haruka project.
-/// </summary>
 namespace Haruka.Constants
 
 //=============================================================================

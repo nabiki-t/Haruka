@@ -1,11 +1,19 @@
+//=============================================================================
+// Haruka Software Storage.
+// iSCSI_LoginTest1.fs : Test cases for iSCSI login.
+//
+
+//=============================================================================
+// Namespace declaration
+
 namespace Haruka.Test.IT.ISCSI
 
+//=============================================================================
+// Import declaration
+
 open System
-open System.Threading
-open System.Threading.Tasks
 open System.IO
-open System.Diagnostics
-open System.Net.Sockets
+open System.Text
 
 open Xunit
 
@@ -13,8 +21,9 @@ open Haruka.Constants
 open Haruka.Commons
 open Haruka.TargetDevice
 open Haruka.Test
-open Xunit.Abstractions
-open System.Text
+
+//=============================================================================
+// Class implementation
 
 [<CollectionDefinition( "iSCSI_LoginTest1" )>]
 type iSCSI_LoginTest1_Fixture() =
@@ -101,6 +110,9 @@ type iSCSI_LoginTest1_Fixture() =
 [<Collection( "iSCSI_LoginTest1" )>]
 type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
+
     let g_CID0 = cid_me.zero
     let g_CID1 = cid_me.fromPrim 1us
     let g_CID2 = cid_me.fromPrim 2us
@@ -146,6 +158,9 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         MaxRecvDataSegmentLength_I = 262144u;
         MaxRecvDataSegmentLength_T = 262144u;
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     // Authentication test
     // Target1 : No auth required

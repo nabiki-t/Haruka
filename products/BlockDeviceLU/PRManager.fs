@@ -99,9 +99,8 @@ type PRInfoRec =
         m_Registrations : ImmutableDictionary< ITNexus, RESVKEY_T >;
     }
 
-// ============================================================================
-// Class definition of PRManager.
-//
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///   PRManager class definition. 
@@ -112,9 +111,15 @@ type PRInfoRec =
 /// <param name="m_LU">
 ///   Interface of Logical Unit object that hold this class object.
 /// </param>
+/// <param name="m_LUN">
+///   LUN of Logical Unit.
+/// </param>
 /// <param name="m_FileName">
 ///   File name that stores reservation information.
 ///   If file name is empty, the reservation information is not saved.
+/// </param>
+/// <param name="m_Killer">
+///   Killer object.
 /// </param>
 type PRManager(
         m_StatusMaster : IStatus,
@@ -1754,12 +1759,6 @@ type PRManager(
     /// </summary>
     /// <param name="objID">
     /// Object ID of PRManager instance.
-    /// </param>
-    /// <param name="source">
-    /// source info of PERSISTENT RESERVE OUT command.
-    /// </param>
-    /// <param name="itt">
-    /// Initiator task tag value of PERSISTENT RESERVE OUT command.
     /// </param>
     /// <param name="lun">
     /// LUN of LU that holds PRManager instance.

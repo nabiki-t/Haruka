@@ -19,7 +19,7 @@ open Haruka.Constants
 open Haruka.Commons
 
 //=============================================================================
-// Type definition
+// Class implementation
 
 [<NoComparison>]
 type SendErrorStatusTask
@@ -51,7 +51,6 @@ type SendErrorStatusTask
     //=========================================================================
     // Interface method
 
-    /// <inheritdoc />
     interface IBlockDeviceTask with
 
         /// Return task type.

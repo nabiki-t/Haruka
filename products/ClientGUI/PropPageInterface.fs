@@ -11,7 +11,6 @@ namespace Haruka.ClientGUI
 //=============================================================================
 // Import declaration
 
-
 open System
 open System.IO
 open System.Collections.Generic
@@ -26,6 +25,9 @@ open System.Threading.Tasks
 
 open Haruka.Client
 open Haruka.Constants
+
+//=============================================================================
+// Interface declaration
 
 /// Interface of property page classes.
 type IPropPageInterface =
@@ -71,7 +73,7 @@ type IMainWindowIFForPP =
     /// </summary>
     /// <param name="node">
     ///  Updated configure node.
-    /// </pram>
+    /// </param>
     /// <remarks>
     ///  The operating status of the target device and target group is based on the cache value.
     /// </remarks>
@@ -82,7 +84,7 @@ type IMainWindowIFForPP =
     /// </summary>
     /// <param name="node">
     ///  Updated configure node.
-    /// </pram>
+    /// </param>
     abstract NoticeUpdateConfig : node:IConfigureNode -> unit
 
     /// <summary>
@@ -191,6 +193,9 @@ type IMainWindowIFForPP =
     ///  True if the target device is activated otherwise false. True if the target group is loaded otherwise false.
     /// </returns>
     abstract IsTGLoaded : tdid:TDID_T -> tgid:TGID_T -> struct( bool * bool )
+
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///  Converter for property page class to UIElement.

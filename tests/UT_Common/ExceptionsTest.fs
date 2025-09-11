@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.Commons
+﻿//=============================================================================
+// Haruka Software Storage.
+// ExceptionsTest.fs : Test cases for Exceptions class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Commons
+
+//=============================================================================
+// Import declaration
 
 open System
 
@@ -8,6 +19,8 @@ open Haruka.Constants
 open Haruka.Commons
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
 
 type Exceptions_Test () =
 

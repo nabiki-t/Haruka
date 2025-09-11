@@ -20,6 +20,8 @@ open Haruka.Constants
 open Haruka.Commons
 open Haruka.Client
 
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///  Configuration master class.
@@ -66,7 +68,7 @@ type GUIConfig( m_ExeDir : string ) =
 
     /// <summary>
     ///  Set localized text to the controller
-    /// </sumary>
+    /// </summary>
     /// <param name="s">
     ///  section name
     /// </param>

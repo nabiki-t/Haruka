@@ -1,9 +1,17 @@
-﻿namespace Haruka.Test.UT.TargetDevice
+﻿//=============================================================================
+// Haruka Software Storage.
+// TaskRouterTest.fs : Test cases for TaskRouter class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.TargetDevice
+
+//=============================================================================
+// Import declaration
 
 open System
-open System.IO
-open System.Text
-open System.Collections
 open System.Collections.Generic
 open System.Collections.Frozen
 
@@ -17,8 +25,13 @@ open Haruka.Test
 
 #nowarn "1240"
 
+//=============================================================================
+// Class implementation
 
 type TaskRouter_Test () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     do
         let lock = GlbFunc.LogParamUpdateLock()
@@ -80,6 +93,9 @@ type TaskRouter_Test () =
         PrivateCaller( taskRouter ).SetField( "m_LU", lus )
 
         k1, status_stub, session, taskRouter, lu1
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     // Test case when a login is attempted to an existing LU.
     [<Fact>]

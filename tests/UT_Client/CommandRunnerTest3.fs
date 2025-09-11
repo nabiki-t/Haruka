@@ -1,13 +1,20 @@
-﻿namespace Haruka.Test.UT.Client
+﻿//=============================================================================
+// Haruka Software Storage.
+// CommandRunnerTest3.fs : Test cases for CommandRunner class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Client
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
-open System.Collections.Generic
-open System.Text
-open System.Text.RegularExpressions
 open System.Threading.Tasks
 open System.Net
-open System.Net.Sockets
 
 open Xunit
 
@@ -17,8 +24,13 @@ open Haruka.Client
 open Haruka.IODataTypes
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
 
 type CommandRunner_Test3() =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     let GenCommandStream ( txt : string ) =
         let ms = new MemoryStream()
@@ -58,6 +70,9 @@ type CommandRunner_Test3() =
         let ss = new ServerStatusStub( st )
         let cc = new CtrlConnectionStub( st )
         in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc 
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.Status_010 () =

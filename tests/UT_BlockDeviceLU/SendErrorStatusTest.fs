@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.BlockDeviceLU
+﻿//=============================================================================
+// Haruka Software Storage.
+// SendErrorStatusTest.fs : Test cases for SendErrorStatusTest class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.BlockDeviceLU
+
+//=============================================================================
+// Import declaration
 
 open System
 
@@ -9,8 +20,13 @@ open Haruka.Commons
 open Haruka.BlockDeviceLU
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
+
 type SendErrorStatusTest_Test () =
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     let createDefTask ( dSense : bool ) ( m_RespCode : iScsiSvcRespCd ) ( m_StatCode : ScsiCmdStatCd ) ( m_SenseData : SenseData ) = 
         let lu = new CInternalLU_Stub()
@@ -53,6 +69,9 @@ type SendErrorStatusTest_Test () =
         let lock = GlbFunc.LogParamUpdateLock()
         HLogger.SetLogParameters( 100u, 100u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
         lock.Release() |> ignore
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.Execute_001() =

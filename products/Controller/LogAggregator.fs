@@ -20,7 +20,7 @@ open Haruka.Commons
 open Haruka.IODataTypes
 
 //=============================================================================
-// Type definition
+// Class implementation
 
 /// <summary>
 ///  LogAggregator class.
@@ -67,13 +67,13 @@ type LogAggregator (
     /// <summary>
     ///  Standard constructor.
     /// </summary>
-    /// <param name="m_LogDirPath">
+    /// <param name="argLogDirPath">
     ///  Path name of directory that store log files.
     /// </param>
-    /// <param name="m_Config">
+    /// <param name="argConfig">
     ///  Log maintenanse configurations.
     /// </param>
-    /// <param name="m_Killer">
+    /// <param name="argKiller">
     ///  Killer object
     /// </param>
     new (
@@ -88,7 +88,6 @@ type LogAggregator (
     //-------------------------------------------------------------------------
     // interface imprementation
 
-    /// <inheritdoc />
     interface IComponent with
 
         // ------------------------------------------------------------------------

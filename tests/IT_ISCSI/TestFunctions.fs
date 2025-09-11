@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test
+﻿//=============================================================================
+// Haruka Software Storage.
+// TestFunctions.fs : Define global functions used in integration tests.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -9,6 +20,9 @@ open Xunit
 
 open Haruka
 open Haruka.Commons
+
+//=============================================================================
+// Class implementation
 
 type TestFunctions() =
 

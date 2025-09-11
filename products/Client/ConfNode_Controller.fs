@@ -13,18 +13,13 @@ namespace Haruka.Client
 
 open System
 open System.Collections.Generic
-open System.Threading
-open System.Threading.Tasks
-open System.Xml
-open System.Xml.Schema
 
 open Haruka.Constants
 open Haruka.Commons
 open Haruka.IODataTypes
 
-
 //=============================================================================
-// Type definition
+// Class implementation
 
 /// <summary>
 ///  Controller node used at the configurations.
@@ -170,7 +165,6 @@ type ConfNode_Controller(
     //=========================================================================
     // Interface method
 
-    /// <inheritdoc />
     interface IConfigFileNode with
         
         // --------------------------------------------------------------------

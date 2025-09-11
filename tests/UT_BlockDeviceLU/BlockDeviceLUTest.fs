@@ -1,21 +1,33 @@
-﻿namespace Haruka.Test.UT.BlockDeviceLU
+﻿//=============================================================================
+// Haruka Software Storage.
+// BlockDeviceLUTest.fs : Test cases for BlockDeviceLU class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.BlockDeviceLU
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
 open System.Threading
 open System.Threading.Tasks
 open System.Collections.Concurrent
-open System.Collections.Generic
 open System.Collections.Immutable
 
 open Xunit
-open Xunit.Abstractions
 
 open Haruka.Constants
 open Haruka.Commons
 open Haruka.BlockDeviceLU
 open Haruka.IODataTypes
 open Haruka.Test
+
+//=============================================================================
+// Class implementation
 
 type public CBlockDeviceTask_Stub() =
 
@@ -59,6 +71,9 @@ type public CBlockDeviceTask_Stub() =
         override _.ReleasePooledBuffer() : unit = f_ReleasePooledBuffer.Value()
 
 type BlockDeviceLU_Test () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     do
         let lock = GlbFunc.LogParamUpdateLock()
@@ -128,6 +143,9 @@ type BlockDeviceLU_Test () =
                 new SenseData( true, senseKey, asc, "" ),
                 ""
             )
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member this.AbortTask_001() =

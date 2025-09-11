@@ -14,6 +14,8 @@ namespace Haruka.ClientGUI
 open System
 open Microsoft.Win32
 
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///  Definition of UserOpeStat class.

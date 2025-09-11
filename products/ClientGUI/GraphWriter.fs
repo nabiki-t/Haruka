@@ -23,6 +23,9 @@ open Haruka.Constants
 open Haruka.Commons
 open Haruka.IODataTypes
 
+//=============================================================================
+// Type definition
+
 /// Constant values that specify the color used as graph drawing.
 type GraphColor =
     | GC_RED = 0
@@ -31,6 +34,9 @@ type GraphColor =
     | GC_CYAN = 3
     | GC_BLUE = 4
     | GC_PURPLE = 5
+
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///  This class imprements functions to write a graph at a specified canvas control.

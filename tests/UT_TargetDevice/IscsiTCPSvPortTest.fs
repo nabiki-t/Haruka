@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.TargetDevice
+﻿//=============================================================================
+// Haruka Software Storage.
+// IscsiTCPSvPortTest.fs : Test cases for IscsiTCPSvPort class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.TargetDevice
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.Threading
@@ -13,13 +24,21 @@ open Haruka.TargetDevice
 open Haruka.IODataTypes
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
 
 type IscsiTCPSvPort_Test () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     do
         let lock = GlbFunc.LogParamUpdateLock()
         HLogger.SetLogParameters( 100u, 100u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
         lock.Release() |> ignore
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.CPort_001() =

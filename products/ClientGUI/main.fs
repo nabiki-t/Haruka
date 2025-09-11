@@ -14,14 +14,9 @@ module Haruka.ClientGUI.main
 open System
 open System.IO
 open System.Windows
-open System.Xml
-open System.Reflection
 
-
-open Haruka.Constants
-open Haruka.Commons
-open Haruka.IODataTypes
-open Haruka.Client
+//=============================================================================
+// module implementation
 
 [<EntryPoint>]
 [<STAThread>]

@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.TargetDevice
+﻿//=============================================================================
+// Haruka Software Storage.
+// StatusMasterTest.fs : Test cases for StatusMaster class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.TargetDevice
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -14,11 +25,16 @@ open Haruka.IODataTypes
 open Haruka.TargetDevice
 open Haruka.BlockDeviceLU
 open Haruka.Test
-open System.Threading.Tasks
 
 #nowarn "1240"
 
+//=============================================================================
+// Class implementation
+
 type StatusMaster_Test () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     let defaultTargetGroupConfStr idx eas =
         ( {
@@ -104,6 +120,9 @@ type StatusMaster_Test () =
             DeviceName = "";
         }
         fn
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member this.Constructor_001() =

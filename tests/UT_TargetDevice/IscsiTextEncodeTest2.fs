@@ -1,16 +1,30 @@
-﻿namespace Haruka.Test.UT.TargetDevice
+﻿//=============================================================================
+// Haruka Software Storage.
+// IscsiTextEncodeTest2.fs : Test cases for IscsiTextEncode class.
+//
 
-open System.Text
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.TargetDevice
+
+//=============================================================================
+// Import declaration
+
+open System
 
 open Xunit
 
 open Haruka.Constants
-open Haruka.Commons
 open Haruka.TargetDevice
-open Haruka.Test
 
+//=============================================================================
+// Class implementation
 
 type IscsiTextEncode2_Test () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.margeTextKeyValue_TargetSide_AuthMethod_001() =

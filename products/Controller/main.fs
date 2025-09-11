@@ -3,7 +3,13 @@
 // main.fs : Haruka controller process main module.
 //
 
+//=============================================================================
+// module name
+
 module Haruka.Controller.main
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.Threading
@@ -12,6 +18,9 @@ open System.IO
 open Haruka.Constants
 open Haruka.Commons
 open Haruka.IODataTypes
+
+//=============================================================================
+// module implementation
 
 /// <summary>
 ///  Show instruction message.

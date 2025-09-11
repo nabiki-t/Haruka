@@ -1,5 +1,15 @@
-﻿namespace Haruka.Test.UT.Client
+﻿//=============================================================================
+// Haruka Software Storage.
+// ConfNode_ControllerTest.fs : Test cases for ConfNode_Controller class.
+//
 
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Client
+
+//=============================================================================
+// Import declaration
 
 open System
 
@@ -11,7 +21,13 @@ open Haruka.Client
 open Haruka.IODataTypes
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
+
 type ConfNode_Controller_Test() =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     let defaultconf : HarukaCtrlConf.T_HarukaCtrl = {
         RemoteCtrl = Some {
@@ -59,6 +75,9 @@ type ConfNode_Controller_Test() =
         SendBufferSize = 8192;
         WhiteList = [];
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.Constractor_001() =

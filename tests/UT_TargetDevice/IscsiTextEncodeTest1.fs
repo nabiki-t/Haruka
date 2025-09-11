@@ -1,16 +1,30 @@
-﻿namespace Haruka.Test.UT.TargetDevice
+﻿//=============================================================================
+// Haruka Software Storage.
+// IscsiTextEncodeTest1.fs : Test cases for IscsiTextEncode class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.TargetDevice
+
+//=============================================================================
+// Import declaration
 
 open System.Text
 
 open Xunit
 
 open Haruka.Constants
-open Haruka.Commons
 open Haruka.TargetDevice
-open Haruka.Test
 
+//=============================================================================
+// Class implementation
 
 type IscsiTextEncode1_Test () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     static member genNegStatVal v =
         {
@@ -45,6 +59,9 @@ type IscsiTextEncode1_Test () =
             NegoStat_SessionType = v;
             NegoStat_UnknownKeys = v;
         }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.StandardLabelBytes2String_001() =

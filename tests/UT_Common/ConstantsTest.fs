@@ -1,16 +1,29 @@
-﻿namespace Haruka.Test.UT.Commons
+﻿//=============================================================================
+// Haruka Software Storage.
+// ConstantsTest.fs : Test cases for Constants class.
+//
 
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Commons
+
+//=============================================================================
+// Import declaration
 
 open System
 
 open Xunit
 
 open Haruka.Constants
-open Haruka.Commons
 
+//=============================================================================
+// Class implementation
 
 type Constants_Test () =
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.Test_OpcodeCd() =

@@ -2,7 +2,13 @@
 // Haruka Software Storage.
 // Definition of ConfRW_UT002_string configuration reader/writer function.
 
+//=============================================================================
+// Namespace declaration
+
 namespace Haruka.Test.UT.ConfRW_002_string
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -12,6 +18,9 @@ open System.Xml
 open System.Xml.Schema
 open System.Xml.Linq
 open Haruka.Constants
+
+//=============================================================================
+// Type definition
 
 type [<NoComparison>]T_Test = {
     D1 : string;
@@ -24,6 +33,9 @@ type [<NoComparison>]T_Test = {
     D8 : string;
     D9 : string;
 }
+
+//=============================================================================
+// Class implementation
 
 ///  ConfRW_UT002_string class imprements read and write function of configuration.
 type ConfRW_UT002_string() =

@@ -14,14 +14,15 @@ namespace Haruka.ClientGUI
 open System
 open System.Windows
 open System.Windows.Controls
-open System.Windows.Threading
-open System.ComponentModel
 open System.Collections.Generic
 
 open Haruka.Constants
 open Haruka.IODataTypes
 open Haruka.Commons
 open Haruka.Client
+
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///  SessionsCtrlUpdater class.
@@ -127,6 +128,9 @@ type SessionsCtrlUpdater(
     /// <summary>
     ///  Update one tree item in session tree.
     /// </summary>
+    /// <param name="stvi">
+    ///  The TreeViewItem to update.
+    /// </param>
     /// <param name="sess">
     ///  Loaded session information.
     /// </param>
@@ -262,7 +266,7 @@ type SessionsCtrlUpdater(
     /// <summary>
     ///  Set the session paramter values to the parameter list controll.
     /// </summary>
-    /// <param name="conn">
+    /// <param name="sess">
     ///  Selected session parameter values.
     /// </param>
     member private _.ShowSessionParameters ( sess : TargetDeviceCtrlRes.T_Session ) : unit =

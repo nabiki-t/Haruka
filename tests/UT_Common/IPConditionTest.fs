@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.Commons
+﻿//=============================================================================
+// Haruka Software Storage.
+// IPConditionTest.fs : Test cases for IPCondition class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Commons
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.Net
@@ -6,11 +17,14 @@ open System.Net
 open Xunit
 
 open Haruka.Constants
-open Haruka.Commons
-open Haruka.Test
 
+//=============================================================================
+// Class implementation
 
 type IPCondition_Test () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.IPCondition_001 () =

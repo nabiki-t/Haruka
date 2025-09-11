@@ -17,7 +17,7 @@ open System.Threading.Tasks
 open System.Threading.Tasks.Dataflow
 
 //=============================================================================
-// Class definition
+// Class implementation
 
 /// <summary>
 ///  This class provide the function that queueing the works and running by .NET task that in sequentially.
@@ -32,16 +32,20 @@ open System.Threading.Tasks.Dataflow
 /// <remarks>
 /// Simple usage example.
 /// <code>
+/// <![CDATA[
 ///  let wf( v : int ) = task { printfn "--%d--" v }
 ///  let w = new WorkingTaskQueue<int>( wf )
 ///  w.Enqueue( 0 ) // "--0--" is printed.
+/// ]]>
 /// </code>
 ///  The function specified at 'm_WorkFunc' must not raise any exception.
 ///  If an exception is raised, process is terminated.
 /// <code>
+/// <![CDATA[
 ///  let wf( v : int ) = task { raise <| Exception( "" ) }
 ///  let w = new WorkingTaskQueue<int>( wf )
 ///  w.Enqueue( 0 ) // When the task is executed, the process is killed.
+/// ]]>
 /// </code>
 /// </remarks>
 type WorkingTaskQueue<'T>( m_WorkFunc : ( 'T -> Task<unit> ), m_ConsCount : uint ) as this =
@@ -164,11 +168,13 @@ type TaskQueue( m_ConsCount : uint ) =
 /// </param>
 /// <remarks>
 /// <code>
+/// <![CDATA[
 ///  let q = new TaskQueueWithState<int>( 0 )
 ///  q.Enqueue( fun stat -> task {
 ///    printfn "%d" stat
 ///    return ( statu + 1 )
 ///  } )
+/// ]]>
 /// </code>
 /// </remarks>
 type TaskQueueWithState< 'A >( init : 'A ) =
@@ -181,7 +187,7 @@ type TaskQueueWithState< 'A >( init : 'A ) =
     let mutable m_stat = init
 
     /// <summary>
-    ///  Enqueue a task. Task function form must be 'A -> Task<'A>.
+    ///  Enqueue a task. Task function form must be <c><![CDATA[ 'A -> Task<'A> ]]></c>.
     ///  The argument at the first execution is given as the value of the constructor argument 'init'.
     ///  When the function is executed for the second or subsequent times, the return value from the previous execution is given as the argument.
     /// </summary>
@@ -206,8 +212,6 @@ type TaskQueueWithState< 'A >( init : 'A ) =
     member _.RunWaitCount = m_Queue.RunWaitCount
 
 
-
-
 /// <summary>
 ///  This class provide the function that queueing the works and running by normal lambda function that in sequentially.
 ///  The works will be executed in exactly the same order as they ware enqueued.
@@ -221,16 +225,20 @@ type TaskQueueWithState< 'A >( init : 'A ) =
 /// <remarks>
 /// Simple usage example.
 /// <code>
+/// <![CDATA[
 ///  let wf( v : int ) = printfn "--%d--" v
 ///  let w = new WorkingLambdaQueue<int>( wf )
 ///  w.Enqueue( 0 ) // "--0--" is printed.
+/// ]]>
 /// </code>
 ///  The function specified at 'm_WorkFunc' must not raise any exception.
 ///  If an exception is raised, process is terminated.
 /// <code>
-///  let wf( v : int ) = raise <| Exception( "" )
+/// <![CDATA[
+///  let wf( v : int ) = raise( Exception( "" ) )
 ///  let w = new WorkingLambdaQueue<int>( wf )
 ///  w.Enqueue( 0 ) // When the task is executed, the process is killed.
+/// ]]>
 /// </code>
 /// </remarks>
 type WorkingLambdaQueue<'T>( m_WorkFunc : ( 'T -> unit ), m_ConsCount : uint ) as this =

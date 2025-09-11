@@ -1,5 +1,15 @@
-﻿namespace Haruka.Test.UT.GenConfRW
+﻿//=============================================================================
+// Haruka Software Storage.
+// GenConfRWTest_002.fs : Test cases for GenConfRW module.
+//
 
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.GenConfRW
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -9,15 +19,21 @@ open Xunit
 
 open Haruka.Constants
 open Haruka.Commons
-open Haruka.Test
 open Haruka.Test.UT
 
+//=============================================================================
+// Class implementation
 
 type GenConfRW_Test_002 () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     member _.GenTestFName ( s : string ) : string =
         Functions.AppendPathName ( Path.GetTempPath() ) s
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Theory>]
     [<InlineData( "" )>]

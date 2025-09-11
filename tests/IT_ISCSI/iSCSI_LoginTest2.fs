@@ -1,21 +1,29 @@
+//=============================================================================
+// Haruka Software Storage.
+// iSCSI_LoginTest2.fs : Test cases for iSCSI login.
+//
+
+//=============================================================================
+// Namespace declaration
+
 namespace Haruka.Test.IT.ISCSI
 
+//=============================================================================
+// Import declaration
+
 open System
-open System.Threading
-open System.Threading.Tasks
 open System.IO
-open System.Diagnostics
-open System.Net.Sockets
+open System.Text
+open System.Net
 
 open Xunit
 
 open Haruka.Constants
 open Haruka.Commons
-open Haruka.TargetDevice
 open Haruka.Test
-open Xunit.Abstractions
-open System.Text
-open System.Net
+
+//=============================================================================
+// Class implementation
 
 [<CollectionDefinition( "iSCSI_LoginTest2" )>]
 type iSCSI_LoginTest2_Fixture() =
@@ -136,6 +144,9 @@ type iSCSI_LoginTest2_Fixture() =
 [<Collection( "iSCSI_LoginTest2" )>]
 type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
+
     let g_CID0 = cid_me.zero
     let g_LUN0 = lun_me.fromPrim 0UL
     let g_LUN1 = lun_me.fromPrim 1UL
@@ -215,6 +226,8 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             0x00uy; 0x00uy;
         |]
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.MaxSessPerTaget_001() =

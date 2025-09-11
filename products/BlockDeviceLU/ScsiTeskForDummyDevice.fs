@@ -20,7 +20,7 @@ open Haruka.Constants
 open Haruka.Commons
 
 //=============================================================================
-// Type definition
+// Class implementation
 
 /// <summary>
 ///  ScsiTask class represents one SCSI task in task manager. 
@@ -48,6 +48,9 @@ open Haruka.Commons
 /// </param>
 /// <param name="m_ModeParameter">
 ///  Mode parameter object that is belongings to the LU.
+/// </param>
+/// <param name="m_PRManager">
+///  Persistent reservation object.
 /// </param>
 /// <param name="m_ACANoncompliant">
 ///  If this parameter is true, this task can also be run when ACA is established.
@@ -83,7 +86,6 @@ type ScsiTaskForDummyDevice
                 g.Gen1( m_ObjID, msg )
             )
 
-    /// <inheritdoc />
     interface IBlockDeviceTask with
 
         /// Return task type.

@@ -13,14 +13,11 @@ namespace Haruka.TargetDevice
 // Import declaration
 
 open System
-open System.Threading
 open System.Threading.Tasks
 open System.IO
 open System.Collections.Generic
 open System.Collections.Immutable
-open System.Net
 open System.Net.Sockets
-open System.Diagnostics
 
 open Haruka.Constants
 open Haruka.Commons
@@ -42,6 +39,8 @@ type ResendStatusRec = {
     m_R_SNACK_Request : ImmutableArray< struct( ITT_T * ( unit -> unit ) ) >;
 }
 
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///   This class wraps one TCP connection and receives/sends PDUs from/to initiator. 
@@ -55,7 +54,7 @@ type ResendStatusRec = {
 ///   The Target Portal Group Tag number of waiting TCP port which TCP connection connected to.
 ///   This value is always 0.
 /// </param>
-/// <param name="m_NetStream">
+/// <param name="argNetStream">
 ///   The TCP connection.
 /// </param>
 /// <param name="m_ConnectedTime">
@@ -81,9 +80,6 @@ type ResendStatusRec = {
 /// </param>
 /// <param name="m_NetPortIdx">
 ///   Network portal index number where this connection was established.
-/// </param>
-/// <param name="argNewStatSN">
-///   StatSN value.
 /// </param>
 /// <param name="m_Killer">
 ///   Killer object.
@@ -144,7 +140,6 @@ type Connection
     //=========================================================================
     // Interface method
 
-    /// <inheritdoc />
     interface IConnection with
 
         // ------------------------------------------------------------------------
@@ -211,9 +206,6 @@ type Connection
         /// <summary>
         ///   Process all of the full feature phase requests.
         /// </summary>
-        /// <param name="firstPDU">
-        ///   Received first PDU of full feature phase.
-        /// </param>
         override this.StartFullFeaturePhase () : unit =
             fun () -> task {
                 try

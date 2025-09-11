@@ -1,7 +1,17 @@
-﻿namespace Haruka.Test.UT.Client
+﻿//=============================================================================
+// Haruka Software Storage.
+// CtrlConnectionTest4.fs : Test cases for CtrlConnection class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Client
+
+//=============================================================================
+// Import declaration
 
 open System
-open System.IO
 open System.Net.Sockets
 
 open Xunit
@@ -9,11 +19,16 @@ open Xunit
 open Haruka.Constants
 open Haruka.Commons
 open Haruka.Client
-open Haruka.Controller
 open Haruka.IODataTypes
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
+
 type CtrlConnection_Test4() =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     static member ReceiveMediaControlRequest ( c : NetworkStream ) ( tdid : TDID_T ) ( lun : LUN_T ) ( mid : MEDIAIDX_T ) ( sessID : CtrlSessionID ) =
         task {
@@ -44,6 +59,9 @@ type CtrlConnection_Test4() =
                 } )
                 |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
         }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.DebugMedia_GetAllTraps_001() =

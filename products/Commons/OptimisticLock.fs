@@ -15,7 +15,7 @@ open System
 open System.Threading
 
 //=============================================================================
-// Class definition
+// Class implementation
 
 /// <summary>
 ///  Achieving optimistic lock algorithm for reference type objects.
@@ -44,12 +44,14 @@ type OptimisticLock< 'T when 'T : not struct >( init : 'T ) =
     /// </returns>
     /// <remarks>
     /// <code>
+    /// <![CDATA[
     ///  type ExpRec = { A1 : int }
-    ///  let theObj = OptimisticExclusion<ExpRec>( { A1 = 0 } )
+    ///  let theObj = OptimisticExclusion <ExpRec>( { A1 = 0 } )
     ///  let struct( oldOne, newOne ) =
     ///    theObj.Update ( fun oldVal -> { A1 = oldVal.A1 + 1 } )
     ///  printfn "%d" oldOne.A1 // 0 is displayed.
     ///  printfn "%d" newOne.A1 // 1 is displayed.
+    /// ]]>
     /// </code>
     ///  If the update function returns old object is returned as is, update process is canceled.
     ///  In this case, even if there is a conflict in the update process, no retry is performed.
@@ -85,15 +87,17 @@ type OptimisticLock< 'T when 'T : not struct >( init : 'T ) =
     /// </returns>
     /// <remarks>
     /// <code>
+    /// <![CDATA[
     ///  type ExpRec = { A1 : int }
     ///  let theObj = OptimisticExclusion<ExpRec>( { A1 = 0 } )
     ///  let work =                 // Any value returned by the function specified in the argument is returned.
-    ///    theObj.Update ( fun oldVal -> 
+    ///    theObj.Update ( fun oldVal ->
     ///      let newVal = { A1 = oldVal.A1 + 1 }
     ///      struct( newVal, 99 )   // Returns the updated object and any values.
     ///    )
     ///  printfn "%d" work          // 99 is displayed.
     ///  printfn "%d" theObj.obj.A1 // 1 is displayed.
+    /// ]]>
     /// </code>
     ///  If the update function returns old object is returned as is, update process is canceled.
     ///  In this case, even if there is a conflict in the update process, no retry is performed.
@@ -130,6 +134,7 @@ type OptimisticLock< 'T when 'T : not struct >( init : 'T ) =
     /// </returns>
     /// <remarks>
     /// <code>
+    /// <![CDATA[
     ///  type ExpRec = { A1 : int }
     ///  let r = OptimisticExclusion<ExpRec>( { A1 = 0 } )
     ///  r.Update( fun oldVal retryStat ->
@@ -159,6 +164,7 @@ type OptimisticLock< 'T when 'T : not struct >( init : 'T ) =
     ///  Retry 4
     ///  Updated, result=99
     ///  A1=41
+    /// ]]>
     /// </code>
     ///  If the update function returns old object is returned as is, update process is canceled.
     ///  In this case, even if there is a conflict in the update process, no retry is performed.

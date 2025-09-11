@@ -1,5 +1,15 @@
-﻿
+﻿//=============================================================================
+// Haruka Software Storage.
+// IscsiTaskScsiCommandTest.fs : Test cases for IscsiTaskScsiCommand class.
+//
+
+//=============================================================================
+// Namespace declaration
+
 namespace Haruka.Test.UT.TargetDevice
+
+//=============================================================================
+// Import declaration
 
 open System
 
@@ -11,11 +21,13 @@ open Haruka.IODataTypes
 open Haruka.TargetDevice
 open Haruka.Test
 
-
-
+//=============================================================================
+// Class implementation
 
 type IscsiTaskScsiCommand_Test () =
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     do
         let lock = GlbFunc.LogParamUpdateLock()
@@ -77,6 +89,8 @@ type IscsiTaskScsiCommand_Test () =
         ByteCount = 0u;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.Constractor_001() =

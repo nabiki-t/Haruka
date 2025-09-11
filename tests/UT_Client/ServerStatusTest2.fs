@@ -1,10 +1,18 @@
-﻿namespace Haruka.Test.UT.Client
+﻿//=============================================================================
+// Haruka Software Storage.
+// ServerStatusTest2.fs : Test cases for ServerStatus class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Client
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
-open System.Net
-open System.Net.Sockets
-open System.Diagnostics
 
 open Xunit
 
@@ -15,7 +23,13 @@ open Haruka.Controller
 open Haruka.IODataTypes
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
+
 type ServerStatus_Test2() =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.Publish_001() =

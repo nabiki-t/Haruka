@@ -14,14 +14,12 @@ namespace Haruka.TargetDevice
 // Import declaration
 
 open System
-open System.Threading.Tasks
 
 open Haruka.Constants
 open Haruka.Commons
 
 //=============================================================================
-// Type definition
-
+// Class implementation
 
 /// <summary>
 ///   This constructor creates a iSCSI task object that is constituted only one PDU.
@@ -70,7 +68,6 @@ type IscsiTaskOnePDUCommand
     //=========================================================================
     // Interface method
 
-    /// <inheritdoc />
     interface IIscsiTask with
 
         // --------------------------------------------------------------------

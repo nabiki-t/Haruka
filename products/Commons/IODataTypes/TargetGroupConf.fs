@@ -2,7 +2,13 @@
 // Haruka Software Storage.
 // Definition of ReaderWriter configuration reader/writer function.
 
+//=============================================================================
+// Namespace declaration
+
 namespace Haruka.IODataTypes.TargetGroupConf
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -12,6 +18,9 @@ open System.Xml
 open System.Xml.Schema
 open System.Xml.Linq
 open Haruka.Constants
+
+//=============================================================================
+// Type definition
 
 type [<NoComparison>]T_TargetGroup = {
     TargetGroupID : TGID_T;
@@ -95,6 +104,9 @@ and [<NoComparison>]T_DebugMedia = {
     MediaName : string;
     Peripheral : T_MEDIA;
 }
+
+//=============================================================================
+// Class implementation
 
 ///  ReaderWriter class imprements read and write function of configuration.
 type ReaderWriter() =

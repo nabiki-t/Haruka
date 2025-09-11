@@ -13,9 +13,7 @@ namespace Haruka.ClientGUI
 
 open System
 open System.IO
-open System.Xaml
 open System.Windows
-open System.Windows.Controls
 open System.Windows.Forms
 open System.Windows.Media
 open System.Windows.Media.Imaging
@@ -26,6 +24,9 @@ open System.Collections.Frozen
 open Haruka.Constants
 open Haruka.Commons
 open Haruka.Client
+
+//=============================================================================
+// Type definition
 
 /// Constants that represents the icon image.
 type IconImageIndex =
@@ -49,6 +50,9 @@ type IconImageIndex =
     | III_STATUS_RUNNING
     | III_STATUS_UNLOADED
     | III_STATUS_MODIFIED
+
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///  This class has all of icon images that is used at GUI controll.
@@ -119,7 +123,7 @@ type IconLoader ( m_ExeDir : string ) =
     /// <summary>
     ///  get icon image
     /// </summary>
-    /// <pram name="idx">
+    /// <param name="idx">
     ///  Index of the icon images.
     /// </param>
     /// <returns>

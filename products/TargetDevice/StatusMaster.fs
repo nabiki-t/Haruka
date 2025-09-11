@@ -28,7 +28,7 @@ open Haruka.Media
 open Haruka.IODataTypes
 
 //=============================================================================
-// Type definition
+// Class implementation
 
 /// <summary>
 ///   Implementation of StatusMaster component.
@@ -38,6 +38,12 @@ open Haruka.IODataTypes
 /// </param>
 /// <param name="m_Killer">
 ///   Killer object.
+/// </param>
+/// <param name="m_CtrlReqSource">
+///   Input stream for receiving control requests for the Target Device.
+/// </param>
+/// <param name="m_CtrlReqSink">
+///   The output stream for the processing results in response to a control request to the Target Device.
 /// </param>
 type StatusMaster(
     m_WorkDirPath : string,
@@ -93,7 +99,6 @@ type StatusMaster(
     //=========================================================================
     // Interface method
 
-    /// <inheritdoc />
     interface IStatus with
 
         // --------------------------------------------------------------------
@@ -1293,7 +1298,7 @@ type StatusMaster(
     /// <summary>
     ///  Process "Get Media Status" control request.
     /// </summary>
-    /// <param name="LUN">
+    /// <param name="lun">
     ///   Specify LUN of which the media belongs to.
     /// </param>
     /// <param name="mid">
@@ -1386,13 +1391,11 @@ type StatusMaster(
         }
 
     /// <summary>
-    ///  Process "Get Media Status" control request.
+    ///  Process "Media Control" control request.
     /// </summary>
-    /// <param name="LUN">
-    ///   Specify LUN of which the media belongs to.
-    /// </param>
-    /// <param name="mid">
-    ///   Specify which to get status of the media.
+    /// <param name="request">
+    ///   The content of the processing request: the LUN and media ID to which the request is to be forwarded,
+    ///   and the content of the processing request to be forwarded.
     /// </param>
     /// <returns>
     ///   Connections list.

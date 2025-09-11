@@ -8,9 +8,6 @@
 //=============================================================================
 // Namespace declaration
 
-/// <summary>
-///   Definitions of PDU class.
-/// </summary>
 namespace Haruka.TargetDevice
 
 //=============================================================================
@@ -26,72 +23,40 @@ open Haruka.Constants
 open Haruka.Commons
 
 //=============================================================================
-// Type definition
+// Class implementation
 
-/// <summary>
-///  Internal record type that used to receive PDU.
-/// </summary>
-/// <param name="m_I">
-///  Immidiate flag. If I bit is 1, this value is set to true.
-/// </param>
-/// <param name="m_Opcode">
-///   Opcode value.
-/// </param>
-/// <param name="m_F">
-///   Final flag. If F bit is 1, this value is set to true.
-/// </param>
-/// <param name="m_OpcodeSpecific0">
-///   Opcode specific( 3 bytes )
-/// </param>
-/// <param name="m_LUNorOpcodeSpecific1">
-///   LUN or Opcode specific( 8 bytes )
-/// </param>
-/// <param name="m_InitiatorTaskTag">
-///   Initiator task tag
-/// </param>
-/// <param name="m_OpcodeSpecific2">
-///   Opcode specific( 28 bytes )
-/// </param>
-/// <param name="m_AHS">
-///   Additional header segment
-/// </param>
-/// <param name="m_DataSegment">
-///   Data segment
-/// </param>
-/// <param name="m_TSIH">
-///   Session ID of Receiving this PDU 
-/// </param>
-/// <param name="m_CID">
-///   Connection ID of Receiving this PDU
-/// </param>
-/// <param name="m_ConCounter">
-///   Connection counter value of Receiving this PDU
-/// </param>
-/// <param name="m_IsTargetSide">
-///   If a PDU send/receive at target side, set to true
-/// </param>
-/// <param name="m_ReceivedByteCount">
-///   NUmber of bytes that received from the initiator.
-/// </param>
-/// <param name="m_ObjID">
-///   Object Identifier
-/// </param>
+/// Internal record type that used to receive PDU.
 [<Struct; IsReadOnly; IsByRefLike>]
 type private internalPDUInfo = {
+    /// Immidiate flag. If I bit is 1, this value is set to true.
     m_I : bool;
+    /// Opcode value.
     m_Opcode : OpcodeCd;
+    /// Final flag. If F bit is 1, this value is set to true.
     m_F : bool;
+    /// Opcode specific( 3 bytes )
     m_OpcodeSpecific0 : byte[];
+    /// LUN or Opcode specific( 8 bytes )
     m_LUNorOpcodeSpecific1 : byte[];
+    /// Initiator task tag
     m_InitiatorTaskTag : ITT_T;
+    /// Opcode specific( 28 bytes )
     m_OpcodeSpecific2 : byte[];
+    /// Additional header segment
     m_AHS : AHS[];
+    /// Data segment
     m_DataSegment : PooledBuffer;
+    /// Session ID of Receiving this PDU 
     m_TSIH : TSIH_T ValueOption;
+    /// Connection ID of Receiving this PDU
     m_CID : CID_T ValueOption;
+    /// Connection counter value of Receiving this PDU
     m_ConCounter : CONCNT_T ValueOption;
+    /// If a PDU send/receive at target side.
     m_Standpoint : Standpoint;
+    /// NUmber of bytes that received from the initiator.
     m_ReceivedByteCount : uint32;
+    /// Object Identifier
     m_ObjID : OBJIDX_T;
 }
 
@@ -132,7 +97,7 @@ type PDU() =
     /// <param name="sock">
     ///   Socket that is used to receive the PDU.
     /// </param>
-    /// <param name="isTargetSide">
+    /// <param name="standpoint">
     ///   The PDU is received at target side or not.
     ///   This argument is used to check opcode value.
     /// </param>
@@ -1965,19 +1930,6 @@ type PDU() =
     /// <summary>
     ///   Get BHS bytes data of specified PDU.
     /// </summary>
-    /// <param name="argTSIH">
-    ///   TSIH value of current session, or if TSIH is not dicided, specify 0 in this argument.
-    /// </param>
-    /// <param name="argCID">
-    ///   CID value of current connection, or 0.
-    ///   If TSIH is not 0, CID must also not 0.
-    /// </param>
-    /// <param name="argCounter">
-    ///   Connection counter value of the current connection. It is used in exception and to write log message only.
-    /// </param>
-    /// <param name="objid">
-    ///   Identifier value of PDU object.
-    /// </param>
     /// <param name="argPDU">
     ///   Any type of PDU data structure.
     /// </param>

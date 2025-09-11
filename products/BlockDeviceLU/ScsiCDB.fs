@@ -7,9 +7,6 @@
 //=============================================================================
 // Namespace declaration
 
-/// <summary>
-///   This component defines data types that represent SCSI CDB data structure.
-/// </summary>
 namespace Haruka.BlockDeviceLU
 
 //=============================================================================
@@ -19,7 +16,7 @@ open Haruka.Constants
 open Haruka.Commons
 
 //=============================================================================
-// Type definition
+// Class implementation
 
 /// <summary>
 /// CDBTypes shows the typed of SCSI CDB.
@@ -321,7 +318,6 @@ type ChangeAliasesCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -367,7 +363,6 @@ type ExtendedCopyCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes = ExtendedCopy
@@ -417,7 +412,6 @@ type InquiryCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -473,7 +467,6 @@ type LogSelectCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -533,7 +526,6 @@ type LogSenseCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -595,7 +587,6 @@ type ModeSelectCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -670,7 +661,6 @@ type ModeSenseCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -729,7 +719,6 @@ type PersistentReserveInCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -791,7 +780,6 @@ type PersistentReserveOutCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =PersistentReserveOut
@@ -849,7 +837,6 @@ type PreventAllowMediumRemovalCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -906,7 +893,6 @@ type ReadAttributeCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -971,7 +957,6 @@ type ReadBufferCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -1022,7 +1007,6 @@ type ReadMediaSerialNumberCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -1074,7 +1058,6 @@ type ReceiveCopyResultsCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -1131,7 +1114,6 @@ type ReceiveDiagnosticResultsCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -1180,7 +1162,6 @@ type ReportAliasesCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -1229,7 +1210,6 @@ type ReportDeviceIdentifierCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -1278,7 +1258,6 @@ type ReportLUNsCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -1330,7 +1309,6 @@ type ReportPriorityCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -1389,7 +1367,6 @@ type ReportSupportedOperationCodesCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -1440,7 +1417,6 @@ type ReportSupportedTaskManagementFunctionsCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -1488,7 +1464,6 @@ type ReportTargetPortGroupsCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -1537,7 +1512,6 @@ type ReportTimestampCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -1586,7 +1560,6 @@ type RequestSenseCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -1647,7 +1620,6 @@ type SendDiagnosticCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -1700,7 +1672,6 @@ type SetDeviceIdentifierCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -1751,7 +1722,6 @@ type SetPriorityCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -1801,7 +1771,6 @@ type SetTargetPortGroupsCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -1850,7 +1819,6 @@ type SetTimestampCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -1893,7 +1861,6 @@ type TestUnitReadyCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -1943,7 +1910,6 @@ type WriteAttributeCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -1999,7 +1965,6 @@ type WriteBufferCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -2053,7 +2018,6 @@ type AccessControlIn_ReportAclCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -2105,7 +2069,6 @@ type AccessControlIn_ReportLUDescriptorsCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -2161,7 +2124,6 @@ type AccessControlIn_ReportAccessControlsLogCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -2214,7 +2176,6 @@ type AccessControlIn_ReportOverrideLockoutTimerCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -2266,7 +2227,6 @@ type AccessControlIn_RequestProxyTokenCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -2315,7 +2275,6 @@ type AccessControlOutCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -2376,7 +2335,6 @@ type FormatUnitCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -2442,7 +2400,6 @@ type PreFetchCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -2527,7 +2484,6 @@ type ReadCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -2619,7 +2575,6 @@ type Read32CDB =
         TransferLength : uint32;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -2697,7 +2652,6 @@ type ReadCapacityCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -2766,7 +2720,6 @@ type ReadDefectDataCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -2843,7 +2796,6 @@ type ReadLongCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -2899,7 +2851,6 @@ type ReassignBlocksCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -2954,7 +2905,6 @@ type StartStopUnitCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -3021,7 +2971,6 @@ type SynchronizeCacheCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -3101,7 +3050,6 @@ type VerifyCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -3187,8 +3135,7 @@ type Verify32CDB =
         /// VERIFICATION LENGTH
         VerificationLength : uint32;
     }
-
-    /// <inheritdoc />
+    
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -3274,7 +3221,6 @@ type WriteCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -3367,7 +3313,6 @@ type Write32CDB =
         VerificationLength : uint32;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -3449,7 +3394,6 @@ type WriteAndVerifyCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -3536,7 +3480,6 @@ type WriteAndVerify32CDB =
         VerificationLength : uint32;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -3606,7 +3549,6 @@ type WriteLongCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -3680,7 +3622,6 @@ type WriteSameCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -3766,7 +3707,6 @@ type WriteSame32CDB =
         VerificationLength : uint32;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -3831,7 +3771,6 @@ type XDReadCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -3895,7 +3834,6 @@ type XDRead32CDB =
 
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -3965,7 +3903,6 @@ type XDWriteCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -4045,7 +3982,6 @@ type XDWrite32CDB =
 
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -4123,7 +4059,6 @@ type XDWriteReadCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -4207,7 +4142,6 @@ type XDWriteRead32CDB =
 
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -4280,7 +4214,6 @@ type XPWriteCDB =
         Control : byte;
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =
@@ -4356,7 +4289,6 @@ type XPWrite32CDB =
 
     }
 
-    /// <inheritdoc />
     interface ICDB with
         // Get the type of CDB.
         member this.Type : CDBTypes =

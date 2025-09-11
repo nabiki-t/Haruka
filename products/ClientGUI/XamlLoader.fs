@@ -23,6 +23,9 @@ open Haruka.Constants
 open Haruka.Commons
 open Haruka.Client
 
+//=============================================================================
+// Type definition
+
 /// Constants that represents the icon image.
 type PropertyViewIndex =
     | PVI_LOGIN_DIALOG
@@ -43,6 +46,9 @@ type PropertyViewIndex =
     | PVI_MEDIA_DUMMY
     | PVI_MEDIA_DEBUG
     | PVI_MAIN_WINDOW
+
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///  This class has all of XAML configurations that is used at GUI controll.

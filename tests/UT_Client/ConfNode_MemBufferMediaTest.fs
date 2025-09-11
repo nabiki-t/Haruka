@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.Client
+﻿//=============================================================================
+// Haruka Software Storage.
+// ConfNode_MemBufferMediaTest.fs : Test cases for ConfNode_MemBufferMedia class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Client
+
+//=============================================================================
+// Import declaration
 
 open System
 
@@ -10,13 +21,22 @@ open Haruka.Client
 open Haruka.IODataTypes
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
+
 type ConfNode_MemBufferMedia_Test() =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     let defaultConf : TargetGroupConf.T_MemBuffer = {
         IdentNumber = mediaidx_me.fromPrim 1u;
         MediaName = "";
         BytesCount = 512UL;
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.Constractor_001() =

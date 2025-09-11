@@ -19,7 +19,7 @@ open Haruka.Commons
 open Haruka.IODataTypes
 
 //=============================================================================
-// Type definition
+// Class implementation
 
 /// <summary>
 ///  Target group node used at the configurations.
@@ -77,7 +77,6 @@ type ConfNode_DebugMedia(
     //=========================================================================
     // Interface method
 
-    /// <inheritdoc />
     interface IMediaNode with
         
         // --------------------------------------------------------------------

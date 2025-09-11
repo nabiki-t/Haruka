@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.Commons
+﻿//=============================================================================
+// Haruka Software Storage.
+// ResponseFenceTest.fs : Test cases for ResponseFence class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Commons
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.Collections.Generic
@@ -8,7 +19,13 @@ open Xunit
 open Haruka.Commons
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
+
 type ResponseFence_Test1() =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.Test_WF() =  // W->F

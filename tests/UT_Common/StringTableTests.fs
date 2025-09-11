@@ -1,4 +1,15 @@
+//=============================================================================
+// Haruka Software Storage.
+// StringTableTests.fs : Test cases for StringTable class.
+//
+
+//=============================================================================
+// Namespace declaration
+
 namespace Haruka.Test.UT.Commons
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.Threading
@@ -11,7 +22,13 @@ open Haruka.Constants
 open Haruka.Commons
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
+
 type StringTable_Test() =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     static let m_ResReaderLock = new SemaphoreSlim(1)
 
@@ -50,6 +67,9 @@ type StringTable_Test() =
         Thread.CurrentThread.CurrentCulture <- culbk
         m_ResReaderLock.Release() |> ignore
         st
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.Constractor_001() =

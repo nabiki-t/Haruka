@@ -19,6 +19,9 @@ open Haruka.Constants
 open Haruka.Commons
 open Haruka.IODataTypes
 
+//=============================================================================
+// Class implementation
+
 /// <summary>
 ///  EditDebugTrapDialog class.
 /// </summary>
@@ -82,9 +85,6 @@ type EditDebugTrapDialog( m_Config : GUIConfig ) as this =
     /// <summary>
     ///  Display the window
     /// </summary>
-    /// <param name="apl">
-    ///  The application class object.
-    /// </param>
     /// <remarks>
     ///  This method will not return until the window is closed.
     /// </remarks>

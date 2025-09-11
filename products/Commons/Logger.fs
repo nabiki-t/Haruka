@@ -5,9 +5,6 @@
 //=============================================================================
 // Namespace declaration
 
-/// <summary>
-///   Definitions of logger object.
-/// </summary>
 namespace Haruka.Commons
 
 //=============================================================================
@@ -16,18 +13,15 @@ namespace Haruka.Commons
 open System
 open System.IO
 open System.Threading
-open System.Threading.Tasks.Dataflow
 open System.Collections.Generic
-open System.Collections.Frozen
 open System.Runtime.CompilerServices
 open System.Runtime.InteropServices
 open System.Diagnostics
 
 open Haruka.Constants
 
-
 //=============================================================================
-// declaration
+// Type definition
 
 /// <summary>
 ///   Message ID definition. LogID bitfield has "0xXYYYYYZZ" struture.
@@ -473,7 +467,6 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
     /// <summary>
     ///   Generate message string.
     /// </summary>
-    /// <param name="id">LogID</param>
     /// <param name="objId">Object ID that identify object instance.</param>
     /// <param name="cid">ConnectionID</param>
     /// <param name="conCounter">Connection Counter</param>
@@ -1016,7 +1009,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
     /// <param name="source">Source code file name which writing this log message.</param>
     /// <param name="line">Source code line number which writing this log message.</param>
     /// <returns>Generated message string</returns>
-    member public this.Gen6( id, objId, cid, conCounter, tsih, itt, lun,
+    member public this.Gen6( objId, cid, conCounter, tsih, itt, lun,
                                     a0 : obj,
                                     a1 : obj,
                                     a2 : obj,
@@ -1157,10 +1150,9 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
     /// <summary>
     ///   Generate E_SCSI_ACA_EXCEPTION_RAISED message string.
     /// </summary>
-    /// <param name="a0">SCSI Sense Key code.</param>
-    /// <param name="a1">SCSI ASC code.</param>
-    /// <param name="a2">Free format string message.</param>
-    /// <param name="dummy">Dummy argument for prevent mistakes in function names.</param>
+    /// <param name="senseKey">SCSI Sense Key code.</param>
+    /// <param name="acc">SCSI ASC code.</param>
+    /// <param name="msg">Free format string message.</param>
     /// <param name="fnname">Function name which writing this log message.</param>
     /// <param name="source">Source code file name which writing this log message.</param>
     /// <param name="line">Source code line number which writing this log message.</param>
@@ -1373,6 +1365,8 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
         | ValueSome( x ) ->
             this.GenMessage( objId, ValueSome( x.CID ), ValueSome( x.ConCounter ), ValueSome( x.TSIH ), itt, lun, msg, fnname, source, line )
 
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///  Log configuration record
@@ -1720,9 +1714,18 @@ type HLogger() =
     /// <summary>
     ///  Output trace message for ACA exception to the log.
     /// </summary>
-    /// <param name="f">
-    ///  Message generation function.
+    /// <param name="senseKey">
+    ///  Sense key value.
     /// </param>
+    /// <param name="acc">
+    ///  Additional sense code and additional sense code qualifier.
+    /// </param>
+    /// <param name="msg">
+    ///  Message string.
+    /// </param>
+    /// <param name="fnname">Function name which writing this log message.</param>
+    /// <param name="source">Source code file name which writing this log message.</param>
+    /// <param name="line">Source code line number which writing this log message.</param>
     static member public ACAException ( struct ( objId, cmdSource, itt, lun ),
                                     senseKey : SenseKeyCd,
                                     acc : ASCCd,

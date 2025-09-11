@@ -15,12 +15,12 @@ open System
 open System.IO
 open System.Reflection
 open System.Threading
-open System.Collections.Generic
-open System.Collections.Frozen
 
 open Haruka.Constants
 open Haruka.IODataTypes
 
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///  string table reader class
@@ -80,6 +80,7 @@ type StringTable( m_ResName : string ) =
     /// <summary>
     ///  Get resource string.
     /// </summary>
+    /// <param name="s">Section Name</param>
     /// <param name="n">Message ID</param>
     /// <param name="argcnt">Message arguments count.</param>
     /// <returns>

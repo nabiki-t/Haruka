@@ -1,14 +1,21 @@
-﻿namespace Haruka.Test.UT.TargetDevice
+﻿//=============================================================================
+// Haruka Software Storage.
+// SessionTest.fs : Test cases for Session class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.TargetDevice
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
-open System.Collections
-open System.Collections.Generic
-open System.Collections.Concurrent
 open System.Text
 open System.Threading
 open System.Threading.Tasks
-open System.Threading.Tasks.Dataflow
 
 open Xunit
 open Xunit.Abstractions
@@ -20,8 +27,13 @@ open Haruka.IODataTypes
 open Haruka.Test
 open System.Collections.Immutable
 
+//=============================================================================
+// Class implementation
 
 type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     do
         let lock = GlbFunc.LogParamUpdateLock()
@@ -275,6 +287,9 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
 
     static member GetWaitingQueue ( pc : PrivateCaller ) =
         ( pc.GetField( "m_ProcessWaitQueue" ) :?> OptimisticLock< ProcessWaitQueue > ).obj.WaitingQueue
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.Constractor() =

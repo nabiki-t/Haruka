@@ -1,4 +1,15 @@
-﻿module Haruka.Test.main
+﻿//=============================================================================
+// Haruka Software Storage.
+// main.fs : Implements functionality that will be used as a stub process.
+//
+
+//=============================================================================
+// module name
+
+module Haruka.Test.main
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -7,6 +18,9 @@ open System.Threading
 
 open Haruka.Commons
 open System.Diagnostics
+
+//=============================================================================
+// module implementation
 
 // Defines a process to be used as a stub for MediaCreateProc.
 // It impersonates the real MediaCreateProc and responds to standard input/output and standard error output.

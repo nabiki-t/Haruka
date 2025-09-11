@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.Controller
+﻿//=============================================================================
+// Haruka Software Storage.
+// ControllerTest2.fs : Test cases for Controller class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Controller
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -17,7 +28,8 @@ open Haruka.Controller
 open Haruka.IODataTypes
 open System.Collections.Generic
 
-
+//=============================================================================
+// Type definition
 
 type MediaCreateProcStub() =
     inherit MediaCreateProc( HarukaCtrlerCtrlReq.T_MediaType.U_PlainFile({ FileName = "a"; FileSize = 1L; }), "", "" )
@@ -52,9 +64,13 @@ type MediaCreateProcStub() =
     override _.PathName = m_PathName.Value
     override _.FileTypeStr = m_FileTypeStr.Value
 
-
+//=============================================================================
+// Class implementation
 
 type Controller_Test2 () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     do
         let lock = GlbFunc.LogParamUpdateLock()
@@ -72,6 +88,8 @@ type Controller_Test2 () =
         } )
         |> Functions.RunTaskSynchronously
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
         
     [<Fact>]
     member _.Constractor_001() =

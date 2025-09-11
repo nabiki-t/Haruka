@@ -16,7 +16,7 @@ open System.Collections.Concurrent
 open System.Threading
 
 //=============================================================================
-// declaration
+// Type definition
 
 /// <summary>
 ///  Definition of record which used in ResCounter. One ResCntRec has a time stamp, a total value, a number of value.
@@ -99,6 +99,9 @@ type ResCountResult = {
     /// Aggregated count
     Count : int64;
 }
+
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///  Aggregate recource usage value.

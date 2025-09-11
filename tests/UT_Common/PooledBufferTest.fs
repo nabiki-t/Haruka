@@ -1,18 +1,30 @@
-﻿namespace Haruka.Test.UT.Commons
+﻿//=============================================================================
+// Haruka Software Storage.
+// PooledBufferTest.fs : Test cases for PooledBuffer class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Commons
+
+//=============================================================================
+// Import declaration
 
 open System
-open System.Threading
-open System.Threading.Tasks
-open System.IO
 open System.Collections.Generic
 
 open Xunit
 
 open Haruka.Constants
-open Haruka.Commons
-open Haruka.Test
+
+//=============================================================================
+// Class implementation
 
 type PooledBuffer_Test() =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.IEquatable_001() =

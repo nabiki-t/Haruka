@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.Client
+﻿//=============================================================================
+// Haruka Software Storage.
+// CtrlConnectionTest3.fs : Test cases for CtrlConnection class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Client
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -13,7 +24,13 @@ open Haruka.Controller
 open Haruka.IODataTypes
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
+
 type CtrlConnection_Test3() =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     static member ReceiveTargetDeviceCtrlRequest ( c : NetworkStream ) ( tdid : TDID_T ) ( sessID : CtrlSessionID ) =
         task {
@@ -28,6 +45,9 @@ type CtrlConnection_Test3() =
                 Assert.Fail __LINE__
                 return ""
         }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.SendTargetDeviceRequest_001() =

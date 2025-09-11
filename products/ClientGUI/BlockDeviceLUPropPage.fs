@@ -24,6 +24,9 @@ open Haruka.IODataTypes
 open Haruka.Commons
 open Haruka.Client
 
+//=============================================================================
+// Class implementation
+
 /// <summary>
 ///  BlockDeviceLUPropPage class.
 /// </summary>
@@ -33,14 +36,14 @@ open Haruka.Client
 /// <param name="m_PropPage">
 ///  The grid object for this property page that is loaded from the XAML file.
 /// </param>
-/// <param name="m_TreeViewItem">
-///  The TreeViewItem of the TreeView on the MainWindow that corresponds to this property page.
-/// </param>
 /// <param name="m_MainWindow">
 ///  The main window object.
 /// </param>
 /// <param name="m_ServerStatus">
 ///  Server status object.
+/// </param>
+/// <param name="m_CtrlConnection">
+///  Connection.
 /// </param>
 /// <param name="m_NodeID">
 ///  node ID.
@@ -149,7 +152,6 @@ type BlockDeviceLUPropPage(
     ///////////////////////////////////////////////////////////////////////////
     // IPropPageInterface interface
 
-    /// <inheritdoc />
     interface IPropPageInterface with
 
         // Get loaded property page UI object.

@@ -19,7 +19,6 @@ open System.Threading.Tasks
 open Haruka.Constants
 open Haruka.Commons
 
-
 //=============================================================================
 // Type definition
 
@@ -77,19 +76,12 @@ type CommandVarb =
     | Clear_Trap
     | Traps
 
+//=============================================================================
+// Class implementation
 
 /// <summary>
-/// Entered command and value
+/// Read entered command and value.
 /// </summary>
-/// <param name="m_Varb">
-/// Command varb.
-/// </param>
-/// <param name="m_NamedArgs">
-/// Entered named arguments.
-/// </param>
-/// <param name="m_NamelessArgs">
-/// Entered nameless arguments.
-/// </param>
 [<NoComparison>]
 type CommandReader () =
 

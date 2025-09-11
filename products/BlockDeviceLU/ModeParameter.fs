@@ -28,7 +28,7 @@ open Haruka.Constants
 open Haruka.Commons
 
 //=============================================================================
-// Type definition
+// Class implementation
 
 /// <summary>
 ///  ModeParameter class. This class holds and management mode parameter values.

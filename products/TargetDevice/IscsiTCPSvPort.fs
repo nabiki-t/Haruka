@@ -24,7 +24,7 @@ open Haruka.IODataTypes
 open System.IO
 
 //=============================================================================
-// Class definition
+// Class implementation
 
 /// <summary>
 ///   Instance of TCP server port.
@@ -33,7 +33,7 @@ open System.IO
 /// <param name="m_StatusMaster">
 ///   Interface of Status Master component.
 /// </param>
-/// <param name="m_NetworkPortalInfo">
+/// <param name="m_NetworkPortal">
 ///   Configuration information of TCP connection.
 /// </param>
 /// <param name="m_Killer">
@@ -63,7 +63,6 @@ type IscsiTCPSvPort
     //=========================================================================
     // Interface method
 
-    /// <inheritdoc />
     interface IPort with
 
         // --------------------------------------------------------------------

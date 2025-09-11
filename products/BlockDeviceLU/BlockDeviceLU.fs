@@ -8,9 +8,6 @@
 //=============================================================================
 // Namespace declaration
 
-/// <summary>
-///   This component implements simple block device logical unit functionalty.
-/// </summary>
 namespace Haruka.BlockDeviceLU
 
 //=============================================================================
@@ -64,7 +61,30 @@ type TaskSet = {
     ACA : ( ITNexus * SCSIACAException ) voption;
 }
 
+//=============================================================================
+// Class implementation
 
+/// <summary>
+///  Implementing Block device LU functionality
+/// </summary>
+/// <param name="m_DeviceType">
+///  Specify the type of this LU.
+/// </param>
+/// <param name="m_StatusMaster">
+///  Reference to the Status Master instance..
+/// </param>
+/// <param name="m_LUN">
+///  LUN allocated to this LU.
+/// </param>
+/// <param name="m_LogicalUnitInfo">
+///  Configuration information.
+/// </param>
+/// <param name="m_WorkDirPath">
+///  Working folder path name.
+/// </param>
+/// <param name="m_TargetGroupKiller">
+///  Killer object.
+/// </param>
 type BlockDeviceLU
     (
         m_DeviceType : BlockDeviceType,
@@ -142,8 +162,6 @@ type BlockDeviceLU
     //=========================================================================
     // Interface method
 
-
-    /// <inheritdoc />
     interface ILU with
 
         // --------------------------------------------------------------------
@@ -541,7 +559,6 @@ type BlockDeviceLU
                     sum
             loop 0 0
 
-    /// <inheritdoc />
     interface IInternalLU with
         
         // ------------------------------------------------------------------------
@@ -726,14 +743,20 @@ type BlockDeviceLU
     /// <summary>
     ///   Add new Scsi task to task queue.
     /// </summary>
-    /// <param name="curTS">
-    ///  Current task set status.
-    /// </param>
     /// <param name="source">
     ///  Source information of received SCSI command.
     /// </param>
-    /// <param name="newTask">
-    ///  A new SCSI task that is added to task queue.
+    /// <param name="command">
+    ///  Received SCSI command.
+    /// </param>
+    /// <param name="cdb">
+    ///  CDB.
+    /// </param>
+    /// <param name="data">
+    ///  Received Data-Out PDUs list..
+    /// </param>
+    /// <param name="curTS">
+    ///  Current task set status.
     /// </param>
     /// <returns>
     ///  Next task set status.
@@ -930,6 +953,9 @@ type BlockDeviceLU
     /// <summary>
     ///  Check overlapeed command is exist or not.
     /// </summary>
+    /// <param name="argQ">
+    ///  Current task queue status.
+    /// </param>
     /// <param name="source">
     ///  Source information of received SCSI command.
     /// </param>
@@ -963,9 +989,12 @@ type BlockDeviceLU
     /// <summary>
     ///  Check ACA task is already exists, or not.
     /// </summary>
+    /// <param name="argQ">
+    ///  Current task queue status.
+    /// </param>
     /// <returns>
     ///  If ACA task is already exists, returns True.
-    /// </exception>
+    /// </returns>
     /// <remarks>
     ///   Call this method in critical section at task set lock.
     /// </remarks>
@@ -1097,8 +1126,8 @@ type BlockDeviceLU
     /// <summary>
     ///  Execute specified task.
     /// </summary>
-    /// <param name="idx">
-    ///  Index of which task to be exexute.
+    /// <param name="bdTask">
+    ///  The task to be exexute.
     /// </param>
     /// <returns>
     ///  Next status of the task that has been executed. 
@@ -1164,7 +1193,7 @@ type BlockDeviceLU
                 m_ExecuteQueue.Enqueue( errTask.Execute() )
                 TASK_STAT_Running( errTask )
 
-    /// <sumary>
+    /// <summary>
     ///  Handle SCSIACAException
     /// </summary>
     /// <param name="source">
@@ -1181,6 +1210,9 @@ type BlockDeviceLU
     /// </param>
     /// <param name="taskType">
     ///  Type of failed task.
+    /// </param>
+    /// <param name="curTS">
+    ///  Current task set status.
     /// </param>
     /// <remarks>
     ///  Call this method in critical section at task set lock.
@@ -1362,8 +1394,11 @@ type BlockDeviceLU
     /// <summary>
     ///  Delete specified task from queue.
     /// </summary>
-    /// <param name="task">
+    /// <param name="deltask">
     ///  task have to be deleted.
+    /// </param>
+    /// <param name="curTS">
+    ///  Current task set status.
     /// </param>
     /// <remarks>
     ///   Call this method in critical section at task set lock.
@@ -1389,10 +1424,10 @@ type BlockDeviceLU
     /// </summary>
     /// <param name="source">
     ///  command source information of the command that raised LU-reset.
-    /// </panam>
+    /// </param>
     /// <param name="itt">
     ///  Initiator task tag of the command that raised LU-reset.
-    /// </panam>
+    /// </param>
     member private this.NotifyLUReset ( source : CommandSourceInfo ) ( itt : ITT_T ) : unit =
         let loginfo = struct ( m_ObjID, ValueSome source, ValueSome itt, ValueSome m_LUN )
 

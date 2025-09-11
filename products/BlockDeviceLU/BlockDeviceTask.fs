@@ -28,6 +28,9 @@ type BlockDeviceTaskType =
     /// This task is not SCSI task that used in BlockDeviceLU.
     | InternalTask
 
+//=============================================================================
+// Interface declaration
+
 /// Definition of IBlockDeviceTask interface.
 type IBlockDeviceTask =
 

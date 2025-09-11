@@ -3,26 +3,23 @@
 // TaskRouter.fs : Defines TaskRouter class
 // TaskRouter class imprements the IProtocolService interface.
 
-
 //=============================================================================
 // Namespace declaration
 
 namespace Haruka.TargetDevice
-
 
 //=============================================================================
 // Import declaration
 
 open System
 open System.Collections.Concurrent
-open System.Threading.Tasks
 
 open Haruka
 open Haruka.Constants
 open Haruka.Commons
 
 //=============================================================================
-// Type definition
+// Class implementation
 
 /// <summary>
 ///  TaskRouter class definition.
@@ -33,9 +30,6 @@ open Haruka.Commons
 /// </summary>
 /// <param name="m_Status">
 ///  The interface of the StatusMaster object.
-/// </param>
-/// <param name="m_Config">
-///  The interface of the ConfigurationMaster object.
 /// </param>
 /// <param name="m_Session">
 ///  The interface of session object which this instance belongings to.
@@ -100,7 +94,6 @@ type TaskRouter
     //=========================================================================
     // Interface method
 
-    /// <inheritdoc />
     interface IProtocolService with
 
         // --------------------------------------------------------------------

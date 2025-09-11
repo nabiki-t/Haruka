@@ -8,8 +8,14 @@
 
 namespace Haruka.Constants
 
+//=============================================================================
+// Import declaration
+
 open System
 open System.Collections.Generic
+
+//=============================================================================
+// Class implementation
 
 /// <summary>
 /// The data type of I_T Nexus identifier.

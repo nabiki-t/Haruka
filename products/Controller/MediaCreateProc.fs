@@ -32,11 +32,20 @@ type MC_PROGRESS =
     | NormalEnd of DateTime
     | AbnormalEnd of DateTime
 
+//=============================================================================
+// Class implementation
+
 /// <summary>
 ///  Manage the process of generating media files.
 /// </summary>
 /// <param name="m_MediaInfo">
 ///  process arguments.
+/// </param>
+/// <param name="m_ConfPath">
+///  The current directory of the child process.
+/// </param>
+/// <param name="m_InitMediaPath">
+///  The executable file name of the program to be launched as a child process.
 /// </param>
 type MediaCreateProc(
         m_MediaInfo : HarukaCtrlerCtrlReq.T_MediaType,

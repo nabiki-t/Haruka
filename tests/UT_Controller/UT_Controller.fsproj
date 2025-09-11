@@ -12,21 +12,23 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <WarningLevel>5</WarningLevel>
     <Tailcalls>True</Tailcalls>
+    <OtherFlags>--warnon:3390</OtherFlags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <WarningLevel>5</WarningLevel>
     <Tailcalls>True</Tailcalls>
+    <OtherFlags>--warnon:3390</OtherFlags>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Include="CreateDefaultConfigTest.fs" />
     <Compile Include="CmdArgsTest.fs" />
     <Compile Include="InitMediaTest.fs" />
+    <Compile Include="MediaCreateProcTest.fs" />
     <Compile Include="LogAggregatorTest.fs" />
     <Compile Include="ControllerTest1.fs" />
     <Compile Include="ControllerTest2.fs" />
-    <Compile Include="MediaCreateProcTest.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
 

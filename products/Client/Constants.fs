@@ -8,7 +8,13 @@
 
 namespace Haruka.Client
 
+//=============================================================================
+// Import declaration
+
 open System
+
+//=============================================================================
+// Class implementation
 
 type ClientConst() =
     let dummy = ()

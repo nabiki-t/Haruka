@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.TargetDevice
+﻿//=============================================================================
+// Haruka Software Storage.
+// IscsiTaskTextNegociationTest.fs : Test cases for IscsiTaskTextNegociation class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.TargetDevice
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.Text
@@ -11,8 +22,13 @@ open Haruka.IODataTypes
 open Haruka.TargetDevice
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
 
 type IscsiTaskTextNegociation_Test () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     do
         let lock = GlbFunc.LogParamUpdateLock()
@@ -79,7 +95,8 @@ type IscsiTaskTextNegociation_Test () =
         ErrorRecoveryLevel = 0uy;
     }
 
-
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.Constractor_001() =

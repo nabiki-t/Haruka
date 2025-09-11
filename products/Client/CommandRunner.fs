@@ -23,6 +23,8 @@ open Haruka.Constants
 open Haruka.Commons
 open System.Diagnostics
 
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///  Definition of CommandReader class.
@@ -32,6 +34,9 @@ open System.Diagnostics
 /// </param>
 /// <param name="m_InFile">
 ///   Stream which read command from.
+/// </param>
+/// <param name="m_OutFile">
+///   The stream to use as the output destination for the execution results.
 /// </param>
 type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile : TextWriter ) =
 
@@ -686,8 +691,11 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
+    /// </param>
+    /// <param name="cn">
+    ///  Current node.
     /// </param>
     /// <returns>
     ///  Next status.
@@ -728,8 +736,11 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
+    /// </param>
+    /// <param name="cn">
+    ///  Current node.
     /// </param>
     /// <returns>
     ///  Next status.
@@ -759,8 +770,11 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
+    /// </param>
+    /// <param name="cn">
+    ///  Current node.
     /// </param>
     /// <returns>
     ///  Next status.
@@ -787,8 +801,11 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
+    /// </param>
+    /// <param name="cn">
+    ///  Current node.
     /// </param>
     /// <returns>
     ///  Next status.
@@ -818,8 +835,11 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
+    /// </param>
+    /// <param name="cn">
+    ///  Current node.
     /// </param>
     member private _.Command_List
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode ) : unit =
@@ -842,8 +862,11 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
+    /// </param>
+    /// <param name="cn">
+    ///  Current node.
     /// </param>
     member private _.Command_ListParent
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode ) : unit =
@@ -866,8 +889,11 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
+    /// </param>
+    /// <param name="cn">
+    ///  Current node.
     /// </param>
     /// <returns>
     ///  Next status.
@@ -1730,8 +1756,11 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
+    /// </param>
+    /// <param name="cn">
+    ///  Current node.
     /// </param>
     member private _.Command_Validate
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode ) : unit =
@@ -1757,8 +1786,11 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
+    /// </param>
+    /// <param name="cn">
+    ///  Current node.
     /// </param>
     member private _.Command_StatusAll
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
@@ -1821,8 +1853,11 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
+    /// </param>
+    /// <param name="cn">
+    ///  Current node.
     /// </param>
     member private _.Command_Create_TargetDevice
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
@@ -1868,11 +1903,14 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cmd">
     ///  User entered command.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Editing configuration data.
     /// </param>
     /// <param name="ss">
     ///  Connection to the controller.
+    /// </param>
+    /// <param name="cn">
+    ///  Current node.
     /// </param>
     member private _.Command_Status
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
@@ -1939,7 +1977,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
     /// </param>
     /// <param name="cn">
@@ -2043,7 +2081,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
     /// </param>
     /// <param name="cn">
@@ -2072,7 +2110,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
     /// </param>
     /// <param name="cn">
@@ -2101,7 +2139,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
     /// </param>
     /// <param name="cn">
@@ -2151,7 +2189,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
     /// </param>
     /// <param name="cn">
@@ -2186,7 +2224,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
     /// </param>
     /// <param name="cn">
@@ -2241,7 +2279,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
     /// </param>
     /// <param name="cn">
@@ -2286,7 +2324,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
     /// </param>
     /// <param name="cn">
@@ -2364,7 +2402,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
     /// </param>
     /// <param name="cn">
@@ -2411,7 +2449,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
     /// </param>
     /// <param name="cn">
@@ -2445,7 +2483,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
     /// </param>
     /// <param name="cn">
@@ -2479,7 +2517,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
     /// </param>
     /// <param name="cn">
@@ -2513,7 +2551,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
     /// </param>
     /// <param name="cn">
@@ -2547,7 +2585,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
     /// </param>
     /// <param name="cn">
@@ -2607,7 +2645,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="ss">
     ///  Editing configuration data.
     /// </param>
-    /// <param name="ss">
+    /// <param name="cc">
     ///  Connection to the controller.
     /// </param>
     /// <param name="cn">

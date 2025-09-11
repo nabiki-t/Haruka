@@ -13,18 +13,13 @@ namespace Haruka.Client
 
 open System
 open System.Collections.Generic
-open System.Threading
-open System.Threading.Tasks
-open System.Xml
-open System.Xml.Schema
 
 open Haruka.Constants
 open Haruka.Commons
 open Haruka.IODataTypes
-open System.Text.RegularExpressions
 
 //=============================================================================
-// Type definition
+// Class implementation
 
 /// <summary>
 ///  Target node used at the configurations.
@@ -101,7 +96,6 @@ type ConfNode_Target(
     //=========================================================================
     // Interface method
 
-    /// <inheritdoc />
     interface IConfigureNode with
         
         // --------------------------------------------------------------------

@@ -21,7 +21,6 @@ open System.Threading
 open System.Threading.Tasks
 open System.Net
 open System.Net.Sockets
-open System.Runtime.CompilerServices
 
 open Haruka.Constants
 open Haruka.Commons
@@ -48,6 +47,9 @@ type TargetDeviceProcInfo = {
     m_RestartCount : int;
 }
 
+//=============================================================================
+// Class implementation
+
 /// <summary>
 ///  Controller class.
 /// </summary>
@@ -55,7 +57,13 @@ type TargetDeviceProcInfo = {
 ///  Path name of directory that contains configuration files.
 /// </param>
 /// <param name="m_Killer">
-///  referense of HKiller object..
+///  referense of HKiller object.
+/// </param>
+/// <param name="m_TD_ExePath">
+///  The executable file name of the TargetDevice.
+/// </param>
+/// <param name="m_IM_ExePath">
+///  The executable file name of the InitMedia.
 /// </param>
 type Controller (
     m_ConfPath : string,
@@ -181,7 +189,6 @@ type Controller (
     //-------------------------------------------------------------------------
     // interface imprementation
 
-    /// <inheritdoc />
     interface IComponent with
 
         // ------------------------------------------------------------------------
@@ -212,12 +219,6 @@ type Controller (
     /// <summary>
     ///  Load target device process at startup.
     /// </summary>
-    /// <param name="confPath">
-    ///  Directory name that store configuration files.
-    /// </param>
-    /// <returns>
-    ///  Executed target device processes.
-    /// </returns>
     member this.LoadInitialTargetDeviceProcs () : unit =
         let rx = Constants.TARGET_DEVICE_DIR_NAME_REGOBJ
         Directory.GetDirectories m_ConfPath
@@ -734,7 +735,7 @@ type Controller (
     /// <summary>
     ///  Process "Delete target device dir" control request.
     /// </summary>
-    /// <param name="targetDeviceID">
+    /// <param name="arg">
     ///  The target device ID where the working directory will be deleted.
     /// </param>
     /// <returns>
@@ -819,7 +820,7 @@ type Controller (
     /// <summary>
     ///  Process "Create target device config" control request.
     /// </summary>
-    /// <param name="tgConf">
+    /// <param name="tdConf">
     ///  The target device ID and the configuration which will be written.
     /// </param>
     /// <returns>

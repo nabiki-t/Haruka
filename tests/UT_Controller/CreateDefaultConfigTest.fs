@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.Controller
+﻿//=============================================================================
+// Haruka Software Storage.
+// CreateDefaultConfigTest.fs : Test cases for CreateDefaultConfig function.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Controller
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -12,7 +23,13 @@ open Haruka.Controller
 open Haruka.IODataTypes
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
+
 type CreateDefaultConfig_Test () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     do
         let lock = GlbFunc.LogParamUpdateLock()
@@ -24,6 +41,9 @@ type CreateDefaultConfig_Test () =
         if Directory.Exists dname then GlbFunc.DeleteDir dname
         GlbFunc.CreateDir dname |> ignore
         dname
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.CreateDefaultConfig_001() =

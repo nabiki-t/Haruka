@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.Client
+﻿//=============================================================================
+// Haruka Software Storage.
+// CtrlConnectionTest2.fs : Test cases for CtrlConnection class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Client
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -12,7 +23,13 @@ open Haruka.Controller
 open Haruka.IODataTypes
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
+
 type CtrlConnection_Test2() =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     static member defaultSessParam =
         {
@@ -40,6 +57,9 @@ type CtrlConnection_Test2() =
             DataSequenceInOrder = true;
             ErrorRecoveryLevel = 0uy;
         }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.CreateTargetGroupConfig_001() =

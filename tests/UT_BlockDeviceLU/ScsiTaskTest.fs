@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.BlockDeviceLU
+﻿//=============================================================================
+// Haruka Software Storage.
+// ScsiTaskTest.fs : Test cases for ScsiTask class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.BlockDeviceLU
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -12,6 +23,9 @@ open Haruka.Commons
 open Haruka.BlockDeviceLU
 open Haruka.IODataTypes
 open Haruka.Test
+
+//=============================================================================
+// Type definition
 
 type ICDB_Stub =
     {
@@ -29,8 +43,13 @@ type ICDB_Stub =
         member this.LINK = this.m_LINK
         member _.DescriptString = ""
 
+//=============================================================================
+// Class implementation
 
 type ScsiTaskTest_Test () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     let defaultSCSICommandPDU = {
         I = false;
@@ -161,6 +180,10 @@ type ScsiTaskTest_Test () =
         GlbFunc.CreateDir w1 |> ignore
         w1
    
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases 
+    
     [<Fact>]
     member _.Execute_001() =
         let tv = [|

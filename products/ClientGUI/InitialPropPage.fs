@@ -12,20 +12,14 @@ namespace Haruka.ClientGUI
 // Import declaration
 
 open System
-open System.IO
-open System.Collections.Generic
-open System.Xml
-open System.Xaml
 open System.Windows
-open System.Windows.Markup
 open System.Windows.Controls
 open System.ComponentModel
-open System.Threading.Tasks
 
-open Haruka.Constants
-open Haruka.IODataTypes
-open Haruka.Commons
 open Haruka.Client
+
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///  InitialPropPage class.
@@ -47,7 +41,6 @@ type InitialPropPage(
         // Set controller localized text
         m_Config.SetLocalizedText "InitialPropPage" m_PropPage
 
-    /// <inheritdoc />
     interface IPropPageInterface with
         
         // Get loaded property page UI object.

@@ -1,12 +1,21 @@
-﻿namespace Haruka.Test.UT.Client
+﻿//=============================================================================
+// Haruka Software Storage.
+// CtrlConnectionTest1.fs : Test cases for CtrlConnection class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Client
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.Threading
-open System.Reflection
 open System.IO
 open System.Net
 open System.Net.Sockets
-open System.Threading.Tasks
 
 open Xunit
 
@@ -17,8 +26,15 @@ open Haruka.Controller
 open Haruka.IODataTypes
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
+
 type CtrlConnection_Test1() =
 
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
+    
     static member CreateDefaultCtrlConf ( p : string ) ( adr : string ) ( portNum : int ) =
         let fname = Functions.AppendPathName p Constants.CONTROLLER_CONF_FILE_NAME
         let conf : HarukaCtrlConf.T_HarukaCtrl = {
@@ -93,6 +109,9 @@ type CtrlConnection_Test1() =
                 }
             do! Functions.FramingSender c rb2
         }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.Constractor_001() =

@@ -15,14 +15,12 @@ namespace Haruka.TargetDevice
 // Import declaration
 
 open System
-open System.Threading.Tasks
 
 open Haruka.Constants
 open Haruka.Commons
 
 //=============================================================================
-// Type definition
-
+// Class implementation
 
 /// <summary>
 ///   Constractor of IscsiTaskTextNegociation.
@@ -359,7 +357,6 @@ type IscsiTaskTextNegociation
     //=========================================================================
     // Interface method
 
-    /// <inheritdoc />
     interface IIscsiTask with
 
         // --------------------------------------------------------------------

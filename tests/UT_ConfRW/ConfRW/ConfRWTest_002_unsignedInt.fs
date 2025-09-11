@@ -2,7 +2,13 @@
 // Haruka Software Storage.
 // Definition of ConfRW_UT002_unsignedInt configuration reader/writer function.
 
+//=============================================================================
+// Namespace declaration
+
 namespace Haruka.Test.UT.ConfRW_002_unsignedInt
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -12,6 +18,9 @@ open System.Xml
 open System.Xml.Schema
 open System.Xml.Linq
 open Haruka.Constants
+
+//=============================================================================
+// Type definition
 
 type [<NoComparison>]T_Test = {
     D1 : uint32;
@@ -23,6 +32,9 @@ type [<NoComparison>]T_Test = {
     D7 : uint32;
     D8 : uint32;
 }
+
+//=============================================================================
+// Class implementation
 
 ///  ConfRW_UT002_unsignedInt class imprements read and write function of configuration.
 type ConfRW_UT002_unsignedInt() =

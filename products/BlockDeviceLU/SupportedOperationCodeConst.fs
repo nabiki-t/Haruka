@@ -15,7 +15,7 @@ open Haruka.Constants
 open Haruka.Commons
 
 //=============================================================================
-// Type definition
+// Class implementation
 
 /// SupportedOperationCodeConst class has constatnt values used in REPORT SUPPORTED OPERATION CODES command.
 type SupportedOperationCodeConst() =

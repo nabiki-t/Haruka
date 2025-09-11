@@ -3,7 +3,13 @@
 // iSCSI_Initiator.fs : Implement the iSCSI Initiator function used in the integration test.
 //
 
+//=============================================================================
+// Namespace declaration
+
 namespace Haruka.Test
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.Diagnostics
@@ -19,6 +25,8 @@ open Haruka.TargetDevice
 open System.Security.Cryptography
 open System.Text
 
+//=============================================================================
+// Type definition
 
 type SessParams = {
     InitiatorName : string;
@@ -55,7 +63,6 @@ type ConnParams = {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Definition of iSCSI_Connection class
-
 
 type iSCSI_Connection(
     m_ConParams : ConnParams,
@@ -137,6 +144,9 @@ type iSCSI_Connection(
 /// </param>
 /// <param name="leadingConn">
 ///  Connected and logged in leading connection.
+/// </param>
+/// <param name="initialCmdSNValue">
+///  CmdSN value that is to be used as initial value.
 /// </param>
 type iSCSI_Initiator(
     m_SessParams : SessParams,
@@ -427,6 +437,9 @@ type iSCSI_Initiator(
     /// </param>
     /// <param name="argF">
     ///  SCSIDataOutPDU F field value.
+    /// </param>
+    /// <param name="itt">
+    ///  Initiator task tag field value.
     /// </param>
     /// <param name="argLUN">
     ///  SCSIDataOutPDU LUN field value.
@@ -1010,6 +1023,9 @@ type iSCSI_Initiator(
     /// <param name="exp_ConnParams">
     ///  Desired connection parameters.
     /// </param>
+    /// <param name="initCmdSN">
+    ///  CmdSN value that is to be used as initial value..
+    /// </param>
     /// <returns>
     ///  Created iSCSI initiator object.
     /// </returns>
@@ -1025,11 +1041,11 @@ type iSCSI_Initiator(
     /// <summary>
     ///  Create session instance and login the leading connection.
     /// </summary>
-    /// <param name="exp_SessParams">
-    ///  Desired session parameters.
-    /// </param>
     /// <param name="exp_ConnParams">
     ///  Desired connection parameters.
+    /// </param>
+    /// <param name="param">
+    ///  Parameter data that will be send as SendTargets text key.
     /// </param>
     /// <returns>
     ///  Created iSCSI initiator object.
@@ -1149,7 +1165,7 @@ type iSCSI_Initiator(
     /// <param name="isLeadingCon">
     ///  Leading connection or not.
     /// </param>
-    /// <param name="isLeadingCon">
+    /// <param name="isDiscoverySession">
     ///  Discovery session or normal session.
     /// </param>
     /// <returns>
@@ -1800,7 +1816,7 @@ type iSCSI_Initiator(
     /// <param name="getCmdSN">
     ///  The function to get current CmdSN value.
     /// </param>
-    /// <param name="expStatSN">
+    /// <param name="nextExpStatSN">
     ///  Next ExpStatSN value.
     /// </param>
     /// <param name="textReq">

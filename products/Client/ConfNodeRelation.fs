@@ -20,7 +20,7 @@ open Haruka.Constants
 open Haruka.Commons
 
 //=============================================================================
-// Type definition
+// Class implementation
 
 /// This class holds configuration node and managements relationship of nodes.
 type ConfNodeRelation() =
@@ -61,7 +61,7 @@ type ConfNodeRelation() =
 
     /// <summary>
     /// Add new configuration node.
-    /// </suumary>
+    /// </summary>
     /// <param name="node">
     ///  Node object that is inserted.
     /// </param>
@@ -89,7 +89,7 @@ type ConfNodeRelation() =
 
     /// <summary>
     /// Add new configuration node.
-    /// </suumary>
+    /// </summary>
     /// <param name="parent">
     ///  Parent side tarminal of reration which will be added. 
     /// </param>
@@ -110,7 +110,7 @@ type ConfNodeRelation() =
 
     /// <summary>
     /// Delete existing relationship between two nodes.
-    /// </suumary>
+    /// </summary>
     /// <param name="parent">
     ///  Parent side tarminal of reration which will be deleted. 
     /// </param>

@@ -1,13 +1,24 @@
-﻿namespace Haruka.Test.UT.Commons
+﻿//=============================================================================
+// Haruka Software Storage.
+// KillerTest.fs : Test cases for Killer class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Commons
+
+//=============================================================================
+// Import declaration
 
 open System
-open System.Threading
 
 open Xunit
 
-open Haruka.Constants
 open Haruka.Commons
-open Haruka.Test
+
+//=============================================================================
+// Type definition
 
 type CKillerTestStub() = 
     let mutable count = 0
@@ -16,8 +27,13 @@ type CKillerTestStub() =
             count <- count + 1
     member this.GetCount() = count
 
+//=============================================================================
+// Class implementation
 
 type HKiller_Test () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.HKiller_001() =

@@ -1,8 +1,17 @@
-﻿namespace Haruka.Test.UT.Media
+﻿//=============================================================================
+// Haruka Software Storage.
+// MemBufferMediaTest.fs : Test cases for MemBufferMedia class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Media
+
+//=============================================================================
+// Import declaration
 
 open System
-open System.IO
-open System.Threading
 
 open Xunit
 
@@ -12,8 +21,13 @@ open Haruka.Test
 open Haruka.Media
 open Haruka.IODataTypes
 
+//=============================================================================
+// Class implementation
 
 type MemBufferMedia_Test () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     let wCmdSrc ( k1 : IKiller ) : CommandSourceInfo =
         {
@@ -34,7 +48,10 @@ type MemBufferMedia_Test () =
         let lock = GlbFunc.LogParamUpdateLock()
         HLogger.SetLogParameters( 100u, 100u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
         lock.Release() |> ignore
- 
+        
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
+
     [<Fact>]
     member _.Constructor_001() =
         let stat_stub = new CStatus_Stub()

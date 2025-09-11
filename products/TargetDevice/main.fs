@@ -21,7 +21,7 @@ open Haruka.TargetDevice
 open System.Threading
 
 //=============================================================================
-// Startup code
+// module implementation
 
 /// Show instruction message 
 let help() : unit =

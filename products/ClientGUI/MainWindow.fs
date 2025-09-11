@@ -23,6 +23,9 @@ open Haruka.IODataTypes
 open Haruka.Commons
 open Haruka.Client
 
+//=============================================================================
+// Class implementation
+
 /// <summary>
 ///  MainWindow class.
 /// </summary>
@@ -274,7 +277,6 @@ type MainWindow( m_ExeDir : string ) as this =
     ///////////////////////////////////////////////////////////////////////////
     // IMainWindowIFForPP interface
 
-    /// <inheritdoc>
     interface IMainWindowIFForPP with
 
         // Notify of updated configure node status.
@@ -2027,9 +2029,6 @@ type MainWindow( m_ExeDir : string ) as this =
     /// <summary>
     ///  It shows the property page for specified configure node.
     /// </summary>
-    /// <param name="propIdx">
-    ///  The index of the property view that needs to be shown.
-    /// </param>
     /// <param name="confNode">
     ///  The configure node that should be shown in the property page.
     /// </param>

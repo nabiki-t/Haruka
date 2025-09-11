@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test
+﻿//=============================================================================
+// Haruka Software Storage.
+// Glbfunc.fs : Global functions for test.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.Net
@@ -12,6 +23,9 @@ open System.Threading.Tasks
 open Haruka
 open Haruka.Constants
 open Haruka.Commons
+
+//=============================================================================
+// Class implementation
 
 type GlbFunc() =
 
@@ -387,6 +401,7 @@ type GlbFunc() =
     /// </summary>
     /// <returns>
     ///  A tuple of the server and client streams.
+    /// </returns>
     static member CreateAnonymousPipe() : ( AnonymousPipeServerStream * AnonymousPipeClientStream ) =
         let pout = new AnonymousPipeServerStream( PipeDirection.Out )
         let pin = new AnonymousPipeClientStream( PipeDirection.In, pout.ClientSafePipeHandle )

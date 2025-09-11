@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.Commons
+﻿//=============================================================================
+// Haruka Software Storage.
+// ResCounterTest.fs : Test cases for ResCounter class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Commons
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.Threading.Tasks
@@ -6,11 +17,16 @@ open System.Collections.Concurrent
 
 open Xunit
 
-open Haruka.Constants
 open Haruka.Commons
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
+
 type ResCounter_Test1() =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.ResCntRec_Constructor_001() =

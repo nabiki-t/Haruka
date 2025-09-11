@@ -1,6 +1,6 @@
 ﻿//=============================================================================
 // Haruka Software Storage.
-// Typedefs.fs : Defines miscellaneous data types that is used in SCSI commonly.
+// PooledBuffer.fs : Holds buffers allocated by ArrayPool.
 //
 
 //=============================================================================
@@ -17,7 +17,7 @@ open System.Collections.Generic
 open System.Buffers
 
 //=============================================================================
-// Type definition
+// Class implementation
 
 /// <summary>
 ///  An alias to indicate that this is a buffer allocated from an ArrayPool.
@@ -301,7 +301,7 @@ type PooledBuffer(
     /// <summary>
     ///  Release a buffer.
     /// </summary>
-    /// <param name="s">
+    /// <param name="v">
     ///  PooledBuffer.
     /// </param>
     static member Return( v : PooledBuffer ) : unit =

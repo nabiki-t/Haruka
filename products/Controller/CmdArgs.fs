@@ -16,7 +16,6 @@ open System
 open Haruka.Constants
 open Haruka.Commons
 
-
 //=============================================================================
 // Type definition
 
@@ -25,6 +24,9 @@ type CtrlCmdType =
     | Server                // Start haruka controller process.
     | InitWorkDir           // Create a work folder and generate an initial definition file.
     | InitMedia_PlainFile   // Create a "plain file" media file.
+
+//=============================================================================
+// Class implementation
 
 type CmdArgs() =
 

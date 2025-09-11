@@ -12,11 +12,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <WarningLevel>5</WarningLevel>
     <Tailcalls>True</Tailcalls>
+    <OtherFlags>--warnon:3390</OtherFlags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <WarningLevel>5</WarningLevel>
     <Tailcalls>True</Tailcalls>
+    <OtherFlags>--warnon:3390</OtherFlags>
   </PropertyGroup>
 
   <ItemGroup>
@@ -40,6 +42,8 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <Generator>ResXFileCodeGenerator</Generator>
     </None>
+    <Compile Include="TypeDefsTest.fs" />
+    <Compile Include="IPConditionTest.fs" />
     <Compile Include="PooledBufferTest.fs" />
     <Compile Include="WorkingQueueTest.fs" />
     <Compile Include="StringTableTests.fs" />
@@ -48,9 +52,6 @@
     <Compile Include="FunctionsTest.fs" />
     <Compile Include="KillerTest.fs" />
     <Compile Include="PDUInterfaceTest.fs" />
-    <Compile Include="TypeDefsTest.fs" />
-    <Compile Include="IPConditionTest.fs" />
-    <Compile Include="CryptoTransceiverTest.fs" />
     <Compile Include="CommandParserTest.fs" />
     <Compile Include="ResCounterTest.fs" />
     <Compile Include="ResponseFenceTest.fs" />

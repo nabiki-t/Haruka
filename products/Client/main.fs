@@ -11,13 +11,13 @@ module Haruka.Client.main
 //=============================================================================
 // Import declaration
 
-
 open System
-open System.Text
-open System.IO
 
 open Haruka.Constants
 open Haruka.Commons
+
+//=============================================================================
+// module implementation
 
 /// <summary>
 ///  Show command instruction text.

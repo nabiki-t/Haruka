@@ -1,9 +1,15 @@
 ﻿//=============================================================================
 // Haruka Software Storage.
-// PDUTest.fs : Unit test code for Connection.PDU
-// 
+// PDUTest.fs : Test cases for PDU class.
+//
+
+//=============================================================================
+// Namespace declaration
 
 namespace Haruka.Test.UT.TargetDevice
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -15,8 +21,13 @@ open Haruka.Commons
 open Haruka.TargetDevice
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
 
 type PDU_Test () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     let tsih1o = ValueSome( tsih_me.fromPrim 1us )
     let cid1o = ValueSome( cid_me.fromPrim 1us )
@@ -26,6 +37,9 @@ type PDU_Test () =
         let lock = GlbFunc.LogParamUpdateLock()
         HLogger.SetLogParameters( 100u, 100u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
         lock.Release() |> ignore
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.SCSICommandPDU_001() =

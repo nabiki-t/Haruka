@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.Controller
+﻿//=============================================================================
+// Haruka Software Storage.
+// ControllerTest1.fs : Test cases for Controller class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Controller
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -14,8 +25,13 @@ open Haruka.Test
 open Haruka.Controller
 open Haruka.IODataTypes
 
+//=============================================================================
+// Class implementation
 
 type Controller_Test1 () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     static let portNum = GlbFunc.nextTcpPortNo()
     static let dname = Controller_Test1.CreateTestDir "Controller_Test1"
@@ -122,6 +138,9 @@ type Controller_Test1 () =
                 return CtrlSessionID()
 
         }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.Login_001() =

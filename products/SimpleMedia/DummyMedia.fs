@@ -20,7 +20,7 @@ open Haruka.Commons
 open Haruka.IODataTypes
 
 //=============================================================================
-// Class definition
+// Class implementation
 
 /// <summary>
 ///  DummyMedia class definition. The length of the DummyMedia is always 0 and all processing requests fail.

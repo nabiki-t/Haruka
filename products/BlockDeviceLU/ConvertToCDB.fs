@@ -20,7 +20,7 @@ open Haruka.Commons
 open Haruka.BlockDeviceLU
 
 //=============================================================================
-// Type definition
+// Class implementation
 
 /// <summary>
 ///   This class defines ConvertScsiCommandPDUToCDB function.

@@ -16,7 +16,7 @@ open Haruka.Constants
 open Haruka.Commons
 
 //=============================================================================
-// Type definition
+// Interface declaration
 
 /// <summary>
 ///   Interface of BlockDeviceLU class, that used in BlockDeviceLU module only.
@@ -66,11 +66,6 @@ type IInternalLU =
     /// </param>
     /// <param name="ex">
     ///  Unit attention.
-    /// </param>
-    /// <param name="srcNexus">
-    ///  The I_T Nexus that led to the establishment of unit attention. 
-    ///  No unit attention is reported for this I_T Nexus.
-    ///  If None is specified, unit attention will be reported on all I_T nexuses.
     /// </param>
     abstract EstablishUnitAttention : iport:string -> ex:SCSIACAException -> unit
 

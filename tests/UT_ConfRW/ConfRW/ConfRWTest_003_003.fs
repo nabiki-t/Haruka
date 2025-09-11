@@ -2,7 +2,13 @@
 // Haruka Software Storage.
 // Definition of ReaderWriter configuration reader/writer function.
 
+//=============================================================================
+// Namespace declaration
+
 namespace Haruka.Test.UT.ConfRW_003_003
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -13,6 +19,9 @@ open System.Xml.Schema
 open System.Xml.Linq
 open Haruka.Constants
 
+//=============================================================================
+// Type definition
+
 type [<NoComparison>]T_Test = {
     R021_1 : T_R021_1 option;
 }
@@ -21,6 +30,9 @@ and [<NoComparison>]T_R021_1 = {
     D1 : int;
     D2 : int;
 }
+
+//=============================================================================
+// Class implementation
 
 ///  ReaderWriter class imprements read and write function of configuration.
 type ReaderWriter() =

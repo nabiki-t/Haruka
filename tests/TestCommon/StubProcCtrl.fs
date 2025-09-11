@@ -1,15 +1,33 @@
-﻿namespace Haruka.Test
+﻿//=============================================================================
+// Haruka Software Storage.
+// StubProcCtrl.fs : IMplementation of StubProcCtrl class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
 open System.IO.Pipes
-open System.Threading
 
 open Haruka.Commons
 open Haruka.Constants
 
-// A class for simulating the standard input/output and standard error output of a child process using MediaCreateProcStub,
-// which is defined as the main function of TestCommon.exe.
+//=============================================================================
+// Class implementation
+
+/// <summary>
+/// A class for simulating the standard input/output and standard error output of a child process using MediaCreateProcStub,
+/// which is defined as the main function of TestCommon.exe.
+/// </summary>
+/// <param name="dirName">
+/// Specifies the directory name to which arguments are output when the process is started.
+/// </param>
 type StubProcCtrl( dirName : string ) =
 
     let m_ArgsDebugFileName =

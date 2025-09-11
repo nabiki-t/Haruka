@@ -14,7 +14,6 @@ namespace Haruka.TargetDevice
 // Import declaration
 
 open System
-open System.Threading.Tasks
 
 open Haruka.Constants
 open Haruka.Commons
@@ -44,7 +43,7 @@ type DATARECVSTAT =
     | SOLICITED
 
 //=============================================================================
-// Class definition
+// Class implementation
 
 /// <summary>
 ///   IscsiTaskScsiCommand class definition. This constractor is used internal only.
@@ -676,7 +675,6 @@ type IscsiTaskScsiCommand
     //=========================================================================
     // Interface method
 
-    /// <inheritdoc />
     interface IIscsiTask with
 
         // --------------------------------------------------------------------

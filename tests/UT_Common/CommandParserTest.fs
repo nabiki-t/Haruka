@@ -1,9 +1,18 @@
-﻿namespace Haruka.Test.UT.Commons
+﻿//=============================================================================
+// Haruka Software Storage.
+// CommandParserTest.fs : Test cases for CommandParser class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Commons
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
-open System.Collections.Generic
-open System.Text
 open System.Text.RegularExpressions
 
 open Xunit
@@ -12,12 +21,21 @@ open Haruka.Constants
 open Haruka.Commons
 open Haruka.Test
 
+//=============================================================================
+// Type definition
+
 type testVerb =
     | Exit
     | Login
     | Logout
 
+//=============================================================================
+// Class implementation
+
 type CommandParser_Test1() =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     let GenCommandStream ( txt : string ) =
         let ms = new MemoryStream()
@@ -50,6 +68,9 @@ type CommandParser_Test1() =
             ValuelessArgs = Array.empty;
             NamelessArgs = namelessArgs;
         }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.DiviteInputString_001() =

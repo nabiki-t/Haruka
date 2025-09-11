@@ -18,7 +18,7 @@ open Haruka.Commons
 open Haruka.IODataTypes
 
 //=============================================================================
-// Type definition
+// Class implementation
 
 type InitMedia() =
 

@@ -8,6 +8,14 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OtherFlags>--warnon:3390</OtherFlags>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OtherFlags>--warnon:3390</OtherFlags>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Include="ClientProc.fs" />
     <Compile Include="iSCSI_Initiator.fs" />

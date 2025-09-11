@@ -1,10 +1,16 @@
-﻿namespace Haruka.Test.UT.Controller
+﻿//=============================================================================
+// Haruka Software Storage.
+// LogAggregatorTest.fs : Test cases for LogAggregator class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Controller
 
 open System
 open System.IO
 open System.Threading.Tasks
-open System.Text
-open System.Net.Sockets
 open System.Threading
 open System.Threading.Tasks.Dataflow
 
@@ -16,8 +22,13 @@ open Haruka.Test
 open Haruka.Controller
 open Haruka.IODataTypes
 
+//=============================================================================
+// Class implementation
 
 type LogAggregator_Test1 () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     do
         let lock = GlbFunc.LogParamUpdateLock()
@@ -29,6 +40,9 @@ type LogAggregator_Test1 () =
         if Directory.Exists w1 then GlbFunc.DeleteDir w1
         GlbFunc.CreateDir w1 |> ignore
         w1
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.AddChild_001() =

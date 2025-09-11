@@ -1,10 +1,18 @@
-﻿namespace Haruka.Test.UT.Client
+﻿//=============================================================================
+// Haruka Software Storage.
+// CommandRunnerTest1.fs : Test cases for CommandRunner class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Client
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
-open System.Collections.Generic
-open System.Text
-open System.Text.RegularExpressions
 open System.Threading.Tasks
 open System.Net
 open System.Net.Sockets
@@ -16,8 +24,9 @@ open Haruka.Commons
 open Haruka.Client
 open Haruka.IODataTypes
 open Haruka.Test
-open System.Security.Cryptography
 
+//=============================================================================
+// Type definition
 
 type ServerStatusStub( m_MessageTable : StringTable ) =
     inherit ServerStatus( m_MessageTable )
@@ -308,7 +317,13 @@ type CtrlConnectionStub( st : StringTable ) =
     override _.DebugMedia_ClearTraps tdid lun mediaid = m_DebugMedia_ClearTraps.Value tdid lun mediaid
     override _.DebugMedia_GetCounterValue tdid lun mediaid counterno = m_DebugMedia_GetCounterValue.Value tdid lun mediaid counterno
 
+//=============================================================================
+// Class implementation
+
 type CommandRunner_Test1() =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     let GenCommandStream ( txt : string ) =
         let ms = new MemoryStream()
@@ -689,6 +704,8 @@ type CommandRunner_Test1() =
         [| CommandRunner_Test1.m_MemBufferMediaNode :> obj; "MD" :> obj |];
     |]
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.CommandLoop_exit_001() =

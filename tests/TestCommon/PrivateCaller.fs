@@ -1,11 +1,20 @@
 ﻿//=============================================================================
 // Haruka Software Storage.
-// PrivateCaller.fs : Defines PrivateCaller classe for debug use.
+// PrivateCaller.fs : Defines PrivateCaller classe for debug or test use.
 // 
+
+//=============================================================================
+// Namespace declaration
 
 namespace Haruka.Test
 
+//=============================================================================
+// Import declaration
+
 open System.Reflection
+
+//=============================================================================
+// Class implementation
 
 type PrivateCaller( o : obj ) =
     let m_Obj = o

@@ -297,6 +297,12 @@ type TextKeyValuesStatus =
             NegoStat_UnknownKeys = NegoStatusValue.NSV_Negotiated;
         }
 
+//=============================================================================
+// Class implementation
+
+/// <summary>
+///  This class defines the functions that used for iSCSI text format encoding.
+/// </summary>
 type IscsiTextEncode() =
 
     //=============================================================================
@@ -1054,11 +1060,8 @@ type IscsiTextEncode() =
     /// <param name="recTKV">
     ///   A TextKeyValues record before update.
     /// </param>
-    /// <param name="keyName">
-    ///   Key name string of received key-value pair.
-    /// </param>
-    /// <param name="valDat">
-    ///   Value of received key-value pair.
+    /// <param name="kv">
+    ///   received key-value pair.
     /// </param>
     /// <returns>
     ///   Updated a TextKeyValues record.
@@ -1066,7 +1069,8 @@ type IscsiTextEncode() =
     /// <remarks>
     ///   It is expected that the value created by TextKeyData2KeyValues function is specified for valDat argument.
     /// </remarks>
-    static member UpdateTextKeyValuesRecord ( isTargetVal : bool ) ( recTKV : TextKeyValues ) struct ( keyName : string, valDat : TextValueType<byte[]> ) =
+    static member UpdateTextKeyValuesRecord ( isTargetVal : bool ) ( recTKV : TextKeyValues ) ( kv : struct ( string *  TextValueType<byte[]> ) ) =
+        let struct ( keyName, valDat ) = kv
         let tranceDataType ( f : byte[] -> 'a ) : TextValueType<'a> =
             match valDat with
             | ISV_Missing ->

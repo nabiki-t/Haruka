@@ -10,15 +10,17 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <Tailcalls>True</Tailcalls>
     <WarningLevel>5</WarningLevel>
+    <OtherFlags>--warnon:3390</OtherFlags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <WarningLevel>5</WarningLevel>
+    <OtherFlags>--warnon:3390</OtherFlags>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Include="PlainFileMedia.fs" />
-    <Compile Include="MemBuffer.fs" />
+    <Compile Include="MemBufferMedia.fs" />
     <Compile Include="DummyMedia.fs" />
     <Compile Include="DebugMedia.fs" />
   </ItemGroup>

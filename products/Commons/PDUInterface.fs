@@ -8,17 +8,12 @@
 //=============================================================================
 // Namespace declaration
 
-/// <summary>
-///   PDUInterface module defines interface of PDU data object,
-///   and relational sub data structure, constant, etc.
-/// </summary>
 namespace Haruka.Commons
 
 //=============================================================================
 // Import declaration
 
 open System
-open System.Buffers
 open System.Runtime.CompilerServices
 
 open Haruka.Constants
@@ -112,7 +107,7 @@ type SCSICommandPDU =
         /// Received byte count
         ByteCount : uint32;
     }
-    /// <inheritdoc />
+
     interface ILogicalPDU with
         // Get immidiate flag
         member this.Immidiate : bool =
@@ -223,7 +218,7 @@ type SCSIResponsePDU =
         /// When returning a buffer to the ArrayPool, the same buffer must never be returned more than once.
         DataInBuffer : PooledBuffer;
     }
-    /// <inheritdoc />
+
     interface ILogicalPDU with
         // Get immidiate flag
         member _.Immidiate : bool =
@@ -316,7 +311,7 @@ type TaskManagementFunctionRequestPDU =
         /// Received byte count
         ByteCount : uint32;
     }
-    /// <inheritdoc />
+
     interface ILogicalPDU with
         // Get immidiate flag
         member this.Immidiate : bool =
@@ -392,7 +387,7 @@ type TaskManagementFunctionResponsePDU =
         /// Whether response fence is required
         ResponseFence : ResponseFenceNeedsFlag
     }
-    /// <inheritdoc />
+
     interface ILogicalPDU with
         // Get immidiate flag
         member _.Immidiate : bool =
@@ -487,7 +482,7 @@ type SCSIDataOutPDU =
         /// Received byte count
         ByteCount : uint32;
     }
-    /// <inheritdoc />
+
     interface ILogicalPDU with
         // Get immidiate flag
         member _.Immidiate : bool =
@@ -634,7 +629,7 @@ type SCSIDataInPDU =
         /// Whether response fence is required
         ResponseFence : ResponseFenceNeedsFlag
     }
-    /// <inheritdoc />
+
     interface ILogicalPDU with
         // Get immidiate flag
         member _.Immidiate : bool =
@@ -732,7 +727,7 @@ type R2TPDU =
         /// DesiredDataTransferLength field value.
         DesiredDataTransferLength : uint32;
     }
-    /// <inheritdoc />
+
     interface ILogicalPDU with
         // Get immidiate flag
         member _.Immidiate : bool =
@@ -831,7 +826,7 @@ type AsyncronousMessagePDU =
         /// ISCSIEventData field value in data segment.
         ISCSIEventData : byte[];
     }
-    /// <inheritdoc />
+
     interface ILogicalPDU with
         // Get immidiate flag
         member _.Immidiate : bool =
@@ -926,7 +921,7 @@ type TextRequestPDU =
         /// Received byte count
         ByteCount : uint32;
     }
-    /// <inheritdoc />
+
     interface ILogicalPDU with
         // Get immidiate flag
         member this.Immidiate : bool =
@@ -1010,7 +1005,7 @@ type TextResponsePDU =
         /// Text Response data in data segment.
         TextResponse : byte[];
     }
-    /// <inheritdoc />
+
     interface ILogicalPDU with
         // Get immidiate flag
         member _.Immidiate : bool =
@@ -1113,7 +1108,7 @@ type LoginRequestPDU =
         /// Received byte count
         ByteCount : uint32;
     }
-    /// <inheritdoc />
+
     interface ILogicalPDU with
         // Get immidiate flag
         member _.Immidiate : bool =
@@ -1206,7 +1201,7 @@ type LoginResponsePDU =
         /// Text Response data in data segment.
         TextResponse : byte[];
     }
-    /// <inheritdoc />
+
     interface ILogicalPDU with
         // Get immidiate flag
         member _.Immidiate : bool =
@@ -1293,7 +1288,7 @@ type LogoutRequestPDU =
         /// Received byte count
         ByteCount : uint32;
     }
-    /// <inheritdoc />
+
     interface ILogicalPDU with
         // Get immidiate flag
         member this.Immidiate : bool =
@@ -1374,7 +1369,7 @@ type LogoutResponsePDU =
         /// Close this connection or not.
         CloseAllegiantConnection : bool;
     }
-    /// <inheritdoc />
+
     interface ILogicalPDU with
         // Get immidiate flag
         member _.Immidiate : bool =
@@ -1463,7 +1458,7 @@ type SNACKRequestPDU =
         /// Received byte count
         ByteCount : uint32;
     }
-    /// <inheritdoc />
+
     interface ILogicalPDU with
         // The I bit of the SNACK request PDU is always 0.
         // But There is no CmdSN field in the SNACK request PDU, so
@@ -1542,7 +1537,7 @@ type RejectPDU =
         /// Header Data.
         HeaderData : byte[];
     }
-    /// <inheritdoc />
+
     interface ILogicalPDU with
         // Get immidiate flag
         member _.Immidiate : bool =
@@ -1634,7 +1629,7 @@ type NOPOutPDU =
         /// Received byte count
         ByteCount : uint32;
     }
-    /// <inheritdoc />
+
     interface ILogicalPDU with
         // Get immidiate flag
         member this.Immidiate : bool =
@@ -1711,7 +1706,7 @@ type NOPInPDU =
         /// After the PDU is sent, or when an acknowledgment is received from the initiator, the PDU is returned to the ArrayPool.
         [<IsReadOnly>] PingData : PooledBuffer;
     }
-    /// <inheritdoc />
+
     interface ILogicalPDU with
         // Get immidiate flag
         member _.Immidiate : bool =

@@ -13,17 +13,13 @@ namespace Haruka.Client
 
 open System
 open System.Collections.Generic
-open System.Threading
-open System.Threading.Tasks
-open System.Xml
-open System.Xml.Schema
 
 open Haruka.Constants
 open Haruka.Commons
 open Haruka.IODataTypes
 
 //=============================================================================
-// Type definition
+// Class implementation
 
 /// <summary>
 ///  Target device node used at the configurations.
@@ -125,9 +121,6 @@ type ConfNode_TargetDevice(
     /// <param name="newNodeID">
     ///  Node ID should be set this node.
     /// </param>
-    /// <param name="tdid">
-    ///  Target device ID should be set this node.
-    /// </param>
     /// <param name="tempExp">
     ///  Temp export format data.
     /// </param>
@@ -159,7 +152,6 @@ type ConfNode_TargetDevice(
     //=========================================================================
     // Interface method
 
-    /// <inheritdoc />
     interface IConfigFileNode with
         
         // --------------------------------------------------------------------
@@ -653,11 +645,11 @@ type ConfNode_TargetDevice(
     /// <summary>
     /// Create new object that has updated configuration values.
     /// </summary>
+    /// <param name="argTargetDeviceID">
+    ///  Target device ID.
+    /// </param>
     /// <param name="argTargetDeviceName">
     ///  Target device name.
-    /// </param>
-    /// <param name="argNodeID">
-    ///  Node ID of this node.
     /// </param>
     /// <param name="argNegotiableParameters">
     ///  Configuration values.

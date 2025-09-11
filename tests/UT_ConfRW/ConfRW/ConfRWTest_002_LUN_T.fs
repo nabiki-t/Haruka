@@ -2,7 +2,13 @@
 // Haruka Software Storage.
 // Definition of ConfRW_UT002_LUN_T configuration reader/writer function.
 
+//=============================================================================
+// Namespace declaration
+
 namespace Haruka.Test.UT.ConfRW_002_LUN_T
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -13,6 +19,9 @@ open System.Xml.Schema
 open System.Xml.Linq
 open Haruka.Constants
 
+//=============================================================================
+// Type definition
+
 type [<NoComparison>]T_Test = {
     D1 : LUN_T;
     D2 : LUN_T list;
@@ -21,6 +30,9 @@ type [<NoComparison>]T_Test = {
     D5 : LUN_T;
     D6 : LUN_T;
 }
+
+//=============================================================================
+// Class implementation
 
 ///  ConfRW_UT002_LUN_T class imprements read and write function of configuration.
 type ConfRW_UT002_LUN_T() =

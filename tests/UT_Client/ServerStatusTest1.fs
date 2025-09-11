@@ -1,4 +1,15 @@
-﻿namespace Haruka.Test.UT.Client
+﻿//=============================================================================
+// Haruka Software Storage.
+// ServerStatusTest1.fs : Test cases for ServerStatus class.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Client
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -17,7 +28,13 @@ open Haruka.Controller
 open Haruka.IODataTypes
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
+
 type ServerStatus_Test1() =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     static member Init ( caseName : string ) =
         let portNo = GlbFunc.nextTcpPortNo()
@@ -25,9 +42,6 @@ type ServerStatus_Test1() =
         if Directory.Exists dname then GlbFunc.DeleteDir dname
         GlbFunc.CreateDir dname |> ignore
         ( portNo, dname )
-
-    ////////////////////////////////////////////////////////////////////////////
-    // Default configuration values
 
     static member defaultNego : TargetDeviceConf.T_NegotiableParameters = {
         MaxRecvDataSegmentLength = Constants.NEGOPARAM_DEF_MaxRecvDataSegmentLength;
@@ -72,6 +86,9 @@ type ServerStatus_Test1() =
         LUN = [];
         Auth = TargetGroupConf.U_None();
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     ////////////////////////////////////////////////////////////////////////////
     // Stub procedure for server.

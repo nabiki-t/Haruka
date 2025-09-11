@@ -19,6 +19,9 @@ open Haruka.Commons
 open Haruka.IODataTypes
 open Haruka.Constants
 
+//=============================================================================
+// Class implementation
+
 /// <summary>
 ///  Definition of ServerStatus class.
 /// </summary>
@@ -49,7 +52,7 @@ type ServerStatus(
     ///   At CLI client, LU nodes will be child of the target node only.
     ///   But for GUI client, LU nodes will be child of both of the target node and target group node.
     /// </remarks>
-    abstract LoadConfigure : CtrlConnection -> bool -> Task
+    abstract LoadConfigure : con:CtrlConnection -> forCLI:bool -> Task
     default this.LoadConfigure con forCLI =
         task {
             // Initialize all of configuration nodes and get contoroller configuration.
@@ -324,7 +327,7 @@ type ServerStatus(
     /// <param name="con">
     /// Connection object to controller.
     /// </param>
-    abstract Publish : CtrlConnection -> Task
+    abstract Publish : con:CtrlConnection -> Task
     default this.Publish con =
 
         // check configuration error is exist or not.
@@ -501,7 +504,7 @@ type ServerStatus(
     /// <returns>
     ///  configure node.
     /// </returns>
-    abstract GetNode : CONFNODE_T -> IConfigureNode
+    abstract GetNode : nodeID:CONFNODE_T -> IConfigureNode
     default _.GetNode nodeID =
         m_ConfNodes.GetNode nodeID
 
@@ -547,7 +550,7 @@ type ServerStatus(
     ///  If a new node is added after being deleted, the node ID will be changed and relational child node are deleted.
     ///  This method can update attribute value without changing node ID and relations.
     /// </remarks>
-    abstract UpdateControllerNode : HarukaCtrlConf.T_HarukaCtrl -> ConfNode_Controller
+    abstract UpdateControllerNode : conf:HarukaCtrlConf.T_HarukaCtrl -> ConfNode_Controller
     default this.UpdateControllerNode conf =
         let newNode = this.ControllerNode.CreateUpdatedNode conf
         m_ConfNodes.Update newNode
@@ -582,7 +585,12 @@ type ServerStatus(
     ///  Added target device node has no network portal node or target group node.
     ///  So, in this state, configuration files can't be uploaded.
     /// </remarks>
-    abstract AddTargetDeviceNode : TDID_T -> string -> TargetDeviceConf.T_NegotiableParameters -> TargetDeviceConf.T_LogParameters -> ConfNode_TargetDevice
+    abstract AddTargetDeviceNode :
+        argTargetDeviceID:TDID_T ->
+        argTargetDeviceName:string ->
+        argNegotiableParameters:TargetDeviceConf.T_NegotiableParameters ->
+        argLogParameters:TargetDeviceConf.T_LogParameters ->
+        ConfNode_TargetDevice
     default _.AddTargetDeviceNode argTargetDeviceID argTargetDeviceName argNegotiableParameters argLogParameters =
         let nid = m_ConfNodes.NextID
         let n = 
@@ -609,7 +617,7 @@ type ServerStatus(
     /// <remarks>
     ///  Target device node which can be deleted must have been modified or the corresponding target device process must have been terminated.
     /// </remarks>
-    abstract DeleteTargetDeviceNode : ConfNode_TargetDevice -> unit
+    abstract DeleteTargetDeviceNode : tdnode:ConfNode_TargetDevice -> unit
     default _.DeleteTargetDeviceNode tdnode =
         m_ConfNodes.DeleteAllChildNodeList ( tdnode :> IConfigureNode ).NodeID
 
@@ -639,7 +647,13 @@ type ServerStatus(
     ///  If a new node is added after being deleted, the node ID will be changed and relational child node are deleted.
     ///  This method can update attribute value without changing node ID and relations.
     /// </remarks>
-    abstract UpdateTargetDeviceNode : ConfNode_TargetDevice -> TDID_T -> string -> TargetDeviceConf.T_NegotiableParameters -> TargetDeviceConf.T_LogParameters -> ConfNode_TargetDevice
+    abstract UpdateTargetDeviceNode :
+        tdnode:ConfNode_TargetDevice ->
+        argTargetDeviceID:TDID_T ->
+        argTargetDeviceName:string ->
+        argNegotiableParameters:TargetDeviceConf.T_NegotiableParameters ->
+        argLogParameters:TargetDeviceConf.T_LogParameters ->
+        ConfNode_TargetDevice
     default _.UpdateTargetDeviceNode tdnode argTargetDeviceID argTargetDeviceName argNegotiableParameters argLogParameters =
         let nn = tdnode.CreateUpdatedNode argTargetDeviceID argTargetDeviceName argNegotiableParameters argLogParameters
         m_ConfNodes.Update nn
@@ -648,7 +662,7 @@ type ServerStatus(
     /// <summary>
     ///  Add new network portal node to child of specified target device node.
     /// </summary>
-    /// <param name="tdNodeID">
+    /// <param name="tdnode">
     ///  ID of the target device node which is added new network portal node.
     /// </param>
     /// <param name="argNetworkPortal">
@@ -660,7 +674,7 @@ type ServerStatus(
     /// <remarks>
     ///  Target device node which can be updated must have been modified or the corresponding target device process must have been terminated.
     /// </remarks>
-    abstract AddNetworkPortalNode : ConfNode_TargetDevice -> TargetDeviceConf.T_NetworkPortal -> ConfNode_NetworkPortal
+    abstract AddNetworkPortalNode : tdnode:ConfNode_TargetDevice -> argNetworkPortal:TargetDeviceConf.T_NetworkPortal -> ConfNode_NetworkPortal
     default _.AddNetworkPortalNode tdnode argNetworkPortal =
         let tdNodeID = ( tdnode :> IConfigureNode ).NodeID
         let nnp = new ConfNode_NetworkPortal( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, argNetworkPortal )
@@ -679,7 +693,7 @@ type ServerStatus(
     /// <remarks>
     ///  Target device node which can be updated must have been modified or the corresponding target device process must have been terminated.
     /// </remarks>
-    abstract DeleteNetworkPortalNode : ConfNode_NetworkPortal -> unit
+    abstract DeleteNetworkPortalNode : npnode:ConfNode_NetworkPortal -> unit
     default this.DeleteNetworkPortalNode npnode =
         let npNodeID = ( npnode :> IConfigureNode ).NodeID
         let tdNode = this.IdentifyTargetDeviceNode npnode
@@ -704,7 +718,7 @@ type ServerStatus(
     ///  If a new node is added after being deleted, the node ID will be changed and relational child node are deleted.
     ///  This method can update attribute value without changing node ID and relations.
     /// </remarks>
-    abstract UpdateNetworkPortalNode : ConfNode_NetworkPortal -> TargetDeviceConf.T_NetworkPortal -> ConfNode_NetworkPortal
+    abstract UpdateNetworkPortalNode : npnode:ConfNode_NetworkPortal -> argNetworkPortal:TargetDeviceConf.T_NetworkPortal -> ConfNode_NetworkPortal
     default this.UpdateNetworkPortalNode npnode argNetworkPortal =
         let tdNode = this.IdentifyTargetDeviceNode npnode
         let nnp = npnode.CreateUpdatedNode argNetworkPortal
@@ -736,7 +750,12 @@ type ServerStatus(
     ///  Target groups can be added regardless of target device status.
     ///  Added target group node has no target nodes or LU nodes. So, in this state, configuration files can't be uploaded.
     /// </remarks>
-    abstract AddTargetGroupNode : ConfNode_TargetDevice -> TGID_T -> string -> bool -> ConfNode_TargetGroup
+    abstract AddTargetGroupNode :
+        tdnode:ConfNode_TargetDevice ->
+        argTargetGroupID:TGID_T ->
+        argTargetGroupName:string ->
+        argEnabledAtStart:bool ->
+        ConfNode_TargetGroup
     default _.AddTargetGroupNode tdnode argTargetGroupID argTargetGroupName argEnabledAtStart =
         let nid = m_ConfNodes.NextID
         let n =
@@ -762,7 +781,7 @@ type ServerStatus(
     /// <remarks>
     ///  Target group node which can be deleted must have been modified or the corresponding target group process must have been unloaded.
     /// </remarks>
-    abstract DeleteTargetGroupNode : ConfNode_TargetGroup -> unit
+    abstract DeleteTargetGroupNode : tgnode:ConfNode_TargetGroup -> unit
     default _.DeleteTargetGroupNode tgnode =
         let tgNodeID = ( tgnode :> IConfigureNode ).NodeID
         m_ConfNodes.DeleteAllChildNodeList tgNodeID
@@ -790,7 +809,12 @@ type ServerStatus(
     ///  If a new node is added after being deleted, the node ID will be changed and relational child node are deleted.
     ///  This method can update attribute value without changing node ID and relations.
     /// </remarks>
-    abstract UpdateTargetGroupNode : ConfNode_TargetGroup -> TGID_T -> string -> bool -> ConfNode_TargetGroup
+    abstract UpdateTargetGroupNode :
+        tgnode:ConfNode_TargetGroup ->
+        argTargetGroupID:TGID_T ->
+        argTargetGroupName:string ->
+        argEnabledAtStart:bool ->
+        ConfNode_TargetGroup
     default _.UpdateTargetGroupNode tgnode argTargetGroupID argTargetGroupName argEnabledAtStart =
         let n = tgnode.CreateUpdatedNode argTargetGroupID argTargetGroupName argEnabledAtStart
         m_ConfNodes.Update n
@@ -807,7 +831,7 @@ type ServerStatus(
     ///  Target group node which can be updated must have been modified or the corresponding target group process must have been unloaded.
     ///  All descendants of specified node will be deleted. For example, LU that only belongs to specified target are also deleted.
     /// </remarks>
-    abstract DeleteNodeInTargetGroup : IConfigureNode -> unit
+    abstract DeleteNodeInTargetGroup : argNode:IConfigureNode -> unit
     default this.DeleteNodeInTargetGroup argNode =
         let tNodeID = argNode.NodeID
         let tgNode = this.IdentifyTargetGroupNode argNode
@@ -831,7 +855,7 @@ type ServerStatus(
     ///  Target group node which can be updated must have been modified or the corresponding target group process must have been unloaded.
     ///  Added target node has no LU nodes. So, in this state, configuration files can't be uploaded.
     /// </remarks>
-    abstract AddTargetNode : ConfNode_TargetGroup -> TargetGroupConf.T_Target -> ConfNode_Target
+    abstract AddTargetNode : tgNode:ConfNode_TargetGroup -> argConf:TargetGroupConf.T_Target -> ConfNode_Target
     default this.AddTargetNode tgNode argConf =
         let tgNodeID = ( tgNode :> IConfigureNode ).NodeID
         let n = new ConfNode_Target( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, argConf )
@@ -858,7 +882,7 @@ type ServerStatus(
     ///  If a new node is added after being deleted, the node ID will be changed and relational child node are deleted.
     ///  This method can update attribute value without changing node ID and relations.
     /// </remarks>
-    abstract UpdateTargetNode : ConfNode_Target -> TargetGroupConf.T_Target -> ConfNode_Target
+    abstract UpdateTargetNode : tnode:ConfNode_Target -> argConf:TargetGroupConf.T_Target -> ConfNode_Target
     default this.UpdateTargetNode tnode argConf =
         let tgNode = this.IdentifyTargetGroupNode tnode
         let n = tnode.CreateUpdatedNode argConf
@@ -876,7 +900,7 @@ type ServerStatus(
     /// <param name="luNode">
     ///  Child node.
     /// </param>
-    abstract AddTargetLURelation : ConfNode_Target -> ILUNode -> unit
+    abstract AddTargetLURelation : tNode:ConfNode_Target -> luNode:ILUNode -> unit
     default this.AddTargetLURelation tNode luNode =
         let tgNode = this.IdentifyTargetGroupNode tNode
         m_ConfNodes.AddRelation ( tNode :> IConfigureNode ).NodeID ( luNode :> IConfigureNode ).NodeID
@@ -895,7 +919,7 @@ type ServerStatus(
     /// <remarks>
     ///  If the parent of the specified LU node no longer exists, that LU node will also be deleted.
     /// </remarks>
-    abstract DeleteTargetLURelation : ConfNode_Target -> ILUNode -> unit
+    abstract DeleteTargetLURelation : tNode:ConfNode_Target -> luNode:ILUNode -> unit
     default this.DeleteTargetLURelation tNode luNode =
         let tgNode = this.IdentifyTargetGroupNode tNode
         // Delete relation
@@ -922,7 +946,7 @@ type ServerStatus(
     ///  Created block device LU node.
     ///  Added LU node has no media nodes. So, in this state, configuration files can't be uploaded.
     /// </returns>
-    abstract AddBlockDeviceLUNode : ConfNode_Target -> LUN_T -> string -> ConfNode_BlockDeviceLU
+    abstract AddBlockDeviceLUNode : tnode:ConfNode_Target -> argLUN:LUN_T -> argLUName:string -> ConfNode_BlockDeviceLU
     default this.AddBlockDeviceLUNode tnode argLUN argLUName =
         let tgNode = this.IdentifyTargetGroupNode tnode
         let n = new ConfNode_BlockDeviceLU( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, argLUN, argLUName )
@@ -952,7 +976,7 @@ type ServerStatus(
     ///  The block device LU node will be child of specified target group node.
     ///  So this LU is no accessible from any target until adding relation from one.
     /// </remarks>
-    abstract AddBlockDeviceLUNode_InTargetGroup : ConfNode_TargetGroup -> LUN_T -> string -> ConfNode_BlockDeviceLU
+    abstract AddBlockDeviceLUNode_InTargetGroup : tgnode:ConfNode_TargetGroup -> argLUN:LUN_T -> argLUName:string -> ConfNode_BlockDeviceLU
     default this.AddBlockDeviceLUNode_InTargetGroup tgnode argLUN argLUName =
         let n = new ConfNode_BlockDeviceLU( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, argLUN, argLUName )
         m_ConfNodes.AddNode n
@@ -978,7 +1002,7 @@ type ServerStatus(
     ///  If a new node is added after being deleted, the node ID will be changed and relational child node are deleted.
     ///  This method can update attribute value without changing node ID and relations.
     /// </returns>
-    abstract UpdateBlockDeviceLUNode : ConfNode_BlockDeviceLU -> LUN_T -> string -> ConfNode_BlockDeviceLU
+    abstract UpdateBlockDeviceLUNode : lunode:ConfNode_BlockDeviceLU -> argLUN:LUN_T -> argLUName:string -> ConfNode_BlockDeviceLU
     default this.UpdateBlockDeviceLUNode lunode argLUN argLUName =
         let tgNode = this.IdentifyTargetGroupNode lunode
         let n = lunode.CreateUpdatedNode argLUN argLUName
@@ -1003,7 +1027,7 @@ type ServerStatus(
     ///  Created dummy device LU node.
     ///  Added LU node has no media nodes. So, in this state, configuration files can't be uploaded.
     /// </returns>
-    abstract AddDummyDeviceLUNode : ConfNode_Target -> LUN_T -> string -> ConfNode_DummyDeviceLU
+    abstract AddDummyDeviceLUNode : tnode:ConfNode_Target -> argLUN:LUN_T -> argLUName:string -> ConfNode_DummyDeviceLU
     default this.AddDummyDeviceLUNode tnode argLUN argLUName =
         let tgNode = this.IdentifyTargetGroupNode tnode
         let n = new ConfNode_DummyDeviceLU( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, argLUN, argLUName )
@@ -1030,7 +1054,7 @@ type ServerStatus(
     ///  If a new node is added after being deleted, the node ID will be changed and relational child node are deleted.
     ///  This method can update attribute value without changing node ID and relations.
     /// </returns>
-    abstract UpdateDummyDeviceLUNode : ConfNode_DummyDeviceLU -> LUN_T -> string -> ConfNode_DummyDeviceLU
+    abstract UpdateDummyDeviceLUNode : lunode:ConfNode_DummyDeviceLU -> argLUN:LUN_T -> argLUName:string -> ConfNode_DummyDeviceLU
     default this.UpdateDummyDeviceLUNode lunode argLUN argLUName =
         let tgNode = this.IdentifyTargetGroupNode lunode
         let n = lunode.CreateUpdatedNode argLUN argLUName
@@ -1051,7 +1075,7 @@ type ServerStatus(
     /// <returns>
     ///  Created plain file media node.
     /// </returns>
-    abstract AddPlainFileMediaNode : IConfigureNode -> TargetGroupConf.T_PlainFile -> ConfNode_PlainFileMedia
+    abstract AddPlainFileMediaNode : parentNode:IConfigureNode -> argValue:TargetGroupConf.T_PlainFile -> ConfNode_PlainFileMedia
     default this.AddPlainFileMediaNode parentNode argValue =
         let tgNode = this.IdentifyTargetGroupNode parentNode
         let n = new ConfNode_PlainFileMedia( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, argValue )
@@ -1075,7 +1099,7 @@ type ServerStatus(
     ///  If a new node is added after being deleted, the node ID will be changed and relational child node are deleted.
     ///  This method can update attribute value without changing node ID and relations.
     /// </returns>
-    abstract UpdatePlainFileMediaNode : ConfNode_PlainFileMedia -> TargetGroupConf.T_PlainFile -> ConfNode_PlainFileMedia
+    abstract UpdatePlainFileMediaNode : mediaNode:ConfNode_PlainFileMedia -> argValue:TargetGroupConf.T_PlainFile -> ConfNode_PlainFileMedia
     default this.UpdatePlainFileMediaNode mediaNode argValue =
         let tgNode = this.IdentifyTargetGroupNode mediaNode
         let n = mediaNode.CreateUpdatedNode argValue
@@ -1096,7 +1120,7 @@ type ServerStatus(
     /// <returns>
     ///  Created memory buffer media node.
     /// </returns>
-    abstract AddMemBufferMediaNode : IConfigureNode -> TargetGroupConf.T_MemBuffer -> ConfNode_MemBufferMedia
+    abstract AddMemBufferMediaNode : parentNode:IConfigureNode -> argConf:TargetGroupConf.T_MemBuffer -> ConfNode_MemBufferMedia
     default this.AddMemBufferMediaNode parentNode argConf =
         let tgNode = this.IdentifyTargetGroupNode parentNode
         let n = new ConfNode_MemBufferMedia( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, argConf )
@@ -1120,7 +1144,7 @@ type ServerStatus(
     ///  If a new node is added after being deleted, the node ID will be changed and relational child node are deleted.
     ///  This method can update attribute value without changing node ID and relations.
     /// </returns>
-    abstract UpdateMemBufferMediaNode : ConfNode_MemBufferMedia -> TargetGroupConf.T_MemBuffer -> ConfNode_MemBufferMedia
+    abstract UpdateMemBufferMediaNode : mediaNode:ConfNode_MemBufferMedia -> argConf:TargetGroupConf.T_MemBuffer -> ConfNode_MemBufferMedia
     default this.UpdateMemBufferMediaNode mediaNode argConf =
         let tgNode = this.IdentifyTargetGroupNode mediaNode
         let n = mediaNode.CreateUpdatedNode argConf
@@ -1144,7 +1168,7 @@ type ServerStatus(
     /// <returns>
     ///  Created dummy media node.
     /// </returns>
-    abstract AddDummyMediaNode : IConfigureNode -> MEDIAIDX_T -> string -> ConfNode_DummyMedia
+    abstract AddDummyMediaNode : parentNode:IConfigureNode -> argIdent:MEDIAIDX_T -> argName:string -> ConfNode_DummyMedia
     default this.AddDummyMediaNode parentNode argIdent argName =
         let tgNode = this.IdentifyTargetGroupNode parentNode
         let n = new ConfNode_DummyMedia( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, argIdent, argName )
@@ -1163,12 +1187,15 @@ type ServerStatus(
     /// <param name="argIdent">
     ///  Media identifier number.
     /// </param>
+    /// <param name="argName">
+    ///  Media name.
+    /// </param>
     /// <returns>
     ///  Updated dummy media node.
     ///  If a new node is added after being deleted, the node ID will be changed and relational child node are deleted.
     ///  This method can update attribute value without changing node ID and relations.
     /// </returns>
-    abstract UpdateDummyMediaNode : ConfNode_DummyMedia -> MEDIAIDX_T -> string -> ConfNode_DummyMedia
+    abstract UpdateDummyMediaNode : mediaNode:ConfNode_DummyMedia -> argIdent:MEDIAIDX_T -> argName:string -> ConfNode_DummyMedia
     default this.UpdateDummyMediaNode mediaNode argIdent argName =
         let tgNode = this.IdentifyTargetGroupNode mediaNode
         let n = mediaNode.CreateUpdatedNode argIdent argName
@@ -1192,7 +1219,7 @@ type ServerStatus(
     /// <returns>
     ///  Created debug media node.
     /// </returns>
-    abstract AddDebugMediaNode : IConfigureNode -> MEDIAIDX_T -> string -> ConfNode_DebugMedia
+    abstract AddDebugMediaNode : parentNode:IConfigureNode -> argIdent:MEDIAIDX_T -> argName:string -> ConfNode_DebugMedia
     default this.AddDebugMediaNode parentNode argIdent argName =
         let tgNode = this.IdentifyTargetGroupNode parentNode
         let n = new ConfNode_DebugMedia( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, argIdent, argName )
@@ -1219,7 +1246,7 @@ type ServerStatus(
     ///  If a new node is added after being deleted, the node ID will be changed and relational child node are deleted.
     ///  This method can update attribute value without changing node ID and relations.
     /// </returns>
-    abstract UpdateDebugMediaNode : ConfNode_DebugMedia -> MEDIAIDX_T -> string -> ConfNode_DebugMedia
+    abstract UpdateDebugMediaNode : mediaNode:ConfNode_DebugMedia -> argIdent:MEDIAIDX_T -> argName:string -> ConfNode_DebugMedia
     default this.UpdateDebugMediaNode mediaNode argIdent argName =
         let tgNode = this.IdentifyTargetGroupNode mediaNode
         let n = mediaNode.CreateUpdatedNode argIdent argName
@@ -1240,7 +1267,7 @@ type ServerStatus(
     /// <remarks>
     ///  If specified node at argument is a target device node, this function returns specified node.
     /// </remarks>
-    abstract GetAncestorTargetDevice : IConfigureNode -> ConfNode_TargetDevice option
+    abstract GetAncestorTargetDevice : node:IConfigureNode -> ConfNode_TargetDevice option
     default this.GetAncestorTargetDevice node =
         match node with
         | :? ConfNode_TargetDevice as x ->
@@ -1263,7 +1290,7 @@ type ServerStatus(
     /// <remarks>
     ///  If specified node at argument is a target group node, this function returns specified node.
     /// </remarks>
-    abstract GetAncestorTargetGroup : IConfigureNode -> ConfNode_TargetGroup option
+    abstract GetAncestorTargetGroup : node:IConfigureNode -> ConfNode_TargetGroup option
     default this.GetAncestorTargetGroup node =
         match node with
         | :? ConfNode_TargetGroup as x ->
@@ -1286,7 +1313,7 @@ type ServerStatus(
     /// <remarks>
     ///  If specified node at argument is a logical unit node, this function returns specified node.
     /// </remarks>
-    abstract GetAncestorLogicalUnit : IConfigureNode -> ILUNode option
+    abstract GetAncestorLogicalUnit : node:IConfigureNode -> ILUNode option
     default _.GetAncestorLogicalUnit node =
         match node with
         | :? ILUNode as x ->
@@ -1348,13 +1375,13 @@ type ServerStatus(
     /// <param name="con">
     ///  Connection object to the controller.
     /// </param>
-    /// <param name="tdNode">
+    /// <param name="node">
     ///  Target device node.
     /// </param>
     /// <returns>
     ///  If the ancestor target group is not unloaded, it returns false, otherwise true.
     /// </returns>
-    abstract TryCheckTargetDeviceUnloaded : CtrlConnection -> IConfigureNode -> Task<bool>
+    abstract TryCheckTargetDeviceUnloaded : con:CtrlConnection -> node:IConfigureNode -> Task<bool>
     default this.TryCheckTargetDeviceUnloaded ( con : CtrlConnection ) ( node : IConfigureNode ) : Task<bool> =
         task {
             let tdNode =
@@ -1378,13 +1405,13 @@ type ServerStatus(
     /// <param name="con">
     ///  Connection object to the controller.
     /// </param>
-    /// <param name="tdNode">
+    /// <param name="node">
     ///  Target device node.
     /// </param>
     /// <exceptions>
     ///  If specified target device is running, EditError exception is raised.
     /// </exceptions>
-    abstract CheckTargetDeviceUnloaded : CtrlConnection -> IConfigureNode -> Task
+    abstract CheckTargetDeviceUnloaded : con:CtrlConnection -> node:IConfigureNode -> Task
     default this.CheckTargetDeviceUnloaded ( con : CtrlConnection ) ( node : IConfigureNode ) : Task =
         task {
             let! r = this.TryCheckTargetDeviceUnloaded con node
@@ -1404,7 +1431,7 @@ type ServerStatus(
     /// <returns>
     ///  If the ancestor target group is not unloaded, it returns false, otherwise true.
     /// </returns>
-    abstract TryCheckTargetGroupUnloaded : CtrlConnection -> IConfigureNode -> Task<bool>
+    abstract TryCheckTargetGroupUnloaded : con:CtrlConnection -> node:IConfigureNode -> Task<bool>
     default this.TryCheckTargetGroupUnloaded ( con : CtrlConnection ) ( node : IConfigureNode ) : Task<bool> =
         task {
             let tdNode = this.IdentifyTargetDeviceNode node
@@ -1443,7 +1470,7 @@ type ServerStatus(
     /// <exceptions>
     ///  If the ancestor target group is not unloaded, EditError exception is raised.
     /// </exceptions>
-    abstract CheckTargetGroupUnloaded : CtrlConnection -> IConfigureNode -> Task
+    abstract CheckTargetGroupUnloaded : con:CtrlConnection -> node:IConfigureNode -> Task
     default this.CheckTargetGroupUnloaded ( con : CtrlConnection ) ( node : IConfigureNode ) : Task =
         task {
             let! r = this.TryCheckTargetGroupUnloaded con node
@@ -1466,7 +1493,7 @@ type ServerStatus(
     /// <remarks>
     ///  The node specified at 'n' and all of children are exported.
     /// </remarks>
-    abstract ExportTemporaryDump : CONFNODE_T -> bool -> string
+    abstract ExportTemporaryDump : n:CONFNODE_T -> recursive:bool -> string
     default this.ExportTemporaryDump ( n : CONFNODE_T ) ( recursive : bool ) : string =
         let outputNodes = [
             yield m_ConfNodes.GetNode n
@@ -1521,7 +1548,7 @@ type ServerStatus(
     ///  As long as there are no fatal errors, it will try to read as much as possible even if there are errors in the data.
     ///  Therefore, the data loaded may not necessarily match the data exported.
     /// </remarks>
-    abstract ImportTemporaryDump : string -> CONFNODE_T -> bool -> IConfigureNode
+    abstract ImportTemporaryDump : testr:string -> n:CONFNODE_T -> recursive:bool -> IConfigureNode
     default this.ImportTemporaryDump ( testr: string ) ( n : CONFNODE_T ) ( recursive : bool ) : IConfigureNode =
         let t = TempExport.ReaderWriter.LoadString testr
         let rootNodeID = t.RootNode

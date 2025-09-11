@@ -1,9 +1,17 @@
-﻿
+﻿//=============================================================================
+// Haruka Software Storage.
+// ConvertToCDBTest.fs : Test cases for ConvertToCDB class.
+//
+
+//=============================================================================
+// Namespace declaration
+
 namespace Haruka.Test.UT.BlockDeviceLU
 
+//=============================================================================
+// Import declaration
+
 open System
-open System.IO
-open System.Text
 
 open Xunit
 
@@ -13,8 +21,13 @@ open Haruka.Commons
 open Haruka.BlockDeviceLU
 open Haruka.Test
 
+//=============================================================================
+// Class implementation
 
 type ConvertToCDB_Test () =
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Common definition
 
     let defaultScsiCommand : SCSICommandPDU = {
         I = true;
@@ -46,6 +59,9 @@ type ConvertToCDB_Test () =
         let lock = GlbFunc.LogParamUpdateLock()
         HLogger.SetLogParameters( 100u, 100u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
         lock.Release() |> ignore
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test cases
 
     [<Fact>]
     member _.ConvertToCDB_0001() =

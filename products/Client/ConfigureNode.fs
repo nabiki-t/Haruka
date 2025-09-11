@@ -18,12 +18,13 @@ open Haruka.Constants
 open Haruka.Commons
 open Haruka.IODataTypes
 
+//=============================================================================
+// Type definition
+
 /// values in that node has been updated from when loaded from controller, or not.
 type ModifiedStatus =
     | Modified
     | NotModified
-
-
 
 /// Measure for configuration node ID.
 [<Measure>]
@@ -46,6 +47,9 @@ type confnode_me =
 
 /// Data types of CONFNODE_T
 type CONFNODE_T = uint64<confnode_me>
+
+//=============================================================================
+// Interface declaration
 
 /// Interface impremented all of configuration node object.
 type IConfigureNode =
