@@ -19,6 +19,7 @@ open Xunit
 
 open Haruka.Constants
 open Haruka.Commons
+open Haruka.TargetDevice
 open Haruka.Test
 
 //=============================================================================
@@ -1430,7 +1431,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 m_defaultConnParam with
                     MaxRecvDataSegmentLength_I = 4096u;
             }
-            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam conParam
             let accessLength = 4096u
             let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
             //let pduCount = 1u
@@ -1449,6 +1450,549 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // SCSI Response
             let! rpdu3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
             Assert.True(( rpdu3.Status = ScsiCmdStatCd.GOOD ))
+
+            // logout.
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            ()
+        }
+
+    [<Fact>]
+    member _.DataSN_Read_MultiDataPDU_001() =
+        task {
+            let conParam = {
+                m_defaultConnParam with
+                    MaxRecvDataSegmentLength_I = 4096u;
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam conParam
+            let pduCount = 2u
+            let accessLength = 4096u * pduCount
+            let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
+
+            // SCSI Read
+            let readCDB = scsiRead10CDB ( uint16 accessBlockcount )
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
+
+            // SCSI Data-In
+            for i = 0u to pduCount - 1u do
+                let! rpdu2 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+                Assert.True(( rpdu2.InitiatorTaskTag = itt ))
+                Assert.True(( rpdu2.DataSN = datasn_me.fromPrim i ))
+                Assert.True(( rpdu2.BufferOffset = i * 4096u ))
+                Assert.True(( rpdu2.DataSegment.Count = 4096 ))
+
+            // SCSI Response
+            let! rpdu3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu3.Status = ScsiCmdStatCd.GOOD ))
+
+            // logout.
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            ()
+        }
+
+    [<Fact>]
+    member _.DataSN_Read_MultiBurst_001() =
+        task {
+            let sesParam = {
+                m_defaultSessParam with
+                    MaxBurstLength = 3000u;
+                    ErrorRecoveryLevel = 1uy;
+            }
+            let conParam = {
+                m_defaultConnParam with
+                    MaxRecvDataSegmentLength_I = 800u;
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession sesParam conParam
+            let accessLength = 16384u
+            let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
+            let expRsult = [|
+                ( 0u, 0u, 800, false );
+                ( 1u, 800u, 800, false );
+                ( 2u, 1600u, 800, false );
+                ( 3u, 2400u, 600, true );
+                ( 4u, 3000u, 800, false );
+                ( 5u, 3800u, 800, false );
+                ( 6u, 4600u, 800, false );
+                ( 7u, 5400u, 600, true );
+                ( 8u, 6000u, 800, false );
+                ( 9u, 6800u, 800, false );
+                ( 10u, 7600u, 800, false );
+                ( 11u, 8400u, 600, true );
+                ( 12u, 9000u, 800, false );
+                ( 13u, 9800u, 800, false );
+                ( 14u, 10600u, 800, false );
+                ( 15u, 11400u, 600, true );
+                ( 16u, 12000u, 800, false );
+                ( 17u, 12800u, 800, false );
+                ( 18u, 13600u, 800, false );
+                ( 19u, 14400u, 600, true );
+                ( 20u, 15000u, 800, false );
+                ( 21u, 15800u, 584, true );
+            |]
+
+            // SCSI Read
+            let readCDB = scsiRead10CDB ( uint16 accessBlockcount )
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
+
+            for i = 0 to expRsult.Length - 1 do
+                let ( expdn, expOffset, expLength, expF ) = expRsult.[i]
+
+                // SCSI Data-In
+                let! rpdu2 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+                Assert.True(( rpdu2.F = expF ))
+                Assert.True(( rpdu2.A = expF ))
+                Assert.True(( rpdu2.InitiatorTaskTag = itt ))
+                Assert.True(( rpdu2.DataSN = datasn_me.fromPrim expdn ))
+                Assert.True(( rpdu2.BufferOffset = expOffset ))
+                Assert.True(( rpdu2.DataSegment.Count = expLength ))
+
+                if rpdu2.A then
+                    // Data ACK
+                    let begRun = rpdu2.DataSN |> datasn_me.next |> datasn_me.toPrim
+                    let! _ = r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.DATA_ACK g_LUN1 g_DefITT rpdu2.TargetTransferTag begRun 0u
+                    ()
+
+            // SCSI Response
+            let! rpdu3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu3.Status = ScsiCmdStatCd.GOOD ))
+
+            // logout.
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            ()
+        }
+
+    [<Fact>]
+    member _.DataSN_Read_MultiBurst_002() =
+        task {
+            let sesParam = {
+                m_defaultSessParam with
+                    MaxBurstLength = 3000u;
+                    ErrorRecoveryLevel = 0uy;
+            }
+            let conParam = {
+                m_defaultConnParam with
+                    MaxRecvDataSegmentLength_I = 800u;
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession sesParam conParam
+            let accessLength = 8192u
+            let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
+            let expRsult = [|
+                ( 0u, 0u, 800, false );
+                ( 1u, 800u, 800, false );
+                ( 2u, 1600u, 800, false );
+                ( 3u, 2400u, 600, true );
+                ( 4u, 3000u, 800, false );
+                ( 5u, 3800u, 800, false );
+                ( 6u, 4600u, 800, false );
+                ( 7u, 5400u, 600, true );
+                ( 8u, 6000u, 800, false );
+                ( 9u, 6800u, 800, false );
+                ( 10u, 7600u, 592, true );
+            |]
+
+            // SCSI Read
+            let readCDB = scsiRead10CDB ( uint16 accessBlockcount )
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
+
+            for i = 0 to expRsult.Length - 1 do
+                let ( expdn, expOffset, expLength, expF ) = expRsult.[i]
+
+                // SCSI Data-In
+                let! rpdu2 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+                Assert.True(( rpdu2.F = expF ))
+                Assert.False(( rpdu2.A ))
+                Assert.True(( rpdu2.InitiatorTaskTag = itt ))
+                Assert.True(( rpdu2.DataSN = datasn_me.fromPrim expdn ))
+                Assert.True(( rpdu2.BufferOffset = expOffset ))
+                Assert.True(( rpdu2.DataSegment.Count = expLength ))
+
+            // SCSI Response
+            let! rpdu3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu3.Status = ScsiCmdStatCd.GOOD ))
+
+            // logout.
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            ()
+        }
+
+    // Retransmit data with SNACK request
+    [<Fact>]
+    member _.DataSN_Read_SNACK_001() =
+        task {
+            let sesParam = {
+                m_defaultSessParam with
+                    MaxBurstLength = 3000u;
+                    ErrorRecoveryLevel = 1uy;
+            }
+            let conParam = {
+                m_defaultConnParam with
+                    MaxRecvDataSegmentLength_I = 1200u;
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession sesParam conParam
+            let accessLength = 8192u
+            let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
+            let expRsult = [|
+                ( 0u, 0u, 1200, false );
+                ( 1u, 1200u, 1200, false );
+                ( 2u, 2400u, 600, true );
+                ( 3u, 3000u, 1200, false );
+                ( 4u, 4200u, 1200, false );
+                ( 5u, 5400u, 600, true );
+                ( 6u, 6000u, 1200, false );
+                ( 7u, 7200u, 992, true );
+            |]
+
+            // SCSI Read
+            let readCDB = scsiRead10CDB ( uint16 accessBlockcount )
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
+
+            // SCSI Data-In
+            for i = 0 to expRsult.Length - 1 do
+                let ( expdn, expOffset, expLength, expF ) = expRsult.[i]
+                let! rpdu2 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+                Assert.True(( rpdu2.F = expF ))
+                Assert.True(( rpdu2.A = expF ))
+                Assert.True(( rpdu2.InitiatorTaskTag = itt ))
+                Assert.True(( rpdu2.DataSN = datasn_me.fromPrim expdn ))
+                Assert.True(( rpdu2.BufferOffset = expOffset ))
+                Assert.True(( rpdu2.DataSegment.Count = expLength ))
+
+            // SCSI Response
+            let! rpdu3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu3.Status = ScsiCmdStatCd.GOOD ))
+
+            // Send SNACK request
+            // Note that at this point, no acknowledgement has been returned.
+            r1.Connection( g_CID0 ).RewindExtStatSN ( statsn_me.fromPrim 1u )
+            let! _ = r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.DATA_R2T g_LUN1 itt g_DefTTT 4u 0u
+
+            // SCSI Data-In
+            for i = 4 to 7 do
+                let ( expdn, expOffset, expLength, expF ) = expRsult.[i]
+                let! rpdu2 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+                Assert.True(( rpdu2.F = expF ))
+                Assert.True(( rpdu2.A = expF ))
+                Assert.True(( rpdu2.InitiatorTaskTag = itt ))
+                Assert.True(( rpdu2.DataSN = datasn_me.fromPrim expdn ))
+                Assert.True(( rpdu2.BufferOffset = expOffset ))
+                Assert.True(( rpdu2.DataSegment.Count = expLength ))
+
+            r1.Connection( g_CID0 ).SkipExtStatSN ( statsn_me.fromPrim 1u )
+
+            // logout.
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            ()
+        }
+
+    // Retransmitting the data, which involves re-segmenting the data
+    [<Fact>]
+    member _.DataSN_Read_SNACK_002() =
+        task {
+            let sesParam = {
+                m_defaultSessParam with
+                    MaxBurstLength = 3000u;
+                    ErrorRecoveryLevel = 1uy;
+            }
+            let conParam = {
+                m_defaultConnParam with
+                    MaxRecvDataSegmentLength_I = 1200u;
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession sesParam conParam
+            let accessLength = 8192u
+            let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
+            let expRsult = [|
+                ( 0u, 0u, 1200, false );
+                ( 1u, 1200u, 1200, false );
+                ( 2u, 2400u, 600, true );
+                ( 3u, 3000u, 1200, false );
+                ( 4u, 4200u, 1200, false );
+                ( 5u, 5400u, 600, true );
+                ( 6u, 6000u, 1200, false );
+                ( 7u, 7200u, 992, true );
+            |]
+
+            // Send SCSI write
+            let writeData = Array.zeroCreate ( int accessLength )
+            Random.Shared.NextBytes( writeData.AsSpan() )
+            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockcount )
+            let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
+
+            // Receive R2T 1
+            let! r2t1 = r1.ReceiveSpecific<R2TPDU> g_CID0
+            Assert.True(( r2t1.BufferOffset = 0u ))
+            Assert.True(( r2t1.DesiredDataTransferLength = 3000u ))
+
+            // Send Data-Out PDU 1
+            let writeData1 = PooledBuffer.Rent( writeData.[ 0 .. 2999 ] )
+            let! _ = r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2t1.TargetTransferTag ( datasn_me.fromPrim 0u ) r2t1.BufferOffset writeData1
+            writeData1.Return()
+
+            // Receive R2T 2
+            let! r2t2 = r1.ReceiveSpecific<R2TPDU> g_CID0
+            Assert.True(( r2t2.BufferOffset = 3000u ))
+            Assert.True(( r2t2.DesiredDataTransferLength = 3000u ))
+
+            // Send Data-Out PDU 2
+            let writeData2 = PooledBuffer.Rent( writeData.[ 3000 .. 5999 ] )
+            let! _ = r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2t2.TargetTransferTag ( datasn_me.fromPrim 0u ) r2t2.BufferOffset writeData2
+            writeData2.Return()
+
+            // Receive R2T 3
+            let! r2t3 = r1.ReceiveSpecific<R2TPDU> g_CID0
+            Assert.True(( r2t3.BufferOffset = 6000u ))
+            Assert.True(( r2t3.DesiredDataTransferLength = 2192u ))
+
+            // Send Data-Out PDU 2
+            let writeData3 = PooledBuffer.Rent( writeData.[ 6000 .. 8191 ] )
+            let! _ = r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2t3.TargetTransferTag ( datasn_me.fromPrim 0u ) r2t3.BufferOffset writeData3
+            writeData3.Return()
+
+            // Receive SCSI Response PDU
+            let! writeRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
+
+            // SCSI Read
+            let readCDB = scsiRead10CDB ( uint16 accessBlockcount )
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
+
+            // SCSI Data-In
+            for i = 0 to expRsult.Length - 1 do
+                let ( expdn, expOffset, expLength, expF ) = expRsult.[i]
+                let! rpdu2 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+                Assert.True(( rpdu2.F = expF ))
+                Assert.True(( rpdu2.A = expF ))
+                Assert.True(( rpdu2.InitiatorTaskTag = itt ))
+                Assert.True(( rpdu2.DataSN = datasn_me.fromPrim expdn ))
+                Assert.True(( rpdu2.BufferOffset = expOffset ))
+                Assert.True(( rpdu2.DataSegment.Count = expLength ))
+                let recvData = rpdu2.DataSegment.ToArray()
+                let expData = writeData.[ int expOffset .. int expOffset + expLength - 1 ]
+                Assert.True(( recvData = expData ))
+
+                if expdn = 2u then
+                    // Data ACK
+                    let! _ = r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.DATA_ACK g_LUN1 g_DefITT rpdu2.TargetTransferTag 3u 0u
+                    ()
+
+            // SCSI Response
+            let! rpdu3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu3.Status = ScsiCmdStatCd.GOOD ))
+
+            // Note that at this point, no acknowledgement has been returned.
+            r1.Connection( g_CID0 ).RewindExtStatSN ( statsn_me.fromPrim 1u )
+
+            // Text request. MaxRecvDataSegmentLength_I -> 800
+            let textRequest = 
+                let negoValue1 = {
+                    TextKeyValues.defaultTextKeyValues with
+                        MaxRecvDataSegmentLength_I = TextValueType.Value( 800u );
+                }
+                let negoStat1 = {
+                    TextKeyValuesStatus.defaultTextKeyValuesStatus with
+                        NegoStat_MaxRecvDataSegmentLength_I = NegoStatusValue.NSG_WaitSend;
+                }
+                IscsiTextEncode.CreateTextKeyValueString negoValue1 negoStat1
+            let! itt4, _ = r1.SendTextRequestPDU g_CID0 true true false g_LUN1 g_DefTTT textRequest
+
+            let! rpdu4 = r1.ReceiveSpecific<TextResponsePDU> g_CID0
+            Assert.True(( rpdu4.F ))
+            Assert.True(( rpdu4.InitiatorTaskTag = itt4 ))
+            Assert.True(( rpdu4.TextResponse.Length = 0 ))
+
+            // update initiator side parameter value
+            r1.FakeConnectionParameter g_CID0 { conParam with MaxRecvDataSegmentLength_I = 800u }
+
+            // Send R-SNACK request
+            let! _ = r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.RDATA_SNACK g_LUN1 itt ( ttt_me.fromPrim 0x12345678u ) 0u 0u
+
+            let expRsult2 = [|
+                ( 3u, 3000u, 800, false );
+                ( 4u, 3800u, 800, false );
+                ( 5u, 4600u, 800, false );
+                ( 6u, 5400u, 600, true );
+                ( 7u, 6000u, 800, false );
+                ( 8u, 6800u, 800, false );
+                ( 9u, 7600u, 592, true );
+            |]
+
+            // SCSI Data-In
+            for i = 0 to expRsult2.Length - 1 do
+                let ( expdn, expOffset, expLength, expF ) = expRsult2.[i]
+                let! rpdu5 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+                Assert.True(( rpdu5.F = expF ))
+                Assert.True(( rpdu5.A = expF ))
+                Assert.True(( rpdu5.InitiatorTaskTag = itt ))
+                Assert.True(( rpdu5.DataSN = datasn_me.fromPrim expdn ))
+                Assert.True(( rpdu5.BufferOffset = expOffset ))
+                Assert.True(( rpdu5.DataSegment.Count = expLength ))
+                let recvData = rpdu5.DataSegment.ToArray()
+                let expData = writeData.[ int expOffset .. int expOffset + expLength - 1 ]
+                Assert.True(( recvData = expData ))
+
+            // SCSI Response
+            let! rpdu6 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu6.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( rpdu6.SNACKTag = snacktag_me.fromPrim 0x12345678u ))
+
+            r1.Connection( g_CID0 ).SkipExtStatSN ( statsn_me.fromPrim 1u )
+
+            // logout.
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
+            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            ()
+        }
+
+    // Retransmitting the data, which involves re-segmenting the data
+    [<Fact>]
+    member _.DataSN_Read_SNACK_003() =
+        task {
+            let sesParam = {
+                m_defaultSessParam with
+                    MaxBurstLength = 3000u;
+                    ErrorRecoveryLevel = 1uy;
+            }
+            let conParam = {
+                m_defaultConnParam with
+                    MaxRecvDataSegmentLength_I = 1200u;
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession sesParam conParam
+            let accessLength = 8192u
+            let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
+            let expRsult = [|
+                ( 0u, 0u, 1200, false );
+                ( 1u, 1200u, 1200, false );
+                ( 2u, 2400u, 600, true );
+                ( 3u, 3000u, 1200, false );
+                ( 4u, 4200u, 1200, false );
+                ( 5u, 5400u, 600, true );
+                ( 6u, 6000u, 1200, false );
+                ( 7u, 7200u, 992, true );
+            |]
+
+            // Send SCSI write
+            let writeData = Array.zeroCreate ( int accessLength )
+            Random.Shared.NextBytes( writeData.AsSpan() )
+            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockcount )
+            let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
+
+            // Receive R2T 1
+            let! r2t1 = r1.ReceiveSpecific<R2TPDU> g_CID0
+            Assert.True(( r2t1.BufferOffset = 0u ))
+            Assert.True(( r2t1.DesiredDataTransferLength = 3000u ))
+
+            // Send Data-Out PDU 1
+            let writeData1 = PooledBuffer.Rent( writeData.[ 0 .. 2999 ] )
+            let! _ = r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2t1.TargetTransferTag ( datasn_me.fromPrim 0u ) r2t1.BufferOffset writeData1
+            writeData1.Return()
+
+            // Receive R2T 2
+            let! r2t2 = r1.ReceiveSpecific<R2TPDU> g_CID0
+            Assert.True(( r2t2.BufferOffset = 3000u ))
+            Assert.True(( r2t2.DesiredDataTransferLength = 3000u ))
+
+            // Send Data-Out PDU 2
+            let writeData2 = PooledBuffer.Rent( writeData.[ 3000 .. 5999 ] )
+            let! _ = r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2t2.TargetTransferTag ( datasn_me.fromPrim 0u ) r2t2.BufferOffset writeData2
+            writeData2.Return()
+
+            // Receive R2T 3
+            let! r2t3 = r1.ReceiveSpecific<R2TPDU> g_CID0
+            Assert.True(( r2t3.BufferOffset = 6000u ))
+            Assert.True(( r2t3.DesiredDataTransferLength = 2192u ))
+
+            // Send Data-Out PDU 2
+            let writeData3 = PooledBuffer.Rent( writeData.[ 6000 .. 8191 ] )
+            let! _ = r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2t3.TargetTransferTag ( datasn_me.fromPrim 0u ) r2t3.BufferOffset writeData3
+            writeData3.Return()
+
+            // Receive SCSI Response PDU
+            let! writeRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
+
+            // SCSI Read
+            let readCDB = scsiRead10CDB ( uint16 accessBlockcount )
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
+
+            // SCSI Data-In
+            for i = 0 to expRsult.Length - 1 do
+                let ( expdn, expOffset, expLength, expF ) = expRsult.[i]
+                let! rpdu2 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+                Assert.True(( rpdu2.F = expF ))
+                Assert.True(( rpdu2.A = expF ))
+                Assert.True(( rpdu2.InitiatorTaskTag = itt ))
+                Assert.True(( rpdu2.DataSN = datasn_me.fromPrim expdn ))
+                Assert.True(( rpdu2.BufferOffset = expOffset ))
+                Assert.True(( rpdu2.DataSegment.Count = expLength ))
+                let recvData = rpdu2.DataSegment.ToArray()
+                let expData = writeData.[ int expOffset .. int expOffset + expLength - 1 ]
+                Assert.True(( recvData = expData ))
+
+            // SCSI Response
+            let! rpdu3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu3.Status = ScsiCmdStatCd.GOOD ))
+
+            // Note that at this point, no acknowledgement has been returned.
+            r1.Connection( g_CID0 ).RewindExtStatSN ( statsn_me.fromPrim 1u )
+
+            // Text request. MaxRecvDataSegmentLength_I -> 1300
+            let textRequest = 
+                let negoValue1 = {
+                    TextKeyValues.defaultTextKeyValues with
+                        MaxRecvDataSegmentLength_I = TextValueType.Value( 1300u );
+                }
+                let negoStat1 = {
+                    TextKeyValuesStatus.defaultTextKeyValuesStatus with
+                        NegoStat_MaxRecvDataSegmentLength_I = NegoStatusValue.NSG_WaitSend;
+                }
+                IscsiTextEncode.CreateTextKeyValueString negoValue1 negoStat1
+            let! itt4, _ = r1.SendTextRequestPDU g_CID0 true true false g_LUN1 g_DefTTT textRequest
+
+            let! rpdu4 = r1.ReceiveSpecific<TextResponsePDU> g_CID0
+            Assert.True(( rpdu4.F ))
+            Assert.True(( rpdu4.InitiatorTaskTag = itt4 ))
+            Assert.True(( rpdu4.TextResponse.Length = 0 ))
+
+            // update initiator side parameter value
+            r1.FakeConnectionParameter g_CID0 { conParam with MaxRecvDataSegmentLength_I = 1300u }
+
+            // Send R-SNACK request
+            let! _ = r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.RDATA_SNACK g_LUN1 itt ( ttt_me.fromPrim 0x12345678u ) 0u 0u
+
+            let expRsult2 = [|
+                ( 0u, 0u, 1300, false );
+                ( 1u, 1300u, 1300, false );
+                ( 2u, 2600u, 400, true );
+                ( 3u, 3000u, 1300, false );
+                ( 4u, 4300u, 1300, false );
+                ( 5u, 5600u, 400, true );
+                ( 6u, 6000u, 1300, false );
+                ( 7u, 7300u, 892, true );
+            |]
+
+            // SCSI Data-In
+            for i = 0 to expRsult2.Length - 1 do
+                let ( expdn, expOffset, expLength, expF ) = expRsult2.[i]
+                let! rpdu5 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+                Assert.True(( rpdu5.F = expF ))
+                Assert.True(( rpdu5.A = expF ))
+                Assert.True(( rpdu5.InitiatorTaskTag = itt ))
+                Assert.True(( rpdu5.DataSN = datasn_me.fromPrim expdn ))
+                Assert.True(( rpdu5.BufferOffset = expOffset ))
+                Assert.True(( rpdu5.DataSegment.Count = expLength ))
+                let recvData = rpdu5.DataSegment.ToArray()
+                let expData = writeData.[ int expOffset .. int expOffset + expLength - 1 ]
+                Assert.True(( recvData = expData ))
+
+            // SCSI Response
+            let! rpdu6 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu6.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( rpdu6.SNACKTag = snacktag_me.fromPrim 0x12345678u ))
+
+            r1.Connection( g_CID0 ).SkipExtStatSN ( statsn_me.fromPrim 1u )
 
             // logout.
             let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
