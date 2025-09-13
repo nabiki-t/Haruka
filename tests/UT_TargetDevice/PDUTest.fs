@@ -1161,6 +1161,7 @@ type PDU_Test () =
                 ResponseData = ArraySegment.Empty;
                 ResponseFence = ResponseFenceNeedsFlag.Irrelevant;
                 DataInBuffer = PooledBuffer.Empty;
+                LUN = lun_me.zero;
             }
         let sendBytesCnt =
             PDU.SendPDU(
@@ -1211,6 +1212,7 @@ type PDU_Test () =
                 ResponseData = ArraySegment.Empty;
                 ResponseFence = ResponseFenceNeedsFlag.Irrelevant;
                 DataInBuffer = PooledBuffer.Empty;
+                LUN = lun_me.zero;
             }
         let sendBytesCnt =
             PDU.SendPDU(
@@ -1261,6 +1263,7 @@ type PDU_Test () =
                 ResponseData = ArraySegment.Empty;
                 ResponseFence = ResponseFenceNeedsFlag.Irrelevant;
                 DataInBuffer = PooledBuffer.Empty;
+                LUN = lun_me.zero;
             }
         let sendBytesCnt =
             PDU.SendPDU(
@@ -1431,6 +1434,7 @@ type PDU_Test () =
                 ResponseData = ArraySegment<byte>( [| 0x00uy .. 0x18uy |], 0, 25 );
                 ResponseFence = ResponseFenceNeedsFlag.Irrelevant;
                 DataInBuffer = PooledBuffer.Empty;
+                LUN = lun_me.zero;
             }
         let sendBytesCnt =
             PDU.SendPDU(
@@ -1503,6 +1507,7 @@ type PDU_Test () =
                 ResponseData = ArraySegment.Empty;
                 ResponseFence = ResponseFenceNeedsFlag.Irrelevant;
                 DataInBuffer = PooledBuffer.Empty;
+                LUN = lun_me.zero;
             }
         let sendBytesCnt =
             PDU.SendPDU(
@@ -1574,6 +1579,7 @@ type PDU_Test () =
                 ResponseData = ArraySegment( [| 0uy; 1uy; 2uy; 3uy; 4uy; 4uy; 4uy; 4uy; 4uy; |], 0, 9 );
                 ResponseFence = ResponseFenceNeedsFlag.Irrelevant;
                 DataInBuffer = PooledBuffer.Empty;
+                LUN = lun_me.zero;
             }
         let sendBytesCnt =
             PDU.SendPDU(
@@ -4283,6 +4289,7 @@ type PDU_Test () =
                 ResponseData = ArraySegment<byte>( [| 0uy .. 200uy |], 0, 200 );
                 ResponseFence = ResponseFenceNeedsFlag.Immediately;
                 DataInBuffer = PooledBuffer.Empty;
+                LUN = lun_me.zero;
             }
         let b = PDU.GetHeader( pdu )
         Assert.True(( b =

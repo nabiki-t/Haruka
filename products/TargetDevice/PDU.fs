@@ -576,13 +576,11 @@ type PDU() =
         let wSenseData =
             if wSenseLength > 0us then
                 a.m_DataSegment.GetArraySegment 2 ( int wSenseLength )
-                //ArraySegment( a.m_DataSegment.Array, 2, int wSenseLength )
             else
                 ArraySegment.Empty
         let wResponseData =
             if int wSenseLength + 2 < a.m_DataSegment.Count then
                 a.m_DataSegment.GetArraySegment ( int wSenseLength + 2 ) ( a.m_DataSegment.Count - ( int wSenseLength + 2 ) )
-                //ArraySegment( a.m_DataSegment.Array, int wSenseLength + 2, a.m_DataSegment.Count - ( int wSenseLength + 2 ) )
             else
                 ArraySegment.Empty
 
@@ -622,6 +620,7 @@ type PDU() =
             ResponseData = wResponseData;
             ResponseFence = ResponseFenceNeedsFlag.Irrelevant;
             DataInBuffer = a.m_DataSegment;
+            LUN = lun_me.zero;
         }
 
         // o, u flag are mutually exclusive.

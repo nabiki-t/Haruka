@@ -136,6 +136,7 @@ type PDUInterface_Test () =
                 ResponseData = ArraySegment.Empty;
                 ResponseFence = ResponseFenceNeedsFlag.W_Mode;
                 DataInBuffer = PooledBuffer.Empty;
+                LUN = lun_me.zero;
             } :> ILogicalPDU
         let r1 = pdu.UpdateTargetValues ( statsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 2u )
         Assert.True(( r1 = {
@@ -158,6 +159,7 @@ type PDUInterface_Test () =
                 ResponseData = ArraySegment.Empty;
                 ResponseFence = ResponseFenceNeedsFlag.W_Mode;
                 DataInBuffer = PooledBuffer.Empty;
+                LUN = lun_me.zero;
         } ))
 
     [<Fact>]
@@ -183,6 +185,7 @@ type PDUInterface_Test () =
                 ResponseData = ArraySegment.Empty;
                 ResponseFence = ResponseFenceNeedsFlag.W_Mode;
                 DataInBuffer = PooledBuffer.Empty;
+                LUN = lun_me.zero;
             } :> ILogicalPDU
         let r2 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 4u ) ( cmdsn_me.fromPrim 5u ) ( cmdsn_me.fromPrim 6u )
         Assert.True(( r2 = {
@@ -205,6 +208,7 @@ type PDUInterface_Test () =
                 ResponseData = ArraySegment.Empty;
                 ResponseFence = ResponseFenceNeedsFlag.W_Mode;
                 DataInBuffer = PooledBuffer.Empty;
+                LUN = lun_me.zero;
         } ))
 
     [<Fact>]
@@ -230,6 +234,7 @@ type PDUInterface_Test () =
                 ResponseData = ArraySegment.Empty;
                 ResponseFence = ResponseFenceNeedsFlag.W_Mode;
                 DataInBuffer = PooledBuffer.Empty;
+                LUN = lun_me.zero;
             } :> ILogicalPDU
         Assert.True ( pdu.NeedIncrementStatSN() )
 
@@ -256,6 +261,7 @@ type PDUInterface_Test () =
                 ResponseData = ArraySegment.Empty;
                 ResponseFence = ResponseFenceNeedsFlag.W_Mode;
                 DataInBuffer = PooledBuffer.Empty;
+                LUN = lun_me.zero;
             } :> ILogicalPDU
         Assert.True(( pdu.NeedResponseFence = ResponseFenceNeedsFlag.W_Mode ))
 

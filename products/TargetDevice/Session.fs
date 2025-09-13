@@ -596,6 +596,7 @@ type Session
                     ResponseData = ArraySegment.Empty; // The response data always uses a SCSI Data-In PDU.
                     ResponseFence = needResponseFence;
                     DataInBuffer = argSendDataBytes;
+                    LUN = reqCmdPDU.LUN;
                 }
 
                 dataPDUList

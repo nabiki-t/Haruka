@@ -215,6 +215,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         ResponseData = ArraySegment<byte>( Array.empty, 0, 0 );
         ResponseFence = ResponseFenceNeedsFlag.Immediately;
         DataInBuffer = PooledBuffer.Empty;
+        LUN = lun_me.zero;
     }
 
     static member defaultScsiDataOutPDUValues = {

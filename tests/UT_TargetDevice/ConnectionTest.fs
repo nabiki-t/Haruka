@@ -78,6 +78,7 @@ type Connection_Test () =
         ResponseData = ArraySegment.Empty;
         ResponseFence = ResponseFenceNeedsFlag.R_Mode;
         DataInBuffer = PooledBuffer.Empty;
+        LUN = lun_me.zero;
     }
 
     static member defaultSCSIDataInPDUValues = {

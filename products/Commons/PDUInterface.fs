@@ -217,6 +217,12 @@ type SCSIResponsePDU =
         /// The same instance of a buffer may be referenced by multiple PDUs. 
         /// When returning a buffer to the ArrayPool, the same buffer must never be returned more than once.
         DataInBuffer : PooledBuffer;
+
+        /// The LUN value set in the LUN field of the SCSI Request PDU that caused the SCSI Response PDU to be generated.
+        /// The SCSI Response PDU does not have a field for setting the LUN.
+        /// However, since the LUN value is required when re-dividing the Data-In PDU in response to an R-Data SNACK request, the value is retained.
+        /// If not used, set to 0.
+        LUN : LUN_T;
     }
 
     interface ILogicalPDU with
