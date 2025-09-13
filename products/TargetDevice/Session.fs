@@ -502,7 +502,7 @@ type Session
                         // Normal response data that is not sense data, always uses SCSI Data-In PDUs.
                         // Or, if the sense data is longer than MaxRecvDataSegmentLength, use the SCSI Data-In PDU.
 
-                        let pduSegs = Session.DivideRespDataSegment realSendDataLength mbl mrdsl_I
+                        let pduSegs = Functions.DivideRespDataSegment 0u realSendDataLength mbl mrdsl_I
                         pduSegs
                         |> List.mapi ( fun cnt struct( dpos, dlen, fflag ) ->
                             {
@@ -1462,41 +1462,4 @@ type Session
                 v
         ttt_me.fromPrim( loop() )
 
-    // ------------------------------------------------------------------------
-    /// <summary>
-    ///  Determines the response data segment to be placed in each Data-In PDU.
-    /// </summary>
-    /// <param name="sendDataLength">
-    ///  Response data byte length
-    /// </param>
-    /// <param name="mbl">
-    ///  MaxBurstLength value.
-    /// </param>
-    /// <param name="mrdsl">
-    ///  MaxRecvDataSegmentLength value of the initiatoer side.
-    /// </param>
-    /// <returns>
-    ///  pair of start position, length and F bit value.
-    /// </returns>
-    static member private DivideRespDataSegment( sendDataLength : uint32 ) ( mbl : uint32 ) ( mrdsl : uint32 )  : struct ( uint32 * uint32 * bool ) list =
-        let rec processBursts ( burstStart : uint32 ) ( acc1 : struct ( uint32 * uint32 * bool ) list ) =
-            if burstStart < sendDataLength then
-                let remaining = sendDataLength - burstStart
-                let burstSize = min remaining mbl
-                let rec processPDUs ( pduOffset : uint32 ) ( acc2 : struct ( uint32 * uint32 * bool ) list ) =
-                    if pduOffset < burstSize then
-                        let remainInBurst = burstSize - pduOffset
-                        let pduSize = min remainInBurst mrdsl
-                        let isLastInBurst = ( pduOffset + pduSize ) = burstSize
-                        let nextAcc = struct ( burstStart + pduOffset, pduSize, isLastInBurst ) :: acc2
-                        processPDUs ( pduOffset + pduSize ) nextAcc
-                    else
-                        acc2
-                processPDUs 0u acc1
-                |> processBursts ( burstStart + burstSize )
-            else
-                acc1
-        if sendDataLength > 0u && mbl > 0u && mrdsl > 0u then
-            processBursts 0u [] |> List.rev
-        else
-            []
+

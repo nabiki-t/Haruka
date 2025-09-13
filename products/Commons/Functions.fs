@@ -1861,6 +1861,45 @@ type Functions() =
         with
         | _ -> dv
 
-
+    /// <summary>
+    ///  Determines the response data segment to be placed in each Data-In PDU.
+    /// </summary>
+    /// <param name="start">
+    ///  Start position of the response data.
+    /// </param>
+    /// <param name="length">
+    ///  Response data byte length
+    /// </param>
+    /// <param name="mbl">
+    ///  MaxBurstLength value.
+    /// </param>
+    /// <param name="mrdsl">
+    ///  MaxRecvDataSegmentLength value of the initiatoer side.
+    /// </param>
+    /// <returns>
+    ///  pair of start position, length and F bit value.
+    /// </returns>
+    static member DivideRespDataSegment ( start : uint32 )( length : uint32 ) ( mbl : uint32 ) ( mrdsl : uint32 )  : struct ( uint32 * uint32 * bool ) list =
+        let rec processBursts ( burstStart : uint32 ) ( acc1 : struct ( uint32 * uint32 * bool ) list ) =
+            if burstStart < length then
+                let remaining = length - burstStart
+                let burstSize = min remaining mbl
+                let rec processPDUs ( pduOffset : uint32 ) ( acc2 : struct ( uint32 * uint32 * bool ) list ) =
+                    if pduOffset < burstSize then
+                        let remainInBurst = burstSize - pduOffset
+                        let pduSize = min remainInBurst mrdsl
+                        let isLastInBurst = ( pduOffset + pduSize ) = burstSize
+                        let nextAcc = struct ( start + burstStart + pduOffset, pduSize, isLastInBurst ) :: acc2
+                        processPDUs ( pduOffset + pduSize ) nextAcc
+                    else
+                        acc2
+                processPDUs 0u acc1
+                |> processBursts ( burstStart + burstSize )
+            else
+                acc1
+        if length > 0u && mbl > 0u && mrdsl > 0u then
+            processBursts 0u [] |> List.rev
+        else
+            []
 
 

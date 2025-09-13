@@ -2044,3 +2044,63 @@ type Functions_Test () =
         d.Add( 1, 1 )
         let r = Functions.SearchAndConvert d 1 ( fun i -> i + 1 ) 2
         Assert.True(( r = 2 ))
+
+    [<Fact>]
+    member _.DivideRespDataSegment_001() =
+        let r = Functions.DivideRespDataSegment 0u 0u 0u 0u
+        Assert.True(( r.Length = 0 ))
+
+    [<Fact>]
+    member _.DivideRespDataSegment_002() =
+        let r = Functions.DivideRespDataSegment 0u 50u 100u 100u
+        Assert.True(( r.Length = 1 ))
+        Assert.True(( r.[0] = struct( 0u, 50u, true ) ))
+
+    [<Fact>]
+    member _.DivideRespDataSegment_003() =
+        let r = Functions.DivideRespDataSegment 0u 100u 100u 100u
+        Assert.True(( r.Length = 1 ))
+        Assert.True(( r.[0] = struct( 0u, 100u, true ) ))
+
+    [<Fact>]
+    member _.DivideRespDataSegment_004() =
+        let r = Functions.DivideRespDataSegment 0u 200u 100u 100u
+        Assert.True(( r.Length = 2 ))
+        Assert.True(( r.[0] = struct( 0u, 100u, true ) ))
+        Assert.True(( r.[1] = struct( 100u, 100u, true ) ))
+
+    [<Fact>]
+    member _.DivideRespDataSegment_005() =
+        let r = Functions.DivideRespDataSegment 0u 300u 200u 100u
+        Assert.True(( r.Length = 3 ))
+        Assert.True(( r.[0] = struct( 0u, 100u, false ) ))
+        Assert.True(( r.[1] = struct( 100u, 100u, true ) ))
+        Assert.True(( r.[2] = struct( 200u, 100u, true ) ))
+
+    [<Fact>]
+    member _.DivideRespDataSegment_006() =
+        let r = Functions.DivideRespDataSegment 0u 300u 100u 200u
+        Assert.True(( r.Length = 3 ))
+        Assert.True(( r.[0] = struct( 0u, 100u, true ) ))
+        Assert.True(( r.[1] = struct( 100u, 100u, true ) ))
+        Assert.True(( r.[2] = struct( 200u, 100u, true ) ))
+
+    [<Fact>]
+    member _.DivideRespDataSegment_007() =
+        let r = Functions.DivideRespDataSegment 0u 300u 120u 80u
+        Assert.True(( r.Length = 5 ))
+        Assert.True(( r.[0] = struct( 0u, 80u, false ) ))
+        Assert.True(( r.[1] = struct( 80u, 40u, true ) ))
+        Assert.True(( r.[2] = struct( 120u, 80u, false ) ))
+        Assert.True(( r.[3] = struct( 200u, 40u, true ) ))
+        Assert.True(( r.[4] = struct( 240u, 60u, true ) ))
+
+    [<Fact>]
+    member _.DivideRespDataSegment_008() =
+        let r = Functions.DivideRespDataSegment 1000u 300u 120u 80u
+        Assert.True(( r.Length = 5 ))
+        Assert.True(( r.[0] = struct( 1000u, 80u, false ) ))
+        Assert.True(( r.[1] = struct( 1080u, 40u, true ) ))
+        Assert.True(( r.[2] = struct( 1120u, 80u, false ) ))
+        Assert.True(( r.[3] = struct( 1200u, 40u, true ) ))
+        Assert.True(( r.[4] = struct( 1240u, 60u, true ) ))
