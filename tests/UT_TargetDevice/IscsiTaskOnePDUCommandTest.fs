@@ -1358,6 +1358,7 @@ type IscsiTaskOnePDUCommand_Test () =
     [<Fact>]
     member _.GetExecuteTask_030_SNACK_008_RDataSnack() =
         let mutable cnt2 = 0
+        let dataInBuffer = PooledBuffer.Rent [| 0uy .. 255uy |]
         let connStub1 = new CConnection_Stub(
             p_R_SNACKRequest = (
                 fun itt f ->
@@ -1371,10 +1372,11 @@ type IscsiTaskOnePDUCommand_Test () =
                         Array.empty,
                         {
                             IscsiTaskOnePDUCommand_Test.defaultSCSIResponsePDUValues with
-                                SenseData = ArraySegment( [| 0uy .. 255uy |], 0, 256 );
+                                SenseData = dataInBuffer.ArraySegment;
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
                                 ExpDataSN = datasn_me.zero;
+                                DataInBuffer = dataInBuffer;
                         }
                     )
             ),
@@ -1514,6 +1516,7 @@ type IscsiTaskOnePDUCommand_Test () =
     [<Fact>]
     member _.GetExecuteTask_032_SNACK_010_RDataSnack() =
         let mutable cnt2 = 0
+        let dataInBuffer = PooledBuffer.Rent [| 0uy .. 253uy |]
         let connStub1 = new CConnection_Stub(
             p_R_SNACKRequest = (
                 fun itt f ->
@@ -1528,11 +1531,12 @@ type IscsiTaskOnePDUCommand_Test () =
                         {
                             IscsiTaskOnePDUCommand_Test.defaultSCSIResponsePDUValues with
                                 SenseData = ArraySegment.Empty;
-                                ResponseData = ArraySegment( [| 0uy .. 253uy |], 0, 254 );
+                                ResponseData = dataInBuffer.ArraySegment;
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
                                 ExpDataSN = datasn_me.zero;
                                 ResponseFence = ResponseFenceNeedsFlag.W_Mode;
+                                DataInBuffer = dataInBuffer;
                         }
                     )
             ),
@@ -1568,7 +1572,8 @@ type IscsiTaskOnePDUCommand_Test () =
             ),
             p_NoticeUnlockResponseFence = (
                 fun flg -> Assert.True(( flg = ResponseFenceNeedsFlag.W_Mode ))
-            )
+            ),
+            p_GetNextTTT = ( fun () -> ttt_me.fromPrim 3u )
         )
         let iscsitask =
             new IscsiTaskOnePDUCommand(
@@ -1594,6 +1599,7 @@ type IscsiTaskOnePDUCommand_Test () =
     [<Fact>]
     member _.GetExecuteTask_033_SNACK_011_RDataSnack() =
         let mutable cnt2 = 0
+        let dataInBuffer = PooledBuffer.Rent [| 0uy .. 254uy |]
         let connStub1 = new CConnection_Stub(
             p_R_SNACKRequest = (
                 fun itt f ->
@@ -1609,10 +1615,12 @@ type IscsiTaskOnePDUCommand_Test () =
                             IscsiTaskOnePDUCommand_Test.defaultSCSIResponsePDUValues with
                                 SenseData = ArraySegment.Empty;
                                 InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
-                                ResponseData = ArraySegment( [| 0uy .. 254uy |], 0, 255 );
+                                ResponseData = dataInBuffer.ArraySegment;
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
                                 ExpDataSN = datasn_me.zero;
+                                DataInBuffer = dataInBuffer;
+                                LUN = lun_me.fromPrim 888UL;
                         }
                     )
             ),
@@ -1639,9 +1647,10 @@ type IscsiTaskOnePDUCommand_Test () =
                         Assert.True(( pdu.Opcode = OpcodeCd.SCSI_DATA_IN ))
                         let w = pdu :?> SCSIDataInPDU
                         Assert.True(( w.F = true ))
-                        Assert.True(( w.A = false ))
+                        Assert.True(( w.A = true ))
+                        Assert.True(( w.LUN = lun_me.fromPrim 888UL ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
-                        Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xffffffffu ))
+                        Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 333u ))
                         Assert.True(( w.DataSN = datasn_me.zero ))
                         Assert.True(( w.BufferOffset = 0u ))
                         let arDataSegment = w.DataSegment
@@ -1660,7 +1669,8 @@ type IscsiTaskOnePDUCommand_Test () =
             ),
             p_NoticeUnlockResponseFence = (
                 fun flg -> Assert.True(( flg = ResponseFenceNeedsFlag.R_Mode ))
-            )
+            ),
+            p_GetNextTTT = ( fun () -> ttt_me.fromPrim 333u )
         )
         let iscsitask =
             new IscsiTaskOnePDUCommand(
@@ -1687,6 +1697,7 @@ type IscsiTaskOnePDUCommand_Test () =
     [<Fact>]
     member _.GetExecuteTask_034_SNACK_012_RDataSnack() =
         let mutable cnt2 = 0
+        let dataInBuffer = PooledBuffer.Rent [| 0uy .. 255uy |]
         let connStub1 = new CConnection_Stub(
             p_R_SNACKRequest = (
                 fun itt f ->
@@ -1702,10 +1713,12 @@ type IscsiTaskOnePDUCommand_Test () =
                             IscsiTaskOnePDUCommand_Test.defaultSCSIResponsePDUValues with
                                 SenseData = ArraySegment.Empty;
                                 InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
-                                ResponseData = ArraySegment( [| 0uy .. 255uy |], 0, 256 );
+                                ResponseData = dataInBuffer.ArraySegment;
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
                                 ExpDataSN = datasn_me.zero;
+                                DataInBuffer = dataInBuffer;
+                                LUN = lun_me.fromPrim 777UL;
                         }
                     )
             ),
@@ -1732,9 +1745,10 @@ type IscsiTaskOnePDUCommand_Test () =
                         Assert.True(( pdu.Opcode = OpcodeCd.SCSI_DATA_IN ))
                         let w = pdu :?> SCSIDataInPDU
                         Assert.True(( w.F = true ))
-                        Assert.True(( w.A = false ))
+                        Assert.True(( w.A = true ))
+                        Assert.True(( w.LUN = lun_me.fromPrim 777UL ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
-                        Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xffffffffu ))
+                        Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 444u ))
                         Assert.True(( w.DataSN = datasn_me.zero ))
                         Assert.True(( w.BufferOffset = 0u ))
                         let arDataSegment = w.DataSegment
@@ -1753,7 +1767,8 @@ type IscsiTaskOnePDUCommand_Test () =
             ),
             p_NoticeUnlockResponseFence = (
                 fun flg -> Assert.True(( flg = ResponseFenceNeedsFlag.R_Mode ))
-            )
+            ),
+            p_GetNextTTT = ( fun () -> ttt_me.fromPrim 444u )
         )
         let iscsitask =
             new IscsiTaskOnePDUCommand(
@@ -1780,6 +1795,7 @@ type IscsiTaskOnePDUCommand_Test () =
     [<Fact>]
     member _.GetExecuteTask_035_SNACK_013_RDataSnack() =
         let mutable cnt2 = 0
+        let dataInBuffer = PooledBuffer.Rent 257
         let connStub1 = new CConnection_Stub(
             p_R_SNACKRequest = (
                 fun itt f ->
@@ -1795,10 +1811,12 @@ type IscsiTaskOnePDUCommand_Test () =
                             IscsiTaskOnePDUCommand_Test.defaultSCSIResponsePDUValues with
                                 SenseData = ArraySegment.Empty;
                                 InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
-                                ResponseData = ArraySegment( Array.zeroCreate( 257 ), 0, 257 );
+                                ResponseData = dataInBuffer.ArraySegment;
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
                                 ExpDataSN = datasn_me.zero;
+                                DataInBuffer = dataInBuffer;
+                                LUN = lun_me.fromPrim 777UL
                         }
                     )
             ),
@@ -1826,6 +1844,7 @@ type IscsiTaskOnePDUCommand_Test () =
                         let w = pdu :?> SCSIDataInPDU
                         Assert.True(( w.F = false ))
                         Assert.True(( w.A = false ))
+                        Assert.True(( w.LUN = lun_me.zero ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
                         Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xffffffffu ))
                         Assert.True(( w.DataSN = datasn_me.zero ))
@@ -1836,9 +1855,10 @@ type IscsiTaskOnePDUCommand_Test () =
                         Assert.True(( pdu.Opcode = OpcodeCd.SCSI_DATA_IN ))
                         let w = pdu :?> SCSIDataInPDU
                         Assert.True(( w.F = true ))
-                        Assert.True(( w.A = false ))
+                        Assert.True(( w.A = true ))
+                        Assert.True(( w.LUN = lun_me.fromPrim 777UL ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
-                        Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xffffffffu ))
+                        Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 444u ))
                         Assert.True(( w.DataSN = datasn_me.fromPrim 1u ))
                         Assert.True(( w.BufferOffset = 256u ))
                         let arDataSegment = w.DataSegment
@@ -1857,7 +1877,8 @@ type IscsiTaskOnePDUCommand_Test () =
             ),
             p_NoticeUnlockResponseFence = (
                 fun flg -> Assert.True(( flg = ResponseFenceNeedsFlag.R_Mode ))
-            )
+            ),
+            p_GetNextTTT = ( fun () -> ttt_me.fromPrim 444u )
         )
         let iscsitask =
             new IscsiTaskOnePDUCommand(
@@ -1884,6 +1905,7 @@ type IscsiTaskOnePDUCommand_Test () =
     [<Fact>]
     member _.GetExecuteTask_036_SNACK_014_RDataSnack() =
         let mutable cnt2 = 0
+        let dataInBuffer = PooledBuffer.Rent 512
         let connStub1 = new CConnection_Stub(
             p_R_SNACKRequest = (
                 fun itt f ->
@@ -1899,10 +1921,12 @@ type IscsiTaskOnePDUCommand_Test () =
                             IscsiTaskOnePDUCommand_Test.defaultSCSIResponsePDUValues with
                                 SenseData = ArraySegment.Empty;
                                 InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
-                                ResponseData = ArraySegment( Array.zeroCreate( 512 ), 0, 512 );
+                                ResponseData = dataInBuffer.ArraySegment;
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
                                 ExpDataSN = datasn_me.zero;
+                                DataInBuffer = dataInBuffer;
+                                LUN = lun_me.fromPrim 777UL;
                         }
                     )
             ),
@@ -1930,6 +1954,7 @@ type IscsiTaskOnePDUCommand_Test () =
                         let w = pdu :?> SCSIDataInPDU
                         Assert.True(( w.F = false ))
                         Assert.True(( w.A = false ))
+                        Assert.True(( w.LUN = lun_me.zero ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
                         Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xffffffffu ))
                         Assert.True(( w.DataSN = datasn_me.zero ))
@@ -1940,9 +1965,10 @@ type IscsiTaskOnePDUCommand_Test () =
                         Assert.True(( pdu.Opcode = OpcodeCd.SCSI_DATA_IN ))
                         let w = pdu :?> SCSIDataInPDU
                         Assert.True(( w.F = true ))
-                        Assert.True(( w.A = false ))
+                        Assert.True(( w.A = true ))
+                        Assert.True(( w.LUN = lun_me.fromPrim 777UL ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
-                        Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xffffffffu ))
+                        Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 555u ))
                         Assert.True(( w.DataSN = datasn_me.fromPrim 1u ))
                         Assert.True(( w.BufferOffset = 256u ))
                         let arDataSegment = w.DataSegment
@@ -1961,7 +1987,8 @@ type IscsiTaskOnePDUCommand_Test () =
             ),
             p_NoticeUnlockResponseFence = (
                 fun flg -> Assert.True(( flg = ResponseFenceNeedsFlag.R_Mode ))
-            )
+            ),
+            p_GetNextTTT = ( fun () -> ttt_me.fromPrim 555u )
         )
         let iscsitask =
             new IscsiTaskOnePDUCommand(
@@ -1988,6 +2015,7 @@ type IscsiTaskOnePDUCommand_Test () =
     [<Fact>]
     member _.GetExecuteTask_037_SNACK_015_RDataSnack() =
         let mutable cnt2 = 0
+        let dataInBuffer = PooledBuffer.Rent 513
         let connStub1 = new CConnection_Stub(
             p_R_SNACKRequest = (
                 fun itt f ->
@@ -2003,10 +2031,12 @@ type IscsiTaskOnePDUCommand_Test () =
                             IscsiTaskOnePDUCommand_Test.defaultSCSIResponsePDUValues with
                                 SenseData = ArraySegment.Empty;
                                 InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
-                                ResponseData = ArraySegment( Array.zeroCreate( 513 ), 0, 513 );
+                                ResponseData = dataInBuffer.ArraySegment;
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
                                 ExpDataSN = datasn_me.zero;
+                                DataInBuffer = dataInBuffer;
+                                LUN = lun_me.fromPrim 777UL;
                         }
                     )
             ),
@@ -2034,6 +2064,7 @@ type IscsiTaskOnePDUCommand_Test () =
                         let w = pdu :?> SCSIDataInPDU
                         Assert.True(( w.F = false ))
                         Assert.True(( w.A = false ))
+                        Assert.True(( w.LUN = lun_me.zero ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
                         Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xffffffffu ))
                         Assert.True(( w.DataSN = datasn_me.zero ))
@@ -2045,6 +2076,7 @@ type IscsiTaskOnePDUCommand_Test () =
                         let w = pdu :?> SCSIDataInPDU
                         Assert.True(( w.F = false ))
                         Assert.True(( w.A = false ))
+                        Assert.True(( w.LUN = lun_me.zero ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
                         Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xffffffffu ))
                         Assert.True(( w.DataSN = datasn_me.fromPrim 1u ))
@@ -2055,9 +2087,10 @@ type IscsiTaskOnePDUCommand_Test () =
                         Assert.True(( pdu.Opcode = OpcodeCd.SCSI_DATA_IN ))
                         let w = pdu :?> SCSIDataInPDU
                         Assert.True(( w.F = true ))
-                        Assert.True(( w.A = false ))
+                        Assert.True(( w.A = true ))
+                        Assert.True(( w.LUN = lun_me.fromPrim 777UL ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
-                        Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xffffffffu ))
+                        Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 555u ))
                         Assert.True(( w.DataSN = datasn_me.fromPrim 2u ))
                         Assert.True(( w.BufferOffset = 512u ))
                         let arDataSegment = w.DataSegment
@@ -2076,7 +2109,8 @@ type IscsiTaskOnePDUCommand_Test () =
             ),
             p_NoticeUnlockResponseFence = (
                 fun flg -> Assert.True(( flg = ResponseFenceNeedsFlag.R_Mode ))
-            )
+            ),
+            p_GetNextTTT = ( fun () -> ttt_me.fromPrim 555u )
         )
         let iscsitask =
             new IscsiTaskOnePDUCommand(
@@ -2103,6 +2137,7 @@ type IscsiTaskOnePDUCommand_Test () =
     [<Fact>]
     member _.GetExecuteTask_038_SNACK_016_RDataSnack() =
         let mutable cnt2 = 0
+        let dataInBuffer = PooledBuffer.Rent 254
         let connStub1 = new CConnection_Stub(
             p_R_SNACKRequest = (
                 fun itt f ->
@@ -2123,7 +2158,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                     TargetTransferTag = ttt_me.fromPrim 0xFEDCBA98u;
                                     DataSN = datasn_me.zero;
                                     BufferOffset = 0u;
-                                    DataSegment = ArraySegment( Array.zeroCreate( 254 ), 0, 254 );
+                                    DataSegment = dataInBuffer.ArraySegment;
                             }
                         |],
                         {
@@ -2134,6 +2169,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
                                 ExpDataSN = datasn_me.zero;
+                                DataInBuffer = dataInBuffer;
                         }
                     )
             ),
@@ -2196,6 +2232,7 @@ type IscsiTaskOnePDUCommand_Test () =
     [<Fact>]
     member _.GetExecuteTask_039_SNACK_017_RDataSnack() =
         let mutable cnt2 = 0
+        let dataInBuffer = PooledBuffer.Rent 255
         let connStub1 = new CConnection_Stub(
             p_R_SNACKRequest = (
                 fun itt f ->
@@ -2216,7 +2253,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                     TargetTransferTag = ttt_me.fromPrim 0xFEDCBA98u;
                                     DataSN = datasn_me.zero;
                                     BufferOffset = 0u;
-                                    DataSegment = ArraySegment( Array.zeroCreate( 255 ), 0, 255 );
+                                    DataSegment = dataInBuffer.ArraySegment;
                             }
                         |],
                         {
@@ -2227,6 +2264,8 @@ type IscsiTaskOnePDUCommand_Test () =
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
                                 ExpDataSN = datasn_me.zero;
+                                LUN = lun_me.fromPrim 3UL;
+                                DataInBuffer = dataInBuffer;
                         }
                     )
             ),
@@ -2256,7 +2295,7 @@ type IscsiTaskOnePDUCommand_Test () =
                         Assert.True(( w.A = true ))
                         Assert.True(( w.LUN = lun_me.fromPrim 0x3UL ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
-                        Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xFEDCBA98u ))
+                        Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 666u ))
                         Assert.True(( w.DataSN = datasn_me.zero ))
                         Assert.True(( w.BufferOffset = 0u ))
                         let arDataSegment = w.DataSegment
@@ -2275,7 +2314,8 @@ type IscsiTaskOnePDUCommand_Test () =
             ),
             p_NoticeUnlockResponseFence = (
                 fun flg -> Assert.True(( flg = ResponseFenceNeedsFlag.R_Mode ))
-            )
+            ),
+            p_GetNextTTT = ( fun () -> ttt_me.fromPrim 666u )
         )
         let iscsitask =
             new IscsiTaskOnePDUCommand(
@@ -2302,6 +2342,7 @@ type IscsiTaskOnePDUCommand_Test () =
     [<Fact>]
     member _.GetExecuteTask_040_SNACK_018_RDataSnack() =
         let mutable cnt2 = 0
+        let dataInBuffer = PooledBuffer.Rent 257
         let connStub1 = new CConnection_Stub(
             p_R_SNACKRequest = (
                 fun itt f ->
@@ -2322,7 +2363,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                     TargetTransferTag = ttt_me.fromPrim 0xFEDCBA98u;
                                     DataSN = datasn_me.zero;
                                     BufferOffset = 0u;
-                                    DataSegment = ArraySegment( Array.zeroCreate( 257 ), 0, 257 );
+                                    DataSegment = dataInBuffer.ArraySegment;
                             }
                         |],
                         {
@@ -2333,6 +2374,8 @@ type IscsiTaskOnePDUCommand_Test () =
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
                                 ExpDataSN = datasn_me.zero;
+                                DataInBuffer = dataInBuffer;
+                                LUN = lun_me.fromPrim 3UL;
                         }
                     )
             ),
@@ -2374,7 +2417,7 @@ type IscsiTaskOnePDUCommand_Test () =
                         Assert.True(( w.A = true ))
                         Assert.True(( w.LUN = lun_me.fromPrim 3UL ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
-                        Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xFEDCBA98u ))
+                        Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 666u ))
                         Assert.True(( w.DataSN = datasn_me.fromPrim 1u ))
                         Assert.True(( w.BufferOffset = 256u ))
                         let arDataSegment = w.DataSegment
@@ -2393,7 +2436,8 @@ type IscsiTaskOnePDUCommand_Test () =
             ),
             p_NoticeUnlockResponseFence = (
                 fun flg -> Assert.True(( flg = ResponseFenceNeedsFlag.R_Mode ))
-            )
+            ),
+            p_GetNextTTT = ( fun () -> ttt_me.fromPrim 666u )
         )
         let iscsitask =
             new IscsiTaskOnePDUCommand(
@@ -2420,6 +2464,7 @@ type IscsiTaskOnePDUCommand_Test () =
     [<Fact>]
     member _.GetExecuteTask_041_SNACK_019_RDataSnack() =
         let mutable cnt2 = 0
+        let dataInBuffer = PooledBuffer.Rent [| 0uy .. 253uy |]
         let connStub1 = new CConnection_Stub(
             p_R_SNACKRequest = (
                 fun itt f ->
@@ -2431,7 +2476,6 @@ type IscsiTaskOnePDUCommand_Test () =
                     Assert.True(( itt = itt_me.fromPrim 0x01020304u ))
                     (
                         [|
-                            let warray = [| 0uy .. 253uy |]
                             {
                                 IscsiTaskOnePDUCommand_Test.defaultSCSIDataInPDUValues with
                                     F = false;
@@ -2439,7 +2483,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                     InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
                                     DataSN = datasn_me.zero;
                                     BufferOffset = 0u;
-                                    DataSegment = ArraySegment( warray, 0, 128 );
+                                    DataSegment = ArraySegment( dataInBuffer.Array, 0, 128 );
                             };
                             {
                                 IscsiTaskOnePDUCommand_Test.defaultSCSIDataInPDUValues with
@@ -2448,7 +2492,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                     InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
                                     DataSN = datasn_me.fromPrim 1u;
                                     BufferOffset = 128u;
-                                    DataSegment = ArraySegment( warray, 128, 126 );
+                                    DataSegment = ArraySegment( dataInBuffer.Array, 128, 126 );
                             }
                         |],
                         {
@@ -2459,6 +2503,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
                                 ExpDataSN = datasn_me.zero;
+                                DataInBuffer = dataInBuffer;
                         }
                     )
             ),
@@ -2521,6 +2566,7 @@ type IscsiTaskOnePDUCommand_Test () =
     [<Fact>]
     member _.GetExecuteTask_042_SNACK_020_RDataSnack() =
         let mutable cnt2 = 0
+        let dataInBuffer = PooledBuffer.Rent [| 0uy .. 255uy |]
         let connStub1 = new CConnection_Stub(
             p_R_SNACKRequest = (
                 fun itt f ->
@@ -2532,7 +2578,6 @@ type IscsiTaskOnePDUCommand_Test () =
                     Assert.True(( itt = itt_me.fromPrim 0x01020304u ))
                     (
                         [|
-                            let warray = [| 0uy .. 255uy |]
                             {
                                 IscsiTaskOnePDUCommand_Test.defaultSCSIDataInPDUValues with
                                     F = false;
@@ -2540,7 +2585,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                     InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
                                     DataSN = datasn_me.zero;
                                     BufferOffset = 0u;
-                                    DataSegment = ArraySegment( warray, 0, 128 );
+                                    DataSegment = ArraySegment( dataInBuffer.Array, 0, 128 );
                             };
                             {
                                 IscsiTaskOnePDUCommand_Test.defaultSCSIDataInPDUValues with
@@ -2549,7 +2594,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                     InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
                                     DataSN = datasn_me.fromPrim 1u;
                                     BufferOffset = 128u;
-                                    DataSegment = ArraySegment( warray, 128, 128 );
+                                    DataSegment = ArraySegment( dataInBuffer.Array, 128, 128 );
                             }
                         |],
                         {
@@ -2560,6 +2605,9 @@ type IscsiTaskOnePDUCommand_Test () =
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
                                 ExpDataSN = datasn_me.zero;
+                                DataInBuffer = dataInBuffer;
+                                LUN = lun_me.fromPrim 5555UL;
+
                         }
                     )
             ),
@@ -2586,10 +2634,10 @@ type IscsiTaskOnePDUCommand_Test () =
                         Assert.True(( pdu.Opcode = OpcodeCd.SCSI_DATA_IN ))
                         let w = pdu :?> SCSIDataInPDU
                         Assert.True(( w.F = true ))
-                        Assert.True(( w.A = false ))
-                        Assert.True(( w.LUN = lun_me.zero ))
+                        Assert.True(( w.A = true ))
+                        Assert.True(( w.LUN = lun_me.fromPrim 5555UL ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
-                        Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xffffffffu ))
+                        Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 666u ))
                         Assert.True(( w.DataSN = datasn_me.zero ))
                         Assert.True(( w.BufferOffset = 0u ))
                         let arDataSegment = w.DataSegment
@@ -2608,7 +2656,8 @@ type IscsiTaskOnePDUCommand_Test () =
             ),
             p_NoticeUnlockResponseFence = (
                 fun flg -> Assert.True(( flg = ResponseFenceNeedsFlag.R_Mode ))
-            )
+            ),
+            p_GetNextTTT = ( fun () -> ttt_me.fromPrim 666u )
         )
         let iscsitask =
             new IscsiTaskOnePDUCommand(
@@ -2635,6 +2684,7 @@ type IscsiTaskOnePDUCommand_Test () =
     [<Fact>]
     member _.GetExecuteTask_043_SNACK_021_RDataSnack() =
         let mutable cnt2 = 0
+        let dataInBuffer = PooledBuffer.Rent [| 0uy .. 255uy |]
         let connStub1 = new CConnection_Stub(
             p_R_SNACKRequest = (
                 fun itt f ->
@@ -2646,7 +2696,6 @@ type IscsiTaskOnePDUCommand_Test () =
                     Assert.True(( itt = itt_me.fromPrim 0x01020304u ))
                     (
                         [|
-                            let warray = [| 0uy .. 255uy |]
                             {
                                 IscsiTaskOnePDUCommand_Test.defaultSCSIDataInPDUValues with
                                     F = false;
@@ -2654,7 +2703,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                     InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
                                     DataSN = datasn_me.fromPrim 2u;
                                     BufferOffset = 128u;
-                                    DataSegment = ArraySegment( warray, 128, 64 );
+                                    DataSegment = ArraySegment( dataInBuffer.Array, 128, 64 );
                             };
                             {
                                 IscsiTaskOnePDUCommand_Test.defaultSCSIDataInPDUValues with
@@ -2665,7 +2714,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                     TargetTransferTag = ttt_me.fromPrim 0xFEDCBA98u;
                                     DataSN = datasn_me.fromPrim 3u;
                                     BufferOffset = 192u;
-                                    DataSegment = ArraySegment( warray, 192, 64 );
+                                    DataSegment = ArraySegment( dataInBuffer.Array, 192, 64 );
                             }
                         |],
                         {
@@ -2676,6 +2725,8 @@ type IscsiTaskOnePDUCommand_Test () =
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
                                 ExpDataSN = datasn_me.zero;
+                                DataInBuffer = dataInBuffer;
+                                LUN = lun_me.fromPrim 0x3UL;
                         }
                     )
             ),
@@ -2703,6 +2754,7 @@ type IscsiTaskOnePDUCommand_Test () =
                         let w = pdu :?> SCSIDataInPDU
                         Assert.True(( w.F = false ))
                         Assert.True(( w.A = false ))
+                        Assert.True(( w.LUN = lun_me.zero ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
                         Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xffffffffu ))
                         Assert.True(( w.DataSN = datasn_me.fromPrim 2u ))
@@ -2714,6 +2766,7 @@ type IscsiTaskOnePDUCommand_Test () =
                         let w = pdu :?> SCSIDataInPDU
                         Assert.True(( w.F = false ))
                         Assert.True(( w.A = false ))
+                        Assert.True(( w.LUN = lun_me.zero ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
                         Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xffffffffu ))
                         Assert.True(( w.DataSN = datasn_me.fromPrim 3u ))
@@ -2725,6 +2778,7 @@ type IscsiTaskOnePDUCommand_Test () =
                         let w = pdu :?> SCSIDataInPDU
                         Assert.True(( w.F = false ))
                         Assert.True(( w.A = false ))
+                        Assert.True(( w.LUN = lun_me.zero ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
                         Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xffffffffu ))
                         Assert.True(( w.DataSN = datasn_me.fromPrim 4u ))
@@ -2738,7 +2792,7 @@ type IscsiTaskOnePDUCommand_Test () =
                         Assert.True(( w.A = true ))
                         Assert.True(( w.LUN = lun_me.fromPrim 3UL ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
-                        Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xFEDCBA98u ))
+                        Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 666u ))
                         Assert.True(( w.DataSN = datasn_me.fromPrim 5u ))
                         Assert.True(( w.BufferOffset = 248u ))
                         let arDataSegment = w.DataSegment
@@ -2757,7 +2811,8 @@ type IscsiTaskOnePDUCommand_Test () =
             ),
             p_NoticeUnlockResponseFence = (
                 fun flg -> Assert.True(( flg = ResponseFenceNeedsFlag.R_Mode ))
-            )
+            ),
+            p_GetNextTTT = ( fun () -> ttt_me.fromPrim 666u )
         )
         let iscsitask =
             new IscsiTaskOnePDUCommand(
@@ -2785,6 +2840,7 @@ type IscsiTaskOnePDUCommand_Test () =
     [<Fact>]
     member _.GetExecuteTask_044_SNACK_022_RDataSnack() =
         let mutable cnt2 = 0
+        let dataInBuffer = PooledBuffer.Rent [| 0uy .. 255uy |]
         let connStub1 = new CConnection_Stub(
             p_R_SNACKRequest = (
                 fun itt f ->
@@ -2796,7 +2852,6 @@ type IscsiTaskOnePDUCommand_Test () =
                     Assert.True(( itt = itt_me.fromPrim 0x01020304u ))
                     (
                         [|
-                            let warray = [| 0uy .. 255uy |]
                             {
                                 IscsiTaskOnePDUCommand_Test.defaultSCSIDataInPDUValues with
                                     F = false;
@@ -2804,7 +2859,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                     InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
                                     DataSN = datasn_me.fromPrim 2u;
                                     BufferOffset = 128u;
-                                    DataSegment = ArraySegment( warray, 128, 64 );
+                                    DataSegment = ArraySegment( dataInBuffer.Array, 128, 64 );
                             };
                             {
                                 IscsiTaskOnePDUCommand_Test.defaultSCSIDataInPDUValues with
@@ -2813,7 +2868,7 @@ type IscsiTaskOnePDUCommand_Test () =
                                     InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
                                     DataSN = datasn_me.fromPrim 3u;
                                     BufferOffset = 192u;
-                                    DataSegment = ArraySegment( warray, 192, 64 );
+                                    DataSegment = ArraySegment( dataInBuffer.Array, 192, 64 );
                             }
                         |],
                         {
@@ -2824,6 +2879,8 @@ type IscsiTaskOnePDUCommand_Test () =
                                 StatSN = statsn_me.fromPrim 10u;
                                 ExpCmdSN = cmdsn_me.fromPrim 11u;
                                 ExpDataSN = datasn_me.zero;
+                                DataInBuffer = dataInBuffer;
+                                LUN = lun_me.fromPrim 123UL;
                         }
                     )
             ),
@@ -2850,9 +2907,10 @@ type IscsiTaskOnePDUCommand_Test () =
                         Assert.True(( pdu.Opcode = OpcodeCd.SCSI_DATA_IN ))
                         let w = pdu :?> SCSIDataInPDU
                         Assert.True(( w.F = true ))
-                        Assert.True(( w.A = false ))
+                        Assert.True(( w.A = true ))
+                        Assert.True(( w.LUN = lun_me.fromPrim 123UL ))
                         Assert.True(( w.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ))
-                        Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 0xffffffffu ))
+                        Assert.True(( w.TargetTransferTag = ttt_me.fromPrim 777u ))
                         Assert.True(( w.DataSN = datasn_me.fromPrim 2u ))
                         Assert.True(( w.BufferOffset = 128u ))
                         let arDataSegment = w.DataSegment
@@ -2871,7 +2929,8 @@ type IscsiTaskOnePDUCommand_Test () =
             ),
             p_NoticeUnlockResponseFence = (
                 fun flg -> Assert.True(( flg = ResponseFenceNeedsFlag.R_Mode ))
-            )
+            ),
+            p_GetNextTTT = ( fun () -> ttt_me.fromPrim 777u )
         )
         let iscsitask =
             new IscsiTaskOnePDUCommand(

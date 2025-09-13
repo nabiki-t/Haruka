@@ -408,21 +408,14 @@ type IscsiTaskOnePDUCommand
         let oldDataInPDUs, oldRespPDU =
             conn.GetSentSCSIResponsePDUForR_SNACK snackpdu.InitiatorTaskTag
 
-        let oldResp_SenseData = oldRespPDU.SenseData
-        let senseData = oldResp_SenseData.Array
-        let respData =
-            if oldDataInPDUs.Length > 0 then
-                let w = oldDataInPDUs.[0].DataSegment
-                w.Array
-            else
-                let w = oldRespPDU.ResponseData
-                w.Array
-        let argSendDataBytes =
-            if senseData.Length > 0 then
-                senseData
-            else
-                respData
+        let isExistSenseData = oldRespPDU.SenseData.Count > 0
+        let argSendDataBytes = oldRespPDU.DataInBuffer
         let comPara = conn.CurrentParams
+        let mbl = m_Session.SessionParameter.MaxBurstLength
+        let erl = m_Session.SessionParameter.ErrorRecoveryLevel
+        let mrdsl_I = comPara.MaxRecvDataSegmentLength_I
+        let lun = oldRespPDU.LUN
+
         let someOfDI_Acked = 
             oldDataInPDUs.Length > 0 && datasn_me.lessThan ( datasn_me.zero ) oldDataInPDUs.[0].DataSN
                         
@@ -432,59 +425,53 @@ type IscsiTaskOnePDUCommand
         let realSendDataLength = uint32 argSendDataBytes.Length
 
         // Search the DataIn PDU that has 1 in A bit.
-        let ackDataInPDU = oldDataInPDUs |> Array.tryFind ( fun itr -> itr.A )
+        //let ackDataInPDU = oldDataInPDUs |> Array.tryFind ( fun itr -> itr.A )
 
         let newDataInPDUList =
-            if comPara.MaxRecvDataSegmentLength_I - 2u < realSendDataLength || someOfDI_Acked then
+            if mrdsl_I - 2u < realSendDataLength || someOfDI_Acked then
                 // If send data is longer than MaxRecvDataSegmentLength at the initiator,
                 // or, some of Data-In PDUs are already acknowledged, all of data are sent by Data-In PDU.
                 // Otherwise, all data are sent by SCSI response PDU, and there are no Data-In PDU.
 
                 // Divite sendDataBytes to some of Data-In PDUs
-                let rec loop ( sp : uint32 ) cnt ( li : ILogicalPDU list ) =
-                    if sp >= realSendDataLength then
-                        li
-                    else
-                        let seglen = min comPara.MaxRecvDataSegmentLength_I ( realSendDataLength - sp );
-                        let lastPDUFlag = sp + comPara.MaxRecvDataSegmentLength_I >= realSendDataLength
-                        let w : ILogicalPDU = {
-                            F = sp + comPara.MaxRecvDataSegmentLength_I >= realSendDataLength;
-                            A = if ackDataInPDU.IsSome then lastPDUFlag else false;
-                            O = false;  // ignored
-                            U = false;  // ignored
-                            S = false;  // Haruka does not use this flag
-                            Status = ScsiCmdStatCd.GOOD;  // ignored
-                            LUN =
-                                if ackDataInPDU.IsSome && lastPDUFlag then
-                                    ackDataInPDU.Value.LUN  // Delivered from LUN field of old PDU that has 1 at A bit.
-                                else
-                                    lun_me.zero;
-                            InitiatorTaskTag = snackpdu.InitiatorTaskTag;
-                            TargetTransferTag =
-                                if ackDataInPDU.IsSome && lastPDUFlag then
-                                    ackDataInPDU.Value.TargetTransferTag      // Delivered from TTT field of old PDU that has 1 at A bit.
-                                else
-                                    ttt_me.fromPrim 0xFFFFFFFFu;
-                            StatSN = statsn_me.zero;  // ignored
-                            ExpCmdSN = cmdsn_me.zero;
-                            MaxCmdSN = cmdsn_me.zero;
-                            DataSN = cnt;
-                            BufferOffset = sp;
-                            ResidualCount = 0u;  // ignored
-                            DataSegment = ArraySegment( argSendDataBytes, int sp, int seglen )
-                            ResponseFence = ResponseFenceNeedsFlag.Immediately;
-                        }
-                        loop ( sp + seglen ) ( datasn_me.next cnt ) ( w :: li )
                 let startDataPos, startDataSN =
                     if someOfDI_Acked then
                         oldDataInPDUs.[0].BufferOffset, oldDataInPDUs.[0].DataSN
                     else
                         0u, datasn_me.zero
-                loop startDataPos startDataSN []
+                let pduSegs = Functions.DivideRespDataSegment startDataPos ( realSendDataLength - startDataPos ) mbl mrdsl_I
+                pduSegs
+                |> List.mapi ( fun cnt struct( dpos, dlen, fflag ) ->
+                    {
+                        F = fflag;
+                        A = if erl > 0uy then fflag else false;
+                        O = false;  // ignored
+                        U = false;  // ignored
+                        S = false;  // Haruka does not use this flag
+                        Status = ScsiCmdStatCd.GOOD;  // ignored
+                        LUN =
+                            if erl > 0uy && fflag then
+                                lun
+                            else
+                                lun_me.zero;
+                        InitiatorTaskTag = snackpdu.InitiatorTaskTag;
+                        TargetTransferTag =
+                            if erl > 0uy && fflag then
+                                m_Session.NextTTT
+                            else
+                                ttt_me.fromPrim 0xffffffffu;
+                        StatSN = statsn_me.zero;
+                        ExpCmdSN = cmdsn_me.zero;
+                        MaxCmdSN = cmdsn_me.zero;
+                        DataSN = datasn_me.fromPrim( uint cnt ) + startDataSN;
+                        BufferOffset = dpos;
+                        ResidualCount = 0u;
+                        DataSegment = argSendDataBytes.GetArraySegment( int dpos ) ( int dlen );
+                        ResponseFence = ResponseFenceNeedsFlag.Immediately;
+                    } :> ILogicalPDU
+                )
             else
                 []
-            |> List.rev
-            |> List.toArray
 
         let newRespPDU = {
             oldRespPDU with
@@ -495,8 +482,8 @@ type IscsiTaskOnePDUCommand
                     else
                         datasn_me.fromPrim( uint32 newDataInPDUList.Length );
                 ResponseData = 
-                    if respData.Length > 0 && comPara.MaxRecvDataSegmentLength_I - 2u >= realSendDataLength && not someOfDI_Acked then
-                        ArraySegment( argSendDataBytes, 0, int realSendDataLength )
+                    if not isExistSenseData && comPara.MaxRecvDataSegmentLength_I - 2u >= realSendDataLength && not someOfDI_Acked then
+                        argSendDataBytes.ArraySegment
                     else
                         ArraySegment.Empty;
         }
