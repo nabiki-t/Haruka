@@ -184,6 +184,15 @@ type Session
         override _.I_TNexus : ITNexus =
             m_I_TNexus
 
+        override _.NextTTT : TTT_T =
+            let rec loop() =
+                let v = Interlocked.Increment( &m_TTTGen )
+                if v = 0xFFFFFFFFu then
+                    loop()
+                else
+                    v
+            ttt_me.fromPrim( loop() )
+
         // --------------------------------------------------------------------
         // Implementation of ISession.IsExistCID
         override _.IsExistCID ( cid : CID_T ) : bool =
@@ -436,7 +445,7 @@ type Session
             
         // ------------------------------------------------------------------------
         // Send response data to the initiator.
-        override _.SendSCSIResponse
+        override this.SendSCSIResponse
                 ( reqCmdPDU : SCSICommandPDU )
                 ( cid : CID_T )
                 ( counter : CONCNT_T )
@@ -520,7 +529,7 @@ type Session
                                 InitiatorTaskTag = itt;
                                 TargetTransferTag =
                                     if m_sessionParameter.ErrorRecoveryLevel > 0uy && fflag then
-                                        this.GenerateTTTValue()
+                                        ( this :> ISession ).NextTTT
                                     else
                                         ttt_me.fromPrim 0xffffffffu;
                                 StatSN = statsn_me.zero;
@@ -1448,18 +1457,4 @@ type Session
             )
         | _ ->
             ()
-
-    // ------------------------------------------------------------------------
-    /// <summary>
-    ///   Generate unique value used to TTT.
-    /// </summary>
-    member private _.GenerateTTTValue() : TTT_T =
-        let rec loop() =
-            let v = Interlocked.Increment( &m_TTTGen )
-            if v = 0xFFFFFFFFu then
-                loop()
-            else
-                v
-        ttt_me.fromPrim( loop() )
-
 

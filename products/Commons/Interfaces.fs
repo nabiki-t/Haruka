@@ -1115,6 +1115,12 @@ type ISession =
 
     // ------------------------------------------------------------------------
     /// <summary>
+    ///   Get next TTT value.
+    /// </summary>
+    abstract NextTTT : TTT_T
+
+    // ------------------------------------------------------------------------
+    /// <summary>
     ///   Check specified CID is exist or not.
     /// </summary>
     /// <param name="cid">

@@ -222,6 +222,7 @@ type public CSession_Stub() =
     let mutable f_GetSessionParameter : ( unit -> IscsiNegoParamSW ) option = None
     let mutable f_GetTSIH : ( unit -> TSIH_T ) option = None
     let mutable f_GetI_TNexus : ( unit -> ITNexus ) option = None
+    let mutable f_GetNextTTT : ( unit -> TTT_T ) option = None
     let mutable f_IsExistCID : ( CID_T -> bool ) option = None
     let mutable f_AddNewConnection : ( System.IO.Stream -> DateTime -> CID_T -> NETPORTIDX_T -> TPGT_T -> IscsiNegoParamCO -> bool  ) option = None
     let mutable f_ReinstateConnection : ( System.IO.Stream -> DateTime -> CID_T -> NETPORTIDX_T -> TPGT_T -> IscsiNegoParamCO -> bool  ) option = None
@@ -248,6 +249,7 @@ type public CSession_Stub() =
     member _.p_GetSessionParameter with set v = f_GetSessionParameter <- Some( v )
     member _.p_GetTSIH with set v = f_GetTSIH <- Some( v )
     member _.p_GetI_TNexus with set v = f_GetI_TNexus <- Some( v )
+    member _.p_GetNextTTT with set v = f_GetNextTTT <- Some( v )
     member _.p_IsExistCID with set v = f_IsExistCID <- Some( v )
     member _.p_AddNewConnection with set v = f_AddNewConnection <- Some( v )
     member _.p_ReinstateConnection with set v = f_ReinstateConnection <- Some( v )
@@ -279,6 +281,8 @@ type public CSession_Stub() =
             f_GetTSIH.Value ()
         override _.I_TNexus with get() =
             f_GetI_TNexus.Value ()
+        override _.NextTTT with get() =
+            f_GetNextTTT.Value ()
         override _.IsExistCID ( cid : CID_T ) =
             f_IsExistCID.Value cid
         override _.AddNewConnection
