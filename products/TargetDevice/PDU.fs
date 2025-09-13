@@ -406,7 +406,15 @@ type PDU() =
             Array.empty
 
     // --------------------------------------------------------------------
-    // Get Logical PDU.
+    /// <summary>
+    ///  Convert received data to ILogicalPDU.
+    /// </summary>
+    /// <param name="a">
+    ///  Received data.
+    /// </param>
+    /// <returns>
+    ///  Converted ILogicalPDU data.
+    /// </returns>
     static member private toLogicalPDU( a : internalPDUInfo ) : ILogicalPDU =
         match a.m_Opcode with
         | OpcodeCd.NOP_IN ->
@@ -452,7 +460,15 @@ type PDU() =
             raise <| SessionRecoveryException ( msg, tsih_me.fromValOpt 0us a.m_TSIH )
 
     // --------------------------------------------------------------------
-    // Get SCSI Command PDU
+    /// <summary>
+    ///  Convert received data to SCSICommandPDU.
+    /// </summary>
+    /// <param name="a">
+    ///  Received data.
+    /// </param>
+    /// <returns>
+    ///  Converted SCSICommandPDU data.
+    /// </returns>
     static member private toSCSICommandPDU ( a : internalPDUInfo ) : SCSICommandPDU =
         let loginfo = struct( a.m_ObjID, a.m_CID, a.m_ConCounter, a.m_TSIH, ValueNone, ValueNone )
         let wtsih = tsih_me.fromValOpt 0us a.m_TSIH
@@ -539,7 +555,15 @@ type PDU() =
         retvalue
 
     // --------------------------------------------------------------------
-    // Get SCSI Response PDU
+    /// <summary>
+    ///  Convert received data to SCSIResponsePDU.
+    /// </summary>
+    /// <param name="a">
+    ///  Received data.
+    /// </param>
+    /// <returns>
+    ///  Converted SCSIResponsePDU data.
+    /// </returns>
     static member private toSCSIResponsePDU ( a : internalPDUInfo ) : SCSIResponsePDU =
         let loginfo = struct( a.m_ObjID, a.m_CID, a.m_ConCounter, a.m_TSIH, ValueNone, ValueNone )
         let wtsih = tsih_me.fromValOpt 0us a.m_TSIH
@@ -646,7 +670,15 @@ type PDU() =
         retvalue
 
     // --------------------------------------------------------------------
-    // Get Task management function request PDU
+    /// <summary>
+    ///  Convert received data to TaskManagementFunctionRequestPDU.
+    /// </summary>
+    /// <param name="a">
+    ///  Received data.
+    /// </param>
+    /// <returns>
+    ///  Converted TaskManagementFunctionRequestPDU data.
+    /// </returns>
     static member private toTaskManagementFunctionRequestPDU ( a : internalPDUInfo ) : TaskManagementFunctionRequestPDU =
         let loginfo = struct( a.m_ObjID, a.m_CID, a.m_ConCounter, a.m_TSIH, ValueNone, ValueNone )
         let wtsih = tsih_me.fromValOpt 0us a.m_TSIH
@@ -704,7 +736,15 @@ type PDU() =
         retvalue
   
     // --------------------------------------------------------------------
-    // Get Task management function response PDU
+    /// <summary>
+    ///  Convert received data to TaskManagementFunctionResponsePDU.
+    /// </summary>
+    /// <param name="a">
+    ///  Received data.
+    /// </param>
+    /// <returns>
+    ///  Converted TaskManagementFunctionResponsePDU data.
+    /// </returns>
     static member private toTaskManagementFunctionResponsePDU ( a : internalPDUInfo ) : TaskManagementFunctionResponsePDU =
         let loginfo = struct( a.m_ObjID, a.m_CID, a.m_ConCounter, a.m_TSIH, ValueNone, ValueNone )
         let wtsih = tsih_me.fromValOpt 0us a.m_TSIH
@@ -747,7 +787,15 @@ type PDU() =
         retvalue
 
     // --------------------------------------------------------------------
-    // Get SCSI Data-Out PDU
+    /// <summary>
+    ///  Convert received data to SCSIDataOutPDU.
+    /// </summary>
+    /// <param name="a">
+    ///  Received data.
+    /// </param>
+    /// <returns>
+    ///  Converted SCSIDataOutPDU data.
+    /// </returns>
     static member private toSCSIDataOutPDU ( a : internalPDUInfo ) : SCSIDataOutPDU =
 
         // Check Opcode value ( If Opcode is not SCSI Data-Out, this function must not called.
@@ -774,7 +822,15 @@ type PDU() =
         retvalue
 
     // --------------------------------------------------------------------
-    // Get SCSI Data-In PDU
+    /// <summary>
+    ///  Convert received data to SCSIDataInPDU.
+    /// </summary>
+    /// <param name="a">
+    ///  Received data.
+    /// </param>
+    /// <returns>
+    ///  Converted SCSIDataInPDU data.
+    /// </returns>
     static member private toSCSIDataInPDU ( a : internalPDUInfo ) : SCSIDataInPDU =
         let loginfo = struct( a.m_ObjID, a.m_CID, a.m_ConCounter, a.m_TSIH, ValueNone, ValueNone )
         let wtsih = tsih_me.fromValOpt 0us a.m_TSIH
@@ -827,7 +883,15 @@ type PDU() =
         retvalue
 
     // --------------------------------------------------------------------
-    // Get R2T PDU
+    /// <summary>
+    ///  Convert received data to R2TPDU.
+    /// </summary>
+    /// <param name="a">
+    ///  Received data.
+    /// </param>
+    /// <returns>
+    ///  Converted R2TPDU data.
+    /// </returns>
     static member private toR2TPDU ( a : internalPDUInfo ) : R2TPDU =
         let loginfo = struct( a.m_ObjID, a.m_CID, a.m_ConCounter, a.m_TSIH, ValueNone, ValueNone )
         let wtsih = tsih_me.fromValOpt 0us a.m_TSIH
@@ -880,7 +944,15 @@ type PDU() =
         retvalue
 
     // --------------------------------------------------------------------
-    // Get Asyncronous Message PDU
+    /// <summary>
+    ///  Convert received data to AsyncronousMessagePDU.
+    /// </summary>
+    /// <param name="a">
+    ///  Received data.
+    /// </param>
+    /// <returns>
+    ///  Converted AsyncronousMessagePDU data.
+    /// </returns>
     static member private toAsyncronousMessagePDU ( a : internalPDUInfo ) : AsyncronousMessagePDU =
         let loginfo = struct( a.m_ObjID, a.m_CID, a.m_ConCounter, a.m_TSIH, ValueNone, ValueNone )
         let wtsih = tsih_me.fromValOpt 0us a.m_TSIH
@@ -935,7 +1007,15 @@ type PDU() =
         retvalue
       
     // --------------------------------------------------------------------
-    // Get Text request PDU
+    /// <summary>
+    ///  Convert received data to TextRequestPDU.
+    /// </summary>
+    /// <param name="a">
+    ///  Received data.
+    /// </param>
+    /// <returns>
+    ///  Converted TextRequestPDU data.
+    /// </returns>
     static member private toTextRequestPDU ( a : internalPDUInfo ) : TextRequestPDU =
         let wtsih = tsih_me.fromValOpt 0us a.m_TSIH
 
@@ -974,7 +1054,15 @@ type PDU() =
         retvalue
 
     // --------------------------------------------------------------------
-    // Get Text response PDU
+    /// <summary>
+    ///  Convert received data to TextResponsePDU.
+    /// </summary>
+    /// <param name="a">
+    ///  Received data.
+    /// </param>
+    /// <returns>
+    ///  Converted TextResponsePDU data.
+    /// </returns>
     static member private toTextResponsePDU ( a : internalPDUInfo ) : TextResponsePDU =
         let wtsih = tsih_me.fromValOpt 0us a.m_TSIH
 
@@ -1012,7 +1100,15 @@ type PDU() =
         retvalue
 
     // --------------------------------------------------------------------
-    // Get Login request PDU
+    /// <summary>
+    ///  Convert received data to LoginRequestPDU.
+    /// </summary>
+    /// <param name="a">
+    ///  Received data.
+    /// </param>
+    /// <returns>
+    ///  Converted LoginRequestPDU data.
+    /// </returns>
     static member private toLoginRequestPDU ( a : internalPDUInfo ) : LoginRequestPDU =
         let loginfo = struct( a.m_ObjID, a.m_CID, a.m_ConCounter, a.m_TSIH, ValueNone, ValueNone )
         let wtsih = tsih_me.fromValOpt 0us a.m_TSIH
@@ -1099,7 +1195,15 @@ type PDU() =
         retvalue
 
     // --------------------------------------------------------------------
-    // Get Login response PDU
+    /// <summary>
+    ///  Convert received data to LoginResponsePDU.
+    /// </summary>
+    /// <param name="a">
+    ///  Received data.
+    /// </param>
+    /// <returns>
+    ///  Converted LoginResponsePDU data.
+    /// </returns>
     static member private toLoginResponsePDU ( a : internalPDUInfo ) : LoginResponsePDU =
         let loginfo = struct( a.m_ObjID, a.m_CID, a.m_ConCounter, a.m_TSIH, ValueNone, ValueNone )
         let wtsih = tsih_me.fromValOpt 0us a.m_TSIH
@@ -1190,7 +1294,15 @@ type PDU() =
         retvalue
 
     // --------------------------------------------------------------------
-    // Get Logout request PDU
+    /// <summary>
+    ///  Convert received data to LogoutRequestPDU.
+    /// </summary>
+    /// <param name="a">
+    ///  Received data.
+    /// </param>
+    /// <returns>
+    ///  Converted LogoutRequestPDU data.
+    /// </returns>
     static member private toLogoutRequestPDU ( a : internalPDUInfo ) : LogoutRequestPDU =
         let loginfo = struct( a.m_ObjID, a.m_CID, a.m_ConCounter, a.m_TSIH, ValueNone, ValueNone )
         let wtsih = tsih_me.fromValOpt 0us a.m_TSIH
@@ -1233,7 +1345,15 @@ type PDU() =
         retvalue
 
     // --------------------------------------------------------------------
-    // Get Logout response PDU
+    /// <summary>
+    ///  Convert received data to LogoutResponsePDU.
+    /// </summary>
+    /// <param name="a">
+    ///  Received data.
+    /// </param>
+    /// <returns>
+    ///  Converted LogoutResponsePDU data.
+    /// </returns>
     static member private toLogoutResponsePDU ( a : internalPDUInfo ) : LogoutResponsePDU =
         let loginfo = struct( a.m_ObjID, a.m_CID, a.m_ConCounter, a.m_TSIH, ValueNone, ValueNone )
         let wtsih = tsih_me.fromValOpt 0us a.m_TSIH
@@ -1279,7 +1399,15 @@ type PDU() =
         retvalue
 
     // --------------------------------------------------------------------
-    // Get SNACK request PDU
+    /// <summary>
+    ///  Convert received data to SNACKRequestPDU.
+    /// </summary>
+    /// <param name="a">
+    ///  Received data.
+    /// </param>
+    /// <returns>
+    ///  Converted SNACKRequestPDU data.
+    /// </returns>
     static member private toSNACKRequestPDU ( a : internalPDUInfo ) : SNACKRequestPDU =
         let loginfo = struct( a.m_ObjID, a.m_CID, a.m_ConCounter, a.m_TSIH, ValueNone, ValueNone )
         let wtsih = tsih_me.fromValOpt 0us a.m_TSIH
@@ -1311,7 +1439,15 @@ type PDU() =
         retvalue
 
     // --------------------------------------------------------------------
-    // Get Reject PDU
+    /// <summary>
+    ///  Convert received data to RejectPDU.
+    /// </summary>
+    /// <param name="a">
+    ///  Received data.
+    /// </param>
+    /// <returns>
+    ///  Converted RejectPDU data.
+    /// </returns>
     static member private toRejectPDU ( a : internalPDUInfo ) : RejectPDU =
         let loginfo = struct( a.m_ObjID, a.m_CID, a.m_ConCounter, a.m_TSIH, ValueNone, ValueNone )
         let wtsih = tsih_me.fromValOpt 0us a.m_TSIH
@@ -1345,7 +1481,15 @@ type PDU() =
         retvalue
 
     // --------------------------------------------------------------------
-    // Get NOP-Out PDU
+    /// <summary>
+    ///  Convert received data to NOPOutPDU.
+    /// </summary>
+    /// <param name="a">
+    ///  Received data.
+    /// </param>
+    /// <returns>
+    ///  Converted NOPOutPDU data.
+    /// </returns>
     static member private toNOPOutPDU ( a : internalPDUInfo ) : NOPOutPDU =
         let wtsih = tsih_me.fromValOpt 0us a.m_TSIH
 
@@ -1379,7 +1523,15 @@ type PDU() =
         retvalue
 
     // --------------------------------------------------------------------
-    // Get NOP-In PDU
+    /// <summary>
+    ///  Convert received data to NOPInPDU.
+    /// </summary>
+    /// <param name="a">
+    ///  Received data.
+    /// </param>
+    /// <returns>
+    ///  Converted NOPInPDU data.
+    /// </returns>
     static member private toNOPInPDU ( a : internalPDUInfo ) : NOPInPDU =
         // Check Opcode value ( If Opcode is not NOP-In, this function must not called.
         // So, In case of conflict with this condition, it is considered a defect of Haruka. )
