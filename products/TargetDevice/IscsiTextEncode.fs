@@ -6,9 +6,6 @@
 //=============================================================================
 // Namespace declaration
 
-/// <summary>
-///   Definitions of functions, that used for processing iSCSI text key-value data.
-/// </summary>
 namespace Haruka.TargetDevice
 
 //=============================================================================
@@ -21,7 +18,7 @@ open Haruka.Constants
 open Haruka.Commons
 
 //=============================================================================
-// Data type definition
+// Type definition
 
 /// <summary>
 ///   Represent receiving or sending value in text key.
