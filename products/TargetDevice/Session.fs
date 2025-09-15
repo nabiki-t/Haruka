@@ -1339,6 +1339,7 @@ type Session
         let loginfo = struct ( m_ObjID, ValueSome conn.CID, ValueSome conn.ConCounter, ValueSome m_TSIH, ValueSome pdu.InitiatorTaskTag, ValueNone )
 
         if currentQ.WaitingQueue.ContainsKey pdu.InitiatorTaskTag |> not then
+            // A SCSI Data-Out PDU is received before a SCSI Command PDU.
             let wtask =
                 IscsiTaskScsiCommand.ReceivedNewSCSIDataOutPDU(
                     this :> ISession,
@@ -1367,13 +1368,25 @@ type Session
                 let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectReasonCd.INVALID_PDU_FIELD
                 Some refuseTask, currentQ.WaitingQueue
             else
-                // Update SCSI Command task object that has already received SCSI Command or SCSI Data-Out PDUs.
-                let task =
-                    IscsiTaskScsiCommand.ReceivedContinuationSCSIDataOutPDU(
-                        v :?> IscsiTaskScsiCommand,
-                        pdu
-                    ) :> IIscsiTask;
-                None, currentQ.WaitingQueue.SetItem( pdu.InitiatorTaskTag, task )
+                let wScsiTask = v :?> IscsiTaskScsiCommand
+                match wScsiTask.SCSICommandPDU with
+                | ValueSome( x ) ->
+                    // Reject any Data-Out PDU that carries data outside the range indicated by ExpectedDataTransferLength.
+                    let edtl = x.ExpectedDataTransferLength
+                    let bufOff = pdu.BufferOffset
+                    let dataLen = PooledBuffer.ulength pdu.DataSegment
+                    if bufOff > edtl || dataLen > edtl || bufOff + dataLen > edtl then
+                        // Reject and ignore
+                        let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection conn pdu RejectReasonCd.INVALID_PDU_FIELD
+                        Some refuseTask, currentQ.WaitingQueue
+                    else
+                        // Update SCSI Command task object that has already received SCSI Command or SCSI Data-Out PDUs.
+                        let task = IscsiTaskScsiCommand.ReceivedContinuationSCSIDataOutPDU( wScsiTask, pdu ) :> IIscsiTask;
+                        None, currentQ.WaitingQueue.SetItem( pdu.InitiatorTaskTag, task )
+                | _ ->
+                    // Update SCSI Command task object that has already received SCSI Command or SCSI Data-Out PDUs.
+                    let task = IscsiTaskScsiCommand.ReceivedContinuationSCSIDataOutPDU( wScsiTask, pdu ) :> IIscsiTask;
+                    None, currentQ.WaitingQueue.SetItem( pdu.InitiatorTaskTag, task )
 
     // ------------------------------------------------------------------------
     /// <summary>

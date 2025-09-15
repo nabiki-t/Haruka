@@ -366,16 +366,16 @@ type IscsiTaskScsiCommand
     // ------------------------------------------------------------------------
     /// <summary>
     ///  Factory method of IscsiTaskScsiCommand class.
-    ///  This method is used when a new SCSI Data-Out PDU is received.
+    ///  A SCSI Data-Out PDU carrying unsolicited data is received before a SCSI Command PDU.
     /// </summary>
     /// <param name="argSession">
-    ///   The session object that is received the SCSI Command PDU.
+    ///   The session object that is received the Data-Out PDU.
     /// </param>
     /// <param name="argCID">
-    ///   CID value of the connection that is received the SCSI Command PDU.
+    ///   CID value of the connection that is received the Data-Out PDU.
     /// </param>
     /// <param name="argCounter">
-    ///   Connection counter value of the connection that is received the SCSI Command PDU.
+    ///   Connection counter value of the connection that is received the Data-Out PDU.
     /// </param>
     /// <param name="argDataOutPDU">
     ///   Received SCSI Data-Out PDU values.
@@ -449,7 +449,6 @@ type IscsiTaskScsiCommand
         let currentNextR2TSN = argTask.NextR2TSNValue
         let tsih = wSession.TSIH
         let witt = argPDU.InitiatorTaskTag
-        let executedFlg = ( argTask :> IIscsiTask ).Executed
         let loginfo =
             if wCommandPDU.IsSome then
                 struct ( objid, ValueSome cid, ValueSome counter, ValueSome tsih, ValueSome witt, ValueSome wCommandPDU.Value.LUN )
@@ -551,19 +550,15 @@ type IscsiTaskScsiCommand
                                             wDataPDU
                                             sessParam.MaxBurstLength
                                             currentNextR2TSN
+                                    let r2tCount = ( fst recoveryR2T ).Length
 
-                                    HLogger.Trace( LogID.V_TRACE, fun g ->
-                                        let msg = sprintf "##### recoveryR2T.length : %d, %d" ( fst recoveryR2T ).Length ( snd recoveryR2T )
-                                        g.Gen1( loginfo, msg )
-                                    )
-                                    for itr in fst recoveryR2T do
-                                        HLogger.Trace( LogID.V_TRACE, fun g ->
-                                            let msg = sprintf "offset=%d, length=%d" itr.offset itr.length
+                                    if r2tCount > 0 then
+                                        HLogger.Trace( LogID.I_TRACE, fun g ->
+                                            let msg = sprintf "RecoveryR2T generated. Count=%d" r2tCount
                                             g.Gen1( loginfo, msg )
                                         )
 
-
-                                    if wSession.SessionParameter.ErrorRecoveryLevel = 0uy && ( fst recoveryR2T ).Length > 0 then
+                                    if wSession.SessionParameter.ErrorRecoveryLevel = 0uy && r2tCount > 0 then
                                         // In error recovery level is zero, if it failed to receive all of output data,
                                         // it occurs session recovery. 
                                         HLogger.Trace( LogID.E_FAILED_RECEIVE_ALL_DATA_OUT_BYTES, fun g -> g.Gen0 loginfo )
@@ -605,7 +600,6 @@ type IscsiTaskScsiCommand
         let wCommandPDU : SCSICommandPDU voption = argTask.SCSICommandPDU
         let sessParam = wSession.SessionParameter
         let tsih = wSession.TSIH
-        //let executedFlg = ( argTask :> IIscsiTask ).Executed
         let loginfo = struct ( objid, ValueSome( cid ), ValueSome( counter ), ValueSome( tsih ), ValueSome( argPDU.InitiatorTaskTag ), ValueSome( argPDU.LUN ) )
 
         if wCommandPDU.IsSome then
@@ -652,39 +646,57 @@ type IscsiTaskScsiCommand
                 argTask.NextR2TSNValue,
                 false
             )
-        //elif IscsiTaskScsiCommand.isAllDataReceived argTask.SCSIDataOutPDUs ( ttt_me.fromPrim 0xFFFFFFFFu ) then
-        elif argPDU.F || ( argTask.SCSIDataOutPDUs |> List.exists ( _.F ) ) then
-            // If all of unsolicided data are received,
-            // the status is transitioned to DATARECVSTAT.SOLICITED
-            let vR2T, nextSN = 
-                IscsiTaskScsiCommand.generateR2TInfo argPDU argTask.SCSIDataOutPDUs sessParam.MaxBurstLength
-            new IscsiTaskScsiCommand(
-                objid,
-                wSession,
-                cid,
-                counter,
-                ValueSome argPDU,
-                argTask.SCSIDataOutPDUs,
-                vR2T,
-                DATARECVSTAT.SOLICITED,
-                nextSN,
-                false
-            )
+
         else
-            // wait more unsolicided data, or SCSI command PDU
-            new IscsiTaskScsiCommand(
-                objid,
-                wSession,
-                cid,
-                counter,
-                ValueSome argPDU,
-                argTask.SCSIDataOutPDUs,
-                Array.empty,
-                DATARECVSTAT.UNSOLICITED,
-                0u,
-                false
-            )
-            
+            // If any Data-Out PDU outside the range indicated by ExpectedDataTransferLength is exist, those PDU are silentry ignored.
+            // Normally, this should be rejected, but since it is abnormal to receive the Data-Out PDU first, no further relief is given.
+            let nextDataOutPDU = 
+                argTask.SCSIDataOutPDUs
+                |> List.filter ( fun itr ->
+                    let edtl = argPDU.ExpectedDataTransferLength
+                    let dataLen = PooledBuffer.ulength itr.DataSegment
+                    let bufOff = itr.BufferOffset
+                    let r = ( dataLen <= edtl && bufOff <= edtl && dataLen + bufOff <= edtl )
+                    if not r then
+                        HLogger.Trace( LogID.W_DATA_PDU_IGNORED, fun g ->
+                           let msg =
+                            sprintf
+                                "Out of range Data-Out PDU. ExpectedDataTransferLength=%d, Offset=%d, Length=%d"
+                                edtl bufOff dataLen
+                           g.Gen1( loginfo, msg )
+                        )
+                    r
+                )
+            if argPDU.F || ( nextDataOutPDU |> List.exists ( _.F ) ) then
+                // If all of unsolicided data are received, the status is transitioned to DATARECVSTAT.SOLICITED
+                let vR2T, nextSN = 
+                    IscsiTaskScsiCommand.generateR2TInfo argPDU argTask.SCSIDataOutPDUs sessParam.MaxBurstLength
+                new IscsiTaskScsiCommand(
+                    objid,
+                    wSession,
+                    cid,
+                    counter,
+                    ValueSome argPDU,
+                    nextDataOutPDU,
+                    vR2T,
+                    DATARECVSTAT.SOLICITED,
+                    nextSN,
+                    false
+                )
+            else
+                // wait more unsolicided data, or SCSI command PDU
+                new IscsiTaskScsiCommand(
+                    objid,
+                    wSession,
+                    cid,
+                    counter,
+                    ValueSome argPDU,
+                    nextDataOutPDU,
+                    Array.empty,
+                    DATARECVSTAT.UNSOLICITED,
+                    0u,
+                    false
+                )
 
     //=========================================================================
     // Interface method

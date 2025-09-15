@@ -1666,6 +1666,165 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         GlbFunc.ClosePorts [| sp; cp; |]
 
     [<Fact>]
+    member _.PushReceivedPDU_012_Immidiate_ScsiCommand_008() =
+        // Create session object
+        let sess, pc, _, _, _, sp, cp =
+            Session_Test.CreateDefaultSessionObject
+                Session_Test.defaultSessionParam
+                Session_Test.defaultConnectionParam
+                ( cid_me.fromPrim 1us )
+                ( cmdsn_me.zero )
+                ( itt_me.fromPrim 0u )
+                true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
+
+        // SCSI Command PDU
+        let cmdpdu = {
+            Session_Test.defaultScsiCommandPDUValues with
+                I = true;
+                F = false;
+                W = true;
+                R = false;
+                InitiatorTaskTag = itt_me.fromPrim 1u;
+                ExpectedDataTransferLength = 10u;
+                DataSegment = PooledBuffer.Empty;
+        }
+
+        // Receive SCSI Comment PDU.
+        sess.PushReceivedPDU conn1.Value cmdpdu
+
+        // SCSI Data-Out PDU ( Out of range )
+        let datapdu = {
+            Session_Test.defaultScsiDataOutPDUValues with
+                F = false;
+                InitiatorTaskTag = itt_me.fromPrim 1u;
+                TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
+                DataSN = datasn_me.zero;
+                BufferOffset = 10u;
+                DataSegment = PooledBuffer.RentAndInit 1;
+        }
+
+        // Receive SCSI Data-Out PDU
+        sess.PushReceivedPDU conn1.Value datapdu
+
+        // Receive Reject response PDU in the initiator
+        let pdu3 =
+            PDU.Receive( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, cp, Standpoint.Initiator )
+            |> Functions.RunTaskSynchronously
+        Assert.True( ( pdu3.Opcode = OpcodeCd.REJECT ) )
+        let rejectpdu = pdu3 :?> RejectPDU
+        Assert.True(( rejectpdu.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
+
+        sess.DestroySession()
+        GlbFunc.ClosePorts [| sp; cp; |]
+
+    [<Fact>]
+    member _.PushReceivedPDU_012_Immidiate_ScsiCommand_009() =
+        // Create session object
+        let sess, pc, _, _, _, sp, cp =
+            Session_Test.CreateDefaultSessionObject
+                Session_Test.defaultSessionParam
+                Session_Test.defaultConnectionParam
+                ( cid_me.fromPrim 1us )
+                ( cmdsn_me.zero )
+                ( itt_me.fromPrim 0u )
+                true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
+
+        // SCSI Command PDU
+        let cmdpdu = {
+            Session_Test.defaultScsiCommandPDUValues with
+                I = true;
+                F = false;
+                W = true;
+                R = false;
+                InitiatorTaskTag = itt_me.fromPrim 1u;
+                ExpectedDataTransferLength = 10u;
+                DataSegment = PooledBuffer.Empty;
+        }
+
+        // Receive SCSI Comment PDU.
+        sess.PushReceivedPDU conn1.Value cmdpdu
+
+        // SCSI Data-Out PDU ( Out of range )
+        let datapdu = {
+            Session_Test.defaultScsiDataOutPDUValues with
+                F = false;
+                InitiatorTaskTag = itt_me.fromPrim 1u;
+                TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
+                DataSN = datasn_me.zero;
+                BufferOffset = 11u;
+                DataSegment = PooledBuffer.Empty;
+        }
+
+        // Receive SCSI Data-Out PDU
+        sess.PushReceivedPDU conn1.Value datapdu
+
+        // Receive Reject response PDU in the initiator
+        let pdu3 =
+            PDU.Receive( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, cp, Standpoint.Initiator )
+            |> Functions.RunTaskSynchronously
+        Assert.True( ( pdu3.Opcode = OpcodeCd.REJECT ) )
+        let rejectpdu = pdu3 :?> RejectPDU
+        Assert.True(( rejectpdu.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
+
+        sess.DestroySession()
+        GlbFunc.ClosePorts [| sp; cp; |]
+
+    [<Fact>]
+    member _.PushReceivedPDU_012_Immidiate_ScsiCommand_010() =
+        // Create session object
+        let sess, pc, _, _, _, sp, cp =
+            Session_Test.CreateDefaultSessionObject
+                Session_Test.defaultSessionParam
+                Session_Test.defaultConnectionParam
+                ( cid_me.fromPrim 1us )
+                ( cmdsn_me.zero )
+                ( itt_me.fromPrim 0u )
+                true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
+
+        // SCSI Command PDU
+        let cmdpdu = {
+            Session_Test.defaultScsiCommandPDUValues with
+                I = true;
+                F = false;
+                W = true;
+                R = false;
+                InitiatorTaskTag = itt_me.fromPrim 1u;
+                ExpectedDataTransferLength = 10u;
+                DataSegment = PooledBuffer.Empty;
+        }
+
+        // Receive SCSI Comment PDU.
+        sess.PushReceivedPDU conn1.Value cmdpdu
+
+        // SCSI Data-Out PDU ( Out of range )
+        let datapdu = {
+            Session_Test.defaultScsiDataOutPDUValues with
+                F = false;
+                InitiatorTaskTag = itt_me.fromPrim 1u;
+                TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
+                DataSN = datasn_me.zero;
+                BufferOffset = 0u;
+                DataSegment = PooledBuffer.Rent 11; // too long
+        }
+
+        // Receive SCSI Data-Out PDU
+        sess.PushReceivedPDU conn1.Value datapdu
+
+        // Receive Reject response PDU in the initiator
+        let pdu3 =
+            PDU.Receive( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, cp, Standpoint.Initiator )
+            |> Functions.RunTaskSynchronously
+        Assert.True( ( pdu3.Opcode = OpcodeCd.REJECT ) )
+        let rejectpdu = pdu3 :?> RejectPDU
+        Assert.True(( rejectpdu.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
+
+        sess.DestroySession()
+        GlbFunc.ClosePorts [| sp; cp; |]
+
+    [<Fact>]
     member _.PushReceivedPDU_013_Immidiate_TaskManagement_001() =
         // Create session object
         let sess, pc, _, _, luStub, sp, cp =
