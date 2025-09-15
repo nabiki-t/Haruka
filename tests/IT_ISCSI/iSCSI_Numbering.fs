@@ -142,6 +142,16 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             0x00uy; 0x00uy;
         |]
 
+    let CloseSession ( r : iSCSI_Initiator ) ( cid : CID_T ) =
+        task {
+            // logout
+            let! itt, _ = r.SendLogoutRequestPDU cid false LogoutReqReasonCd.CLOSE_SESS cid
+            let! rpdu5 = r.ReceiveSpecific<LogoutResponsePDU> cid
+            Assert.True(( rpdu5.InitiatorTaskTag = itt ))
+            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+        }
+
+
     // default session parameters
     let m_defaultSessParam = {
         InitiatorName = "iqn.2020-05.example.com:initiator";
@@ -194,9 +204,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 ()
 
             // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+            do! CloseSession r1 g_CID0
         }
 
     // The target discards the PDU and retransmits it.
@@ -230,10 +238,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
             sendData.Return()
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+            do! CloseSession r1 g_CID0
         }
 
     // Retransmission of PDUs with the same CmdSN. Nop-Out
@@ -313,10 +318,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( pdu5_2.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
             Assert.True(( pdu5_2.ExpCmdSN = cmdsn_me.fromPrim 5u ))
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+            do! CloseSession r1 g_CID0
         }
 
     // Send until CmdSN reaches MaxCmdSN.
@@ -347,7 +349,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Send Data-Out PDUs and receive SCSI Response PDUs
             let sendData = PooledBuffer.RentAndInit( int m_MediaBlockSize )
             for i = 0 to pduCount - 1 do
-                let! _ = r1.SendSCSIDataOutPDU g_CID0 true vitt.[i] g_LUN1 g_DefTTT datasn_me.zero 0u sendData
+                do! r1.SendSCSIDataOutPDU g_CID0 true vitt.[i] g_LUN1 g_DefTTT datasn_me.zero 0u sendData
                 let! _ = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
                 ()
 
@@ -356,10 +358,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu2.MaxCmdSN = cmdsn_me.incr ( Constants.BDLU_MAX_TASKSET_SIZE + 1u ) wcmdsn ))
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+            do! CloseSession r1 g_CID0
         }
 
     // Send CmdSN over MaxCmdSN.
@@ -392,7 +391,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Send Data-Out PDUs and receive SCSI Response PDUs
             let sendData = PooledBuffer.RentAndInit( int m_MediaBlockSize )
             for i = 0 to pduCount - 1 do
-                let! _ = r1.SendSCSIDataOutPDU g_CID0 true vitt.[i] g_LUN1 g_DefTTT datasn_me.zero 0u sendData
+                do! r1.SendSCSIDataOutPDU g_CID0 true vitt.[i] g_LUN1 g_DefTTT datasn_me.zero 0u sendData
                 let! _ = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
                 ()
 
@@ -401,10 +400,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu2.MaxCmdSN = cmdsn_me.incr ( Constants.BDLU_MAX_TASKSET_SIZE + 1u ) wcmdsn ))
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+            do! CloseSession r1 g_CID0
         }
 
     [<Fact>]
@@ -442,10 +438,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( cmdsn5 = cmdsn_me.fromPrim 1u ))
             Assert.True(( pdu5.ExpCmdSN = cmdsn_me.fromPrim 2u ))
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+            do! CloseSession r1 g_CID0
         }
 
     // Send CmdSN in reverse order
@@ -492,10 +485,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // skip CmdSN=2
             r1.SetNextCmdSN ( cmdsn_me.fromPrim 3u )
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+            do! CloseSession r1 g_CID0
         }
 
     // Multi sessions
@@ -535,14 +525,8 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _ = r2.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn2_2 = cmdsn_me.fromPrim 2u ))
 
-            // logout at session 1
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-
-            // logout at session 2
-            let! _ = r2.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r2.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+            do! CloseSession r1 g_CID0  // logout at session 1
+            do! CloseSession r2 g_CID0  // logout at session 2
         }
 
     // Multi connections
@@ -582,10 +566,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( cmdsn2_2 = cmdsn_me.fromPrim 5u ))
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+            do! CloseSession r1 g_CID0
         }
 
     // Reconnecting a connection. session persists.
@@ -624,10 +605,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( cmdsn2_2 = cmdsn_me.fromPrim 4u ))
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_SESS g_CID1
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID1
-            ()
+            do! CloseSession r1 g_CID1
         }
         
     // Reconnecting a connection. session persists.
@@ -663,10 +641,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( cmdsn2_2 = cmdsn_me.fromPrim 3u ))
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_SESS g_CID1
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID1
-            ()
+            do! CloseSession r1 g_CID1
         }
 
     // Reconnecting a connection. session persists.
@@ -700,10 +675,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( cmdsn2_2 = cmdsn_me.fromPrim 3u ))
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_SESS g_CID1
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID1
-            ()
+            do! CloseSession r1 g_CID1
         }
 
     // Reconnecting a connection. session does not persist.
@@ -734,10 +706,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _ = r2.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_2 = cmdsn_me.zero ))
 
-            // logout
-            let! _ = r2.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r2.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+            do! CloseSession r2 g_CID0
         }
 
     // Reconnecting a connection. session does not persist.
@@ -766,10 +735,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _ = r2.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_2 = cmdsn_me.zero ))
 
-            // logout
-            let! _ = r2.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r2.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+            do! CloseSession r2 g_CID0
         }
 
     // Reconnecting a connection. session persists.
@@ -800,10 +766,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! wpdu = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_2 = cmdsn_me.fromPrim 2u ))
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_SESS g_CID1
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID1
-            ()
+            do! CloseSession r1 g_CID1
         }
         
     // Reconnecting a connection. session persists.
@@ -832,10 +795,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! wpdu = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_2 = cmdsn_me.fromPrim 2u ))
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_SESS g_CID1
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID1
-            ()
+            do! CloseSession r1 g_CID1
         }
 
     // Sequence of non-immediate commands.
@@ -851,10 +811,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 let! pdu = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.True(( pdu.StatSN = sendExpStatSN ))
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+            do! CloseSession r1 g_CID0
         }
 
     // the next command is sent without incrementing ExpStatSN.
@@ -905,10 +862,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // rewind ExpStatSN
             r1.Connection( g_CID0 ).SkipExtStatSN( statsn_me.fromPrim 1u )
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+            do! CloseSession r1 g_CID0
         }
 
     // Add ExpStatSN before receiving status.
@@ -942,10 +896,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( pdu2.StatSN = statsn_me.decr 1u sendExpStatSN2 ))
             Assert.True(( pdu2.InitiatorTaskTag = itt2 ))
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+            do! CloseSession r1 g_CID0
         }
 
     // Resend request for received status.
@@ -1000,10 +951,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( pdu3_2.StatSN = statsn_me.next sendExpStatSN2 ))
             Assert.True(( pdu3_2.InitiatorTaskTag = itt3 ))
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+            do! CloseSession r1 g_CID0
         }
 
     // Sequence of non-immediate commands.
@@ -1039,10 +987,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! pdu4 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu4.StatSN = sendExpStatSN4 ))
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! rpdu5 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+            do! CloseSession r1 g_CID0
         }
 
     // Multi connections
@@ -1092,10 +1037,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! pdu1_3 = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( pdu1_3.StatSN = sendExpStatSN1_3 ))
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+            do! CloseSession r1 g_CID0
         }
 
     // Too little ExpStatSN
@@ -1210,10 +1152,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Reconnecting the connection resets StatSN back to the beginning.
             Assert.True(( statsn_me.lessThan sendExpStatSN2 sendExpStatSN1 ))
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+            do! CloseSession r1 g_CID0
         }
 
     // Reconnecting a connection. Reconnect after drop the connection.
@@ -1250,10 +1189,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Reconnecting the connection resets StatSN back to the beginning.
             Assert.True(( statsn_me.lessThan sendExpStatSN2 sendExpStatSN1 ))
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+            do! CloseSession r1 g_CID0
         }
 
     // Reconnecting a connection.  Reconnect with implicit logout. Initial ExpStatSN=0.
@@ -1292,10 +1228,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Reconnecting the connection resets StatSN back to the beginning.
             Assert.True(( statsn_me.lessThan sendExpStatSN2 sendExpStatSN1 ))
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+            do! CloseSession r1 g_CID0
         }
 
     // Reconnecting a connection.  Reconnect with implicit logout.
@@ -1329,10 +1262,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // StatSN value is not reset
             Assert.True(( statsn_me.lessThan sendExpStatSN1 sendExpStatSN2 ))
 
-            // logout
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+            do! CloseSession r1 g_CID0
         }
 
     // Reconnecting a connection.  Reconnect with implicit logout. Fake ExpStatSN.
@@ -1365,9 +1295,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 ()
 
             // logout. Connection 1 is still alive.
-            let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_SESS g_CID1
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID1
-            ()
+            do! CloseSession r1 g_CID1
         }
 
     [<Fact>]
@@ -1400,9 +1328,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( pdu1.Status = ScsiCmdStatCd.GOOD ))
 
             // logout.
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            sendData.Return()
+            do! CloseSession r1 g_CID0
         }
 
     [<Fact>]
@@ -1419,9 +1345,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( rpdu3.Status = ScsiCmdStatCd.GOOD ))
 
             // logout.
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+            do! CloseSession r1 g_CID0
         }
 
     [<Fact>]
@@ -1452,9 +1376,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( rpdu3.Status = ScsiCmdStatCd.GOOD ))
 
             // logout.
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+            do! CloseSession r1 g_CID0
         }
 
     [<Fact>]
@@ -1485,10 +1407,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! rpdu3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
             Assert.True(( rpdu3.Status = ScsiCmdStatCd.GOOD ))
 
-            // logout.
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+            do! CloseSession r1 g_CID0
         }
 
     [<Fact>]
@@ -1557,10 +1476,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! rpdu3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
             Assert.True(( rpdu3.Status = ScsiCmdStatCd.GOOD ))
 
-            // logout.
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+            do! CloseSession r1 g_CID0
         }
 
     [<Fact>]
@@ -1612,10 +1528,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! rpdu3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
             Assert.True(( rpdu3.Status = ScsiCmdStatCd.GOOD ))
 
-            // logout.
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+            do! CloseSession r1 g_CID0
         }
 
     // Retransmit data with SNACK request
@@ -1682,10 +1595,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             r1.Connection( g_CID0 ).SkipExtStatSN ( statsn_me.fromPrim 1u )
 
-            // logout.
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+            do! CloseSession r1 g_CID0
         }
 
     // Retransmitting the data, which involves re-segmenting the data
@@ -1728,7 +1638,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Send Data-Out PDU 1
             let writeData1 = PooledBuffer.Rent( writeData.[ 0 .. 2999 ] )
-            let! _ = r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2t1.TargetTransferTag ( datasn_me.fromPrim 0u ) r2t1.BufferOffset writeData1
+            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2t1.TargetTransferTag ( datasn_me.fromPrim 0u ) r2t1.BufferOffset writeData1
             writeData1.Return()
 
             // Receive R2T 2
@@ -1738,7 +1648,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Send Data-Out PDU 2
             let writeData2 = PooledBuffer.Rent( writeData.[ 3000 .. 5999 ] )
-            let! _ = r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2t2.TargetTransferTag ( datasn_me.fromPrim 0u ) r2t2.BufferOffset writeData2
+            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2t2.TargetTransferTag ( datasn_me.fromPrim 0u ) r2t2.BufferOffset writeData2
             writeData2.Return()
 
             // Receive R2T 3
@@ -1748,7 +1658,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Send Data-Out PDU 2
             let writeData3 = PooledBuffer.Rent( writeData.[ 6000 .. 8191 ] )
-            let! _ = r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2t3.TargetTransferTag ( datasn_me.fromPrim 0u ) r2t3.BufferOffset writeData3
+            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2t3.TargetTransferTag ( datasn_me.fromPrim 0u ) r2t3.BufferOffset writeData3
             writeData3.Return()
 
             // Receive SCSI Response PDU
@@ -1839,11 +1749,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( rpdu6.SNACKTag = snacktag_me.fromPrim 0x12345678u ))
 
             r1.Connection( g_CID0 ).SkipExtStatSN ( statsn_me.fromPrim 1u )
-
-            // logout.
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+            do! CloseSession r1 g_CID0
         }
 
     // Retransmitting the data, which involves re-segmenting the data
@@ -1886,7 +1792,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Send Data-Out PDU 1
             let writeData1 = PooledBuffer.Rent( writeData.[ 0 .. 2999 ] )
-            let! _ = r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2t1.TargetTransferTag ( datasn_me.fromPrim 0u ) r2t1.BufferOffset writeData1
+            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2t1.TargetTransferTag ( datasn_me.fromPrim 0u ) r2t1.BufferOffset writeData1
             writeData1.Return()
 
             // Receive R2T 2
@@ -1896,7 +1802,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Send Data-Out PDU 2
             let writeData2 = PooledBuffer.Rent( writeData.[ 3000 .. 5999 ] )
-            let! _ = r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2t2.TargetTransferTag ( datasn_me.fromPrim 0u ) r2t2.BufferOffset writeData2
+            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2t2.TargetTransferTag ( datasn_me.fromPrim 0u ) r2t2.BufferOffset writeData2
             writeData2.Return()
 
             // Receive R2T 3
@@ -1906,7 +1812,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Send Data-Out PDU 2
             let writeData3 = PooledBuffer.Rent( writeData.[ 6000 .. 8191 ] )
-            let! _ = r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2t3.TargetTransferTag ( datasn_me.fromPrim 0u ) r2t3.BufferOffset writeData3
+            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2t3.TargetTransferTag ( datasn_me.fromPrim 0u ) r2t3.BufferOffset writeData3
             writeData3.Return()
 
             // Receive SCSI Response PDU
@@ -1993,9 +1899,390 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( rpdu6.SNACKTag = snacktag_me.fromPrim 0x12345678u ))
 
             r1.Connection( g_CID0 ).SkipExtStatSN ( statsn_me.fromPrim 1u )
+            do! CloseSession r1 g_CID0
+        }
 
-            // logout.
-            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! _ = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            ()
+    [<Fact>]
+    member _.R2T_NoUnsolicitedData_NoWrittenData_001() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with MaxRecvDataSegmentLength_I = 16384u }
+            Assert.True(( r1.Params.MaxBurstLength = 16384u ))
+            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 16384u ))
+            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
+
+            let accessLength = 4096u
+            let accessBlockCount = accessLength / m_MediaBlockSize
+
+            // read media data
+            let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
+            let! readITT1, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
+            let! readPDU1_1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+            Assert.True(( readPDU1_1.F ))
+            Assert.True(( readPDU1_1.InitiatorTaskTag = readITT1 ))
+            let! readPDU1_2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( readPDU1_2.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+            Assert.True(( readPDU1_2.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( readPDU1_2.InitiatorTaskTag = readITT1 ))
+
+            // Send SCSI write
+            let writeCDB = scsiWrite10CDB 0u 0us
+            let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 0u writeCDB PooledBuffer.Empty 0u
+
+            // Receive SCSI Response PDU
+            let! writeRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.False(( writeRespPDU.o ))
+            Assert.False(( writeRespPDU.u ))
+            Assert.False(( writeRespPDU.O ))
+            Assert.False(( writeRespPDU.U ))
+            Assert.True(( writeRespPDU.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+            Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( writeRespPDU.InitiatorTaskTag = writeITT ))
+            Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
+            Assert.True(( writeRespPDU.ResidualCount = 0u ))
+            Assert.True(( writeRespPDU.SenseLength = 0us ))
+            Assert.True(( writeRespPDU.SenseData.Count = 0 ))
+            Assert.True(( writeRespPDU.ResponseData.Count = 0 ))
+
+            // read media data
+            let! readITT2, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
+            let! readPDU2_1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+            Assert.True(( readPDU2_1.F ))
+            Assert.True(( readPDU2_1.InitiatorTaskTag = readITT2 ))
+            let! readPDU2_2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( readPDU2_2.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+            Assert.True(( readPDU2_2.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( readPDU2_2.InitiatorTaskTag = readITT2 ))
+
+            // check no data changed
+            Assert.True(( readPDU1_1.DataSegment.ToArray() = readPDU2_1.DataSegment.ToArray() ))
+
+            do! CloseSession r1 g_CID0
+        }
+
+    [<Fact>]
+    member _.R2T_NoUnsolicitedData_1R2T_1DataOutPDU_001() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with MaxRecvDataSegmentLength_I = 16384u }
+            Assert.True(( r1.Params.MaxBurstLength = 16384u ))
+            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 16384u ))
+            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
+
+            let accessLength = 4096u
+            let accessBlockCount = accessLength / m_MediaBlockSize
+
+            // Send SCSI write
+            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
+
+            // Receive R2T
+            let! r2tPDU = r1.ReceiveSpecific<R2TPDU> g_CID0
+            Assert.True(( r2tPDU.InitiatorTaskTag = writeITT ))
+            Assert.True(( r2tPDU.R2TSN = datasn_me.fromPrim 0u ))
+            Assert.True(( r2tPDU.BufferOffset = 0u ))
+            Assert.True(( r2tPDU.DesiredDataTransferLength = accessLength ))
+
+            // Send data-Out PDU ( write random data )
+            let writtenData = PooledBuffer.Rent( int accessLength )
+            Random.Shared.NextBytes( writtenData.Array )
+            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 0u ) 0u writtenData
+
+            // Receive SCSI Response PDU
+            let! writeRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( writeRespPDU.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+            Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( writeRespPDU.InitiatorTaskTag = writeITT ))
+            Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
+            Assert.True(( writeRespPDU.ResidualCount = 0u ))
+
+            // read media data
+            let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
+            let! _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
+            let! readPDU1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+            let! readPDU2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( readPDU2.Status = ScsiCmdStatCd.GOOD ))
+
+            // Verify that the sent data was written correctly.
+            Assert.True(( writtenData.ArraySegment.ToArray() = readPDU1.DataSegment.ToArray() ))
+
+            do! CloseSession r1 g_CID0
+            writtenData.Return()
+        }
+
+    // Data-Out PDUs are sent in order
+    [<Fact>]
+    member _.R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_001() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with MaxRecvDataSegmentLength_I = 16384u }
+            Assert.True(( r1.Params.MaxBurstLength = 16384u ))
+            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 16384u ))
+            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
+
+            let accessLength = 4096u
+            let accessBlockCount = accessLength / m_MediaBlockSize
+
+            // Send SCSI write
+            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
+
+            // Receive R2T
+            let! r2tPDU = r1.ReceiveSpecific<R2TPDU> g_CID0
+            Assert.True(( r2tPDU.InitiatorTaskTag = writeITT ))
+            Assert.True(( r2tPDU.R2TSN = datasn_me.fromPrim 0u ))
+            Assert.True(( r2tPDU.BufferOffset = 0u ))
+            Assert.True(( r2tPDU.DesiredDataTransferLength = accessLength ))
+
+            let writtenData = Array.zeroCreate( int accessLength )
+            Random.Shared.NextBytes( writtenData )
+
+            // Send data-Out PDU 1
+            let writtenData1 = PooledBuffer.Rent writtenData.[ 0 .. 1023 ]
+            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 0u ) 0u writtenData1
+            writtenData1.Return()
+
+            // Send data-Out PDU 2
+            let writtenData2 = PooledBuffer.Rent writtenData.[ 1024 .. 2047 ]
+            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 1u ) 1024u writtenData2
+            writtenData2.Return()
+
+            // Send data-Out PDU 3
+            let writtenData3 = PooledBuffer.Rent writtenData.[ 2048 .. 3071 ]
+            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 2u ) 2048u writtenData3
+            writtenData3.Return()
+
+            // Send data-Out PDU 4
+            let writtenData4 = PooledBuffer.Rent writtenData.[ 3072 .. 4095 ]
+            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 3u ) 3072u writtenData4
+            writtenData4.Return()
+
+            // Receive SCSI Response PDU
+            let! writeRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( writeRespPDU.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+            Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( writeRespPDU.InitiatorTaskTag = writeITT ))
+            Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
+            Assert.True(( writeRespPDU.ResidualCount = 0u ))
+
+            // read media data
+            let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
+            let! _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
+            let! readPDU1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+            let! readPDU2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( readPDU2.Status = ScsiCmdStatCd.GOOD ))
+
+            // Verify that the sent data was written correctly.
+            Assert.True(( writtenData = readPDU1.DataSegment.ToArray() ))
+
+            do! CloseSession r1 g_CID0
+        }
+
+    // Data-Out PDUs are sent out of order
+    [<Fact>]
+    member _.R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_002() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with MaxRecvDataSegmentLength_I = 16384u }
+            Assert.True(( r1.Params.MaxBurstLength = 16384u ))
+            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 16384u ))
+            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
+
+            let accessLength = 4096u
+            let accessBlockCount = accessLength / m_MediaBlockSize
+
+            // Send SCSI write
+            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
+
+            // Receive R2T
+            let! r2tPDU = r1.ReceiveSpecific<R2TPDU> g_CID0
+            Assert.True(( r2tPDU.InitiatorTaskTag = writeITT ))
+            Assert.True(( r2tPDU.R2TSN = datasn_me.fromPrim 0u ))
+            Assert.True(( r2tPDU.BufferOffset = 0u ))
+            Assert.True(( r2tPDU.DesiredDataTransferLength = accessLength ))
+
+            let writtenData = Array.zeroCreate( int accessLength )
+            Random.Shared.NextBytes( writtenData )
+
+            // Send data-Out PDU 2
+            let writtenData2 = PooledBuffer.Rent writtenData.[ 2048 .. 3071 ]
+            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 1u ) 2048u writtenData2
+            writtenData2.Return()
+
+            // Send data-Out PDU 1
+            let writtenData1 = PooledBuffer.Rent writtenData.[ 0 .. 1023 ]
+            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 0u ) 0u writtenData1
+            writtenData1.Return()
+
+            // Send data-Out PDU 4
+            let writtenData4 = PooledBuffer.Rent writtenData.[ 3072 .. 4095 ]
+            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 3u ) 3072u writtenData4
+            writtenData4.Return()
+
+            // Send data-Out PDU 3
+            let writtenData3 = PooledBuffer.Rent writtenData.[ 1024 .. 2047 ]
+            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 2u ) 1024u writtenData3
+            writtenData3.Return()
+
+            // Receive SCSI Response PDU
+            let! writeRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( writeRespPDU.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))    // Haruka does not check the values ​​of DataPDUInOrder and DataSequenceInOrder.
+            Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( writeRespPDU.InitiatorTaskTag = writeITT ))
+            Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
+            Assert.True(( writeRespPDU.ResidualCount = 0u ))
+
+            // read media data
+            let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
+            let! _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
+            let! readPDU1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+            let! readPDU2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( readPDU2.Status = ScsiCmdStatCd.GOOD ))
+
+            // Verify that the sent data was written correctly.
+            Assert.True(( writtenData = readPDU1.DataSegment.ToArray() ))
+
+            do! CloseSession r1 g_CID0
+        }
+
+    // There is an overlap in the sending data.
+    [<Fact>]
+    member _.R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_003() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with MaxRecvDataSegmentLength_I = 16384u }
+            Assert.True(( r1.Params.MaxBurstLength = 16384u ))
+            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 16384u ))
+            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
+
+            let accessLength = 4096u
+            let accessBlockCount = accessLength / m_MediaBlockSize
+
+            // Send SCSI write
+            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
+
+            // Receive R2T
+            let! r2tPDU = r1.ReceiveSpecific<R2TPDU> g_CID0
+            Assert.True(( r2tPDU.InitiatorTaskTag = writeITT ))
+            Assert.True(( r2tPDU.R2TSN = datasn_me.fromPrim 0u ))
+            Assert.True(( r2tPDU.BufferOffset = 0u ))
+            Assert.True(( r2tPDU.DesiredDataTransferLength = accessLength ))
+
+            let writtenData = Array.zeroCreate( int accessLength )
+            Random.Shared.NextBytes( writtenData )
+
+            // Send data-Out PDU 1
+            let writtenData1 = PooledBuffer.Rent writtenData.[ 0 .. 2047 ]
+            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 0u ) 0u writtenData1
+            writtenData1.Return()
+
+            // Send data-Out PDU 2
+            let writtenData2 = PooledBuffer.Rent writtenData.[ 1024 .. 3071 ]
+            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 1u ) 1024u writtenData2
+            writtenData2.Return()
+
+            // Send data-Out PDU 3
+            let writtenData3 = PooledBuffer.Rent writtenData.[ 2048 .. 4095 ]
+            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 2u ) 2048u writtenData3
+            writtenData3.Return()
+
+            // Receive SCSI Response PDU
+            let! writeRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( writeRespPDU.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+            Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( writeRespPDU.InitiatorTaskTag = writeITT ))
+            Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
+            Assert.True(( writeRespPDU.O ))
+            Assert.True(( writeRespPDU.ResidualCount = 2048u )) // Haruka considers this to be an overflow because the initiator sent too many data.
+
+            // read media data
+            let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
+            let! _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
+            let! readPDU1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+            let! readPDU2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( readPDU2.Status = ScsiCmdStatCd.GOOD ))
+
+            // Verify that the sent data was written correctly.
+            Assert.True(( writtenData = readPDU1.DataSegment.ToArray() ))
+
+            do! CloseSession r1 g_CID0
+        }
+
+    // Contains a 0-byte Data-Out PDU
+    [<Fact>]
+    member _.R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_004() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with MaxRecvDataSegmentLength_I = 16384u }
+            Assert.True(( r1.Params.MaxBurstLength = 16384u ))
+            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 16384u ))
+            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
+
+            let accessLength = 4096u
+            let accessBlockCount = accessLength / m_MediaBlockSize
+
+            // Send SCSI write
+            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
+
+            // Receive R2T
+            let! r2tPDU = r1.ReceiveSpecific<R2TPDU> g_CID0
+            Assert.True(( r2tPDU.InitiatorTaskTag = writeITT ))
+            Assert.True(( r2tPDU.R2TSN = datasn_me.fromPrim 0u ))
+            Assert.True(( r2tPDU.BufferOffset = 0u ))
+            Assert.True(( r2tPDU.DesiredDataTransferLength = accessLength ))
+
+            let writtenData = Array.zeroCreate( int accessLength )
+            Random.Shared.NextBytes( writtenData )
+
+            // Send data-Out PDU 1 ( 0 byte )
+            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 0u ) 0u PooledBuffer.Empty
+
+            // Send data-Out PDU 2
+            let writtenData1 = PooledBuffer.Rent writtenData.[ 0 .. 1023 ]
+            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 1u ) 0u writtenData1
+            writtenData1.Return()
+
+            // Send data-Out PDU 3 ( 0 byte )
+            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 2u ) 1024u PooledBuffer.Empty
+
+            // Send data-Out PDU 4
+            let writtenData2 = PooledBuffer.Rent writtenData.[ 1024 .. 2047 ]
+            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 3u ) 1024u writtenData2
+            writtenData2.Return()
+
+            // Send data-Out PDU 5 ( 0 byte )
+            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 4u ) 2048u PooledBuffer.Empty
+
+            // Send data-Out PDU 6
+            let writtenData3 = PooledBuffer.Rent writtenData.[ 2048 .. 3071 ]
+            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 5u ) 2048u writtenData3
+            writtenData3.Return()
+
+            // Send data-Out PDU 7 ( 0 byte )
+            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 6u ) 3072u PooledBuffer.Empty
+
+            // Send data-Out PDU 8
+            let writtenData4 = PooledBuffer.Rent writtenData.[ 3072 .. 4095 ]
+            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 7u ) 3072u writtenData4
+            writtenData4.Return()
+
+            // Send data-Out PDU 9 ( 0 byte )
+            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 8u ) 4096u PooledBuffer.Empty
+
+            // Receive SCSI Response PDU
+            let! writeRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( writeRespPDU.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+            Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( writeRespPDU.InitiatorTaskTag = writeITT ))
+            Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
+            Assert.True(( writeRespPDU.ResidualCount = 0u ))
+
+            // read media data
+            let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
+            let! _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
+            let! readPDU1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+            let! readPDU2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( readPDU2.Status = ScsiCmdStatCd.GOOD ))
+
+            // Verify that the sent data was written correctly.
+            Assert.True(( writtenData = readPDU1.DataSegment.ToArray() ))
+
+            do! CloseSession r1 g_CID0
         }
