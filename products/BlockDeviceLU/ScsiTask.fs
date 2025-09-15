@@ -1150,10 +1150,6 @@ type ScsiTask
         result.Array.[1] <- 0x00uy; // Reserved
         result.Array.[2] <- 0x00uy; // Reserved
         result.Array.[3] <- 0x00uy; // Reserved
-(*        let result = [|
-            0xF8uy; // ATS(1), ATSS(1), CACAS(1), CTSS(1), LURS(1), QTS(0), TRS(0), WAKES(0)
-            0x00uy; 0x00uy; 0x00uy; // Reserved
-        |]*)
 
         let init, current = this.SetTerminateFlag 1
         if init = 0 && current = 1 then
@@ -1424,13 +1420,7 @@ type ScsiTask
                     Functions.UInt32ToNetworkBytes r.Array 0 0xFFFFFFFFu
                 Functions.UInt32ToNetworkBytes r.Array 4 ( uint32 Constants.MEDIA_BLOCK_SIZE )
                 r
-(*                [|
-                    if blockCount < 0xFFFFFFFFUL then
-                        yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 blockCount )
-                    else
-                        yield! Functions.UInt32ToNetworkBytes_NewVec 0xFFFFFFFFu
-                    yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )
-                |]*)
+
             else
                 //  READ CAPACITY(16)
                 let r = PooledBuffer.Rent 32
@@ -1440,13 +1430,6 @@ type ScsiTask
                 for i = 13 to 31 do
                     r.Array.[i] <- 0x00uy;
                 r
-(*                [|
-                    yield! Functions.UInt64ToNetworkBytes_NewVec blockCount
-                    yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )
-                    yield 0x00uy; // RTO_EN, PROT_EN
-                    for _ = 13 to 31 do
-                        yield 0x00uy;
-                |]*)
 
         let init, current = this.SetTerminateFlag 1
         if init = 0 && current = 1 then
