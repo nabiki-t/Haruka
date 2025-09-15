@@ -291,6 +291,12 @@ type IscsiTaskScsiCommand
         if cmd.W then
             let v =
                 dops
+                |> List.filter ( fun i -> ( PooledBuffer.ulength i.DataSegment ) > 0u )     // Empty Data-Out PDU is ignored.
+                |> List.filter ( fun i ->
+                        // Ignore Data-Out PDU outside the range.
+                        i.BufferOffset <= cmd.ExpectedDataTransferLength &&
+                        ( PooledBuffer.ulength i.DataSegment ) + i.BufferOffset <= cmd.ExpectedDataTransferLength
+                    )
                 |> List.sortBy ( fun i -> i.BufferOffset )
                 |> loop id ( cmd.DataSegment |> PooledBuffer.ulength ) nextR2TSN
                 |> List.toArray
