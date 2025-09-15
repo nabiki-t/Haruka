@@ -184,14 +184,22 @@ type IscsiTaskScsiCommand
                     [||]
                 else
                     let startPos =
-                        dops
-                        |> List.fold ( fun m itr ->
-                            let itr_endpos = itr.BufferOffset + ( itr.DataSegment |> PooledBuffer.ulength )
-                            if itr.TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu && m < itr_endpos then
-                                itr_endpos
-                            else
-                                m
-                           ) ( cmd.DataSegment |> PooledBuffer.ulength )
+                        let wl =
+                            dops
+                            |> List.choose ( fun itr ->
+                                let edtl = cmd.ExpectedDataTransferLength
+                                let dataLen = PooledBuffer.ulength itr.DataSegment
+                                let bufOff = itr.BufferOffset
+                                if dataLen > 0u && dataLen <= edtl && bufOff <= edtl && dataLen + bufOff <= edtl then
+                                    Some( bufOff + dataLen )
+                                else
+                                    None
+                            )
+                        if not wl.IsEmpty then
+                            wl |> List.max
+                        else
+                            0u
+                        |> max ( cmd.DataSegment |> PooledBuffer.ulength )
                     let endPos = cmd.ExpectedDataTransferLength - 1u
                     IscsiTaskScsiCommand.genR2TInfoForGap startPos endPos mbl 0u
                     |> List.toArray
@@ -291,11 +299,11 @@ type IscsiTaskScsiCommand
         if cmd.W then
             let v =
                 dops
-                |> List.filter ( fun i -> ( PooledBuffer.ulength i.DataSegment ) > 0u )     // Empty Data-Out PDU is ignored.
                 |> List.filter ( fun i ->
-                        // Ignore Data-Out PDU outside the range.
-                        i.BufferOffset <= cmd.ExpectedDataTransferLength &&
-                        ( PooledBuffer.ulength i.DataSegment ) + i.BufferOffset <= cmd.ExpectedDataTransferLength
+                        let edtl = cmd.ExpectedDataTransferLength
+                        let dataLen = PooledBuffer.ulength i.DataSegment
+                        let bufOff = i.BufferOffset
+                        dataLen > 0u && dataLen <= edtl && bufOff <= edtl && dataLen + bufOff <= edtl
                     )
                 |> List.sortBy ( fun i -> i.BufferOffset )
                 |> loop id ( cmd.DataSegment |> PooledBuffer.ulength ) nextR2TSN

@@ -458,6 +458,54 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( 1u = nsn ))
 
     [<Fact>]
+    member _.generateR2TInfo_011() =
+        let cmd = {
+            IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
+                ExpectedDataTransferLength = 30u;
+                DataSegment = PooledBuffer.RentAndInit 23;
+        }
+        let data = [
+            {
+                IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with  // empty Data-Out PDU
+                    BufferOffset = 5u;
+                    DataSegment = PooledBuffer.Empty;
+                    TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
+            };
+        ]
+        let r2t, nsn = PrivateCaller.Invoke< IscsiTaskScsiCommand >( "generateR2TInfo", cmd, data, 10u ) :?> ( r2tinfo[] * uint32 )
+        Assert.True(( 1 = r2t.Length ))
+        Assert.True(( 1u = nsn ))
+        Assert.True(( 23u = r2t.[0].offset ))
+        Assert.True(( 7u = r2t.[0].length ))
+
+    [<Fact>]
+    member _.generateR2TInfo_012() =
+        let cmd = {
+            IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
+                ExpectedDataTransferLength = 30u;
+                DataSegment = PooledBuffer.RentAndInit 23;
+        }
+        let data = [
+            {
+                IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with  // Out of range Data-Out PDU
+                    BufferOffset = 30u;
+                    DataSegment = PooledBuffer.Rent 1;
+                    TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
+            };
+            {
+                IscsiTaskScsiCommand_Test.defaultScisDataOutPDUValues with  // Out of range Data-Out PDU
+                    BufferOffset = 32u;
+                    DataSegment = PooledBuffer.Rent 1;
+                    TargetTransferTag = ttt_me.fromPrim 0xFFFFFFFFu;
+            };
+        ]
+        let r2t, nsn = PrivateCaller.Invoke< IscsiTaskScsiCommand >( "generateR2TInfo", cmd, data, 10u ) :?> ( r2tinfo[] * uint32 )
+        Assert.True(( 1 = r2t.Length ))
+        Assert.True(( 1u = nsn ))
+        Assert.True(( 23u = r2t.[0].offset ))
+        Assert.True(( 7u = r2t.[0].length ))
+
+    [<Fact>]
     member _.generateRecoveryR2TInfo_001() =
         let cmd = {
             IscsiTaskScsiCommand_Test.defaultScsiCommandPDUValues with
