@@ -3380,56 +3380,59 @@ type StatusMaster_Test () =
 
                 let linestr = o.ReadLine()
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( linestr )
-                match res1.Response with
-                | TargetDeviceCtrlRes.T_Response.U_ConnectionList( x ) ->
-                    let wl = x.Connection |> List.sortBy ( fun itr -> itr.ConnectionID )
-                    Assert.True(( wl.Length = 5 ))
+                let wConList =
+                    match res1.Response with
+                    | TargetDeviceCtrlRes.T_Response.U_ConnectionList( x ) ->
+                        x.Connection
+                    | _ ->
+                        Assert.Fail __LINE__
+                        []
 
-                    Assert.True(( wl.[0].TSIH = tsih_me.fromPrim 1us ))
-                    Assert.True(( wl.[0].ConnectionID = cid_me.fromPrim 0us ))
-                    Assert.True(( wl.[0].ConnectionCount = concnt_me.fromPrim 0 ))
-                    Assert.True(( wl.[0].ReceiveBytesCount.Length = 0 ))
-                    Assert.True(( wl.[0].SentBytesCount.Length = 0 ))
-                    Assert.True(( wl.[0].EstablishTime = DateTime( 0L, DateTimeKind.Utc ) ))
+                let wl = wConList |> List.sortBy ( fun itr -> itr.ConnectionID )
+                Assert.True(( wl.Length = 5 ))
 
-                    Assert.True(( wl.[1].TSIH = tsih_me.fromPrim 1us ))
-                    Assert.True(( wl.[1].ConnectionID = cid_me.fromPrim 1us ))
-                    Assert.True(( wl.[1].ConnectionCount = concnt_me.fromPrim 1 ))
-                    Assert.True(( wl.[1].ReceiveBytesCount.Length = 1 ))
-                    Assert.True(( wl.[1].ReceiveBytesCount.[0].Value = 0L ))
-                    Assert.True(( wl.[1].SentBytesCount.Length = 1 ))
-                    Assert.True(( wl.[1].SentBytesCount.[0].Value = 0L ))
-                    Assert.True(( wl.[1].EstablishTime = DateTime( 1L, DateTimeKind.Utc ) ))
+                Assert.True(( wl.[0].TSIH = tsih_me.fromPrim 1us ))
+                Assert.True(( wl.[0].ConnectionID = cid_me.fromPrim 0us ))
+                Assert.True(( wl.[0].ConnectionCount = concnt_me.fromPrim 0 ))
+                Assert.True(( wl.[0].ReceiveBytesCount.Length = 0 ))
+                Assert.True(( wl.[0].SentBytesCount.Length = 0 ))
+                Assert.True(( wl.[0].EstablishTime = DateTime( 0L, DateTimeKind.Utc ) ))
 
-                    Assert.True(( wl.[2].TSIH = tsih_me.fromPrim 2us ))
-                    Assert.True(( wl.[2].ConnectionID = cid_me.fromPrim 2us ))
-                    Assert.True(( wl.[2].ConnectionCount = concnt_me.fromPrim 0 ))
-                    Assert.True(( wl.[2].ReceiveBytesCount.Length = 1 ))
-                    Assert.True(( wl.[2].ReceiveBytesCount.[0].Value = 1L ))
-                    Assert.True(( wl.[2].SentBytesCount.Length = 1 ))
-                    Assert.True(( wl.[2].SentBytesCount.[0].Value = 1L ))
-                    Assert.True(( wl.[2].EstablishTime = DateTime( 2L, DateTimeKind.Utc ) ))
+                Assert.True(( wl.[1].TSIH = tsih_me.fromPrim 1us ))
+                Assert.True(( wl.[1].ConnectionID = cid_me.fromPrim 1us ))
+                Assert.True(( wl.[1].ConnectionCount = concnt_me.fromPrim 1 ))
+                Assert.True(( wl.[1].ReceiveBytesCount.Length = 1 ))
+                Assert.True(( wl.[1].ReceiveBytesCount.[0].Value = 0L ))
+                Assert.True(( wl.[1].SentBytesCount.Length = 1 ))
+                Assert.True(( wl.[1].SentBytesCount.[0].Value = 0L ))
+                Assert.True(( wl.[1].EstablishTime = DateTime( 1L, DateTimeKind.Utc ) ))
 
-                    Assert.True(( wl.[3].TSIH = tsih_me.fromPrim 2us ))
-                    Assert.True(( wl.[3].ConnectionID = cid_me.fromPrim 3us ))
-                    Assert.True(( wl.[3].ConnectionCount = concnt_me.fromPrim 0 ))
-                    Assert.True(( wl.[3].ReceiveBytesCount.Length = 1 ))
-                    Assert.True(( wl.[3].ReceiveBytesCount.[0].Value = 2L ))
-                    Assert.True(( wl.[3].SentBytesCount.Length = 1 ))
-                    Assert.True(( wl.[3].SentBytesCount.[0].Value = 2L ))
-                    Assert.True(( wl.[3].EstablishTime = DateTime( 3L, DateTimeKind.Utc ) ))
+                Assert.True(( wl.[2].TSIH = tsih_me.fromPrim 2us ))
+                Assert.True(( wl.[2].ConnectionID = cid_me.fromPrim 2us ))
+                Assert.True(( wl.[2].ConnectionCount = concnt_me.fromPrim 0 ))
+                Assert.True(( wl.[2].ReceiveBytesCount.Length = 1 ))
+                Assert.True(( wl.[2].ReceiveBytesCount.[0].Value = 1L ))
+                Assert.True(( wl.[2].SentBytesCount.Length = 1 ))
+                Assert.True(( wl.[2].SentBytesCount.[0].Value = 1L ))
+                Assert.True(( wl.[2].EstablishTime = DateTime( 2L, DateTimeKind.Utc ) ))
 
-                    Assert.True(( wl.[4].TSIH = tsih_me.fromPrim 2us ))
-                    Assert.True(( wl.[4].ConnectionID = cid_me.fromPrim 4us ))
-                    Assert.True(( wl.[4].ConnectionCount = concnt_me.fromPrim 0 ))
-                    Assert.True(( wl.[4].ReceiveBytesCount.Length = 1 ))
-                    Assert.True(( wl.[4].ReceiveBytesCount.[0].Value = 3L ))
-                    Assert.True(( wl.[4].SentBytesCount.Length = 1 ))
-                    Assert.True(( wl.[4].SentBytesCount.[0].Value = 3L ))
-                    Assert.True(( wl.[4].EstablishTime = DateTime( 4L, DateTimeKind.Utc ) ))
+                Assert.True(( wl.[3].TSIH = tsih_me.fromPrim 2us ))
+                Assert.True(( wl.[3].ConnectionID = cid_me.fromPrim 3us ))
+                Assert.True(( wl.[3].ConnectionCount = concnt_me.fromPrim 0 ))
+                Assert.True(( wl.[3].ReceiveBytesCount.Length = 1 ))
+                Assert.True(( wl.[3].ReceiveBytesCount.[0].Value = 2L ))
+                Assert.True(( wl.[3].SentBytesCount.Length = 1 ))
+                Assert.True(( wl.[3].SentBytesCount.[0].Value = 2L ))
+                Assert.True(( wl.[3].EstablishTime = DateTime( 3L, DateTimeKind.Utc ) ))
 
-                | _ ->
-                    Assert.Fail __LINE__
+                Assert.True(( wl.[4].TSIH = tsih_me.fromPrim 2us ))
+                Assert.True(( wl.[4].ConnectionID = cid_me.fromPrim 4us ))
+                Assert.True(( wl.[4].ConnectionCount = concnt_me.fromPrim 0 ))
+                Assert.True(( wl.[4].ReceiveBytesCount.Length = 1 ))
+                Assert.True(( wl.[4].ReceiveBytesCount.[0].Value = 3L ))
+                Assert.True(( wl.[4].SentBytesCount.Length = 1 ))
+                Assert.True(( wl.[4].SentBytesCount.[0].Value = 3L ))
+                Assert.True(( wl.[4].EstablishTime = DateTime( 4L, DateTimeKind.Utc ) ))
 
                 pc.SetField( "m_Sessions", OptimisticLock( ImmutableDictionary< TSIH_T, ISession >.Empty ) )
                 GlbFunc.AllDispose [ rq_out; rq_in; rs_out; rs_in; ]

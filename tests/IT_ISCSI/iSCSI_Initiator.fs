@@ -1361,7 +1361,8 @@ type iSCSI_Initiator(
                     raise <| SessionRecoveryException ( "Unexpected PDU was received.", tsih_me.zero )
 
             // CHAP_A must contain 5us
-            if not <| Array.exists ( (=) 5us ) negoValue2.CHAP_A.GetValue then
+            let r = Array.exists ( (=) 5us ) negoValue2.CHAP_A.GetValue
+            if not r then
                 raise <| SessionRecoveryException ( "CHAP algorithm not supported.", tsih_me.zero )
 
             // Calculate the value of CHAP_R to respond with
@@ -1373,112 +1374,118 @@ type iSCSI_Initiator(
                         yield! negoValue2.CHAP_C.GetValue;
                     |]
 
-            if exp_ConnParams.Target_UserName = "" then
-                // No authentication of the target is required
-                // send CHAP_N, CHAP_R
-                let negoValue3 =
-                    {
-                        TextKeyValues.defaultTextKeyValues with
-                            CHAP_N = TextValueType.Value( exp_ConnParams.Initiator_UserName );
-                            CHAP_R = TextValueType.Value( responseHashValue );
+            let! result =
+                if exp_ConnParams.Target_UserName = "" then
+                    task {
+                        // No authentication of the target is required
+                        // send CHAP_N, CHAP_R
+                        let negoValue3 =
+                            {
+                                TextKeyValues.defaultTextKeyValues with
+                                    CHAP_N = TextValueType.Value( exp_ConnParams.Initiator_UserName );
+                                    CHAP_R = TextValueType.Value( responseHashValue );
+                            }
+                        let negoStat3 =
+                            {
+                                TextKeyValuesStatus.defaultTextKeyValuesStatus with
+                                    NegoStat_CHAP_N = NegoStatusValue.NSG_WaitSend;
+                                    NegoStat_CHAP_R = NegoStatusValue.NSG_WaitSend;
+                            }
+
+                        let textReq = IscsiTextEncode.CreateTextKeyValueString negoValue3 negoStat3
+                        let loginRequest3 =
+                            {
+                                defaultLoginRequest with
+                                    T = true;
+                                    NSG = LoginReqStateCd.OPERATIONAL;
+                                    CmdSN = getCmdSN();
+                                    ExpStatSN = statsn_me.next lastPDU1.StatSN;
+                                    TextRequest = textReq;
+                            }
+                        let! _ = PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objID, conn, loginRequest3 )
+
+                        let! _, lastPDU3 = iSCSI_Initiator.ReceiveLoginResponse objID exp_ConnParams.CID conn getCmdSN ( Some loginRequest3.ExpStatSN )
+                        //let negoValue4, negoStat4 = IscsiTextEncode.margeTextKeyValue textResp3 negoValue3 negoStat3
+
+                        // Login successful
+                        return lastPDU3
                     }
-                let negoStat3 =
-                    {
-                        TextKeyValuesStatus.defaultTextKeyValuesStatus with
-                            NegoStat_CHAP_N = NegoStatusValue.NSG_WaitSend;
-                            NegoStat_CHAP_R = NegoStatusValue.NSG_WaitSend;
+                else
+                    task {
+                        // Target authentication required
+
+                        let rnd1 = new Random()
+                        let sendIdentVal = uint16( rnd1.Next() % 0xFF )
+                        let cspRand = RandomNumberGenerator.Create()
+                        let challangeBuffer : byte[] = Array.zeroCreate 1024
+                        cspRand.GetBytes challangeBuffer
+                        let negoValue3 =
+                            {
+                                TextKeyValues.defaultTextKeyValues with
+                                    CHAP_N = TextValueType.Value( exp_ConnParams.Initiator_UserName );
+                                    CHAP_R = TextValueType.Value( responseHashValue );
+                                    CHAP_I = TextValueType.Value( sendIdentVal );
+                                    CHAP_C = TextValueType.Value( challangeBuffer );
+                            }
+                        let negoStat3 =
+                            {
+                                TextKeyValuesStatus.defaultTextKeyValuesStatus with
+                                    NegoStat_CHAP_N = NegoStatusValue.NSG_WaitSend ||| NegoStatusValue.NSG_WaitReceive;
+                                    NegoStat_CHAP_R = NegoStatusValue.NSG_WaitSend ||| NegoStatusValue.NSG_WaitReceive;
+                                    NegoStat_CHAP_I = NegoStatusValue.NSG_WaitSend;
+                                    NegoStat_CHAP_C = NegoStatusValue.NSG_WaitSend;
+                            }
+
+                        let textReq = IscsiTextEncode.CreateTextKeyValueString negoValue3 negoStat3
+                        let loginRequest3 =
+                            {
+                                defaultLoginRequest with
+                                    T = true;
+                                    NSG = LoginReqStateCd.OPERATIONAL;
+                                    CmdSN = getCmdSN();
+                                    ExpStatSN = statsn_me.next lastPDU1.StatSN;
+                                    TextRequest = textReq;
+                            }
+                        let! _ = PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objID, conn, loginRequest3 )
+
+                        let negoStat4 = IscsiTextEncode.ClearSendWaitStatus negoStat3
+                        let negoValue4 = {
+                            negoValue3 with
+                                // drop CHAP_N and CHAP_R value.
+                                // Both the initiator and the target send N and R values.
+                                // But N and R values are not merged afterwards. 
+                                // Only the target's values ​​are used, so N and R values ​​sent by the initiator must be dropped.
+                                CHAP_N = TextValueType.ISV_Missing;
+                                CHAP_R = TextValueType.ISV_Missing;
+                        }
+
+                        let! textResp3, lastPDU3 = iSCSI_Initiator.ReceiveLoginResponse objID exp_ConnParams.CID conn getCmdSN ( Some loginRequest3.ExpStatSN )
+                        let negoValue5, negoStat5 = IscsiTextEncode.margeTextKeyValue Standpoint.Initiator negoValue4 textResp3 negoStat4
+
+                        // CHAP_N, CHAP_R must be received
+                        if ( negoStat5.NegoStat_CHAP_N &&& NegoStatusValue.NSG_WaitReceive = NegoStatusValue.NSG_WaitReceive ) ||
+                            ( negoStat5.NegoStat_CHAP_R &&& NegoStatusValue.NSG_WaitReceive = NegoStatusValue.NSG_WaitReceive ) then
+                                raise <| SessionRecoveryException ( "Unexpected PDU was received.", tsih_me.zero )
+
+                        // check target name
+                        if negoValue5.CHAP_N.GetValue <> exp_ConnParams.Target_UserName then
+                            raise <| SessionRecoveryException ( "Authenticate failed. Invalid target user name.", tsih_me.zero )
+
+                        // calc target response value
+                        let expHashValue =
+                            ( MD5.Create() ).ComputeHash
+                                [|
+                                    yield byte sendIdentVal;
+                                    yield! Encoding.UTF8.GetBytes exp_ConnParams.Target_Password;
+                                    yield! challangeBuffer;
+                                |]
+                        if expHashValue <> negoValue5.CHAP_R.GetValue then
+                            raise <| SessionRecoveryException ( "Authenticate failed. Invalid target response value.", tsih_me.zero )
+
+                        // Login successful
+                        return lastPDU3
                     }
-
-                let textReq = IscsiTextEncode.CreateTextKeyValueString negoValue3 negoStat3
-                let loginRequest3 =
-                    {
-                        defaultLoginRequest with
-                            T = true;
-                            NSG = LoginReqStateCd.OPERATIONAL;
-                            CmdSN = getCmdSN();
-                            ExpStatSN = statsn_me.next lastPDU1.StatSN;
-                            TextRequest = textReq;
-                    }
-                let! _ = PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objID, conn, loginRequest3 )
-
-                let! _, lastPDU3 = iSCSI_Initiator.ReceiveLoginResponse objID exp_ConnParams.CID conn getCmdSN ( Some loginRequest3.ExpStatSN )
-                //let negoValue4, negoStat4 = IscsiTextEncode.margeTextKeyValue textResp3 negoValue3 negoStat3
-
-                // Login successful
-                return lastPDU3
-            else
-                // Target authentication required
-
-                let rnd1 = new Random()
-                let sendIdentVal = uint16( rnd1.Next() % 0xFF )
-                let cspRand = RandomNumberGenerator.Create()
-                let challangeBuffer : byte[] = Array.zeroCreate 1024
-                cspRand.GetBytes challangeBuffer
-                let negoValue3 =
-                    {
-                        TextKeyValues.defaultTextKeyValues with
-                            CHAP_N = TextValueType.Value( exp_ConnParams.Initiator_UserName );
-                            CHAP_R = TextValueType.Value( responseHashValue );
-                            CHAP_I = TextValueType.Value( sendIdentVal );
-                            CHAP_C = TextValueType.Value( challangeBuffer );
-                    }
-                let negoStat3 =
-                    {
-                        TextKeyValuesStatus.defaultTextKeyValuesStatus with
-                            NegoStat_CHAP_N = NegoStatusValue.NSG_WaitSend ||| NegoStatusValue.NSG_WaitReceive;
-                            NegoStat_CHAP_R = NegoStatusValue.NSG_WaitSend ||| NegoStatusValue.NSG_WaitReceive;
-                            NegoStat_CHAP_I = NegoStatusValue.NSG_WaitSend;
-                            NegoStat_CHAP_C = NegoStatusValue.NSG_WaitSend;
-                    }
-
-                let textReq = IscsiTextEncode.CreateTextKeyValueString negoValue3 negoStat3
-                let loginRequest3 =
-                    {
-                        defaultLoginRequest with
-                            T = true;
-                            NSG = LoginReqStateCd.OPERATIONAL;
-                            CmdSN = getCmdSN();
-                            ExpStatSN = statsn_me.next lastPDU1.StatSN;
-                            TextRequest = textReq;
-                    }
-                let! _ = PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objID, conn, loginRequest3 )
-
-                let negoStat4 = IscsiTextEncode.ClearSendWaitStatus negoStat3
-                let negoValue4 = {
-                    negoValue3 with
-                        // drop CHAP_N and CHAP_R value.
-                        // Both the initiator and the target send N and R values.
-                        // But N and R values are not merged afterwards. 
-                        // Only the target's values ​​are used, so N and R values ​​sent by the initiator must be dropped.
-                        CHAP_N = TextValueType.ISV_Missing;
-                        CHAP_R = TextValueType.ISV_Missing;
-                }
-
-                let! textResp3, lastPDU3 = iSCSI_Initiator.ReceiveLoginResponse objID exp_ConnParams.CID conn getCmdSN ( Some loginRequest3.ExpStatSN )
-                let negoValue5, negoStat5 = IscsiTextEncode.margeTextKeyValue Standpoint.Initiator negoValue4 textResp3 negoStat4
-
-                // CHAP_N, CHAP_R must be received
-                if ( negoStat5.NegoStat_CHAP_N &&& NegoStatusValue.NSG_WaitReceive = NegoStatusValue.NSG_WaitReceive ) ||
-                    ( negoStat5.NegoStat_CHAP_R &&& NegoStatusValue.NSG_WaitReceive = NegoStatusValue.NSG_WaitReceive ) then
-                        raise <| SessionRecoveryException ( "Unexpected PDU was received.", tsih_me.zero )
-
-                // check target name
-                if negoValue5.CHAP_N.GetValue <> exp_ConnParams.Target_UserName then
-                    raise <| SessionRecoveryException ( "Authenticate failed. Invalid target user name.", tsih_me.zero )
-
-                // calc target response value
-                let expHashValue =
-                    ( MD5.Create() ).ComputeHash
-                        [|
-                            yield byte sendIdentVal;
-                            yield! Encoding.UTF8.GetBytes exp_ConnParams.Target_Password;
-                            yield! challangeBuffer;
-                        |]
-                if expHashValue <> negoValue5.CHAP_R.GetValue then
-                    raise <| SessionRecoveryException ( "Authenticate failed. Invalid target response value.", tsih_me.zero )
-
-                // Login successful
-                return lastPDU3
+            return result
         }
 
 
@@ -1615,19 +1622,19 @@ type iSCSI_Initiator(
                         raise <| SessionRecoveryException ( msg, tsih_me.zero )
 
                     // Check reject value
-                    if not isLeadingCon then
-                        // if use existing session, LO parameters must not be handled.
-                        if textKey.MaxConnections <> TextValueType.ISV_Missing ||
-                            textKey.InitialR2T <> TextValueType.ISV_Missing ||
-                            textKey.ImmediateData <> TextValueType.ISV_Missing ||
-                            textKey.MaxBurstLength <> TextValueType.ISV_Missing ||
-                            textKey.FirstBurstLength <> TextValueType.ISV_Missing ||
-                            textKey.DefaultTime2Wait <> TextValueType.ISV_Missing ||
-                            textKey.DefaultTime2Retain <> TextValueType.ISV_Missing ||
-                            textKey.MaxOutstandingR2T <> TextValueType.ISV_Missing ||
-                            textKey.DataPDUInOrder <> TextValueType.ISV_Missing ||
-                            textKey.DataSequenceInOrder <> TextValueType.ISV_Missing ||
-                            textKey.ErrorRecoveryLevel <> TextValueType.ISV_Missing then
+                    // if use existing session, LO parameters must not be handled.
+                    if ( not isLeadingCon ) && (
+                        textKey.MaxConnections <> TextValueType.ISV_Missing ||
+                        textKey.InitialR2T <> TextValueType.ISV_Missing ||
+                        textKey.ImmediateData <> TextValueType.ISV_Missing ||
+                        textKey.MaxBurstLength <> TextValueType.ISV_Missing ||
+                        textKey.FirstBurstLength <> TextValueType.ISV_Missing ||
+                        textKey.DefaultTime2Wait <> TextValueType.ISV_Missing ||
+                        textKey.DefaultTime2Retain <> TextValueType.ISV_Missing ||
+                        textKey.MaxOutstandingR2T <> TextValueType.ISV_Missing ||
+                        textKey.DataPDUInOrder <> TextValueType.ISV_Missing ||
+                        textKey.DataSequenceInOrder <> TextValueType.ISV_Missing ||
+                        textKey.ErrorRecoveryLevel <> TextValueType.ISV_Missing ) then
                             let msg = "Invalid text key was received."
                             raise <| SessionRecoveryException ( msg, tsih_me.zero )
 
