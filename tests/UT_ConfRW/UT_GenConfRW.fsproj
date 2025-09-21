@@ -137,8 +137,9 @@
     <ProjectReference Include="..\TestCommon\TestCommon.fsproj" />
   </ItemGroup>
 
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="dotnet run --project ..\..\products\GenConfRW -c $(Configuration) ConfRW" />
-  </Target>
+<Target Name="PreBuild" BeforeTargets="CoreCompile">
+  <Exec Command="dotnet run --no-build --project ..\..\products\GenConfRW -c $(Configuration) ConfRW" />
+</Target>
+
 
 </Project>

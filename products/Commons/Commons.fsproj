@@ -68,10 +68,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Constants\Constants.fsproj" />
+    <ProjectReference Include="..\GenConfRW\GenConfRW.fsproj" />
   </ItemGroup>
 
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="dotnet run --project ..\GenConfRW -c $(Configuration) ./IODataTypes" />
+  <Target Name="PreBuild" BeforeTargets="CoreCompile">
+    <Exec Command="dotnet run --no-build --project ..\GenConfRW -c $(Configuration) ./IODataTypes" />
   </Target>
 
 </Project>
