@@ -210,22 +210,18 @@ type Connection
             fun () -> task {
                 try
                     // receive first PDU in full feature phase.
-                    let headerDigest = m_COParams.HeaderDigest.[0]
-                    let dataDigest = m_COParams.DataDigest.[0]
-                    let mrdsl_t = m_COParams.MaxRecvDataSegmentLength_T
-                    let! firstPDU = PDU.Receive(
-                        mrdsl_t, headerDigest, dataDigest, ValueSome m_TSIH, ValueSome m_CID, ValueSome m_Counter, m_StreamForRead, Standpoint.Target
-                    )
+                    match! this.ReceivePDUWithoutReject() with
+                    | ValueSome( firstPDU ) ->
+                        // Set initial StatSN value
+                        m_StatSN <- firstPDU.ExpStatSN
 
-                    // Set initial StatSN value
-                    m_StatSN <- firstPDU.ExpStatSN
+                        // Push received first PDU to session component
+                        m_session.PushReceivedPDU this firstPDU
 
-                    // Push received first PDU to session component
-                    m_session.PushReceivedPDU this firstPDU
-
-                    // Receive next PDU
-                    do! this.ReceivePDUInFullFeaturePhase()
-
+                        // Receive next PDU
+                        do! this.ReceivePDUInFullFeaturePhase()
+                    | ValueNone ->
+                        ()
                 with
                 | _ as x ->
                     let wc = m_session.GetConnection m_CID m_Counter
@@ -638,6 +634,34 @@ type Connection
     //=========================================================================
     // Private method
 
+    /// <summary>
+    ///  Receive PDU from the initiator. If received PDU was corrupted, send Reject PDU.
+    /// </summary>
+    /// <returns>
+    ///  Received PDU, or ValueNone if termination noticed.
+    /// </returns>
+    member private _.ReceivePDUWithoutReject() =
+        let headerDigest = m_COParams.HeaderDigest.[0]
+        let dataDigest = m_COParams.DataDigest.[0]
+        let mrdsl_t = m_COParams.MaxRecvDataSegmentLength_T
+        Functions.loopAsyncWithArgs ( fun () ->
+            task {
+                try
+                    let! lpdu = PDU.Receive(
+                        mrdsl_t, headerDigest, dataDigest, ValueSome m_TSIH, ValueSome m_CID, ValueSome m_Counter, m_StreamForRead, Standpoint.Target
+                    )
+                    return LoopState.Terminate( ValueSome lpdu )
+                with
+                | :? RejectPDUException as x ->
+                    if not m_Killer.IsNoticed then
+                        // Send Reject PDU
+                        m_session.RejectPDUByHeader m_CID m_Counter x.Header x.Reason
+                        return LoopState.Continue()
+                    else
+                        return LoopState.Terminate( ValueNone )
+            }
+        ) ()
+
     // ------------------------------------------------------------------------
     /// <summary>
     ///   Send PDU to the initiator.
@@ -812,20 +836,12 @@ type Connection
     member private this.ReceivePDUInFullFeaturePhase () : Task<unit> =
 
         task {
-//            let wloginfo = struct ( m_ObjID, ValueSome( m_CID ), ValueSome( m_Counter ), ValueSome( m_TSIH ), ValueNone, ValueNone )
-            let headerDigest = m_COParams.HeaderDigest.[0]
-            let dataDigest = m_COParams.DataDigest.[0]
-            let mrdsl_t = m_COParams.MaxRecvDataSegmentLength_T
-
-
             // If termination is requested, stop receive PDUs.
             while not m_Killer.IsNoticed do
 
                 // Receive a PDU from the connection
-                try
-                    let! lpdu = PDU.Receive(
-                        mrdsl_t, headerDigest, dataDigest, ValueSome m_TSIH, ValueSome m_CID, ValueSome m_Counter, m_StreamForRead, Standpoint.Target
-                    )
+                match! this.ReceivePDUWithoutReject() with
+                | ValueSome( lpdu ) ->
 
                     let wByteCount = lpdu.ByteCount
                     if wByteCount.IsSome then
@@ -858,12 +874,8 @@ type Connection
 //                        m_ReceiveTask.Enqueue ( fun () ->
                             m_session.PushReceivedPDU this lpdu
 //                        )
-
-                with
-                | :? RejectPDUException as x ->
-                    if not m_Killer.IsNoticed then
-                        // Send Reject PDU
-                        m_session.RejectPDUByHeader m_CID m_Counter x.Header x.Reason
+                | ValueNone ->
+                    ()
         }
 
     /// <summary>

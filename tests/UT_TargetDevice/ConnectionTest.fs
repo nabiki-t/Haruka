@@ -3299,3 +3299,172 @@ type Connection_Test () =
             ()
 
         GlbFunc.ClosePorts [| sp; cp; |]
+
+    [<Fact>]
+    member _.ReceivePDUWithoutReject_001() =
+        task {
+            let _, sessStub, killer, sp, cp, con =
+                Connection_Test.createDefaultConnectionObj(
+                    {
+                        Connection_Test.defaultConnectionParam with
+                            HeaderDigest = [| DigestType.DST_None |];
+                            DataDigest = [| DigestType.DST_CRC32C |];
+                    },
+                    Connection_Test.defaultSessionParameter,
+                    statsn_me.zero
+                )
+            let pc = PrivateCaller( con )
+
+            // send pdu ( accepted )
+            let pdu2 = {
+                Connection_Test.defaultNopOUTPDUValues with
+                    LUN = lun_me.fromPrim 3UL
+            }
+            let! _ = PDU.SendPDU( 4096u, DigestType.DST_None, DigestType.DST_CRC32C, ValueNone, ValueNone, ValueNone, objidx_me.NewID(), cp, pdu2 )
+
+            let! rpdu = pc.Invoke( "ReceivePDUWithoutReject" ) :?> Task< ILogicalPDU voption >
+            Assert.True(( rpdu.IsSome ))
+            match rpdu.Value with
+            | :? NOPOutPDU as x ->
+                Assert.True(( x.LUN = lun_me.fromPrim 3UL ))
+            | _ ->
+                Assert.Fail __LINE__
+
+            GlbFunc.ClosePorts [| sp; cp; |]
+        }
+
+    [<Fact>]
+    member _.ReceivePDUWithoutReject_002() =
+        task {
+            let _, sessStub, killer, sp, cp, con =
+                Connection_Test.createDefaultConnectionObj(
+                    {
+                        Connection_Test.defaultConnectionParam with
+                            HeaderDigest = [| DigestType.DST_None |];
+                            DataDigest = [| DigestType.DST_CRC32C |];
+                    },
+                    Connection_Test.defaultSessionParameter,
+                    statsn_me.zero
+                )
+            let pc = PrivateCaller( con )
+            let mutable cnt = 0
+
+            sessStub.p_RejectPDUByHeader <- ( fun _ _ _ _ ->
+                cnt <- cnt + 1
+            )
+
+            // send pdu ( rejected )
+            let pduData1 =
+                [|
+                    0x00uy; 0x80uy; 0x00uy; 0x00uy; // I
+                    0x00uy; 0x00uy; 0x00uy; 0x04uy; // TotalAHSLength, DataSegmentLength
+                    0x11uy; 0x11uy; 0x11uy; 0x11uy; // LUN
+                    0x11uy; 0x11uy; 0x11uy; 0x11uy;
+                    0x11uy; 0x12uy; 0x13uy; 0x14uy; // ITT
+                    0x21uy; 0x22uy; 0x23uy; 0x24uy; // TTT
+                    0x31uy; 0x32uy; 0x33uy; 0x34uy; // CmdSN
+                    0x41uy; 0x42uy; 0x43uy; 0x44uy; // ExpStatSN
+                    0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
+                    0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
+                    0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
+                    0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
+                    0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // Data Segment
+                    0x00uy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
+                |]
+            cp.Write( pduData1, 0, pduData1.Length ) |> ignore
+
+            // send pdu ( accepted )
+            let pdu2 = {
+                Connection_Test.defaultNopOUTPDUValues with
+                    LUN = lun_me.fromPrim 2UL
+            }
+            let! _ = PDU.SendPDU( 4096u, DigestType.DST_None, DigestType.DST_CRC32C, ValueNone, ValueNone, ValueNone, objidx_me.NewID(), cp, pdu2 )
+
+            let! rpdu = pc.Invoke( "ReceivePDUWithoutReject" ) :?> Task< ILogicalPDU voption >
+            Assert.True(( rpdu.IsSome ))
+            match rpdu.Value with
+            | :? NOPOutPDU as x ->
+                Assert.True(( x.LUN = lun_me.fromPrim 2UL ))
+            | _ ->
+                Assert.Fail __LINE__
+
+            Assert.True(( cnt = 1 ))
+
+            GlbFunc.ClosePorts [| sp; cp; |]
+        }
+
+    [<Fact>]
+    member _.ReceivePDUWithoutReject_003() =
+        task {
+            let _, sessStub, killer, sp, cp, con =
+                Connection_Test.createDefaultConnectionObj(
+                    {
+                        Connection_Test.defaultConnectionParam with
+                            HeaderDigest = [| DigestType.DST_None |];
+                            DataDigest = [| DigestType.DST_CRC32C |];
+                    },
+                    Connection_Test.defaultSessionParameter,
+                    statsn_me.zero
+                )
+            let pc = PrivateCaller( con )
+
+            killer.NoticeTerminate()
+            try
+                let! _ = pc.Invoke( "ReceivePDUWithoutReject" ) :?> Task< ILogicalPDU voption >
+                Assert.Fail __LINE__
+            with
+            | :? ConnectionErrorException as x ->
+                ()
+            | _ ->
+                Assert.Fail __LINE__
+
+            GlbFunc.ClosePorts [| sp; cp; |]
+        }
+
+    [<Fact>]
+    member _.ReceivePDUWithoutReject_004() =
+        task {
+            let _, sessStub, killer, sp, cp, con =
+                Connection_Test.createDefaultConnectionObj(
+                    {
+                        Connection_Test.defaultConnectionParam with
+                            HeaderDigest = [| DigestType.DST_None |];
+                            DataDigest = [| DigestType.DST_CRC32C |];
+                    },
+                    Connection_Test.defaultSessionParameter,
+                    statsn_me.zero
+                )
+            let pc = PrivateCaller( con )
+
+            // send pdu ( rejected )
+            let pduData1 =
+                [|
+                    0x00uy; 0x80uy; 0x00uy; 0x00uy; // I
+                    0x00uy; 0x00uy; 0x00uy; 0x04uy; // TotalAHSLength, DataSegmentLength
+                    0x11uy; 0x11uy; 0x11uy; 0x11uy; // LUN
+                    0x11uy; 0x11uy; 0x11uy; 0x11uy;
+                    0x11uy; 0x12uy; 0x13uy; 0x14uy; // ITT
+                    0x21uy; 0x22uy; 0x23uy; 0x24uy; // TTT
+                    0x31uy; 0x32uy; 0x33uy; 0x34uy; // CmdSN
+                    0x41uy; 0x42uy; 0x43uy; 0x44uy; // ExpStatSN
+                    0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
+                    0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
+                    0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
+                    0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
+                    0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // Data Segment
+                    0x00uy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
+                |]
+            cp.Write( pduData1, 0, pduData1.Length ) |> ignore
+
+            // update notice flag
+            let pc2 = PrivateCaller( killer )
+            let m_Rec = pc2.GetField( "m_Rec" ) :?> OptimisticLock< KillerRec >
+            m_Rec.Update ( fun oldRec ->
+                struct( { oldRec with m_Flg = true }, () )
+            )
+
+            let! rpdu = pc.Invoke( "ReceivePDUWithoutReject" ) :?> Task< ILogicalPDU voption >
+            Assert.True(( rpdu.IsNone ))
+
+            GlbFunc.ClosePorts [| sp; cp; |]
+        }
