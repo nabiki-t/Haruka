@@ -14,6 +14,7 @@ namespace Haruka.Test.IT.ISCSI
 open System
 open System.IO
 open System.Net
+open System.Threading.Tasks
 
 open Xunit
 
@@ -106,6 +107,41 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     let m_MediaSize = fx.MediaSize
     let m_MediaBlockSize = fx.MediaBlockSize
 
+    // default session parameters
+    let m_defaultSessParam = {
+        InitiatorName = "iqn.2020-05.example.com:initiator";
+        InitiatorAlias = "aaa";
+        TargetName = "iqn.2020-05.example.com:target1";
+        TargetAlias = "";
+        ISID = isid_me.fromPrim 1UL;
+        TSIH = tsih_me.fromPrim 0us;
+        MaxConnections = Constants.NEGOPARAM_MaxConnections;
+        InitialR2T = false;
+        ImmediateData = true;
+        MaxBurstLength = 262144u;
+        FirstBurstLength = 262144u;
+        DefaultTime2Wait = 2us;
+        DefaultTime2Retain = 20us;
+        MaxOutstandingR2T = 16us;
+        DataPDUInOrder = false;
+        DataSequenceInOrder = false;
+        ErrorRecoveryLevel = 0uy;
+    }
+
+    // default connection parameters
+    let m_defaultConnParam = {
+        PortNo = iSCSIPortNo;
+        CID = g_CID0;
+        Initiator_UserName = "";
+        Initiator_Password = "";
+        Target_UserName = "";
+        Target_Password = "";
+        HeaderDigest = DigestType.DST_CRC32C;
+        DataDigest = DigestType.DST_CRC32C;
+        MaxRecvDataSegmentLength_I = 4096u;
+        MaxRecvDataSegmentLength_T = 4096u;
+    }
+
     let scsiWrite10CDB ( lba : uint32 ) ( transferLength : uint16 ) =
         let wlba =
             ( int32 ) lba
@@ -151,41 +187,52 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
         }
 
+    let CreateSession ( argErrorRecoveryLevel : byte ) ( argMaxBurstLength : uint ) ( argMaxRecvDataSegmentLength_I : uint ) : Task<iSCSI_Initiator> =
+        task {
+            let sessParam = {
+                m_defaultSessParam with
+                    MaxBurstLength = argMaxBurstLength;
+                    ErrorRecoveryLevel = argErrorRecoveryLevel;
+            }
+            let connParam = {
+                m_defaultConnParam with
+                    MaxRecvDataSegmentLength_I = argMaxRecvDataSegmentLength_I
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam connParam
+            Assert.True(( r1.Params.MaxBurstLength = argMaxBurstLength ))
+            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = argMaxRecvDataSegmentLength_I ))
+            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
+            return r1
+        }
 
-    // default session parameters
-    let m_defaultSessParam = {
-        InitiatorName = "iqn.2020-05.example.com:initiator";
-        InitiatorAlias = "aaa";
-        TargetName = "iqn.2020-05.example.com:target1";
-        TargetAlias = "";
-        ISID = isid_me.fromPrim 1UL;
-        TSIH = tsih_me.fromPrim 0us;
-        MaxConnections = Constants.NEGOPARAM_MaxConnections;
-        InitialR2T = false;
-        ImmediateData = true;
-        MaxBurstLength = 262144u;
-        FirstBurstLength = 262144u;
-        DefaultTime2Wait = 2us;
-        DefaultTime2Retain = 20us;
-        MaxOutstandingR2T = 16us;
-        DataPDUInOrder = false;
-        DataSequenceInOrder = false;
-        ErrorRecoveryLevel = 0uy;
-    }
+    let ReadMediaData ( rS : iSCSI_Initiator ) ( blockCount : uint32 ) ( blockLength : uint32 ) : Task<byte[]> =
+        task {
+            let accessLength = blockCount * blockLength
+            let rBuffer = Array.zeroCreate<byte>( int accessLength )
+            let readCDB = scsiRead10CDB ( uint16 blockCount )
+            let! itt, _ = rS.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
 
-    // default connection parameters
-    let m_defaultConnParam = {
-        PortNo = iSCSIPortNo;
-        CID = g_CID0;
-        Initiator_UserName = "";
-        Initiator_Password = "";
-        Target_UserName = "";
-        Target_Password = "";
-        HeaderDigest = DigestType.DST_CRC32C;
-        DataDigest = DigestType.DST_CRC32C;
-        MaxRecvDataSegmentLength_I = 4096u;
-        MaxRecvDataSegmentLength_T = 4096u;
-    }
+            do! Functions.loopAsync ( fun () ->
+                task {
+                    let! pdu = rS.Receive g_CID0
+                    match pdu with
+                    | :? SCSIDataInPDU as x ->
+                        Assert.True(( x.InitiatorTaskTag = itt ))
+                        x.DataSegment.CopyTo( rBuffer, int x.BufferOffset )
+                        return true
+                    | :? SCSIResponsePDU as x ->
+                        Assert.True(( x.InitiatorTaskTag = itt ))
+                        Assert.True(( x.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+                        Assert.True(( x.Status = ScsiCmdStatCd.GOOD ))
+                        return false
+                    | _ ->
+                        Assert.Fail __LINE__
+                        return false
+                }
+            )
+            return rBuffer
+        }
+
 
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
@@ -682,10 +729,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.CmdSN_ReconnectConnection_004() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ErrorRecoveryLevel = 1uy;
-            }
+            let sessParam1 = { m_defaultSessParam with ErrorRecoveryLevel = 1uy; }
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
 
             // Nop-Out 1
@@ -713,10 +757,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.CmdSN_ReconnectConnection_005() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ErrorRecoveryLevel = 1uy;
-            }
+            let sessParam1 = { m_defaultSessParam with ErrorRecoveryLevel = 1uy; }
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
 
             // Nop-Out 1
@@ -818,10 +859,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.StatSN_LostResponse_001() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ErrorRecoveryLevel = 1uy;
-            }
+            let sessParam1 = { m_defaultSessParam with ErrorRecoveryLevel = 1uy; }
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
 
             // Send Nop-Out 1
@@ -869,10 +907,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.StatSN_Skip_001() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ErrorRecoveryLevel = 1uy;
-            }
+            let sessParam1 = { m_defaultSessParam with ErrorRecoveryLevel = 1uy; }
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
 
             // Send Nop-Out 1
@@ -903,10 +938,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.StatSN_Rewind_001() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ErrorRecoveryLevel = 1uy;
-            }
+            let sessParam1 = { m_defaultSessParam with ErrorRecoveryLevel = 1uy; }
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
 
             // Send Nop-Out 1
@@ -1044,10 +1076,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.StatSN_MaxStatSNDiff_001() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ErrorRecoveryLevel = 0uy;
-            }
+            let sessParam1 = { m_defaultSessParam with ErrorRecoveryLevel = 0uy; }
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
 
             // Nop-Out 1
@@ -1082,10 +1111,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.StatSN_MaxStatSNDiff_002() =
         task {
-            let sessParam1 = {
-                m_defaultSessParam with
-                    ErrorRecoveryLevel = 0uy;
-            }
+            let sessParam1 = { m_defaultSessParam with ErrorRecoveryLevel = 0uy; }
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
 
             // Nop-Out 1
@@ -1351,11 +1377,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.DataSN_Read_OneDataPDU_001() =
         task {
-            let conParam = {
-                m_defaultConnParam with
-                    MaxRecvDataSegmentLength_I = 4096u;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam conParam
+            let! r1 = CreateSession 0uy 16384u 4096u
             let accessLength = 4096u
             let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
             //let pduCount = 1u
@@ -1382,11 +1404,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.DataSN_Read_MultiDataPDU_001() =
         task {
-            let conParam = {
-                m_defaultConnParam with
-                    MaxRecvDataSegmentLength_I = 4096u;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam conParam
+            let! r1 = CreateSession 0uy 16384u 4096u
             let pduCount = 2u
             let accessLength = 4096u * pduCount
             let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
@@ -1413,16 +1431,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.DataSN_Read_MultiBurst_001() =
         task {
-            let sesParam = {
-                m_defaultSessParam with
-                    MaxBurstLength = 3000u;
-                    ErrorRecoveryLevel = 1uy;
-            }
-            let conParam = {
-                m_defaultConnParam with
-                    MaxRecvDataSegmentLength_I = 800u;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sesParam conParam
+            let! r1 = CreateSession 1uy 3000u 800u
             let accessLength = 16384u
             let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
             let expRsult = [|
@@ -1482,16 +1491,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.DataSN_Read_MultiBurst_002() =
         task {
-            let sesParam = {
-                m_defaultSessParam with
-                    MaxBurstLength = 3000u;
-                    ErrorRecoveryLevel = 0uy;
-            }
-            let conParam = {
-                m_defaultConnParam with
-                    MaxRecvDataSegmentLength_I = 800u;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sesParam conParam
+            let! r1 = CreateSession 0uy 3000u 800u
             let accessLength = 8192u
             let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
             let expRsult = [|
@@ -1535,16 +1535,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.DataSN_Read_SNACK_001() =
         task {
-            let sesParam = {
-                m_defaultSessParam with
-                    MaxBurstLength = 3000u;
-                    ErrorRecoveryLevel = 1uy;
-            }
-            let conParam = {
-                m_defaultConnParam with
-                    MaxRecvDataSegmentLength_I = 1200u;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sesParam conParam
+            let! r1 = CreateSession 1uy 3000u 1200u
             let accessLength = 8192u
             let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
             let expRsult = [|
@@ -1602,16 +1593,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.DataSN_Read_SNACK_002() =
         task {
-            let sesParam = {
-                m_defaultSessParam with
-                    MaxBurstLength = 3000u;
-                    ErrorRecoveryLevel = 1uy;
-            }
-            let conParam = {
-                m_defaultConnParam with
-                    MaxRecvDataSegmentLength_I = 1200u;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sesParam conParam
+            let! r1 = CreateSession 1uy 3000u 1200u
             let accessLength = 8192u
             let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
             let expRsult = [|
@@ -1714,7 +1696,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( rpdu4.TextResponse.Length = 0 ))
 
             // update initiator side parameter value
-            r1.FakeConnectionParameter g_CID0 { conParam with MaxRecvDataSegmentLength_I = 800u }
+            r1.FakeConnectionParameter g_CID0 { m_defaultConnParam with MaxRecvDataSegmentLength_I = 800u }
 
             // Send R-SNACK request
             let! _ = r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.RDATA_SNACK g_LUN1 itt ( ttt_me.fromPrim 0x12345678u ) 0u 0u
@@ -1756,16 +1738,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.DataSN_Read_SNACK_003() =
         task {
-            let sesParam = {
-                m_defaultSessParam with
-                    MaxBurstLength = 3000u;
-                    ErrorRecoveryLevel = 1uy;
-            }
-            let conParam = {
-                m_defaultConnParam with
-                    MaxRecvDataSegmentLength_I = 1200u;
-            }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sesParam conParam
+            let! r1 = CreateSession 1uy 3000u 1200u
             let accessLength = 8192u
             let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
             let expRsult = [|
@@ -1863,7 +1836,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( rpdu4.TextResponse.Length = 0 ))
 
             // update initiator side parameter value
-            r1.FakeConnectionParameter g_CID0 { conParam with MaxRecvDataSegmentLength_I = 1300u }
+            r1.FakeConnectionParameter g_CID0 { m_defaultConnParam with MaxRecvDataSegmentLength_I = 1300u }
 
             // Send R-SNACK request
             let! _ = r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.RDATA_SNACK g_LUN1 itt ( ttt_me.fromPrim 0x12345678u ) 0u 0u
@@ -1905,11 +1878,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.R2T_NoUnsolicitedData_NoWrittenData_001() =
         task {
-            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with MaxRecvDataSegmentLength_I = 16384u }
-            Assert.True(( r1.Params.MaxBurstLength = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
-
+            let! r1 = CreateSession 0uy 16384u 16384u
             let accessLength = 4096u
             let accessBlockCount = accessLength / m_MediaBlockSize
 
@@ -1943,18 +1912,9 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.SenseData.Count = 0 ))
             Assert.True(( writeRespPDU.ResponseData.Count = 0 ))
 
-            // read media data
-            let! readITT2, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
-            let! readPDU2_1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
-            Assert.True(( readPDU2_1.F ))
-            Assert.True(( readPDU2_1.InitiatorTaskTag = readITT2 ))
-            let! readPDU2_2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
-            Assert.True(( readPDU2_2.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
-            Assert.True(( readPDU2_2.Status = ScsiCmdStatCd.GOOD ))
-            Assert.True(( readPDU2_2.InitiatorTaskTag = readITT2 ))
-
             // check no data changed
-            Assert.True(( readPDU1_1.DataSegment.ToArray() = readPDU2_1.DataSegment.ToArray() ))
+            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            Assert.True(( readPDU1_1.DataSegment.ToArray() = wroteData ))
 
             do! CloseSession r1 g_CID0
         }
@@ -1962,11 +1922,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.R2T_NoUnsolicitedData_1R2T_1DataOutPDU_001() =
         task {
-            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with MaxRecvDataSegmentLength_I = 16384u }
-            Assert.True(( r1.Params.MaxBurstLength = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
-
+            let! r1 = CreateSession 0uy 16384u 16384u
             let accessLength = 4096u
             let accessBlockCount = accessLength / m_MediaBlockSize
 
@@ -1994,29 +1950,89 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
-            // read media data
-            let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
-            let! _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
-            let! readPDU1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
-            let! readPDU2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
-            Assert.True(( readPDU2.Status = ScsiCmdStatCd.GOOD ))
-
             // Verify that the sent data was written correctly.
-            Assert.True(( writtenData.ArraySegment.ToArray() = readPDU1.DataSegment.ToArray() ))
+            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            Assert.True(( PooledBuffer.ValueEqualsWithArray writtenData wroteData ))
 
             do! CloseSession r1 g_CID0
             writtenData.Return()
         }
 
-    // Data-Out PDUs are sent in order
-    [<Fact>]
-    member _.R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_001() =
-        task {
-            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with MaxRecvDataSegmentLength_I = 16384u }
-            Assert.True(( r1.Params.MaxBurstLength = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
+    static member m_R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_001_data = [|
+        [|
+            [|//  DataSN  TTT                F      Data Start  Data End  Fake data
+                ( 0u,     Option<uint>.None, false, 0,          1023,     false );
+                ( 1u,     Option<uint>.None, false, 1024,       2047,     false );
+                ( 2u,     Option<uint>.None, false, 2048,       3071,     false );
+                ( 3u,     Option<uint>.None, true,  3072,       4095,     false );
+            |] :> obj;
+            0u :> obj;  // Residual Count
+        |];
+        [|
+            [|//  DataSN  TTT                F      Data Start  Data End  Fake data
+                ( 1u,     Option<uint>.None, false, 2048,       3071,     false );
+                ( 0u,     Option<uint>.None, false, 0,          1023,     false );
+                ( 3u,     Option<uint>.None, false, 3072,       4095,     false );
+                ( 2u,     Option<uint>.None, true,  1024,       2047,     false );
+            |] :> obj;
+            0u :> obj;  // Residual Count
+        |];
+        [|
+            [|//  DataSN  TTT                F      Data Start  Data End  Fake data
+                ( 0u,     Option<uint>.None, false, 0,          2047,     false );
+                ( 1u,     Option<uint>.None, false, 1024,       3071,     false );
+                ( 2u,     Option<uint>.None, true,  2048,       4095,     false );
+            |] :> obj;
+            2048u :> obj;// Haruka considers this to be an overflow because the initiator sent too many data.
+        |];
+        [|
+            [|//  DataSN  TTT                F      Data Start  Data End  Fake data
+                ( 0u,     Option<uint>.None, false, 0,          -1,       false );    // Empty Data-Out PDU
+                ( 1u,     Option<uint>.None, false, 0,          1023,     false );
+                ( 2u,     Option<uint>.None, false, 1024,       1023,     false );    // Empty Data-Out PDU
+                ( 3u,     Option<uint>.None, false, 1024,       2047,     false );
+                ( 4u,     Option<uint>.None, false, 2048,       2047,     false );    // Empty Data-Out PDU
+                ( 5u,     Option<uint>.None, false, 2048,       3071,     false );
+                ( 6u,     Option<uint>.None, false, 3072,       3071,     false );    // Empty Data-Out PDU
+                ( 7u,     Option<uint>.None, false, 3072,       4095,     false );
+                ( 8u,     Option<uint>.None, true,  4096,       4095,     false );    // Empty Data-Out PDU
+            |] :> obj;
+            0u :> obj;  // Residual Count
+        |];
+        [|
+            [|//  DataSN  TTT                F      Data Start  Data End  Fake data
+                ( 99u,    Option<uint>.None, false, 0,          1023,     false );
+                ( 50u,    Option<uint>.None, false, 1024,       2047,     false );
+                ( 99u,    Option<uint>.None, false, 2048,       3071,     false );
+                ( 4u,     Option<uint>.None, true,  3072,       4095,     false );
+            |] :> obj;
+            0u :> obj;  // Residual Count
+        |];
+        [|
+            [|//  DataSN  TTT                  F      Data Start  Data End  Fake data
+                ( 0u,     Option<uint>.None,   false, 0,          1023,     false );
+                ( 1u,     Option<uint>.None,   false, 1024,       2047,     false );
+                ( 2u,     Some( 0xFFFFFFFFu ), false, 2048,       3071,     false );    // Received as is as unsolicited data.
+                ( 3u,     Option<uint>.None,   true,  3072,       4095,     false );
+            |] :> obj;
+            0u :> obj;  // Residual Count
+        |];
+        [|
+            [|//  DataSN  TTT                  F      Data Start  Data End  Fake data
+                ( 0u,     Some( 0x11111111u ), false, 0,          4095,     true  );   // ignored
+                ( 1u,     Option<uint>.None,   false, 0,          4095,     false );
+                ( 2u,     Some( 0x22222222u ), false, 0,          4095,     true  );   // ignored
+                ( 3u,     Option<uint>.None,   true,  4096,       4095,     false );
+            |] :> obj;
+            0u :> obj;  // Residual Count
+        |];
+    |]
 
+    [<Theory>]
+    [<MemberData( "m_R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_001_data" )>]
+    member _.R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_001( v : ( uint * uint option * bool * int * int * bool )[] ) ( expResidualCount : uint32 ) =
+        task {
+            let! r1 = CreateSession 0uy 16384u 16384u
             let accessLength = 4096u
             let accessBlockCount = accessLength / m_MediaBlockSize
 
@@ -2034,25 +2050,18 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let writtenData = Array.zeroCreate( int accessLength )
             Random.Shared.NextBytes( writtenData )
 
-            // Send data-Out PDU 1
-            let writtenData1 = PooledBuffer.Rent writtenData.[ 0 .. 1023 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 0u ) 0u writtenData1
-            writtenData1.Return()
-
-            // Send data-Out PDU 2
-            let writtenData2 = PooledBuffer.Rent writtenData.[ 1024 .. 2047 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 1u ) 1024u writtenData2
-            writtenData2.Return()
-
-            // Send data-Out PDU 3
-            let writtenData3 = PooledBuffer.Rent writtenData.[ 2048 .. 3071 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 2u ) 2048u writtenData3
-            writtenData3.Return()
-
-            // Send data-Out PDU 4
-            let writtenData4 = PooledBuffer.Rent writtenData.[ 3072 .. 4095 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 3u ) 3072u writtenData4
-            writtenData4.Return()
+            // Send data-Out PDU
+            for i = 0 to v.Length - 1 do
+                let argDataSN, argTTT, argF, argStart, argEnd, argFake = v.[i]
+                let wttt =
+                    match argTTT with
+                    | Some( x ) -> ttt_me.fromPrim x
+                    | None -> r2tPDU.TargetTransferTag
+                let writtenData1 = PooledBuffer.Rent writtenData.[ argStart .. argEnd ]
+                if argFake then
+                    Random.Shared.NextBytes( writtenData1.ArraySegment.AsSpan() )
+                do! r1.SendSCSIDataOutPDU g_CID0 argF writeITT g_LUN1 wttt ( datasn_me.fromPrim argDataSN ) ( uint32 argStart ) writtenData1
+                writtenData1.Return()
 
             // Receive SCSI Response PDU
             let! writeRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
@@ -2060,242 +2069,20 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
             Assert.True(( writeRespPDU.InitiatorTaskTag = writeITT ))
             Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
-            Assert.True(( writeRespPDU.ResidualCount = 0u ))
-
-            // read media data
-            let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
-            let! _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
-            let! readPDU1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
-            let! readPDU2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
-            Assert.True(( readPDU2.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( writeRespPDU.ResidualCount = expResidualCount ))
 
             // Verify that the sent data was written correctly.
-            Assert.True(( writtenData = readPDU1.DataSegment.ToArray() ))
-
-            do! CloseSession r1 g_CID0
-        }
-
-    // Data-Out PDUs are sent out of order
-    [<Fact>]
-    member _.R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_002() =
-        task {
-            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with MaxRecvDataSegmentLength_I = 16384u }
-            Assert.True(( r1.Params.MaxBurstLength = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
-
-            let accessLength = 4096u
-            let accessBlockCount = accessLength / m_MediaBlockSize
-
-            // Send SCSI write
-            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
-            let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
-
-            // Receive R2T
-            let! r2tPDU = r1.ReceiveSpecific<R2TPDU> g_CID0
-            Assert.True(( r2tPDU.InitiatorTaskTag = writeITT ))
-            Assert.True(( r2tPDU.R2TSN = datasn_me.fromPrim 0u ))
-            Assert.True(( r2tPDU.BufferOffset = 0u ))
-            Assert.True(( r2tPDU.DesiredDataTransferLength = accessLength ))
-
-            let writtenData = Array.zeroCreate( int accessLength )
-            Random.Shared.NextBytes( writtenData )
-
-            // Send data-Out PDU 2
-            let writtenData2 = PooledBuffer.Rent writtenData.[ 2048 .. 3071 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 1u ) 2048u writtenData2
-            writtenData2.Return()
-
-            // Send data-Out PDU 1
-            let writtenData1 = PooledBuffer.Rent writtenData.[ 0 .. 1023 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 0u ) 0u writtenData1
-            writtenData1.Return()
-
-            // Send data-Out PDU 4
-            let writtenData4 = PooledBuffer.Rent writtenData.[ 3072 .. 4095 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 3u ) 3072u writtenData4
-            writtenData4.Return()
-
-            // Send data-Out PDU 3
-            let writtenData3 = PooledBuffer.Rent writtenData.[ 1024 .. 2047 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 2u ) 1024u writtenData3
-            writtenData3.Return()
-
-            // Receive SCSI Response PDU
-            let! writeRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
-            Assert.True(( writeRespPDU.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))    // Haruka does not check the values ​​of DataPDUInOrder and DataSequenceInOrder.
-            Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
-            Assert.True(( writeRespPDU.InitiatorTaskTag = writeITT ))
-            Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
-            Assert.True(( writeRespPDU.ResidualCount = 0u ))
-
-            // read media data
-            let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
-            let! _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
-            let! readPDU1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
-            let! readPDU2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
-            Assert.True(( readPDU2.Status = ScsiCmdStatCd.GOOD ))
-
-            // Verify that the sent data was written correctly.
-            Assert.True(( writtenData = readPDU1.DataSegment.ToArray() ))
-
-            do! CloseSession r1 g_CID0
-        }
-
-    // There is an overlap in the sending data.
-    [<Fact>]
-    member _.R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_003() =
-        task {
-            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with MaxRecvDataSegmentLength_I = 16384u }
-            Assert.True(( r1.Params.MaxBurstLength = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
-
-            let accessLength = 4096u
-            let accessBlockCount = accessLength / m_MediaBlockSize
-
-            // Send SCSI write
-            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
-            let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
-
-            // Receive R2T
-            let! r2tPDU = r1.ReceiveSpecific<R2TPDU> g_CID0
-            Assert.True(( r2tPDU.InitiatorTaskTag = writeITT ))
-            Assert.True(( r2tPDU.R2TSN = datasn_me.fromPrim 0u ))
-            Assert.True(( r2tPDU.BufferOffset = 0u ))
-            Assert.True(( r2tPDU.DesiredDataTransferLength = accessLength ))
-
-            let writtenData = Array.zeroCreate( int accessLength )
-            Random.Shared.NextBytes( writtenData )
-
-            // Send data-Out PDU 1
-            let writtenData1 = PooledBuffer.Rent writtenData.[ 0 .. 2047 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 0u ) 0u writtenData1
-            writtenData1.Return()
-
-            // Send data-Out PDU 2
-            let writtenData2 = PooledBuffer.Rent writtenData.[ 1024 .. 3071 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 1u ) 1024u writtenData2
-            writtenData2.Return()
-
-            // Send data-Out PDU 3
-            let writtenData3 = PooledBuffer.Rent writtenData.[ 2048 .. 4095 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 2u ) 2048u writtenData3
-            writtenData3.Return()
-
-            // Receive SCSI Response PDU
-            let! writeRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
-            Assert.True(( writeRespPDU.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
-            Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
-            Assert.True(( writeRespPDU.InitiatorTaskTag = writeITT ))
-            Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
-            Assert.True(( writeRespPDU.O ))
-            Assert.True(( writeRespPDU.ResidualCount = 2048u )) // Haruka considers this to be an overflow because the initiator sent too many data.
-
-            // read media data
-            let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
-            let! _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
-            let! readPDU1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
-            let! readPDU2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
-            Assert.True(( readPDU2.Status = ScsiCmdStatCd.GOOD ))
-
-            // Verify that the sent data was written correctly.
-            Assert.True(( writtenData = readPDU1.DataSegment.ToArray() ))
-
-            do! CloseSession r1 g_CID0
-        }
-
-    // Contains a 0-byte Data-Out PDU
-    [<Fact>]
-    member _.R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_004() =
-        task {
-            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with MaxRecvDataSegmentLength_I = 16384u }
-            Assert.True(( r1.Params.MaxBurstLength = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
-
-            let accessLength = 4096u
-            let accessBlockCount = accessLength / m_MediaBlockSize
-
-            // Send SCSI write
-            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
-            let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
-
-            // Receive R2T
-            let! r2tPDU = r1.ReceiveSpecific<R2TPDU> g_CID0
-            Assert.True(( r2tPDU.InitiatorTaskTag = writeITT ))
-            Assert.True(( r2tPDU.R2TSN = datasn_me.fromPrim 0u ))
-            Assert.True(( r2tPDU.BufferOffset = 0u ))
-            Assert.True(( r2tPDU.DesiredDataTransferLength = accessLength ))
-
-            let writtenData = Array.zeroCreate( int accessLength )
-            Random.Shared.NextBytes( writtenData )
-
-            // Send data-Out PDU 1 ( 0 byte )
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 0u ) 0u PooledBuffer.Empty
-
-            // Send data-Out PDU 2
-            let writtenData1 = PooledBuffer.Rent writtenData.[ 0 .. 1023 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 1u ) 0u writtenData1
-            writtenData1.Return()
-
-            // Send data-Out PDU 3 ( 0 byte )
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 2u ) 1024u PooledBuffer.Empty
-
-            // Send data-Out PDU 4
-            let writtenData2 = PooledBuffer.Rent writtenData.[ 1024 .. 2047 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 3u ) 1024u writtenData2
-            writtenData2.Return()
-
-            // Send data-Out PDU 5 ( 0 byte )
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 4u ) 2048u PooledBuffer.Empty
-
-            // Send data-Out PDU 6
-            let writtenData3 = PooledBuffer.Rent writtenData.[ 2048 .. 3071 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 5u ) 2048u writtenData3
-            writtenData3.Return()
-
-            // Send data-Out PDU 7 ( 0 byte )
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 6u ) 3072u PooledBuffer.Empty
-
-            // Send data-Out PDU 8
-            let writtenData4 = PooledBuffer.Rent writtenData.[ 3072 .. 4095 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 7u ) 3072u writtenData4
-            writtenData4.Return()
-
-            // Send data-Out PDU 9 ( 0 byte )
-            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 8u ) 4096u PooledBuffer.Empty
-
-            // Receive SCSI Response PDU
-            let! writeRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
-            Assert.True(( writeRespPDU.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
-            Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
-            Assert.True(( writeRespPDU.InitiatorTaskTag = writeITT ))
-            Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
-            Assert.True(( writeRespPDU.ResidualCount = 0u ))
-
-            // read media data
-            let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
-            let! _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
-            let! readPDU1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
-            let! readPDU2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
-            Assert.True(( readPDU2.Status = ScsiCmdStatCd.GOOD ))
-
-            // Verify that the sent data was written correctly.
-            Assert.True(( writtenData = readPDU1.DataSegment.ToArray() ))
+            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            Assert.True(( writtenData = wroteData ))
 
             do! CloseSession r1 g_CID0
         }
 
     // Out of range Data-Out PDU
     [<Fact>]
-    member _.R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_005() =
+    member _.R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_002() =
         task {
-            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with MaxRecvDataSegmentLength_I = 16384u }
-            Assert.True(( r1.Params.MaxBurstLength = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
-
+            let! r1 = CreateSession 0uy 16384u 16384u
             let accessLength = 4096u
             let accessBlockCount = accessLength / m_MediaBlockSize
 
@@ -2337,30 +2124,18 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
-            // read media data
-            let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
-            let! _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
-            let! readPDU1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
-            let! readPDU2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
-            Assert.True(( readPDU2.Status = ScsiCmdStatCd.GOOD ))
-
             // Verify that the sent data was written correctly.
-            Assert.True(( writtenData = readPDU1.DataSegment.ToArray() ))
+            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            Assert.True(( writtenData = wroteData ))
 
             do! CloseSession r1 g_CID0
         }
 
     // Incomplete data transfer. ErrorRecoveryLevel=0
     [<Fact>]
-    member _.R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_006() =
+    member _.R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_003() =
         task {
-            let sessParam = { m_defaultSessParam with ErrorRecoveryLevel = 0uy }
-            let connParam = { m_defaultConnParam with MaxRecvDataSegmentLength_I = 16384u }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam connParam
-            Assert.True(( r1.Params.MaxBurstLength = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
-
+            let! r1 = CreateSession 0uy 16384u 16384u
             let accessLength = 4096u
             let accessBlockCount = accessLength / m_MediaBlockSize
 
@@ -2400,15 +2175,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
     // Incomplete data transfer. ErrorRecoveryLevel>0
     [<Fact>]
-    member _.R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_007() =
+    member _.R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_004() =
         task {
+            let! r1 = CreateSession 1uy 16384u 16384u
             let sessParam = { m_defaultSessParam with ErrorRecoveryLevel = 1uy }
-            let connParam = { m_defaultConnParam with MaxRecvDataSegmentLength_I = 16384u }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam connParam
-            Assert.True(( r1.Params.MaxBurstLength = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
-
             let accessLength = 4096u
             let accessBlockCount = accessLength / m_MediaBlockSize
 
@@ -2456,216 +2226,9 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
-            // read media data
-            let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
-            let! _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
-            let! readPDU1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
-            let! readPDU2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
-            Assert.True(( readPDU2.Status = ScsiCmdStatCd.GOOD ))
-
             // Verify that the sent data was written correctly.
-            Assert.True(( writtenData = readPDU1.DataSegment.ToArray() ))
-
-            do! CloseSession r1 g_CID0
-        }
-
-    // DataSN duplicate/skip
-    // The Haruka implementation does not check the DataSN value.
-    [<Fact>]
-    member _.R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_008() =
-        task {
-            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with MaxRecvDataSegmentLength_I = 16384u }
-            Assert.True(( r1.Params.MaxBurstLength = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
-
-            let accessLength = 4096u
-            let accessBlockCount = accessLength / m_MediaBlockSize
-
-            // Send SCSI write
-            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
-            let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
-
-            // Receive R2T
-            let! r2tPDU = r1.ReceiveSpecific<R2TPDU> g_CID0
-            Assert.True(( r2tPDU.InitiatorTaskTag = writeITT ))
-            Assert.True(( r2tPDU.R2TSN = datasn_me.fromPrim 0u ))
-            Assert.True(( r2tPDU.BufferOffset = 0u ))
-            Assert.True(( r2tPDU.DesiredDataTransferLength = accessLength ))
-
-            let writtenData = Array.zeroCreate( int accessLength )
-            Random.Shared.NextBytes( writtenData )
-
-            // Send data-Out PDU 1
-            let writtenData1 = PooledBuffer.Rent writtenData.[ 0 .. 1023 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 99u ) 0u writtenData1
-            writtenData1.Return()
-
-            // Send data-Out PDU 2
-            let writtenData2 = PooledBuffer.Rent writtenData.[ 1024 .. 2047 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 50u ) 1024u writtenData2
-            writtenData2.Return()
-
-            // Send data-Out PDU 3
-            let writtenData3 = PooledBuffer.Rent writtenData.[ 2048 .. 3071 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 99u ) 2048u writtenData3
-            writtenData3.Return()
-
-            // Send data-Out PDU 4
-            let writtenData4 = PooledBuffer.Rent writtenData.[ 3072 .. 4095 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 4u ) 3072u writtenData4
-            writtenData4.Return()
-
-            // Receive SCSI Response PDU
-            let! writeRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
-            Assert.True(( writeRespPDU.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
-            Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
-            Assert.True(( writeRespPDU.InitiatorTaskTag = writeITT ))
-            Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
-            Assert.True(( writeRespPDU.ResidualCount = 0u ))
-
-            // read media data
-            let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
-            let! _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
-            let! readPDU1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
-            let! readPDU2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
-            Assert.True(( readPDU2.Status = ScsiCmdStatCd.GOOD ))
-
-            // Verify that the sent data was written correctly.
-            Assert.True(( writtenData = readPDU1.DataSegment.ToArray() ))
-
-            do! CloseSession r1 g_CID0
-        }
-
-    // TTT=0xFFFFFFFF
-    [<Fact>]
-    member _.R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_009() =
-        task {
-            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with MaxRecvDataSegmentLength_I = 16384u }
-            Assert.True(( r1.Params.MaxBurstLength = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
-
-            let accessLength = 4096u
-            let accessBlockCount = accessLength / m_MediaBlockSize
-
-            // Send SCSI write
-            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
-            let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
-
-            // Receive R2T
-            let! r2tPDU = r1.ReceiveSpecific<R2TPDU> g_CID0
-            Assert.True(( r2tPDU.InitiatorTaskTag = writeITT ))
-            Assert.True(( r2tPDU.R2TSN = datasn_me.fromPrim 0u ))
-            Assert.True(( r2tPDU.BufferOffset = 0u ))
-            Assert.True(( r2tPDU.DesiredDataTransferLength = accessLength ))
-
-            let writtenData = Array.zeroCreate( int accessLength )
-            Random.Shared.NextBytes( writtenData )
-
-            // Send data-Out PDU 1
-            let writtenData1 = PooledBuffer.Rent writtenData.[ 0 .. 1023 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 0u ) 0u writtenData1
-            writtenData1.Return()
-
-            // Send data-Out PDU 2
-            let writtenData2 = PooledBuffer.Rent writtenData.[ 1024 .. 2047 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 1u ) 1024u writtenData2
-            writtenData2.Return()
-
-            // Send data-Out PDU 3 ( TTT = 0xFFFFFFFF )
-            // Received as is as unsolicited data.
-            let writtenData3 = PooledBuffer.Rent writtenData.[ 2048 .. 3071 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 g_DefTTT ( datasn_me.fromPrim 2u ) 2048u writtenData3
-            writtenData3.Return()
-
-            // Send data-Out PDU 4
-            let writtenData4 = PooledBuffer.Rent writtenData.[ 3072 .. 4095 ]
-            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 4u ) 3072u writtenData4
-            writtenData4.Return()
-
-            // Receive SCSI Response PDU
-            let! writeRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
-            Assert.True(( writeRespPDU.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
-            Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
-            Assert.True(( writeRespPDU.InitiatorTaskTag = writeITT ))
-            Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
-            Assert.True(( writeRespPDU.ResidualCount = 0u ))
-
-            // read media data
-            let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
-            let! _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
-            let! readPDU1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
-            let! readPDU2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
-            Assert.True(( readPDU2.Status = ScsiCmdStatCd.GOOD ))
-
-            // Verify that the sent data was written correctly.
-            Assert.True(( writtenData = readPDU1.DataSegment.ToArray() ))
-
-            do! CloseSession r1 g_CID0
-        }
-
-    // Unknown TTT
-    [<Fact>]
-    member _.R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_010() =
-        task {
-            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with MaxRecvDataSegmentLength_I = 16384u }
-            Assert.True(( r1.Params.MaxBurstLength = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 16384u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
-
-            let accessLength = 4096u
-            let accessBlockCount = accessLength / m_MediaBlockSize
-
-            // Send SCSI write
-            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
-            let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
-
-            // Receive R2T
-            let! r2tPDU = r1.ReceiveSpecific<R2TPDU> g_CID0
-            Assert.True(( r2tPDU.InitiatorTaskTag = writeITT ))
-            Assert.True(( r2tPDU.R2TSN = datasn_me.fromPrim 0u ))
-            Assert.True(( r2tPDU.BufferOffset = 0u ))
-            Assert.True(( r2tPDU.DesiredDataTransferLength = accessLength ))
-
-            let writtenData = Array.zeroCreate( int accessLength )
-            Random.Shared.NextBytes( writtenData )
-
-            // Send data-Out PDU 0 ( ignored )
-            let writtenData0 = PooledBuffer.RentAndInit 4096
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 ( ttt_me.fromPrim 0x11111111u ) ( datasn_me.fromPrim 0u ) 0u writtenData0
-            writtenData0.Return()
-
-            // Send data-Out PDU 1
-            let writtenData1 = PooledBuffer.Rent writtenData
-            do! r1.SendSCSIDataOutPDU g_CID0 false writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 1u ) 0u writtenData1
-            writtenData1.Return()
-
-            // Send data-Out PDU 2 ( ignored )
-            let writtenData2 = PooledBuffer.RentAndInit 4096
-            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 ( ttt_me.fromPrim 0x22222222u ) ( datasn_me.fromPrim 2u ) 0u writtenData2
-            writtenData2.Return()
-
-            // Send data-Out PDU 3
-            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 1u ) 4096u PooledBuffer.Empty
-
-            // Receive SCSI Response PDU
-            let! writeRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
-            Assert.True(( writeRespPDU.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
-            Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
-            Assert.True(( writeRespPDU.InitiatorTaskTag = writeITT ))
-            Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
-            Assert.True(( writeRespPDU.ResidualCount = 0u ))
-
-            // read media data
-            let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
-            let! _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
-            let! readPDU1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
-            let! readPDU2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
-            Assert.True(( readPDU2.Status = ScsiCmdStatCd.GOOD ))
-
-            // Verify that the sent data was written correctly.
-            Assert.True(( writtenData = readPDU1.DataSegment.ToArray() ))
+            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            Assert.True(( writtenData = wroteData ))
 
             do! CloseSession r1 g_CID0
         }
@@ -2674,13 +2237,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.R2T_NoUnsolicitedData_MultiR2T_Ordered_001() =
         task {
-            let sessParam = { m_defaultSessParam with MaxBurstLength = 4096u }
-            let connParam = { m_defaultConnParam with MaxRecvDataSegmentLength_I = 4096u }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam connParam
-            Assert.True(( r1.Params.MaxBurstLength = 4096u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 4096u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
-
+            let! r1 = CreateSession 0uy 4096u 4096u
             let accessLength = 8192u
             let accessBlockCount = accessLength / m_MediaBlockSize
 
@@ -2729,17 +2286,9 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
-            // read media data
-            let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
-            let! _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
-            let! readPDU1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
-            let! readPDU2 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
-            let! readPDU3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
-            Assert.True(( readPDU3.Status = ScsiCmdStatCd.GOOD ))
-
             // Verify that the sent data was written correctly.
-            Assert.True(( writtenData.[0 .. 4095] = readPDU1.DataSegment.ToArray() ))
-            Assert.True(( writtenData.[4096 .. 8192] = readPDU2.DataSegment.ToArray() ))
+            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            Assert.True(( writtenData = wroteData ))
 
             do! CloseSession r1 g_CID0
         }
@@ -2748,13 +2297,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.R2T_NoUnsolicitedData_MultiR2T_Interleaved_001() =
         task {
-            let sessParam = { m_defaultSessParam with MaxBurstLength = 4096u }
-            let connParam = { m_defaultConnParam with MaxRecvDataSegmentLength_I = 4096u }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam connParam
-            Assert.True(( r1.Params.MaxBurstLength = 4096u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 4096u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
-
+            let! r1 = CreateSession 0uy 4096u 4096u
             let accessLength = 8192u
             let accessBlockCount = accessLength / m_MediaBlockSize
 
@@ -2823,17 +2366,9 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
-            // read media data
-            let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
-            let! _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
-            let! readPDU1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
-            let! readPDU2 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
-            let! readPDU3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
-            Assert.True(( readPDU3.Status = ScsiCmdStatCd.GOOD ))
-
             // Verify that the sent data was written correctly.
-            Assert.True(( writtenData.[0 .. 4095] = readPDU1.DataSegment.ToArray() ))
-            Assert.True(( writtenData.[4096 .. 8192] = readPDU2.DataSegment.ToArray() ))
+            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            Assert.True(( writtenData = wroteData ))
 
             do! CloseSession r1 g_CID0
         }
@@ -2842,17 +2377,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.R2T_NoUnsolicitedData_MultiR2T_Incomplete_001() =
         task {
-            let sessParam = {
-                m_defaultSessParam with
-                    MaxBurstLength = 4096u
-                    ErrorRecoveryLevel = 1uy;
-            }
-            let connParam = { m_defaultConnParam with MaxRecvDataSegmentLength_I = 4096u }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam connParam
-            Assert.True(( r1.Params.MaxBurstLength = 4096u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 4096u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
-
+            let! r1 = CreateSession 1uy 4096u 4096u
             let accessLength = 8192u
             let accessBlockCount = accessLength / m_MediaBlockSize
 
@@ -2915,17 +2440,9 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
-            // read media data
-            let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
-            let! _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
-            let! readPDU1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
-            let! readPDU2 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
-            let! readPDU3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
-            Assert.True(( readPDU3.Status = ScsiCmdStatCd.GOOD ))
-
             // Verify that the sent data was written correctly.
-            Assert.True(( writtenData.[0 .. 4095] = readPDU1.DataSegment.ToArray() ))
-            Assert.True(( writtenData.[4096 .. 8192] = readPDU2.DataSegment.ToArray() ))
+            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            Assert.True(( writtenData = wroteData ))
 
             do! CloseSession r1 g_CID0
         }
@@ -2934,17 +2451,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.R2T_NoUnsolicitedData_MultiR2T_OutOfRange_001() =
         task {
-            let sessParam = {
-                m_defaultSessParam with
-                    MaxBurstLength = 4096u
-                    ErrorRecoveryLevel = 1uy;
-            }
-            let connParam = { m_defaultConnParam with MaxRecvDataSegmentLength_I = 4096u }
-            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam connParam
-            Assert.True(( r1.Params.MaxBurstLength = 4096u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_I = 4096u ))
-            Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = 4096u ))
-
+            let! r1 = CreateSession 1uy 4096u 4096u
             let accessLength = 8192u
             let accessBlockCount = accessLength / m_MediaBlockSize
 
@@ -3010,17 +2517,348 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
-            // read media data
-            let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
-            let! _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
-            let! readPDU1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
-            let! readPDU2 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
-            let! readPDU3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
-            Assert.True(( readPDU3.Status = ScsiCmdStatCd.GOOD ))
+            // Verify that the sent data was written correctly.
+            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            Assert.True(( writtenData = wroteData ))
+
+            do! CloseSession r1 g_CID0
+        }
+                
+    // request resinding R2T
+    [<Fact>]
+    member _.R2T_NoUnsolicitedData_MultiR2T_SNACKR2T_001() =
+        task {
+            let! r1 = CreateSession 1uy 4096u 4096u
+            let accessLength = 8192u
+            let accessBlockCount = accessLength / m_MediaBlockSize
+
+            // Send SCSI write
+            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
+
+            // Receive two R2T
+            let vTTT = Array.zeroCreate< TTT_T >( 2 )
+            for i = 0 to 1 do
+                let! r2tPDU = r1.ReceiveSpecific<R2TPDU> g_CID0
+                Assert.True(( r2tPDU.InitiatorTaskTag = writeITT ))
+                Assert.True(( r2tPDU.R2TSN = datasn_me.fromPrim ( uint32 i ) ))
+                Assert.True(( r2tPDU.BufferOffset = ( uint32 i ) * 4096u ))
+                Assert.True(( r2tPDU.DesiredDataTransferLength = 4096u ))
+                vTTT.[i] <- r2tPDU.TargetTransferTag
+
+            // send R2T SNACK
+            do! r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.DATA_R2T g_LUN1 writeITT g_DefTTT 0u 1u
+
+            // Receive R2T 0
+            let! r2tPDU2 = r1.ReceiveSpecific<R2TPDU> g_CID0
+            Assert.True(( r2tPDU2.InitiatorTaskTag = writeITT ))
+            Assert.True(( r2tPDU2.R2TSN = datasn_me.fromPrim 0u ))
+            Assert.True(( r2tPDU2.BufferOffset = 0u ))
+            Assert.True(( r2tPDU2.DesiredDataTransferLength = 4096u ))
+            Assert.True(( r2tPDU2.TargetTransferTag = vTTT.[0] ))
+
+            let writtenData = Array.zeroCreate( int accessLength )
+            Random.Shared.NextBytes( writtenData )
+
+            // Send data-Out PDU 0 for R2T 0
+            let writtenData0 = PooledBuffer.Rent writtenData.[ 0 .. 4095 ]
+            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 vTTT.[0] ( datasn_me.fromPrim 0u ) 0u writtenData0
+            writtenData0.Return()
+
+            // Send data-Out PDU 1 for R2T 1 ( F=1 )
+            let writtenData1 = PooledBuffer.Rent writtenData.[ 4096 .. 8191 ]
+            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 vTTT.[1] ( datasn_me.fromPrim 0u ) 4096u writtenData1
+            writtenData1.Return()
+
+            // Receive SCSI Response PDU
+            let! writeRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( writeRespPDU.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+            Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( writeRespPDU.InitiatorTaskTag = writeITT ))
+            Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
+            Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
             // Verify that the sent data was written correctly.
-            Assert.True(( writtenData.[0 .. 4095] = readPDU1.DataSegment.ToArray() ))
-            Assert.True(( writtenData.[4096 .. 8192] = readPDU2.DataSegment.ToArray() ))
+            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            Assert.True(( writtenData = wroteData ))
+
+            do! CloseSession r1 g_CID0
+        }
+
+    [<Theory>]
+    //            ERL  SCSICommand  Unsolicited  Expected       Solicited    Sess      Expected       Data-Out for  RecoveryR2T
+    //                 data         Data-Out     R2T            Data-Out     Recovery  RecoveryR2T    RecoveryR2T   retry or not
+    [<InlineData( 0u,  0,           0, 0,        0u, 4096u,     0, 0,        true,     0u, 0u,        0, 0,         false )>]
+    [<InlineData( 1u,  0,           0, 0,        0u, 4096u,     0, 0,        false,    0u, 4096u,     0, 0,         true )>]
+    [<InlineData( 1u,  0,           0, 0,        0u, 4096u,     0, 0,        false,    0u, 4096u,     0, 4096,      false )>]
+    [<InlineData( 0u,  1024,        0, 0,        1024u, 3072u,  0, 0,        true,     0u, 0u,        0, 0,         false )>]
+    [<InlineData( 1u,  1024,        0, 0,        1024u, 3072u,  0, 0,        false,    1024u, 3072u,  0, 0,         true )>]
+    [<InlineData( 1u,  1024,        0, 0,        1024u, 3072u,  0, 0,        false,    1024u, 3072u,  1024, 3072,   false )>]
+    [<InlineData( 1u,  4096,        0, 0,        0u, 0u,        0, 0,        false,    0u, 0u,        0, 0,         false )>]
+    [<InlineData( 0u,  0,           0, 1024,     1024u, 3072u,  0, 0,        true,     0u, 0u,        0, 0,         false )>]
+    [<InlineData( 1u,  0,           0, 1024,     1024u, 3072u,  0, 0,        false,    1024u, 3072u,  0, 0,         true )>]
+    [<InlineData( 1u,  0,           0, 1024,     1024u, 3072u,  0, 0,        false,    1024u, 3072u,  1024, 3072,   false )>]
+    [<InlineData( 0u,  1024,        1024, 1024,  2048u, 2048u,  0, 0,        true,     0u, 0u,        0, 0,         false )>]
+    [<InlineData( 1u,  1024,        1024, 1024,  2048u, 2048u,  0, 0,        false,    2048u, 2048u,  0, 0,         true )>]
+    [<InlineData( 1u,  1024,        1024, 1024,  2048u, 2048u,  0, 0,        false,    2048u, 2048u,  2048, 2048,   false )>]
+    [<InlineData( 1u,  0,           0, 4096,     0u, 0u,        0, 0,        false,    0u, 0u,        0, 0,         false )>]
+    [<InlineData( 1u,  1024,        1024, 3072,  0u, 0u,        0, 0,        false,    0u, 0u,        0, 0,         false )>]
+    [<InlineData( 0u,  0,           0, 0,        0u, 4096u,     0, 1024,     true,     0u, 0u,        0, 0,         false )>]
+    [<InlineData( 1u,  0,           0, 0,        0u, 4096u,     0, 1024,     false,    1024u, 3072u,  0, 0,         true )>]
+    [<InlineData( 1u,  0,           0, 0,        0u, 4096u,     0, 1024,     false,    1024u, 3072u,  1024, 3072,   false )>]
+    [<InlineData( 0u,  1024,        0, 0,        1024u, 3072u,  1024, 1024,  true,     0u, 0u,        0, 0,         false )>]
+    [<InlineData( 1u,  1024,        0, 0,        1024u, 3072u,  1024, 1024,  false,    2048u, 2048u,  0, 0,         true )>]
+    [<InlineData( 1u,  1024,        0, 0,        1024u, 3072u,  1024, 1024,  false,    2048u, 2048u,  2048, 2048,   false )>]
+    [<InlineData( 0u,  0,           0, 1024,     1024u, 3072u,  1024, 1024,  true,     0u, 0u,        0, 0,         false )>]
+    [<InlineData( 1u,  0,           0, 1024,     1024u, 3072u,  1024, 1024,  false,    2048u, 2048u,  0, 0,         true )>]
+    [<InlineData( 1u,  0,           0, 1024,     1024u, 3072u,  1024, 1024,  false,    2048u, 2048u,  2048, 2048,   false )>]
+    [<InlineData( 0u,  1024,        1024, 1024,  2048u, 2048u,  2048, 1024,  true,     0u, 0u,        0, 0,         false )>]
+    [<InlineData( 1u,  1024,        1024, 1024,  2048u, 2048u,  2048, 1024,  false,    3072u, 1024u,  0, 0,         true )>]
+    [<InlineData( 1u,  1024,        1024, 1024,  2048u, 2048u,  2048, 1024,  false,    3072u, 1024u,  3072, 1024,   false )>]
+    [<InlineData( 0u,  0,           0, 0,        0u,    4096u,  0, 4096,     false,    0u, 0u,        0, 0,         false )>]
+    [<InlineData( 0u,  1024,        0, 0,        1024u, 3072u,  1024, 3072,  false,    0u, 0u,        0, 0,         false )>]
+    [<InlineData( 0u,  0,           0, 1024,     1024u, 3072u,  1024, 3072,  false,    0u, 0u,        0, 0,         false )>]
+    [<InlineData( 0u,  1024,        1024, 1024,  2048u, 2048u,  2048, 2048,  false,    0u, 0u,        0, 0,         false )>]
+    member _.UnsolicitedData_001
+            ( errorRecoveryLevel : byte )
+            ( range1Count : int32 )                                     // SCSI Command Unsolicited data
+            ( range2Start : int32 ) ( range2Count : int32 )             // Unsolicited Data-Out PDU
+            ( expR2TBufferOffset : uint32 ) ( expR2TLength : uint32 )   // Expected R2T PDU
+            ( range3Start : int32 ) ( range3Count : int32 )             // Solicited Data-Out PDU for R2T
+            ( isSessionRecovery : bool )
+            ( expRR2TBufferOffset : uint32 ) ( expRR2TLength : uint32 ) // Expected Recovery R2T PDU
+            ( range4Start : int32 ) ( range4Count : int32 )             // Data-Out PDU for Recovery R2T
+            ( retryRecoveryR2T : bool ) =
+        task {
+            let! r1 = CreateSession errorRecoveryLevel 4096u 4096u
+            let accessLength = 4096u
+            let accessBlockCount = accessLength / m_MediaBlockSize
+            let writtenData = Array.zeroCreate( int accessLength )
+            Random.Shared.NextBytes( writtenData )
+
+            // Send SCSI write
+            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let writtenData1 = PooledBuffer.Rent writtenData.[ 0 .. range1Count - 1 ]
+            let scsiCommandFFlag = ( range2Count = 0 )
+            let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false scsiCommandFFlag false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB writtenData1 0u
+            writtenData1.Return()
+
+            // Send Unsolicited Data-Out PDU
+            if not scsiCommandFFlag then
+                let writtenData2 = PooledBuffer.Rent writtenData.[ range2Start .. range2Start + range2Count - 1 ]
+                do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 g_DefTTT ( datasn_me.fromPrim 0u ) ( uint32 range2Start ) writtenData2
+                writtenData2.Return()
+
+            // Receive R2T PDU
+            let mutable r2tTTT = g_DefTTT
+            if expR2TLength > 0u then
+                let! r2tPDU = r1.ReceiveSpecific<R2TPDU> g_CID0
+                Assert.True(( r2tPDU.InitiatorTaskTag = writeITT ))
+                Assert.True(( r2tPDU.R2TSN = datasn_me.fromPrim 0u ))
+                Assert.True(( r2tPDU.BufferOffset = expR2TBufferOffset ))
+                Assert.True(( r2tPDU.DesiredDataTransferLength = expR2TLength ))
+                r2tTTT <- r2tPDU.TargetTransferTag
+
+            // Send Solicited Data-Out PDU
+            if expR2TLength > 0u then
+                let writtenData3 = PooledBuffer.Rent writtenData.[ range3Start .. range3Start + range3Count - 1 ]
+                do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 r2tTTT ( datasn_me.fromPrim 0u ) ( uint32 range3Start ) writtenData3
+                writtenData3.Return()
+
+            if isSessionRecovery then
+                try
+                    let! _ = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+                    Assert.Fail __LINE__
+                with
+                | :? SessionRecoveryException
+                | :? ConnectionErrorException ->
+                    ()
+            else
+                // Receive Recovery R2T PDU
+                let mutable rr2tTTT = g_DefTTT
+                if expRR2TLength > 0u then
+                    let! rr2tPDU = r1.ReceiveSpecific<R2TPDU> g_CID0
+                    Assert.True(( rr2tPDU.InitiatorTaskTag = writeITT ))
+                    Assert.True(( rr2tPDU.R2TSN = datasn_me.fromPrim 1u ))
+                    Assert.True(( rr2tPDU.BufferOffset = expRR2TBufferOffset ))
+                    Assert.True(( rr2tPDU.DesiredDataTransferLength = expRR2TLength ))
+                    rr2tTTT <- rr2tPDU.TargetTransferTag
+
+                // Send Solicited Data-Out PDU
+                if expRR2TLength > 0u then
+                    let writtenData4 = PooledBuffer.Rent writtenData.[ range4Start .. range4Start + range4Count - 1 ]
+                    do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 rr2tTTT ( datasn_me.fromPrim 0u ) ( uint32 range4Start ) writtenData4
+                    writtenData4.Return()
+
+                // Receive recovery R2T again.
+                if retryRecoveryR2T then
+                    let! rr2tPDU2 = r1.ReceiveSpecific<R2TPDU> g_CID0
+                    Assert.True(( rr2tPDU2.InitiatorTaskTag = writeITT ))
+                    Assert.True(( rr2tPDU2.R2TSN = datasn_me.fromPrim 2u ))
+
+                    // Send all of solicited Data
+                    let writtenData5 = PooledBuffer.Rent writtenData.[ int rr2tPDU2.BufferOffset .. int ( rr2tPDU2.BufferOffset + rr2tPDU2.DesiredDataTransferLength - 1u ) ]
+                    do! r1.SendSCSIDataOutPDU g_CID0 true writeITT g_LUN1 rr2tPDU2.TargetTransferTag ( datasn_me.fromPrim 0u ) rr2tPDU2.BufferOffset writtenData5
+                    writtenData5.Return()
+
+                // Receive SCSI Response PDU
+                let! writeRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+                Assert.True(( writeRespPDU.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+                Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
+                Assert.True(( writeRespPDU.InitiatorTaskTag = writeITT ))
+                Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
+                Assert.True(( writeRespPDU.ResidualCount = 0u ))
+
+                // Verify that the sent data was written correctly.
+                let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+                Assert.True(( writtenData = wroteData ))
+
+                do! CloseSession r1 g_CID0
+        }
+
+    static member m_UnsolicitedData_VariousDataOutPDU_001_data = [|
+        [|
+            [|//  DataSN  TTT          F      Data Start  Data End  Fake data
+                ( 0u,     0xFFFFFFFFu, false, 0,          1023,     false );
+                ( 1u,     0xFFFFFFFFu, false, 1024,       2047,     false );
+                ( 2u,     0xFFFFFFFFu, false, 2048,       3071,     false );
+                ( 3u,     0xFFFFFFFFu, true,  3072,       4095,     false );
+            |] :> obj;
+            0u :> obj;  // Residual Count
+        |];
+        [|
+            [|//  DataSN  TTT          F      Data Start  Data End  Fake data
+                ( 3u,     0xFFFFFFFFu, false, 2048,       3071,     false );
+                ( 1u,     0xFFFFFFFFu, false, 3072,       4095,     false );
+                ( 0u,     0xFFFFFFFFu, false, 1024,       2047,     false );
+                ( 2u,     0xFFFFFFFFu, true,  0,          1023,     false );
+            |] :> obj;
+            0u :> obj;  // Residual Count
+        |];
+        [|
+            [|//  DataSN  TTT          F      Data Start  Data End  Fake data
+                ( 0u,     0xFFFFFFFFu, false, 0,          3071,     false );
+                ( 1u,     0xFFFFFFFFu, false, 1024,       2047,     false );
+                ( 2u,     0xFFFFFFFFu, true,  3072,       4095,     false );
+            |] :> obj;
+            1024u :> obj;  // Residual Count
+        |];
+        [|
+            [|//  DataSN  TTT          F      Data Start  Data End  Fake data
+                ( 0u,     0xFFFFFFFFu, false, 0,          -1,       false );   // 0 byte Data-Out
+                ( 1u,     0xFFFFFFFFu, false, 0,          2047,     false );
+                ( 2u,     0xFFFFFFFFu, false, 2048,       2047,     false );   // 0 byte Data-Out
+                ( 3u,     0xFFFFFFFFu, false, 2048,       4095,     false );
+                ( 4u,     0xFFFFFFFFu, true,  4096,       4095,     false );   // 0 byte Data-Out
+            |] :> obj;
+            0u :> obj;  // Residual Count
+        |];
+        [|
+            [|//  DataSN  TTT          F      Data Start  Data End  Fake data
+                ( 99u,    0xFFFFFFFFu, false, 0,          2047,     false );
+                ( 13u,    0xFFFFFFFFu, false, 2048,       3071,     false );
+                ( 99u,    0xFFFFFFFFu, true,  3072,       4095,     false );
+            |] :> obj;
+            0u :> obj;  // Residual Count
+        |];
+        [|
+            [|//  DataSN  TTT          F      Data Start  Data End  Fake data
+                ( 0u,     0x11111111u, false, 0,          4095,     true );     // ignored
+                ( 1u,     0xFFFFFFFFu, false, 0,          2047,     false );
+                ( 2u,     0xFFFFFFFFu, false, 2048,       4095,     false );
+                ( 3u,     0x22222222u, true,  4096,       4095,     true );     // ignored
+                ( 4u,     0xFFFFFFFFu, true,  4096,       4095,     false );
+            |] :> obj;
+            0u :> obj;  // Residual Count
+        |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_UnsolicitedData_VariousDataOutPDU_001_data" )>]
+    member _.UnsolicitedData_VariousDataOutPDU_001 ( v : ( uint * uint * bool * int * int * bool )[] ) ( expResidualCount : uint32 ) =
+        task {
+            let! r1 = CreateSession 1uy 4096u 4096u
+            let accessLength = 4096u
+            let accessBlockCount = accessLength / m_MediaBlockSize
+            let writtenData = Array.zeroCreate( int accessLength )
+            Random.Shared.NextBytes( writtenData )
+
+            // Send SCSI write
+            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
+
+            // Send data-Out PDU
+            for i = 0 to v.Length - 1 do
+                let argDataSN, argTTT, argF, argStart, argEnd, argFake = v.[i]
+                let writtenData1 = PooledBuffer.Rent writtenData.[ argStart .. argEnd ]
+                if argFake then
+                    Random.Shared.NextBytes( writtenData1.ArraySegment.AsSpan() )
+                do! r1.SendSCSIDataOutPDU g_CID0 argF writeITT g_LUN1 ( ttt_me.fromPrim argTTT ) ( datasn_me.fromPrim argDataSN ) ( uint32 argStart ) writtenData1
+                writtenData1.Return()
+
+            // Receive SCSI Response PDU
+            let! writeRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( writeRespPDU.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+            Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( writeRespPDU.InitiatorTaskTag = writeITT ))
+            Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
+            Assert.True(( writeRespPDU.ResidualCount = expResidualCount ))
+
+            // Verify that the sent data was written correctly.
+            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            Assert.True(( writtenData = wroteData ))
+
+            do! CloseSession r1 g_CID0
+        }
+
+    [<Fact>]
+    member _.UnsolicitedData_DropScsiCommandPDU_001() =
+        task {
+            let! r1 = CreateSession 1uy 4096u 4096u
+            let accessLength = 4096u
+            let accessBlockCount = accessLength / m_MediaBlockSize
+            let writtenData = Array.zeroCreate( int accessLength )
+            Random.Shared.NextBytes( writtenData )
+
+            let oldITT = r1.ITT
+
+            // Send SCSI write ( dropped at target )
+            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let writtenData0 = PooledBuffer.Rent writtenData.[ 0 .. 1023 ]
+            let! writeITT1, writeCmdSN1 =
+                r1.SendSCSICommandPDU_Test id ( ValueSome( 500u, 600u ) ) g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB writtenData0 0u
+
+            // Send Data-Out PDU
+            let writtenData1 = PooledBuffer.Rent writtenData.[ 1024 .. 4095 ]
+            do! r1.SendSCSIDataOutPDU g_CID0 true writeITT1 g_LUN1 g_DefTTT ( datasn_me.fromPrim 0u ) 1024u writtenData1
+            writtenData1.Return()
+
+            // Receive Reject PDU
+            let! _ = r1.ReceiveSpecific<RejectPDU> g_CID0
+
+            // rewind CmdAN and ITT
+            r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
+            r1.ITT <- oldITT
+
+            // Re-Send SCSI write
+            let! writeITT2, writeCmdSN2 =
+                r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB writtenData0 0u
+            Assert.True(( writeITT1 = writeITT2 ))
+            Assert.True(( writeCmdSN1 = writeCmdSN2 ))
+            writtenData0.Return()
+
+
+            // Receive SCSI Response PDU
+            let! writeRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( writeRespPDU.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+            Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( writeRespPDU.InitiatorTaskTag = writeITT1 ))
+            Assert.True(( writeRespPDU.BidirectionalReadResidualCount = 0u ))
+            Assert.True(( writeRespPDU.ResidualCount = 0u ))
+
+            // Verify that the sent data was written correctly.
+            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            Assert.True(( writtenData = wroteData ))
 
             do! CloseSession r1 g_CID0
         }
