@@ -868,6 +868,25 @@ type iSCSI_Initiator(
         m_Connections.Remove( cid ) |> ignore
 
     /// <summary>
+    ///  Close session graaseflly.
+    /// </summary>
+    /// <param name="cid">
+    ///  Specifies the connection to use to send the logout request.
+    /// </param>
+    /// <param name="immidiate">
+    ///  Specify whether to deliver immediately or not.
+    /// </param>
+    member this.CloseSession ( cid : CID_T ) ( immidiate : bool ) =
+        task {
+            let! itt, _ = this.SendLogoutRequestPDU cid immidiate LogoutReqReasonCd.CLOSE_SESS cid
+            let! rpdu5 = this.ReceiveSpecific<LogoutResponsePDU> cid
+            if rpdu5.InitiatorTaskTag <> itt then
+                raise <| SessionRecoveryException( "Unexpedted ITT", m_SessParams.TSIH )
+            if rpdu5.Response <> LogoutResCd.SUCCESS then
+                raise <| SessionRecoveryException( "Unexpedted Response", m_SessParams.TSIH )
+        }
+
+    /// <summary>
     ///  Remove connection entry and return old connection object.
     ///  Connection will not be closed.
     /// </summary>
@@ -894,6 +913,60 @@ type iSCSI_Initiator(
     member this.FakeConnectionParameter ( cid : CID_T ) ( conParams : ConnParams ) : unit =
         let r = this.RemoveConnectionEntry cid
         m_Connections.Add( cid, iSCSI_Connection( conParams, r.Connection, r.ExpStatSN ) )
+
+    /// <summary>
+    ///  Reads a specified range of data from the media.
+    /// </summary>
+    /// <param name="cid">
+    ///  Specifies the connection to be used for sending and receiving PDUs.
+    /// </param>
+    /// <param name="lun">
+    ///  Specify the LU to be read.
+    /// </param>
+    /// <param name="lba">
+    ///  Specifiy the start position to be read.
+    /// </param>
+    /// <param name="blockCount">
+    ///  Specifiy the length to be read.
+    /// </param>
+    /// <param name="blockLength">
+    ///  Media block size.
+    /// </param>
+    /// <returns>
+    ///  Return the loaded data.
+    /// </returns>
+    member this.ReadMediaData ( cid : CID_T ) ( lun : LUN_T ) ( lba : uint32 ) ( blockCount : uint32 ) ( blockLength : uint32 ) : Task<byte[]> =
+        task {
+            let accessLength = blockCount * blockLength
+            let rBuffer = Array.zeroCreate<byte>( int accessLength )
+            let readCDB = GenScsiCDB.Read10 0uy false false false lba 0uy ( uint16 blockCount ) false false
+            let! itt, _ = this.SendSCSICommandPDU cid false true true false TaskATTRCd.SIMPLE_TASK lun accessLength readCDB PooledBuffer.Empty 0u
+
+            do! Functions.loopAsync ( fun () ->
+                task {
+                    let! pdu = this.Receive cid
+                    match pdu with
+                    | :? SCSIDataInPDU as x ->
+                        if x.InitiatorTaskTag <> itt then
+                            raise <| SessionRecoveryException( "Unexpedted ITT", m_SessParams.TSIH )
+                        x.DataSegment.CopyTo( rBuffer, int x.BufferOffset )
+                        return true
+                    | :? SCSIResponsePDU as x ->
+                        if x.InitiatorTaskTag <> itt then
+                            raise <| SessionRecoveryException( "Unexpedted ITT", m_SessParams.TSIH )
+                        if x.Response <> iScsiSvcRespCd.COMMAND_COMPLETE then
+                            raise <| SessionRecoveryException( "Unexpedted Response", m_SessParams.TSIH )
+                        if x.Status <> ScsiCmdStatCd.GOOD then
+                            raise <| SessionRecoveryException( "Unexpedted Status", m_SessParams.TSIH )
+                        return false
+                    | _ ->
+                        raise <| SessionRecoveryException( "Unexpedted PDU", m_SessParams.TSIH )
+                        return false
+                }
+            )
+            return rBuffer
+        }
+
 
 
     ///////////////////////////////////////////////////////////////////////////

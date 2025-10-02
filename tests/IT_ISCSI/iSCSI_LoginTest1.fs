@@ -192,9 +192,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             rpdu1.PingData.Return()
 
             // Logout
-            let! _ = r.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! rpdu2 = r.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
+            do! r.CloseSession g_CID0 false
         }
 
     // Authentication test
@@ -389,9 +387,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             rpdu1.PingData.Return()
 
             // Logout
-            let! _ = r.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! rpdu2 = r.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
+            do! r.CloseSession g_CID0 false
         }
 
     // Authentication test
@@ -667,9 +663,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             rpdu1.PingData.Return()
 
             // Logout
-            let! _ = r.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_SESS g_CID0
-            let! rpdu2 = r.ReceiveSpecific<LogoutResponsePDU> g_CID0
-            Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
+            do! r.CloseSession g_CID0 false
         }
 
     // Authentication test
@@ -835,9 +829,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             rpdu1.PingData.Return()
 
             // Logout
-            let! _ = r2.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_SESS g_CID1
-            let! rpdu2 = r2.ReceiveSpecific<LogoutResponsePDU> g_CID1
-            Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
+            do! r2.CloseSession g_CID1 false
         }
 
     // Logout for the session by last one connection.
@@ -920,9 +912,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             rpdu4.PingData.Return()
 
             // Logout
-            let! _ = r3.SendLogoutRequestPDU g_CID2 false LogoutReqReasonCd.CLOSE_SESS g_CID2
-            let! rpdu5 = r3.ReceiveSpecific<LogoutResponsePDU> g_CID2
-            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
+            do! r3.CloseSession g_CID2 false
         }
 
     // Log out of a session while other connections exist.
@@ -1027,9 +1017,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             rpdu3.PingData.Return()
 
             // Logout
-            let! _ = r3.SendLogoutRequestPDU g_CID2 false LogoutReqReasonCd.CLOSE_SESS g_CID2
-            let! rpdu4 = r3.ReceiveSpecific<LogoutResponsePDU> g_CID2
-            Assert.True(( rpdu4.Response = LogoutResCd.SUCCESS ))
+            do! r3.CloseSession g_CID2 false
         }
 
     // Log out of a session while other connections exist.

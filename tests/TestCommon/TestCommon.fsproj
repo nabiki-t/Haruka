@@ -25,6 +25,7 @@
     <Compile Include="PrivateCaller.fs" />
     <Compile Include="Stub.fs" />
     <Compile Include="StubProcCtrl.fs" />
+    <Compile Include="GenScsiCDB.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
 

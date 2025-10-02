@@ -142,51 +142,6 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
         MaxRecvDataSegmentLength_T = 4096u;
     }
 
-    let scsiWrite10CDB ( lba : uint32 ) ( transferLength : uint16 ) =
-        let wlba =
-            ( int32 ) lba
-            |> IPAddress.HostToNetworkOrder
-            |> BitConverter.GetBytes
-        let wtl =
-            ( int16 ) transferLength
-            |> IPAddress.HostToNetworkOrder
-            |> BitConverter.GetBytes
-        [|
-            0x2Auy;                                 // OPERATION CODE( Write 10 )
-            0x00uy;                                 // WRPROTECT(000), DPO(0), FUA(0), FUA_NV(0)
-            wlba.[0]; wlba.[1]; wlba.[2]; wlba.[3]; // LBA
-            0x00uy;                                 // GROUP NUMBER(0)
-            wtl.[0]; wtl.[1];                       // TRANSFER LENGTH
-            0x00uy;                                 // NACA(0), LINK(0)
-            0x00uy; 0x00uy; 0x00uy; 0x00uy;         // padding
-            0x00uy; 0x00uy;
-        |]
-
-    let scsiRead10CDB ( transferLength : uint16 ) =
-        let w =
-            ( int16 ) transferLength
-            |> IPAddress.HostToNetworkOrder
-            |> BitConverter.GetBytes
-        [|
-            0x28uy;                         // OPERATION CODE( Read 10 )
-            0x00uy;                         // RDPROTECT(000), DPO(0), FUA(0), FUA_NV(0)
-            0x00uy; 0x00uy; 0x00uy; 0x00uy; // LBA
-            0x00uy;                         // GROUP NUMBER(0)
-            w.[0]; w.[1];                   // TRANSFER LENGTH
-            0x00uy;                         // NACA(0), LINK(0)
-            0x00uy; 0x00uy; 0x00uy; 0x00uy; // padding
-            0x00uy; 0x00uy;
-        |]
-
-    let CloseSession ( r : iSCSI_Initiator ) ( cid : CID_T ) =
-        task {
-            // logout
-            let! itt, _ = r.SendLogoutRequestPDU cid false LogoutReqReasonCd.CLOSE_SESS cid
-            let! rpdu5 = r.ReceiveSpecific<LogoutResponsePDU> cid
-            Assert.True(( rpdu5.InitiatorTaskTag = itt ))
-            Assert.True(( rpdu5.Response = LogoutResCd.SUCCESS ))
-        }
-
     let CreateSession ( argErrorRecoveryLevel : byte ) ( argMaxBurstLength : uint ) ( argMaxRecvDataSegmentLength_I : uint ) : Task<iSCSI_Initiator> =
         task {
             let sessParam = {
@@ -205,35 +160,6 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             return r1
         }
 
-    let ReadMediaData ( rS : iSCSI_Initiator ) ( blockCount : uint32 ) ( blockLength : uint32 ) : Task<byte[]> =
-        task {
-            let accessLength = blockCount * blockLength
-            let rBuffer = Array.zeroCreate<byte>( int accessLength )
-            let readCDB = scsiRead10CDB ( uint16 blockCount )
-            let! itt, _ = rS.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
-
-            do! Functions.loopAsync ( fun () ->
-                task {
-                    let! pdu = rS.Receive g_CID0
-                    match pdu with
-                    | :? SCSIDataInPDU as x ->
-                        Assert.True(( x.InitiatorTaskTag = itt ))
-                        x.DataSegment.CopyTo( rBuffer, int x.BufferOffset )
-                        return true
-                    | :? SCSIResponsePDU as x ->
-                        Assert.True(( x.InitiatorTaskTag = itt ))
-                        Assert.True(( x.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
-                        Assert.True(( x.Status = ScsiCmdStatCd.GOOD ))
-                        return false
-                    | _ ->
-                        Assert.Fail __LINE__
-                        return false
-                }
-            )
-            return rBuffer
-        }
-
-
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
 
@@ -250,8 +176,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 ()
 
-            // logout
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // The target discards the PDU and retransmits it.
@@ -285,7 +210,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
             sendData.Return()
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // Retransmission of PDUs with the same CmdSN. Nop-Out
@@ -345,7 +270,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
 
             // Send SCSI Command with same CmdSN as Nop-Out 4
-            let writeCDB = scsiWrite10CDB 0u 0us
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy 0us false false
             let! _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
             let! pdu4_2 = r1.ReceiveSpecific<RejectPDU> g_CID0
             Assert.True(( pdu4_2.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
@@ -365,7 +290,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( pdu5_2.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
             Assert.True(( pdu5_2.ExpCmdSN = cmdsn_me.fromPrim 5u ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // Send until CmdSN reaches MaxCmdSN.
@@ -383,7 +308,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let pduCount = ( cmdsn_me.toPrim pdu1_1.MaxCmdSN ) - ( cmdsn_me.toPrim pdu1_1.ExpCmdSN ) + 1u |> int
             let vitt = Array.zeroCreate<ITT_T> pduCount
             for i = 1 to pduCount do
-                let writeCDB = scsiWrite10CDB 0u 1us
+                let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us false false
                 let! itt, _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
                 vitt.[ i - 1 ] <- itt
 
@@ -405,7 +330,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu2.MaxCmdSN = cmdsn_me.incr ( Constants.BDLU_MAX_TASKSET_SIZE + 1u ) wcmdsn ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // Send CmdSN over MaxCmdSN.
@@ -423,12 +348,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let pduCount = ( cmdsn_me.toPrim pdu1_1.MaxCmdSN ) - ( cmdsn_me.toPrim pdu1_1.ExpCmdSN ) + 1u |> int
             let vitt = Array.zeroCreate<ITT_T> pduCount
             for i = 1 to pduCount do
-                let writeCDB = scsiWrite10CDB 0u 1us
+                let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us false false
                 let! itt, _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
                 vitt.[ i - 1 ] <- itt
 
             // Send additional SCSI Command PDU with CmdSN overs MaxCmdSN.
-            let writeCDB = scsiWrite10CDB 0u 1us
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us false false
             let! _, _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
             let! _ = r1.ReceiveSpecific<RejectPDU> g_CID0
 
@@ -447,7 +372,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu2.MaxCmdSN = cmdsn_me.incr ( Constants.BDLU_MAX_TASKSET_SIZE + 1u ) wcmdsn ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     [<Fact>]
@@ -485,7 +410,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( cmdsn5 = cmdsn_me.fromPrim 1u ))
             Assert.True(( pdu5.ExpCmdSN = cmdsn_me.fromPrim 2u ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // Send CmdSN in reverse order
@@ -532,7 +457,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // skip CmdSN=2
             r1.SetNextCmdSN ( cmdsn_me.fromPrim 3u )
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // Multi sessions
@@ -572,8 +497,8 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _ = r2.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn2_2 = cmdsn_me.fromPrim 2u ))
 
-            do! CloseSession r1 g_CID0  // logout at session 1
-            do! CloseSession r2 g_CID0  // logout at session 2
+            do! r1.CloseSession g_CID0 false  // logout at session 1
+            do! r2.CloseSession g_CID0 false  // logout at session 2
         }
 
     // Multi connections
@@ -613,7 +538,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( cmdsn2_2 = cmdsn_me.fromPrim 5u ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // Reconnecting a connection. session persists.
@@ -652,7 +577,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( cmdsn2_2 = cmdsn_me.fromPrim 4u ))
 
-            do! CloseSession r1 g_CID1
+            do! r1.CloseSession g_CID1 false
         }
         
     // Reconnecting a connection. session persists.
@@ -688,7 +613,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( cmdsn2_2 = cmdsn_me.fromPrim 3u ))
 
-            do! CloseSession r1 g_CID1
+            do! r1.CloseSession g_CID1 false
         }
 
     // Reconnecting a connection. session persists.
@@ -722,7 +647,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( cmdsn2_2 = cmdsn_me.fromPrim 3u ))
 
-            do! CloseSession r1 g_CID1
+            do! r1.CloseSession g_CID1 false
         }
 
     // Reconnecting a connection. session does not persist.
@@ -750,7 +675,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _ = r2.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_2 = cmdsn_me.zero ))
 
-            do! CloseSession r2 g_CID0
+            do! r2.CloseSession g_CID0 false
         }
 
     // Reconnecting a connection. session does not persist.
@@ -776,7 +701,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _ = r2.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_2 = cmdsn_me.zero ))
 
-            do! CloseSession r2 g_CID0
+            do! r2.CloseSession g_CID0 false
         }
 
     // Reconnecting a connection. session persists.
@@ -792,7 +717,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
             // Send SCSI Command PDU at connection 0
-            let writeCDB = scsiWrite10CDB 0u 1us
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us false false
             let! _, cmdsn_sc = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
             Assert.True(( cmdsn_sc = cmdsn_me.fromPrim 1u ))
 
@@ -807,7 +732,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! wpdu = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_2 = cmdsn_me.fromPrim 2u ))
 
-            do! CloseSession r1 g_CID1
+            do! r1.CloseSession g_CID1 false
         }
         
     // Reconnecting a connection. session persists.
@@ -823,7 +748,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
             // Send SCSI Command PDU at connection 0
-            let writeCDB = scsiWrite10CDB 0u 1us
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us false false
             let! _, cmdsn_sc = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
             Assert.True(( cmdsn_sc = cmdsn_me.fromPrim 1u ))
 
@@ -836,7 +761,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! wpdu = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_2 = cmdsn_me.fromPrim 2u ))
 
-            do! CloseSession r1 g_CID1
+            do! r1.CloseSession g_CID1 false
         }
 
     // Sequence of non-immediate commands.
@@ -852,7 +777,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 let! pdu = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.True(( pdu.StatSN = sendExpStatSN ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // the next command is sent without incrementing ExpStatSN.
@@ -900,7 +825,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // rewind ExpStatSN
             r1.Connection( g_CID0 ).SkipExtStatSN( statsn_me.fromPrim 1u )
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // Add ExpStatSN before receiving status.
@@ -931,7 +856,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( pdu2.StatSN = statsn_me.decr 1u sendExpStatSN2 ))
             Assert.True(( pdu2.InitiatorTaskTag = itt2 ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // Resend request for received status.
@@ -983,7 +908,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( pdu3_2.StatSN = statsn_me.next sendExpStatSN2 ))
             Assert.True(( pdu3_2.InitiatorTaskTag = itt3 ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // Sequence of non-immediate commands.
@@ -1019,7 +944,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! pdu4 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu4.StatSN = sendExpStatSN4 ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // Multi connections
@@ -1069,7 +994,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! pdu1_3 = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( pdu1_3.StatSN = sendExpStatSN1_3 ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // Too little ExpStatSN
@@ -1178,7 +1103,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Reconnecting the connection resets StatSN back to the beginning.
             Assert.True(( statsn_me.lessThan sendExpStatSN2 sendExpStatSN1 ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // Reconnecting a connection. Reconnect after drop the connection.
@@ -1215,7 +1140,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Reconnecting the connection resets StatSN back to the beginning.
             Assert.True(( statsn_me.lessThan sendExpStatSN2 sendExpStatSN1 ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // Reconnecting a connection.  Reconnect with implicit logout. Initial ExpStatSN=0.
@@ -1254,7 +1179,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Reconnecting the connection resets StatSN back to the beginning.
             Assert.True(( statsn_me.lessThan sendExpStatSN2 sendExpStatSN1 ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // Reconnecting a connection.  Reconnect with implicit logout.
@@ -1288,7 +1213,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // StatSN value is not reset
             Assert.True(( statsn_me.lessThan sendExpStatSN1 sendExpStatSN2 ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // Reconnecting a connection.  Reconnect with implicit logout. Fake ExpStatSN.
@@ -1321,7 +1246,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 ()
 
             // logout. Connection 1 is still alive.
-            do! CloseSession r1 g_CID1
+            do! r1.CloseSession g_CID1 false
         }
 
     [<Fact>]
@@ -1331,7 +1256,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // SCSI Write command ( failed )
-            let writeCDB = scsiWrite10CDB 0xFFFFFFFFu 1us
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0xFFFFFFFFu 0uy 1us false false
             let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
             let! _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB sendData 0u
             let! pdu1 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
@@ -1346,7 +1271,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( pdu2.Response = TaskMgrResCd.FUCTION_COMPLETE ))
 
             // SCSI Write command ( succeed )
-            let writeCDB = scsiWrite10CDB 0u 1us
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us false false
             let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
             let! _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB sendData 0u
             let! pdu1 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
@@ -1354,7 +1279,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( pdu1.Status = ScsiCmdStatCd.GOOD ))
 
             // logout.
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     [<Fact>]
@@ -1363,7 +1288,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // SCSI Read
-            let readCDB = scsiRead10CDB ( uint16 0us )
+            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy 0us false false
             let! _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 0u readCDB PooledBuffer.Empty 0u
 
             // SCSI Response
@@ -1371,7 +1296,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( rpdu3.Status = ScsiCmdStatCd.GOOD ))
 
             // logout.
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     [<Fact>]
@@ -1383,7 +1308,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             //let pduCount = 1u
 
             // SCSI Read
-            let readCDB = scsiRead10CDB ( uint16 accessBlockcount )
+            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 accessBlockcount ) false false
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
 
             // SCSI Data-In
@@ -1398,7 +1323,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( rpdu3.Status = ScsiCmdStatCd.GOOD ))
 
             // logout.
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     [<Fact>]
@@ -1410,7 +1335,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
 
             // SCSI Read
-            let readCDB = scsiRead10CDB ( uint16 accessBlockcount )
+            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 accessBlockcount ) false false
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
 
             // SCSI Data-In
@@ -1425,7 +1350,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! rpdu3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
             Assert.True(( rpdu3.Status = ScsiCmdStatCd.GOOD ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     [<Fact>]
@@ -1460,7 +1385,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             |]
 
             // SCSI Read
-            let readCDB = scsiRead10CDB ( uint16 accessBlockcount )
+            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 accessBlockcount ) false false
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
 
             for i = 0 to expRsult.Length - 1 do
@@ -1485,7 +1410,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! rpdu3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
             Assert.True(( rpdu3.Status = ScsiCmdStatCd.GOOD ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     [<Fact>]
@@ -1509,7 +1434,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             |]
 
             // SCSI Read
-            let readCDB = scsiRead10CDB ( uint16 accessBlockcount )
+            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 accessBlockcount ) false false
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
 
             for i = 0 to expRsult.Length - 1 do
@@ -1528,7 +1453,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! rpdu3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
             Assert.True(( rpdu3.Status = ScsiCmdStatCd.GOOD ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // Retransmit data with SNACK request
@@ -1550,7 +1475,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             |]
 
             // SCSI Read
-            let readCDB = scsiRead10CDB ( uint16 accessBlockcount )
+            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 accessBlockcount ) false false
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
 
             // SCSI Data-In
@@ -1586,7 +1511,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             r1.Connection( g_CID0 ).SkipExtStatSN ( statsn_me.fromPrim 1u )
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // Retransmitting the data, which involves re-segmenting the data
@@ -1610,7 +1535,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Send SCSI write
             let writeData = Array.zeroCreate ( int accessLength )
             Random.Shared.NextBytes( writeData.AsSpan() )
-            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockcount )
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 accessBlockcount ) false false
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive R2T 1
@@ -1648,7 +1573,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
 
             // SCSI Read
-            let readCDB = scsiRead10CDB ( uint16 accessBlockcount )
+            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 accessBlockcount ) false false
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
 
             // SCSI Data-In
@@ -1731,7 +1656,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( rpdu6.SNACKTag = snacktag_me.fromPrim 0x12345678u ))
 
             r1.Connection( g_CID0 ).SkipExtStatSN ( statsn_me.fromPrim 1u )
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // Retransmitting the data, which involves re-segmenting the data
@@ -1755,7 +1680,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Send SCSI write
             let writeData = Array.zeroCreate ( int accessLength )
             Random.Shared.NextBytes( writeData.AsSpan() )
-            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockcount )
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 accessBlockcount ) false false
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive R2T 1
@@ -1793,7 +1718,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
 
             // SCSI Read
-            let readCDB = scsiRead10CDB ( uint16 accessBlockcount )
+            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 accessBlockcount ) false false
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
 
             // SCSI Data-In
@@ -1872,7 +1797,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( rpdu6.SNACKTag = snacktag_me.fromPrim 0x12345678u ))
 
             r1.Connection( g_CID0 ).SkipExtStatSN ( statsn_me.fromPrim 1u )
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     [<Fact>]
@@ -1883,7 +1808,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let accessBlockCount = accessLength / m_MediaBlockSize
 
             // read media data
-            let readCDB = scsiRead10CDB ( uint16 accessBlockCount )
+            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 accessBlockCount ) false false
             let! readITT1, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
             let! readPDU1_1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
             Assert.True(( readPDU1_1.F ))
@@ -1894,7 +1819,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( readPDU1_2.InitiatorTaskTag = readITT1 ))
 
             // Send SCSI write
-            let writeCDB = scsiWrite10CDB 0u 0us
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy 0us false false
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 0u writeCDB PooledBuffer.Empty 0u
 
             // Receive SCSI Response PDU
@@ -1913,10 +1838,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResponseData.Count = 0 ))
 
             // check no data changed
-            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
             Assert.True(( readPDU1_1.DataSegment.ToArray() = wroteData ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     [<Fact>]
@@ -1927,7 +1852,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let accessBlockCount = accessLength / m_MediaBlockSize
 
             // Send SCSI write
-            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 accessBlockCount ) false false
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive R2T
@@ -1951,10 +1876,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
             Assert.True(( PooledBuffer.ValueEqualsWithArray writtenData wroteData ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
             writtenData.Return()
         }
 
@@ -2037,7 +1962,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let accessBlockCount = accessLength / m_MediaBlockSize
 
             // Send SCSI write
-            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 accessBlockCount ) false false
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive R2T
@@ -2072,10 +1997,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = expResidualCount ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
             Assert.True(( writtenData = wroteData ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // Out of range Data-Out PDU
@@ -2087,7 +2012,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let accessBlockCount = accessLength / m_MediaBlockSize
 
             // Send SCSI write
-            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 accessBlockCount ) false false
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive R2T
@@ -2125,10 +2050,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
             Assert.True(( writtenData = wroteData ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     // Incomplete data transfer. ErrorRecoveryLevel=0
@@ -2140,7 +2065,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let accessBlockCount = accessLength / m_MediaBlockSize
 
             // Send SCSI write
-            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 accessBlockCount ) false false
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive R2T
@@ -2183,7 +2108,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let accessBlockCount = accessLength / m_MediaBlockSize
 
             // Send SCSI write
-            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 accessBlockCount ) false false
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive R2T
@@ -2227,10 +2152,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
             Assert.True(( writtenData = wroteData ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
         
     // Send Data-Out PDUs in order for multiple R2Ts
@@ -2242,7 +2167,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let accessBlockCount = accessLength / m_MediaBlockSize
 
             // Send SCSI write
-            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 accessBlockCount ) false false
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive two R2T
@@ -2287,10 +2212,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
             Assert.True(( writtenData = wroteData ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
         
     // Sending Data-Out PDUs in parallel to multiple R2Ts
@@ -2302,7 +2227,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let accessBlockCount = accessLength / m_MediaBlockSize
 
             // Send SCSI write
-            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 accessBlockCount ) false false
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive two R2T
@@ -2367,10 +2292,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
             Assert.True(( writtenData = wroteData ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
         
     // Incomplete data transmission
@@ -2382,7 +2307,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let accessBlockCount = accessLength / m_MediaBlockSize
 
             // Send SCSI write
-            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 accessBlockCount ) false false
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive two R2T
@@ -2441,10 +2366,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
             Assert.True(( writtenData = wroteData ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
         
     // Out of range data transmission
@@ -2456,7 +2381,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let accessBlockCount = accessLength / m_MediaBlockSize
 
             // Send SCSI write
-            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 accessBlockCount ) false false
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive two R2T
@@ -2518,10 +2443,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
             Assert.True(( writtenData = wroteData ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
                 
     // request resinding R2T
@@ -2533,7 +2458,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let accessBlockCount = accessLength / m_MediaBlockSize
 
             // Send SCSI write
-            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 accessBlockCount ) false false
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive two R2T
@@ -2579,10 +2504,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
             Assert.True(( writtenData = wroteData ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     [<Theory>]
@@ -2637,7 +2562,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Random.Shared.NextBytes( writtenData )
 
             // Send SCSI write
-            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 accessBlockCount ) false false
             let writtenData1 = PooledBuffer.Rent writtenData.[ 0 .. range1Count - 1 ]
             let scsiCommandFFlag = ( range2Count = 0 )
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false scsiCommandFFlag false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB writtenData1 0u
@@ -2710,10 +2635,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
                 // Verify that the sent data was written correctly.
-                let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+                let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
                 Assert.True(( writtenData = wroteData ))
 
-                do! CloseSession r1 g_CID0
+                do! r1.CloseSession g_CID0 false
         }
 
     static member m_UnsolicitedData_VariousDataOutPDU_001_data = [|
@@ -2784,7 +2709,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Random.Shared.NextBytes( writtenData )
 
             // Send SCSI write
-            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 accessBlockCount ) false false
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Send data-Out PDU
@@ -2805,10 +2730,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = expResidualCount ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
             Assert.True(( writtenData = wroteData ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }
 
     [<Fact>]
@@ -2823,7 +2748,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let oldITT = r1.ITT
 
             // Send SCSI write ( dropped at target )
-            let writeCDB = scsiWrite10CDB 0u ( uint16 accessBlockCount )
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 accessBlockCount ) false false
             let writtenData0 = PooledBuffer.Rent writtenData.[ 0 .. 1023 ]
             let! writeITT1, writeCmdSN1 =
                 r1.SendSCSICommandPDU_Test id ( ValueSome( 500u, 600u ) ) g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB writtenData0 0u
@@ -2857,8 +2782,8 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = ReadMediaData r1 accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
             Assert.True(( writtenData = wroteData ))
 
-            do! CloseSession r1 g_CID0
+            do! r1.CloseSession g_CID0 false
         }

@@ -23,6 +23,7 @@
     <Compile Include="iSCSI_LoginTest1.fs" />
     <Compile Include="iSCSI_LoginTest2.fs" />
     <Compile Include="iSCSI_Numbering.fs" />
+    <Compile Include="iSCSI_OtherErrorCases.fs" />
     <Compile Include="ClientConfigTest.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
