@@ -1938,7 +1938,7 @@ type PDU_Test () =
         use ms = new MemoryStream()
         let psus =
             {
-                Response = TaskMgrResCd.FUCTION_COMPLETE;
+                Response = TaskMgrResCd.FUNCTION_COMPLETE;
                 InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
                 StatSN = statsn_me.fromPrim 0xDEADBEEFu;
                 ExpCmdSN = cmdsn_me.fromPrim 0xFEEEFEEEu;
@@ -1968,7 +1968,7 @@ type PDU_Test () =
 
         let pdu = recvPDU_logi :?> TaskManagementFunctionResponsePDU
 
-        Assert.True( ( pdu.Response = TaskMgrResCd.FUCTION_COMPLETE ) )
+        Assert.True( ( pdu.Response = TaskMgrResCd.FUNCTION_COMPLETE ) )
         Assert.True( ( pdu.InitiatorTaskTag = itt_me.fromPrim 0x01020304u ) )
         Assert.True( ( pdu.StatSN = statsn_me.fromPrim 0xDEADBEEFu ) )
         Assert.True( ( pdu.ExpCmdSN = cmdsn_me.fromPrim 0xFEEEFEEEu ) )
@@ -4313,7 +4313,7 @@ type PDU_Test () =
      member _.GetHeader_SCSI_TASK_MGR_RES() =
         let pdu =
             {
-                Response = TaskMgrResCd.FUCTION_COMPLETE;
+                Response = TaskMgrResCd.FUNCTION_COMPLETE;
                 InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
                 StatSN = statsn_me.fromPrim 0x01020304u;
                 ExpCmdSN = cmdsn_me.fromPrim 0x01020304u;

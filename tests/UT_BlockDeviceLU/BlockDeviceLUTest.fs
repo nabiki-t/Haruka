@@ -183,7 +183,7 @@ type BlockDeviceLU_Test () =
             let tmpdu = pdu :?> TaskManagementFunctionResponsePDU
             Assert.True(( source = cid_me.fromPrim 0us ))
             Assert.True(( cnd = concnt_me.fromPrim 0 ))
-            Assert.True(( tmpdu.Response = TaskMgrResCd.FUCTION_COMPLETE ))
+            Assert.True(( tmpdu.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
             Assert.True(( tmpdu.InitiatorTaskTag = itt_me.fromPrim 0u ))
             Assert.True(( lun = lun_me.zero ))
             cnt1 <- cnt1 + 1
@@ -408,7 +408,7 @@ type BlockDeviceLU_Test () =
             let tmpdu = pdu :?> TaskManagementFunctionResponsePDU
             Assert.True(( source = cid_me.fromPrim 0us ))
             Assert.True(( cnd = concnt_me.fromPrim 0 ))
-            Assert.True(( tmpdu.Response = TaskMgrResCd.FUCTION_COMPLETE ))
+            Assert.True(( tmpdu.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
             Assert.True(( tmpdu.InitiatorTaskTag = itt_me.fromPrim 0u ))
             Assert.True(( lun = lun_me.zero ))
             cnt1 <- cnt1 + 1
@@ -482,7 +482,7 @@ type BlockDeviceLU_Test () =
             let tmpdu = pdu :?> TaskManagementFunctionResponsePDU
             Assert.True(( source = cid_me.fromPrim 0us ))
             Assert.True(( cnd = concnt_me.fromPrim 0 ))
-            Assert.True(( tmpdu.Response = TaskMgrResCd.FUCTION_COMPLETE ))
+            Assert.True(( tmpdu.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
             Assert.True(( tmpdu.InitiatorTaskTag = itt_me.fromPrim 0u ))
             Assert.True(( lun = lun_me.zero ))
             cnt1 <- cnt1 + 1
@@ -745,7 +745,7 @@ type BlockDeviceLU_Test () =
             let tmpdu = pdu :?> TaskManagementFunctionResponsePDU
             Assert.True(( source = cid_me.fromPrim 0us ))
             Assert.True(( cnd = concnt_me.fromPrim 0 ))
-            Assert.True(( tmpdu.Response = TaskMgrResCd.FUCTION_COMPLETE ))
+            Assert.True(( tmpdu.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
             Assert.True(( tmpdu.InitiatorTaskTag = itt_me.fromPrim 0u ))
             Assert.True(( lun = lun_me.zero ))
             cnt1 <- cnt1 + 1
@@ -819,7 +819,7 @@ type BlockDeviceLU_Test () =
             let tmpdu = pdu :?> TaskManagementFunctionResponsePDU
             Assert.True(( source = cid_me.fromPrim 0us ))
             Assert.True(( cnd = concnt_me.fromPrim 0 ))
-            Assert.True(( tmpdu.Response = TaskMgrResCd.FUCTION_COMPLETE ))
+            Assert.True(( tmpdu.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
             Assert.True(( tmpdu.InitiatorTaskTag = itt_me.fromPrim 0u ))
             Assert.True(( lun = lun_me.zero ))
             cnt1 <- cnt1 + 1
@@ -1066,7 +1066,7 @@ type BlockDeviceLU_Test () =
             let tmpdu = pdu :?> TaskManagementFunctionResponsePDU
             Assert.True(( source = cid_me.fromPrim 0us ))
             Assert.True(( cnd = concnt_me.fromPrim 0 ))
-            Assert.True(( tmpdu.Response = TaskMgrResCd.FUCTION_COMPLETE ))
+            Assert.True(( tmpdu.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
             Assert.True(( tmpdu.InitiatorTaskTag = itt_me.fromPrim 0u ))
             Assert.True(( lun = lun_me.zero ))
             cnt1 <- cnt1 + 1
@@ -1141,7 +1141,7 @@ type BlockDeviceLU_Test () =
             let tmpdu = pdu :?> TaskManagementFunctionResponsePDU
             Assert.True(( source = cid_me.fromPrim 0us ))
             Assert.True(( cnd = concnt_me.fromPrim 0 ))
-            Assert.True(( tmpdu.Response = TaskMgrResCd.FUCTION_COMPLETE ))
+            Assert.True(( tmpdu.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
             Assert.True(( tmpdu.InitiatorTaskTag = itt_me.fromPrim 0u ))
             Assert.True(( lun = lun_me.zero ))
             cnt1 <- cnt1 + 1
@@ -1388,7 +1388,7 @@ type BlockDeviceLU_Test () =
             let tmpdu = pdu :?> TaskManagementFunctionResponsePDU
             Assert.True(( source = cid_me.fromPrim 0us ))
             Assert.True(( cnd = concnt_me.fromPrim 0 ))
-            Assert.True(( tmpdu.Response = TaskMgrResCd.FUCTION_COMPLETE ))
+            Assert.True(( tmpdu.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
             Assert.True(( tmpdu.InitiatorTaskTag = itt_me.fromPrim 0u ))
             Assert.True(( lun = lun_me.zero ))
             cnt1 <- cnt1 + 1
@@ -1467,7 +1467,7 @@ type BlockDeviceLU_Test () =
             let tmpdu = pdu :?> TaskManagementFunctionResponsePDU
             Assert.True(( source = cid_me.fromPrim 0us ))
             Assert.True(( cnd = concnt_me.fromPrim 0 ))
-            Assert.True(( tmpdu.Response = TaskMgrResCd.FUCTION_COMPLETE ))
+            Assert.True(( tmpdu.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
             Assert.True(( tmpdu.InitiatorTaskTag = itt_me.fromPrim 0u ))
             Assert.True(( lun = lun_me.zero ))
             cnt1 <- cnt1 + 1
@@ -1740,7 +1740,7 @@ type BlockDeviceLU_Test () =
             let tmpdu = pdu :?> TaskManagementFunctionResponsePDU
             Assert.True(( source = cid_me.fromPrim 0us ))
             Assert.True(( cnd = concnt_me.fromPrim 0 ))
-            Assert.True(( tmpdu.Response = TaskMgrResCd.FUCTION_COMPLETE ))
+            Assert.True(( tmpdu.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
             Assert.True(( tmpdu.InitiatorTaskTag = itt_me.fromPrim 0u ))
             Assert.True(( lun = lun_me.zero ))
             cnt1 <- cnt1 + 1

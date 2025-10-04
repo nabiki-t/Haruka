@@ -121,7 +121,7 @@ type TaskMgrReqCd =
 
 type TaskMgrResCd =
     /// Task Management Function Response PDU Response values : Function complete
-    | FUCTION_COMPLETE = 0x00uy
+    | FUNCTION_COMPLETE = 0x00uy
     /// Task Management Function Response PDU Response values : Task does not exist
     | TASK_NOT_EXIST = 0x01uy
     /// Task Management Function Response PDU Response values : LUN does not exist
@@ -2165,8 +2165,8 @@ module Constants =
 
 
     let byteToTaskMgrResCd ( a : byte ) ( errcont : byte -> TaskMgrResCd ) : TaskMgrResCd =
-        if a = byte TaskMgrResCd.FUCTION_COMPLETE then
-            TaskMgrResCd.FUCTION_COMPLETE
+        if a = byte TaskMgrResCd.FUNCTION_COMPLETE then
+            TaskMgrResCd.FUNCTION_COMPLETE
         elif a = byte TaskMgrResCd.TASK_NOT_EXIST then
             TaskMgrResCd.TASK_NOT_EXIST
         elif a = byte TaskMgrResCd.LUN_NOT_EXIST then
@@ -2185,7 +2185,7 @@ module Constants =
 
     let getTaskMgrResNameFromValue : ( TaskMgrResCd -> string ) =
         function
-        | TaskMgrResCd.FUCTION_COMPLETE -> "FUCTION_COMPLETE"
+        | TaskMgrResCd.FUNCTION_COMPLETE -> "FUNCTION_COMPLETE"
         | TaskMgrResCd.TASK_NOT_EXIST -> "TASK_NOT_EXIST"
         | TaskMgrResCd.LUN_NOT_EXIST -> "LUN_NOT_EXIST"
         | TaskMgrResCd.TASK_STILL_ALLEGIANT -> "TASK_STILL_ALLEGIANT"

@@ -797,7 +797,7 @@ type TaskRouter_Test () =
             ( cid_me.fromPrim 1us )
             concnt_me.zero
             {
-                Response = TaskMgrResCd.FUCTION_COMPLETE;
+                Response = TaskMgrResCd.FUNCTION_COMPLETE;
                 InitiatorTaskTag = itt_me.fromPrim 0u;
                 StatSN = statsn_me.zero;
                 ExpCmdSN = cmdsn_me.zero;
@@ -825,7 +825,7 @@ type TaskRouter_Test () =
                 ( cid_me.fromPrim 1us )
                 concnt_me.zero
                 {
-                    Response = TaskMgrResCd.FUCTION_COMPLETE;
+                    Response = TaskMgrResCd.FUNCTION_COMPLETE;
                     InitiatorTaskTag = itt_me.fromPrim 0u;
                     StatSN = statsn_me.zero;
                     ExpCmdSN = cmdsn_me.zero;

@@ -1268,7 +1268,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 false TaskMgrReqCd.CLEAR_ACA g_LUN1 ( itt_me.fromPrim 0xFFFFFFFFu ) cmdsn_me.zero datasn_me.zero
             let! pdu2 = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
             Assert.True(( pdu2.StatSN = sendExpStatSN2 ))
-            Assert.True(( pdu2.Response = TaskMgrResCd.FUCTION_COMPLETE ))
+            Assert.True(( pdu2.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
 
             // SCSI Write command ( succeed )
             let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us false false

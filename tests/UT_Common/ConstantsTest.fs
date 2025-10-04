@@ -176,19 +176,19 @@ type Constants_Test () =
             let r =
                 Constants.byteToTaskMgrResCd( byte v ) ( fun v2 ->
                     Assert.Fail __LINE__
-                    TaskMgrResCd.FUCTION_COMPLETE
+                    TaskMgrResCd.FUNCTION_COMPLETE
                 )
             Assert.True(( r = v ))
         let r2 =
             Constants.byteToTaskMgrResCd( 0xFFuy ) ( fun v2 ->
                 Assert.True(( v2 = 0xFFuy ))
-                TaskMgrResCd.FUCTION_COMPLETE
+                TaskMgrResCd.FUNCTION_COMPLETE
             )
-        Assert.True(( r2 = TaskMgrResCd.FUCTION_COMPLETE ))
+        Assert.True(( r2 = TaskMgrResCd.FUNCTION_COMPLETE ))
 
     [<Fact>]
     member _.Test_getTaskMgrResNameFromValue() =
-        Assert.True(( "FUCTION_COMPLETE" = Constants.getTaskMgrResNameFromValue TaskMgrResCd.FUCTION_COMPLETE ))
+        Assert.True(( "FUNCTION_COMPLETE" = Constants.getTaskMgrResNameFromValue TaskMgrResCd.FUNCTION_COMPLETE ))
         Assert.True(( "TASK_NOT_EXIST" = Constants.getTaskMgrResNameFromValue TaskMgrResCd.TASK_NOT_EXIST ))
         Assert.True(( "LUN_NOT_EXIST" = Constants.getTaskMgrResNameFromValue TaskMgrResCd.LUN_NOT_EXIST ))
         Assert.True(( "TASK_STILL_ALLEGIANT" = Constants.getTaskMgrResNameFromValue TaskMgrResCd.TASK_STILL_ALLEGIANT ))

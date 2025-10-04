@@ -257,7 +257,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
     }
 
     static member defaultTaskManagementResponsePDUValues = {
-        Response = TaskMgrResCd.FUCTION_COMPLETE;
+        Response = TaskMgrResCd.FUNCTION_COMPLETE;
         InitiatorTaskTag = itt_me.fromPrim 0u;
         StatSN = statsn_me.zero;
         ExpCmdSN = cmdsn_me.zero;
@@ -3398,7 +3398,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 Assert.True(( itt = itt_me.fromPrim ( uint32 i ) ))
                 Assert.True(( refitt = itt_me.fromPrim 0u ))
                 let rpdu = {
-                    Response = TaskMgrResCd.FUCTION_COMPLETE;
+                    Response = TaskMgrResCd.FUNCTION_COMPLETE;
                     InitiatorTaskTag = itt;
                     StatSN = statsn_me.zero;
                     ExpCmdSN = cmdsn_me.zero;
@@ -3424,7 +3424,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 |> Functions.RunTaskSynchronously
             Assert.True( ( pdu2.Opcode = OpcodeCd.SCSI_TASK_MGR_RES ) )
             let pdu3 = pdu2 :?> TaskManagementFunctionResponsePDU
-            Assert.True( ( pdu3.Response = TaskMgrResCd.FUCTION_COMPLETE ) )
+            Assert.True( ( pdu3.Response = TaskMgrResCd.FUNCTION_COMPLETE ) )
             Assert.True( ( pdu3.StatSN = statsn_me.fromPrim ( uint32 i ) ) )
             Assert.True( ( pdu3.ExpCmdSN = cmdsn_me.fromPrim ( uint32 i + 1u ) ) )
 
@@ -3446,7 +3446,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             |> Functions.RunTaskSynchronously
         Assert.True( ( pdu2.Opcode = OpcodeCd.SCSI_TASK_MGR_RES ) )
         let pdu3 = pdu2 :?> TaskManagementFunctionResponsePDU
-        Assert.True( ( pdu3.Response = TaskMgrResCd.FUCTION_COMPLETE ) )
+        Assert.True( ( pdu3.Response = TaskMgrResCd.FUNCTION_COMPLETE ) )
         Assert.True( ( pdu3.StatSN = statsn_me.fromPrim 1u ) )
         Assert.True( ( pdu3.ExpCmdSN = cmdsn_me.fromPrim 5u ) )
 
@@ -3455,7 +3455,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             |> Functions.RunTaskSynchronously
         Assert.True( ( pdu4.Opcode = OpcodeCd.SCSI_TASK_MGR_RES ) )
         let pdu5 = pdu4 :?> TaskManagementFunctionResponsePDU
-        Assert.True( ( pdu5.Response = TaskMgrResCd.FUCTION_COMPLETE ) )
+        Assert.True( ( pdu5.Response = TaskMgrResCd.FUNCTION_COMPLETE ) )
         Assert.True( ( pdu5.StatSN = statsn_me.fromPrim 2u ) )
         Assert.True( ( pdu5.ExpCmdSN = cmdsn_me.fromPrim 5u ) )
 
@@ -3478,7 +3478,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 |> Functions.RunTaskSynchronously
             Assert.True( ( pdu6.Opcode = OpcodeCd.SCSI_TASK_MGR_RES ) )
             let pdu7 = pdu6 :?> TaskManagementFunctionResponsePDU
-            Assert.True( ( pdu7.Response = TaskMgrResCd.FUCTION_COMPLETE ) )
+            Assert.True( ( pdu7.Response = TaskMgrResCd.FUNCTION_COMPLETE ) )
             Assert.True( ( pdu7.StatSN = statsn_me.fromPrim ( uint32 i ) ) )
             Assert.True( ( pdu7.ExpCmdSN = cmdsn_me.fromPrim 5u ) )
 
@@ -5578,7 +5578,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             ( cid_me.fromPrim 1us )
             ( concnt_me.fromPrim 1 )    // connection missing
             {
-                Response = TaskMgrResCd.FUCTION_COMPLETE;
+                Response = TaskMgrResCd.FUNCTION_COMPLETE;
                 InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
                 StatSN = statsn_me.fromPrim 0x01020304u;
                 ExpCmdSN = cmdsn_me.fromPrim 0x01020304u;
@@ -5602,7 +5602,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             ( cid_me.fromPrim 1us )
             ( concnt_me.fromPrim 1 )    // connection missing
             {
-                Response = TaskMgrResCd.FUCTION_COMPLETE;
+                Response = TaskMgrResCd.FUNCTION_COMPLETE;
                 InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
                 StatSN = statsn_me.fromPrim 0x01020304u;
                 ExpCmdSN = cmdsn_me.fromPrim 0x01020304u;
@@ -5627,7 +5627,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             ( cid_me.fromPrim 1us )
             ( concnt_me.fromPrim 1 )
             {
-                Response = TaskMgrResCd.FUCTION_COMPLETE;
+                Response = TaskMgrResCd.FUNCTION_COMPLETE;
                 InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
                 StatSN = statsn_me.fromPrim 0x01020304u;
                 ExpCmdSN = cmdsn_me.fromPrim 0x01020304u;
@@ -5661,7 +5661,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             ( cid_me.fromPrim 1us )
             ( concnt_me.fromPrim 1 )
             {
-                Response = TaskMgrResCd.FUCTION_COMPLETE;
+                Response = TaskMgrResCd.FUNCTION_COMPLETE;
                 InitiatorTaskTag = itt_me.fromPrim 0x01020304u;
                 StatSN = statsn_me.fromPrim 0x01020304u;
                 ExpCmdSN = cmdsn_me.fromPrim 0x01020304u;
@@ -5691,7 +5691,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 false
 
         let respdu1 = {
-            Response = TaskMgrResCd.FUCTION_COMPLETE;
+            Response = TaskMgrResCd.FUNCTION_COMPLETE;
             InitiatorTaskTag = itt_me.fromPrim 1u;
             StatSN = statsn_me.fromPrim 0x01020304u;
             ExpCmdSN = cmdsn_me.fromPrim 0x01020304u;
@@ -5699,7 +5699,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             ResponseFence = ResponseFenceNeedsFlag.R_Mode;
         }
         let respdu2 = {
-            Response = TaskMgrResCd.FUCTION_COMPLETE;
+            Response = TaskMgrResCd.FUNCTION_COMPLETE;
             InitiatorTaskTag = itt_me.fromPrim 2u;
             StatSN = statsn_me.fromPrim 0x01020304u;
             ExpCmdSN = cmdsn_me.fromPrim 0x01020304u;

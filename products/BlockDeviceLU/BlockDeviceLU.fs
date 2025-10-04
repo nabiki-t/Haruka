@@ -208,7 +208,7 @@ type BlockDeviceLU
 
                         // return response
                         source.ProtocolService.SendOtherResponse source.CID source.ConCounter {
-                            Response = TaskMgrResCd.FUCTION_COMPLETE;
+                            Response = TaskMgrResCd.FUNCTION_COMPLETE;
                             InitiatorTaskTag = initiatorTaskTag;
                             StatSN = statsn_me.zero;
                             ExpCmdSN = cmdsn_me.zero;
@@ -258,7 +258,7 @@ type BlockDeviceLU
 
                         // return response
                         source.ProtocolService.SendOtherResponse source.CID source.ConCounter {
-                            Response = TaskMgrResCd.FUCTION_COMPLETE;
+                            Response = TaskMgrResCd.FUNCTION_COMPLETE;
                             InitiatorTaskTag = initiatorTaskTag;
                             StatSN = statsn_me.zero;
                             ExpCmdSN = cmdsn_me.zero;
@@ -313,7 +313,7 @@ type BlockDeviceLU
 
                         // return response
                         source.ProtocolService.SendOtherResponse source.CID source.ConCounter {
-                            Response = TaskMgrResCd.FUCTION_COMPLETE;
+                            Response = TaskMgrResCd.FUNCTION_COMPLETE;
                             InitiatorTaskTag = initiatorTaskTag;
                             StatSN = statsn_me.zero;
                             ExpCmdSN = cmdsn_me.zero;
@@ -357,7 +357,7 @@ type BlockDeviceLU
 
                         // return response
                         source.ProtocolService.SendOtherResponse source.CID source.ConCounter {
-                            Response = TaskMgrResCd.FUCTION_COMPLETE;
+                            Response = TaskMgrResCd.FUNCTION_COMPLETE;
                             InitiatorTaskTag = initiatorTaskTag;
                             StatSN = statsn_me.zero;
                             ExpCmdSN = cmdsn_me.zero;
@@ -423,7 +423,7 @@ type BlockDeviceLU
                         // return response
                         if fromI then
                             source.Value.ProtocolService.SendOtherResponse source.Value.CID source.Value.ConCounter {
-                                Response = TaskMgrResCd.FUCTION_COMPLETE;
+                                Response = TaskMgrResCd.FUNCTION_COMPLETE;
                                 InitiatorTaskTag = initiatorTaskTag.Value;
                                 StatSN = statsn_me.zero;
                                 ExpCmdSN = cmdsn_me.zero;
