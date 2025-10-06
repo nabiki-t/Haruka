@@ -827,6 +827,11 @@ type Session
                     this.UpdateProcessWaitQueue_TextReq wcon ( wpdu :?> TextRequestPDU ) currentQ
                 | OpcodeCd.SCSI_DATA_OUT ->
                     this.UpdateProcessWaitQueue_SCSIDataOut wcon ( wpdu :?> SCSIDataOutPDU ) currentQ
+                | OpcodeCd.LOGIN_REQ ->
+                    // Reject and ignore
+                    HLogger.Trace( LogID.W_OTHER_PDU_IGNORED, fun g -> g.Gen1( loginfo, "Login request PDU was received in full pheature phase." ) )
+                    let refuseTask = fun () -> this.RejectPDUByLogi_ToConnection wcon wpdu RejectReasonCd.PROTOCOL_ERR
+                    Some refuseTask, currentQ.WaitingQueue
                 | _ ->
                     let msg = sprintf "Unknown opcode(0x%02X)" ( byte wpdu.Opcode )
                     HLogger.Trace( LogID.F_INTERNAL_ASSERTION, fun g -> g.Gen1( loginfo, msg ) )

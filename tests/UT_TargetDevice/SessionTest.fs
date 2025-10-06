@@ -3808,6 +3808,49 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         GlbFunc.ClosePorts [| sp; cp; |]
 
     [<Fact>]
+    member _.PushReceivedPDU_043_LoginRequest_001() =
+        // Create session object
+        let sess, _, _, _, _, sp, cp =
+            Session_Test.CreateDefaultSessionObject
+                Session_Test.defaultSessionParam
+                Session_Test.defaultConnectionParam
+                ( cid_me.fromPrim 1us )
+                ( cmdsn_me.zero )
+                ( itt_me.fromPrim 0u )
+                true
+        let conn1 = sess.GetConnection ( cid_me.fromPrim 1us ) ( concnt_me.fromPrim 1 )
+
+        // Receive Login Request PDU in the target
+        sess.PushReceivedPDU conn1.Value {
+            T = false;
+            C = false;
+            CSG = LoginReqStateCd.SEQURITY;
+            NSG = LoginReqStateCd.SEQURITY;
+            VersionMax = 0x00uy;
+            VersionMin = 0x00uy;
+            ISID = isid_me.zero;
+            TSIH = tsih_me.zero;
+            InitiatorTaskTag = itt_me.fromPrim 0u;
+            CID = cid_me.zero;
+            CmdSN = cmdsn_me.zero;
+            ExpStatSN = statsn_me.zero;
+            TextRequest = [||];
+            ByteCount = 0u;
+        }
+
+        // Receive Reject PDU in the initiator
+        let pdu5 =
+            PDU.Receive( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, cp, Standpoint.Initiator )
+            |> Functions.RunTaskSynchronously
+
+        Assert.True(( pdu5.Opcode = OpcodeCd.REJECT ))
+        let pdu6 = pdu5 :?> RejectPDU
+        Assert.True(( pdu6.Reason = RejectReasonCd.PROTOCOL_ERR ))
+
+        sess.DestroySession()
+        GlbFunc.ClosePorts [| sp; cp; |]
+
+    [<Fact>]
     member _.SendSCSIResponse_001() =
         let itNexus = new ITNexus( "abcI", isid_me.fromElem 0uy 1uy 2us 3uy 4us, "abcT", tpgt_me.zero )
         let sessParam = {
