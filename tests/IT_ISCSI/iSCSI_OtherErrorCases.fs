@@ -532,3 +532,164 @@ type iSCSI_OtherErrorCases( fx : iSCSI_Numbering_Fixture ) =
 
             do! r1.CloseSession g_CID0 false
         }
+
+    [<Fact>]
+    member _.LoginRequestInFullFeaturePhase_001() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+
+            // Send Login request PDU as first PDU in full feature phase
+            let loginRequest =
+                {
+                    T = false;
+                    C = false;
+                    CSG = LoginReqStateCd.SEQURITY;
+                    NSG = LoginReqStateCd.SEQURITY;
+                    VersionMax = 0x00uy;
+                    VersionMin = 0x00uy;
+                    ISID = isid_me.zero;
+                    TSIH = tsih_me.zero;
+                    InitiatorTaskTag = itt_me.fromPrim 0u;
+                    CID = cid_me.zero;
+                    CmdSN = cmdsn_me.zero;
+                    ExpStatSN = statsn_me.zero;
+                    TextRequest = [||];
+                    ByteCount = 0u;
+                }
+            let conn = r1.Connection( g_CID0 ).Connection
+            let mrdslt = r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T
+            let! _ = PDU.SendPDU( mrdslt, DigestType.DST_CRC32C, DigestType.DST_CRC32C, ValueNone, ValueNone, ValueNone, objidx_me.NewID(), conn, loginRequest )
+            conn.Flush()
+
+            // Receive Reject PDU
+            let! rejectPDU = r1.ReceiveSpecific<RejectPDU> g_CID0
+            Assert.True(( rejectPDU.Reason = RejectReasonCd.PROTOCOL_ERR ))
+
+            do! r1.CloseSession g_CID0 false
+        }
+
+    [<Fact>]
+    member _.LoginRequestInFullFeaturePhase_002() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+
+            // Send Nop-Out and receive Nop-In
+            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
+
+            // Send Login request PDU as second PDU in full feature phase
+            let loginRequest =
+                {
+                    T = false;
+                    C = false;
+                    CSG = LoginReqStateCd.SEQURITY;
+                    NSG = LoginReqStateCd.SEQURITY;
+                    VersionMax = 0x00uy;
+                    VersionMin = 0x00uy;
+                    ISID = isid_me.zero;
+                    TSIH = tsih_me.zero;
+                    InitiatorTaskTag = itt_me.fromPrim 0u;
+                    CID = cid_me.zero;
+                    CmdSN = cmdsn_me.zero;
+                    ExpStatSN = statsn_me.zero;
+                    TextRequest = [||];
+                    ByteCount = 0u;
+                }
+            let conn = r1.Connection( g_CID0 ).Connection
+            let mrdslt = r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T
+            let! _ = PDU.SendPDU( mrdslt, DigestType.DST_CRC32C, DigestType.DST_CRC32C, ValueNone, ValueNone, ValueNone, objidx_me.NewID(), conn, loginRequest )
+            conn.Flush()
+
+            // Receive Reject PDU
+            let! rejectPDU = r1.ReceiveSpecific<RejectPDU> g_CID0
+            Assert.True(( rejectPDU.Reason = RejectReasonCd.PROTOCOL_ERR ))
+
+            do! r1.CloseSession g_CID0 false
+        }
+
+    [<Fact>]
+    member _.UnexpectedPDUInLoginPhase_001() =
+        task {
+            let conn = GlbFunc.ConnectToServer( iSCSIPortNo )
+
+            // Send Nop-Out PDU
+            let pdu = {
+                I = false;
+                LUN = lun_me.zero;
+                InitiatorTaskTag = itt_me.fromPrim 0u;
+                TargetTransferTag = ttt_me.fromPrim 0u;
+                CmdSN = cmdsn_me.zero;
+                ExpStatSN = statsn_me.zero;
+                PingData = PooledBuffer.Empty;
+                ByteCount = 0u;
+            }
+            let! _ = PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objidx_me.NewID(), conn, pdu )
+            Assert.True(( conn.ReadByte() = -1 ))
+        }
+
+    [<Fact>]
+    member _.UnexpectedPDUInLoginPhase_002() =
+        task {
+            let conn = GlbFunc.ConnectToServer( iSCSIPortNo )
+            let objid = objidx_me.NewID()
+
+            // Send first login request PDU
+            let negoValue1 =
+                {
+                    TextKeyValues.defaultTextKeyValues with
+                        TargetName = TextValueType.Value( m_defaultSessParam.TargetName );
+                        InitiatorName = TextValueType.Value( m_defaultSessParam.InitiatorName );
+                        SessionType = TextValueType.Value( "Normal" );
+                        AuthMethod = TextValueType.Value( [| AuthMethodCandidateValue.AMC_None |] );
+                }
+            let negoStat1 =
+                {
+                    TextKeyValuesStatus.defaultTextKeyValuesStatus with
+                        NegoStat_TargetName = NegoStatusValue.NSG_WaitSend;
+                        NegoStat_InitiatorName = NegoStatusValue.NSG_WaitSend;
+                        NegoStat_SessionType = NegoStatusValue.NSG_WaitSend;
+                        NegoStat_AuthMethod = NegoStatusValue.NSG_WaitSend;
+                }
+            let loginRequest =
+                {
+                    T = false;
+                    C = false;
+                    CSG = LoginReqStateCd.SEQURITY;
+                    NSG = LoginReqStateCd.SEQURITY;
+                    VersionMax = 0x00uy;
+                    VersionMin = 0x00uy;
+                    ISID = isid_me.zero;
+                    TSIH = tsih_me.zero;
+                    InitiatorTaskTag = itt_me.fromPrim 0u;
+                    CID = cid_me.zero;
+                    CmdSN = cmdsn_me.zero;
+                    ExpStatSN = statsn_me.zero;
+                    TextRequest = IscsiTextEncode.CreateTextKeyValueString negoValue1 negoStat1;
+                    ByteCount = 0u;
+                }
+            let! _ = PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objid, conn, loginRequest )
+
+            // Receive login response
+            let! pdu1 = PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, conn, Standpoint.Initiator )
+            Assert.True(( pdu1.Opcode = OpcodeCd.LOGIN_RES ))
+
+            // Send Nop-Out PDU
+            let pdu = {
+                I = false;
+                LUN = lun_me.zero;
+                InitiatorTaskTag = itt_me.fromPrim 0u;
+                TargetTransferTag = ttt_me.fromPrim 0u;
+                CmdSN = cmdsn_me.zero;
+                ExpStatSN = statsn_me.zero;
+                PingData = PooledBuffer.Empty;
+                ByteCount = 0u;
+            }
+            let! _ = PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objid, conn, pdu )
+
+            // In iSCSI specification, The target should have responded with a Login response PDU before disconnecting,
+            // but is escalating to session recovery.
+
+            // connection disconnected
+            Assert.True(( conn.ReadByte() = -1 ))
+        }
