@@ -693,3 +693,24 @@ type iSCSI_OtherErrorCases( fx : iSCSI_Numbering_Fixture ) =
             // connection disconnected
             Assert.True(( conn.ReadByte() = -1 ))
         }
+
+    [<Fact>]
+    member _.UnexpectedPDUInDiscoverySession_001() =
+        task {
+            let sessParam = {
+                m_defaultSessParam with
+                    ISID = GlbFunc.newISID();
+                    TargetName = "";
+            }
+            let! r1 = iSCSI_Initiator.LoginForDiscoverySession sessParam m_defaultConnParam
+
+            // Send Nop-Out
+            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            try
+                let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
+                Assert.Fail __LINE__
+            with
+            | :? ConnectionErrorException
+            | :? SessionRecoveryException ->
+                ()
+        }

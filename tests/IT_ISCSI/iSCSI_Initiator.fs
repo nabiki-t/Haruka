@@ -967,8 +967,73 @@ type iSCSI_Initiator(
             return rBuffer
         }
 
+    /// <summary>
+    ///  Send SendTargets text request and receive responces.
+    /// </summary>
+    /// <param name="cid">
+    ///  Specifies the connection to be used for sending and receiving PDUs.
+    /// </param>
+    /// <param name="param">
+    ///  Parameter data that will be send as SendTargets text key.
+    /// </param>
+    /// <returns>
+    ///  Dictionary of the target name and target addresses.
+    /// </returns>
+    member this.SendTargetsTextRequest ( cid : CID_T ) ( param : string ) : Task< Dictionary< string, string[] > > =
 
+        let buildResult ( respKeyVal : string[][] ) : Dictionary< string, string[] > =
+            let rd = Dictionary< string, List<string> >()
+            let rec loop ( targetName : string ) ( idx : int ) =
+                if idx < respKeyVal.Length then
+                    if respKeyVal.[idx].[0] = "TargetName" then
+                        loop respKeyVal.[idx].[1] ( idx + 1 )
+                    else
+                        let r, v = rd.TryGetValue targetName
+                        if r then
+                            v.Add respKeyVal.[idx].[1]
+                        else
+                            let nv = List<string>( [| respKeyVal.[idx].[1] |] )
+                            rd.Add( targetName, nv )
+                        loop targetName ( idx + 1 )
+            loop "" 0
+            rd
+            |> Seq.map ( fun itr -> itr.Key, itr.Value |> Seq.toArray )
+            |> Seq.map KeyValuePair
+            |> Dictionary
+        task {
+            // Send SendTargets text request
+            let rv = List<TextResponsePDU>()
+            while rv.Count = 0 || rv.[ rv.Count - 1 ].C do
+                let textReq =
+                    if rv.Count = 0 then
+                        [|
+                            yield! ( Encoding.UTF8.GetBytes "SendTargets=" )
+                            yield! ( Encoding.UTF8.GetBytes param )
+                            yield '\u0000'B
+                        |]
+                    else
+                        Array.Empty()
+                let! _ = this.SendTextRequestPDU cid true false false lun_me.zero ( ttt_me.fromPrim 0xFFFFFFFFu ) textReq
+                let! wresppdu = this.ReceiveSpecific<TextResponsePDU> cid
+                rv.Add wresppdu
 
+            let keyValues =
+                rv
+                |> Seq.map _.TextResponse
+                |> Seq.concat
+                |> Seq.toArray
+                |> Functions.SplitByteArray 0uy
+                |> List.filter ( fun x -> x.Length <> 0 )
+                |> List.map Encoding.UTF8.GetString
+            let keyValues2 =
+                keyValues
+                |> List.map ( fun itr -> itr.Split '=' )
+                |> List.filter ( fun itr -> itr.Length = 2 )
+                |> List.filter ( fun itr -> itr.[0] = "TargetName" || itr.[0] = "TargetAddress" )
+                |> List.toArray
+
+            return buildResult keyValues2
+        }
     ///////////////////////////////////////////////////////////////////////////
     // private member
 
@@ -1133,7 +1198,7 @@ type iSCSI_Initiator(
         }
 
     /// <summary>
-    ///  Login for discovery session and get target configurations.
+    ///  Login for discovery session and get target name list.
     /// </summary>
     /// <param name="exp_ConnParams">
     ///  Desired connection parameters.
@@ -1144,27 +1209,7 @@ type iSCSI_Initiator(
     /// <returns>
     ///  Dictionary of the target name and target addresses.
     /// </returns>
-    static member SendTargets ( exp_ConnParams : ConnParams ) ( param : string ) : Task< Dictionary< string, string[] > > =
-
-        let buildResult ( respKeyVal : string[][] ) : Dictionary< string, string[] > =
-            let rd = Dictionary< string, List<string> >()
-            let rec loop ( targetName : string ) ( idx : int ) =
-                if idx < respKeyVal.Length then
-                    if respKeyVal.[idx].[0] = "TargetName" then
-                        loop respKeyVal.[idx].[1] ( idx + 1 )
-                    else
-                        let r, v = rd.TryGetValue targetName
-                        if r then
-                            v.Add respKeyVal.[idx].[1]
-                        else
-                            let nv = List<string>( [| respKeyVal.[idx].[1] |] )
-                            rd.Add( targetName, nv )
-                        loop targetName ( idx + 1 )
-            loop "" 0
-            rd
-            |> Seq.map ( fun itr -> itr.Key, itr.Value |> Seq.toArray )
-            |> Seq.map KeyValuePair
-            |> Dictionary
+    static member QueryTargetNames ( exp_ConnParams : ConnParams ) ( param : string ) : Task< Dictionary< string, string[] > > =
         task {
             let swp = {
                 InitiatorName = "iqn.2020-05.example.com:initiator";
@@ -1187,39 +1232,7 @@ type iSCSI_Initiator(
             }
             let! sess = iSCSI_Initiator.LoginForDiscoverySession swp exp_ConnParams
             let cid = exp_ConnParams.CID
-
-            // Send SendTargets text request
-            let rv = List<TextResponsePDU>()
-            while rv.Count = 0 || rv.[ rv.Count - 1 ].C do
-                let textReq =
-                    if rv.Count = 0 then
-                        [|
-                            yield! ( Encoding.UTF8.GetBytes "SendTargets=" )
-                            yield! ( Encoding.UTF8.GetBytes param )
-                            yield '\u0000'B
-                        |]
-                    else
-                        Array.Empty()
-                let! _ = sess.SendTextRequestPDU cid true false false lun_me.zero ( ttt_me.fromPrim 0xFFFFFFFFu ) textReq
-                let! wresppdu = sess.ReceiveSpecific<TextResponsePDU> cid
-                rv.Add wresppdu
-
-            let keyValues =
-                rv
-                |> Seq.map _.TextResponse
-                |> Seq.concat
-                |> Seq.toArray
-                |> Functions.SplitByteArray 0uy
-                |> List.filter ( fun x -> x.Length <> 0 )
-                |> List.map Encoding.UTF8.GetString
-            let keyValues2 =
-                keyValues
-                |> List.map ( fun itr -> itr.Split '=' )
-                |> List.filter ( fun itr -> itr.Length = 2 )
-                |> List.filter ( fun itr -> itr.[0] = "TargetName" || itr.[0] = "TargetAddress" )
-                |> List.toArray
-
-            let rd = buildResult keyValues2
+            let! rd = sess.SendTargetsTextRequest cid param
 
             // Logout
             let! _ = sess.SendLogoutRequestPDU cid false LogoutReqReasonCd.CLOSE_SESS cid

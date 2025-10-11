@@ -1810,7 +1810,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
                     CID = g_CID0;
                     PortNo = m_iSCSIPortNo;
             }
-            let! r1 = iSCSI_Initiator.SendTargets connParam1 "All"
+            let! r1 = iSCSI_Initiator.QueryTargetNames connParam1 "All"
             Assert.True(( r1.Count = 3 ))
 
             let v1 = r1.[ "iqn.2020-05.example.com:target1" ]
@@ -1834,7 +1834,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
                     CID = g_CID0;
                     PortNo = m_iSCSIPortNo;
             }
-            let! r1 = iSCSI_Initiator.SendTargets connParam1 "iqn.2020-05.example.com:target2"
+            let! r1 = iSCSI_Initiator.QueryTargetNames connParam1 "iqn.2020-05.example.com:target2"
             Assert.True(( r1.Count = 1 ))
 
             let v2 = r1.[ "iqn.2020-05.example.com:target2" ]
@@ -1851,7 +1851,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
                         CID = g_CID0;
                         PortNo = m_iSCSIPortNo;
                 }
-                let! _ = iSCSI_Initiator.SendTargets connParam1 ""
+                let! _ = iSCSI_Initiator.QueryTargetNames connParam1 ""
                 Assert.Fail __LINE__
             with
             | :? SessionRecoveryException
@@ -1867,7 +1867,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
                     CID = g_CID0;
                     PortNo = m_iSCSIPortNo;
             }
-            let! r1 = iSCSI_Initiator.SendTargets connParam1 "aaaaaaaaaa"
+            let! r1 = iSCSI_Initiator.QueryTargetNames connParam1 "aaaaaaaaaa"
             Assert.True(( r1.Count = 0 ))
 
         }

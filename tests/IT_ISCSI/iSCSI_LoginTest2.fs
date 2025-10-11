@@ -400,7 +400,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
                     MaxRecvDataSegmentLength_I = 8192u;
                     MaxRecvDataSegmentLength_T = 8192u;
             }
-            let! r1 = iSCSI_Initiator.SendTargets connParam1 "All"
+            let! r1 = iSCSI_Initiator.QueryTargetNames connParam1 "All"
             Assert.True(( r1.Count = int m_TargetCount ))
 
             let expectTargetAddress =
@@ -414,6 +414,37 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
                 let v1 = r1.[ targetName ]
                 Assert.True(( v1.Length = expectTargetAddress.Length ))
                 Assert.True(( ( Array.sort v1 ) = expectTargetAddress ))
+        }
+
+    [<Fact>]
+    member _.DiscoverySession_002() =
+        task {
+            let isid = GlbFunc.newISID();
+            let sessParam = {
+                m_defaultSessParam with
+                    ISID = isid;
+                    TargetName = "";
+            }
+            let connParam1 = {
+                m_defaultConnParam with
+                    PortNo = m_TD0_iSCSIPortNo.[0];
+            }
+            let! r1 = iSCSI_Initiator.LoginForDiscoverySession sessParam connParam1
+
+            let connParam2 = {
+                m_defaultConnParam with
+                    PortNo = m_TD0_iSCSIPortNo.[1];
+            }
+            let! r2 = iSCSI_Initiator.LoginForDiscoverySession sessParam connParam2
+
+            let! st1 = r1.SendTargetsTextRequest g_CID0 "All"
+            Assert.True(( st1.Count > 0 ))
+
+            let! st2 = r2.SendTargetsTextRequest g_CID0 "All"
+            Assert.True(( st2.Count > 0 ))
+
+            r1.CloseConnection g_CID0
+            r2.CloseConnection g_CID0
         }
 
     [<Fact>]
