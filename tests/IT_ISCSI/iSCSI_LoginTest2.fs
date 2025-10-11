@@ -400,7 +400,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
                     MaxRecvDataSegmentLength_I = 8192u;
                     MaxRecvDataSegmentLength_T = 8192u;
             }
-            let! r1 = iSCSI_Initiator.DiscoverySession connParam1 "All"
+            let! r1 = iSCSI_Initiator.SendTargets connParam1 "All"
             Assert.True(( r1.Count = int m_TargetCount ))
 
             let expectTargetAddress =

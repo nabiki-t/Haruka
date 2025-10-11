@@ -1112,7 +1112,28 @@ type iSCSI_Initiator(
         }
 
     /// <summary>
-    ///  Create session instance and login the leading connection.
+    ///  Create session instance and login for discovery session..
+    /// </summary>
+    /// <param name="exp_SessParams">
+    ///  Desired session parameters.
+    /// </param>
+    /// <param name="exp_ConnParams">
+    ///  Desired connection parameters.
+    /// </param>
+    /// <returns>
+    ///  Created iSCSI initiator object.
+    /// </returns>
+    static member LoginForDiscoverySession ( exp_SessParams : SessParams ) ( exp_ConnParams : ConnParams ) : Task<iSCSI_Initiator> =
+        task {
+            let objID = objidx_me.NewID()
+            let getCmdSN = fun () -> cmdsn_me.zero
+            let! sessParams, connParams, lastStatSN, conn =
+                iSCSI_Initiator.Login exp_SessParams exp_ConnParams objID getCmdSN ( itt_me.fromPrim 0u ) statsn_me.zero true true
+            return new iSCSI_Initiator( sessParams, connParams, statsn_me.next lastStatSN, conn, cmdsn_me.zero )
+        }
+
+    /// <summary>
+    ///  Login for discovery session and get target configurations.
     /// </summary>
     /// <param name="exp_ConnParams">
     ///  Desired connection parameters.
@@ -1121,9 +1142,9 @@ type iSCSI_Initiator(
     ///  Parameter data that will be send as SendTargets text key.
     /// </param>
     /// <returns>
-    ///  Created iSCSI initiator object.
+    ///  Dictionary of the target name and target addresses.
     /// </returns>
-    static member DiscoverySession ( exp_ConnParams : ConnParams ) ( param : string ) : Task< Dictionary< string, string[] > > =
+    static member SendTargets ( exp_ConnParams : ConnParams ) ( param : string ) : Task< Dictionary< string, string[] > > =
 
         let buildResult ( respKeyVal : string[][] ) : Dictionary< string, string[] > =
             let rd = Dictionary< string, List<string> >()
@@ -1145,8 +1166,6 @@ type iSCSI_Initiator(
             |> Seq.map KeyValuePair
             |> Dictionary
         task {
-            let objID = objidx_me.NewID()
-            let getCmdSN = fun () -> cmdsn_me.zero
             let swp = {
                 InitiatorName = "iqn.2020-05.example.com:initiator";
                 InitiatorAlias = "";
@@ -1166,9 +1185,8 @@ type iSCSI_Initiator(
                 DataSequenceInOrder = true;
                 ErrorRecoveryLevel = 0uy;
             }
-            let! sessParams, connParams, lastStatSN, conn =
-                iSCSI_Initiator.Login swp exp_ConnParams objID getCmdSN ( itt_me.fromPrim 0u ) statsn_me.zero true true
-            let sess = new iSCSI_Initiator( sessParams, connParams, statsn_me.next lastStatSN, conn, cmdsn_me.zero )
+            let! sess = iSCSI_Initiator.LoginForDiscoverySession swp exp_ConnParams
+            let cid = exp_ConnParams.CID
 
             // Send SendTargets text request
             let rv = List<TextResponsePDU>()
@@ -1182,8 +1200,8 @@ type iSCSI_Initiator(
                         |]
                     else
                         Array.Empty()
-                let! _ = sess.SendTextRequestPDU connParams.CID true false false lun_me.zero ( ttt_me.fromPrim 0xFFFFFFFFu ) textReq
-                let! wresppdu = sess.ReceiveSpecific<TextResponsePDU> connParams.CID
+                let! _ = sess.SendTextRequestPDU cid true false false lun_me.zero ( ttt_me.fromPrim 0xFFFFFFFFu ) textReq
+                let! wresppdu = sess.ReceiveSpecific<TextResponsePDU> cid
                 rv.Add wresppdu
 
             let keyValues =
@@ -1204,12 +1222,11 @@ type iSCSI_Initiator(
             let rd = buildResult keyValues2
 
             // Logout
-            let! _ = sess.SendLogoutRequestPDU connParams.CID false LogoutReqReasonCd.CLOSE_SESS connParams.CID
-            let! _ = sess.ReceiveSpecific<LogoutResponsePDU> connParams.CID
+            let! _ = sess.SendLogoutRequestPDU cid false LogoutReqReasonCd.CLOSE_SESS cid
+            let! _ = sess.ReceiveSpecific<LogoutResponsePDU> cid
 
             return rd
         }
-
 
     ///////////////////////////////////////////////////////////////////////////
     // static private member
