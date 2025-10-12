@@ -1371,7 +1371,19 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! _ = r1.SendLogoutRequestPDU g_CID1 false LogoutReqReasonCd.CLOSE_CONN g_CID1
             let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID1
             Assert.True(( rpdu2.Response = LogoutResCd.SUCCESS ))
+        }
 
+    // Closing a non-existent connection
+    [<Fact>]
+    member _.Logout_ClosingNonexistentConn_001() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+
+            let! _ = r1.SendLogoutRequestPDU g_CID0 false LogoutReqReasonCd.CLOSE_CONN g_CID1
+            let! rpdu2 = r1.ReceiveSpecific<LogoutResponsePDU> g_CID0
+            Assert.True(( rpdu2.Response = LogoutResCd.CID_NOT_FOUND ))
+
+            do! r1.CloseSession g_CID0 false
         }
         
     // Logging into a non-existent session.

@@ -285,7 +285,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
 
             // Text request PDU with same CmdSN as Nop-Out 5
-            let! _ = r1.SendTextRequestPDU g_CID0 false false false g_LUN1 g_DefTTT [||]
+            let! _ = r1.SendTextRequestPDU g_CID0 false false false ValueNone g_LUN1 g_DefTTT [||]
             let! pdu5_2 = r1.ReceiveSpecific<RejectPDU> g_CID0
             Assert.True(( pdu5_2.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
             Assert.True(( pdu5_2.ExpCmdSN = cmdsn_me.fromPrim 5u ))
@@ -1613,7 +1613,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                         NegoStat_MaxRecvDataSegmentLength_I = NegoStatusValue.NSG_WaitSend;
                 }
                 IscsiTextEncode.CreateTextKeyValueString negoValue1 negoStat1
-            let! itt4, _ = r1.SendTextRequestPDU g_CID0 true true false g_LUN1 g_DefTTT textRequest
+            let! itt4, _ = r1.SendTextRequestPDU g_CID0 true true false ValueNone g_LUN1 g_DefTTT textRequest
 
             let! rpdu4 = r1.ReceiveSpecific<TextResponsePDU> g_CID0
             Assert.True(( rpdu4.F ))
@@ -1753,7 +1753,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                         NegoStat_MaxRecvDataSegmentLength_I = NegoStatusValue.NSG_WaitSend;
                 }
                 IscsiTextEncode.CreateTextKeyValueString negoValue1 negoStat1
-            let! itt4, _ = r1.SendTextRequestPDU g_CID0 true true false g_LUN1 g_DefTTT textRequest
+            let! itt4, _ = r1.SendTextRequestPDU g_CID0 true true false ValueNone g_LUN1 g_DefTTT textRequest
 
             let! rpdu4 = r1.ReceiveSpecific<TextResponsePDU> g_CID0
             Assert.True(( rpdu4.F ))

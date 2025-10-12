@@ -390,6 +390,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         |> Functions.RunTaskInPallalel
         |> Functions.TaskIgnore
 
+    // Get a list of targets in a discovery session
     [<Fact>]
     member _.DiscoverySession_001() =
         task {
@@ -416,6 +417,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
                 Assert.True(( ( Array.sort v1 ) = expectTargetAddress ))
         }
 
+    // Build multiple discovery sessions simultaneously through different network portals without specifying a target name.
     [<Fact>]
     member _.DiscoverySession_002() =
         task {
@@ -443,9 +445,103 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let! st2 = r2.SendTargetsTextRequest g_CID0 "All"
             Assert.True(( st2.Count > 0 ))
 
-            r1.CloseConnection g_CID0
-            r2.CloseConnection g_CID0
+            do! r1.CloseSession g_CID0 false
+            do! r2.CloseSession g_CID0 false
         }
+
+    // Build multiple discovery sessions simultaneously through the same network portal without specifying a target name.
+    [<Fact>]
+    member _.DiscoverySession_003() =
+        task {
+            let isid = GlbFunc.newISID();
+            let sessParam = {
+                m_defaultSessParam with
+                    ISID = isid;
+                    TargetName = "";
+            }
+            let connParam1 = {
+                m_defaultConnParam with
+                    PortNo = m_TD0_iSCSIPortNo.[0];
+            }
+            let! r1 = iSCSI_Initiator.LoginForDiscoverySession sessParam connParam1
+            let! r2 = iSCSI_Initiator.LoginForDiscoverySession sessParam connParam1
+
+            // According to the iSCSI specification, this pattern should implicitly log out the previously established Discovery Session.
+            // However, Haruka does not check for this pattern and allows multiple discovery sessions to exist at the same time.
+
+            let! st1 = r1.SendTargetsTextRequest g_CID0 "All"
+            Assert.True(( st1.Count > 0 ))
+
+            let! st2 = r2.SendTargetsTextRequest g_CID0 "All"
+            Assert.True(( st2.Count > 0 ))
+
+            do! r1.CloseSession g_CID0 false
+            do! r2.CloseSession g_CID0 false
+        }
+
+    // Build multiple Discovery Sessions simultaneously by specifying different target names.
+    [<Fact>]
+    member _.DiscoverySession_004() =
+        task {
+            let isid = GlbFunc.newISID();
+            let sessParam1 = {
+                m_defaultSessParam with
+                    ISID = isid;
+                    TargetName = "iqn.2020-05.example.com:target1";
+            }
+            let connParam1 = {
+                m_defaultConnParam with
+                    PortNo = m_TD0_iSCSIPortNo.[0];
+            }
+            let! r1 = iSCSI_Initiator.LoginForDiscoverySession sessParam1 connParam1
+
+            let sessParam2 = {
+                m_defaultSessParam with
+                    ISID = isid;
+                    TargetName = "iqn.2020-05.example.com:target2";
+            }
+            let! r2 = iSCSI_Initiator.LoginForDiscoverySession sessParam2 connParam1
+
+            let! st1 = r1.SendTargetsTextRequest g_CID0 "All"
+            Assert.True(( st1.Count > 0 ))
+
+            let! st2 = r2.SendTargetsTextRequest g_CID0 "All"
+            Assert.True(( st2.Count > 0 ))
+
+            do! r1.CloseSession g_CID0 false
+            do! r2.CloseSession g_CID0 false
+        }
+
+    // Build multiple Discovery Sessions simultaneously by specifying same target names.
+    [<Fact>]
+    member _.DiscoverySession_005() =
+        task {
+            let isid = GlbFunc.newISID();
+            let sessParam1 = {
+                m_defaultSessParam with
+                    ISID = isid;
+                    TargetName = "iqn.2020-05.example.com:target1";
+            }
+            let connParam1 = {
+                m_defaultConnParam with
+                    PortNo = m_TD0_iSCSIPortNo.[0];
+            }
+            let! r1 = iSCSI_Initiator.LoginForDiscoverySession sessParam1 connParam1
+            let! r2 = iSCSI_Initiator.LoginForDiscoverySession sessParam1 connParam1
+
+            // According to the iSCSI specification, this pattern should implicitly log out the previously established Discovery Session.
+            // However, Haruka does not check for this pattern and allows multiple discovery sessions to exist at the same time.
+
+            let! st1 = r1.SendTargetsTextRequest g_CID0 "All"
+            Assert.True(( st1.Count > 0 ))
+
+            let! st2 = r2.SendTargetsTextRequest g_CID0 "All"
+            Assert.True(( st2.Count > 0 ))
+
+            do! r1.CloseSession g_CID0 false
+            do! r2.CloseSession g_CID0 false
+        }
+
 
     [<Fact>]
     member _.LoginNego_HeaderDigest_001() =

@@ -523,6 +523,9 @@ type iSCSI_Initiator(
     /// <param name="argC">
     ///  TextRequestPDU C field value.
     /// </param>
+    /// <param name="argITT">
+    ///  Initiator Task Tag field value.
+    /// </param>
     /// <param name="argLUN">
     ///  TextRequestPDU LUN field value.
     /// </param>
@@ -542,6 +545,7 @@ type iSCSI_Initiator(
         ( argI : bool )
         ( argF : bool )
         ( argC : bool )
+        ( argITT : ITT_T voption )
         ( argLUN : LUN_T )
         ( argTargetTransferTag : TTT_T )
         ( argTextRequest : byte[] )
@@ -550,7 +554,12 @@ type iSCSI_Initiator(
             let con = m_Connections.[cid]
             do! con.WaitSend()
             try
-                let itt = Interlocked.Increment( &m_ITT ) |> itt_me.fromPrim
+                let itt =
+                    match argITT with
+                    | ValueSome( x ) ->
+                        x
+                    | ValueNone ->
+                        Interlocked.Increment( &m_ITT ) |> itt_me.fromPrim
                 let cmdsn =
                     if argI then m_CmdSN else Interlocked.Increment( &m_CmdSN )
                     |> cmdsn_me.fromPrim
@@ -876,7 +885,7 @@ type iSCSI_Initiator(
     /// <param name="immidiate">
     ///  Specify whether to deliver immediately or not.
     /// </param>
-    member this.CloseSession ( cid : CID_T ) ( immidiate : bool ) =
+    member this.CloseSession ( cid : CID_T ) ( immidiate : bool ) : Task<unit> =
         task {
             let! itt, _ = this.SendLogoutRequestPDU cid immidiate LogoutReqReasonCd.CLOSE_SESS cid
             let! rpdu5 = this.ReceiveSpecific<LogoutResponsePDU> cid
@@ -884,6 +893,7 @@ type iSCSI_Initiator(
                 raise <| SessionRecoveryException( "Unexpedted ITT", m_SessParams.TSIH )
             if rpdu5.Response <> LogoutResCd.SUCCESS then
                 raise <| SessionRecoveryException( "Unexpedted Response", m_SessParams.TSIH )
+            this.CloseConnection cid
         }
 
     /// <summary>
@@ -1013,7 +1023,7 @@ type iSCSI_Initiator(
                         |]
                     else
                         Array.Empty()
-                let! _ = this.SendTextRequestPDU cid true false false lun_me.zero ( ttt_me.fromPrim 0xFFFFFFFFu ) textReq
+                let! _ = this.SendTextRequestPDU cid true false false ValueNone lun_me.zero ( ttt_me.fromPrim 0xFFFFFFFFu ) textReq
                 let! wresppdu = this.ReceiveSpecific<TextResponsePDU> cid
                 rv.Add wresppdu
 

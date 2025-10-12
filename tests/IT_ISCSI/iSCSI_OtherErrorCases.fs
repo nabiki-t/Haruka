@@ -289,7 +289,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_Numbering_Fixture ) =
             let! ittW, _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
 
             // send Text request with immidiate flag
-            let! ittTX, _ = r1.SendTextRequestPDU g_CID0 true true false g_LUN1 g_DefTTT [||]
+            let! ittTX, _ = r1.SendTextRequestPDU g_CID0 true true false ValueNone g_LUN1 g_DefTTT [||]
 
             // receive text response
             let! txrPDU = r1.ReceiveSpecific<TextResponsePDU> g_CID0
@@ -516,7 +516,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_Numbering_Fixture ) =
 
             // send Text request with immidiate flag
             let sendData = Array.zeroCreate<byte> 256
-            let! _ = r1.SendTextRequestPDU_Test id ( ValueSome( 100u, 100u ) ) g_CID0 false true false g_LUN1 g_DefTTT sendData
+            let! _ = r1.SendTextRequestPDU_Test id ( ValueSome( 100u, 100u ) ) g_CID0 false true false ValueNone g_LUN1 g_DefTTT sendData
 
             // Receive Reject PDU
             let! rejectPDU = r1.ReceiveSpecific<RejectPDU> g_CID0
@@ -694,6 +694,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( conn.ReadByte() = -1 ))
         }
 
+    // Send Nop-Out PDU in Discovery session
     [<Fact>]
     member _.UnexpectedPDUInDiscoverySession_001() =
         task {
@@ -703,8 +704,6 @@ type iSCSI_OtherErrorCases( fx : iSCSI_Numbering_Fixture ) =
                     TargetName = "";
             }
             let! r1 = iSCSI_Initiator.LoginForDiscoverySession sessParam m_defaultConnParam
-
-            // Send Nop-Out
             let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
             try
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -713,4 +712,211 @@ type iSCSI_OtherErrorCases( fx : iSCSI_Numbering_Fixture ) =
             | :? ConnectionErrorException
             | :? SessionRecoveryException ->
                 ()
+        }
+
+    // Send SCSI Command PDU in Discovery session
+    [<Fact>]
+    member _.UnexpectedPDUInDiscoverySession_002() =
+        task {
+            let sessParam = {
+                m_defaultSessParam with
+                    ISID = GlbFunc.newISID();
+                    TargetName = "";
+            }
+            let! r1 = iSCSI_Initiator.LoginForDiscoverySession sessParam m_defaultConnParam
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy 0us false false
+            let! _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
+            try
+                let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
+                Assert.Fail __LINE__
+            with
+            | :? ConnectionErrorException
+            | :? SessionRecoveryException ->
+                ()
+        }
+
+    // Send SCSI Data-Out PDU in Discovery session
+    [<Fact>]
+    member _.UnexpectedPDUInDiscoverySession_003() =
+        task {
+            let sessParam = {
+                m_defaultSessParam with
+                    ISID = GlbFunc.newISID();
+                    TargetName = "";
+            }
+            let! r1 = iSCSI_Initiator.LoginForDiscoverySession sessParam m_defaultConnParam
+            do! r1.SendSCSIDataOutPDU g_CID0 true ( itt_me.fromPrim 1u ) g_LUN1 g_DefTTT datasn_me.zero 0u PooledBuffer.Empty
+            try
+                let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
+                Assert.Fail __LINE__
+            with
+            | :? ConnectionErrorException
+            | :? SessionRecoveryException ->
+                ()
+        }
+
+    // Send TMF request PDU in Discovery session
+    [<Fact>]
+    member _.UnexpectedPDUInDiscoverySession_004() =
+        task {
+            let sessParam = {
+                m_defaultSessParam with
+                    ISID = GlbFunc.newISID();
+                    TargetName = "";
+            }
+            let! r1 = iSCSI_Initiator.LoginForDiscoverySession sessParam m_defaultConnParam
+            let! _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 false TaskMgrReqCd.ABORT_TASK g_LUN1 ( itt_me.fromPrim 1u ) cmdsn_me.zero datasn_me.zero
+            try
+                let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
+                Assert.Fail __LINE__
+            with
+            | :? ConnectionErrorException
+            | :? SessionRecoveryException ->
+                ()
+        }
+
+    // Send SNACK PDU in Discovery session
+    [<Fact>]
+    member _.UnexpectedPDUInDiscoverySession_005() =
+        task {
+            let sessParam = {
+                m_defaultSessParam with
+                    ISID = GlbFunc.newISID();
+                    TargetName = "";
+            }
+            let! r1 = iSCSI_Initiator.LoginForDiscoverySession sessParam m_defaultConnParam
+            do! r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.STATUS g_LUN1 g_DefITT g_DefTTT 0u 1u
+            try
+                let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
+                Assert.Fail __LINE__
+            with
+            | :? ConnectionErrorException
+            | :? SessionRecoveryException ->
+                ()
+        }
+
+    [<Fact>]
+    member _.TextRequest_NegotiationReset_001() =
+        task {
+            let sessParam = {
+                m_defaultSessParam with
+                    ErrorRecoveryLevel = 1uy;
+                    MaxBurstLength = 3000u;
+            }
+            let connParam = {
+                m_defaultConnParam with
+                    MaxRecvDataSegmentLength_I = 1200u;
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam connParam
+
+            let accessLength = 8192u
+            let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
+            let expRsult = [|
+                ( 0u, 0u, 1200, false );
+                ( 1u, 1200u, 1200, false );
+                ( 2u, 2400u, 600, true );
+                ( 3u, 3000u, 1200, false );
+                ( 4u, 4200u, 1200, false );
+                ( 5u, 5400u, 600, true );
+                ( 6u, 6000u, 1200, false );
+                ( 7u, 7200u, 992, true );
+            |]
+
+            // Send SCSI Read command
+            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 accessBlockcount ) false false
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
+
+            // Receive SCSI Data-In PDUs
+            for i = 0 to expRsult.Length - 1 do
+                let ( expdn, expOffset, expLength, expF ) = expRsult.[i]
+                let! rpdu2 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+                Assert.True(( rpdu2.F = expF ))
+                Assert.True(( rpdu2.A = expF ))
+                Assert.True(( rpdu2.InitiatorTaskTag = itt ))
+                Assert.True(( rpdu2.DataSN = datasn_me.fromPrim expdn ))
+                Assert.True(( rpdu2.BufferOffset = expOffset ))
+                Assert.True(( rpdu2.DataSegment.Count = expLength ))
+
+            // Receive SCSI Response PDU
+            let! rpdu3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu3.Status = ScsiCmdStatCd.GOOD ))
+
+            // Note that at this point, no acknowledgement has been returned.
+            r1.Connection( g_CID0 ).RewindExtStatSN ( statsn_me.fromPrim 1u )
+
+            // Send text request. MaxRecvDataSegmentLength_I -> 1300
+            let textRequest = 
+                let negoValue1 = {
+                    TextKeyValues.defaultTextKeyValues with
+                        MaxRecvDataSegmentLength_I = TextValueType.Value( 1300u );
+                }
+                let negoStat1 = {
+                    TextKeyValuesStatus.defaultTextKeyValuesStatus with
+                        NegoStat_MaxRecvDataSegmentLength_I = NegoStatusValue.NSG_WaitSend;
+                }
+                IscsiTextEncode.CreateTextKeyValueString negoValue1 negoStat1
+            let! itt4, _ = r1.SendTextRequestPDU g_CID0 false false false ValueNone g_LUN1 g_DefTTT textRequest
+
+            // Receive text response PDU
+            let! rpdu4 = r1.ReceiveSpecific<TextResponsePDU> g_CID0
+            Assert.False(( rpdu4.F ))
+            Assert.True(( rpdu4.InitiatorTaskTag = itt4 ))
+            Assert.True(( rpdu4.TextResponse.Length = 0 ))
+
+            // Send text request. Negotiation reset. ( TTT = 0xFFFFFFFF )
+            let! _ = r1.SendTextRequestPDU g_CID0 false true false ( ValueSome itt4 ) g_LUN1 g_DefTTT [||]
+
+            // Receive text response PDU
+            let! rpdu5 = r1.ReceiveSpecific<TextResponsePDU> g_CID0
+            Assert.True(( rpdu5.F ))
+            Assert.True(( rpdu5.InitiatorTaskTag = itt4 ))
+            Assert.True(( rpdu5.TextResponse.Length = 0 ))
+
+            // Send R-SNACK request
+            let! _ = r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.RDATA_SNACK g_LUN1 itt ( ttt_me.fromPrim 0x12345678u ) 0u 0u
+
+            // Receive SCSI Data-In PDUs
+            for i = 0 to expRsult.Length - 1 do
+                let ( expdn, expOffset, expLength, expF ) = expRsult.[i]
+                let! rpdu6 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+                Assert.True(( rpdu6.F = expF ))
+                Assert.True(( rpdu6.A = expF ))
+                Assert.True(( rpdu6.InitiatorTaskTag = itt ))
+                Assert.True(( rpdu6.DataSN = datasn_me.fromPrim expdn ))
+                Assert.True(( rpdu6.BufferOffset = expOffset ))
+                Assert.True(( rpdu6.DataSegment.Count = expLength ))
+
+            // Receive SCSI Response PDU
+            let! rpdu7 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu7.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( rpdu7.SNACKTag = snacktag_me.fromPrim 0x12345678u ))
+
+            r1.Connection( g_CID0 ).SkipExtStatSN ( statsn_me.fromPrim 1u )
+            do! r1.CloseSession g_CID0 false
+        }
+
+    [<Fact>]
+    member _.TextRequest_EmptyReset_001() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+
+            // Send empty text request.
+            let! itt4, _ = r1.SendTextRequestPDU g_CID0 false false false ValueNone g_LUN1 g_DefTTT [||]
+
+            // Receive text response PDU
+            let! rpdu4 = r1.ReceiveSpecific<TextResponsePDU> g_CID0
+            Assert.False(( rpdu4.F ))
+            Assert.True(( rpdu4.InitiatorTaskTag = itt4 ))
+            Assert.True(( rpdu4.TextResponse.Length = 0 ))
+
+            // Send empty text request. F=1
+            let! _ = r1.SendTextRequestPDU g_CID0 false true false ( ValueSome itt4 ) g_LUN1 g_DefTTT [||]
+
+            // Receive text response PDU
+            let! rpdu5 = r1.ReceiveSpecific<TextResponsePDU> g_CID0
+            Assert.True(( rpdu5.F ))
+            Assert.True(( rpdu5.InitiatorTaskTag = itt4 ))
+            Assert.True(( rpdu5.TextResponse.Length = 0 ))
+
+            do! r1.CloseSession g_CID0 false
         }
