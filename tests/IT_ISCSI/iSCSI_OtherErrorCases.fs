@@ -920,3 +920,23 @@ type iSCSI_OtherErrorCases( fx : iSCSI_Numbering_Fixture ) =
 
             do! r1.CloseSession g_CID0 false
         }
+
+    [<Fact>]
+    member _.Unknown_Opcode_001() =
+        task {
+            let connParam = { m_defaultConnParam with HeaderDigest = DigestType.DST_None }
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam connParam
+
+            // Send PDU with unknown opcode
+            let v = Array.zeroCreate<byte> 48
+            for i = 0 to 63 do
+                if not ( Array.exists ( (=) i ) [| 0x00; 0x01; 0x02; 0x03; 0x04; 0x05; 0x06; 0x10 |] ) then
+                    v.[0] <- byte i
+                    do! r1.Connection( g_CID0 ).Connection.WriteAsync( v, 0, 48 )
+
+                    // Receive reject PDU
+                    let! rpdu1 = r1.ReceiveSpecific<RejectPDU> g_CID0
+                    Assert.True(( rpdu1.Reason = RejectReasonCd.COM_NOT_SUPPORT ))
+
+            do! r1.CloseSession g_CID0 false
+        }
