@@ -1813,7 +1813,6 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             Assert.True(( ( pdu1 :?> LoginResponsePDU ).Status = LoginResStatCd.UNSUPPORT_SESS_TYPE ))
         }
 
-
     [<Fact>]
     member _.DiscoverySession_001() =
         task {
@@ -1881,5 +1880,63 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             }
             let! r1 = iSCSI_Initiator.QueryTargetNames connParam1 "aaaaaaaaaa"
             Assert.True(( r1.Count = 0 ))
+        }
 
+    [<Fact>]
+    member _.SendTargets_TextRequest_001() =
+        task {
+            // login for full feature phase
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+
+            // send SendTargets text request
+            let! result = r1.SendTargetsTextRequest g_CID0 "All"
+            Assert.True(( result.Count = 0 ))
+
+            do! r1.CloseSession g_CID0 false
+        }
+
+    [<Fact>]
+    member _.SendTargets_TextRequest_002() =
+        task {
+            // login for full feature phase
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+
+            // send SendTargets text request
+            let! result = r1.SendTargetsTextRequest g_CID0 "iqn.2020-05.example.com:target2"
+            Assert.True(( result.Count = 0 ))
+            do! r1.CloseSession g_CID0 false
+        }
+
+    [<Fact>]
+    member _.SendTargets_TextRequest_003() =
+        task {
+            // login for full feature phase
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+
+            // send SendTargets text request
+            let! result = r1.SendTargetsTextRequest g_CID0 "iqn.2020-05.example.com:target1"
+            Assert.True(( result.Count = 1 ))
+
+            let v2 = result.[ "iqn.2020-05.example.com:target1" ]
+            Assert.True(( v2.Length = 1 ))
+            Assert.True(( v2.[0] = sprintf "[::1]:%d,0" m_iSCSIPortNo ))
+
+            do! r1.CloseSession g_CID0 false
+        }
+
+    [<Fact>]
+    member _.SendTargets_TextRequest_004() =
+        task {
+            // login for full feature phase
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+
+            // send SendTargets text request
+            let! result = r1.SendTargetsTextRequest g_CID0 ""
+            Assert.True(( result.Count = 1 ))
+
+            let v2 = result.[ "iqn.2020-05.example.com:target1" ]
+            Assert.True(( v2.Length = 1 ))
+            Assert.True(( v2.[0] = sprintf "[::1]:%d,0" m_iSCSIPortNo ))
+
+            do! r1.CloseSession g_CID0 false
         }
