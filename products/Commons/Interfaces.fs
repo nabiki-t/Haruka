@@ -896,9 +896,15 @@ type IConnection =
 
     // ------------------------------------------------------------------------
     /// <summary>
-    ///   Get connection counter value of this connection
+    ///   Get network portal index number of this connection.
     /// </summary>
     abstract NetPortIdx : NETPORTIDX_T
+
+    // ------------------------------------------------------------------------
+    /// <summary>
+    ///   Get TCP connection local endpoint information.
+    /// </summary>
+    abstract LocalAddress : System.Net.IPEndPoint voption
 
     // ------------------------------------------------------------------------
     /// <summary>

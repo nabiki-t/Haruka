@@ -13,6 +13,7 @@ namespace Haruka.Test.UT.TargetDevice
 
 open System
 open System.Text
+open System.Net
 
 open Xunit
 
@@ -95,6 +96,18 @@ type IscsiTaskTextNegociation_Test () =
         ErrorRecoveryLevel = 0uy;
     }
 
+    static member defaultNetworkPortal : TargetDeviceConf.T_NetworkPortal = {
+        IdentNumber = netportidx_me.fromPrim 1u;
+        TargetPortalGroupTag = tpgt_me.fromPrim 0us;
+        TargetAddress = "";
+        PortNumber = 3000us;
+        DisableNagle = false;
+        ReceiveBufferSize = 512;
+        SendBufferSize = 512;
+        WhiteList = [];
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
 
@@ -103,8 +116,10 @@ type IscsiTaskTextNegociation_Test () =
         let sessStub = new CSession_Stub(
             p_GetTSIH = fun () -> tsih_me.zero
         )
+        let smStub = new CStatus_Stub()
         let r = new IscsiTaskTextNegociation(
             objidx_me.NewID(),
+            smStub,
             sessStub :> ISession,
             cid_me.fromPrim 0us,
             concnt_me.fromPrim 0,
@@ -151,8 +166,10 @@ type IscsiTaskTextNegociation_Test () =
         let sessStub = new CSession_Stub(
             p_GetTSIH = fun () -> tsih_me.zero
         )
+        let smStub = new CStatus_Stub()
         let r = new IscsiTaskTextNegociation(
             objidx_me.NewID(),
+            smStub,
             sessStub :> ISession,
             cid_me.fromPrim 0us,
             concnt_me.fromPrim 0,
@@ -178,8 +195,10 @@ type IscsiTaskTextNegociation_Test () =
         let sessStub = new CSession_Stub(
             p_GetTSIH = fun () -> tsih_me.zero
         )
+        let smStub = new CStatus_Stub()
         let r = new IscsiTaskTextNegociation(
             objidx_me.NewID(),
+            smStub,
             sessStub :> ISession,
             cid_me.fromPrim 0us,
             concnt_me.fromPrim 0,
@@ -210,7 +229,9 @@ type IscsiTaskTextNegociation_Test () =
         let sessStub = new CSession_Stub(
             p_GetTSIH = fun () -> tsih_me.zero
         )
+        let smStub = new CStatus_Stub()
         let r = IscsiTaskTextNegociation.CreateWithInitParams(
+            smStub,
             sessStub :> ISession,
             cid_me.fromPrim 0us,
             concnt_me.fromPrim 0,
@@ -228,7 +249,9 @@ type IscsiTaskTextNegociation_Test () =
         let sessStub = new CSession_Stub(
             p_GetTSIH = fun () -> tsih_me.zero
         )
+        let smStub = new CStatus_Stub()
         let task1 = IscsiTaskTextNegociation.CreateWithInitParams(
+            smStub,
             sessStub :> ISession,
             cid_me.fromPrim 0us,
             concnt_me.fromPrim 0,
@@ -257,7 +280,9 @@ type IscsiTaskTextNegociation_Test () =
         let sessStub = new CSession_Stub(
             p_GetTSIH = fun () -> tsih_me.zero
         )
+        let smStub = new CStatus_Stub()
         let task1 = IscsiTaskTextNegociation.CreateWithInitParams(
+            smStub,
             sessStub :> ISession,
             cid_me.fromPrim 0us,
             concnt_me.fromPrim 0,
@@ -286,8 +311,10 @@ type IscsiTaskTextNegociation_Test () =
         let sessStub = new CSession_Stub(
             p_GetTSIH = fun () -> tsih_me.zero
         )
+        let smStub = new CStatus_Stub()
         let task1 = new IscsiTaskTextNegociation(
             objidx_me.NewID(),
+            smStub,
             sessStub :> ISession,
             cid_me.fromPrim 0us,
             concnt_me.fromPrim 0,
@@ -329,7 +356,9 @@ type IscsiTaskTextNegociation_Test () =
         let sessStub = new CSession_Stub(
             p_GetTSIH = fun () -> tsih_me.zero
         )
+        let smStub = new CStatus_Stub()
         let task1 = IscsiTaskTextNegociation.CreateWithInitParams(
+            smStub,
             sessStub :> ISession,
             cid_me.fromPrim 0us,
             concnt_me.fromPrim 0,
@@ -365,8 +394,10 @@ type IscsiTaskTextNegociation_Test () =
         let sessStub = new CSession_Stub(
             p_GetTSIH = fun () -> tsih_me.zero
         )
+        let smStub = new CStatus_Stub()
         let task1 = new IscsiTaskTextNegociation(
             objidx_me.NewID(),
+            smStub,
             sessStub :> ISession,
             cid_me.fromPrim 0us,
             concnt_me.fromPrim 0,
@@ -409,8 +440,10 @@ type IscsiTaskTextNegociation_Test () =
         let sessStub = new CSession_Stub(
             p_GetTSIH = fun () -> tsih_me.zero
         )
+        let smStub = new CStatus_Stub()
         let task1 = new IscsiTaskTextNegociation(
             objidx_me.NewID(),
+            smStub,
             sessStub :> ISession,
             cid_me.fromPrim 0us,
             concnt_me.fromPrim 0,
@@ -462,7 +495,9 @@ type IscsiTaskTextNegociation_Test () =
         let sessStub = new CSession_Stub(
             p_GetTSIH = fun () -> tsih_me.zero
         )
+        let smStub = new CStatus_Stub()
         let task1 = IscsiTaskTextNegociation.CreateWithInitParams(
+            smStub,
             sessStub :> ISession,
             cid_me.fromPrim 0us,
             concnt_me.fromPrim 0,
@@ -490,8 +525,10 @@ type IscsiTaskTextNegociation_Test () =
             p_GetTSIH = ( fun () -> tsih_me.zero ),
             p_GetConnection = ( fun _ _ -> ValueNone )
         )
+        let smStub = new CStatus_Stub()
         let task1 = new IscsiTaskTextNegociation(
             objidx_me.NewID(),
+            smStub,
             sessStub :> ISession,
             cid_me.fromPrim 0us,
             concnt_me.fromPrim 0,
@@ -563,6 +600,384 @@ type IscsiTaskTextNegociation_Test () =
         Assert.True(( NegoStatusValue.NSV_Negotiated = task3.CurrentNegoStatus.NegoStat_TargetAlias ))
 
     [<Fact>]
+    member _.Constractor_013() =
+        let sessStub = new CSession_Stub(
+            p_GetTSIH = ( fun () -> tsih_me.zero ),
+            p_GetConnection = ( fun _ _ -> ValueNone )
+        )
+        let smStub = new CStatus_Stub()
+        let recvPDU = {
+            IscsiTaskTextNegociation_Test.defaultRequestPDU with
+                TextRequest = [|
+                    yield! Encoding.UTF8.GetBytes "SendTargets=targeta0";
+                    yield  0x00uy;
+                    yield! Encoding.UTF8.GetBytes "TargetAlias=aaa";
+                |]
+        }
+        let task1 = IscsiTaskTextNegociation.CreateWithInitParams(
+            smStub,
+            sessStub :> ISession,
+            cid_me.fromPrim 0us,
+            concnt_me.fromPrim 0,
+            recvPDU,
+            IscsiTaskTextNegociation_Test.defaultIscsiNegoParamSW,
+            IscsiTaskTextNegociation_Test.defaultIscsiNegoParamCO
+        )
+        try
+            let task2 = IscsiTaskTextNegociation.UpdateNegoStatByReqPDU( task1, recvPDU )
+            Assert.Fail __LINE__
+        with
+        | :? SessionRecoveryException as x ->
+            Assert.True(( x.Message.StartsWith "SendTargets text key must be used alone" ))
+
+    [<Fact>]
+    member _.Constractor_014() =
+        let connStub = new CConnection_Stub(
+            p_LocalAddress = ( fun () -> ValueSome ( IPEndPoint( IPAddress.Parse( "192.168.1.1" ), 3000 ) ) ),
+            p_CurrentParams = ( fun () -> IscsiTaskTextNegociation_Test.defaultIscsiNegoParamCO )
+        )
+        let sessStub = new CSession_Stub(
+            p_GetTSIH = ( fun () -> tsih_me.zero ),
+            p_GetConnection = ( fun _ _ -> ValueSome connStub ),
+            p_GetSessionParameter = ( fun () -> IscsiTaskTextNegociation_Test.defaultIscsiNegoParamSW )
+        )
+        let smStub = new CStatus_Stub(
+            p_GetNetworkPortal = ( fun () -> [] )
+        )
+        let recvPDU = {
+            IscsiTaskTextNegociation_Test.defaultRequestPDU with
+                TextRequest = Encoding.UTF8.GetBytes "SendTargets=targeta0";
+        }
+        let task1 = IscsiTaskTextNegociation.CreateWithInitParams(
+            smStub,
+            sessStub :> ISession,
+            cid_me.fromPrim 0us,
+            concnt_me.fromPrim 0,
+            recvPDU,
+            IscsiTaskTextNegociation_Test.defaultIscsiNegoParamSW,
+            IscsiTaskTextNegociation_Test.defaultIscsiNegoParamCO
+        )
+        let task2 = IscsiTaskTextNegociation.UpdateNegoStatByReqPDU( task1, recvPDU )
+
+        Assert.True( ValueOption.isSome task2.NextResponsePDU )
+        let nextRespPDU = ValueOption.get task2.NextResponsePDU
+        Assert.False( nextRespPDU.F )
+        Assert.False( nextRespPDU.C )
+
+        let sendTargetsResult =
+            nextRespPDU.TextResponse
+            |> Functions.SplitByteArray 0uy
+            |> List.filter ( fun x -> x.Length <> 0 )
+            |> List.map Encoding.UTF8.GetString
+
+        Assert.True(( sendTargetsResult.Length = 1 ))
+        Assert.True(( sendTargetsResult.[0] = "TargetName=targeta0" ))
+        
+    [<Fact>]
+    member _.Constractor_015() =
+        let connStub = new CConnection_Stub(
+            p_LocalAddress = ( fun () -> ValueSome ( IPEndPoint( IPAddress.Parse( "192.168.1.1" ), 3000 ) ) ),
+            p_CurrentParams = ( fun () -> IscsiTaskTextNegociation_Test.defaultIscsiNegoParamCO )
+        )
+        let sessStub = new CSession_Stub(
+            p_GetTSIH = ( fun () -> tsih_me.zero ),
+            p_GetConnection = ( fun _ _ -> ValueSome connStub ),
+            p_GetSessionParameter = ( fun () -> IscsiTaskTextNegociation_Test.defaultIscsiNegoParamSW )
+        )
+        let smStub = new CStatus_Stub(
+            p_GetNetworkPortal = ( fun () -> [
+                { IscsiTaskTextNegociation_Test.defaultNetworkPortal with TargetAddress = "abc" }
+            ] )
+        )
+        let recvPDU = {
+            IscsiTaskTextNegociation_Test.defaultRequestPDU with
+                TextRequest = Encoding.UTF8.GetBytes "SendTargets=targeta0";
+        }
+        let task1 = IscsiTaskTextNegociation.CreateWithInitParams(
+            smStub,
+            sessStub :> ISession,
+            cid_me.fromPrim 0us,
+            concnt_me.fromPrim 0,
+            recvPDU,
+            IscsiTaskTextNegociation_Test.defaultIscsiNegoParamSW,
+            IscsiTaskTextNegociation_Test.defaultIscsiNegoParamCO
+        )
+        let task2 = IscsiTaskTextNegociation.UpdateNegoStatByReqPDU( task1, recvPDU )
+
+        Assert.True( ValueOption.isSome task2.NextResponsePDU )
+        let nextRespPDU = ValueOption.get task2.NextResponsePDU
+        Assert.False( nextRespPDU.F )
+        Assert.False( nextRespPDU.C )
+
+        let sendTargetsResult =
+            nextRespPDU.TextResponse
+            |> Functions.SplitByteArray 0uy
+            |> List.filter ( fun x -> x.Length <> 0 )
+            |> List.map Encoding.UTF8.GetString
+
+        Assert.True(( sendTargetsResult.Length = 2 ))
+        Assert.True(( sendTargetsResult.[0] = "TargetName=targeta0" ))
+        Assert.True(( sendTargetsResult.[1] = "TargetAddress=abc:3000,0" ))
+        
+    [<Fact>]
+    member _.Constractor_016() =
+        let connStub = new CConnection_Stub(
+            p_LocalAddress = ( fun () -> ValueSome ( IPEndPoint( IPAddress.Parse( "192.168.1.1" ), 3000 ) ) ),
+            p_CurrentParams = ( fun () -> IscsiTaskTextNegociation_Test.defaultIscsiNegoParamCO )
+        )
+        let sessStub = new CSession_Stub(
+            p_GetTSIH = ( fun () -> tsih_me.zero ),
+            p_GetConnection = ( fun _ _ -> ValueSome connStub ),
+            p_GetSessionParameter = ( fun () -> IscsiTaskTextNegociation_Test.defaultIscsiNegoParamSW )
+        )
+        let smStub = new CStatus_Stub(
+            p_GetNetworkPortal = ( fun () -> [
+                { IscsiTaskTextNegociation_Test.defaultNetworkPortal with TargetAddress = "aaa"; TargetPortalGroupTag = tpgt_me.fromPrim 0us };
+                { IscsiTaskTextNegociation_Test.defaultNetworkPortal with TargetAddress = "bbb"; TargetPortalGroupTag = tpgt_me.fromPrim 1us };
+                { IscsiTaskTextNegociation_Test.defaultNetworkPortal with TargetAddress = "ccc"; TargetPortalGroupTag = tpgt_me.fromPrim 0us };
+            ] )
+        )
+        let recvPDU = {
+            IscsiTaskTextNegociation_Test.defaultRequestPDU with
+                TextRequest = Encoding.UTF8.GetBytes "SendTargets=targeta0";
+        }
+        let task1 = IscsiTaskTextNegociation.CreateWithInitParams(
+            smStub,
+            sessStub :> ISession,
+            cid_me.fromPrim 0us,
+            concnt_me.fromPrim 0,
+            recvPDU,
+            IscsiTaskTextNegociation_Test.defaultIscsiNegoParamSW,
+            IscsiTaskTextNegociation_Test.defaultIscsiNegoParamCO
+        )
+        let task2 = IscsiTaskTextNegociation.UpdateNegoStatByReqPDU( task1, recvPDU )
+
+        Assert.True( ValueOption.isSome task2.NextResponsePDU )
+        let nextRespPDU = ValueOption.get task2.NextResponsePDU
+        Assert.False( nextRespPDU.F )
+        Assert.False( nextRespPDU.C )
+
+        let sendTargetsResult =
+            nextRespPDU.TextResponse
+            |> Functions.SplitByteArray 0uy
+            |> List.filter ( fun x -> x.Length <> 0 )
+            |> List.map Encoding.UTF8.GetString
+
+        Assert.True(( sendTargetsResult.Length = 3 ))
+        Assert.True(( sendTargetsResult.[0] = "TargetName=targeta0" ))
+        Assert.True(( sendTargetsResult.[1] = "TargetAddress=aaa:3000,0" ))
+        Assert.True(( sendTargetsResult.[2] = "TargetAddress=ccc:3000,0" ))
+        
+    [<Fact>]
+    member _.Constractor_017() =
+        let connStub = new CConnection_Stub(
+            p_LocalAddress = ( fun () -> ValueSome ( IPEndPoint( IPAddress.Parse( "192.168.1.1" ), 3000 ) ) ),
+            p_CurrentParams = ( fun () -> IscsiTaskTextNegociation_Test.defaultIscsiNegoParamCO )
+        )
+        let sessStub = new CSession_Stub(
+            p_GetTSIH = ( fun () -> tsih_me.zero ),
+            p_GetConnection = ( fun _ _ -> ValueSome connStub ),
+            p_GetSessionParameter = ( fun () -> IscsiTaskTextNegociation_Test.defaultIscsiNegoParamSW )
+        )
+        let smStub = new CStatus_Stub(
+            p_GetNetworkPortal = ( fun () -> [
+                { IscsiTaskTextNegociation_Test.defaultNetworkPortal with TargetAddress = "" }; // target address not specified
+            ] )
+        )
+        let recvPDU = {
+            IscsiTaskTextNegociation_Test.defaultRequestPDU with
+                TextRequest = Encoding.UTF8.GetBytes "SendTargets=targeta0";
+        }
+        let task1 = IscsiTaskTextNegociation.CreateWithInitParams(
+            smStub,
+            sessStub :> ISession,
+            cid_me.fromPrim 0us,
+            concnt_me.fromPrim 0,
+            recvPDU,
+            IscsiTaskTextNegociation_Test.defaultIscsiNegoParamSW,
+            IscsiTaskTextNegociation_Test.defaultIscsiNegoParamCO
+        )
+        let task2 = IscsiTaskTextNegociation.UpdateNegoStatByReqPDU( task1, recvPDU )
+
+        Assert.True( ValueOption.isSome task2.NextResponsePDU )
+        let nextRespPDU = ValueOption.get task2.NextResponsePDU
+        Assert.False( nextRespPDU.F )
+        Assert.False( nextRespPDU.C )
+
+        let sendTargetsResult =
+            nextRespPDU.TextResponse
+            |> Functions.SplitByteArray 0uy
+            |> List.filter ( fun x -> x.Length <> 0 )
+            |> List.map Encoding.UTF8.GetString
+
+        Assert.True(( sendTargetsResult.Length = 2 ))
+        Assert.True(( sendTargetsResult.[0] = "TargetName=targeta0" ))
+        Assert.True(( sendTargetsResult.[1] = "TargetAddress=192.168.1.1:3000,0" ))
+        
+    [<Fact>]
+    member _.Constractor_018() =
+        let connStub = new CConnection_Stub(
+            p_LocalAddress = ( fun () -> ValueNone ),   // local address missing
+            p_CurrentParams = ( fun () -> IscsiTaskTextNegociation_Test.defaultIscsiNegoParamCO )
+        )
+        let sessStub = new CSession_Stub(
+            p_GetTSIH = ( fun () -> tsih_me.zero ),
+            p_GetConnection = ( fun _ _ -> ValueSome connStub ),
+            p_GetSessionParameter = ( fun () -> IscsiTaskTextNegociation_Test.defaultIscsiNegoParamSW )
+        )
+        let smStub = new CStatus_Stub(
+            p_GetNetworkPortal = ( fun () -> [
+                { IscsiTaskTextNegociation_Test.defaultNetworkPortal with TargetAddress = "" }; // target address not specified
+            ] )
+        )
+        let recvPDU = {
+            IscsiTaskTextNegociation_Test.defaultRequestPDU with
+                TextRequest = Encoding.UTF8.GetBytes "SendTargets=targeta0";
+        }
+        let task1 = IscsiTaskTextNegociation.CreateWithInitParams(
+            smStub,
+            sessStub :> ISession,
+            cid_me.fromPrim 0us,
+            concnt_me.fromPrim 0,
+            recvPDU,
+            IscsiTaskTextNegociation_Test.defaultIscsiNegoParamSW,
+            IscsiTaskTextNegociation_Test.defaultIscsiNegoParamCO
+        )
+        let task2 = IscsiTaskTextNegociation.UpdateNegoStatByReqPDU( task1, recvPDU )
+
+        Assert.True( ValueOption.isSome task2.NextResponsePDU )
+        let nextRespPDU = ValueOption.get task2.NextResponsePDU
+        Assert.False( nextRespPDU.F )
+        Assert.False( nextRespPDU.C )
+
+        let sendTargetsResult =
+            nextRespPDU.TextResponse
+            |> Functions.SplitByteArray 0uy
+            |> List.filter ( fun x -> x.Length <> 0 )
+            |> List.map Encoding.UTF8.GetString
+
+        Assert.True(( sendTargetsResult.Length = 2 ))
+        Assert.True(( sendTargetsResult.[0] = "TargetName=targeta0" ))
+        Assert.True(( sendTargetsResult.[1] = "TargetAddress=:3000,0" ))    // Unable to obtain address
+        
+    [<Fact>]
+    member _.Constractor_019() =
+        let sessStub = new CSession_Stub(
+            p_GetTSIH = ( fun () -> tsih_me.zero ),
+            p_GetConnection = ( fun _ _ -> ValueNone ), // connection object missing
+            p_GetSessionParameter = ( fun () -> IscsiTaskTextNegociation_Test.defaultIscsiNegoParamSW )
+        )
+        let smStub = new CStatus_Stub(
+            p_GetNetworkPortal = ( fun () -> [
+                { IscsiTaskTextNegociation_Test.defaultNetworkPortal with TargetAddress = "" }; // target address not specified
+            ] )
+        )
+        let recvPDU = {
+            IscsiTaskTextNegociation_Test.defaultRequestPDU with
+                TextRequest = Encoding.UTF8.GetBytes "SendTargets=targeta0";
+        }
+        let task1 = IscsiTaskTextNegociation.CreateWithInitParams(
+            smStub,
+            sessStub :> ISession,
+            cid_me.fromPrim 0us,
+            concnt_me.fromPrim 0,
+            recvPDU,
+            IscsiTaskTextNegociation_Test.defaultIscsiNegoParamSW,
+            IscsiTaskTextNegociation_Test.defaultIscsiNegoParamCO
+        )
+        let task2 = IscsiTaskTextNegociation.UpdateNegoStatByReqPDU( task1, recvPDU )
+
+        Assert.True( ValueOption.isSome task2.NextResponsePDU )
+        let nextRespPDU = ValueOption.get task2.NextResponsePDU
+        Assert.False( nextRespPDU.F )
+        Assert.False( nextRespPDU.C )
+
+        let sendTargetsResult =
+            nextRespPDU.TextResponse
+            |> Functions.SplitByteArray 0uy
+            |> List.filter ( fun x -> x.Length <> 0 )
+            |> List.map Encoding.UTF8.GetString
+
+        Assert.True(( sendTargetsResult.Length = 2 ))
+        Assert.True(( sendTargetsResult.[0] = "TargetName=targeta0" ))
+        Assert.True(( sendTargetsResult.[1] = "TargetAddress=:3000,0" ))    // Unable to obtain address
+        
+    [<Fact>]
+    member _.Constractor_020() =
+        let connStub = new CConnection_Stub(
+            p_LocalAddress = ( fun () -> ValueSome ( IPEndPoint( IPAddress.Parse( "192.168.1.1" ), 3000 ) ) ),
+            p_CurrentParams = ( fun () -> IscsiTaskTextNegociation_Test.defaultIscsiNegoParamCO )
+        )
+        let sessStub = new CSession_Stub(
+            p_GetTSIH = ( fun () -> tsih_me.zero ),
+            p_GetConnection = ( fun _ _ -> ValueSome connStub ),
+            p_GetSessionParameter = ( fun () -> IscsiTaskTextNegociation_Test.defaultIscsiNegoParamSW )
+        )
+        let smStub = new CStatus_Stub(
+            p_GetNetworkPortal = ( fun () -> [
+                { IscsiTaskTextNegociation_Test.defaultNetworkPortal with TargetAddress = "abc" };
+            ] )
+        )
+        let recvPDU = {
+            IscsiTaskTextNegociation_Test.defaultRequestPDU with
+                TextRequest = Encoding.UTF8.GetBytes "SendTargets=";    // SendTargets parameter not specified
+        }
+        let task1 = IscsiTaskTextNegociation.CreateWithInitParams(
+            smStub,
+            sessStub :> ISession,
+            cid_me.fromPrim 0us,
+            concnt_me.fromPrim 0,
+            recvPDU,
+            IscsiTaskTextNegociation_Test.defaultIscsiNegoParamSW,
+            IscsiTaskTextNegociation_Test.defaultIscsiNegoParamCO
+        )
+        let task2 = IscsiTaskTextNegociation.UpdateNegoStatByReqPDU( task1, recvPDU )
+
+        Assert.True( ValueOption.isSome task2.NextResponsePDU )
+        let nextRespPDU = ValueOption.get task2.NextResponsePDU
+        Assert.False( nextRespPDU.F )
+        Assert.False( nextRespPDU.C )
+
+        let sendTargetsResult =
+            nextRespPDU.TextResponse
+            |> Functions.SplitByteArray 0uy
+            |> List.filter ( fun x -> x.Length <> 0 )
+            |> List.map Encoding.UTF8.GetString
+
+        Assert.True(( sendTargetsResult.Length = 2 ))
+        Assert.True(( sendTargetsResult.[0] = "TargetName=targeta0" ))
+        Assert.True(( sendTargetsResult.[1] = "TargetAddress=abc:3000,0" ))
+        
+    [<Fact>]
+    member _.Constractor_021() =
+        let sessStub = new CSession_Stub(
+            p_GetTSIH = ( fun () -> tsih_me.zero ),
+            p_GetConnection = ( fun _ _ -> ValueNone ),
+            p_GetSessionParameter = ( fun () -> IscsiTaskTextNegociation_Test.defaultIscsiNegoParamSW )
+        )
+        let smStub = new CStatus_Stub()
+        let recvPDU = {
+            IscsiTaskTextNegociation_Test.defaultRequestPDU with
+                TextRequest = Encoding.UTF8.GetBytes "SendTargets=gggggggggggggggggg";
+        }
+        let task1 = IscsiTaskTextNegociation.CreateWithInitParams(
+            smStub,
+            sessStub :> ISession,
+            cid_me.fromPrim 0us,
+            concnt_me.fromPrim 0,
+            recvPDU,
+            IscsiTaskTextNegociation_Test.defaultIscsiNegoParamSW,
+            IscsiTaskTextNegociation_Test.defaultIscsiNegoParamCO
+        )
+        let task2 = IscsiTaskTextNegociation.UpdateNegoStatByReqPDU( task1, recvPDU )
+
+        Assert.True( ValueOption.isSome task2.NextResponsePDU )
+        let nextRespPDU = ValueOption.get task2.NextResponsePDU
+        Assert.False( nextRespPDU.F )
+        Assert.False( nextRespPDU.C )
+        Assert.True(( nextRespPDU.TextResponse.Length = 0 ))
+
+    [<Fact>]
     member _.GetExecuteTask_001() =
         let mutable cnt1 = 0
         let sessStub = new CSession_Stub(
@@ -574,9 +989,11 @@ type IscsiTaskTextNegociation_Test () =
                 Assert.True(( ttt_me.fromPrim 11u = respdu.TargetTransferTag ))
             )
         )
+        let smStub = new CStatus_Stub()
 
         let task1 = new IscsiTaskTextNegociation(
             objidx_me.NewID(),
+            smStub,
             sessStub :> ISession,
             cid_me.fromPrim 0us,
             concnt_me.fromPrim 0,
@@ -639,6 +1056,7 @@ type IscsiTaskTextNegociation_Test () =
                 Assert.False( respdu.C )
             )
         )
+        let smStub = new CStatus_Stub()
 
         let reqpdu = {
             IscsiTaskTextNegociation_Test.defaultRequestPDU with
@@ -651,6 +1069,7 @@ type IscsiTaskTextNegociation_Test () =
                 |]
         }
         let task1 = IscsiTaskTextNegociation.CreateWithInitParams(
+            smStub,
             sessStub :> ISession,
             cid_me.fromPrim 0us,
             concnt_me.fromPrim 0,

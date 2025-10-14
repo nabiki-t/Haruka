@@ -15,6 +15,7 @@ open System
 open System.Threading
 open System.Threading.Tasks
 open System.Collections.Immutable
+open System.IO
 
 open Xunit
 
@@ -3468,3 +3469,63 @@ type Connection_Test () =
 
             GlbFunc.ClosePorts [| sp; cp; |]
         }
+
+    [<Fact>]
+    member _.LocalAddress_001() =
+        let sp, cp = GlbFunc.GetNetConn()
+        let statusStub = new CStatus_Stub()
+        let sessStub = new CSession_Stub()
+        let killer = new HKiller() :> IKiller
+        let cdt = DateTime.UtcNow
+        let con =
+            new Connection(
+                statusStub :> IStatus,
+                tpgt_me.zero,
+                sp,
+                cdt,
+                Connection_Test.defaultConnectionParam,
+                Connection_Test.defaultSessionParameter,
+                sessStub,
+                tsih_me.fromPrim 0us,
+                cid_me.zero,
+                concnt_me.zero,
+                netportidx_me.zero,
+                killer
+            )
+            :> IConnection
+        let r = con.LocalAddress
+        Assert.True(( r.IsSome ))
+        Assert.True(( r.Value.Address.ToString() = "::1" ))
+        sp.Close()
+        cp.Close()
+        sp.Dispose()
+        cp.Dispose()
+
+    [<Fact>]
+    member _.LocalAddress_002() =
+        let sp = new MemoryStream()
+        let statusStub = new CStatus_Stub()
+        let sessStub = new CSession_Stub()
+        let killer = new HKiller() :> IKiller
+        let cdt = DateTime.UtcNow
+        let con =
+            new Connection(
+                statusStub :> IStatus,
+                tpgt_me.zero,
+                sp,
+                cdt,
+                Connection_Test.defaultConnectionParam,
+                Connection_Test.defaultSessionParameter,
+                sessStub,
+                tsih_me.fromPrim 0us,
+                cid_me.zero,
+                concnt_me.zero,
+                netportidx_me.zero,
+                killer
+            )
+            :> IConnection
+        let r = con.LocalAddress
+        Assert.True(( r.IsNone ))
+        sp.Close()
+        sp.Dispose()
+

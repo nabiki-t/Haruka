@@ -17,6 +17,7 @@ open System.Threading.Tasks
 open System.IO
 open System.Collections.Generic
 open System.Collections.Immutable
+open System.Net
 open System.Net.Sockets
 
 open Haruka.Constants
@@ -179,6 +180,15 @@ type Connection
         // Get connection counter value of this connection
         override _.NetPortIdx : NETPORTIDX_T =
             m_NetPortIdx
+
+        // ------------------------------------------------------------------------
+        // Get TCP connection local endpoint information.
+        override _.LocalAddress : IPEndPoint voption =
+            match argNetStream with
+            | :? NetworkStream as x ->
+                ValueSome( x.Socket.LocalEndPoint :?> IPEndPoint )
+            | _ ->
+                ValueNone
 
         // ------------------------------------------------------------------------
         // request to close connection

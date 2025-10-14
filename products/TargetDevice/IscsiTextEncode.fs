@@ -1480,6 +1480,49 @@ type IscsiTextEncode() =
         f k.NegoStat_SessionType &&
         f k.NegoStat_UnknownKeys
 
+
+    // ----------------------------------------------------------------------------
+    /// <summary>
+    ///  Check specified TextKeyValues has one or more values or not.
+    /// </summary>
+    /// <param name="k">
+    ///  Values should be check.
+    /// </param>
+    /// <returns>
+    ///  If one or more members of k has value, it returns true. Otherwise false.
+    /// </returns>
+    static member HasValue ( k : TextKeyValues ) : bool =
+        k.AuthMethod.HasValue ||
+        k.CHAP_A.HasValue ||
+        k.CHAP_I.HasValue ||
+        k.CHAP_C.HasValue ||
+        k.CHAP_N.HasValue ||
+        k.CHAP_R.HasValue ||
+        k.HeaderDigest.HasValue ||
+        k.DataDigest.HasValue ||
+        k.MaxConnections.HasValue ||
+        k.SendTargets.HasValue ||
+        k.TargetName.HasValue ||
+        k.InitiatorName.HasValue ||
+        k.TargetAlias.HasValue ||
+        k.InitiatorAlias.HasValue ||
+        k.TargetAddress.HasValue ||
+        k.TargetPortalGroupTag.HasValue ||
+        k.InitialR2T.HasValue ||
+        k.ImmediateData.HasValue ||
+        k.MaxRecvDataSegmentLength_I.HasValue ||
+        k.MaxRecvDataSegmentLength_T.HasValue ||
+        k.MaxBurstLength.HasValue ||
+        k.FirstBurstLength.HasValue ||
+        k.DefaultTime2Wait.HasValue ||
+        k.DefaultTime2Retain.HasValue ||
+        k.MaxOutstandingR2T.HasValue ||
+        k.DataPDUInOrder.HasValue ||
+        k.DataSequenceInOrder.HasValue ||
+        k.ErrorRecoveryLevel.HasValue ||
+        k.SessionType.HasValue ||
+        k.UnknownKeys.Length > 0
+
     // ----------------------------------------------------------------------------
     /// <summary>
     ///   Negotiation of all of the key is finished or not.

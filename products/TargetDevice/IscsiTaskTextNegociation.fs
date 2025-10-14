@@ -15,9 +15,11 @@ namespace Haruka.TargetDevice
 // Import declaration
 
 open System
+open System.Text
 
 open Haruka.Constants
 open Haruka.Commons
+open Haruka.IODataTypes
 
 //=============================================================================
 // Class implementation
@@ -28,6 +30,9 @@ open Haruka.Commons
 /// </summary>
 /// <param name="m_ObjID">
 ///   Object ID for log message.
+/// </param>
+/// <param name="m_StatusMaster">
+///   The interface of the Status master object.
 /// </param>
 /// <param name="m_Session">
 ///   The interface of the session object which this task belongings to.
@@ -60,12 +65,19 @@ open Haruka.Commons
 /// <param name="argRespPDU">
 ///   The sequense of Response PDUs.
 /// </param>
+/// <param name="m_Initiator_Last_C">
+///   a
+/// </param>
+/// <param name="m_Initiator_Last_F">
+///   a
+/// </param>
 /// <param name="m_Executed">
 ///   GetExecuteTask method had been called.
 /// </param>
 type IscsiTaskTextNegociation
     (
         m_ObjID : OBJIDX_T,
+        m_StatusMaster : IStatus,
         m_Session : ISession,
         m_AllegiantCID : CID_T,
         m_AllegiantConCounter : CONCNT_T,
@@ -76,8 +88,8 @@ type IscsiTaskTextNegociation
         m_CurrentNogeStatus : TextKeyValuesStatus,
         m_contPDUs : TextRequestPDU list,
         argRespPDU : TextResponsePDU list,
-        Initiator_Last_C : bool,
-        Initiator_Last_F : bool,
+        m_Initiator_Last_C : bool,
+        m_Initiator_Last_F : bool,
         m_Executed : bool
     ) =
 
@@ -97,8 +109,8 @@ type IscsiTaskTextNegociation
 
     // negotiation sequense is finished or not
     let m_IsNegotiationFinished =
-        ( not Initiator_Last_C ) &&
-        Initiator_Last_F &&
+        ( not m_Initiator_Last_C ) &&
+        m_Initiator_Last_F &&
         ( m_ContResponsePDUs.Length <= 0 ) &&
         ( m_NextResponsePDU.IsNone || ( m_NextResponsePDU.IsSome && m_NextResponsePDU.Value.F ) )
 
@@ -121,6 +133,9 @@ type IscsiTaskTextNegociation
     /// <summary>
     ///   Set to initial parameter values of text key negotiation.
     /// </summary>
+    /// <param name="argStatusMaster">
+    ///   The interface of the status master object.
+    /// </param>
     /// <param name="argSession">
     ///   The interface of the session object which this task belongings to.
     /// </param>
@@ -142,6 +157,7 @@ type IscsiTaskTextNegociation
     ///   This values used for initial values of text key negotiation.
     /// </param>
     static member CreateWithInitParams(
+        argStatusMaster : IStatus,
         argSession : ISession,
         argCID : CID_T,
         argCounter : CONCNT_T,
@@ -151,6 +167,7 @@ type IscsiTaskTextNegociation
 
         new IscsiTaskTextNegociation(
             objidx_me.NewID(), // Generate object ID for this instance
+            argStatusMaster,
             argSession,
             argCID,
             argCounter,
@@ -184,6 +201,7 @@ type IscsiTaskTextNegociation
         let objid = objidx_me.NewID()   // Generate object ID for this instance
         let firstIFllg = ValueOption.get ( curParam :> IIscsiTask ).Immidiate
         let firstITT = ValueOption.get ( curParam :> IIscsiTask ).InitiatorTaskTag
+        let wStatusMaster = curParam.StatusMaster
         let wSession = curParam.Session
         let struct( cid, counter ) = ( curParam :> IIscsiTask ).AllegiantConnection
         let oldContRespPDU : TextResponsePDU list = curParam.ContResponsePDUs
@@ -222,6 +240,7 @@ type IscsiTaskTextNegociation
             // add the received PDU to the PDUs list.
             new IscsiTaskTextNegociation(
                 objid,
+                wStatusMaster,
                 wSession,
                 cid,
                 counter,
@@ -257,6 +276,7 @@ type IscsiTaskTextNegociation
             // response next PDU
             new IscsiTaskTextNegociation(
                 objid,
+                wStatusMaster,
                 wSession,
                 cid,
                 counter,
@@ -275,30 +295,49 @@ type IscsiTaskTextNegociation
         else
             // Response PDUs sequence is not, and received PDUs sequence is terminated,
             // update the negotiation status and genelate response PDUs sequence.
-            
-            let nextValues, nextStatus =
-                let receivedTextKeyValue =
+
+            let receivedTextKeyValue =
+                let w =
                     argReceivedPDU :: curParam.ContPDUs
                     |> List.rev
                     |> List.map ( fun itr -> itr.TextRequest )
                     |> List.toArray
                     |> IscsiTextEncode.RecognizeTextKeyData false
-                match receivedTextKeyValue with
-                | ValueNone ->
+                if w.IsNone then
                     let msg = "Failed to recognize text key-values."
                     HLogger.Trace( LogID.E_PROTOCOL_ERROR, fun g -> g.Gen1( loginfo, msg ) )
                     raise <| SessionRecoveryException ( msg, wSession.TSIH )
-                | ValueSome( v ) ->
-                    IscsiTextEncode.margeTextKeyValue Standpoint.Target v curParam.CurrentNegoParam curParam.CurrentNegoStatus
-            
-            // Create sending text key bytes array
-            let sendBytes = IscsiTextEncode.CreateTextKeyValueString nextValues nextStatus
+                w.Value
 
             // get current effective MaxRecvDataSegmentLength value
+            let connection = wSession.GetConnection cid counter
             let mrds_i =
-                match wSession.GetConnection cid counter with
+                match connection with
                 | ValueNone -> 512
                 | ValueSome( c ) -> (int)( c.CurrentParams.MaxRecvDataSegmentLength_I )
+
+            // Create sending text key bytes array
+            let sendBytes, nextValues, nextStatus =
+                if receivedTextKeyValue.SendTargets.HasValue then
+
+                    // SendTargets must be used alone.
+                    if IscsiTextEncode.HasValue { receivedTextKeyValue with SendTargets = TextValueType.ISV_Missing } then
+                        let msg = "SendTargets text key must be used alone."
+                        HLogger.Trace( LogID.E_PROTOCOL_ERROR, fun g -> g.Gen1( loginfo, msg ) )
+                        raise <| SessionRecoveryException ( msg, wSession.TSIH )
+
+                    let rb = IscsiTaskTextNegociation.CreateSendTargetsResponse
+                                receivedTextKeyValue.SendTargets.GetValue
+                                wStatusMaster
+                                wSession.SessionParameter.TargetConf
+                                connection
+                                
+                    ( rb, curParam.CurrentNegoParam, curParam.CurrentNegoStatus )
+                else
+                    let nextValues2, nextStatus2 =
+                        IscsiTextEncode.margeTextKeyValue Standpoint.Target receivedTextKeyValue curParam.CurrentNegoParam curParam.CurrentNegoStatus
+                    let rb = IscsiTextEncode.CreateTextKeyValueString nextValues2 nextStatus2
+                    ( rb, nextValues2, nextStatus2 )
 
             // Divite bytes array into 8192 bytes unit.
             let sendTextResponses =
@@ -323,6 +362,7 @@ type IscsiTaskTextNegociation
             // responde target value to initiator
             IscsiTaskTextNegociation(
                 objid,
+                wStatusMaster,
                 wSession,
                 cid,
                 counter,
@@ -431,9 +471,9 @@ type IscsiTaskTextNegociation
 
             let nextTask =
                 new IscsiTaskTextNegociation (
-                    m_ObjID, m_Session, m_AllegiantCID, m_AllegiantConCounter, m_FirstIFlg, m_FirstITT,
-                m_CmdSN, m_CurrentNegoParam,  m_CurrentNogeStatus, m_contPDUs, argRespPDU, Initiator_Last_C,
-                Initiator_Last_F, true )
+                    m_ObjID, m_StatusMaster, m_Session, m_AllegiantCID, m_AllegiantConCounter, m_FirstIFlg, m_FirstITT,
+                    m_CmdSN, m_CurrentNegoParam,  m_CurrentNogeStatus, m_contPDUs, argRespPDU, m_Initiator_Last_C,
+                    m_Initiator_Last_F, true )
             struct( ext, nextTask )
 
         // ------------------------------------------------------------------------
@@ -445,6 +485,16 @@ type IscsiTaskTextNegociation
         // GetExecuteTask method had been called or not.
         override _.Executed : bool =
             m_Executed
+
+    // ------------------------------------------------------------------------
+    /// <summary>
+    ///   Get refelence of the status master object.
+    /// </summary>
+    /// <returns>
+    ///   Status master object.
+    /// </returns>
+    member _.StatusMaster : IStatus =
+        m_StatusMaster
 
     // ------------------------------------------------------------------------
     /// <summary>
@@ -506,4 +556,53 @@ type IscsiTaskTextNegociation
     /// </returns>
     member _.ContResponsePDUs : TextResponsePDU list =
         m_ContResponsePDUs
+
+    // ------------------------------------------------------------------------
+    /// <summary>
+    ///  Create response data for SendTargets text key request.
+    /// </summary>
+    /// <param name="reqParam">
+    ///  Specified parameter value.
+    /// </param>
+    /// <param name="statusMaster">
+    ///  Status master object.
+    /// </param>
+    /// <param name="targetConf">
+    ///  Logged in target configuration.
+    /// </param>
+    /// <param name="conn">
+    ///  allegiant connection object.
+    /// </param>
+    /// <returns>
+    ///  A byte array representing the target address.
+    /// </returns>
+    static member private CreateSendTargetsResponse ( reqParam : string ) ( statusMaster : IStatus ) ( targetConf : TargetGroupConf.T_Target ) ( conn : IConnection voption ) : byte[] =
+        if reqParam = "" || String.Equals( reqParam, targetConf.TargetName, StringComparison.Ordinal ) then
+            // Get local address of allegiant connection, it is used for default address value.
+            let localAddress =
+                match conn with
+                | ValueSome( con ) ->
+                    match con.LocalAddress with
+                    | ValueSome( x ) ->
+                        ValueSome x.Address
+                    | ValueNone ->
+                        ValueNone
+                | ValueNone ->
+                    ValueNone
+            [|
+                let enc = Encoding.GetEncoding( "utf-8" )
+                let netPortalConfs = statusMaster.GetNetworkPortal()
+                let targetNameStr = "TargetName=" + targetConf.TargetName
+                yield! enc.GetBytes targetNameStr
+                yield '\u0000'B
+                for pn in netPortalConfs do
+                    if pn.TargetPortalGroupTag = targetConf.TargetPortalGroupTag then
+                        let wadr = Functions.ConfiguredNetPortAddressToTargetAddressStr pn.TargetAddress localAddress
+                        let targetAddressStr = sprintf "TargetAddress=%s:%d,%d" wadr pn.PortNumber pn.TargetPortalGroupTag
+                        yield! enc.GetBytes targetAddressStr
+                        yield '\u0000'B
+            |]
+        else
+            [||]
+
 

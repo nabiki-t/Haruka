@@ -1254,6 +1254,7 @@ type Session
             let task =
                 IscsiTaskTextNegociation.UpdateNegoStatByReqPDU(
                     IscsiTaskTextNegociation.CreateWithInitParams(
+                        m_StatusMaster,
                         this :> ISession,
                         conn.CID,
                         conn.ConCounter,
@@ -1287,6 +1288,7 @@ type Session
                 let task =
                     IscsiTaskTextNegociation.UpdateNegoStatByReqPDU(
                         IscsiTaskTextNegociation.CreateWithInitParams(
+                            m_StatusMaster,
                             this :> ISession,
                             conn.CID,
                             conn.ConCounter,

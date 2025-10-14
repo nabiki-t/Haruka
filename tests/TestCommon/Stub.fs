@@ -13,6 +13,7 @@ namespace Haruka.Test
 
 open System
 open System.Threading.Tasks
+open System.Net
 
 open Haruka.Constants
 open Haruka.Commons
@@ -645,6 +646,7 @@ type public CConnection_Stub() =
     let mutable f_NextStatSN : ( unit -> STATSN_T ) option = None
     let mutable f_ConCounter : ( unit -> CONCNT_T ) option = None
     let mutable f_NetPortIdx : ( unit -> NETPORTIDX_T ) option = None
+    let mutable f_LocalAddress : ( unit -> IPEndPoint voption ) option = None
     let mutable f_Close : ( unit -> unit ) option = None
     let mutable f_Terminate : ( unit -> unit ) option = None
     let mutable f_StartFullFeaturePhase : ( unit -> unit ) option = None
@@ -669,6 +671,7 @@ type public CConnection_Stub() =
     member _.p_NextStatSN with set v = f_NextStatSN <- Some( v )
     member _.p_ConCounter with set v = f_ConCounter <- Some( v )
     member _.p_NetPortIdx with set v = f_NetPortIdx <- Some( v )
+    member _.p_LocalAddress with set v = f_LocalAddress <- Some( v )
     member _.p_Close with set v = f_Close <- Some( v )
     member _.p_Terminate with set v = f_Terminate <- Some( v )
     member _.p_StartFullFeaturePhase with set v = f_StartFullFeaturePhase <- Some( v )
@@ -700,6 +703,8 @@ type public CConnection_Stub() =
             f_ConCounter.Value()
         override _.NetPortIdx with get() : NETPORTIDX_T =
             f_NetPortIdx.Value()
+        override _.LocalAddress with get() : IPEndPoint voption =
+            f_LocalAddress.Value()
         override _.Close() : unit =
             f_Close.Value()
         override _.Terminate () =

@@ -22,6 +22,7 @@ open System.Collections.Generic
 open System.Collections.Frozen
 
 open Haruka.Constants
+open System.Net.Sockets
 
 //=============================================================================
 // Type definition
@@ -1902,4 +1903,64 @@ type Functions() =
         else
             []
 
+    /// <summary>
+    ///  Convert IP address information to a string representation.
+    /// </summary>
+    /// <param name="ipadr">
+    ///  IP address.
+    /// </param>
+    /// <param name="def">
+    ///   The default value to return when an unknown protocol other than IPv4 or IPv6 is used.
+    /// </param>
+    /// <returns>
+    ///   Convert IP address string.
+    /// </returns>
+    /// <remarks>
+    ///  The IP address is converted to a format that should be returned in response to a SendTargets text request.
+    /// </remarks>
+    static member IPAddressToString ( ipadr : IPAddress ) ( def : string ) : string =
+        if ipadr.AddressFamily = AddressFamily.InterNetwork then
+            // IPv4 address
+            ipadr.ToString()
+        elif ipadr.AddressFamily = AddressFamily.InterNetworkV6 then
+            // IPv6 address
+            if ipadr.IsIPv4MappedToIPv6 then
+                // ::FFFF:nnn.nnn.nnn.nnn, It returned as IPv4 format "nnn.nnn.nnn.nnn".
+                ( ipadr.MapToIPv4() ).ToString()
+            else
+                // IPv6 address, It returned as "[aaaa:bbbb:...:ffff]"
+                "[" + ipadr.ToString() + "]"
+        else
+            def
 
+    /// <summary>
+    ///  Converts the string specified as the NetworkPortal Address into a string 
+    ///  representation to be returned as a response to SendTargets text request.
+    /// </summary>
+    /// <param name="confAddress">
+    ///  String specified as the address of the network portal.
+    /// </param>
+    /// <param name="defaultAddress">
+    ///  The local IP address to respond to if the address specification in the configuration is omitted.
+    /// </param>
+    /// <returns>
+    ///  Address string.
+    /// </returns>
+    static member ConfiguredNetPortAddressToTargetAddressStr ( confAddress : string ) ( defaultAddress : IPAddress voption ) : string =
+        if confAddress.Length > 0 then
+            // Target address is specified.
+            let r, v = IPAddress.TryParse confAddress
+            if not r then
+                // Specified address is considered as host name.
+                confAddress
+            else
+                // Specified address is IP address. If unknown protocol is used, it returns configured string.
+                Functions.IPAddressToString v confAddress
+        else
+            // If target address is not specified, local address is used.
+            // If the local address is omitted too, empty string is returned.
+            match defaultAddress with
+            | ValueSome( x ) ->
+                Functions.IPAddressToString x ( x.ToString() )
+            | ValueNone ->
+                ""

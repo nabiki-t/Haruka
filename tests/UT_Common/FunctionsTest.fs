@@ -17,6 +17,7 @@ open System.Threading
 open System.Threading.Tasks
 open System.Runtime.Intrinsics.X86
 open System.Collections.Generic
+open System.Net
 
 open Xunit
 
@@ -2104,3 +2105,48 @@ type Functions_Test () =
         Assert.True(( r.[2] = struct( 1120u, 80u, false ) ))
         Assert.True(( r.[3] = struct( 1200u, 40u, true ) ))
         Assert.True(( r.[4] = struct( 1240u, 60u, true ) ))
+
+    [<Fact>]
+    member _.IPAddressToString_001() =
+        let ip = IPAddress.Parse "192.168.1.1"
+        let r = Functions.IPAddressToString ip "abc"
+        Assert.True(( r = "192.168.1.1" ))
+
+    [<Fact>]
+    member _.IPAddressToString_002() =
+        let ip = IPAddress.Parse "::FFFF:192.168.111.222"
+        let r = Functions.IPAddressToString ip "abc"
+        Assert.True(( r = "192.168.111.222" ))
+
+    [<Fact>]
+    member _.IPAddressToString_003() =
+        let ip = IPAddress.Parse "1111:2222:3333:4444:5555:6666:7777:8888"
+        let r = Functions.IPAddressToString ip "abc"
+        Assert.True(( r = "[1111:2222:3333:4444:5555:6666:7777:8888]" ))
+
+    [<Fact>]
+    member _.IPAddressToString_004() =
+        let ip = IPAddress.Parse "::1"
+        let r = Functions.IPAddressToString ip "abc"
+        Assert.True(( r = "[::1]" ))
+
+    [<Fact>]
+    member _.ConfiguredNetPortAddressToTargetAddressStr_001() =
+        let r = Functions.ConfiguredNetPortAddressToTargetAddressStr "abc" ValueNone
+        Assert.True(( r = "abc" ))
+
+    [<Fact>]
+    member _.ConfiguredNetPortAddressToTargetAddressStr_002() =
+        let r = Functions.ConfiguredNetPortAddressToTargetAddressStr "192.168.1.1" ValueNone
+        Assert.True(( r = "192.168.1.1" ))
+
+    [<Fact>]
+    member _.ConfiguredNetPortAddressToTargetAddressStr_003() =
+        let ip = IPAddress.Parse "192.168.1.1"
+        let r = Functions.ConfiguredNetPortAddressToTargetAddressStr "" ( ValueSome ip )
+        Assert.True(( r = "192.168.1.1" ))
+
+    [<Fact>]
+    member _.ConfiguredNetPortAddressToTargetAddressStr_004() =
+        let r = Functions.ConfiguredNetPortAddressToTargetAddressStr "" ValueNone
+        Assert.True(( r = "" ))

@@ -491,7 +491,7 @@ type LoginNegociator
 
                                         for pn in netPortalConfs do
                                             if pn.TargetPortalGroupTag = tn.TargetPortalGroupTag then
-                                                let wadr = LoginNegociator.GenTargetAddressString pn localAddress
+                                                let wadr = Functions.ConfiguredNetPortAddressToTargetAddressStr pn.TargetAddress ( ValueSome localAddress )
                                                 let targetAddressStr = sprintf "TargetAddress=%s:%d,%d" wadr pn.PortNumber pn.TargetPortalGroupTag
                                                 yield! enc.GetBytes targetAddressStr
                                                 yield '\u0000'B
@@ -514,7 +514,7 @@ type LoginNegociator
                                             yield '\u0000'B
                                             for pn in netPortalConfs do
                                                 if pn.TargetPortalGroupTag = tn.TargetPortalGroupTag then
-                                                    let wadr = LoginNegociator.GenTargetAddressString pn localAddress
+                                                    let wadr = Functions.ConfiguredNetPortAddressToTargetAddressStr pn.TargetAddress ( ValueSome localAddress )
                                                     let targetAddressStr = sprintf "TargetAddress=%s:%d,%d" wadr pn.PortNumber pn.TargetPortalGroupTag
                                                     yield! enc.GetBytes targetAddressStr
                                                     yield '\u0000'B
@@ -545,42 +545,6 @@ type LoginNegociator
                 }
             do! Functions.loopAsyncWithArgs negoloop struct( next2_CPDU, next2_CPDU.ExpStatSN )
         }
-
-    // ------------------------------------------------------------------------
-    /// <summary>
-    ///  Generate target address string for the discovery session.
-    /// </summary>
-    /// <param name="npconf">Network portal configuration</param>
-    /// <param name="localadr">Local port IP address.</param>
-    /// <returns>Target address string</returns>
-    static member private GenTargetAddressString ( npconf : TargetDeviceConf.T_NetworkPortal ) ( localadr : IPAddress ) : string =
-        let convIPToStr ( a : IPAddress ) ( def : string ) =
-            if a.AddressFamily = AddressFamily.InterNetwork then
-                // IPv4 address
-                a.ToString()
-            elif a.AddressFamily = AddressFamily.InterNetworkV6 then
-                // IPv6 address
-                if a.IsIPv4MappedToIPv6 then
-                    // ::FFFF:nnn.nnn.nnn.nnn, It returned as IPv4 format "nnn.nnn.nnn.nnn".
-                    ( a.MapToIPv4() ).ToString()
-                else
-                    // IPv6 address, It returned as "[aaaa:bbbb:...:ffff]"
-                    "[" + a.ToString() + "]"
-            else
-                def
-
-        if npconf.TargetAddress.Length > 0 then
-            // Target address is specified.
-            let r, v = IPAddress.TryParse npconf.TargetAddress
-            if not r then
-                // Specified address is considered as host name.
-                npconf.TargetAddress
-            else
-                // Specified address is IP address. If unknown protocol is used, it returns configured string.
-                convIPToStr v npconf.TargetAddress
-        else
-            // If target address is not specified, local address of the deicovery session is used.
-            convIPToStr localadr ( localadr.ToString() )
 
     // ------------------------------------------------------------------------
     /// <summary>
