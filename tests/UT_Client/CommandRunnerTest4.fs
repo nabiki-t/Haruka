@@ -14,6 +14,8 @@ namespace Haruka.Test.UT.Client
 open System
 open System.IO
 open System.Threading.Tasks
+open System.Text
+open System.Text.RegularExpressions
 
 open Xunit
 
@@ -44,12 +46,20 @@ type CommandRunner_Test4() =
         let ws = new StreamWriter( ms )
         ms, ws
 
-    let CheckOutputMessage ( ms : MemoryStream ) ( ws : StreamWriter ) ( expmsg : string ) =
+    let CheckOutputMessage ( ms : MemoryStream ) ( ws : StreamWriter ) ( pronpt : string ) ( msg : string ) : StreamReader =
         ws.Flush()
         ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
         let out_rs = new StreamReader( ms )
+        let esc ( s : string ) =
+            let sb = StringBuilder()
+            for itr in s do
+                if String.exists ( (=) itr ) "=$^{[(|)*+?\\" then
+                    sb.Append '\\' |> ignore
+                sb.Append itr |> ignore
+            sb.ToString()
         let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith expmsg ))
+        let reg = Regex( sprintf "^%s> *%s.*$" ( esc pronpt ) ( esc msg ) )
+        Assert.True(( reg.IsMatch outline ))
         out_rs
 
     let CallCommandLoop ( cr : CommandRunner ) ( stat : ( ServerStatus * CtrlConnection * IConfigureNode ) option ) : ( bool * ( ServerStatus * CtrlConnection * IConfigureNode ) option ) =
@@ -177,7 +187,7 @@ type CommandRunner_Test4() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, medianode ) ))
         Assert.True(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -216,7 +226,7 @@ type CommandRunner_Test4() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, medianode ) ))
         Assert.True(( flg4 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> Media Status"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "Media Status"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -251,7 +261,7 @@ type CommandRunner_Test4() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, medianode ) ))
         Assert.True(( flg4 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> Trap added."
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "Trap added."
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -286,7 +296,7 @@ type CommandRunner_Test4() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, medianode ) ))
         Assert.True(( flg4 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> Trap added."
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "Trap added."
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -326,7 +336,7 @@ type CommandRunner_Test4() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, medianode ) ))
         Assert.True(( flg4 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> Trap added."
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "Trap added."
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -366,7 +376,7 @@ type CommandRunner_Test4() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, medianode ) ))
         Assert.True(( flg4 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> Trap added."
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "Trap added."
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -401,7 +411,7 @@ type CommandRunner_Test4() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, medianode ) ))
         Assert.True(( flg4 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> Trap added."
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "Trap added."
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -440,7 +450,7 @@ type CommandRunner_Test4() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, medianode ) ))
         Assert.True(( flg4 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> Trap added."
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "Trap added."
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -479,7 +489,7 @@ type CommandRunner_Test4() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, medianode ) ))
         Assert.True(( flg4 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> Trap added."
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "Trap added."
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -518,7 +528,7 @@ type CommandRunner_Test4() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, medianode ) ))
         Assert.True(( flg4 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> Trap added."
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "Trap added."
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -557,7 +567,7 @@ type CommandRunner_Test4() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, medianode ) ))
         Assert.True(( flg4 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> Trap added."
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "Trap added."
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -665,7 +675,7 @@ type CommandRunner_Test4() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, medianode ) ))
         Assert.True(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -699,7 +709,7 @@ type CommandRunner_Test4() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, medianode ) ))
         Assert.True(( flg4 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> Traps cleared."
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "Traps cleared."
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -813,7 +823,7 @@ type CommandRunner_Test4() =
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
         Assert.True(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -848,7 +858,7 @@ type CommandRunner_Test4() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, medianode ) ))
         Assert.True(( flg4 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> Registered traps"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "Registered traps"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -888,9 +898,9 @@ type CommandRunner_Test4() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, medianode ) ))
         Assert.True(( flg4 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> Registered traps"
-        let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith "  TestUnitReady" ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "Registered traps"
+        let outline = ( out_rs.ReadLine() ).TrimStart()
+        Assert.True(( outline.StartsWith "TestUnitReady" ))
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1005,7 +1015,7 @@ type CommandRunner_Test4() =
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
         Assert.True(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
 

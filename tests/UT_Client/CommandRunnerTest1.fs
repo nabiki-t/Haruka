@@ -16,6 +16,8 @@ open System.IO
 open System.Threading.Tasks
 open System.Net
 open System.Net.Sockets
+open System.Text
+open System.Text.RegularExpressions
 
 open Xunit
 
@@ -359,6 +361,18 @@ type CommandRunner_Test1() =
             |> Functions.RunTaskSynchronously
         ( r, stat )
 
+    let CheckPromptAndMessage ( st : StreamReader ) ( pronpt : string ) ( msg : string ) : unit =
+        let lineStr = st.ReadLine()
+        let esc ( s : string ) =
+            let sb = StringBuilder()
+            for itr in s do
+                if String.exists ( (=) itr ) "=$^{[(|)*+?\\" then
+                    sb.Append '\\' |> ignore
+                sb.Append itr |> ignore
+            sb.ToString()
+        let reg = Regex( sprintf "^%s> *%s.*$" ( esc pronpt ) ( esc msg ) )
+        Assert.True(( reg.IsMatch lineStr ))
+
     let CommandLoop_UnknownCommand  ( command : string ) ( tnode : IConfigureNode ) ( prompt : string ) =
         let st = new StringTable( "" )
         let in_ms, in_ws, in_rs = GenCommandStream command
@@ -372,8 +386,7 @@ type CommandRunner_Test1() =
         Assert.True(( stat = Some( ss, cc, tnode ) ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith ( sprintf "%s> CMDERR_UNKNOWN_COMMAND" prompt ) ))
+        CheckPromptAndMessage out_rs prompt "CMDERR_UNKNOWN_COMMAND"
 
         GlbFunc.AllDispose [ in_ms; in_ws; in_rs; out_ms; out_ws; out_rs; ]
 
@@ -611,12 +624,12 @@ type CommandRunner_Test1() =
     |]
 
     static member m_CommandLoop_expection_data = [|
-        [| CommandInputError( "aaaa" ) :> obj; "CR> aaaa" :> obj |];
-        [| RequestError( "aaaa" ) :> obj; "CR> CMDERR_UNEXPECTED_REQUEST_ERROR" :> obj |];
-        [| SocketException( 0 ) :> obj; "CR> CMDERR_CONNECTION_ERROR" :> obj |];
-        [| IOException( "aaaa" ) :> obj; "CR> CMDERR_CONNECTION_ERROR" :> obj |];
-        [| EditError( "aaaa" ) :> obj; "CR> CMDERR_UNEXPECTED_EDIT_ERROR" :> obj |];
-        [| ConfigurationError( "aaaa" ) :> obj; "CR> aaaa" :> obj |];
+        [| CommandInputError( "aaaa" ) :> obj; "CR"; "aaaa" :> obj |];
+        [| RequestError( "aaaa" ) :> obj; "CR"; "CMDERR_UNEXPECTED_REQUEST_ERROR" :> obj |];
+        [| SocketException( 0 ) :> obj; "CR"; "CMDERR_CONNECTION_ERROR" :> obj |];
+        [| IOException( "aaaa" ) :> obj; "CR"; "CMDERR_CONNECTION_ERROR" :> obj |];
+        [| EditError( "aaaa" ) :> obj; "CR"; "CMDERR_UNEXPECTED_EDIT_ERROR" :> obj |];
+        [| ConfigurationError( "aaaa" ) :> obj; "CR"; "aaaa" :> obj |];
     |]
 
     static member m_CommandLoop_sessions_data = [|
@@ -919,9 +932,7 @@ type CommandRunner_Test1() =
                     out_ws.Flush()
                     out_ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
                     let out_rs = new StreamReader( out_ms )
-                    let outline = out_rs.ReadLine()
-
-                    Assert.True(( outline.StartsWith "--> CMDERR_FAILED_LOGIN" ))
+                    CheckPromptAndMessage out_rs "--" "CMDERR_FAILED_LOGIN"
 
                     GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
                 with
@@ -947,8 +958,7 @@ type CommandRunner_Test1() =
         Assert.True(( stat.IsNone ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith "--> CMDERR_FAILED_CONNECT_CTRL" ))
+        CheckPromptAndMessage out_rs "--" "CMDERR_FAILED_CONNECT_CTRL"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1011,8 +1021,7 @@ type CommandRunner_Test1() =
         Assert.True(( stat.IsNone ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith "--> CMDERR_UNKNOWN_COMMAND" ))
+        CheckPromptAndMessage out_rs "--" "CMDERR_UNKNOWN_COMMAND"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1055,8 +1064,7 @@ type CommandRunner_Test1() =
         Assert.True(( stat = Some( ss, cc, tnode ) ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith ( sprintf "%s> CMDMSG_CONFIG_MODIFIED" ( prompt :?> string ) ) ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "CMDMSG_CONFIG_MODIFIED"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1076,8 +1084,7 @@ type CommandRunner_Test1() =
         Assert.True(( stat = Some( ss, cc, tnode ) ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith ( sprintf "%s> CMDMSG_MISSING_NODE" ( prompt :?> string ) ) ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "CMDMSG_MISSING_NODE"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1097,8 +1104,7 @@ type CommandRunner_Test1() =
         Assert.True(( stat = Some( ss, cc, tnode ) ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith ( sprintf "%s>" ( prompt :?> string ) ) ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) ""
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1118,8 +1124,7 @@ type CommandRunner_Test1() =
         Assert.True(( stat = Some( ss, cc, tnode ) ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith ( sprintf "%s> CMDMSG_MISSING_CHILD_NODE" ( prompt :?> string ) ) ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "CMDMSG_MISSING_CHILD_NODE"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1139,8 +1144,7 @@ type CommandRunner_Test1() =
         Assert.True(( stat = Some( ss, cc, tnode ) ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith ( sprintf "%s> CMDMSG_MISSING_PARENT_NODE" ( prompt :?> string ) ) ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "CMDMSG_MISSING_PARENT_NODE"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1160,9 +1164,7 @@ type CommandRunner_Test1() =
         Assert.True(( stat = Some( ss, cc, tnode ) ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expResult = sprintf "%s>   %s" ( prompt :?> string ) tnode.ShortDescriptString
-        Assert.True(( outline.StartsWith expResult ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) tnode.ShortDescriptString
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1182,11 +1184,8 @@ type CommandRunner_Test1() =
         Assert.True(( stat = Some( ss, cc, tnode ) ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expResult =
-            let ds = tnode.FullDescriptString
-            sprintf "%s>   %s" ( prompt :?> string ) ds.[0]
-        Assert.True(( outline.StartsWith expResult ))
+        let ds = tnode.FullDescriptString
+        CheckPromptAndMessage out_rs ( prompt :?> string ) ds.[0]
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1206,9 +1205,7 @@ type CommandRunner_Test1() =
         Assert.True(( stat = Some( ss, cc, tnode ) ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expResult = sprintf "%s> CMDMSG_UNKNOWN_PARAMETER_NAME" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expResult ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "CMDMSG_UNKNOWN_PARAMETER_NAME"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1230,9 +1227,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expResult = sprintf "%s> CMDMSG_ALL_VALIDATED" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expResult ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "CMDMSG_ALL_VALIDATED"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1261,9 +1256,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expResult = sprintf "%s> CMDMSG_CONFIGURATION_PUBLISHED" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expResult ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "CMDMSG_CONFIGURATION_PUBLISHED"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1285,9 +1278,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expResult = sprintf "%s> " ( prompt :?> string )
-        Assert.True(( outline.StartsWith expResult ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) ""
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1315,9 +1306,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg2 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expResult = sprintf "%s> NOT MODIFIED :" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expResult ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "NOT MODIFIED :"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1346,8 +1335,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg2 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith "CR> Created" ))
+        CheckPromptAndMessage out_rs "CR" "Created"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1380,9 +1368,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg1 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expResult = sprintf "%s> NOT MODIFIED :" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expResult ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "NOT MODIFIED :"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1402,9 +1388,7 @@ type CommandRunner_Test1() =
         Assert.True(( stat = Some( ss, cc, tnode ) ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expResult = sprintf "%s> CMDMSG_MISSING_NODE" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expResult ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "CMDMSG_MISSING_NODE"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1441,9 +1425,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg2 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expResult = sprintf "%s> Started" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expResult ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "Started"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1484,9 +1466,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg2 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expResult = sprintf "%s> Killed" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expResult ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "Killed"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1536,8 +1516,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg2 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith "TD> CMDMSG_LOG_PARAM_UPDATED" ))
+        CheckPromptAndMessage out_rs "TD" "CMDMSG_LOG_PARAM_UPDATED"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1576,8 +1555,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg1 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith "TD> SoftLimit" ))
+        CheckPromptAndMessage out_rs "TD" "SoftLimit"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
         
@@ -1612,8 +1590,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg1 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith "TD> Created" ))
+        CheckPromptAndMessage out_rs "TD" "Created"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1646,8 +1623,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg1 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith "TD> Created" ))
+        CheckPromptAndMessage out_rs "TD" "Created"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1672,9 +1648,7 @@ type CommandRunner_Test1() =
         Assert.True(( stat = Some( ss, cc, cn ) ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expstr = sprintf "%s> CMDMSG_PARAMVAL_INVALID_PARAM_PATTERN" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expstr ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "CMDMSG_PARAMVAL_INVALID_PARAM_PATTERN"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1779,9 +1753,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg3 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expstr = sprintf "%s> Loaded" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expstr ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "Loaded"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1832,9 +1804,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg3 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expstr = sprintf "%s> Unloaded" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expstr ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "Unloaded"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1885,9 +1855,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg3 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expstr = sprintf "%s> Activated" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expstr ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "Activated"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1938,9 +1906,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg3 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expstr = sprintf "%s> Inactivated" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expstr ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "Inactivated"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1980,8 +1946,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg1 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith "TG> Created" ))
+        CheckPromptAndMessage out_rs "TG" "Created"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2011,8 +1976,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg1 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith "T > Set CHAP authentication" ))
+        CheckPromptAndMessage out_rs "T " "Set CHAP authentication"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2047,8 +2011,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg1 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith "T > Authentication reset" ))
+        CheckPromptAndMessage out_rs "T " "Authentication reset"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2084,8 +2047,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg1 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith "T > Created" ))
+        CheckPromptAndMessage out_rs "T " "Created"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2113,8 +2075,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg1 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith "T > CMDMSG_ADDPARAM_LUN" ))
+        CheckPromptAndMessage out_rs "T " "CMDMSG_ADDPARAM_LUN"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2138,8 +2099,7 @@ type CommandRunner_Test1() =
         Assert.True(( stat = Some( ss, cc, tnode ) ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith "T > CMDMSG_ADDPARAM_LUN" ))
+        CheckPromptAndMessage out_rs "T " "CMDMSG_ADDPARAM_LUN"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2180,9 +2140,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg1 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expstr = sprintf "%s> Created" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expstr ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "Created"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2218,9 +2176,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg1 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expstr = sprintf "%s> Created" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expstr ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "Created"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2256,9 +2212,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg1 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expstr = sprintf "%s> Created" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expstr ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "Created"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2287,9 +2241,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg1 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expstr = sprintf "%s> Started : ProcID=0" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expstr ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "Started : ProcID=0"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2341,9 +2293,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg1 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expstr = sprintf "%s> Terminated" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expstr ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "Terminated"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2405,9 +2355,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg3 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expstr = sprintf "%s> Session(" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expstr ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "Session("
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2441,9 +2389,7 @@ type CommandRunner_Test1() =
         Assert.True(( stat = Some( ss, cc, tnode ) ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expResult = sprintf "%s> Session terminated" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expResult ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "Session terminated"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2498,9 +2444,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg3 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expstr = sprintf "%s> Connection" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expstr ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "Connection"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2540,9 +2484,7 @@ type CommandRunner_Test1() =
         Assert.True(( stat = Some( ss, cc, cn ) ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expstr = sprintf "%s> LU Status" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expstr ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "LU Status"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2575,9 +2517,7 @@ type CommandRunner_Test1() =
         Assert.True(( stat = Some( ss, cc, cn ) ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expstr = sprintf "%s> LU Reseted" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expstr ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "LU Reseted"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2627,9 +2567,7 @@ type CommandRunner_Test1() =
         Assert.True(( stat = Some( ss, cc, cn ) ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expstr = sprintf "%s> Media Status" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expstr ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "Media Status"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2671,9 +2609,7 @@ type CommandRunner_Test1() =
         Assert.True(( stat = Some( ss, cc, cn ) ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expstr = sprintf "%s> Trap added" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expstr ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "Trap added"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2716,9 +2652,7 @@ type CommandRunner_Test1() =
         Assert.True(( stat = Some( ss, cc, cn ) ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expstr = sprintf "%s> Traps cleared" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expstr ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "Traps cleared"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2761,9 +2695,7 @@ type CommandRunner_Test1() =
         Assert.True(( stat = Some( ss, cc, cn ) ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        let expstr = sprintf "%s> Registered traps" ( prompt :?> string )
-        Assert.True(( outline.StartsWith expstr ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "Registered traps"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2779,7 +2711,7 @@ type CommandRunner_Test1() =
 
     [<Theory>]
     [<MemberData( "m_CommandLoop_expection_data" )>]
-    member _.CommandLoop_expection_001 ( expd : obj ) ( prompt : obj ) =
+    member _.CommandLoop_expection_001 ( expd : obj ) ( prompt : obj ) ( msg : obj ) =
         let st = new StringTable( "" )
         let in_ms, in_ws, in_rs = GenCommandStream( "validate" )
         let out_ms, out_ws = GenOutputStream()
@@ -2798,7 +2730,6 @@ type CommandRunner_Test1() =
         Assert.True(( stat = Some( ss, cc, cn ) ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith ( prompt :?> string ) ))
+        CheckPromptAndMessage out_rs ( prompt :?> string ) ( msg :?> string )
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 

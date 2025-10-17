@@ -15,6 +15,8 @@ open System
 open System.IO
 open System.Threading.Tasks
 open System.Net.Sockets
+open System.Text
+open System.Text.RegularExpressions
 
 open Xunit
 
@@ -46,12 +48,20 @@ type CommandRunner_Test2() =
         let ws = new StreamWriter( ms )
         ms, ws
 
-    let CheckOutputMessage ( ms : MemoryStream ) ( ws : StreamWriter ) ( expmsg : string ) =
+    let CheckOutputMessage ( ms : MemoryStream ) ( ws : StreamWriter ) ( pronpt : string ) ( msg : string ) : StreamReader =
         ws.Flush()
         ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
         let out_rs = new StreamReader( ms )
+        let esc ( s : string ) =
+            let sb = StringBuilder()
+            for itr in s do
+                if String.exists ( (=) itr ) "=$^{[(|)*+?\\" then
+                    sb.Append '\\' |> ignore
+                sb.Append itr |> ignore
+            sb.ToString()
         let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith expmsg ))
+        let reg = Regex( sprintf "^%s> *%s.*$" ( esc pronpt ) ( esc msg ) )
+        Assert.True(( reg.IsMatch outline ))
         out_rs
 
     let CallCommandLoop ( cr : CommandRunner ) ( stat : ( ServerStatus * CtrlConnection * IConfigureNode ) option ) : ( bool * ( ServerStatus * CtrlConnection * IConfigureNode ) option ) =
@@ -105,7 +115,7 @@ type CommandRunner_Test2() =
         Assert.False(( r ))
         Assert.True(( stat.IsNone ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> "
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -118,7 +128,7 @@ type CommandRunner_Test2() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tnode ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tnode ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDMSG_CONFIG_MODIFIED"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_CONFIG_MODIFIED"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -138,7 +148,7 @@ type CommandRunner_Test2() =
         Assert.False(( r ))
         Assert.True(( stat.IsNone ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> "
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -159,7 +169,7 @@ type CommandRunner_Test2() =
         Assert.False(( r ))
         Assert.True(( stat.IsNone ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDERR_UNEXPECTED_REQUEST_ERROR"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDERR_UNEXPECTED_REQUEST_ERROR"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -180,7 +190,7 @@ type CommandRunner_Test2() =
         Assert.False(( r ))
         Assert.True(( stat.IsNone ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDERR_CONNECTION_ERROR"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDERR_CONNECTION_ERROR"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -224,7 +234,7 @@ type CommandRunner_Test2() =
 
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> "
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -237,7 +247,7 @@ type CommandRunner_Test2() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tnode ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tnode ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDMSG_CONFIG_MODIFIED"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_CONFIG_MODIFIED"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -248,7 +258,7 @@ type CommandRunner_Test2() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tnode ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tnode ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDMSG_MISSING_NODE"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_MISSING_NODE"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -264,7 +274,7 @@ type CommandRunner_Test2() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, dm ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> "
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -275,7 +285,7 @@ type CommandRunner_Test2() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tnode ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tnode ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> "
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -294,7 +304,7 @@ type CommandRunner_Test2() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, p1 ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -313,7 +323,7 @@ type CommandRunner_Test2() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, p2 ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -330,7 +340,7 @@ type CommandRunner_Test2() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> CMDMSG_MISSING_NODE"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "CMDMSG_MISSING_NODE"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -346,7 +356,7 @@ type CommandRunner_Test2() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws ( "CR>     0 : " + c1.ShortDescriptString )
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" ( "0 : " + c1.ShortDescriptString )
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -357,7 +367,7 @@ type CommandRunner_Test2() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tnode ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tnode ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDMSG_MISSING_CHILD_NODE"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_MISSING_CHILD_NODE"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -373,7 +383,7 @@ type CommandRunner_Test2() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws ( "MD>     0 : " + p1.ShortDescriptString )
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ( "0 : " + p1.ShortDescriptString )
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -383,7 +393,7 @@ type CommandRunner_Test2() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tnode ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tnode ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDMSG_MISSING_PARENT_NODE"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_MISSING_PARENT_NODE"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -424,7 +434,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ConfNode_Controller ).LogMaintenanceValue = initnode.LogMaintenanceValue ))
         Assert.True(( ( r_cn :?> ConfNode_Controller ).LogParametersValue = initnode.LogParametersValue ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> "
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -436,7 +446,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_ControllerNode :?> ConfNode_Controller
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -471,7 +481,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ConfNode_Controller ).LogMaintenanceValue = initnode.LogMaintenanceValue ))
         Assert.True(( ( r_cn :?> ConfNode_Controller ).LogParametersValue = initnode.LogParametersValue ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> "
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -515,7 +525,7 @@ type CommandRunner_Test2() =
             Assert.Fail __LINE__
         Assert.True(( ( r_cn :?> ConfNode_Controller ).LogParametersValue = initnode.LogParametersValue ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> "
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -563,7 +573,7 @@ type CommandRunner_Test2() =
             Assert.Fail __LINE__
         Assert.True(( ( r_cn :?> ConfNode_Controller ).LogParametersValue = initnode.LogParametersValue ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> "
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -603,7 +613,7 @@ type CommandRunner_Test2() =
             Assert.Fail __LINE__
         Assert.True(( ( r_cn :?> ConfNode_Controller ).LogParametersValue = initnode.LogParametersValue ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> "
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -647,7 +657,7 @@ type CommandRunner_Test2() =
             Assert.Fail __LINE__
         Assert.True(( ( r_cn :?> ConfNode_Controller ).LogParametersValue = initnode.LogParametersValue ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> "
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -659,7 +669,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_ControllerNode :?> ConfNode_Controller
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -707,7 +717,7 @@ type CommandRunner_Test2() =
             Assert.Fail __LINE__
         Assert.True(( ( r_cn :?> ConfNode_Controller ).LogParametersValue = initnode.LogParametersValue ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> "
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -747,7 +757,7 @@ type CommandRunner_Test2() =
             Assert.Fail __LINE__
         Assert.True(( ( r_cn :?> ConfNode_Controller ).LogParametersValue = initnode.LogParametersValue ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> "
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -759,7 +769,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_ControllerNode :?> ConfNode_Controller
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -807,7 +817,7 @@ type CommandRunner_Test2() =
             Assert.Fail __LINE__
         Assert.True(( ( r_cn :?> ConfNode_Controller ).LogParametersValue = initnode.LogParametersValue ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> "
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -851,7 +861,7 @@ type CommandRunner_Test2() =
             Assert.Fail __LINE__
         Assert.True(( ( r_cn :?> ConfNode_Controller ).LogParametersValue = initnode.LogParametersValue ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> "
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -863,7 +873,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_ControllerNode :?> ConfNode_Controller
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -911,7 +921,7 @@ type CommandRunner_Test2() =
             Assert.Fail __LINE__
         Assert.True(( ( r_cn :?> ConfNode_Controller ).LogParametersValue = initnode.LogParametersValue ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> "
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -955,7 +965,7 @@ type CommandRunner_Test2() =
             Assert.Fail __LINE__
         Assert.True(( ( r_cn :?> ConfNode_Controller ).LogParametersValue = initnode.LogParametersValue ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> "
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -966,7 +976,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_ControllerNode :?> ConfNode_Controller
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1002,7 +1012,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ConfNode_Controller ).LogParametersValue.HardLimit = 0u ))
         Assert.True(( ( r_cn :?> ConfNode_Controller ).LogParametersValue.LogLevel = LogLevel.LOGLEVEL_INFO ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> "
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1014,7 +1024,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_ControllerNode :?> ConfNode_Controller
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1050,7 +1060,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ConfNode_Controller ).LogParametersValue.HardLimit = 555u ))
         Assert.True(( ( r_cn :?> ConfNode_Controller ).LogParametersValue.LogLevel = LogLevel.LOGLEVEL_INFO ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> "
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1062,7 +1072,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_ControllerNode :?> ConfNode_Controller
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1098,7 +1108,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ConfNode_Controller ).LogParametersValue.HardLimit = 0u ))
         Assert.True(( ( r_cn :?> ConfNode_Controller ).LogParametersValue.LogLevel = LogLevel.LOGLEVEL_VERBOSE ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> "
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1110,7 +1120,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_ControllerNode :?> ConfNode_Controller
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1120,7 +1130,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_ControllerNode :?> ConfNode_Controller
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDMSG_UNKNOWN_PARAMETER_NAME"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_UNKNOWN_PARAMETER_NAME"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1150,7 +1160,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).NegotiableParameters = defTDNegoParam ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).LogParameters = defTDLogParam ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1160,7 +1170,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1190,7 +1200,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).NegotiableParameters = defTDNegoParam ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).LogParameters = defTDLogParam ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1224,7 +1234,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).NegotiableParameters = expparam ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).LogParameters = defTDLogParam ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1236,7 +1246,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1270,7 +1280,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).NegotiableParameters = expparam ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).LogParameters = defTDLogParam ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1282,7 +1292,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1316,7 +1326,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).NegotiableParameters = expparam ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).LogParameters = defTDLogParam ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1328,7 +1338,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1362,7 +1372,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).NegotiableParameters = expparam ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).LogParameters = defTDLogParam ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1374,7 +1384,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1408,7 +1418,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).NegotiableParameters = expparam ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).LogParameters = defTDLogParam ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1420,7 +1430,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1454,7 +1464,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).NegotiableParameters = expparam ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).LogParameters = defTDLogParam ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1466,7 +1476,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1500,7 +1510,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).LogParameters = expparam ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1512,7 +1522,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1546,7 +1556,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).LogParameters = expparam ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1558,7 +1568,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1592,7 +1602,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).LogParameters = expparam ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1603,7 +1613,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1613,7 +1623,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> CMDMSG_UNKNOWN_PARAMETER_NAME"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_UNKNOWN_PARAMETER_NAME"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1641,7 +1651,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ILUNode ).LUN = lun_me.fromPrim 5UL ))
         Assert.True(( ( r_cn :?> ILUNode ).LUName = "" ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> "
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1653,7 +1663,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_DummyDeviceLUNode :?> ConfNode_DummyDeviceLU
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1679,7 +1689,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ILUNode ).LUN = lun_me.zero ))
         Assert.True(( ( r_cn :?> ILUNode ).LUName = "aaa" ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> "
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1689,7 +1699,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_DummyDeviceLUNode :?> ConfNode_DummyDeviceLU
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> CMDMSG_UNKNOWN_PARAMETER_NAME"
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "CMDMSG_UNKNOWN_PARAMETER_NAME"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1717,7 +1727,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ILUNode ).LUN = lun_me.fromPrim 1234605616436508552UL ))
         Assert.True(( ( r_cn :?> ILUNode ).LUName = "" ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> "
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1729,7 +1739,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1755,7 +1765,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ILUNode ).LUN = lun_me.zero ))
         Assert.True(( ( r_cn :?> ILUNode ).LUName = "bbb" ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> "
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1765,7 +1775,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> CMDMSG_UNKNOWN_PARAMETER_NAME"
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "CMDMSG_UNKNOWN_PARAMETER_NAME"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1794,7 +1804,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ConfNode_TargetGroup ).TargetGroupName = "" ))
         Assert.True(( ( r_cn :?> ConfNode_TargetGroup ).EnabledAtStart = false ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> "
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1804,7 +1814,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1833,7 +1843,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ConfNode_TargetGroup ).TargetGroupName = "ccc" ))
         Assert.True(( ( r_cn :?> ConfNode_TargetGroup ).EnabledAtStart = false ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> "
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1862,7 +1872,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ConfNode_TargetGroup ).TargetGroupName = "" ))
         Assert.True(( ( r_cn :?> ConfNode_TargetGroup ).EnabledAtStart = true ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> "
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1873,7 +1883,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1883,7 +1893,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> CMDMSG_UNKNOWN_PARAMETER_NAME"
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "CMDMSG_UNKNOWN_PARAMETER_NAME"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1922,7 +1932,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> ConfNode_Target ).Values = expconf ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > "
+        let out_rs = CheckOutputMessage out_ms out_ws "T " ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1934,7 +1944,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1973,7 +1983,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> ConfNode_Target ).Values = expconf ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > "
+        let out_rs = CheckOutputMessage out_ms out_ws "T " ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -1985,7 +1995,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2024,7 +2034,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> ConfNode_Target ).Values = expconf ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > "
+        let out_rs = CheckOutputMessage out_ms out_ws "T " ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2063,7 +2073,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> ConfNode_Target ).Values = expconf ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > "
+        let out_rs = CheckOutputMessage out_ms out_ws "T " ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2073,7 +2083,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > CMDMSG_UNKNOWN_PARAMETER_NAME"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_UNKNOWN_PARAMETER_NAME"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2114,7 +2124,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> ConfNode_NetworkPortal ).NetworkPortal = expconf ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> "
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2126,7 +2136,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_NetworkPortalNode :?> ConfNode_NetworkPortal
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2167,7 +2177,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> ConfNode_NetworkPortal ).NetworkPortal = expconf ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> "
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2179,7 +2189,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_NetworkPortalNode :?> ConfNode_NetworkPortal
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2220,7 +2230,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> ConfNode_NetworkPortal ).NetworkPortal = expconf ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> "
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2261,7 +2271,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> ConfNode_NetworkPortal ).NetworkPortal = expconf ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> "
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2273,7 +2283,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_NetworkPortalNode :?> ConfNode_NetworkPortal
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2314,7 +2324,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> ConfNode_NetworkPortal ).NetworkPortal = expconf ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> "
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2325,7 +2335,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_NetworkPortalNode :?> ConfNode_NetworkPortal
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2366,7 +2376,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> ConfNode_NetworkPortal ).NetworkPortal = expconf ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> "
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2378,7 +2388,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_NetworkPortalNode :?> ConfNode_NetworkPortal
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2419,7 +2429,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> ConfNode_NetworkPortal ).NetworkPortal = expconf ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> "
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2431,7 +2441,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_NetworkPortalNode :?> ConfNode_NetworkPortal
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2441,7 +2451,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_NetworkPortalNode :?> ConfNode_NetworkPortal
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> CMDMSG_UNKNOWN_PARAMETER_NAME"
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" "CMDMSG_UNKNOWN_PARAMETER_NAME"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2470,7 +2480,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> IMediaNode ).IdentNumber = mediaidx_me.fromPrim 333u ))
         Assert.True(( ( r_cn :?> IMediaNode ).Name = "aaa" ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2482,7 +2492,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_DummyMediaNode :?> ConfNode_DummyMedia
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2511,7 +2521,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> IMediaNode ).IdentNumber = mediaidx_me.fromPrim 1u ))
         Assert.True(( ( r_cn :?> IMediaNode ).Name = "aaaa" ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2521,7 +2531,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_DummyMediaNode :?> ConfNode_DummyMedia
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> CMDMSG_UNKNOWN_PARAMETER_NAME"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "CMDMSG_UNKNOWN_PARAMETER_NAME"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2560,7 +2570,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> IMediaNode ).MediaConfData = TargetGroupConf.U_PlainFile( expconf ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2572,7 +2582,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_PlainFileMediaNode :?> ConfNode_PlainFileMedia
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2611,7 +2621,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> IMediaNode ).MediaConfData = TargetGroupConf.U_PlainFile( expconf ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2650,7 +2660,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> IMediaNode ).MediaConfData = TargetGroupConf.U_PlainFile( expconf ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2689,7 +2699,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> IMediaNode ).MediaConfData = TargetGroupConf.U_PlainFile( expconf ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2701,7 +2711,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_PlainFileMediaNode :?> ConfNode_PlainFileMedia
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2740,7 +2750,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> IMediaNode ).MediaConfData = TargetGroupConf.U_PlainFile( expconf ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2752,7 +2762,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_PlainFileMediaNode :?> ConfNode_PlainFileMedia
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2791,7 +2801,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> IMediaNode ).MediaConfData = TargetGroupConf.U_PlainFile( expconf ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2802,7 +2812,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_PlainFileMediaNode :?> ConfNode_PlainFileMedia
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2812,7 +2822,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_PlainFileMediaNode :?> ConfNode_PlainFileMedia
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> CMDMSG_UNKNOWN_PARAMETER_NAME"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "CMDMSG_UNKNOWN_PARAMETER_NAME"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2848,7 +2858,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> IMediaNode ).MediaConfData = TargetGroupConf.U_MemBuffer( expconf ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2860,7 +2870,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_MemBufferMediaNode :?> ConfNode_MemBufferMedia
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2896,7 +2906,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> IMediaNode ).MediaConfData = TargetGroupConf.U_MemBuffer( expconf ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2932,7 +2942,7 @@ type CommandRunner_Test2() =
         }
         Assert.True(( ( r_cn :?> IMediaNode ).MediaConfData = TargetGroupConf.U_MemBuffer( expconf ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2944,7 +2954,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_MemBufferMediaNode :?> ConfNode_MemBufferMedia
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2954,7 +2964,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_MemBufferMediaNode :?> ConfNode_MemBufferMedia
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> CMDMSG_UNKNOWN_PARAMETER_NAME"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "CMDMSG_UNKNOWN_PARAMETER_NAME"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2983,7 +2993,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> IMediaNode ).IdentNumber = mediaidx_me.fromPrim 333u ))
         Assert.True(( ( r_cn :?> IMediaNode ).Name = "aaa" ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2995,7 +3005,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -3024,7 +3034,7 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> IMediaNode ).IdentNumber = mediaidx_me.fromPrim 1u ))
         Assert.True(( ( r_cn :?> IMediaNode ).Name = "aaaa" ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -3034,7 +3044,7 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
         Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> CMDMSG_UNKNOWN_PARAMETER_NAME"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "CMDMSG_UNKNOWN_PARAMETER_NAME"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3054,7 +3064,7 @@ type CommandRunner_Test2() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDMSG_ALL_VALIDATED"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_ALL_VALIDATED"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3078,8 +3088,8 @@ type CommandRunner_Test2() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let expmsg = sprintf "CR> %s : abc" cn.ShortDescriptString
-        let out_rs = CheckOutputMessage out_ms out_ws expmsg
+        let expmsg = sprintf "%s : abc" cn.ShortDescriptString
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" expmsg
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3095,7 +3105,7 @@ type CommandRunner_Test2() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn2 ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn2 ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> NOT MODIFIED"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "NOT MODIFIED"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3116,7 +3126,7 @@ type CommandRunner_Test2() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn2 ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn2 ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> MODIFIED"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "MODIFIED"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3141,7 +3151,7 @@ type CommandRunner_Test2() =
         let out_rs = new StreamReader( out_ms )
         let lines = [|
             for i = 1 to 2 do
-                yield out_rs.ReadLine()
+                yield ( out_rs.ReadLine() ).TrimStart()
         |]
         Assert.True(( lines.[1].StartsWith "RUNNING" ))
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -3168,7 +3178,7 @@ type CommandRunner_Test2() =
         let out_rs = new StreamReader( out_ms )
         let lines = [|
             for i = 1 to 2 do
-                yield out_rs.ReadLine()
+                yield ( out_rs.ReadLine() ).TrimStart()
         |]
         Assert.True(( lines.[1].StartsWith "UNLOADED(MOD)" ))
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -3195,7 +3205,7 @@ type CommandRunner_Test2() =
         let out_rs = new StreamReader( out_ms )
         let lines = [|
             for i = 1 to 2 do
-                yield out_rs.ReadLine()
+                yield ( out_rs.ReadLine() ).TrimStart()
         |]
         Assert.True(( lines.[1].StartsWith "UNLOADED " ))
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -3240,9 +3250,9 @@ type CommandRunner_Test2() =
         let out_rs = new StreamReader( out_ms )
         let lines = [|
             for i = 1 to 3 do
-                yield out_rs.ReadLine()
+                yield ( out_rs.ReadLine() ).TrimStart()
         |]
-        Assert.True(( lines.[2].StartsWith "  ACTIVE " ))
+        Assert.True(( lines.[2].StartsWith "ACTIVE " ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
         
@@ -3288,9 +3298,9 @@ type CommandRunner_Test2() =
         let out_rs = new StreamReader( out_ms )
         let lines = [|
             for i = 1 to 3 do
-                yield out_rs.ReadLine()
+                yield ( out_rs.ReadLine() ).TrimStart()
         |]
-        Assert.True(( lines.[2].StartsWith "  LOADED " ))
+        Assert.True(( lines.[2].StartsWith "LOADED " ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
 
@@ -3337,9 +3347,9 @@ type CommandRunner_Test2() =
         let out_rs = new StreamReader( out_ms )
         let lines = [|
             for i = 1 to 3 do
-                yield out_rs.ReadLine()
+                yield ( out_rs.ReadLine() ).TrimStart()
         |]
-        Assert.True(( lines.[2].StartsWith "  UNLOADED(MOD)" ))
+        Assert.True(( lines.[2].StartsWith "UNLOADED(MOD)" ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
 
@@ -3386,9 +3396,9 @@ type CommandRunner_Test2() =
         let out_rs = new StreamReader( out_ms )
         let lines = [|
             for i = 1 to 3 do
-                yield out_rs.ReadLine()
+                yield ( out_rs.ReadLine() ).TrimStart()
         |]
-        Assert.True(( lines.[2].StartsWith "  UNLOADED " ))
+        Assert.True(( lines.[2].StartsWith "UNLOADED " ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
 
@@ -3435,9 +3445,9 @@ type CommandRunner_Test2() =
         let out_rs = new StreamReader( out_ms )
         let lines = [|
             for i = 1 to 3 do
-                yield out_rs.ReadLine()
+                yield ( out_rs.ReadLine() ).TrimStart()
         |]
-        Assert.True(( lines.[2].StartsWith "  UNLOADED " ))
+        Assert.True(( lines.[2].StartsWith "UNLOADED " ))
         Assert.False(( flg1 ))
         Assert.False(( flg2 ))
 
@@ -3464,7 +3474,7 @@ type CommandRunner_Test2() =
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3499,7 +3509,7 @@ type CommandRunner_Test2() =
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3529,7 +3539,7 @@ type CommandRunner_Test2() =
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3548,7 +3558,7 @@ type CommandRunner_Test2() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3567,7 +3577,7 @@ type CommandRunner_Test2() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDMSG_TOO_MANY_CHILD"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_TOO_MANY_CHILD"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3585,7 +3595,7 @@ type CommandRunner_Test2() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn2 ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn2 ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> NOT MODIFIED"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "NOT MODIFIED"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3608,7 +3618,7 @@ type CommandRunner_Test2() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn2 ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn2 ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> MODIFIED"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "MODIFIED"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3637,8 +3647,8 @@ type CommandRunner_Test2() =
         out_ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
         let out_rs = new StreamReader( out_ms )
         let lines = [|
-            for i = 1 to 2 do
-                yield out_rs.ReadLine()
+            for _ = 1 to 2 do
+                yield ( out_rs.ReadLine() ).TrimStart()
         |]
         Assert.True(( lines.[1].StartsWith "RUNNING" ))
 
@@ -3671,7 +3681,7 @@ type CommandRunner_Test2() =
         let out_rs = new StreamReader( out_ms )
         let lines = [|
             for i = 1 to 2 do
-                yield out_rs.ReadLine()
+                yield ( out_rs.ReadLine() ).TrimStart()
         |]
         Assert.True(( lines.[1].StartsWith "UNLOADED(MOD)" ))
 
@@ -3704,7 +3714,7 @@ type CommandRunner_Test2() =
         let out_rs = new StreamReader( out_ms )
         let lines = [|
             for i = 1 to 2 do
-                yield out_rs.ReadLine()
+                yield ( out_rs.ReadLine() ).TrimStart()
         |]
         Assert.True(( lines.[1].StartsWith "UNLOADED " ))
 
@@ -3741,9 +3751,9 @@ type CommandRunner_Test2() =
         let out_rs = new StreamReader( out_ms )
         let lines = [|
             for i = 1 to 3 do
-                yield out_rs.ReadLine()
+                yield ( out_rs.ReadLine() ).TrimStart()
         |]
-        Assert.True(( lines.[2].StartsWith "  ACTIVE " ))
+        Assert.True(( lines.[2].StartsWith "ACTIVE " ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
 
@@ -3780,9 +3790,9 @@ type CommandRunner_Test2() =
         let out_rs = new StreamReader( out_ms )
         let lines = [|
             for i = 1 to 3 do
-                yield out_rs.ReadLine()
+                yield ( out_rs.ReadLine() ).TrimStart()
         |]
-        Assert.True(( lines.[2].StartsWith "  LOADED " ))
+        Assert.True(( lines.[2].StartsWith "LOADED " ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
 
@@ -3820,9 +3830,9 @@ type CommandRunner_Test2() =
         let out_rs = new StreamReader( out_ms )
         let lines = [|
             for i = 1 to 3 do
-                yield out_rs.ReadLine()
+                yield ( out_rs.ReadLine() ).TrimStart()
         |]
-        Assert.True(( lines.[2].StartsWith "  UNLOADED(MOD)" ))
+        Assert.True(( lines.[2].StartsWith "UNLOADED(MOD)" ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
 
@@ -3860,9 +3870,9 @@ type CommandRunner_Test2() =
         let out_rs = new StreamReader( out_ms )
         let lines = [|
             for i = 1 to 3 do
-                yield out_rs.ReadLine()
+                yield ( out_rs.ReadLine() ).TrimStart()
         |]
-        Assert.True(( lines.[2].StartsWith "  UNLOADED " ))
+        Assert.True(( lines.[2].StartsWith "UNLOADED " ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
 
@@ -3900,9 +3910,9 @@ type CommandRunner_Test2() =
         let out_rs = new StreamReader( out_ms )
         let lines = [|
             for i = 1 to 3 do
-                yield out_rs.ReadLine()
+                yield ( out_rs.ReadLine() ).TrimStart()
         |]
-        Assert.True(( lines.[2].StartsWith "  UNLOADED " ))
+        Assert.True(( lines.[2].StartsWith "UNLOADED " ))
         Assert.False(( flg1 ))
         Assert.False(( flg2 ))
 

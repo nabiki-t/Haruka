@@ -15,6 +15,8 @@ open System
 open System.IO
 open System.Threading.Tasks
 open System.Net
+open System.Text
+open System.Text.RegularExpressions
 
 open Xunit
 
@@ -46,12 +48,20 @@ type CommandRunner_Test3() =
         let ws = new StreamWriter( ms )
         ms, ws
 
-    let CheckOutputMessage ( ms : MemoryStream ) ( ws : StreamWriter ) ( expmsg : string ) =
+    let CheckOutputMessage ( ms : MemoryStream ) ( ws : StreamWriter ) ( pronpt : string ) ( msg : string ) : StreamReader =
         ws.Flush()
         ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
         let out_rs = new StreamReader( ms )
+        let esc ( s : string ) =
+            let sb = StringBuilder()
+            for itr in s do
+                if String.exists ( (=) itr ) "=$^{[(|)*+?\\" then
+                    sb.Append '\\' |> ignore
+                sb.Append itr |> ignore
+            sb.ToString()
         let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith expmsg ))
+        let reg = Regex( sprintf "^%s> *%s.*$" ( esc pronpt ) ( esc msg ) )
+        Assert.True(( reg.IsMatch outline ))
         out_rs
 
     let CallCommandLoop ( cr : CommandRunner ) ( stat : ( ServerStatus * CtrlConnection * IConfigureNode ) option ) : ( bool * ( ServerStatus * CtrlConnection * IConfigureNode ) option ) =
@@ -106,9 +116,9 @@ type CommandRunner_Test3() =
         let out_rs = new StreamReader( out_ms )
         let lines = [|
             for i = 1 to 3 do
-                yield out_rs.ReadLine()
+                yield ( out_rs.ReadLine() ).TrimStart()
         |]
-        Assert.True(( lines.[2].StartsWith "  UNLOADED " ))
+        Assert.True(( lines.[2].StartsWith "UNLOADED " ))
         Assert.False(( flg1 ))
         Assert.False(( flg2 ))
 
@@ -136,7 +146,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDMSG_MISSING_NODE"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_MISSING_NODE"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -150,7 +160,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDMSG_MISSING_NODE"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_MISSING_NODE"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
 
@@ -168,7 +178,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDMSG_CTRL_NODE_NOT_DELETABLE"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_CTRL_NODE_NOT_DELETABLE"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -201,7 +211,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> Deleted"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -248,7 +258,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> Deleted"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -274,7 +284,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> Deleted"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -310,7 +320,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> Deleted"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -336,7 +346,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> Deleted"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -362,7 +372,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> Deleted"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -397,7 +407,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> Deleted"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -429,7 +439,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> Deleted"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -455,7 +465,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> Deleted"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -481,7 +491,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> Deleted"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -491,7 +501,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> CMDMSG_CTRL_NODE_NOT_DELETABLE"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_CTRL_NODE_NOT_DELETABLE"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -509,7 +519,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn2 ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn2 ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CMDMSG_CTRL_NODE_NOT_DELETABLE"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_CTRL_NODE_NOT_DELETABLE"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -542,7 +552,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> Deleted"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -579,7 +589,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> Deleted"
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -605,7 +615,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> Deleted"
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -640,7 +650,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > Deleted"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -666,7 +676,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> Deleted"
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -692,7 +702,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> Deleted"
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -727,7 +737,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> Deleted"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -759,7 +769,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> Deleted"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -785,7 +795,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> Deleted"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -811,7 +821,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD> Deleted"
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -837,7 +847,7 @@ type CommandRunner_Test3() =
         Assert.True(( stat = Some ( ss, cc, td ) ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> Started"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "Started"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -884,7 +894,7 @@ type CommandRunner_Test3() =
         Assert.True(( stat = Some ( ss, cc, td ) ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> Killed"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "Killed"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
 
@@ -945,7 +955,7 @@ type CommandRunner_Test3() =
         Assert.True(( stat = Some ( ss, cc, td ) ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> CMDMSG_LOG_PARAM_UPDATED"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_LOG_PARAM_UPDATED"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -982,7 +992,7 @@ type CommandRunner_Test3() =
         Assert.True(( stat = Some ( ss, cc, td ) ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> CMDMSG_LOG_PARAM_UPDATED"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_LOG_PARAM_UPDATED"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1019,7 +1029,7 @@ type CommandRunner_Test3() =
         Assert.True(( stat = Some ( ss, cc, td ) ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> CMDMSG_LOG_PARAM_UPDATED"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_LOG_PARAM_UPDATED"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1056,7 +1066,7 @@ type CommandRunner_Test3() =
         Assert.True(( stat = Some ( ss, cc, td ) ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> CMDMSG_LOG_PARAM_UPDATED"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_LOG_PARAM_UPDATED"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1069,7 +1079,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, td ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, td ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1098,14 +1108,13 @@ type CommandRunner_Test3() =
 
         out_ws.Flush()
         out_ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
-        let out_rs = new StreamReader( out_ms )
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "SoftLimit"
         let lines = [|
-            for i = 1 to 3 do
-                yield out_rs.ReadLine()
+            for i = 1 to 2 do
+                yield ( out_rs.ReadLine() ).TrimStart()
         |]
-        Assert.True(( lines.[0].StartsWith "TD> SoftLimit" ))
-        Assert.True(( lines.[1].StartsWith "HardLimit" ))
-        Assert.True(( lines.[2].StartsWith "LogLevel" ))
+        Assert.True(( lines.[0].StartsWith "HardLimit" ))
+        Assert.True(( lines.[1].StartsWith "LogLevel" ))
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1119,7 +1128,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, td ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, td ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1151,7 +1160,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1198,7 +1207,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1230,7 +1239,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1262,7 +1271,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1310,7 +1319,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1353,7 +1362,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> CMDMSG_TOO_MANY_CHILD"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_TOO_MANY_CHILD"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
 
@@ -1383,7 +1392,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1417,7 +1426,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1447,7 +1456,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1494,7 +1503,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1537,7 +1546,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> CMDMSG_TOO_MANY_CHILD"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_TOO_MANY_CHILD"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1554,7 +1563,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some( ss, cc, npnode ) ))
 
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> CMDMSG_PARAMVAL_INVALID_PARAM_PATTERN"
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" "CMDMSG_PARAMVAL_INVALID_PARAM_PATTERN"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1571,7 +1580,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some( ss, cc, npnode ) ))
 
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> CMDMSG_PARAMVAL_INVALID_PARAM_PATTERN"
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" "CMDMSG_PARAMVAL_INVALID_PARAM_PATTERN"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1588,7 +1597,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some( ss, cc, npnode ) ))
 
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> CMDMSG_PARAMVAL_INVALID_PARAM_PATTERN"
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" "CMDMSG_PARAMVAL_INVALID_PARAM_PATTERN"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1614,7 +1623,7 @@ type CommandRunner_Test3() =
         Assert.True(( stat.IsSome ))
         Assert.True flg1
 
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> IP white list updated"
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" "IP white list updated"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1644,7 +1653,7 @@ type CommandRunner_Test3() =
         Assert.True(( stat.IsSome ))
         Assert.True flg1
 
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> IP white list updated"
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" "IP white list updated"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1678,7 +1687,7 @@ type CommandRunner_Test3() =
         Assert.True(( stat.IsSome ))
         Assert.True flg1
 
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> IP white list updated"
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" "IP white list updated"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1702,7 +1711,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat.IsSome ))
 
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> CHKMSG_IP_WHITELIST_TOO_LONG"
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" "CHKMSG_IP_WHITELIST_TOO_LONG"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1726,7 +1735,7 @@ type CommandRunner_Test3() =
         Assert.True(( stat.IsSome ))
         Assert.True flg1
 
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> IP white list updated"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "IP white list updated"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1755,7 +1764,7 @@ type CommandRunner_Test3() =
         Assert.True(( stat.IsSome ))
         Assert.True flg1
 
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> IP white list updated"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "IP white list updated"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1791,7 +1800,7 @@ type CommandRunner_Test3() =
         Assert.True(( stat.IsSome ))
         Assert.True flg1
 
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> IP white list updated"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "IP white list updated"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1818,7 +1827,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat.IsSome ))
 
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> CHKMSG_IP_WHITELIST_TOO_LONG"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "CHKMSG_IP_WHITELIST_TOO_LONG"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1846,7 +1855,7 @@ type CommandRunner_Test3() =
         | ( _, _, n ) ->
             Assert.True(( ( n :?> ConfNode_NetworkPortal ).NetworkPortal.WhiteList.Length = 0 ))
 
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> IP white list cleared"
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" "IP white list cleared"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1878,7 +1887,7 @@ type CommandRunner_Test3() =
         | ( _, _, n ) ->
             Assert.True(( ( n :?> ConfNode_NetworkPortal ).NetworkPortal.WhiteList.Length = 0 ))
 
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> IP white list cleared"
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" "IP white list cleared"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1905,7 +1914,7 @@ type CommandRunner_Test3() =
         | ( _, _, n ) ->
             Assert.True(( ( n :?> ConfNode_Controller ).GetConfigureData().RemoteCtrl.Value.WhiteList.Length = 0 ))
 
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> IP white list cleared"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "IP white list cleared"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
 
@@ -1940,7 +1949,7 @@ type CommandRunner_Test3() =
         | ( _, _, n ) ->
             Assert.True(( ( n :?> ConfNode_Controller ).GetConfigureData().RemoteCtrl.Value.WhiteList.Length = 0 ))
 
-        let out_rs = CheckOutputMessage out_ms out_ws "CR> IP white list cleared"
+        let out_rs = CheckOutputMessage out_ms out_ws "CR" "IP white list cleared"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -1976,7 +1985,7 @@ type CommandRunner_Test3() =
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
         Assert.True(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> Loaded"
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "Loaded"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2023,7 +2032,7 @@ type CommandRunner_Test3() =
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
         Assert.False(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2059,7 +2068,7 @@ type CommandRunner_Test3() =
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
         Assert.True(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> Unloaded"
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "Unloaded"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2106,7 +2115,7 @@ type CommandRunner_Test3() =
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
         Assert.False(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2142,7 +2151,7 @@ type CommandRunner_Test3() =
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
         Assert.True(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> Activated"
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "Activated"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2189,7 +2198,7 @@ type CommandRunner_Test3() =
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
         Assert.False(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2225,7 +2234,7 @@ type CommandRunner_Test3() =
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
         Assert.True(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> Inactivated"
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "Inactivated"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2276,7 +2285,7 @@ type CommandRunner_Test3() =
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
         Assert.False(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2304,7 +2313,7 @@ type CommandRunner_Test3() =
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2376,7 +2385,7 @@ type CommandRunner_Test3() =
         Assert.True(( stat = Some ( ss, cc, tgn1 ) ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2405,7 +2414,7 @@ type CommandRunner_Test3() =
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2450,7 +2459,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn1 ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tgn1 ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2491,7 +2500,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn1 ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tgn1 ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> CMDMSG_TOO_MANY_CHILD"
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "CMDMSG_TOO_MANY_CHILD"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2524,7 +2533,7 @@ type CommandRunner_Test3() =
             Assert.True(( Object.ReferenceEquals( x_cc, cc ) ))
             Assert.True(( Object.ReferenceEquals( x_tn, tn2 ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > Set CHAP authentication"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "Set CHAP authentication"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
@@ -2554,7 +2563,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat.IsSome ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > Set CHAP authentication"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "Set CHAP authentication"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2598,7 +2607,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > Authentication reset"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "Authentication reset"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2619,7 +2628,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2629,7 +2638,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tn ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > CMDMSG_ADDPARAM_LUN"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_ADDPARAM_LUN"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2651,7 +2660,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2699,7 +2708,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn1 ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tn1 ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2742,7 +2751,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn1 ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tn1 ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > CMDMSG_TOO_MANY_CHILD"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_TOO_MANY_CHILD"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
 
@@ -2763,7 +2772,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > CMDMSG_ADDPARAM_LUN"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_ADDPARAM_LUN"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2798,7 +2807,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > CMDMSG_ADDPARAM_MISSING_LUN"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_ADDPARAM_MISSING_LUN"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2844,7 +2853,7 @@ type CommandRunner_Test3() =
         Assert.True(( stat = Some ( ss, cc, tn ) ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > Attach LU"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "Attach LU"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2882,7 +2891,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tn ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > CMDMSG_ADDPARAM_MISSING_LUN"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_ADDPARAM_MISSING_LUN"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2948,7 +2957,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn2 ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tn2 ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > Attach LU"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "Attach LU"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3011,7 +3020,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn2 ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tn2 ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > CMDMSG_TOO_MANY_CHILD"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_TOO_MANY_CHILD"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3022,7 +3031,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tn ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > CMDMSG_ADDPARAM_LUN"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_ADDPARAM_LUN"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3049,7 +3058,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tn ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > CMDMSG_ADDPARAM_MISSING_LUN"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_ADDPARAM_MISSING_LUN"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3088,7 +3097,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tn ) ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > Detach LU"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "Detach LU"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3118,7 +3127,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tn ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > CMDMSG_ADDPARAM_MISSING_LUN"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_ADDPARAM_MISSING_LUN"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3149,7 +3158,7 @@ type CommandRunner_Test3() =
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3216,7 +3225,7 @@ type CommandRunner_Test3() =
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3272,7 +3281,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3324,7 +3333,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> CMDMSG_TOO_MANY_CHILD"
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "CMDMSG_TOO_MANY_CHILD"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3355,7 +3364,7 @@ type CommandRunner_Test3() =
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3411,7 +3420,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3463,7 +3472,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> CMDMSG_TOO_MANY_CHILD"
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "CMDMSG_TOO_MANY_CHILD"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3494,7 +3503,7 @@ type CommandRunner_Test3() =
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
         Assert.True(( flg1 ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3550,7 +3559,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> Created"
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3602,7 +3611,7 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> CMDMSG_TOO_MANY_CHILD"
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "CMDMSG_TOO_MANY_CHILD"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3622,7 +3631,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> Started"
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "Started"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3640,7 +3649,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> "
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3670,12 +3679,9 @@ type CommandRunner_Test3() =
 
         out_ws.Flush()
         out_ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
-        let out_rs = new StreamReader( out_ms )
-        let outline1 = out_rs.ReadLine()
-        Assert.True(( outline1.StartsWith "LU> ProcID=0, NotStarted" ))
-
-        let outline2 = out_rs.ReadLine()
-        Assert.True(( outline2.StartsWith "    xxx" ))
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "ProcID=0, NotStarted"
+        let outline2 = ( out_rs.ReadLine() ).TrimStart()
+        Assert.True(( outline2.StartsWith "xxx" ))
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -3706,9 +3712,7 @@ type CommandRunner_Test3() =
 
         out_ws.Flush()
         out_ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
-        let out_rs = new StreamReader( out_ms )
-        let outline1 = out_rs.ReadLine()
-        Assert.True(( outline1.StartsWith "LU> ProcID=0, Progress" ))
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "ProcID=0, Progress"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -3739,10 +3743,7 @@ type CommandRunner_Test3() =
 
         out_ws.Flush()
         out_ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
-        let out_rs = new StreamReader( out_ms )
-        let outline1 = out_rs.ReadLine()
-        Assert.True(( outline1.StartsWith "LU> ProcID=0, Recovery" ))
-
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "ProcID=0, Recovery"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3772,10 +3773,7 @@ type CommandRunner_Test3() =
 
         out_ws.Flush()
         out_ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
-        let out_rs = new StreamReader( out_ms )
-        let outline1 = out_rs.ReadLine()
-        Assert.True(( outline1.StartsWith "LU> ProcID=0, Succeeded" ))
-
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "ProcID=0, Succeeded"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3805,10 +3803,7 @@ type CommandRunner_Test3() =
 
         out_ws.Flush()
         out_ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
-        let out_rs = new StreamReader( out_ms )
-        let outline1 = out_rs.ReadLine()
-        Assert.True(( outline1.StartsWith "LU> ProcID=0, Failed" ))
-
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "ProcID=0, Failed"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3827,7 +3822,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
         Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> Terminated"
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "Terminated"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3868,7 +3863,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3919,7 +3914,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
         Assert.True(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> Session("
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "Session("
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -3972,7 +3967,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
         Assert.True(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> Session("
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "Session("
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -4025,7 +4020,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tn ) ))
         Assert.True(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > Session("
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "Session("
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -4076,7 +4071,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -4098,7 +4093,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
         Assert.True(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> Session terminated"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "Session terminated"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -4139,7 +4134,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -4179,7 +4174,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
         Assert.True(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> Connection"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "Connection"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -4219,7 +4214,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
         Assert.True(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> Connection"
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "Connection"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -4260,7 +4255,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, npn ) ))
         Assert.True(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "NP> Connection"
+        let out_rs = CheckOutputMessage out_ms out_ws "NP" "Connection"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -4301,7 +4296,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
         Assert.True(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TG> Connection"
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "Connection"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -4342,7 +4337,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tn ) ))
         Assert.True(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T > Connection"
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "Connection"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -4365,7 +4360,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
         Assert.True(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "TD> "
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -4418,7 +4413,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -4447,11 +4442,9 @@ type CommandRunner_Test3() =
 
         out_ws.Flush()
         out_ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
-        let out_rs = new StreamReader( out_ms )
-        let outline1 = out_rs.ReadLine()
-        Assert.True(( outline1.StartsWith "LU> LU Status" ))
-        let outline2 = out_rs.ReadLine()
-        Assert.True(( outline2.StartsWith "  ACA : None" ))
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "LU Status"
+        let outline2 = ( out_rs.ReadLine() ).TrimStart()
+        Assert.True(( outline2.StartsWith "ACA : None" ))
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -4492,11 +4485,9 @@ type CommandRunner_Test3() =
 
         out_ws.Flush()
         out_ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
-        let out_rs = new StreamReader( out_ms )
-        let outline1 = out_rs.ReadLine()
-        Assert.True(( outline1.StartsWith "LU> LU Status" ))
-        let outline2 = out_rs.ReadLine()
-        Assert.True(( outline2.StartsWith "  ACA : {" ))
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "LU Status"
+        let outline2 = ( out_rs.ReadLine() ).TrimStart()
+        Assert.True(( outline2.StartsWith "ACA : {" ))
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -4553,7 +4544,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
         Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -4575,7 +4566,7 @@ type CommandRunner_Test3() =
         Assert.True(( r ))
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
         Assert.True(( flg3 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU> LU Reseted"
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "LU Reseted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
 

@@ -360,6 +360,20 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
         |> Functions.RunTaskSynchronously
 
     /// <summary>
+    ///  Output message.
+    /// </summary>
+    /// <param name="indent">
+    ///  Specify the number of indents to be printed at the beginning of a line.
+    /// </param>
+    /// <param name="msg">
+    ///  Specify the message to be output.
+    /// </param>
+    member private _.Output ( indent : int ) ( msg : string ) =
+        for _ = 0 to indent do
+            m_OutFile.Write( "  " )
+        m_OutFile.WriteLine( msg )
+
+    /// <summary>
     ///  Read one command from standerd input and run the command.
     /// </summary>
     /// <param name="stat">
@@ -381,7 +395,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                         let! nextStat = this.Command_Login cmd
                         return struct( true, nextStat )
                     | _ ->
-                        m_OutFile.WriteLine "Unknown command."
+                        this.Output 0 "Unknown command."
                         return struct( true, stat )
                 else
                     let ss, cc, cn = stat.Value
@@ -432,12 +446,12 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                         return struct( true, stat )
 
                     | CommandVarb.Pwd ->
-                        fprintfn m_OutFile "  %s" cn.ShortDescriptString
+                        this.Output 0 cn.ShortDescriptString
                         return struct( true, stat )
 
                     | CommandVarb.Values ->
                         cn.FullDescriptString
-                        |> List.iter ( fprintfn m_OutFile "  %s" )
+                        |> List.iter ( this.Output 0 )
                         return struct( true, stat )
 
                     | CommandVarb.Set ->
@@ -450,7 +464,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
                     | CommandVarb.Publish ->
                         do! ss.Publish cc
-                        m_OutFile.WriteLine( m_Messages.GetMessage "CMDMSG_CONFIGURATION_PUBLISHED" )
+                        this.Output 0 ( m_Messages.GetMessage "CMDMSG_CONFIGURATION_PUBLISHED" )
                         return struct( true, stat )
 
                     | CommandVarb.Nop ->
@@ -606,27 +620,27 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                         return struct( true, stat )
 
                     | _ ->
-                        m_OutFile.WriteLine "Unknown command."
+                        this.Output 0 "Unknown command."
                         return struct( true, stat )
             with
             | :? CommandInputError as x ->
-                m_OutFile.WriteLine x.Message
+                this.Output 0 x.Message
                 return true, stat
             | :? RequestError as x ->
                 m_Messages.GetMessage( "CMDERR_UNEXPECTED_REQUEST_ERROR", x.Message )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
                 return true, stat
             | :? SocketException
             | :? IOException as x ->
                 m_Messages.GetMessage( "CMDERR_CONNECTION_ERROR", x.Message )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
                 return true, stat
             | :? EditError as x ->
                 m_Messages.GetMessage( "CMDERR_UNEXPECTED_EDIT_ERROR", x.Message )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
                 return true, stat
             | :? ConfigurationError as x ->
-                m_OutFile.WriteLine x.Message
+                this.Output 0 x.Message
                 return true, stat
         }
 
@@ -662,7 +676,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     ///  Next status. If login was success, it returns pair of ServerStatus, CtrlConnection and IConfigureNode(=Controller object).
     ///  If failed, it returns None.
     /// </returns>
-    member private _.Login ( force : bool ) ( host : string ) ( port : int32 ) : Task< ( ServerStatus * CtrlConnection * IConfigureNode ) option > =
+    member private this.Login ( force : bool ) ( host : string ) ( port : int32 ) : Task< ( ServerStatus * CtrlConnection * IConfigureNode ) option > =
         task {
             try
                 let! cc1 = CtrlConnection.Connect m_Messages host port force
@@ -672,12 +686,12 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             with
             | :? RequestError as x ->
                 m_Messages.GetMessage( "CMDERR_FAILED_LOGIN", x.Message )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
                 return None
             | :? SocketException
             | :? IOException as x ->
                 m_Messages.GetMessage( "CMDERR_FAILED_CONNECT_CTRL", x.Message )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
                 return None
         }
 
@@ -700,7 +714,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <returns>
     ///  Next status.
     /// </returns>
-    member private _.Command_Exit
+    member private this.Command_Exit
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task< ( ServerStatus * CtrlConnection * IConfigureNode ) option > =
 
@@ -708,7 +722,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             let force = cmd.NamedArgs.ContainsKey( "/y" )
             if ss.IsModified && not force then
                 m_Messages.GetMessage( "CMDMSG_CONFIG_MODIFIED" )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
                 return Some ( ss, cc, cn )
             else
                 try
@@ -716,11 +730,11 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 with
                 | :? RequestError as x ->
                     m_Messages.GetMessage( "CMDERR_UNEXPECTED_REQUEST_ERROR", x.Message )
-                    |> m_OutFile.WriteLine
+                    |> this.Output 0
                 | :? SocketException
                 | :? IOException as x ->
                     m_Messages.GetMessage( "CMDERR_CONNECTION_ERROR", x.Message )
-                    |> m_OutFile.WriteLine
+                    |> this.Output 0
 
                 // Even if logout was failed, disconnect the connection.
                 cc.Dispose()
@@ -745,7 +759,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <returns>
     ///  Next status.
     /// </returns>
-    member private _.Command_Reload
+    member private this.Command_Reload
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task< ( ServerStatus * CtrlConnection * IConfigureNode ) option > =
 
@@ -753,7 +767,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             let force = cmd.NamedArgs.ContainsKey( "/y" )
             if ss.IsModified && not force then
                 m_Messages.GetMessage( "CMDMSG_CONFIG_MODIFIED" )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
                 return Some ( ss, cc, cn )
             else
                 let ss2 = new ServerStatus( m_Messages )
@@ -779,7 +793,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <returns>
     ///  Next status.
     /// </returns>
-    member private _.Command_Select
+    member private this.Command_Select
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : ( ServerStatus * CtrlConnection * IConfigureNode ) option =
 
@@ -787,7 +801,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
         let child = cn.GetChildNodes<IConfigureNode>()
         if idx >= uint32 child.Length then
             m_Messages.GetMessage( "CMDMSG_MISSING_NODE", sprintf "%d" idx )
-            |> m_OutFile.WriteLine
+            |> this.Output 0
             Some ( ss, cc, cn )
         else
             Some ( ss, cc, child.[ int idx ] )
@@ -810,7 +824,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <returns>
     ///  Next status.
     /// </returns>
-    member private _.Command_UnSelect
+    member private this.Command_UnSelect
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : ( ServerStatus * CtrlConnection * IConfigureNode ) option =
 
@@ -818,7 +832,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
         let parent = cn.GetParentNodes<IConfigureNode>()
         if idx >= uint32 parent.Length then
             m_Messages.GetMessage( "CMDMSG_MISSING_NODE", sprintf "%d" idx )
-            |> m_OutFile.WriteLine
+            |> this.Output 0
             Some ( ss, cc, cn )
         elif parent.Length = 0 then
             // Nothing to do
@@ -841,17 +855,17 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node.
     /// </param>
-    member private _.Command_List
+    member private this.Command_List
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode ) : unit =
 
         let child = cn.GetChildNodes<IConfigureNode>()
         if 0 < child.Length then
             child
             |> List.iteri ( fun i itr ->
-                fprintfn m_OutFile "  % 3d : %s" i itr.ShortDescriptString
+                this.Output 1 ( sprintf "% 3d : %s" i itr.ShortDescriptString )
             )
         else
-            m_OutFile.WriteLine( m_Messages.GetMessage "CMDMSG_MISSING_CHILD_NODE" )
+            this.Output 0 ( m_Messages.GetMessage "CMDMSG_MISSING_CHILD_NODE" )
 
     /// <summary>
     ///  Execute listparent command.
@@ -868,17 +882,17 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node.
     /// </param>
-    member private _.Command_ListParent
+    member private this.Command_ListParent
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode ) : unit =
 
         let parent = cn.GetParentNodes<IConfigureNode>()
         if 0 < parent.Length then
             parent
             |> List.iteri ( fun i itr ->
-                fprintfn m_OutFile "  % 3d : %s" i itr.ShortDescriptString
+                this.Output 1 ( sprintf "% 3d : %s" i itr.ShortDescriptString )
             )
         else
-            m_OutFile.WriteLine( m_Messages.GetMessage "CMDMSG_MISSING_PARENT_NODE" )
+            this.Output 0 ( m_Messages.GetMessage "CMDMSG_MISSING_PARENT_NODE" )
 
     /// <summary>
     ///  Execute set command.
@@ -898,7 +912,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <returns>
     ///  Next status.
     /// </returns>
-    member private _.Command_Set
+    member private this.Command_Set
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task<( ServerStatus * CtrlConnection * IConfigureNode ) option> =
 
@@ -923,7 +937,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt16.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint16" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let oldVal = x.GetConfigureData()
@@ -955,7 +969,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = Boolean.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "Boolean" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let oldVal = x.GetConfigureData()
@@ -989,7 +1003,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt32.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint32" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let oldVal = x.GetConfigureData()
@@ -1016,7 +1030,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt32.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint32" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let oldVal = x.GetConfigureData()
@@ -1047,7 +1061,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = Boolean.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "bool" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let oldVal = x.GetConfigureData()
@@ -1078,7 +1092,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt32.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint32" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let oldVal = x.GetConfigureData()
@@ -1097,7 +1111,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt32.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint32" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let oldVal = x.GetConfigureData()
@@ -1121,7 +1135,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = LogLevel.tryFromString entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", sprintf "LogLevel(%s)" lvValues )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let oldVal = x.GetConfigureData()
@@ -1138,7 +1152,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 | _ ->
                     let paramname = "PortNumber,Address,TotalLimit,MaxFileCount,ForceSync,SoftLimit,HardLimit,LogLevel"
                     m_Messages.GetMessage( "CMDMSG_UNKNOWN_PARAMETER_NAME", paramname )
-                    |> m_OutFile.WriteLine
+                    |> this.Output 0
                     return Some ( ss, cc, cn )
 
             | :? ConfNode_TargetDevice as x ->
@@ -1152,7 +1166,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     with
                     | :? FormatException ->
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "TargetDeviceID" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
 
                 | "NAME" ->
@@ -1165,7 +1179,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt32.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint32" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let newVal = {
@@ -1181,7 +1195,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt32.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint32" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let newVal = {
@@ -1197,7 +1211,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt32.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint32" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let newVal = {
@@ -1213,7 +1227,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt16.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint16" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let newVal = {
@@ -1229,7 +1243,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt16.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint16" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let newVal = {
@@ -1245,7 +1259,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt16.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint16" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let newVal = {
@@ -1261,7 +1275,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt32.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint32" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let newVal = {
@@ -1277,7 +1291,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt32.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint32" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let newVal = {
@@ -1297,7 +1311,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = LogLevel.tryFromString entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", sprintf "LogLevel(%s)" lvValues )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let newVal = {
@@ -1311,7 +1325,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 | _ ->
                     let paramname = "ID,Name,MaxRecvDataSegmentLength,MaxBurstLength,FirstBurstLength,DefaultTime2Wait,DefaultTime2Retain,MaxOutstandingR2T,SoftLimit,HardLimit,LogLevel"
                     m_Messages.GetMessage( "CMDMSG_UNKNOWN_PARAMETER_NAME", paramname )
-                    |> m_OutFile.WriteLine
+                    |> this.Output 0
                     return Some ( ss, cc, cn )
 
             | :? ConfNode_DummyDeviceLU as x ->
@@ -1326,7 +1340,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     | :? FormatException
                     | :? OverflowException ->
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "LUN" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
 
                 | "NAME" ->
@@ -1336,7 +1350,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
                 | _ ->
                     m_Messages.GetMessage( "CMDMSG_UNKNOWN_PARAMETER_NAME", "LUN,Name" )
-                    |> m_OutFile.WriteLine
+                    |> this.Output 0
                     return Some ( ss, cc, cn )
 
             | :? ConfNode_BlockDeviceLU as x ->
@@ -1351,7 +1365,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     | :? FormatException
                     | :? OverflowException ->
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "LUN" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
 
                 | "NAME" ->
@@ -1361,7 +1375,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
                 | _ ->
                     m_Messages.GetMessage( "CMDMSG_UNKNOWN_PARAMETER_NAME", "LUN,Name" )
-                    |> m_OutFile.WriteLine
+                    |> this.Output 0
                     return Some ( ss, cc, cn )
 
             | :? ConfNode_TargetGroup as x ->
@@ -1375,7 +1389,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     with
                     | :? FormatException ->
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "TargetGroupID" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
 
                 | "NAME" ->
@@ -1387,7 +1401,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = Boolean.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "bool" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         do! ss.CheckTargetGroupUnloaded cc x
@@ -1396,7 +1410,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
                 | _ ->
                     m_Messages.GetMessage( "CMDMSG_UNKNOWN_PARAMETER_NAME", "ID,Name,EnabledAtStart" )
-                    |> m_OutFile.WriteLine
+                    |> this.Output 0
                     return Some ( ss, cc, cn )
 
             | :? ConfNode_Target as x ->
@@ -1405,7 +1419,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt32.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint32" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let nextVal = {
@@ -1420,7 +1434,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt16.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint16" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let nextVal = {
@@ -1451,7 +1465,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
                 | _ ->
                     m_Messages.GetMessage( "CMDMSG_UNKNOWN_PARAMETER_NAME", "ID,TPGT,Name,Alias" )
-                    |> m_OutFile.WriteLine
+                    |> this.Output 0
                     return Some ( ss, cc, cn )
 
             | :? ConfNode_NetworkPortal as x ->
@@ -1460,7 +1474,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt32.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint32" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let nextVal = {
@@ -1475,7 +1489,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt16.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint16" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let nextVal = {
@@ -1499,7 +1513,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt16.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint16" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let nextVal = {
@@ -1514,7 +1528,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = Boolean.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "bool" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let nextVal = {
@@ -1529,7 +1543,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = Int32.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "int" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let nextVal = {
@@ -1544,7 +1558,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = Int32.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "int" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let nextVal = {
@@ -1558,7 +1572,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 | _ ->
                     let paramname = "ID,TPGT,TargetAddress,PortNumber,DisableNagle,ReceiveBufferSize,SendBufferSize"
                     m_Messages.GetMessage( "CMDMSG_UNKNOWN_PARAMETER_NAME", paramname )
-                    |> m_OutFile.WriteLine
+                    |> this.Output 0
                     return Some ( ss, cc, cn )
 
             | :? ConfNode_PlainFileMedia as x ->
@@ -1567,7 +1581,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt32.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint32" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let nextVal = {
@@ -1600,7 +1614,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt32.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint64" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let nextVal = {
@@ -1615,7 +1629,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = Int32.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "int" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let nextVal = {
@@ -1630,7 +1644,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = Boolean.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "bool" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let nextVal = {
@@ -1644,7 +1658,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 | _ ->
                     let paramname = "ID,MediaName,FileName,BlockSize,MaxMultiplicity,QueueWaitTimeOut,WriteProtect"
                     m_Messages.GetMessage( "CMDMSG_UNKNOWN_PARAMETER_NAME", paramname )
-                    |> m_OutFile.WriteLine
+                    |> this.Output 0
                     return Some ( ss, cc, cn )
 
             | :? ConfNode_MemBufferMedia as x ->
@@ -1653,7 +1667,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt32.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint32" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let nextVal = {
@@ -1677,7 +1691,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt64.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint64" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         let nextVal = {
@@ -1691,7 +1705,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 | _ ->
                     let paramname = "ID,BytesCount,MediaName"
                     m_Messages.GetMessage( "CMDMSG_UNKNOWN_PARAMETER_NAME", paramname )
-                    |> m_OutFile.WriteLine
+                    |> this.Output 0
                     return Some ( ss, cc, cn )
 
             | :? ConfNode_DummyMedia as x ->
@@ -1700,7 +1714,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt32.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint32" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         do! ss.CheckTargetGroupUnloaded cc x
@@ -1715,7 +1729,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 | _ ->
                     let paramname = "ID,MediaName"
                     m_Messages.GetMessage( "CMDMSG_UNKNOWN_PARAMETER_NAME", paramname )
-                    |> m_OutFile.WriteLine
+                    |> this.Output 0
                     return Some ( ss, cc, cn )
 
             | :? ConfNode_DebugMedia as x ->
@@ -1724,7 +1738,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let r, v = UInt32.TryParse entValue
                     if not r then
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint32" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
                         do! ss.CheckTargetGroupUnloaded cc x
@@ -1739,7 +1753,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 | _ ->
                     let paramname = "ID,MediaName"
                     m_Messages.GetMessage( "CMDMSG_UNKNOWN_PARAMETER_NAME", paramname )
-                    |> m_OutFile.WriteLine
+                    |> this.Output 0
                     return Some ( ss, cc, cn )
 
             | _ ->
@@ -1762,19 +1776,19 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node.
     /// </param>
-    member private _.Command_Validate
+    member private this.Command_Validate
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode ) : unit =
 
         let r = ss.Validate()
         if r.Length = 0 then
             m_Messages.GetMessage( "CMDMSG_ALL_VALIDATED" )
-            |> m_OutFile.WriteLine
+            |> this.Output 0
         else
             r
             |> List.iter ( fun ( nid, msg ) ->
                 let node = ss.GetNode nid
                 sprintf "%s : %s" node.ShortDescriptString msg
-                |> m_OutFile.WriteLine
+                |> this.Output 0
             )
         
     /// <summary>
@@ -1792,16 +1806,16 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node.
     /// </param>
-    member private _.Command_StatusAll
+    member private this.Command_StatusAll
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
             // Show controller status
             let ctrlnode = ss.ControllerNode :> IConfigFileNode
             if ctrlnode.Modified = ModifiedStatus.Modified then
-                fprintfn m_OutFile "MODIFIED     : %s" ctrlnode.ShortDescriptString
+                this.Output 0 ( sprintf "MODIFIED     : %s" ctrlnode.ShortDescriptString )
             else
-                fprintfn m_OutFile "NOT MODIFIED : %s" ctrlnode.ShortDescriptString
+                this.Output 0 ( sprintf "NOT MODIFIED : %s" ctrlnode.ShortDescriptString )
 
             let tdnodes = ss.GetTargetDeviceNodes()
             let! tdprocs = cc.GetTargetDeviceProcs()
@@ -1811,11 +1825,11 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 let tddesc = ( itrtd :> IConfigureNode ).ShortDescriptString
                 let isRunning = List.exists ( (=) tdid ) tdprocs
                 if isRunning then
-                    fprintfn m_OutFile "RUNNING      : %s" tddesc
+                    this.Output 1 ( sprintf "RUNNING      : %s" tddesc )
                 elif ( itrtd :> IConfigFileNode ).Modified = ModifiedStatus.Modified then
-                    fprintfn m_OutFile "UNLOADED(MOD): %s" tddesc
+                    this.Output 1 ( sprintf "UNLOADED(MOD): %s" tddesc )
                 else
-                    fprintfn m_OutFile "UNLOADED     : %s" tddesc
+                    this.Output 1 ( sprintf "UNLOADED     : %s" tddesc )
 
                 // Show target group status
                 let! activeTgs =
@@ -1835,13 +1849,13 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let tgid = itrtg.TargetGroupID
                     let tgdesc = ( itrtg :> IConfigureNode ).ShortDescriptString
                     if activeTgsHash.Contains tgid then
-                        fprintfn m_OutFile "  ACTIVE       : %s" tgdesc
+                        this.Output 2 ( sprintf "ACTIVE       : %s" tgdesc )
                     elif loadedTgsHash.Contains tgid then
-                        fprintfn m_OutFile "  LOADED       : %s" tgdesc
+                        this.Output 2 ( sprintf "LOADED       : %s" tgdesc )
                     elif ( itrtg :> IConfigFileNode ).Modified = ModifiedStatus.Modified then
-                        fprintfn m_OutFile "  UNLOADED(MOD): %s" tgdesc
+                        this.Output 2 ( sprintf "UNLOADED(MOD): %s" tgdesc )
                     else
-                        fprintfn m_OutFile "  UNLOADED     : %s" tgdesc
+                        this.Output 2( sprintf "UNLOADED     : %s" tgdesc )
         }
 
     /// <summary>
@@ -1859,7 +1873,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node.
     /// </param>
-    member private _.Command_Create_TargetDevice
+    member private this.Command_Create_TargetDevice
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
 
@@ -1878,7 +1892,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             // check child node count
             if List.length( oldtds ) >= int ClientConst.MAX_CHILD_NODE_COUNT then
                 m_Messages.GetMessage( "CMDMSG_TOO_MANY_CHILD" )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
             else
                 let newNegParam : TargetDeviceConf.T_NegotiableParameters = {
                     MaxRecvDataSegmentLength = Constants.NEGOPARAM_DEF_MaxRecvDataSegmentLength;
@@ -1894,7 +1908,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     LogLevel = LogLevel.LOGLEVEL_INFO;
                 }
                 let newnode = ss.AddTargetDeviceNode newTdid tdName newNegParam newLogParam
-                fprintfn m_OutFile "Created : %s" ( newnode :> IConfigureNode ).ShortDescriptString
+                this.Output 0 ( sprintf "Created : %s" ( newnode :> IConfigureNode ).ShortDescriptString )
         }
 
     /// <summary>
@@ -1912,7 +1926,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node.
     /// </param>
-    member private _.Command_Status
+    member private this.Command_Status
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
 
@@ -1920,9 +1934,9 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             // Show controller status
             let ctrlnode = ss.ControllerNode :> IConfigFileNode
             if ctrlnode.Modified = ModifiedStatus.Modified then
-                fprintfn m_OutFile "MODIFIED     : %s" ctrlnode.ShortDescriptString
+                this.Output 0 ( sprintf "MODIFIED     : %s" ctrlnode.ShortDescriptString )
             else
-                fprintfn m_OutFile "NOT MODIFIED : %s" ctrlnode.ShortDescriptString
+                this.Output 0 ( sprintf "NOT MODIFIED : %s" ctrlnode.ShortDescriptString )
 
             // Show target device status
             match ss.GetAncestorTargetDevice cn with
@@ -1932,11 +1946,11 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 let tddesc = ( tdnode :> IConfigureNode ).ShortDescriptString
                 let isRunning = List.exists ( (=) tdid ) tdprocs
                 if isRunning then
-                    fprintfn m_OutFile "RUNNING      : %s" tddesc
+                    this.Output 1 ( sprintf "RUNNING      : %s" tddesc )
                 elif ( tdnode :> IConfigFileNode ).Modified = ModifiedStatus.Modified then
-                    fprintfn m_OutFile "UNLOADED(MOD): %s" tddesc
+                    this.Output 1 ( sprintf "UNLOADED(MOD): %s" tddesc )
                 else
-                    fprintfn m_OutFile "UNLOADED     : %s" tddesc
+                    this.Output 1 ( sprintf "UNLOADED     : %s" tddesc )
 
 
                 // Show target group status
@@ -1957,13 +1971,13 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let isActive = activeTgs |> Seq.map _.ID |> Seq.exists ( (=) tgid )
                     let isLoaded = loadedTgs |> Seq.map _.ID |> Seq.exists ( (=) tgid )
                     if isActive then
-                        fprintfn m_OutFile "  ACTIVE       : %s" tgdesc
+                        this.Output 2 ( sprintf "ACTIVE       : %s" tgdesc )
                     elif isLoaded then
-                        fprintfn m_OutFile "  LOADED       : %s" tgdesc
+                        this.Output 2 ( sprintf "LOADED       : %s" tgdesc )
                     elif ( tgnode :> IConfigFileNode ).Modified = ModifiedStatus.Modified then
-                        fprintfn m_OutFile "  UNLOADED(MOD): %s" tgdesc
+                        this.Output 2 ( sprintf "UNLOADED(MOD): %s" tgdesc )
                     else
-                        fprintfn m_OutFile "  UNLOADED     : %s" tgdesc
+                        this.Output 2 ( sprintf "UNLOADED     : %s" tgdesc )
                 | _ -> ()
             | _ -> ()
         }
@@ -1986,7 +2000,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <returns>
     ///  Next status.
     /// </returns>
-    member private _.Command_Delete
+    member private this.Command_Delete
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task<( ServerStatus * CtrlConnection * IConfigureNode ) option> =
 
@@ -1997,25 +2011,25 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 let child = cn.GetChildNodes<IConfigureNode>()
                 if objidx >= uint child.Length then
                     m_Messages.GetMessage( "CMDMSG_MISSING_NODE", sprintf "%d" objidx )
-                    |> m_OutFile.WriteLine
+                    |> this.Output 0
                     return Some ( ss, cc, cn )
                 else
                     match child.[ int objidx ] with
                     | :? ConfNode_Controller as x ->
                         m_Messages.GetMessage( "CMDMSG_CTRL_NODE_NOT_DELETABLE" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                     | :? ConfNode_TargetDevice as x ->
                         do! ss.CheckTargetDeviceUnloaded cc x
                         ss.DeleteTargetDeviceNode x
-                        fprintfn m_OutFile "Deleted : %s" child.[ int objidx ].ShortDescriptString
+                        this.Output 0 ( sprintf "Deleted : %s" child.[ int objidx ].ShortDescriptString )
                     | :? ConfNode_NetworkPortal as x ->
                         do! ss.CheckTargetDeviceUnloaded cc x
                         ss.DeleteNetworkPortalNode x
-                        fprintfn m_OutFile "Deleted : %s" child.[ int objidx ].ShortDescriptString
+                        this.Output 0 ( sprintf "Deleted : %s" child.[ int objidx ].ShortDescriptString )
                     | :? ConfNode_TargetGroup as x ->
                         do! ss.CheckTargetGroupUnloaded cc x
                         ss.DeleteTargetGroupNode x
-                        fprintfn m_OutFile "Deleted : %s" child.[ int objidx ].ShortDescriptString
+                        this.Output 0( sprintf "Deleted : %s" child.[ int objidx ].ShortDescriptString )
                     | :? ConfNode_Target
                     | :? ConfNode_BlockDeviceLU
                     | :? ConfNode_DummyDeviceLU
@@ -2025,7 +2039,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     | :? ConfNode_DebugMedia as x ->
                         do! ss.CheckTargetGroupUnloaded cc x
                         ss.DeleteNodeInTargetGroup x
-                        fprintfn m_OutFile "Deleted : %s" child.[ int objidx ].ShortDescriptString
+                        this.Output 0 ( sprintf "Deleted : %s" child.[ int objidx ].ShortDescriptString )
                     | _ ->
                         raise <| Exception "Unexpected error."
                     return Some ( ss, cc, cn )
@@ -2033,28 +2047,28 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 let parents = cn.GetParentNodes<IConfigureNode>()
                 if parents.Length <= 0 then
                     m_Messages.GetMessage( "CMDMSG_CTRL_NODE_NOT_DELETABLE" )
-                    |> m_OutFile.WriteLine
+                    |> this.Output 0
                     return Some ( ss, cc, cn )
                 else
                     match cn with
                     | :? ConfNode_Controller as x ->
                         m_Messages.GetMessage( "CMDMSG_CTRL_NODE_NOT_DELETABLE" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                         return Some ( ss, cc, cn )
                     | :? ConfNode_TargetDevice as x ->
                         do! ss.CheckTargetDeviceUnloaded cc x
                         ss.DeleteTargetDeviceNode x
-                        fprintfn m_OutFile "Deleted : %s" cn.ShortDescriptString
+                        this.Output 0( sprintf "Deleted : %s" cn.ShortDescriptString )
                         return Some ( ss, cc, parents.[0] )
                     | :? ConfNode_NetworkPortal as x ->
                         do! ss.CheckTargetDeviceUnloaded cc x
                         ss.DeleteNetworkPortalNode x
-                        fprintfn m_OutFile "Deleted : %s" cn.ShortDescriptString
+                        this.Output 0 ( sprintf "Deleted : %s" cn.ShortDescriptString )
                         return Some ( ss, cc, parents.[0] )
                     | :? ConfNode_TargetGroup as x ->
                         do! ss.CheckTargetGroupUnloaded cc x
                         ss.DeleteTargetGroupNode x
-                        fprintfn m_OutFile "Deleted : %s" cn.ShortDescriptString
+                        this.Output 0 ( sprintf "Deleted : %s" cn.ShortDescriptString )
                         return Some ( ss, cc, parents.[0] )
                     | :? ConfNode_Target
                     | :? ConfNode_BlockDeviceLU
@@ -2065,7 +2079,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     | :? ConfNode_DebugMedia ->
                         do! ss.CheckTargetGroupUnloaded cc cn
                         ss.DeleteNodeInTargetGroup cn
-                        fprintfn m_OutFile "Deleted : %s" cn.ShortDescriptString
+                        this.Output 0 ( sprintf "Deleted : %s" cn.ShortDescriptString )
                         return Some ( ss, cc, parents.[0] )
                     | _ ->
                         raise <| Exception "Unexpected error."
@@ -2087,7 +2101,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be ConfNode_TargetDevice or its descendants.
     /// </param>
-    member private _.Command_Start
+    member private this.Command_Start
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
 
@@ -2096,7 +2110,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             match ss.GetAncestorTargetDevice cn with
             | Some ( tdnode ) ->
                 do! cc.StartTargetDeviceProc tdnode.TargetDeviceID
-                fprintfn m_OutFile "Started : %s" ( tdnode :> IConfigureNode ).ShortDescriptString
+                this.Output 0( sprintf "Started : %s" ( tdnode :> IConfigureNode ).ShortDescriptString )
             | _ ->
                 raise <| Exception "Unexpected error."
         }
@@ -2116,7 +2130,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be ConfNode_TargetDevice or its descendants.
     /// </param>
-    member private _.Command_Kill
+    member private this.Command_Kill
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
 
@@ -2125,7 +2139,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             | Some ( tdnode ) ->
                 // Specified target device should be killed by the controller.
                 do! cc.KillTargetDeviceProc tdnode.TargetDeviceID
-                fprintfn m_OutFile "Killed : %s" ( tdnode :> IConfigureNode ).ShortDescriptString
+                this.Output 0 ( sprintf "Killed : %s" ( tdnode :> IConfigureNode ).ShortDescriptString )
             | _ ->
                 raise <| Exception "Unexpected error."
         }
@@ -2145,7 +2159,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be ConfNode_TargetDevice.
     /// </param>
-    member private _.Command_SetLogParam
+    member private this.Command_SetLogParam
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
 
@@ -2174,10 +2188,10 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 }
                 do! cc.SetLogParameters tdnode.TargetDeviceID conf
                 m_Messages.GetMessage( "CMDMSG_LOG_PARAM_UPDATED" )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
             else
                 m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
         }
 
     /// <summary>
@@ -2195,7 +2209,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be ConfNode_TargetDevice.
     /// </param>
-    member private _.Command_GetLogParam
+    member private this.Command_GetLogParam
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
 
@@ -2207,12 +2221,12 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             if List.exists ( (=) tdnode.TargetDeviceID ) tdlist then
 
                 let! r = cc.GetLogParameters tdnode.TargetDeviceID
-                fprintfn m_OutFile "SoftLimit : %d" r.SoftLimit
-                fprintfn m_OutFile "HardLimit : %d" r.HardLimit
-                fprintfn m_OutFile "LogLevel  : %s" ( LogLevel.toString r.LogLevel )
+                this.Output 0 ( sprintf "SoftLimit : %d" r.SoftLimit )
+                this.Output 0 ( sprintf "HardLimit : %d" r.HardLimit )
+                this.Output 0 ( sprintf "LogLevel  : %s" ( LogLevel.toString r.LogLevel ) )
             else
                 m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
         }
 
     /// <summary>
@@ -2230,7 +2244,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be ConfNode_TargetDevice.
     /// </param>
-    member private _.Command_AddPortal
+    member private this.Command_AddPortal
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
 
@@ -2253,7 +2267,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 |> List.length
             if childCount >= int ClientConst.MAX_CHILD_NODE_COUNT then
                 m_Messages.GetMessage( "CMDMSG_TOO_MANY_CHILD" )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
             else
                 let conf : TargetDeviceConf.T_NetworkPortal = {
                     IdentNumber = newIdent;
@@ -2267,7 +2281,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 }
                 do! ss.CheckTargetDeviceUnloaded cc tdnode
                 let newnode = ss.AddNetworkPortalNode tdnode conf
-                fprintfn m_OutFile "Created : %s" ( newnode :> IConfigureNode ).ShortDescriptString
+                this.Output 0 ( sprintf "Created : %s" ( newnode :> IConfigureNode ).ShortDescriptString )
         }
 
     /// <summary>
@@ -2285,7 +2299,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be ConfNode_TargetDevice.
     /// </param>
-    member private _.Command_Create_TargetGroup
+    member private this.Command_Create_TargetGroup
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
 
@@ -2308,11 +2322,11 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 |> List.length
             if childCount >= int ClientConst.MAX_CHILD_NODE_COUNT then
                 m_Messages.GetMessage( "CMDMSG_TOO_MANY_CHILD" )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
             else
                 // create target group node
                 let newnode = ss.AddTargetGroupNode tdnode newTgid tgName true
-                fprintfn m_OutFile "Created : %s" ( newnode :> IConfigureNode ).ShortDescriptString
+                this.Output 0 ( sprintf "Created : %s" ( newnode :> IConfigureNode ).ShortDescriptString )
         }
 
     /// <summary>
@@ -2330,7 +2344,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be ConfNode_NetworkPortal or ConfNode_Controller.
     /// </param>
-    member private _.Command_Add_IPWhiteList
+    member private this.Command_Add_IPWhiteList
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task< ( ServerStatus * CtrlConnection * IConfigureNode ) option > =
 
@@ -2342,7 +2356,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             // The only arguments that can be specified are A and B, or C.
             if not ( ( fadr.IsSome && fmask.IsSome && t.IsNone ) || ( fadr.IsNone && fmask.IsNone && t.IsSome ) ) then
                 m_Messages.GetMessage( "CMDMSG_PARAMVAL_INVALID_PARAM_PATTERN" )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
                 return Some ( ss, cc, cn )
 
             else
@@ -2353,7 +2367,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                         IPCondition.ParseUserInput ( fadr.Value, fmask.Value )
                 if condType.IsNone then
                     m_Messages.GetMessage( "CMDMSG_PARAMVAL_INVALID_PARAM_PATTERN" )
-                    |> m_OutFile.WriteLine
+                    |> this.Output 0
                     return Some ( ss, cc, cn )
                 else
                     match cn with
@@ -2361,7 +2375,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                         let oldVal = crNode.GetConfigureData()
                         if oldVal.RemoteCtrl.Value.WhiteList.Length >= Constants.MAX_IP_WHITELIST_COUNT then
                             m_Messages.GetMessage( "CHKMSG_IP_WHITELIST_TOO_LONG", ( sprintf "%d" Constants.MAX_IP_WHITELIST_COUNT ) )
-                            |> m_OutFile.WriteLine
+                            |> this.Output 0
                             return Some ( ss, cc, cn )
                         else
                             let nextVal = {
@@ -2372,12 +2386,12 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                                     }
                             }
                             let n = ss.UpdateControllerNode nextVal
-                            fprintfn m_OutFile "IP white list updated"
+                            this.Output 0 "IP white list updated"
                             return Some ( ss, cc, ( n :> IConfigureNode ) )
                     | :? ConfNode_NetworkPortal as npNode ->
                         if npNode.NetworkPortal.WhiteList.Length >= Constants.MAX_IP_WHITELIST_COUNT then
                             m_Messages.GetMessage( "CHKMSG_IP_WHITELIST_TOO_LONG", ( sprintf "%d" Constants.MAX_IP_WHITELIST_COUNT ) )
-                            |> m_OutFile.WriteLine
+                            |> this.Output 0
                             return Some ( ss, cc, cn )
                         else
                             let nextVal = {
@@ -2386,7 +2400,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                             }
                             do! ss.CheckTargetDeviceUnloaded cc cn
                             let n = ss.UpdateNetworkPortalNode npNode nextVal
-                            fprintfn m_OutFile "IP white list updated"
+                            this.Output 0 "IP white list updated"
                             return Some ( ss, cc, ( n :> IConfigureNode ) )
                     | _ ->
                         raise <| Exception "Unexpected error."
@@ -2408,7 +2422,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be ConfNode_NetworkPortal or ConfNode_Controller.
     /// </param>
-    member private _.Command_Clear_IPWhiteList
+    member private this.Command_Clear_IPWhiteList
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task< ( ServerStatus * CtrlConnection * IConfigureNode ) option > =
 
@@ -2424,7 +2438,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                         }
                 }
                 let n = ss.UpdateControllerNode nextVal
-                fprintfn m_OutFile "IP white list cleared"
+                this.Output 0 "IP white list cleared"
                 return Some ( ss, cc, ( n :> IConfigureNode ) )
             | :? ConfNode_NetworkPortal as npNode ->
                 let nextVal = {
@@ -2433,7 +2447,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 }
                 do! ss.CheckTargetDeviceUnloaded cc cn
                 let n = ss.UpdateNetworkPortalNode npNode nextVal
-                fprintfn m_OutFile "IP white list cleared"
+                this.Output 0 "IP white list cleared"
                 return Some ( ss, cc, ( n :> IConfigureNode ) )
             | _ ->
                 raise <| Exception "Unexpected error."
@@ -2455,7 +2469,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be ConfNode_TargetGroup or its descendants.
     /// </param>
-    member private _.Command_Load
+    member private this.Command_Load
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
 
@@ -2467,9 +2481,9 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 let tdNodeId = tdnode.Value.TargetDeviceID
                 if List.exists ( (=) tdNodeId ) tdlist then
                     do! cc.LoadTargetGroup tdnode.Value.TargetDeviceID tgnode.Value.TargetGroupID
-                    fprintfn m_OutFile "Loaded : %s" ( tgnode.Value :> IConfigureNode ).ShortDescriptString
+                    this.Output 0 ( sprintf "Loaded : %s" ( tgnode.Value :> IConfigureNode ).ShortDescriptString )
                 else
-                    fprintfn m_OutFile "%s" ( m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" ) )
+                    this.Output 0 ( sprintf "%s" ( m_Messages.GetMessage "ERRMSG_TARGET_DEVICE_NOT_RUNNING" ) )
             else
                 raise <| Exception "Unexpected error."
         }
@@ -2489,7 +2503,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be ConfNode_TargetGroup node.
     /// </param>
-    member private _.Command_Unload
+    member private this.Command_Unload
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
 
@@ -2501,9 +2515,9 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 let tdNodeId = tdnode.Value.TargetDeviceID
                 if List.exists ( (=) tdNodeId ) tdlist then
                     do! cc.UnloadTargetGroup tdnode.Value.TargetDeviceID tgnode.Value.TargetGroupID
-                    fprintfn m_OutFile "Unloaded : %s" ( tgnode.Value :> IConfigureNode ).ShortDescriptString
+                    this.Output 0( sprintf "Unloaded : %s" ( tgnode.Value :> IConfigureNode ).ShortDescriptString )
                 else
-                    fprintfn m_OutFile "%s" ( m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" ) )
+                    this.Output 0 ( sprintf "%s" ( m_Messages.GetMessage "ERRMSG_TARGET_DEVICE_NOT_RUNNING" ) )
             else
                 raise <| Exception "Unexpected error."
         }
@@ -2523,7 +2537,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be ConfNode_TargetGroup node.
     /// </param>
-    member private _.Command_Activate
+    member private this.Command_Activate
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
 
@@ -2535,9 +2549,9 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 let tdNodeId = tdnode.Value.TargetDeviceID
                 if List.exists ( (=) tdNodeId ) tdlist then
                     do! cc.ActivateTargetGroup tdnode.Value.TargetDeviceID tgnode.Value.TargetGroupID
-                    fprintfn m_OutFile "Activated : %s" ( tgnode.Value :> IConfigureNode ).ShortDescriptString
+                    this.Output 0 ( sprintf "Activated : %s" ( tgnode.Value :> IConfigureNode ).ShortDescriptString )
                 else
-                    fprintfn m_OutFile "%s" ( m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" ) )
+                    this.Output 0 ( sprintf "%s" ( m_Messages.GetMessage "ERRMSG_TARGET_DEVICE_NOT_RUNNING" ) )
             else
                 raise <| Exception "Unexpected error."
         }
@@ -2557,7 +2571,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be ConfNode_TargetGroup node.
     /// </param>
-    member private _.Command_Inactivate
+    member private this.Command_Inactivate
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
 
@@ -2569,9 +2583,9 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 let tdNodeId = tdnode.Value.TargetDeviceID
                 if List.exists ( (=) tdNodeId ) tdlist then
                     do! cc.InactivateTargetGroup tdnode.Value.TargetDeviceID tgnode.Value.TargetGroupID
-                    fprintfn m_OutFile "Inactivated : %s" ( tgnode.Value :> IConfigureNode ).ShortDescriptString
+                    this.Output 0 ( sprintf "Inactivated : %s" ( tgnode.Value :> IConfigureNode ).ShortDescriptString )
                 else
-                    fprintfn m_OutFile "%s" ( m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" ) )
+                    this.Output 0 ( sprintf "%s" ( m_Messages.GetMessage "ERRMSG_TARGET_DEVICE_NOT_RUNNING" ) )
             else
                 raise <| Exception "Unexpected error."
         }
@@ -2591,7 +2605,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be ConfNode_TargetGroup node.
     /// </param>
-    member private _.Command_Create_Target
+    member private this.Command_Create_Target
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
 
@@ -2621,7 +2635,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 |> List.length
             if childCount >= int ClientConst.MAX_CHILD_NODE_COUNT then
                 m_Messages.GetMessage( "CMDMSG_TOO_MANY_CHILD" )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
             else
                 let conf : TargetGroupConf.T_Target = {
                     IdentNumber = newIdent;
@@ -2633,7 +2647,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 }
                 do! ss.CheckTargetGroupUnloaded cc cn
                 let newnode = ss.AddTargetNode tgnode conf
-                fprintfn m_OutFile "Created : %s" ( newnode :> IConfigureNode ).ShortDescriptString
+                this.Output 0 ( sprintf "Created : %s" ( newnode :> IConfigureNode ).ShortDescriptString )
         }
 
     /// <summary>
@@ -2651,7 +2665,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be ConfNode_Target node.
     /// </param>
-    member private _.Command_SetChap
+    member private this.Command_SetChap
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task<( ServerStatus * CtrlConnection * IConfigureNode ) option> =
 
@@ -2676,7 +2690,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             }
             do! ss.CheckTargetGroupUnloaded cc cn
             let nedNode = ss.UpdateTargetNode tnode conf :> IConfigureNode
-            fprintfn m_OutFile "Set CHAP authentication : %s" nedNode.ShortDescriptString
+            this.Output 0 ( sprintf "Set CHAP authentication : %s" nedNode.ShortDescriptString )
             return Some ( ss, cc, nedNode )
         }
 
@@ -2695,7 +2709,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be ConfNode_Target node.
     /// </param>
-    member private _.Command_UnsetAuth
+    member private this.Command_UnsetAuth
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
 
@@ -2707,7 +2721,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             }
             do! ss.CheckTargetGroupUnloaded cc cn
             let nedNode = ss.UpdateTargetNode tnode conf
-            fprintfn m_OutFile "Authentication reset : %s" ( nedNode :> IConfigureNode ).ShortDescriptString
+            this.Output 0 ( sprintf "Authentication reset : %s" ( nedNode :> IConfigureNode ).ShortDescriptString )
         }
 
     /// <summary>
@@ -2725,7 +2739,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be ConfNode_Target node.
     /// </param>
-    member private _.Command_Create_LU
+    member private this.Command_Create_LU
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
 
@@ -2733,19 +2747,19 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             let tnode = cn :?> ConfNode_Target
             match cmd.NamedLUN "/l" with
             | None ->
-                m_OutFile.WriteLine( m_Messages.GetMessage "CMDMSG_ADDPARAM_LUN" )
+                this.Output 0 ( m_Messages.GetMessage "CMDMSG_ADDPARAM_LUN" )
             | Some lun ->
                 let childCount = 
                     ( tnode :> IConfigureNode ).GetChildNodes<IConfigureNode>()
                     |> List.length
                 if childCount >= int ClientConst.MAX_CHILD_NODE_COUNT then
                     m_Messages.GetMessage( "CMDMSG_TOO_MANY_CHILD" )
-                    |> m_OutFile.WriteLine
+                    |> this.Output 0
                 else
                     let luname = cmd.DefaultNamedString "/n" ( sprintf "LU_%d" ( lun_me.toPrim lun ) )
                     do! ss.CheckTargetGroupUnloaded cc cn
                     let newnode = ss.AddBlockDeviceLUNode tnode lun luname
-                    fprintfn m_OutFile "Created : %s" ( newnode :> IConfigureNode ).ShortDescriptString
+                    this.Output 0 ( sprintf "Created : %s" ( newnode :> IConfigureNode ).ShortDescriptString )
         }
 
     /// <summary>
@@ -2763,7 +2777,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be ConfNode_Target node.
     /// </param>
-    member private _.Command_Attach
+    member private this.Command_Attach
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
 
@@ -2774,22 +2788,22 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
             match cmd.NamedLUN "/l" with
             | None ->
-                m_OutFile.WriteLine( m_Messages.GetMessage "CMDMSG_ADDPARAM_LUN" )
+                this.Output 0 ( m_Messages.GetMessage "CMDMSG_ADDPARAM_LUN" )
             | Some lun ->
                 match lunodes |> Seq.tryFind ( _.LUN >> (=) lun ) with
                 | None ->
-                    m_OutFile.WriteLine( m_Messages.GetMessage "CMDMSG_ADDPARAM_MISSING_LUN" )
+                    this.Output 0 ( m_Messages.GetMessage "CMDMSG_ADDPARAM_MISSING_LUN" )
                 | Some x ->
                     let childCount = 
                         ( tnode :> IConfigureNode ).GetChildNodes<IConfigureNode>()
                         |> List.length
                     if childCount >= int ClientConst.MAX_CHILD_NODE_COUNT then
                         m_Messages.GetMessage( "CMDMSG_TOO_MANY_CHILD" )
-                        |> m_OutFile.WriteLine
+                        |> this.Output 0
                     else
                         do! ss.CheckTargetGroupUnloaded cc cn
                         ss.AddTargetLURelation tnode x
-                        fprintfn m_OutFile "Attach LU : %s" ( tnode :> IConfigureNode ).ShortDescriptString
+                        this.Output 0 ( sprintf "Attach LU : %s" ( tnode :> IConfigureNode ).ShortDescriptString )
         }
 
     /// <summary>
@@ -2807,7 +2821,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be ConfNode_Target node.
     /// </param>
-    member private _.Command_Detach
+    member private this.Command_Detach
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
 
@@ -2817,15 +2831,15 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
             match cmd.NamedLUN "/l" with
             | None ->
-                m_OutFile.WriteLine( m_Messages.GetMessage "CMDMSG_ADDPARAM_LUN" )
+                this.Output 0 ( m_Messages.GetMessage "CMDMSG_ADDPARAM_LUN" )
             | Some lun ->
                 match lunodes |> Seq.tryFind ( _.LUN >> (=) lun ) with
                 | None ->
-                    m_OutFile.WriteLine( m_Messages.GetMessage "CMDMSG_ADDPARAM_MISSING_LUN" )
+                    this.Output 0 ( m_Messages.GetMessage "CMDMSG_ADDPARAM_MISSING_LUN" )
                 | Some x ->
                     do! ss.CheckTargetGroupUnloaded cc cn
                     ss.DeleteTargetLURelation tnode x
-                    fprintfn m_OutFile "Detach LU : %s" ( tnode :> IConfigureNode ).ShortDescriptString
+                    this.Output 0 ( sprintf "Detach LU : %s" ( tnode :> IConfigureNode ).ShortDescriptString )
         }
 
     /// <summary>
@@ -2843,7 +2857,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be LU or media node.
     /// </param>
-    member private _.Command_Create_Media_PlainFile
+    member private this.Command_Create_Media_PlainFile
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
@@ -2862,7 +2876,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             let childCount =  cn.GetChildNodes<IConfigureNode>() |> List.length
             if childCount >= int ClientConst.MAX_CHILD_NODE_COUNT then
                 m_Messages.GetMessage( "CMDMSG_TOO_MANY_CHILD" )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
             else
                 // create
                 let conf : TargetGroupConf.T_PlainFile = {
@@ -2875,7 +2889,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 }
                 do! ss.CheckTargetGroupUnloaded cc cn
                 let newnode = ss.AddPlainFileMediaNode cn conf
-                fprintfn m_OutFile "Created : %s" ( newnode :> IConfigureNode ).ShortDescriptString
+                this.Output 0 ( sprintf "Created : %s" ( newnode :> IConfigureNode ).ShortDescriptString )
         }
 
     /// <summary>
@@ -2893,7 +2907,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be LU or media node.
     /// </param>
-    member private _.Command_Create_Media_MemBuffer
+    member private this.Command_Create_Media_MemBuffer
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
@@ -2912,7 +2926,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             let childCount =  cn.GetChildNodes<IConfigureNode>() |> List.length
             if childCount >= int ClientConst.MAX_CHILD_NODE_COUNT then
                 m_Messages.GetMessage( "CMDMSG_TOO_MANY_CHILD" )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
             else
                 // create
                 let conf : TargetGroupConf.T_MemBuffer = {
@@ -2922,7 +2936,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 }
                 do! ss.CheckTargetGroupUnloaded cc cn
                 let newnode = ss.AddMemBufferMediaNode cn conf
-                fprintfn m_OutFile "Created : %s" ( newnode :> IConfigureNode ).ShortDescriptString
+                this.Output 0 ( sprintf "Created : %s" ( newnode :> IConfigureNode ).ShortDescriptString )
         }
 
     /// <summary>
@@ -2940,7 +2954,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be LU or media node.
     /// </param>
-    member private _.Command_Create_Media_Debug
+    member private this.Command_Create_Media_Debug
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
@@ -2956,12 +2970,12 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             let childCount =  cn.GetChildNodes<IConfigureNode>() |> List.length
             if childCount >= int ClientConst.MAX_CHILD_NODE_COUNT then
                 m_Messages.GetMessage( "CMDMSG_TOO_MANY_CHILD" )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
             else
                 // create
                 do! ss.CheckTargetGroupUnloaded cc cn
                 let newnode = ss.AddDebugMediaNode cn newIdent ""
-                fprintfn m_OutFile "Created : %s" ( newnode :> IConfigureNode ).ShortDescriptString
+                this.Output 0 ( sprintf "Created : %s" ( newnode :> IConfigureNode ).ShortDescriptString )
         }
 
     /// <summary>
@@ -2979,7 +2993,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be LU or media node.
     /// </param>
-    member private _.Command_InitMedia_PlainFile
+    member private this.Command_InitMedia_PlainFile
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
@@ -2988,7 +3002,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
             // Start init media process
             let! pid = cc.CreateMediaFile_PlainFile fname fbytes
-            fprintfn m_OutFile "Started : ProcID=%d" pid
+            this.Output 0 ( sprintf "Started : ProcID=%d" pid )
         }
 
     /// <summary>
@@ -3006,7 +3020,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be LU or media node.
     /// </param>
-    member private _.Command_IMStatus
+    member private this.Command_IMStatus
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
@@ -3026,9 +3040,8 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     | HarukaCtrlerCtrlRes.U_AbnormalEnd( _ ) ->
                                 "Failed       "
                     
-                fprintfn m_OutFile "ProcID=%d, %s, %s, %s" itr.ProcID statStr itr.FileType itr.PathName
-                for itr2 in itr.ErrorMessage do
-                    fprintfn m_OutFile "    %s" itr2
+                this.Output 0 ( sprintf "ProcID=%d, %s, %s, %s" itr.ProcID statStr itr.FileType itr.PathName )
+                itr.ErrorMessage |> List.iter ( this.Output 1 )
         }
 
     /// <summary>
@@ -3046,7 +3059,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be LU or media node.
     /// </param>
-    member private _.Command_IMKill
+    member private this.Command_IMKill
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
@@ -3054,7 +3067,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
             // Terminate init media process status
             do! cc.KillInitMediaProc pid
-            fprintfn m_OutFile "Terminated : %d" pid
+            this.Output 0 ( sprintf "Terminated : %d" pid )
         }
 
     /// <summary>
@@ -3072,7 +3085,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be LU or media node.
     /// </param>
-    member private _.Command_Sessions
+    member private this.Command_Sessions
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
@@ -3097,28 +3110,28 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                             raise <| Exception "Unexpected error."
 
                     for itrs in sessList do
-                        fprintfn m_OutFile "Session( TSIH : %d )" ( tsih_me.toPrim itrs.TSIH )
-                        fprintfn m_OutFile "  I_T Nexus       : %s" ( itrs.ITNexus.ToString() )
-                        fprintfn m_OutFile "  Target group ID : %s" ( tgid_me.toString itrs.TargetGroupID )
-                        fprintfn m_OutFile "  Target node ID  : %d" ( tnodeidx_me.toPrim itrs.TargetNodeID )
-                        fprintfn m_OutFile "  Establish time  : %s" ( itrs.EstablishTime.ToString( "YYYY/MM/DD hh:mm:ss" ) )
-                        fprintfn m_OutFile "  Session parameters : {" 
-                        fprintfn m_OutFile "    MaxConnections      : %d" ( itrs.SessionParameters.MaxConnections )
-                        fprintfn m_OutFile "    InitiatorAlias      : %s" ( itrs.SessionParameters.InitiatorAlias )
-                        fprintfn m_OutFile "    InitialR2T          : %b" ( itrs.SessionParameters.InitialR2T )
-                        fprintfn m_OutFile "    ImmediateData       : %b" ( itrs.SessionParameters.ImmediateData )
-                        fprintfn m_OutFile "    MaxBurstLength      : %d" ( itrs.SessionParameters.MaxBurstLength )
-                        fprintfn m_OutFile "    FirstBurstLength    : %d" ( itrs.SessionParameters.FirstBurstLength )
-                        fprintfn m_OutFile "    DefaultTime2Wait    : %d" ( itrs.SessionParameters.DefaultTime2Wait )
-                        fprintfn m_OutFile "    DefaultTime2Retain  : %d" ( itrs.SessionParameters.DefaultTime2Retain )
-                        fprintfn m_OutFile "    MaxOutstandingR2T   : %d" ( itrs.SessionParameters.MaxOutstandingR2T )
-                        fprintfn m_OutFile "    DataPDUInOrder      : %b" ( itrs.SessionParameters.DataPDUInOrder )
-                        fprintfn m_OutFile "    DataSequenceInOrder : %b" ( itrs.SessionParameters.DataSequenceInOrder )
-                        fprintfn m_OutFile "    ErrorRecoveryLevel  : %d" ( itrs.SessionParameters.ErrorRecoveryLevel )
-                        fprintfn m_OutFile "  }" 
+                        this.Output 0 ( sprintf "Session( TSIH : %d )" ( tsih_me.toPrim itrs.TSIH ) )
+                        this.Output 1 ( sprintf "I_T Nexus       : %s" ( itrs.ITNexus.ToString() ) )
+                        this.Output 1 ( sprintf "Target group ID : %s" ( tgid_me.toString itrs.TargetGroupID ) )
+                        this.Output 1 ( sprintf "Target node ID  : %d" ( tnodeidx_me.toPrim itrs.TargetNodeID ) )
+                        this.Output 1 ( sprintf "Establish time  : %s" ( itrs.EstablishTime.ToString( "YYYY/MM/DD hh:mm:ss" ) ) )
+                        this.Output 1 ( sprintf "Session parameters : {"  )
+                        this.Output 2 ( sprintf "MaxConnections      : %d" ( itrs.SessionParameters.MaxConnections ) )
+                        this.Output 2 ( sprintf "InitiatorAlias      : %s" ( itrs.SessionParameters.InitiatorAlias ) )
+                        this.Output 2 ( sprintf "InitialR2T          : %b" ( itrs.SessionParameters.InitialR2T ) )
+                        this.Output 2 ( sprintf "ImmediateData       : %b" ( itrs.SessionParameters.ImmediateData ) )
+                        this.Output 2 ( sprintf "MaxBurstLength      : %d" ( itrs.SessionParameters.MaxBurstLength ) )
+                        this.Output 2 ( sprintf "FirstBurstLength    : %d" ( itrs.SessionParameters.FirstBurstLength ) )
+                        this.Output 2 ( sprintf "DefaultTime2Wait    : %d" ( itrs.SessionParameters.DefaultTime2Wait ) )
+                        this.Output 2 ( sprintf "DefaultTime2Retain  : %d" ( itrs.SessionParameters.DefaultTime2Retain ) )
+                        this.Output 2 ( sprintf "MaxOutstandingR2T   : %d" ( itrs.SessionParameters.MaxOutstandingR2T ) )
+                        this.Output 2 ( sprintf "DataPDUInOrder      : %b" ( itrs.SessionParameters.DataPDUInOrder ) )
+                        this.Output 2 ( sprintf "DataSequenceInOrder : %b" ( itrs.SessionParameters.DataSequenceInOrder ) )
+                        this.Output 2 ( sprintf "ErrorRecoveryLevel  : %d" ( itrs.SessionParameters.ErrorRecoveryLevel ) )
+                        this.Output 1 ( sprintf "}"  )
                 else
                     m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
-                    |> m_OutFile.WriteLine
+                    |> this.Output 0
         }
 
     /// <summary>
@@ -3136,7 +3149,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be LU or media node.
     /// </param>
-    member private _.Command_SessKill
+    member private this.Command_SessKill
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
@@ -3150,10 +3163,10 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             elif List.exists ( (=) tdnoe.Value.TargetDeviceID ) tdlist then
                 let tsihv = tsih_me.fromPrim ( uint16 tsih.Value )
                 do! cc.DestructSession tdnoe.Value.TargetDeviceID tsihv
-                fprintfn m_OutFile "Session terminated. TSIH : %d" tsih.Value
+                this.Output 0( sprintf "Session terminated. TSIH : %d" tsih.Value )
             else
                 m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
         }
 
     /// <summary>
@@ -3171,7 +3184,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be LU or media node.
     /// </param>
-    member private _.Command_Connections
+    member private this.Command_Connections
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
@@ -3203,30 +3216,30 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                                 raise <| Exception "Unexpected error."
 
                     conList |> List.iter ( fun itrc ->
-                        fprintfn m_OutFile "Connection( CID : %d, Counter : %d )" ( cid_me.toPrim itrc.ConnectionID ) ( concnt_me.toPrim itrc.ConnectionCount )
-                        fprintfn m_OutFile "  TSIH       : %d" ( tsih_me.toPrim itrc.TSIH )
-                        fprintfn m_OutFile "  Establish time  : %s" ( itrc.EstablishTime.ToString( "YYYY/MM/DD hh:mm:ss" ) )
-                        fprintfn m_OutFile "  Connection parameters : {" 
-                        fprintfn m_OutFile "    AuthMethod                          : %s" ( itrc.ConnectionParameters.AuthMethod )
-                        fprintfn m_OutFile "    HeaderDigest                        : %s" ( itrc.ConnectionParameters.HeaderDigest )
-                        fprintfn m_OutFile "    DataDigest                          : %s" ( itrc.ConnectionParameters.DataDigest )
-                        fprintfn m_OutFile "    MaxRecvDataSegmentLength(Initiator) : %d" ( itrc.ConnectionParameters.MaxRecvDataSegmentLength_I )
-                        fprintfn m_OutFile "    MaxRecvDataSegmentLength(Target)    : %d" ( itrc.ConnectionParameters.MaxRecvDataSegmentLength_T )
-                        fprintfn m_OutFile "  }"
-                        fprintfn m_OutFile "  Usage( Time, Recv Bytes/s, Send Bytes/s )"
+                        this.Output 0 ( sprintf "Connection( CID : %d, Counter : %d )" ( cid_me.toPrim itrc.ConnectionID ) ( concnt_me.toPrim itrc.ConnectionCount ) )
+                        this.Output 1 ( sprintf "TSIH       : %d" ( tsih_me.toPrim itrc.TSIH ) )
+                        this.Output 1 ( sprintf "Establish time  : %s" ( itrc.EstablishTime.ToString( "YYYY/MM/DD hh:mm:ss" ) ) )
+                        this.Output 1 ( sprintf "Connection parameters : {"  )
+                        this.Output 2 ( sprintf "AuthMethod                          : %s" ( itrc.ConnectionParameters.AuthMethod ) )
+                        this.Output 2 ( sprintf "HeaderDigest                        : %s" ( itrc.ConnectionParameters.HeaderDigest ) )
+                        this.Output 2 ( sprintf "DataDigest                          : %s" ( itrc.ConnectionParameters.DataDigest ) )
+                        this.Output 2 ( sprintf "MaxRecvDataSegmentLength(Initiator) : %d" ( itrc.ConnectionParameters.MaxRecvDataSegmentLength_I ) )
+                        this.Output 2 ( sprintf "MaxRecvDataSegmentLength(Target)    : %d" ( itrc.ConnectionParameters.MaxRecvDataSegmentLength_T ) )
+                        this.Output 1 ( sprintf "}" )
+                        this.Output 1 ( sprintf "Usage( Time, Recv Bytes/s, Send Bytes/s )" )
                         let usageseq = Functions.PairByIndex [| itrc.ReceiveBytesCount; itrc.SentBytesCount |] ( fun i -> i.Time ) ( fun i -> i.Value )
                         usageseq
                         |> Seq.iter ( fun ( us_dt, us_val ) ->
                             let dtstr = us_dt.ToString( "YYYY/MM/DD hh:mm:ss" )
                             let recvval = ( Option.defaultValue 0L us_val.[0] ) / Constants.RECOUNTER_SPAN_SEC
                             let sendval = ( Option.defaultValue 0L us_val.[1] ) / Constants.RECOUNTER_SPAN_SEC
-                            fprintfn m_OutFile "    %s, %d, %d" dtstr recvval sendval
+                            this.Output 2 ( sprintf "%s, %d, %d" dtstr recvval sendval )
                         )
                     )
 
                 else
                     m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
-                    |> m_OutFile.WriteLine
+                    |> this.Output 0
         }
 
     /// <summary>
@@ -3244,7 +3257,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be LU or media node.
     /// </param>
-    member private _.Command_LUStatus
+    member private this.Command_LUStatus
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
@@ -3257,10 +3270,10 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 match cn with
                 | :? ILUNode as x ->
                     let! lustat = cc.GetLUStatus tdnode.Value.TargetDeviceID x.LUN
-                    fprintfn m_OutFile "LU Status( LUN : %s )" ( lun_me.toString x.LUN )
+                    this.Output 0 ( sprintf "LU Status( LUN : %s )" ( lun_me.toString x.LUN ) )
 
                     if lustat.ACAStatus.IsNone then
-                        fprintfn m_OutFile "  ACA : None"
+                        this.Output 1 "ACA : None"
                     else
                         let statusCodeStr =
                             lustat.ACAStatus.Value.StatusCode
@@ -3274,15 +3287,15 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                             lustat.ACAStatus.Value.AdditionalSenseCode
                             |> Microsoft.FSharp.Core.LanguagePrimitives.EnumOfValue< uint16, ASCCd >
                             |> Constants.getAscAndAscqNameFromValue
-                        fprintfn m_OutFile "  ACA : {"
-                        fprintfn m_OutFile "    I_T Nexus : %s" ( lustat.ACAStatus.Value.ITNexus.ToString() )
-                        fprintfn m_OutFile "    Status Code : %s" statusCodeStr
-                        fprintfn m_OutFile "    Sense Key : %s" senseKeyStr
-                        fprintfn m_OutFile "    Additional Sense Code : %s" ascStr
-                        fprintfn m_OutFile "    Current : %b" lustat.ACAStatus.Value.IsCurrent
-                        fprintfn m_OutFile "  }"
+                        this.Output 1 ( sprintf "ACA : {" )
+                        this.Output 2 ( sprintf "I_T Nexus : %s" ( lustat.ACAStatus.Value.ITNexus.ToString() ) )
+                        this.Output 2 ( sprintf "Status Code : %s" statusCodeStr )
+                        this.Output 2 ( sprintf "Sense Key : %s" senseKeyStr )
+                        this.Output 2 ( sprintf "Additional Sense Code : %s" ascStr )
+                        this.Output 2 ( sprintf "Current : %b" lustat.ACAStatus.Value.IsCurrent )
+                        this.Output 1 ( sprintf "}" )
 
-                    fprintfn m_OutFile "  Usage( Time, Read Bytes/s, Written Bytes/s, Avg Read Sec, Avg Write Sec )"
+                    this.Output 1 "Usage( Time, Read Bytes/s, Written Bytes/s, Avg Read Sec, Avg Write Sec )"
                     let usageseq =
                         Functions.PairByIndex
                             [| lustat.ReadBytesCount; lustat.WrittenBytesCount; lustat.ReadTickCount; lustat.WriteTickCount |]
@@ -3297,13 +3310,13 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                             ( float ( Option.defaultValue 0L us_val.[2] ) ) / ( float ( Constants.RECOUNTER_SPAN_SEC * Stopwatch.Frequency ) )
                         let avgWriteSec =
                             ( float ( Option.defaultValue 0L us_val.[3] ) ) / ( float ( Constants.RECOUNTER_SPAN_SEC * Stopwatch.Frequency ) )
-                        fprintfn m_OutFile "    %s, %d, %d, %f, %f" dtstr readBytesSec writtenBytesSec avgReadSec avgWriteSec
+                        this.Output 2 ( sprintf "%s, %d, %d, %f, %f" dtstr readBytesSec writtenBytesSec avgReadSec avgWriteSec )
                     )
                 | _ ->
                     raise <| Exception "Unexpected error."
             else
                 m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
         }
 
     /// <summary>
@@ -3321,7 +3334,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be LU or media node.
     /// </param>
-    member private _.Command_LUReset
+    member private this.Command_LUReset
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
@@ -3334,12 +3347,12 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 match cn with
                 | :? ILUNode as x ->
                     do! cc.LUReset tdnoe.Value.TargetDeviceID x.LUN
-                    fprintfn m_OutFile "LU Reseted"
+                    this.Output 0 "LU Reseted"
                 | _ ->
                     raise <| Exception "Unexpected error."
             else
                 m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
         }
 
     /// <summary>
@@ -3357,7 +3370,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be LU or media node.
     /// </param>
-    member private _.Command_MediaStatus
+    member private this.Command_MediaStatus
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
@@ -3371,8 +3384,8 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 match cn with
                 | :? IMediaNode as x ->
                     let! mediaStat = cc.GetMediaStatus tdnoe.Value.TargetDeviceID lunode.Value.LUN x.IdentNumber
-                    fprintfn m_OutFile "Media Status( ID : %d )" ( mediaidx_me.toPrim x.IdentNumber )
-                    fprintfn m_OutFile "  Usage( Time, Read Bytes/s, Written Bytes/s, Avg Read Sec, Avg Write Sec )"
+                    this.Output 0 ( sprintf "Media Status( ID : %d )" ( mediaidx_me.toPrim x.IdentNumber ) )
+                    this.Output 1 "Usage( Time, Read Bytes/s, Written Bytes/s, Avg Read Sec, Avg Write Sec )"
                     let usageseq =
                         Functions.PairByIndex
                             [| mediaStat.ReadBytesCount; mediaStat.WrittenBytesCount; mediaStat.ReadTickCount; mediaStat.WriteTickCount |]
@@ -3387,13 +3400,13 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                             ( float ( Option.defaultValue 0L us_val.[2] ) ) / ( float ( Constants.RECOUNTER_SPAN_SEC * Stopwatch.Frequency ) )
                         let avgWriteSec =
                             ( float ( Option.defaultValue 0L us_val.[3] ) ) / ( float ( Constants.RECOUNTER_SPAN_SEC * Stopwatch.Frequency ) )
-                        fprintfn m_OutFile "    %s, %d, %d, %f, %f" dtstr readBytesSec writtenBytesSec avgReadSec avgWriteSec
+                        this.Output 2 ( sprintf "%s, %d, %d, %f, %f" dtstr readBytesSec writtenBytesSec avgReadSec avgWriteSec )
                     )
                 | _ ->
                     raise <| Exception "Unexpected error."
             else
                 m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
         }
 
     /// <summary>
@@ -3411,7 +3424,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be LU or media node.
     /// </param>
-    member private _.Command_AddTrap
+    member private this.Command_AddTrap
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
 
@@ -3460,12 +3473,12 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 match cn with
                 | :? ConfNode_DebugMedia as x ->
                     do! cc.DebugMedia_AddTrap tdnoe.Value.TargetDeviceID lunode.Value.LUN ( x :> IMediaNode ).IdentNumber eventVal actionVal
-                    fprintfn m_OutFile "Trap added."
+                    this.Output 0 "Trap added."
                 | _ ->
                     raise <| Exception "Unexpected error."
             else
                 m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
         }
 
     /// <summary>
@@ -3483,7 +3496,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be LU or media node.
     /// </param>
-    member private _.Command_ClearTrap
+    member private this.Command_ClearTrap
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
@@ -3497,12 +3510,12 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 match cn with
                 | :? ConfNode_DebugMedia as x ->
                     do! cc.DebugMedia_ClearTraps tdnoe.Value.TargetDeviceID lunode.Value.LUN ( x :> IMediaNode ).IdentNumber
-                    fprintfn m_OutFile "Traps cleared."
+                    this.Output 0 "Traps cleared."
                 | _ ->
                     raise <| Exception "Unexpected error."
             else
                 m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
         }
 
     /// <summary>
@@ -3520,7 +3533,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="cn">
     ///  Current node. cn must be LU or media node.
     /// </param>
-    member private _.Command_Traps
+    member private this.Command_Traps
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
@@ -3535,7 +3548,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 | :? ConfNode_DebugMedia as x ->
                     let mediaidx = ( x :> IMediaNode ).IdentNumber
                     let! tlist = cc.DebugMedia_GetAllTraps tdnoe.Value.TargetDeviceID lunode.Value.LUN mediaidx
-                    fprintfn m_OutFile "Registered traps( ID : %d )" ( mediaidx_me.toPrim mediaidx )
+                    this.Output 0 ( sprintf "Registered traps( ID : %d )" ( mediaidx_me.toPrim mediaidx ) )
                     for itr in tlist do
                         let eventStr =
                             match itr.Event with
@@ -3559,11 +3572,10 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                                 sprintf "Count( Index=%d, Count=%d )" x.Index x.Value
                             | MediaCtrlRes.U_Delay( x ) ->
                                 sprintf "Delay( MiliSec=%d )" x
-                        fprintfn m_OutFile "  %s : %s" eventStr actionStr
+                        this.Output 1 ( sprintf "%s : %s" eventStr actionStr )
                 | _ ->
                     raise <| Exception "Unexpected error."
             else
                 m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
-                |> m_OutFile.WriteLine
+                |> this.Output 0
         }
-
