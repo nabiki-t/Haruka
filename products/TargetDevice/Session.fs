@@ -666,9 +666,11 @@ type Session
         // ------------------------------------------------------------------------
         // Unlock response fence.
         override _.NoticeUnlockResponseFence ( mode : ResponseFenceNeedsFlag ) : unit =
-            if HLogger.IsVerbose then
+            HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g ->
                 let smode = ResponseFenceNeedsFlag.toString mode
-                HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( m_ObjID, "Session.NoticeUnlockResponseFence. mode=" + smode ) )
+                let msg = sprintf "Session.NoticeUnlockResponseFence. mode=%s, Current LockStatus=%d, Current Count=%d" smode m_RespFense.LockStatus m_RespFense.Count
+                g.Gen1( m_ObjID, msg )
+            )
             m_RespFense.Free()
 
     //=========================================================================
@@ -1462,6 +1464,10 @@ type Session
     ///   send pdu type.
     /// </param>
     member private _.SendOtherPDU_sub ( cid : CID_T ) ( counter : CONCNT_T ) ( pdu : ILogicalPDU ) ( sendType : SendOtherPDUType ) : unit =
+        HLogger.Trace( LogID.V_TRACE, fun g ->
+            let loginfo = struct ( m_ObjID, ValueSome cid, ValueSome counter, ValueSome m_TSIH, ValueSome pdu.InitiatorTaskTag, ValueNone )
+            g.Gen1( loginfo, sprintf "Send PDU. Opcode=%s" ( Constants.getOpcodeNameFromValue pdu.Opcode ) )
+        )
 
         match m_CIDs.obj.TryGetValue( cid ) with
         | true, cidInfo when cidInfo.Counter = counter ->
@@ -1478,3 +1484,7 @@ type Session
         | _ ->
             ()
 
+        HLogger.Trace( LogID.V_TRACE, fun g ->
+            let loginfo = struct ( m_ObjID, ValueSome cid, ValueSome counter, ValueSome m_TSIH, ValueSome pdu.InitiatorTaskTag, ValueNone )
+            g.Gen1( loginfo, sprintf "AAAAAAAAAA.  LockStatus=%d, Count=%d" m_RespFense.LockStatus m_RespFense.Count )
+        )
