@@ -1255,14 +1255,18 @@ type BlockDeviceLU
                         4   // Responce CA. ACA is not established.
                 else
                     if naca then
+                        HLogger.Trace( LogID.I_ESTABLISH_NEW_ACA, fun g -> g.Gen0 loginfo )
                         3   // Establish new ACA status.
                     else
+                        HLogger.Trace( LogID.I_RESPONSE_WITH_CA_NOT_EST_ACA, fun g -> g.Gen0 loginfo )
                         4   // Responce CA. ACA is not established.
             elif ITNexus.Equals( fst curTS.ACA.Value, source.I_TNexus ) then
                 if command.ATTR = TaskATTRCd.ACA_TASK then
                     if naca then
+                        HLogger.Trace( LogID.I_CLEAR_ACA_AND_EST_NEW_ACA, fun g -> g.Gen0 loginfo )
                         3   // Clear ACA. And new ACA is established.
                     else
+                        HLogger.Trace( LogID.I_CLEAR_ACA_AND_RESPONSE_CA, fun g -> g.Gen0 loginfo )
                         4   // Clear ACA. Response with CA.
                 else
                     HLogger.Trace( LogID.I_NORMAL_TASK_ABORTED_IN_ACA_STAT, fun g -> g.Gen0 loginfo )
@@ -1308,7 +1312,6 @@ type BlockDeviceLU
                     { command with DataSegment = PooledBuffer.Empty },
                     this,
                     m_ModeParameter.D_SENSE,
-                    //iScsiSvcRespCd.TARGET_FAILURE,
                     iScsiSvcRespCd.COMMAND_COMPLETE,
                     ScsiCmdStatCd.CHECK_CONDITION,
                     ex.SenseData
@@ -1328,7 +1331,6 @@ type BlockDeviceLU
                     { command with DataSegment = PooledBuffer.Empty },
                     this,
                     m_ModeParameter.D_SENSE,
-                    //iScsiSvcRespCd.TARGET_FAILURE,
                     iScsiSvcRespCd.COMMAND_COMPLETE,
                     ScsiCmdStatCd.CHECK_CONDITION,
                     ex.SenseData
@@ -1349,7 +1351,6 @@ type BlockDeviceLU
                     this,
                     m_ModeParameter.D_SENSE,
                     iScsiSvcRespCd.TARGET_FAILURE,
-                    //iScsiSvcRespCd.COMMAND_COMPLETE,
                     ScsiCmdStatCd.TASK_ABORTED
                 ) :> IBlockDeviceTask
             {
