@@ -64,8 +64,9 @@ type ClientProc ( address : string, portNumber : int, workPath : string ) =
         let expLineCnt = if expect.Length > 0 then 1 else 0
         let r = this.RunCommandGetResp command expLineCnt nextPrompt
         if expect.Length > 0 then
-            if r.[0].StartsWith expect |> not then
-                raise <| TestException( sprintf "The response is different from what is expected. Expect=%s, Result=%s" expect r.[0] )
+            let resultStr = ( r.[0] ).TrimStart()
+            if resultStr.StartsWith expect |> not then
+                raise <| TestException( sprintf "The response is different from what is expected. Expect=%s, Result=%s" expect resultStr )
         
     member _.RunCommandGetResp ( command : string ) ( lineCnt : int ) ( nextPrompt : string ) : string[] =
         m_Proc.StandardInput.WriteLine command
