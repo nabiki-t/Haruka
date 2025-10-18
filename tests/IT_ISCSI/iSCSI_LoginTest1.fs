@@ -63,7 +63,8 @@ type iSCSI_LoginTest1_Fixture() =
         client.RunCommand "create membuffer /s 32768" "Created" "MD> "
         client.RunCommand "unselect" "" "LU> "
         client.RunCommand "unselect" "" "T > "
-        let rv = client.RunCommandGetResp "values" 15 "T > "
+        let rv = client.RunCommandGetResp "values" "T > "
+        Assert.True(( rv.Length = 15 ))
         client.RunCommand "unselect" "" "TG> "
 
         // target3, LU=2, Initiator auth required, 16KB
