@@ -507,7 +507,7 @@ type Session
 
                 // data length of SCSI response PDU
                 let dataPDUList =
-                    if resData.Count > 0 || mrdsl_I - 2u < realSendDataLength then
+                    if ( resData.Count > 0 || mrdsl_I - 2u < realSendDataLength ) && argRespCode = iScsiSvcRespCd.COMMAND_COMPLETE then
                         // Normal response data that is not sense data, always uses SCSI Data-In PDUs.
                         // Or, if the sense data is longer than MaxRecvDataSegmentLength, use the SCSI Data-In PDU.
 
@@ -547,25 +547,40 @@ type Session
 
                 // Create SCSI response PDU
                 let resp : ILogicalPDU = {
-                    o = if bidirectCmd then
-                            berdl < SPDTL
+                    o = if argRespCode = iScsiSvcRespCd.COMMAND_COMPLETE then
+                            if bidirectCmd then
+                                berdl < SPDTL
+                            else
+                                false
                         else
-                            false;
-                    u = if bidirectCmd then
-                            berdl > SPDTL
+                            false;   // undefined if Response is other than COMMAND COMPLETE.
+                    u = if argRespCode = iScsiSvcRespCd.COMMAND_COMPLETE then
+                            if bidirectCmd then
+                                berdl > SPDTL
+                            else
+                                false
                         else
-                            false;
-                    O = if bidirectCmd || writeOnlyCmd then
-                            edtl < recvDataLength
-                        else 
-                            edtl < SPDTL;
-                    U = if bidirectCmd || writeOnlyCmd then
-                            edtl > recvDataLength
+                            false;  // undefined if Response is other than COMMAND COMPLETE.
+                    O = if argRespCode = iScsiSvcRespCd.COMMAND_COMPLETE then
+                            if bidirectCmd || writeOnlyCmd then
+                                edtl < recvDataLength
+                            else 
+                                edtl < SPDTL
                         else
-                            edtl > SPDTL;
-
+                            false;  // undefined if Response is other than COMMAND COMPLETE.
+                    U = if argRespCode = iScsiSvcRespCd.COMMAND_COMPLETE then
+                            if bidirectCmd || writeOnlyCmd then
+                                edtl > recvDataLength
+                            else
+                                edtl > SPDTL
+                        else
+                            false;  // undefined if Response is other than COMMAND COMPLETE.
                     Response = argRespCode;
-                    Status = argStatCode;
+                    Status = 
+                        if argRespCode = iScsiSvcRespCd.COMMAND_COMPLETE then
+                            argStatCode
+                        else
+                            ScsiCmdStatCd.GOOD; // undefined if Response is other than COMMAND COMPLETE.
                     InitiatorTaskTag = itt;
                     SNACKTag = snacktag_me.zero;
                     StatSN = statsn_me.zero;
@@ -577,34 +592,43 @@ type Session
                     ExpDataSN =
                             datasn_me.fromPrim( uint32 dataPDUList.Length );
                     BidirectionalReadResidualCount =
-                        if bidirectCmd then
-                            if berdl > SPDTL then
-                                berdl - SPDTL
+                        if argRespCode = iScsiSvcRespCd.COMMAND_COMPLETE then
+                            if bidirectCmd then
+                                if berdl > SPDTL then
+                                    berdl - SPDTL
+                                else
+                                    SPDTL - berdl
                             else
-                                SPDTL - berdl
+                                0u
                         else
                             0u;
                     ResidualCount =
-                        if bidirectCmd || writeOnlyCmd then
-                            if edtl > recvDataLength then
-                                edtl - recvDataLength
+                        if argRespCode = iScsiSvcRespCd.COMMAND_COMPLETE then
+                            if bidirectCmd || writeOnlyCmd then
+                                if edtl > recvDataLength then
+                                    edtl - recvDataLength
+                                else
+                                    recvDataLength - edtl
                             else
-                                recvDataLength - edtl
+                                if edtl > SPDTL then
+                                    edtl - SPDTL
+                                else
+                                    SPDTL - edtl
                         else
-                            if edtl > SPDTL then
-                                edtl - SPDTL
-                            else
-                                SPDTL - edtl;
-
+                            0u;
                     SenseLength = uint16 senseData.Count;
                     SenseData = 
-                        if senseData.Count > 0 && mrdsl_I - 2u >= realSendDataLength then
+                        if senseData.Count > 0 && mrdsl_I - 2u >= realSendDataLength && argRespCode = iScsiSvcRespCd.COMMAND_COMPLETE then
                             argSendDataBytes.GetArraySegment 0 ( int realSendDataLength )
                         else
                             ArraySegment.Empty;
                     ResponseData = ArraySegment.Empty; // The response data always uses a SCSI Data-In PDU.
                     ResponseFence = needResponseFence;
-                    DataInBuffer = argSendDataBytes;
+                    DataInBuffer =
+                        if argRespCode = iScsiSvcRespCd.COMMAND_COMPLETE then
+                            argSendDataBytes
+                        else
+                            PooledBuffer.Empty;
                     LUN = reqCmdPDU.LUN;
                 }
 

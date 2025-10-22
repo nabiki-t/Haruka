@@ -5502,26 +5502,10 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             32u
             ResponseFenceNeedsFlag.R_Mode
 
-    [<Fact>]
-    member _.RejectPDUByLogi_001() =
-        let itNexus = new ITNexus( "abcI", isid_me.fromElem 0uy 1uy 2us 3uy 4us, "abcT", tpgt_me.zero )
-        let sessParam = Session_Test.defaultSessionParam
-        let conParam = Session_Test.defaultConnectionParam
-        let killer = new HKiller()
-        let smStub, luStub = Session_Test.GenDefaultStubs()
-
-        // Create session object
-        let sess = new Session( smStub, DateTime.UtcNow, itNexus, tsih_me.fromPrim 0us, sessParam, cmdsn_me.zero, killer ) :> ISession
-        let pc = new PrivateCaller( sess )
-
-        sess.RejectPDUByLogi
-            ( cid_me.fromPrim 1us )     // connection missing
-            ( concnt_me.fromPrim 1 )
-            Session_Test.defaultScsiCommandPDUValues
-            RejectReasonCd.DATA_DIGEST_ERR
-
-    [<Fact>]
-    member _.RejectPDUByLogi_002() =
+    [<Theory>]
+    [<InlineData( 16u, 32, 16u, 32 )>] // Originally, o and O should be 1.
+    [<InlineData( 16u, 8, 16u, 8 )>] // Originally, u and U should be 1.
+    member _.SendSCSIResponse_019 ( edtl : uint ) ( recvLen : int ) ( berdl : uint )  ( respLen : int ) =
         // Create session object
         let sess, pc, killer, smStub, luStub, sp, cp =
             Session_Test.CreateDefaultSessionObject
@@ -5532,27 +5516,54 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 ( itt_me.fromPrim 0u )
                 false
 
-        // Send reject PDU from the target
-        sess.RejectPDUByLogi
+        // SCSI Command PDU
+        let scsicmd = {
+            Session_Test.defaultScsiCommandPDUValues with
+                I = false;
+                F = true;
+                R = true;
+                W = true;
+                CmdSN = cmdsn_me.zero;
+                ExpStatSN = statsn_me.zero;
+                InitiatorTaskTag = itt_me.fromPrim 2u;
+                ExpectedDataTransferLength = edtl;
+                DataSegment = PooledBuffer.RentAndInit recvLen;
+                BidirectionalExpectedReadDataLength = berdl;
+        }
+
+        sess.SendSCSIResponse
+            scsicmd
             ( cid_me.fromPrim 1us )
             ( concnt_me.fromPrim 1 )
-            Session_Test.defaultScsiCommandPDUValues
-            RejectReasonCd.DATA_DIGEST_ERR
+            ( PooledBuffer.ulength scsicmd.DataSegment )
+            iScsiSvcRespCd.TARGET_FAILURE
+            ScsiCmdStatCd.CHECK_CONDITION
+            PooledBuffer.Empty
+            ( PooledBuffer.RentAndInit respLen )
+            32u
+            ResponseFenceNeedsFlag.R_Mode
 
-        // receive Reject PDU in the initiator
+        // receive SCSI response PDU in the initiator
         let pdu3 =
             PDU.Receive( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, cp, Standpoint.Initiator )
             |> Functions.RunTaskSynchronously
-        Assert.True( ( pdu3.Opcode = OpcodeCd.REJECT ) )
-        let rejectpdu1 = pdu3 :?> RejectPDU
+        Assert.True( ( pdu3.Opcode = OpcodeCd.SCSI_RES ) )
+        let scsirespdu3 = pdu3 :?> SCSIResponsePDU
 
-        Assert.True(( rejectpdu1.Reason = RejectReasonCd.DATA_DIGEST_ERR ))
-        Assert.True(( rejectpdu1.StatSN = statsn_me.fromPrim 1u ))
-        Assert.True(( rejectpdu1.HeaderData = PDU.GetHeader( Session_Test.defaultScsiCommandPDUValues ) ))
+        Assert.False( scsirespdu3.o )   // always false
+        Assert.False( scsirespdu3.u )   // always false
+        Assert.False( scsirespdu3.O )   // always false
+        Assert.False( scsirespdu3.U )   // always false
+        Assert.True(( scsirespdu3.ResidualCount = 0u ))                     // always zero
+        Assert.True(( scsirespdu3.BidirectionalReadResidualCount = 0u ))    // always zero
+        Assert.True(( scsirespdu3.SenseData.Count = 0 ))                    // always empty
+        Assert.True(( scsirespdu3.ResponseData.Count = 0 ))                 // always empty
+        Assert.True(( scsirespdu3.Response = iScsiSvcRespCd.TARGET_FAILURE )) 
+        Assert.True(( scsirespdu3.Status = ScsiCmdStatCd.GOOD ))            // always GOOD
+        Assert.True(( PooledBuffer.length scsirespdu3.DataInBuffer = 0 ))   // always empty
 
         sess.DestroySession()
-        sp.Dispose()
-        cp.Dispose()
+        GlbFunc.ClosePorts [| sp; cp; |]
 
     [<Fact>]
     member _.RejectPDUByHeader_001() =
