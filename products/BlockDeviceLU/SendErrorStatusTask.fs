@@ -27,6 +27,7 @@ type SendErrorStatusTask
         m_StatusMaster : IStatus,
         m_Source : CommandSourceInfo,
         m_Command : SCSICommandPDU,
+        m_RecvDataLen : uint,
         m_LU : IInternalLU,
         dSense : bool,
         m_RespCode : iScsiSvcRespCd,
@@ -69,6 +70,10 @@ type SendErrorStatusTask
         override _.SCSICommand : SCSICommandPDU =
             m_Command
 
+        /// Return total received data length in bytes.
+        override _.ReceivedDataLength : uint =
+            m_RecvDataLen
+
         /// Return CDB of this object
         override _.CDB : ICDB voption =
             ValueNone
@@ -91,7 +96,7 @@ type SendErrorStatusTask
                             m_Command
                             m_Source.CID
                             m_Source.ConCounter
-                            0u
+                            m_RecvDataLen
                             m_RespCode
                             m_StatCode
                             ( PooledBuffer.Rent senseData )

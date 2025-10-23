@@ -57,6 +57,7 @@ type SendErrorStatusTest_Test () =
                     BidirectionalExpectedReadDataLength = 0u;
                     ByteCount = 0u;
                 },
+                0u,
                 lu,
                 dSense,
                 m_RespCode,

@@ -125,6 +125,14 @@ type ScsiTask
         override _.SCSICommand : SCSICommandPDU =
             m_Command
 
+        /// Return total received data length in bytes.
+        override _.ReceivedDataLength : uint =
+            m_DataOut
+            |> List.map _.DataSegment
+            |> List.insertAt 0 m_Command.DataSegment
+            |> List.sumBy PooledBuffer.length
+            |> uint
+
         /// Return CDB of this object
         override _.CDB : ICDB voption =
             ValueSome m_CDB

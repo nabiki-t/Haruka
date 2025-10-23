@@ -46,6 +46,9 @@ type IBlockDeviceTask =
     /// Return SCSI Command object of this object.
     abstract SCSICommand : SCSICommandPDU
 
+    /// Return total received data length in bytes.
+    abstract ReceivedDataLength : uint
+
     /// Return CDB of this object
     abstract CDB : ICDB voption
 

@@ -2800,6 +2800,7 @@ type PRManager_Test1 () =
                 BidirectionalExpectedReadDataLength = 0u;
                 ByteCount = 0u;
             },
+            0u,
             new CInternalLU_Stub(),
             false,
             iScsiSvcRespCd.COMMAND_COMPLETE,

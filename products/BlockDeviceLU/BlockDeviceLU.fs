@@ -476,9 +476,16 @@ type BlockDeviceLU
                     | :? SCSIACAException as x ->
                         // ACA established
                         try
+                            let recvDataLen = BlockDeviceLU.ReturnDataSegment command data
                             m_TaskSet <- 
                                 m_TaskSet
-                                |> this.EstablishNewACAStatus source x command errNACAval BlockDeviceTaskType.ScsiTask
+                                |> this.EstablishNewACAStatus
+                                    source
+                                    x
+                                    { command with DataSegment = PooledBuffer.Empty }   // for safty
+                                    recvDataLen
+                                    errNACAval
+                                    BlockDeviceTaskType.ScsiTask
                                 |> this.StartExecutableSCSITasks 
                         with
                         | _ as x2 ->
@@ -642,7 +649,13 @@ type BlockDeviceLU
                             m_TaskSet <-
                                 oldTaskSet
                                 |> this.DeleteTask argTask
-                                |> this.EstablishNewACAStatus argTask.Source x argTask.SCSICommand wcdb.Value.NACA argTask.TaskType
+                                |> this.EstablishNewACAStatus
+                                    argTask.Source
+                                    x
+                                    { argTask.SCSICommand with DataSegment = PooledBuffer.Empty }   // for safty
+                                     argTask.ReceivedDataLength
+                                     wcdb.Value.NACA
+                                     argTask.TaskType
                                 |> this.StartExecutableSCSITasks
                             argTask.ReleasePooledBuffer()
                     with
@@ -740,6 +753,17 @@ type BlockDeviceLU
                 -1
         loop 0
 
+
+    static member private ReturnDataSegment ( command : SCSICommandPDU ) ( data : SCSIDataOutPDU list ) : uint =
+        data
+        |> List.map _.DataSegment
+        |> List.insertAt 0 command.DataSegment
+        |> List.fold ( fun sum itr ->
+            let ns = sum + ( PooledBuffer.length itr |> uint )
+            PooledBuffer.Return itr
+            ns
+        ) 0u
+
     /// <summary>
     ///   Add new Scsi task to task queue.
     /// </summary>
@@ -785,16 +809,14 @@ type BlockDeviceLU
 
                         // The data segment is no longer used.
                         // Also, there will be no opportunity to release it after this, so it will be returned here.
-                        data
-                        |> Seq.map _.DataSegment
-                        |> Seq.insertAt 0 command.DataSegment
-                        |> PooledBuffer.Return
+                        let recvDataLen = BlockDeviceLU.ReturnDataSegment command data
 
                         // Insert a task that send ACA active status to task queue.
                         new SendErrorStatusTask(
                             m_StatusMaster,
                             source,
                             { command with DataSegment = PooledBuffer.Empty },  // for safety
+                            uint recvDataLen,
                             this,
                             m_ModeParameter.D_SENSE,
                             iScsiSvcRespCd.TARGET_FAILURE,
@@ -814,16 +836,14 @@ type BlockDeviceLU
 
                         // The data segment is no longer used.
                         // Also, there will be no opportunity to release it after this, so it will be returned here.
-                        data
-                        |> Seq.map _.DataSegment
-                        |> Seq.insertAt 0 command.DataSegment
-                        |> PooledBuffer.Return
+                        let recvDataLen = BlockDeviceLU.ReturnDataSegment command data
 
                         // Insert a task that send ACA active status to task queue.
                         new SendErrorStatusTask(
                             m_StatusMaster,
                             source,
                             { command with DataSegment = PooledBuffer.Empty },  // for safety
+                            recvDataLen,
                             this,
                             m_ModeParameter.D_SENSE,
                             iScsiSvcRespCd.TARGET_FAILURE,
@@ -863,16 +883,14 @@ type BlockDeviceLU
 
                         // The data segment is no longer used.
                         // Also, there will be no opportunity to release it after this, so it will be returned here.
-                        data
-                        |> Seq.map _.DataSegment
-                        |> Seq.insertAt 0 command.DataSegment
-                        |> PooledBuffer.Return
+                        let recvDataLen = BlockDeviceLU.ReturnDataSegment command data
 
                         // Insert a task that send ACA active status to task queue.
                         new SendErrorStatusTask(
                             m_StatusMaster,
                             source,
                             { command with DataSegment = PooledBuffer.Empty },  // for safety
+                            recvDataLen,
                             this,
                             m_ModeParameter.D_SENSE,
                             iScsiSvcRespCd.TARGET_FAILURE,
@@ -882,16 +900,14 @@ type BlockDeviceLU
                     elif cdb.NACA then
                         // The data segment is no longer used.
                         // Also, there will be no opportunity to release it after this, so it will be returned here.
-                        data
-                        |> Seq.map _.DataSegment
-                        |> Seq.insertAt 0 command.DataSegment
-                        |> PooledBuffer.Return
+                        let recvDataLen = BlockDeviceLU.ReturnDataSegment command data
 
                         // Insert a task that send ACA active status to task queue.
                         new SendErrorStatusTask(
                             m_StatusMaster,
                             source,
                             { command with DataSegment = PooledBuffer.Empty },  // for safety
+                            recvDataLen,
                             this,
                             m_ModeParameter.D_SENSE,
                             iScsiSvcRespCd.TARGET_FAILURE,
@@ -901,10 +917,7 @@ type BlockDeviceLU
                     else
                         // The data segment is no longer used.
                         // Also, there will be no opportunity to release it after this, so it will be returned here.
-                        data
-                        |> Seq.map _.DataSegment
-                        |> Seq.insertAt 0 command.DataSegment
-                        |> PooledBuffer.Return
+                        let recvDataLen = BlockDeviceLU.ReturnDataSegment command data
 
                         // Insert a task that send BUSY status to task queue.
                         // UA_INTLCK_CTRL is 10b. 
@@ -913,6 +926,7 @@ type BlockDeviceLU
                             m_StatusMaster,
                             source,
                             { command with DataSegment = PooledBuffer.Empty },  // for safety
+                            recvDataLen,
                             this,
                             m_ModeParameter.D_SENSE,
                             iScsiSvcRespCd.TARGET_FAILURE,
@@ -1151,6 +1165,7 @@ type BlockDeviceLU
                     m_StatusMaster,
                     cmdSource,
                     { bdTask.SCSICommand with DataSegment = PooledBuffer.Empty },  // for safety
+                    bdTask.ReceivedDataLength,
                     this,
                     m_ModeParameter.D_SENSE,
                     iScsiSvcRespCd.COMMAND_COMPLETE,
@@ -1179,6 +1194,7 @@ type BlockDeviceLU
                         m_StatusMaster,
                         cmdSource,
                         { bdTask.SCSICommand with DataSegment = PooledBuffer.Empty },  // for safety
+                        bdTask.ReceivedDataLength,
                         this,
                         m_ModeParameter.D_SENSE,
                         iScsiSvcRespCd.COMMAND_COMPLETE,
@@ -1205,6 +1221,9 @@ type BlockDeviceLU
     /// <param name="command">
     ///  Command that raised the exception.
     /// </param>
+    /// <param name="recvDataLen">
+    ///  Total received data length by SCSI Command PDU and SCSI Data-Out PDUs..
+    /// </param>
     /// <param name="naca">
     ///  NACA falg value that is specified in the failed command.
     /// </param>
@@ -1222,6 +1241,7 @@ type BlockDeviceLU
                         ( source : CommandSourceInfo )
                         ( ex : SCSIACAException )
                         ( command : SCSICommandPDU )
+                        ( recvDataLen : uint )
                         ( naca : bool )
                         ( taskType : BlockDeviceTaskType )
                         ( curTS : TaskSet ) : TaskSet =
@@ -1291,7 +1311,8 @@ type BlockDeviceLU
                 new SendErrorStatusTask(
                     m_StatusMaster,
                     source,
-                    { command with DataSegment = PooledBuffer.Empty },
+                    command,
+                    recvDataLen,
                     this,
                     m_ModeParameter.D_SENSE,
                     iScsiSvcRespCd.COMMAND_COMPLETE,
@@ -1309,7 +1330,8 @@ type BlockDeviceLU
                 new SendErrorStatusTask(
                     m_StatusMaster,
                     source,
-                    { command with DataSegment = PooledBuffer.Empty },
+                    command,
+                    recvDataLen,
                     this,
                     m_ModeParameter.D_SENSE,
                     iScsiSvcRespCd.COMMAND_COMPLETE,
@@ -1328,7 +1350,8 @@ type BlockDeviceLU
                 new SendErrorStatusTask(
                     m_StatusMaster,
                     source,
-                    { command with DataSegment = PooledBuffer.Empty },
+                    command,
+                    recvDataLen,
                     this,
                     m_ModeParameter.D_SENSE,
                     iScsiSvcRespCd.COMMAND_COMPLETE,
@@ -1347,7 +1370,8 @@ type BlockDeviceLU
                 new SendErrorStatusTask(
                     m_StatusMaster,
                     source,
-                    { command with DataSegment = PooledBuffer.Empty },
+                    command,
+                    recvDataLen,
                     this,
                     m_ModeParameter.D_SENSE,
                     iScsiSvcRespCd.TARGET_FAILURE,

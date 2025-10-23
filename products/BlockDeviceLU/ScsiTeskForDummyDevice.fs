@@ -104,6 +104,10 @@ type ScsiTaskForDummyDevice
         override _.SCSICommand : SCSICommandPDU =
             ( m_ScsiTask :> IBlockDeviceTask ).SCSICommand
 
+        /// Return total received data length in bytes.
+        override _.ReceivedDataLength : uint =
+            ( m_ScsiTask :> IBlockDeviceTask ).ReceivedDataLength
+
         /// Return CDB of this object
         override _.CDB : ICDB voption =
             ( m_ScsiTask :> IBlockDeviceTask ).CDB

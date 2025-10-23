@@ -35,6 +35,7 @@ type public CBlockDeviceTask_Stub() =
     let mutable f_GetSource : ( unit -> CommandSourceInfo ) option = None
     let mutable f_GetInitiatorTaskTag : ( unit -> ITT_T ) option = None
     let mutable f_GetSCSICommand : ( unit -> SCSICommandPDU ) option = None
+    let mutable f_GetReceivedDataLength : ( unit -> uint ) option = None
     let mutable f_GetCDB : ( unit -> ICDB voption ) option = None
     let mutable f_Execute : ( unit -> ( unit -> Task<unit> ) ) option = None
     let mutable f_GetDescString : ( unit -> string ) option = None
@@ -47,6 +48,7 @@ type public CBlockDeviceTask_Stub() =
     member _.p_GetSource with set v = f_GetSource <- Some v
     member _.p_GetInitiatorTaskTag with set v = f_GetInitiatorTaskTag <- Some v
     member _.p_GetSCSICommand with set v = f_GetSCSICommand <- Some v
+    member _.p_GetReceivedDataLength with set v = f_GetReceivedDataLength <- Some v
     member _.p_GetCDB with set v = f_GetCDB <- Some v
     member _.p_Execute with set v = f_Execute <- Some v
     member _.p_GetDescString with set v = f_GetDescString <- Some v
@@ -59,6 +61,7 @@ type public CBlockDeviceTask_Stub() =
         override _.Source : CommandSourceInfo = f_GetSource.Value()
         override _.InitiatorTaskTag : ITT_T = f_GetInitiatorTaskTag.Value()
         override _.SCSICommand : SCSICommandPDU = f_GetSCSICommand.Value()
+        override _.ReceivedDataLength : uint = f_GetReceivedDataLength.Value()
         override _.CDB : ICDB voption = f_GetCDB.Value()
         override _.Execute() : ( unit -> Task<unit> ) = f_Execute.Value()
         override _.DescString : string =
@@ -130,6 +133,19 @@ type BlockDeviceLU_Test () =
             ScsiCDB = Array.empty;
             DataSegment = PooledBuffer.Empty;
             BidirectionalExpectedReadDataLength = 0u;
+            ByteCount = 0u;
+        }
+
+    static member private defaultDataOutPDU =
+        {
+            F = false;
+            LUN = lun_me.zero;
+            InitiatorTaskTag = itt_me.fromPrim 0u;
+            TargetTransferTag = ttt_me.fromPrim 0u;
+            ExpStatSN = statsn_me.zero;
+            DataSN = datasn_me.zero;
+            BufferOffset = 0u;
+            DataSegment = PooledBuffer.Empty;
             ByteCount = 0u;
         }
 
@@ -2557,6 +2573,7 @@ type BlockDeviceLU_Test () =
                 dt.p_GetTaskType <- ( fun () -> BlockDeviceTaskType.ScsiTask )
                 dt.p_GetCDB <- ( fun () -> ValueSome cdb )
                 dt.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
+                dt.p_GetReceivedDataLength <- ( fun () -> 0u )
                 dt.p_Execute <- ( fun () ->
                     cnt1 <- cnt1 + 1
                     fun () -> task{ () }
@@ -3131,8 +3148,11 @@ type BlockDeviceLU_Test () =
         let pc = new PrivateCaller( lu )
         let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK
         let cdb = { OperationCode = 0uy; Control = 0uy }
-        let scsiData : SCSIDataOutPDU list = []
-
+        let scsiData : SCSIDataOutPDU list = [
+            { BlockDeviceLU_Test.defaultDataOutPDU with DataSegment = PooledBuffer.Rent 10 };
+            { BlockDeviceLU_Test.defaultDataOutPDU with DataSegment = PooledBuffer.Rent 20 };
+            { BlockDeviceLU_Test.defaultDataOutPDU with DataSegment = PooledBuffer.Rent 30 };
+        ]
         let queue1 = {
             Queue = ImmutableArray< TaskStatus >.Empty;
             ACA = ValueSome( 
@@ -3146,6 +3166,7 @@ type BlockDeviceLU_Test () =
         Assert.True(( queue2.Queue.Length = 1 ))
         Assert.True(( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask ))
         let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
+        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 60u ))
         let pc_task = new PrivateCaller( wt )
         let status = pc_task.GetField( "m_StatCode" ) :?> ScsiCmdStatCd
         Assert.True(( status = ScsiCmdStatCd.ACA_ACTIVE ))
@@ -3157,7 +3178,10 @@ type BlockDeviceLU_Test () =
         let pc = new PrivateCaller( lu )
         let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK
         let cdb = { OperationCode = 0uy; Control = 0uy }
-        let scsiData : SCSIDataOutPDU list = []
+        let scsiData : SCSIDataOutPDU list = [
+            { BlockDeviceLU_Test.defaultDataOutPDU with DataSegment = PooledBuffer.Rent 10 };
+            { BlockDeviceLU_Test.defaultDataOutPDU with DataSegment = PooledBuffer.Rent 20 };
+        ]
 
         let testTask =
             TaskStatus.TASK_STAT_Running(
@@ -3182,6 +3206,7 @@ type BlockDeviceLU_Test () =
         Assert.True(( queue2.Queue.Length = 2 ))
         Assert.True( ( TaskStatus.getTask queue2.Queue.[1] ).TaskType = BlockDeviceTaskType.InternalTask )
         let wt = ( TaskStatus.getTask queue2.Queue.[1] ) :?> SendErrorStatusTask
+        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 30u ))
 
         let pc_task = new PrivateCaller( wt )
         let status = pc_task.GetField( "m_StatCode" ) :?> ScsiCmdStatCd
@@ -3197,7 +3222,10 @@ type BlockDeviceLU_Test () =
                 InitiatorTaskTag = itt_me.fromPrim 0xAABBCCDDu;
         }
         let cdb = { OperationCode = 0uy; Control = 0uy }
-        let scsiData : SCSIDataOutPDU list = []
+        let scsiData : SCSIDataOutPDU list = [
+            { BlockDeviceLU_Test.defaultDataOutPDU with DataSegment = PooledBuffer.Rent 10 };
+            { BlockDeviceLU_Test.defaultDataOutPDU with DataSegment = PooledBuffer.Rent 20 };
+        ]
 
         let queue1 = {
             Queue = ImmutableArray< TaskStatus >.Empty;
@@ -3213,6 +3241,7 @@ type BlockDeviceLU_Test () =
         Assert.True(( queue2.Queue.Length = 1 ))
         Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.ScsiTask )
         let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> ScsiTask
+        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 30u ))
         let pc_task = new PrivateCaller( wt )
         let resultpdu = pc_task.GetField( "m_Command" ) :?> SCSICommandPDU
         Assert.True(( resultpdu.InitiatorTaskTag = itt_me.fromPrim 0xAABBCCDDu ))
@@ -3224,7 +3253,10 @@ type BlockDeviceLU_Test () =
         let pc = new PrivateCaller( lu )
         let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK
         let cdb = { OperationCode = 0uy; Control = 0uy }
-        let scsiData : SCSIDataOutPDU list = []
+        let scsiData : SCSIDataOutPDU list = [
+            { BlockDeviceLU_Test.defaultDataOutPDU with DataSegment = PooledBuffer.Rent 15 };
+            { BlockDeviceLU_Test.defaultDataOutPDU with DataSegment = PooledBuffer.Rent 20 };
+        ]
 
         let queue1 = {
             Queue = ImmutableArray< TaskStatus >.Empty;
@@ -3240,6 +3272,7 @@ type BlockDeviceLU_Test () =
         Assert.True(( queue2.Queue.Length = 1 ))
         Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
         let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
+        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 35u ))
         let pc_task = new PrivateCaller( wt )
         let status = pc_task.GetField( "m_StatCode" ) :?> ScsiCmdStatCd
         Assert.True(( status = ScsiCmdStatCd.ACA_ACTIVE ))
@@ -3249,9 +3282,11 @@ type BlockDeviceLU_Test () =
         let media, sm, lu = this.createBlockDevice()
         let source = BlockDeviceLU_Test.cmdSource()
         let pc = new PrivateCaller( lu )
-        let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK
+        let scsiCmd = { BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK with DataSegment = PooledBuffer.Rent 5 }
         let cdb = { OperationCode = 0uy; Control = 0x04uy }
-        let scsiData : SCSIDataOutPDU list = []
+        let scsiData : SCSIDataOutPDU list = [
+            { BlockDeviceLU_Test.defaultDataOutPDU with DataSegment = PooledBuffer.Rent 20 };
+        ]
 
         let queue1 = {
             Queue = ImmutableArray< TaskStatus >.Empty;
@@ -3267,6 +3302,7 @@ type BlockDeviceLU_Test () =
         Assert.True(( queue2.Queue.Length = 1 ))
         Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
         let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
+        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 25u ))
         let pc_task = new PrivateCaller( wt )
         let status = pc_task.GetField( "m_StatCode" ) :?> ScsiCmdStatCd
         Assert.True(( status = ScsiCmdStatCd.ACA_ACTIVE ))
@@ -3278,7 +3314,10 @@ type BlockDeviceLU_Test () =
         let pc = new PrivateCaller( lu )
         let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK
         let cdb = { OperationCode = 0uy; Control = 0x00uy }
-        let scsiData : SCSIDataOutPDU list = []
+        let scsiData : SCSIDataOutPDU list = [
+            { BlockDeviceLU_Test.defaultDataOutPDU with DataSegment = PooledBuffer.Rent 10 };
+            { BlockDeviceLU_Test.defaultDataOutPDU with DataSegment = PooledBuffer.Rent 20 };
+        ]
 
         let queue1 = {
             Queue = ImmutableArray< TaskStatus >.Empty;
@@ -3294,6 +3333,7 @@ type BlockDeviceLU_Test () =
         Assert.True(( queue2.Queue.Length = 1 ))
         Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
         let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
+        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 30u ))
         let pc_task = new PrivateCaller( wt )
         let status = pc_task.GetField( "m_StatCode" ) :?> ScsiCmdStatCd
         Assert.True(( status = ScsiCmdStatCd.BUSY ))
@@ -3330,7 +3370,10 @@ type BlockDeviceLU_Test () =
                 InitiatorTaskTag = itt_me.fromPrim 0xAABBCCDDu;
         }
         let cdb = { OperationCode = 0uy; Control = 0uy }
-        let scsiData : SCSIDataOutPDU list = []
+        let scsiData : SCSIDataOutPDU list = [
+            { BlockDeviceLU_Test.defaultDataOutPDU with DataSegment = PooledBuffer.Rent 10 };
+            { BlockDeviceLU_Test.defaultDataOutPDU with DataSegment = PooledBuffer.Rent 20 };
+        ]
         let queue1 = {
             Queue = ImmutableArray< TaskStatus >.Empty;
             ACA = ValueNone;
@@ -3342,6 +3385,7 @@ type BlockDeviceLU_Test () =
         Assert.True(( queue2.Queue.Length = 1 ))
         Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.ScsiTask )
         let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> ScsiTask
+        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 30u ))
         let pc_task = new PrivateCaller( wt )
         let resultpdu = pc_task.GetField( "m_Command" ) :?> SCSICommandPDU
         Assert.True(( resultpdu.InitiatorTaskTag = itt_me.fromPrim 0xAABBCCDDu ))
@@ -3399,7 +3443,7 @@ type BlockDeviceLU_Test () =
             ACA = ValueNone;
         }        
         try
-            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, true, BlockDeviceTaskType.InternalTask, queue1 ) |> ignore
+            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 0u, true, BlockDeviceTaskType.InternalTask, queue1 ) |> ignore
             Assert.Fail __LINE__
         with
         | :? Xunit.Sdk.FailException -> reraise();
@@ -3433,12 +3477,13 @@ type BlockDeviceLU_Test () =
             ACA = ValueNone;
         }
         let queue2 =
-            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, true, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
+            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 99u, true, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
 
         // send raised exception to the initiator
         Assert.True(( queue2.Queue.Length = 1 ))
         Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
         let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
+        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 99u ))
         let pcwt = new PrivateCaller( wt )
         Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.BUSY ))
 
@@ -3470,7 +3515,7 @@ type BlockDeviceLU_Test () =
         )
         
         let queue2 =
-            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, true, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
+            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 98u, true, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
 
         let waca = queue2.ACA
         Assert.True( waca.IsSome )
@@ -3480,6 +3525,7 @@ type BlockDeviceLU_Test () =
         Assert.True(( queue2.Queue.Length = 1 ))
         Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
         let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
+        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 98u ))
         let pcwt = new PrivateCaller( wt )
         Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.CHECK_CONDITION ))
         let senseData = pcwt.GetField( "m_SenseData" ) :?> SenseData option
@@ -3515,13 +3561,14 @@ type BlockDeviceLU_Test () =
         }
 
         let queue2 =
-            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, false, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
+            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 7u, false, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
 
         let waca = queue2.ACA
         Assert.True( waca.IsNone )
         Assert.True(( queue2.Queue.Length = 1 ))
         Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
         let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
+        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 7u ))
         let pcwt = new PrivateCaller( wt )
         Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.CHECK_CONDITION ))
         let senseData = pcwt.GetField( "m_SenseData" ) :?> SenseData option
@@ -3557,7 +3604,7 @@ type BlockDeviceLU_Test () =
         }
         
         let queue2 =
-            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, true, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
+            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 50u, true, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
 
         let waca = queue2.ACA
         Assert.True( waca.IsSome )
@@ -3567,6 +3614,7 @@ type BlockDeviceLU_Test () =
         Assert.True(( queue2.Queue.Length = 1 ))
         Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
         let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
+        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 50u ))
         let pcwt = new PrivateCaller( wt )
         Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.CHECK_CONDITION ))
         let senseData = pcwt.GetField( "m_SenseData" ) :?> SenseData option
@@ -3601,13 +3649,14 @@ type BlockDeviceLU_Test () =
         }
 
         let queue2 =
-            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, false, BlockDeviceTaskType.ScsiTask, queue1) :?> TaskSet
+            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 40u, false, BlockDeviceTaskType.ScsiTask, queue1) :?> TaskSet
 
         let waca = queue2.ACA
         Assert.True( waca.IsNone )
         Assert.True(( queue2.Queue.Length = 1 ))
         Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
         let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
+        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 40u ))
         let pcwt = new PrivateCaller( wt )
         Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.CHECK_CONDITION ))
         let senseData = pcwt.GetField( "m_SenseData" ) :?> SenseData option
@@ -3645,7 +3694,7 @@ type BlockDeviceLU_Test () =
         )
         
         let queue2 =
-            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, true, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
+            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 30u, true, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
 
         let waca = queue2.ACA
         Assert.True( waca.IsSome )
@@ -3655,6 +3704,7 @@ type BlockDeviceLU_Test () =
         Assert.True(( queue2.Queue.Length = 1 ))
         Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
         let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
+        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 30u ))
         let pcwt = new PrivateCaller( wt )
         Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.CHECK_CONDITION ))
         let senseData = pcwt.GetField( "m_SenseData" ) :?> SenseData option
@@ -3693,13 +3743,14 @@ type BlockDeviceLU_Test () =
         )
         
         let queue2 =
-            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, false, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
+            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 20u, false, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
 
         let waca = queue2.ACA
         Assert.True( waca.IsNone )
         Assert.True(( queue2.Queue.Length = 1 ))
         Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
         let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
+        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 20u ))
         let pcwt = new PrivateCaller( wt )
         Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.CHECK_CONDITION ))
         let senseData = pcwt.GetField( "m_SenseData" ) :?> SenseData option
@@ -3738,7 +3789,7 @@ type BlockDeviceLU_Test () =
         )
         
         let queue2 =
-            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, false, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
+            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 10u, false, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
 
         let waca = queue2.ACA
         Assert.True( waca.IsSome )
@@ -3746,6 +3797,7 @@ type BlockDeviceLU_Test () =
         Assert.True(( queue2.Queue.Length = 1 ))
         Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
         let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
+        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 10u ))
         let pcwt = new PrivateCaller( wt )
         Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.TASK_ABORTED ))
         let senseData = pcwt.GetField( "m_SenseData" ) :?> SenseData option
@@ -3770,7 +3822,7 @@ type BlockDeviceLU_Test () =
         }
 
         try
-            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, false, BlockDeviceTaskType.ScsiTask, queue1 ) |> ignore
+            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 0u, false, BlockDeviceTaskType.ScsiTask, queue1 ) |> ignore
             Assert.Fail __LINE__
         with
         | :? Xunit.Sdk.FailException -> reraise();
@@ -3807,7 +3859,7 @@ type BlockDeviceLU_Test () =
         )
         
         let queue2 =
-            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, false, BlockDeviceTaskType.ScsiTask , queue1) :?> TaskSet
+            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 0u, false, BlockDeviceTaskType.ScsiTask , queue1) :?> TaskSet
 
         let waca = queue2.ACA
         Assert.True( waca.IsSome )
@@ -3815,6 +3867,7 @@ type BlockDeviceLU_Test () =
         Assert.True(( queue2.Queue.Length = 1 ))
         Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
         let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
+        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 0u ))
         let pcwt = new PrivateCaller( wt )
         Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.TASK_ABORTED ))
         let senseData = pcwt.GetField( "m_SenseData" ) :?> SenseData option
@@ -3909,6 +3962,7 @@ type BlockDeviceLU_Test () =
             fun () -> task{ () }
         )
         taskStub.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
+        taskStub.p_GetReceivedDataLength <- ( fun () -> 0u )
 
         // Unit Attention is exist
         ua.TryAdd(
@@ -3975,6 +4029,7 @@ type BlockDeviceLU_Test () =
             }
         )
         taskStub.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
+        taskStub.p_GetReceivedDataLength <- ( fun () -> 0u )
 
         let queue1 = {
             Queue = ImmutableArray<TaskStatus>.Empty.Add( TaskStatus.TASK_STAT_Dormant( taskStub :> IBlockDeviceTask ) );
