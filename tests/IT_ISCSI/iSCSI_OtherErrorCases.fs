@@ -21,13 +21,71 @@ open Xunit
 open Haruka.Constants
 open Haruka.Commons
 open Haruka.TargetDevice
+open Haruka.Client
 open Haruka.Test
 
 //=============================================================================
 // Class implementation
 
-[<Collection( "iSCSI_Numbering" )>]     // Reuse existing test fixtures
-type iSCSI_OtherErrorCases( fx : iSCSI_Numbering_Fixture ) =
+
+[<CollectionDefinition( "iSCSI_OtherErrorCases" )>]
+type iSCSI_OtherErrorCases_Fixture() =
+
+    let m_iSCSIPortNo = GlbFunc.nextTcpPortNo()
+    let m_MediaSize = 65536u
+
+    // Add default configurations
+    let AddDefaultConf( client : ClientProc ): unit =
+
+        ///////////////////////////////
+        // Target Device 0
+
+        // Target device, Target group
+        client.RunCommand "create" "Created" "CR> "
+        client.RunCommand "select 0" "" "TD> "
+        client.RunCommand ( sprintf "set MAXRECVDATASEGMENTLENGTH %d" 4096 ) "" "TD> "
+        client.RunCommand ( sprintf "set MAXBURSTLENGTH %d" 16384 ) "" "TD> "
+        client.RunCommand ( sprintf "set FIRSTBURSTLENGTH %d" 16384 ) "" "TD> "
+        client.RunCommand "create targetgroup" "Created" "TD> "
+        client.RunCommand ( sprintf "create networkportal /a ::1 /p %d" m_iSCSIPortNo ) "Created" "TD> "
+        client.RunCommand "select 0" "" "TG> "
+
+        // Target, LU
+        client.RunCommand "create /n iqn.2020-05.example.com:target1" "Created" "TG> "
+        client.RunCommand "select 0" "" "T > "
+        client.RunCommand "create /l 1" "Created" "T > "
+        client.RunCommand "select 0" "" "LU> "
+        client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
+
+        client.RunCommand "validate" "All configurations are vlidated" "LU> "
+        client.RunCommand "publish" "All configurations are uploaded to the controller" "LU> "
+        client.RunCommand "start" "Started" "LU> "
+
+    // Start controller and client
+    let m_Controller, m_Client =
+        let workPath =
+            let tempPath = Path.GetTempPath()
+            Functions.AppendPathName tempPath ( Guid.NewGuid().ToString( "N" ) )
+        let controllPortNo = GlbFunc.nextTcpPortNo()
+        let controller, client = TestFunctions.StartHarukaController workPath controllPortNo
+        AddDefaultConf client
+        controller, client
+
+    interface IDisposable with
+        member _.Dispose (): unit =
+            m_Client.Kill()
+
+    interface ICollectionFixture<iSCSI_OtherErrorCases_Fixture>
+
+    member _.controllerProc = m_Controller
+    member _.clientProc = m_Client
+    member _.iSCSIPortNo = m_iSCSIPortNo
+    member _.MediaSize = m_MediaSize
+    member _.MediaBlockSize = uint Constants.MEDIA_BLOCK_SIZE   // 4096 or 512 bytes
+
+
+[<Collection( "iSCSI_OtherErrorCases" )>]     // Reuse existing test fixtures
+type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
 
     ///////////////////////////////////////////////////////////////////////////
     // Common definition
@@ -45,6 +103,8 @@ type iSCSI_OtherErrorCases( fx : iSCSI_Numbering_Fixture ) =
     let iSCSIPortNo = fx.iSCSIPortNo
     let m_MediaSize = fx.MediaSize
     let m_MediaBlockSize = fx.MediaBlockSize
+
+    let m_ClientProc = fx.clientProc
 
     // default session parameters
     let m_defaultSessParam = {
@@ -937,6 +997,190 @@ type iSCSI_OtherErrorCases( fx : iSCSI_Numbering_Fixture ) =
                     // Receive reject PDU
                     let! rpdu1 = r1.ReceiveSpecific<RejectPDU> g_CID0
                     Assert.True(( rpdu1.Reason = RejectReasonCd.COM_NOT_SUPPORT ))
+
+            do! r1.CloseSession g_CID0 false
+        }
+
+    [<Fact>]
+    member _.ResponseFence_001() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+
+            // Send Nop-Out 1
+            let! ittNopOut1, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+
+            // Receive Nop-In PDU for Nop-Out 1
+            let! nopIn1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( nopIn1.InitiatorTaskTag = ittNopOut1 ))
+
+            // Rewind ExpStatSN ( Act as if no response to Nop-Out 1 has been received )
+            r1.Connection( g_CID0 ).RewindExtStatSN ( statsn_me.fromPrim 1u )
+
+            // Send SCSI write command ( it occurrs ACA )
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0xFFFFFFFEu 0uy 1us true false
+            let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
+            let! ittScsiCmd, _ =
+                r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB sendData 0u
+            sendData.Return()
+
+            let mutable flg = true
+            while flg do
+                let lustat = m_ClientProc.RunCommandGetResp "lustatus" "LU> "
+                flg <- lustat.[1].StartsWith "ACA : None"
+                Threading.Thread.Sleep 100
+
+            // Skip ExpStatSN ( Set the response to Nop-Out 1 )
+            r1.Connection( g_CID0 ).SkipExtStatSN ( statsn_me.fromPrim 1u )
+
+            // Send Nop-Out 2 ( Sends acknowledgement to Nop-Out 1 )
+            let! ittNopOut2, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+
+            // Receive SCSI Response PDU for SCSI write command
+            let! scsiRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( scsiRespPDU.InitiatorTaskTag = ittScsiCmd ))
+
+            // Send Nop-Out 3 ( Sends acknowledgement to SCSI Response )
+            let! ittNopOut3, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+
+            // Receive Nop-In PDU for Nop-Out 2
+            let! nopIn2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( nopIn2.InitiatorTaskTag = ittNopOut2 ))
+
+            // Receive Nop-In PDU for Nop-Out 3
+            let! nopIn3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( nopIn3.InitiatorTaskTag = ittNopOut3 ))
+
+            // clear ACA status
+            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 false TaskMgrReqCd.CLEAR_ACA g_LUN1 ( itt_me.fromPrim 0xFFFFFFFFu ) cmdsn_me.zero datasn_me.zero
+            let! tmdRespPDU = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
+            Assert.True(( tmdRespPDU.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            do! r1.CloseSession g_CID0 false
+        }
+
+    [<Fact>]
+    member _.ResponseFence_002() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+
+            // Send SCSI write command ( it occurrs ACA )
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0xFFFFFFFEu 0uy 1us true false
+            let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
+            let! ittScsiCmd, _ =
+                r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB sendData 0u
+            sendData.Return()
+
+            // Receive SCSI Response PDU for SCSI write command
+            let! scsiRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( scsiRespPDU.InitiatorTaskTag = ittScsiCmd ))
+
+            // Send Nop-Out 1
+            let! ittNopOut1, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+
+            // Receive Nop-In PDU for Nop-Out 1
+            let! nopIn1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( nopIn1.InitiatorTaskTag = ittNopOut1 ))
+
+            // Rewind ExpStatSN ( Act as if no response to Nop-Out 1 has been received )
+            r1.Connection( g_CID0 ).RewindExtStatSN ( statsn_me.fromPrim 1u )
+
+            // clear ACA status
+            let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 false TaskMgrReqCd.CLEAR_ACA g_LUN1 ( itt_me.fromPrim 0xFFFFFFFFu ) cmdsn_me.zero datasn_me.zero
+
+            let mutable flg = true
+            while flg do
+                let lustat = m_ClientProc.RunCommandGetResp "lustatus" "LU> "
+                flg <- lustat.[1].StartsWith "ACA : None" |> not
+                Threading.Thread.Sleep 100
+
+            // Skip ExpStatSN ( Set the response to Nop-Out 1 )
+            r1.Connection( g_CID0 ).SkipExtStatSN ( statsn_me.fromPrim 1u )
+
+            // Send Nop-Out 2 ( Sends acknowledgement to Nop-Out 1 )
+            let! ittNopOut2, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+
+            // Receive TMF response PDU for CLEAR_ACA TMF request.
+            let! tmdRespPDU = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
+            Assert.True(( tmdRespPDU.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
+            Assert.True(( tmdRespPDU.InitiatorTaskTag = ittTMF ))
+
+            // Send Nop-Out 3 ( Sends acknowledgement to TMF Response )
+            let! ittNopOut3, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+
+            // Receive Nop-In PDU for Nop-Out 2
+            let! nopIn2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( nopIn2.InitiatorTaskTag = ittNopOut2 ))
+
+            // Receive Nop-In PDU for Nop-Out 3
+            let! nopIn3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( nopIn3.InitiatorTaskTag = ittNopOut3 ))
+
+            do! r1.CloseSession g_CID0 false
+        }
+
+    [<Fact>]
+    member _.ResponseFence_003() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+
+            // Send SCSI write command ( it occurrs ACA )
+            let writeCDB1 = GenScsiCDB.Write10 0uy false false false 0xFFFFFFFEu 0uy 1us true false
+            let sendData1 = PooledBuffer.Rent ( int m_MediaBlockSize )
+            let! ittScsiCmd1, _ =
+                r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB1 sendData1 0u
+            sendData1.Return()
+
+            // Receive SCSI Response PDU for SCSI write command
+            let! scsiRespPDU1 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( scsiRespPDU1.InitiatorTaskTag = ittScsiCmd1 ))
+            Assert.True(( scsiRespPDU1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // Send Nop-Out 1
+            let! ittNopOut1, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+
+            // Receive Nop-In PDU for Nop-Out 1
+            let! nopIn1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( nopIn1.InitiatorTaskTag = ittNopOut1 ))
+
+            // Rewind ExpStatSN ( Act as if no response to Nop-Out 1 has been received )
+            r1.Connection( g_CID0 ).RewindExtStatSN ( statsn_me.fromPrim 1u )
+
+            // Send SCSI write command
+            let writeCDB2 = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us true false
+            let sendData2 = PooledBuffer.Rent ( int m_MediaBlockSize )
+            let! ittScsiCmd2, _ =
+                r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB2 sendData2 0u
+            sendData2.Return()
+
+            Threading.Thread.Sleep 500
+
+            // Skip ExpStatSN ( Set the response to Nop-Out 1 )
+            r1.Connection( g_CID0 ).SkipExtStatSN ( statsn_me.fromPrim 1u )
+
+            // Send Nop-Out 2 ( Sends acknowledgement to Nop-Out 1 )
+            let! ittNopOut2, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+
+            // Receive SCSI response for SCSI write command request.
+            let! scsiRespPDU2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( scsiRespPDU2.InitiatorTaskTag = ittScsiCmd2 ))
+            Assert.True(( scsiRespPDU2.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+
+            // Send Nop-Out 3 ( Sends acknowledgement to SCSI response )
+            let! ittNopOut3, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+
+            // Receive Nop-In PDU for Nop-Out 2
+            let! nopIn2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( nopIn2.InitiatorTaskTag = ittNopOut2 ))
+
+            // Receive Nop-In PDU for Nop-Out 3
+            let! nopIn3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( nopIn3.InitiatorTaskTag = ittNopOut3 ))
+
+
+            // clear ACA status
+            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 false TaskMgrReqCd.CLEAR_ACA g_LUN1 ( itt_me.fromPrim 0xFFFFFFFFu ) cmdsn_me.zero datasn_me.zero
+            let! tmdRespPDU = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
+            Assert.True(( tmdRespPDU.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
 
             do! r1.CloseSession g_CID0 false
         }
