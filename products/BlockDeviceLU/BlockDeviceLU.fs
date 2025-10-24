@@ -819,7 +819,7 @@ type BlockDeviceLU
                             uint recvDataLen,
                             this,
                             m_ModeParameter.D_SENSE,
-                            iScsiSvcRespCd.TARGET_FAILURE,
+                            iScsiSvcRespCd.COMMAND_COMPLETE,
                             ScsiCmdStatCd.ACA_ACTIVE
                         )
 
@@ -846,7 +846,7 @@ type BlockDeviceLU
                             recvDataLen,
                             this,
                             m_ModeParameter.D_SENSE,
-                            iScsiSvcRespCd.TARGET_FAILURE,
+                            iScsiSvcRespCd.COMMAND_COMPLETE,
                             ScsiCmdStatCd.ACA_ACTIVE
                         )
 
@@ -893,7 +893,7 @@ type BlockDeviceLU
                             recvDataLen,
                             this,
                             m_ModeParameter.D_SENSE,
-                            iScsiSvcRespCd.TARGET_FAILURE,
+                            iScsiSvcRespCd.COMMAND_COMPLETE,
                             ScsiCmdStatCd.ACA_ACTIVE
                         )
 
@@ -910,7 +910,7 @@ type BlockDeviceLU
                             recvDataLen,
                             this,
                             m_ModeParameter.D_SENSE,
-                            iScsiSvcRespCd.TARGET_FAILURE,
+                            iScsiSvcRespCd.COMMAND_COMPLETE,
                             ScsiCmdStatCd.ACA_ACTIVE
                         )
 
@@ -929,7 +929,7 @@ type BlockDeviceLU
                             recvDataLen,
                             this,
                             m_ModeParameter.D_SENSE,
-                            iScsiSvcRespCd.TARGET_FAILURE,
+                            iScsiSvcRespCd.COMMAND_COMPLETE,
                             ScsiCmdStatCd.BUSY
                         )
  
@@ -1374,7 +1374,7 @@ type BlockDeviceLU
                     recvDataLen,
                     this,
                     m_ModeParameter.D_SENSE,
-                    iScsiSvcRespCd.TARGET_FAILURE,
+                    iScsiSvcRespCd.COMMAND_COMPLETE,
                     ScsiCmdStatCd.TASK_ABORTED
                 ) :> IBlockDeviceTask
             {

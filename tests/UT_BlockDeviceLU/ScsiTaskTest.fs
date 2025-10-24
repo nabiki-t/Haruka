@@ -2315,7 +2315,7 @@ type ScsiTaskTest_Test () =
         let mediaStub = ( stask :?> ScsiTask ).Media :?> CMedia_Stub
         psStub.p_SendSCSIResponse <- ( fun _ _ _ _ resp stat sensedata indata alloclen _ ->
             cnt2 <- cnt2 + 1
-            Assert.True(( resp = iScsiSvcRespCd.TARGET_FAILURE ))
+            Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
             Assert.True(( stat = ScsiCmdStatCd.CHECK_CONDITION ))
             let v =
                 [|

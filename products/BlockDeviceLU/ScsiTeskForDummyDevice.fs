@@ -227,7 +227,7 @@ type ScsiTaskForDummyDevice
                     m_Source.CID
                     m_Source.ConCounter
                     0u
-                    iScsiSvcRespCd.TARGET_FAILURE
+                    iScsiSvcRespCd.COMMAND_COMPLETE
                     ScsiCmdStatCd.CHECK_CONDITION
                     ( PooledBuffer.Rent result )
                     PooledBuffer.Empty

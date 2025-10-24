@@ -3167,9 +3167,12 @@ type BlockDeviceLU_Test () =
         Assert.True(( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask ))
         let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
         Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 60u ))
+
         let pc_task = new PrivateCaller( wt )
         let status = pc_task.GetField( "m_StatCode" ) :?> ScsiCmdStatCd
         Assert.True(( status = ScsiCmdStatCd.ACA_ACTIVE ))
+        let respCode = pc_task.GetField( "m_RespCode" ) :?> iScsiSvcRespCd
+        Assert.True(( respCode = iScsiSvcRespCd.COMMAND_COMPLETE ))
 
     [<Fact>]
     member this.AddNewScsiTaskToQueue_002() =
@@ -3211,6 +3214,8 @@ type BlockDeviceLU_Test () =
         let pc_task = new PrivateCaller( wt )
         let status = pc_task.GetField( "m_StatCode" ) :?> ScsiCmdStatCd
         Assert.True(( status = ScsiCmdStatCd.ACA_ACTIVE ))
+        let respCode = pc_task.GetField( "m_RespCode" ) :?> iScsiSvcRespCd
+        Assert.True(( respCode = iScsiSvcRespCd.COMMAND_COMPLETE ))
 
     [<Fact>]
     member this.AddNewScsiTaskToQueue_003() =
@@ -3276,6 +3281,8 @@ type BlockDeviceLU_Test () =
         let pc_task = new PrivateCaller( wt )
         let status = pc_task.GetField( "m_StatCode" ) :?> ScsiCmdStatCd
         Assert.True(( status = ScsiCmdStatCd.ACA_ACTIVE ))
+        let respCode = pc_task.GetField( "m_RespCode" ) :?> iScsiSvcRespCd
+        Assert.True(( respCode = iScsiSvcRespCd.COMMAND_COMPLETE ))
 
     [<Fact>]
     member this.AddNewScsiTaskToQueue_005() =
@@ -3306,6 +3313,8 @@ type BlockDeviceLU_Test () =
         let pc_task = new PrivateCaller( wt )
         let status = pc_task.GetField( "m_StatCode" ) :?> ScsiCmdStatCd
         Assert.True(( status = ScsiCmdStatCd.ACA_ACTIVE ))
+        let respCode = pc_task.GetField( "m_RespCode" ) :?> iScsiSvcRespCd
+        Assert.True(( respCode = iScsiSvcRespCd.COMMAND_COMPLETE ))
 
     [<Fact>]
     member this.AddNewScsiTaskToQueue_006() =
@@ -3337,6 +3346,8 @@ type BlockDeviceLU_Test () =
         let pc_task = new PrivateCaller( wt )
         let status = pc_task.GetField( "m_StatCode" ) :?> ScsiCmdStatCd
         Assert.True(( status = ScsiCmdStatCd.BUSY ))
+        let respCode = pc_task.GetField( "m_RespCode" ) :?> iScsiSvcRespCd
+        Assert.True(( respCode = iScsiSvcRespCd.COMMAND_COMPLETE ))
 
     [<Fact>]
     member this.AddNewScsiTaskToQueue_007() =
