@@ -32,7 +32,7 @@
     <Compile Include="InternalIF.fs" />
     <Compile Include="PRManager.fs" />
     <Compile Include="ScsiTask.fs" />
-    <Compile Include="ScsiTeskForDummyDevice.fs" />
+    <Compile Include="ScsiTaskForDummyDevice.fs" />
     <Compile Include="SendErrorStatusTask.fs" />
     <Compile Include="ConvertToCDB.fs" />
     <Compile Include="BlockDeviceLU.fs" />
