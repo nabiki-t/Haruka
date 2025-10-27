@@ -207,33 +207,12 @@ type ScsiTaskForDummyDevice
 
             | TestUnitReady                             // SPC-3 6.33 TEST UNIT READY command
                 ->
-
                 // If media is not accessible, return NOT READY status and sense data.
-                let s = new SenseData(
-                    true,
-                    SenseKeyCd.NOT_READY,
-                    ASCCd.MEDIUM_NOT_PRESENT,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None
-                )
-
-                let result = ( s.GetSenseData true )
-                m_Source.ProtocolService.SendSCSIResponse
-                    m_Command
-                    m_Source.CID
-                    m_Source.ConCounter
-                    0u
-                    iScsiSvcRespCd.COMMAND_COMPLETE
-                    ScsiCmdStatCd.CHECK_CONDITION
-                    ( PooledBuffer.Rent result )
-                    PooledBuffer.Empty
-                    0u
-                    ResponseFenceNeedsFlag.R_Mode
-                fun () -> task{ () }
+                let msg = "TestUnitReady command has been requested to the dummy device."
+                HLogger.ACAException( m_LogInfo, SenseKeyCd.NOT_READY, ASCCd.MEDIUM_NOT_PRESENT, msg )
+                let ex = SCSIACAException ( m_Source, true, SenseKeyCd.NOT_READY, ASCCd.MEDIUM_NOT_PRESENT, msg )
+                m_LU.NotifyTerminateTaskWithException this ex
+                fun () -> Task.FromResult()
 
             | SynchronizeCache  ->                      // SBC-2 5.18 SYNCHRONIZE CACHE(10), 5.19 SYNCHRONIZE CACHE(16) command
 
@@ -251,6 +230,7 @@ type ScsiTaskForDummyDevice
                     PooledBuffer.Empty
                     0u
                     ResponseFenceNeedsFlag.R_Mode
+                m_LU.NotifyTerminateTask this
                 fun () -> task{ () }
 
             | ReportSupportedOperationCodes             // SPC-3 6.23 REPORT SUPPORTED OPERATION CODES command

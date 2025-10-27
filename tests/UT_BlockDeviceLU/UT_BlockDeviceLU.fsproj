@@ -27,6 +27,7 @@
     <Compile Include="PRManagerTest2.fs" />
     <Compile Include="PRManagerTest3.fs" />
     <Compile Include="ScsiTaskTest.fs" />
+    <Compile Include="ScsiTaskForDummyDeviceTest.fs" />
     <Compile Include="SendErrorStatusTest.fs" />
     <Compile Include="ConvertToCDBTest.fs" />
     <Compile Include="BlockDeviceLUTest.fs" />

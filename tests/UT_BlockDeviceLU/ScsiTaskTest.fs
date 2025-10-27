@@ -27,22 +27,6 @@ open Haruka.Test
 //=============================================================================
 // Type definition
 
-type ICDB_Stub =
-    {
-        m_Type : CDBTypes;
-        m_OperationCode : byte;
-        m_ServiceAction : uint16;
-        m_NACA : bool;
-        m_LINK : bool;
-    }
-    interface ICDB with
-        member this.Type = this.m_Type
-        member this.OperationCode = this.m_OperationCode
-        member this.ServiceAction = this.m_ServiceAction
-        member this.NACA = this.m_NACA
-        member this.LINK = this.m_LINK
-        member _.DescriptString = ""
-
 //=============================================================================
 // Class implementation
 
@@ -183,74 +167,75 @@ type ScsiTaskTest_Test () =
 
     ///////////////////////////////////////////////////////////////////////////
     // Test cases 
-    
-    [<Fact>]
-    member _.Execute_001() =
-        let tv = [|
-            ChangeAliases;
-            ExtendedCopy;
-            LogSelect;
-            LogSense;
-            PreventAllowMediumRemoval;
-            ReadAttribute;
-            ReadBuffer;
-            ReadMediaSerialNumber;
-            ReceiveCopyResults;
-            ReceiveDiagnosticResults;
-            ReportAliases;
-            ReportDeviceIdentifier;
-            ReportPriority;
-            ReportTargetPortGroups;
-            ReportTimestamp;
-            SendDiagnostic;
-            SetDeviceIdentifier;
-            SetPriority;
-            SetTargetPortGroups;
-            SetTimestamp;
-            WriteAttribute;
-            WriteBuffer;
-            AccessControlIn;
-            AccessControlOut;
-            ReadDefectData;
-            ReadLong;
-            ReassignBlocks;
-            StartStopUnit;
-            Verify;
-            WriteAndVerify;
-            WriteLong;
-            WriteSame;
-            XDRead;
-            XDWrite;
-            XDWriteRead;
-            XPWrite;
-        |]
-        for itr in tv do
-            let s = {
-                    m_Type = itr;
-                    m_OperationCode = 0uy;
-                    m_ServiceAction = 0us;
-                    m_NACA = false;
-                    m_LINK = false;
-            }
-            let t, ilu = createDefScsiTask defaultSCSICommandPDU s [ defaultSCSIDataOutPDU ] false 
 
-            let mutable cnt = 0
-            ilu.p_NotifyTerminateTaskWithException <- ( fun argTask argEx ->
-                cnt <- cnt + 1
-                Assert.True(( argTask = t ))
-                match argEx with
-                | :? SCSIACAException as x ->
-                    Assert.True(( x.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-                    Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-                    Assert.True(( x.ASC = ASCCd.INVALID_COMMAND_OPERATION_CODE ))
-                | _ ->
-                    Assert.Fail __LINE__
-            )
+    static member m_Execute_001_data = [|
+        [| ChangeAliases :> obj |];
+        [| ExtendedCopy :> obj |];
+        [| LogSelect :> obj |];
+        [| LogSense :> obj |];
+        [| PreventAllowMediumRemoval :> obj |];
+        [| ReadAttribute :> obj |];
+        [| ReadBuffer :> obj |];
+        [| ReadMediaSerialNumber :> obj |];
+        [| ReceiveCopyResults :> obj |];
+        [| ReceiveDiagnosticResults :> obj |];
+        [| ReportAliases :> obj |];
+        [| ReportDeviceIdentifier :> obj |];
+        [| ReportPriority :> obj |];
+        [| ReportTargetPortGroups :> obj |];
+        [| ReportTimestamp :> obj |];
+        [| SendDiagnostic :> obj |];
+        [| SetDeviceIdentifier :> obj |];
+        [| SetPriority :> obj |];
+        [| SetTargetPortGroups :> obj |];
+        [| SetTimestamp :> obj |];
+        [| WriteAttribute :> obj |];
+        [| WriteBuffer :> obj |];
+        [| AccessControlIn :> obj |];
+        [| AccessControlOut :> obj |];
+        [| ReadDefectData :> obj |];
+        [| ReadLong :> obj |];
+        [| ReassignBlocks :> obj |];
+        [| StartStopUnit :> obj |];
+        [| Verify :> obj |];
+        [| WriteAndVerify :> obj |];
+        [| WriteLong :> obj |];
+        [| WriteSame :> obj |];
+        [| XDRead :> obj |];
+        [| XDWrite :> obj |];
+        [| XDWriteRead :> obj |];
+        [| XPWrite :> obj |];
+    |]
 
-            t.Execute()()
-            |> Functions.RunTaskSynchronously
+    [<Theory>]
+    [<MemberData( "m_Execute_001_data" )>]
+    member _.Execute_001 ( cdb : CDBTypes ) =
+        let s = {
+                m_Type = cdb;
+                m_OperationCode = 0uy;
+                m_ServiceAction = 0us;
+                m_NACA = false;
+                m_LINK = false;
+        }
+        let t, ilu = createDefScsiTask defaultSCSICommandPDU s [ defaultSCSIDataOutPDU ] false 
 
-            Assert.True(( cnt = 1 ))
+        let mutable cnt = 0
+        ilu.p_NotifyTerminateTaskWithException <- ( fun argTask argEx ->
+            cnt <- cnt + 1
+            Assert.True(( argTask = t ))
+            match argEx with
+            | :? SCSIACAException as x ->
+                Assert.True(( x.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+                Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+                Assert.True(( x.ASC = ASCCd.INVALID_COMMAND_OPERATION_CODE ))
+            | _ ->
+                Assert.Fail __LINE__
+        )
+
+        t.Execute()()
+        |> Functions.RunTaskSynchronously
+
+        Assert.True(( cnt = 1 ))
 
     [<Fact>]
     member _.NotifyTerminate_001() =
@@ -1369,86 +1354,61 @@ type ScsiTaskTest_Test () =
         Assert.True(( cnt1 = 1 ))
         Assert.True(( cnt2 = 1 ))
 
-    [<Fact>]
-    member _.ReportSupportedOperationCodes_002() =
+    static member m_ReportSupportedOperationCodes_002_data = [|
+        [| 0x12uy :> obj; SupportedOperationCodeConst.CdbUsageData_INQUIRY :> obj; |];
+        [| 0x15uy :> obj; SupportedOperationCodeConst.CdbUsageData_MODE_SELECT_6 :> obj; |];
+        [| 0x55uy :> obj; SupportedOperationCodeConst.CdbUsageData_MODE_SELECT_10 :> obj; |];
+        [| 0x1Auy :> obj; SupportedOperationCodeConst.CdbUsageData_MODE_SENSE_6 :> obj; |];
+        [| 0x5Auy :> obj; SupportedOperationCodeConst.CdbUsageData_MODE_SENSE_10 :> obj; |];
+        [| 0xA0uy :> obj; SupportedOperationCodeConst.CdbUsageData_REPORT_LUNS :> obj; |];
+        [| 0x03uy :> obj; SupportedOperationCodeConst.CdbUsageData_REQUEST_SENSE :> obj; |];
+        [| 0x00uy :> obj; SupportedOperationCodeConst.CdbUsageData_TEST_UNIT_READY :> obj; |];
+        [| 0x04uy :> obj; SupportedOperationCodeConst.CdbUsageData_FORMAT_UNIT :> obj; |];
+        [| 0x34uy :> obj; SupportedOperationCodeConst.CdbUsageData_PRE_FETCH_10 :> obj; |];
+        [| 0x90uy :> obj; SupportedOperationCodeConst.CdbUsageData_PRE_FETCH_16 :> obj; |];
+        [| 0x08uy :> obj; SupportedOperationCodeConst.CdbUsageData_READ_6 :> obj; |];
+        [| 0x28uy :> obj; SupportedOperationCodeConst.CdbUsageData_READ_10 :> obj; |];
+        [| 0xA8uy :> obj; SupportedOperationCodeConst.CdbUsageData_READ_12 :> obj; |];
+        [| 0x88uy :> obj; SupportedOperationCodeConst.CdbUsageData_READ_16  :> obj; |];
+        [| 0x25uy :> obj; SupportedOperationCodeConst.CdbUsageData_READ_CAPACITY_10 :> obj; |];
+        [| 0x35uy :> obj; SupportedOperationCodeConst.CdbUsageData_SYNCHRONIZE_CACHE_10 :> obj; |];
+        [| 0x91uy :> obj; SupportedOperationCodeConst.CdbUsageData_SYNCHRONIZE_CACHE_16 :> obj; |];
+        [| 0x0Auy :> obj; SupportedOperationCodeConst.CdbUsageData_WRITE_6 :> obj; |];
+        [| 0x2Auy :> obj; SupportedOperationCodeConst.CdbUsageData_WRITE_10 :> obj; |];
+        [| 0xAAuy :> obj; SupportedOperationCodeConst.CdbUsageData_WRITE_12 :> obj; |];
+        [| 0x8Auy :> obj; SupportedOperationCodeConst.CdbUsageData_WRITE_16 :> obj; |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_ReportSupportedOperationCodes_002_data" )>]
+    member _.ReportSupportedOperationCodes_002 ( opCode : byte ) ( result : byte[] ) =
         let mutable cnt1 = 0
         let mutable cnt2 = 0
-        let vOPCode = [|
-            0x12uy;
-            0x15uy;
-            0x55uy;
-            0x1Auy;
-            0x5Auy;
-            0xA0uy;
-            0x03uy;
-            0x00uy;
-            0x04uy;
-            0x34uy;
-            0x90uy;
-            0x08uy;
-            0x28uy;
-            0xA8uy;
-            0x88uy;
-            0x25uy;
-            0x35uy;
-            0x91uy;
-            0x0Auy;
-            0x2Auy;
-            0xAAuy;
-            0x8Auy;
-        |]
-        let vResult = [|
-            SupportedOperationCodeConst.CdbUsageData_INQUIRY;
-            SupportedOperationCodeConst.CdbUsageData_MODE_SELECT_6;
-            SupportedOperationCodeConst.CdbUsageData_MODE_SELECT_10;
-            SupportedOperationCodeConst.CdbUsageData_MODE_SENSE_6;
-            SupportedOperationCodeConst.CdbUsageData_MODE_SENSE_10;
-            SupportedOperationCodeConst.CdbUsageData_REPORT_LUNS;
-            SupportedOperationCodeConst.CdbUsageData_REQUEST_SENSE;
-            SupportedOperationCodeConst.CdbUsageData_TEST_UNIT_READY;
-            SupportedOperationCodeConst.CdbUsageData_FORMAT_UNIT;
-            SupportedOperationCodeConst.CdbUsageData_PRE_FETCH_10;
-            SupportedOperationCodeConst.CdbUsageData_PRE_FETCH_16;
-            SupportedOperationCodeConst.CdbUsageData_READ_6;
-            SupportedOperationCodeConst.CdbUsageData_READ_10;
-            SupportedOperationCodeConst.CdbUsageData_READ_12;
-            SupportedOperationCodeConst.CdbUsageData_READ_16;
-            SupportedOperationCodeConst.CdbUsageData_READ_CAPACITY_10;
-            SupportedOperationCodeConst.CdbUsageData_SYNCHRONIZE_CACHE_10;
-            SupportedOperationCodeConst.CdbUsageData_SYNCHRONIZE_CACHE_16;
-            SupportedOperationCodeConst.CdbUsageData_WRITE_6;
-            SupportedOperationCodeConst.CdbUsageData_WRITE_10;
-            SupportedOperationCodeConst.CdbUsageData_WRITE_12;
-            SupportedOperationCodeConst.CdbUsageData_WRITE_16;
-        |]
 
-        for i = 0 to vOPCode.Length - 1 do
-            let cdb = {
-                OperationCode = 0xA3uy;
-                ServiceAction = 0x00uy;
-                ReportingOptions = 0x01uy;
-                RequestedOperationCode = vOPCode.[i];
-                RequestedServiceAction = 0x00us;
-                AllocationLength = 16u;
-                Control = 0x00uy;
-            }
-            let stask, ilu = createDefScsiTask defaultSCSICommandPDU cdb [] false
-            let psStub = stask.Source.ProtocolService :?> CProtocolService_Stub
-            psStub.p_SendSCSIResponse <- ( fun _ _ _ _ resp stat _ indata alloclen _ ->
-                cnt2 <- cnt2 + 1
-                Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
-                Assert.True(( stat = ScsiCmdStatCd.GOOD ))
-                Assert.True(( PooledBuffer.ValueEqualsWithArray indata vResult.[i] ))
-                Assert.True(( alloclen = 0x10u ))
-            )
-            ilu.p_NotifyTerminateTask <- ( fun argTask ->
-                cnt1 <- cnt1 + 1
-            )
+        let cdb = {
+            OperationCode = 0xA3uy;
+            ServiceAction = 0x00uy;
+            ReportingOptions = 0x01uy;
+            RequestedOperationCode = opCode;
+            RequestedServiceAction = 0x00us;
+            AllocationLength = 16u;
+            Control = 0x00uy;
+        }
+        let stask, ilu = createDefScsiTask defaultSCSICommandPDU cdb [] false
+        let psStub = stask.Source.ProtocolService :?> CProtocolService_Stub
+        psStub.p_SendSCSIResponse <- ( fun _ _ _ _ resp stat _ indata alloclen _ ->
+            cnt2 <- cnt2 + 1
+            Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
+            Assert.True(( stat = ScsiCmdStatCd.GOOD ))
+            Assert.True(( PooledBuffer.ValueEqualsWithArray indata result ))
+            Assert.True(( alloclen = 0x10u ))
+        )
+        ilu.p_NotifyTerminateTask <- ( fun _ -> cnt1 <- cnt1 + 1 )
 
-            stask.Execute()()
-            |> Functions.RunTaskSynchronously
-            Assert.True(( cnt1 = i + 1 ))
-            Assert.True(( cnt2 = i + 1 ))
+        stask.Execute()()
+        |> Functions.RunTaskSynchronously
+        Assert.True(( cnt1 = 1 ))
+        Assert.True(( cnt2 = 1 ))
 
     [<Fact>]
     member _.ReportSupportedOperationCodes_003() =

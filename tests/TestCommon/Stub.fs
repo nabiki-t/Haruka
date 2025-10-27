@@ -823,3 +823,19 @@ type public CInternalLU_Stub() =
             f_NotifyReadTickCount.Value d tm
         override _.NotifyWriteTickCount ( d : DateTime ) ( tm : int64 ) =
             f_NotifyWriteTickCount.Value d tm
+
+type ICDB_Stub =
+    {
+        m_Type : CDBTypes;
+        m_OperationCode : byte;
+        m_ServiceAction : uint16;
+        m_NACA : bool;
+        m_LINK : bool;
+    }
+    interface ICDB with
+        member this.Type = this.m_Type
+        member this.OperationCode = this.m_OperationCode
+        member this.ServiceAction = this.m_ServiceAction
+        member this.NACA = this.m_NACA
+        member this.LINK = this.m_LINK
+        member _.DescriptString = ""
