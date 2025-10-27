@@ -14,6 +14,7 @@ namespace Haruka.Test.UT.BlockDeviceLU
 open System
 open System.IO
 open System.Text
+open System.Threading.Tasks
 open System.Collections.Immutable
 
 open Xunit
@@ -2400,7 +2401,7 @@ type ScsiTaskTest_Test () =
         )
         mediaStub.p_Format <- ( fun itt source ->
             Assert.True(( itt = itt_me.fromPrim 0u ))
-            task{ () }
+            Task.FromResult()
         )
         ilu.p_NotifyTerminateTask <- ( fun argTask ->
             cnt1 <- cnt1 + 1
@@ -2433,7 +2434,7 @@ type ScsiTaskTest_Test () =
         )
         mediaStub.p_Format <- ( fun itt source ->
             Assert.True(( itt = itt_me.fromPrim 0u ))
-            task{ () }
+            Task.FromResult()
         )
         ilu.p_NotifyTerminateTask <- ( fun argTask ->
             cnt1 <- cnt1 + 1
@@ -2476,7 +2477,7 @@ type ScsiTaskTest_Test () =
         )
         mediaStub.p_Format <- ( fun itt source ->
             Assert.True(( itt = itt_me.fromPrim 0u ))
-            task{ () }
+            Task.FromResult()
         )
         ilu.p_NotifyTerminateTaskWithException <- ( fun argTask argEx ->
             cnt1 <- cnt1 + 1
@@ -2703,7 +2704,7 @@ type ScsiTaskTest_Test () =
             Assert.True(( itt = itt_me.fromPrim 0u ))
             Assert.True(( lba = 0xAABBUL ))
             Assert.True(( buf.Count = ( int Constants.MEDIA_BLOCK_SIZE ) * 3 ))
-            task{ return buf.Count }
+            Task.FromResult( buf.Count )
         )
         ilu.p_NotifyTerminateTask <- ( fun argTask ->
             cnt1 <- cnt1 + 1
@@ -2745,7 +2746,7 @@ type ScsiTaskTest_Test () =
             Assert.True(( itt = itt_me.fromPrim 0u ))
             Assert.True(( lba = 0xAABBUL ))
             Assert.True(( buf.Count = int wDataLen ))
-            task{ return buf.Count }
+            Task.FromResult( buf.Count )
         )
         ilu.p_NotifyTerminateTask <- ( fun argTask ->
             cnt1 <- cnt1 + 1
@@ -2796,7 +2797,7 @@ type ScsiTaskTest_Test () =
             Assert.True(( itt = itt_me.fromPrim 0u ))
             Assert.True(( lba = 0xAABBUL ))
             Assert.True(( buf.Count = int wDataLen ))
-            task{ return buf.Count }
+            Task.FromResult( buf.Count )
         )
         ilu.p_NotifyTerminateTaskWithException <- ( fun argTask argEx ->
             cnt1 <- cnt1 + 1
@@ -3438,7 +3439,7 @@ type ScsiTaskTest_Test () =
                 Assert.True(( buf.Count = 4992 ))
             | _ ->
                 Assert.Fail __LINE__
-            task{ return buf.Count }
+            Task.FromResult( buf.Count )
         )
         ilu.p_NotifyTerminateTask <- ( fun argTask ->
             cnt3 <- cnt3 + 1
@@ -3504,7 +3505,7 @@ type ScsiTaskTest_Test () =
             Assert.True(( lba = 0x00UL ))
             Assert.True(( offset = 0UL ))
             Assert.True(( buf.Count = 512 ))
-            task{ return buf.Count }
+            Task.FromResult( buf.Count )
         )
         ilu.p_NotifyTerminateTask <- ( fun argTask ->
             cnt3 <- cnt3 + 1
@@ -3561,7 +3562,7 @@ type ScsiTaskTest_Test () =
         )
         mediaStub.p_Write <- ( fun _ _ _ _ buf ->
             cnt1 <- cnt1 + 1
-            task{ return buf.Count }
+            Task.FromResult( buf.Count )
         )
         ilu.p_NotifyTerminateTaskWithException <- ( fun argTask argEx ->
             cnt3 <- cnt3 + 1
@@ -3610,7 +3611,7 @@ type ScsiTaskTest_Test () =
         )
         mediaStub.p_Write <- ( fun _ _ _ _ buf ->
             cnt1 <- cnt1 + 1
-            task{ return buf.Count }
+            Task.FromResult( buf.Count )
         )
         ilu.p_NotifyTerminateTask <- ( fun argTask ->
             cnt3 <- cnt3 + 1

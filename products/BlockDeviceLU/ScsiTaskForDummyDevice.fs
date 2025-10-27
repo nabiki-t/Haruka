@@ -231,7 +231,7 @@ type ScsiTaskForDummyDevice
                     0u
                     ResponseFenceNeedsFlag.R_Mode
                 m_LU.NotifyTerminateTask this
-                fun () -> task{ () }
+                fun () -> Task.FromResult()
 
             | ReportSupportedOperationCodes             // SPC-3 6.23 REPORT SUPPORTED OPERATION CODES command
                 ->

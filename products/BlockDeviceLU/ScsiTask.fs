@@ -1378,7 +1378,7 @@ type ScsiTask
                     if bufLen > 0UL then
                         m_Media.Read m_ITT m_Source cdb.LogicalBlockAddress buf.ArraySegment
                     else
-                        task{ return 0 }
+                        Task.FromResult 0
 
                 // Notify read bytes count to LU for usage counter.
                 m_LU.NotifyReadBytesCount DateTime.UtcNow ( int64 readSize )

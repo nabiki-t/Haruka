@@ -730,7 +730,7 @@ type Controller (
             }
         else
             HLogger.Trace( LogID.W_MGR_CLI_SESSION_ID_MISMATCH, fun g -> g.Gen0 m_ObjID )
-            task{ return sendMsg false "Session ID mismatch" }
+            Task.FromResult( sendMsg false "Session ID mismatch" )
 
     /// <summary>
     ///  Process "Delete target device dir" control request.
@@ -815,7 +815,7 @@ type Controller (
             }
         else
             HLogger.Trace( LogID.W_MGR_CLI_SESSION_ID_MISMATCH, fun g -> g.Gen0 m_ObjID )
-            task{ return sendMsg "" "Session ID mismatch" }
+            Task.FromResult( sendMsg "" "Session ID mismatch" )
 
     /// <summary>
     ///  Process "Create target device config" control request.
@@ -1030,7 +1030,7 @@ type Controller (
             }
         else
             HLogger.Trace( LogID.W_MGR_CLI_SESSION_ID_MISMATCH, fun g -> g.Gen0 m_ObjID )
-            task{ return sendMsg [] "Session ID mismatch" }
+            Task.FromResult( sendMsg [] "Session ID mismatch" )
 
 
     /// <summary>

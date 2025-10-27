@@ -715,9 +715,7 @@ type Functions_Test () =
     [<Fact>]
     member _.RetryAsync1_001() =
         let mutable cnt = 0
-        let f() = task {
-            return Ok( 0 )
-        }
+        let f() = Task.FromResult( Ok( 0 ) )
         let e ( _ : Exception ) : bool =
             cnt <- cnt + 1
             true
@@ -893,9 +891,7 @@ type Functions_Test () =
     [<Fact>]
     member _.RetryAsync2_001() =
         let mutable cnt = 0
-        let f() = task {
-            return 0
-        }
+        let f() = Task.FromResult( 0 )
         let e ( _ : Exception ) : bool =
             cnt <- cnt + 1
             true
@@ -1422,31 +1418,21 @@ type Functions_Test () =
 
     [<Fact>]
     member _.loopAsyncWithState_001() =
-        let f2 ( a : int ) =
-            task {
-                return struct( false, 0 )
-            }
+        let f2 ( a : int ) = Task.FromResult struct( false, 0 )
         let r = ( Functions.loopAsyncWithState f2 0 ).Result
         Assert.True(( r = 0 ))
 
     [<Fact>]
     member _.loopAsyncWithState_002() =
         let f2 ( a : int ) =
-            task {
-                if a = 3 then
-                    return struct( false, a )
-                else
-                    return struct( true, a + 1 )
-            }
+            Task.FromResult( if a = 3 then struct( false, a ) else struct( true, a + 1 ) )
         let r = ( Functions.loopAsyncWithState f2 0 ).Result
         Assert.True(( r = 3 ))
 
     [<Fact>]
     member _.loopAsyncWithState_003() =
         let f2 ( a : struct {| a1 : int; a2 : int list |} ) =
-            task {
-                return struct( ( a.a1 < 10 ), struct {| a1 = a.a1 + 1; a2 = a.a1 :: a.a2 |} )
-            }
+            Task.FromResult( struct( ( a.a1 < 10 ), struct {| a1 = a.a1 + 1; a2 = a.a1 :: a.a2 |} ) )
         let r = ( Functions.loopAsyncWithState f2 ( struct {| a1 = 0; a2 = [] |} ) ).Result
         Assert.True(( r.a1 = 11 ))
         Assert.True(( r.a2 = [ 10; 9; 8; 7; 6; 5; 4; 3; 2; 1; 0 ] ))
@@ -1454,9 +1440,7 @@ type Functions_Test () =
     [<Fact>]
     member _.loopAsyncWithState_004() =
         let f2 ( a : int, b : int ) =
-            task {
-                return struct( ( a < 5 ), ( a + 1, b + 2 ) )
-            }
+            Task.FromResult struct( ( a < 5 ), ( a + 1, b + 2 ) )
         let r1, r2 = ( Functions.loopAsyncWithState f2 ( 0, 1 ) ).Result
         Assert.True(( r1 = 6 ))
         Assert.True(( r2 = 13 ))
@@ -1549,10 +1533,7 @@ type Functions_Test () =
 
     [<Fact>]
     member _.RunTaskSynchronously_001() =
-        let t : Task<int> =
-            task {
-                return 99
-            }
+        let t : Task<int> = Task.FromResult 99
         let a = Functions.RunTaskSynchronously t
         Assert.True(( a = 99 ))
 

@@ -2576,7 +2576,7 @@ type BlockDeviceLU_Test () =
                 dt.p_GetReceivedDataLength <- ( fun () -> 0u )
                 dt.p_Execute <- ( fun () ->
                     cnt1 <- cnt1 + 1
-                    fun () -> task{ () }
+                    fun () -> Task.FromResult()
                 )
                 dt.p_ReleasePooledBuffer <- id
                 yield TaskStatus.TASK_STAT_Dormant( dt :> IBlockDeviceTask )
@@ -2631,7 +2631,7 @@ type BlockDeviceLU_Test () =
             dt2.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
             dt2.p_Execute <- ( fun () ->
                 raise <| SCSIACAException ( source, true, SenseKeyCd.ABORTED_COMMAND, ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT, "" )
-                fun () -> task{ () }
+                fun () -> Task.FromResult()
             )
             yield TaskStatus.TASK_STAT_Dormant( dt2 :> IBlockDeviceTask )
         |]
@@ -3970,7 +3970,7 @@ type BlockDeviceLU_Test () =
         taskStub.p_GetCDB <- ( fun () -> ValueSome cdb )
         taskStub.p_Execute <- ( fun () ->
             Assert.Fail __LINE__
-            fun () -> task{ () }
+            fun () -> Task.FromResult()
         )
         taskStub.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
         taskStub.p_GetReceivedDataLength <- ( fun () -> 0u )
@@ -4596,7 +4596,7 @@ type BlockDeviceLU_Test () =
                     p_GetCDB = ( fun () -> ValueSome cdb ),
                     p_Execute = ( fun () ->
                         Assert.Fail __LINE__
-                        fun () -> task{ () }
+                        fun () -> Task.FromResult()
                     ),
                     p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK ),
                     p_GetACANoncompliant = ( fun () -> false )
@@ -4610,7 +4610,7 @@ type BlockDeviceLU_Test () =
                     p_GetCDB = ( fun () -> ValueNone ),
                     p_Execute = ( fun () ->
                         Assert.Fail __LINE__
-                        fun () -> task{ () }
+                        fun () -> Task.FromResult()
                     ),
                     p_GetACANoncompliant = ( fun () -> true )   // InternalTask always must return true.
                 ) :> IBlockDeviceTask
@@ -4683,7 +4683,7 @@ type BlockDeviceLU_Test () =
                     p_GetCDB = ( fun () -> ValueSome cdb ),
                     p_Execute = ( fun () ->
                         Assert.Fail __LINE__
-                        fun () -> task{ () }
+                        fun () -> Task.FromResult()
                     ),
                     p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK ),
                     p_GetACANoncompliant = ( fun () -> false )
@@ -4697,7 +4697,7 @@ type BlockDeviceLU_Test () =
                     p_GetCDB = ( fun () -> ValueNone ),
                     p_Execute = ( fun () ->
                         Assert.Fail __LINE__
-                        fun () -> task{ () }
+                        fun () -> Task.FromResult()
                     ),
                     p_GetACANoncompliant = ( fun () -> true )   // InternalTask always must return true.
                 ) :> IBlockDeviceTask
@@ -4774,7 +4774,7 @@ type BlockDeviceLU_Test () =
                     p_GetCDB = ( fun () -> ValueSome cdb ),
                     p_Execute = ( fun () ->
                         Assert.Fail __LINE__
-                        fun () -> task{ () }
+                        fun () -> Task.FromResult()
                     ),
                     p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.HEAD_OF_QUEUE_TASK ),
                     p_GetACANoncompliant = ( fun () -> false )
@@ -4833,7 +4833,7 @@ type BlockDeviceLU_Test () =
                 p_GetCDB = ( fun () -> ValueSome cdb ),
                 p_Execute = ( fun () ->
                     Assert.Fail __LINE__
-                    fun () -> task{ () }
+                    fun () -> Task.FromResult()
                 ),
                 p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ORDERED_TASK ),
                 p_GetACANoncompliant = ( fun () -> false )
@@ -4892,7 +4892,7 @@ type BlockDeviceLU_Test () =
                 p_GetCDB = ( fun () -> ValueSome cdb ),
                 p_Execute = ( fun () ->
                     Assert.Fail __LINE__
-                    fun () -> task{ () }
+                    fun () -> Task.FromResult()
                 ),
                 p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK ),
                 p_GetACANoncompliant = ( fun () -> false )
@@ -4951,7 +4951,7 @@ type BlockDeviceLU_Test () =
                 p_GetCDB = ( fun () -> ValueSome cdb ),
                 p_Execute = ( fun () ->
                     Assert.Fail __LINE__
-                    fun () -> task{ () }
+                    fun () -> Task.FromResult()
                 ),
                 p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.TAGLESS_TASK ),
                 p_GetACANoncompliant = ( fun () -> false )
@@ -5546,7 +5546,7 @@ type BlockDeviceLU_Test () =
         task1.p_GetCDB <- ( fun () -> ValueSome cdb )
         task1.p_Execute <- ( fun () ->
             Assert.Fail __LINE__
-            fun () -> task{ () }
+            fun () -> Task.FromResult()
         )
         task1.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand attr1 )
         task1.p_GetACANoncompliant <- ( fun () -> false )

@@ -265,7 +265,7 @@ type LoginNegociator
             let! sessionType =
                 match IscsiTextEncode.SearchTextKeyValue "SessionType" keyValues.Value with
                 | ISV_Missing ->
-                    task{ return "" }
+                    Task.FromResult( "" )
                 | TextValueType.Value( x ) ->
                     task {
                         let xs = Encoding.UTF8.GetString x

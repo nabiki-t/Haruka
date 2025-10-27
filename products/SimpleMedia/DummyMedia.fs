@@ -124,7 +124,7 @@ type DummyMedia
             HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_COMMAND_OPERATION_CODE, msg )
             raise <| SCSIACAException ( source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_COMMAND_OPERATION_CODE, msg )
 
-            task{ return 0 }
+            Task.FromResult( 0 )
 
         // ------------------------------------------------------------------------
         // Implementation of Format method
