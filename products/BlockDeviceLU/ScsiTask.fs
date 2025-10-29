@@ -871,11 +871,8 @@ type ScsiTask
             HLogger.ACAException( m_LogInfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE, errmsg )
             raise <| SCSIACAException ( m_Source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE, errmsg )
 
-        let s =
-            if m_Media.BlockCount < cdb.LogicalBlockAddress + ( uint64 cdb.PrefetchLength ) then
-                ScsiCmdStatCd.GOOD
-            else
-                ScsiCmdStatCd.CONDITION_MET
+        // Since it does nothing, the status always returns CONDITION_MET.
+        let s = ScsiCmdStatCd.CONDITION_MET
 
         // Nothig to do
 
@@ -894,7 +891,6 @@ type ScsiTask
                 PooledBuffer.Empty
                 0u
                 ResponseFenceNeedsFlag.R_Mode
-
 
     /// <summary>
     ///  Execute REPORT LUNS SCSI command.
