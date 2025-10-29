@@ -253,9 +253,12 @@ type ScsiTaskForDummyDeviceTest_Test () =
             AllocationLength = 0xFFFFus;
             Control = 0uy;
         }
-        let t, ilu = createDefScsiTaskForDummyDevice defaultSCSICommandPDU s [ defaultSCSIDataOutPDU ] false
+        let scsiCommand = { defaultSCSICommandPDU with DataSegment = PooledBuffer.Rent 10 }
+        let scsiDataOut = { defaultSCSIDataOutPDU with DataSegment = PooledBuffer.Rent 20 }
+        let t, ilu = createDefScsiTaskForDummyDevice scsiCommand s [ scsiDataOut ] false
         let psStub = t.Source.ProtocolService :?> CProtocolService_Stub
-        psStub.p_SendSCSIResponse <- ( fun _ _ _ _ resp stat _ indata alloclen _ ->
+        psStub.p_SendSCSIResponse <- ( fun _ _ _ recvdl resp stat _ indata alloclen _ ->
+            Assert.True(( recvdl = 30u ))
             Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
             Assert.True(( stat = ScsiCmdStatCd.GOOD ))
             let v = [|
@@ -953,11 +956,14 @@ type ScsiTaskForDummyDeviceTest_Test () =
             GroupNumber = 0uy;
             Control = 0uy;
         }
-        let stask, ilu = createDefScsiTaskForDummyDevice defaultSCSICommandPDU cdb [] false
+        let scsiCommand = { defaultSCSICommandPDU with DataSegment = PooledBuffer.Rent 10 }
+        let scsiDataOut = { defaultSCSIDataOutPDU with DataSegment = PooledBuffer.Rent 20 }
+        let stask, ilu = createDefScsiTaskForDummyDevice scsiCommand cdb [scsiDataOut] false
         let psStub = stask.Source.ProtocolService :?> CProtocolService_Stub
 
-        psStub.p_SendSCSIResponse <- ( fun _ _ _ _ resp stat _ _ _ _ ->
+        psStub.p_SendSCSIResponse <- ( fun _ _ _ recvdl resp stat _ _ _ _ ->
             cnt2 <- cnt2 + 1
+            Assert.True(( recvdl = 30u ))
             Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
             Assert.True(( stat = ScsiCmdStatCd.GOOD ))
         )

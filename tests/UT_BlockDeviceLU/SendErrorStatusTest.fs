@@ -28,7 +28,7 @@ type SendErrorStatusTest_Test () =
     ///////////////////////////////////////////////////////////////////////////
     // Common definition
 
-    let createDefTask ( dSense : bool ) ( m_RespCode : iScsiSvcRespCd ) ( m_StatCode : ScsiCmdStatCd ) ( m_SenseData : SenseData ) = 
+    let createDefTask ( recvLen : uint32 ) ( dSense : bool ) ( m_RespCode : iScsiSvcRespCd ) ( m_StatCode : ScsiCmdStatCd ) ( m_SenseData : SenseData ) = 
         let lu = new CInternalLU_Stub()
         let t =
             new SendErrorStatusTask(
@@ -57,7 +57,7 @@ type SendErrorStatusTest_Test () =
                     BidirectionalExpectedReadDataLength = 0u;
                     ByteCount = 0u;
                 },
-                0u,
+                recvLen,
                 lu,
                 dSense,
                 m_RespCode,
@@ -87,11 +87,12 @@ type SendErrorStatusTest_Test () =
                     None,
                     None
         )
-        let t, ilu = createDefTask true iScsiSvcRespCd.COMMAND_COMPLETE ScsiCmdStatCd.GOOD s
+        let t, ilu = createDefTask 55u true iScsiSvcRespCd.COMMAND_COMPLETE ScsiCmdStatCd.GOOD s
         let psStub = t.Source.ProtocolService :?> CProtocolService_Stub
         let mutable cnt = 0
         let mutable cnt1 = 0
-        psStub.p_SendSCSIResponse <- ( fun _ _ _ _ resp stat sensedata _ _ _ ->
+        psStub.p_SendSCSIResponse <- ( fun _ _ _ recvdl resp stat sensedata _ _ _ ->
+            Assert.True(( recvdl = 55u ))
             Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
             Assert.True(( stat = ScsiCmdStatCd.GOOD ))
             let v =
@@ -131,7 +132,7 @@ type SendErrorStatusTest_Test () =
                     None,
                     None
         )
-        let t, ilu = createDefTask false iScsiSvcRespCd.COMMAND_COMPLETE ScsiCmdStatCd.GOOD s
+        let t, ilu = createDefTask 0u false iScsiSvcRespCd.COMMAND_COMPLETE ScsiCmdStatCd.GOOD s
         let psStub = t.Source.ProtocolService :?> CProtocolService_Stub
         let mutable cnt = 0
         let mutable cnt1 = 0
@@ -162,9 +163,10 @@ type SendErrorStatusTest_Test () =
                     None,
                     None
         )
-        let t, ilu = createDefTask false iScsiSvcRespCd.COMMAND_COMPLETE ScsiCmdStatCd.GOOD s
+        let t, ilu = createDefTask 99u false iScsiSvcRespCd.COMMAND_COMPLETE ScsiCmdStatCd.GOOD s
         let psStub = t.Source.ProtocolService :?> CProtocolService_Stub
-        psStub.p_SendSCSIResponse <- ( fun _ _ _ _ resp stat _ _ _ _ ->
+        psStub.p_SendSCSIResponse <- ( fun _ _ _ recvdl resp stat _ _ _ _ ->
+            Assert.True(( recvdl = 99u ))
             Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
             Assert.True(( stat = ScsiCmdStatCd.TASK_ABORTED ))
             cnt <- cnt + 1
@@ -189,7 +191,7 @@ type SendErrorStatusTest_Test () =
                     None,
                     None
         )
-        let t, ilu = createDefTask false iScsiSvcRespCd.COMMAND_COMPLETE ScsiCmdStatCd.GOOD s
+        let t, ilu = createDefTask 0u false iScsiSvcRespCd.COMMAND_COMPLETE ScsiCmdStatCd.GOOD s
         let psStub = t.Source.ProtocolService :?> CProtocolService_Stub
         psStub.p_SendSCSIResponse <- ( fun _ _ _ _ _ _ _ _ _ _ ->
             cnt <- cnt + 1
@@ -214,7 +216,7 @@ type SendErrorStatusTest_Test () =
                     None,
                     None
         )
-        let t, ilu = createDefTask true iScsiSvcRespCd.COMMAND_COMPLETE ScsiCmdStatCd.GOOD s
+        let t, ilu = createDefTask 0u true iScsiSvcRespCd.COMMAND_COMPLETE ScsiCmdStatCd.GOOD s
         let psStub = t.Source.ProtocolService :?> CProtocolService_Stub
         let mutable cnt = 0
         let mutable cnt1 = 0
@@ -261,7 +263,7 @@ type SendErrorStatusTest_Test () =
                     None,
                     None
         )
-        let t, ilu = createDefTask true iScsiSvcRespCd.COMMAND_COMPLETE ScsiCmdStatCd.GOOD s
+        let t, ilu = createDefTask 0u true iScsiSvcRespCd.COMMAND_COMPLETE ScsiCmdStatCd.GOOD s
         let psStub = t.Source.ProtocolService :?> CProtocolService_Stub
         let mutable cnt = 0
         let mutable cnt1 = 0

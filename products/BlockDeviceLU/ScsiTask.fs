@@ -127,11 +127,11 @@ type ScsiTask
 
         /// Return total received data length in bytes.
         override _.ReceivedDataLength : uint =
-            m_DataOut
-            |> List.map _.DataSegment
-            |> List.insertAt 0 m_Command.DataSegment
-            |> List.sumBy PooledBuffer.length
-            |> uint
+            let len1 = PooledBuffer.length m_Command.DataSegment |> uint32
+            let len2 =
+                m_DataOut
+                |> List.sumBy ( fun x -> uint32 ( PooledBuffer.length x.DataSegment ) )
+            len1 + len2
 
         /// Return CDB of this object
         override _.CDB : ICDB voption =
@@ -390,11 +390,12 @@ type ScsiTask
             if init = 0 && current = 2 then
                 // If this task is aborted by the other I_T Nexus, returns TASK ABORTED response.
                 if needResp then
+                    let recvDataLength = ( this :> IBlockDeviceTask ).ReceivedDataLength
                     m_Source.ProtocolService.SendSCSIResponse
                         m_Command
                         m_Source.CID
                         m_Source.ConCounter
-                        0u
+                        recvDataLength
                         iScsiSvcRespCd.COMMAND_COMPLETE
                         ScsiCmdStatCd.TASK_ABORTED
                         PooledBuffer.Empty
@@ -630,11 +631,12 @@ type ScsiTask
         let init, current = this.SetTerminateFlag 1
         if init = 0 && current = 1 then
             // Send response data to the initiator
+            let recvDataLength = ( this :> IBlockDeviceTask ).ReceivedDataLength
             m_Source.ProtocolService.SendSCSIResponse
                 m_Command
                 m_Source.CID
                 m_Source.ConCounter
-                0u
+                recvDataLength
                 iScsiSvcRespCd.COMMAND_COMPLETE
                 ScsiCmdStatCd.GOOD
                 PooledBuffer.Empty
@@ -665,10 +667,7 @@ type ScsiTask
 
         parameterList.Return()
 
-        let recvDataLen =
-            ( PooledBuffer.length m_Command.DataSegment ) +
-            ( m_DataOut |> Seq.map _.DataSegment |> Seq.map PooledBuffer.length |> Seq.sum )
-
+        let recvDataLength = ( this :> IBlockDeviceTask ).ReceivedDataLength
         let init, current = this.SetTerminateFlag 1
         if init = 0 && current = 1 then
             // Send response data to the initiator
@@ -676,7 +675,7 @@ type ScsiTask
                 m_Command
                 m_Source.CID
                 m_Source.ConCounter
-                ( uint32 recvDataLen )
+                recvDataLength
                 iScsiSvcRespCd.COMMAND_COMPLETE
                 ScsiCmdStatCd.GOOD
                 PooledBuffer.Empty
@@ -709,11 +708,12 @@ type ScsiTask
         let init, current = this.SetTerminateFlag 1
         if init = 0 && current = 1 then
             // Send response data to the initiator
+            let recvDataLength = ( this :> IBlockDeviceTask ).ReceivedDataLength
             m_Source.ProtocolService.SendSCSIResponse
                 m_Command
                 m_Source.CID
                 m_Source.ConCounter
-                0u
+                recvDataLength
                 iScsiSvcRespCd.COMMAND_COMPLETE
                 ScsiCmdStatCd.GOOD
                 PooledBuffer.Empty
@@ -754,11 +754,12 @@ type ScsiTask
         let init, current = this.SetTerminateFlag 1
         if init = 0 && current = 1 then
             // Send response data to the initiator
+            let recvDataLength = ( this :> IBlockDeviceTask ).ReceivedDataLength
             m_Source.ProtocolService.SendSCSIResponse
                 m_Command
                 m_Source.CID
                 m_Source.ConCounter
-                0u
+                recvDataLength
                 iScsiSvcRespCd.COMMAND_COMPLETE
                 ScsiCmdStatCd.GOOD
                 PooledBuffer.Empty
@@ -788,10 +789,7 @@ type ScsiTask
         let retresultfunc ( resultval : ScsiCmdStatCd ) _ =
             task {
                 try
-                    let recvDataLen =
-                        ( PooledBuffer.length m_Command.DataSegment ) +
-                        ( m_DataOut |> Seq.map _.DataSegment |> Seq.map PooledBuffer.length |> Seq.sum )
-
+                    let recvDataLen = ( this :> IBlockDeviceTask ).ReceivedDataLength
                     let init, current = this.SetTerminateFlag 1
                     if init = 0 && current = 1 then
                         // Send response data to the initiator
@@ -884,11 +882,12 @@ type ScsiTask
         let init, current = this.SetTerminateFlag 1
         if init = 0 && current = 1 then
             // Send response data to the initiator
+            let recvDataLength = ( this :> IBlockDeviceTask ).ReceivedDataLength
             m_Source.ProtocolService.SendSCSIResponse
                 m_Command
                 m_Source.CID
                 m_Source.ConCounter
-                0u
+                recvDataLength
                 iScsiSvcRespCd.COMMAND_COMPLETE
                 s
                 PooledBuffer.Empty
@@ -958,11 +957,12 @@ type ScsiTask
         let init, current = this.SetTerminateFlag 1
         if init = 0 && current = 1 then
             // Send response data to the initiator
+            let recvDataLength = ( this :> IBlockDeviceTask ).ReceivedDataLength
             m_Source.ProtocolService.SendSCSIResponse
                 m_Command
                 m_Source.CID
                 m_Source.ConCounter
-                0u
+                recvDataLength
                 iScsiSvcRespCd.COMMAND_COMPLETE
                 ScsiCmdStatCd.GOOD
                 PooledBuffer.Empty
@@ -1120,11 +1120,12 @@ type ScsiTask
         let init, current = this.SetTerminateFlag 1
         if init = 0 && current = 1 then
             // Send response data to the initiator
+            let recvDataLength = ( this :> IBlockDeviceTask ).ReceivedDataLength
             m_Source.ProtocolService.SendSCSIResponse
                 m_Command
                 m_Source.CID
                 m_Source.ConCounter
-                0u
+                recvDataLength
                 iScsiSvcRespCd.COMMAND_COMPLETE
                 ScsiCmdStatCd.GOOD
                 PooledBuffer.Empty
@@ -1162,11 +1163,12 @@ type ScsiTask
         let init, current = this.SetTerminateFlag 1
         if init = 0 && current = 1 then
             // Send response data to the initiator
+            let recvDataLength = ( this :> IBlockDeviceTask ).ReceivedDataLength
             m_Source.ProtocolService.SendSCSIResponse
                 m_Command
                 m_Source.CID
                 m_Source.ConCounter
-                0u
+                recvDataLength
                 iScsiSvcRespCd.COMMAND_COMPLETE
                 ScsiCmdStatCd.GOOD
                 PooledBuffer.Empty
@@ -1209,11 +1211,12 @@ type ScsiTask
         let init, current = this.SetTerminateFlag 1
         if init = 0 && current = 1 then
             // Send response data to the initiator
+            let recvDataLength = ( this :> IBlockDeviceTask ).ReceivedDataLength
             m_Source.ProtocolService.SendSCSIResponse
                 m_Command
                 m_Source.CID
                 m_Source.ConCounter
-                0u
+                recvDataLength
                 iScsiSvcRespCd.COMMAND_COMPLETE
                 ScsiCmdStatCd.GOOD
                 PooledBuffer.Empty
@@ -1236,6 +1239,7 @@ type ScsiTask
 
         let init, current = this.SetTerminateFlag 1
         if init = 0 && current = 1 then
+            let recvDataLength = ( this :> IBlockDeviceTask ).ReceivedDataLength
             // Send response data to the initiator
             match r with
             | ValueNone ->
@@ -1244,7 +1248,7 @@ type ScsiTask
                     m_Command
                     m_Source.CID
                     m_Source.ConCounter
-                    0u
+                    recvDataLength
                     iScsiSvcRespCd.COMMAND_COMPLETE
                     ScsiCmdStatCd.GOOD
                     PooledBuffer.Empty
@@ -1270,7 +1274,7 @@ type ScsiTask
                     m_Command
                     m_Source.CID
                     m_Source.ConCounter
-                    0u
+                    recvDataLength
                     iScsiSvcRespCd.COMMAND_COMPLETE
                     ScsiCmdStatCd.CHECK_CONDITION
                     ( PooledBuffer.Rent result )
@@ -1303,11 +1307,12 @@ type ScsiTask
             let init, current = this.SetTerminateFlag 1
             if init = 0 && current = 1 then
                 // Send response data to the initiator
+                let recvDataLength = ( this :> IBlockDeviceTask ).ReceivedDataLength
                 m_Source.ProtocolService.SendSCSIResponse
                     m_Command
                     m_Source.CID
                     m_Source.ConCounter
-                    0u
+                    recvDataLength
                     iScsiSvcRespCd.COMMAND_COMPLETE
                     ScsiCmdStatCd.GOOD
                     PooledBuffer.Empty
@@ -1391,11 +1396,12 @@ type ScsiTask
                 m_LU.NotifyReadTickCount DateTime.UtcNow m_RWStopWatch.ElapsedTicks
 
                 // Send response data to the initiator
+                let recvDataLength = ( this :> IBlockDeviceTask ).ReceivedDataLength
                 m_Source.ProtocolService.SendSCSIResponse
                     m_Command
                     m_Source.CID
                     m_Source.ConCounter
-                    0u
+                    recvDataLength
                     iScsiSvcRespCd.COMMAND_COMPLETE
                     ScsiCmdStatCd.GOOD
                     PooledBuffer.Empty
@@ -1442,11 +1448,12 @@ type ScsiTask
         let init, current = this.SetTerminateFlag 1
         if init = 0 && current = 1 then
             // Send response data to the initiator
+            let recvDataLength = ( this :> IBlockDeviceTask ).ReceivedDataLength
             m_Source.ProtocolService.SendSCSIResponse
                 m_Command
                 m_Source.CID
                 m_Source.ConCounter
-                0u
+                recvDataLength
                 iScsiSvcRespCd.COMMAND_COMPLETE
                 ScsiCmdStatCd.GOOD
                 PooledBuffer.Empty
@@ -1464,8 +1471,11 @@ type ScsiTask
         assert( m_CDB.Type = SynchronizeCache )
         assert( match m_CDB with | :? SynchronizeCacheCDB -> true | _ -> false )
         let cdb = m_CDB :?> SynchronizeCacheCDB
+        let wMediaBlockCount = m_Media.BlockCount
 
-        if m_Media.BlockCount <= cdb.LogicalBlockAddress + ( uint64 cdb.NumberOfBlocks ) then
+        if cdb.LogicalBlockAddress > wMediaBlockCount ||
+            cdb.LogicalBlockAddress + ( uint64 cdb.NumberOfBlocks ) > wMediaBlockCount || 
+            cdb.LogicalBlockAddress + ( uint64 cdb.NumberOfBlocks ) < cdb.LogicalBlockAddress then
             let errmsg = sprintf "Invalid LBA(0x%16X) and NumberOfBlocks(%d), in SYNCHRONIZE CACHE command CDB" cdb.LogicalBlockAddress cdb.NumberOfBlocks
             HLogger.ACAException( m_LogInfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE, errmsg )
             raise <| SCSIACAException ( m_Source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE, errmsg )
@@ -1475,11 +1485,12 @@ type ScsiTask
         let init, current = this.SetTerminateFlag 1
         if init = 0 && current = 1 then
             // Send response data to the initiator
+            let recvDataLength = ( this :> IBlockDeviceTask ).ReceivedDataLength
             m_Source.ProtocolService.SendSCSIResponse
                 m_Command
                 m_Source.CID
                 m_Source.ConCounter
-                0u
+                recvDataLength
                 iScsiSvcRespCd.COMMAND_COMPLETE
                 ScsiCmdStatCd.GOOD
                 PooledBuffer.Empty
@@ -1573,21 +1584,13 @@ type ScsiTask
             with
             | :? AggregateException as x -> raise <| x.InnerException
 
-            let recvDataLength =
-                let rec loop ( cnt : int ) ( s : int ) =
-                    if cnt < wv.Count then
-                        let struct ( _, seg ) = wv.[ cnt ]
-                        loop ( cnt + 1 ) ( s + seg.Count )
-                    else
-                        s
-                loop 0 0
-
             let init, current = this.SetTerminateFlag 1
             if init = 0 && current = 1 then
                 m_RWStopWatch.Stop()
                 m_LU.NotifyWriteTickCount DateTime.UtcNow m_RWStopWatch.ElapsedTicks
 
                 // Send response data to the initiator
+                let recvDataLength = ( this :> IBlockDeviceTask ).ReceivedDataLength
                 m_Source.ProtocolService.SendSCSIResponse
                     m_Command
                     m_Source.CID
@@ -1600,5 +1603,3 @@ type ScsiTask
                     0u
                     ResponseFenceNeedsFlag.R_Mode
         }
-
-

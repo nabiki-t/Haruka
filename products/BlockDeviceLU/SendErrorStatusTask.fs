@@ -112,7 +112,7 @@ type SendErrorStatusTask
                 | _ as x ->
                     // Notify terminate this task with an exception.
                     HLogger.Trace( LogID.V_TRACE, fun g -> g.Gen1( loginfo, sprintf "An exeption raised. Message=%s" x.Message ) )
-                    // 論理ユニットリセットに倒さなければならない
+                    // If any errors occur repeatedly in the error response, escalate to a logical unit reset.
                     m_LU.NotifyTerminateTaskWithException ( this :> IBlockDeviceTask ) x
             }
 
@@ -140,7 +140,7 @@ type SendErrorStatusTask
                         m_Command
                         m_Source.CID
                         m_Source.ConCounter
-                        0u
+                        m_RecvDataLen
                         iScsiSvcRespCd.COMMAND_COMPLETE
                         ScsiCmdStatCd.TASK_ABORTED
                         PooledBuffer.Empty

@@ -219,11 +219,12 @@ type ScsiTaskForDummyDevice
                 // Nothig to do
 
                 // Send response data to the initiator
+                let receivedDataLength = ( m_ScsiTask :> IBlockDeviceTask ).ReceivedDataLength
                 m_Source.ProtocolService.SendSCSIResponse
                     m_Command
                     m_Source.CID
                     m_Source.ConCounter
-                    0u
+                    receivedDataLength
                     iScsiSvcRespCd.COMMAND_COMPLETE
                     ScsiCmdStatCd.GOOD
                     PooledBuffer.Empty
@@ -452,11 +453,12 @@ type ScsiTaskForDummyDevice
         let init, current = m_ScsiTask.SetTerminateFlag 1
         if init = 0 && current = 1 then
             // Send response data to the initiator
+            let receivedDataLength = ( m_ScsiTask :> IBlockDeviceTask ).ReceivedDataLength
             m_Source.ProtocolService.SendSCSIResponse
                 m_Command
                 m_Source.CID
                 m_Source.ConCounter
-                0u
+                receivedDataLength
                 iScsiSvcRespCd.COMMAND_COMPLETE
                 ScsiCmdStatCd.GOOD
                 PooledBuffer.Empty
