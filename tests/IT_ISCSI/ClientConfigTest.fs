@@ -85,7 +85,7 @@ type ClientConfigTest() =
                 0x00uy; // Controll
             |]
             let cid = sess.CID.[0]
-            let! struct( itt1, cmdsn1 ) = sess.SendSCSICommandPDU cid false true true false TaskATTRCd.SIMPLE_TASK lun 32u cdb PooledBuffer.Empty 0u
+            let! struct( itt1, cmdsn1 ) = sess.SendSCSICommandPDU cid BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK lun 32u cdb PooledBuffer.Empty 0u
             let! resp1 = sess.ReceiveSpecific<SCSIDataInPDU>( cid )
             let! resp2 = sess.ReceiveSpecific<SCSIResponsePDU>( cid )
 
@@ -149,7 +149,7 @@ type ClientConfigTest() =
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
             let! expBlockCount1, expBlockSize1 = SendReadCapacityCDB r1 ( lun_me.fromPrim 1UL )
             Assert.True(( expBlockCount1 * ( uint64 expBlockSize1 ) = 65536UL ))
-            let! _ = r1.SendLogoutRequestPDU r1.CID.[0] false LogoutReqReasonCd.CLOSE_SESS r1.CID.[0]
+            let! _ = r1.SendLogoutRequestPDU r1.CID.[0] BitI.F LogoutReqReasonCd.CLOSE_SESS r1.CID.[0]
             let! rpdu1 = r1.ReceiveSpecific<LogoutResponsePDU> r1.CID.[0]
             Assert.True(( rpdu1.Response = LogoutResCd.SUCCESS ))
 
@@ -234,7 +234,7 @@ type ClientConfigTest() =
             client.RunCommand "unload" "Unexpected request" "TG> "
 
             // logout
-            let! _ = r3.SendLogoutRequestPDU r3.CID.[0] false LogoutReqReasonCd.CLOSE_SESS r3.CID.[0]
+            let! _ = r3.SendLogoutRequestPDU r3.CID.[0] BitI.F LogoutReqReasonCd.CLOSE_SESS r3.CID.[0]
             let! rpdu3 = r3.ReceiveSpecific<LogoutResponsePDU> r3.CID.[0]
             Assert.True(( rpdu3.Response = LogoutResCd.SUCCESS ))
 

@@ -61,6 +61,81 @@ type ConnParams = {
     MaxRecvDataSegmentLength_T : uint32;
 }
 
+/// Represents I bit in PDU is 1 or 0.
+type BitI =
+    | T     // Immidiate flag is 1
+    | F     // Immidiate flag os 0
+    /// Convert BitI to bool
+    static member toBool =
+        function
+        | T -> true
+        | F -> false
+    /// Convert bool to BitI
+    static member ofBool =
+        function
+        | true -> T
+        | false -> F
+
+/// Represents F bit in PDU is 1 or 0.
+type BitF =
+    | T     // Final flag is 1
+    | F     // Final flag is 0
+    /// Convert BitF to bool
+    static member toBool =
+        function
+        | T -> true
+        | F -> false
+    /// Convert bool to BitF
+    static member ofBool =
+        function
+        | true -> T
+        | false -> F
+
+/// Represents R bit in PDU is 1 or 0.
+type BitR =
+    | T     // Read flag is 1
+    | F     // Read flag is 0
+    /// Convert BitR to bool
+    static member toBool =
+        function
+        | T -> true
+        | F -> false
+    /// Convert bool to BitR
+    static member ofBool =
+        function
+        | true -> T
+        | false -> F
+
+/// Represents W bit in PDU is 1 or 0.
+type BitW =
+    | T     // Write flag is 1
+    | F     // Write flag is 0
+    /// Convert BitW to bool
+    static member toBool =
+        function
+        | T -> true
+        | F -> false
+    /// Convert bool to BitW
+    static member ofBool =
+        function
+        | true -> T
+        | false -> F
+
+/// Represents C bit in PDU is 1 or 0.
+type BitC =
+    | T     // Continue flag is 1
+    | F     // Continue flag is 0
+    /// Convert BitC to bool
+    static member toBool =
+        function
+        | T -> true
+        | F -> false
+    /// Convert bool to BitC
+    static member ofBool =
+        function
+        | true -> T
+        | false -> F
+
 ///////////////////////////////////////////////////////////////////////////////
 // Definition of iSCSI_Connection class
 
@@ -114,15 +189,19 @@ type iSCSI_Connection(
         m_ExpStatSN <- v
 
 
+    /// Wait to prevent conflicts between sending processes by multiple threads on the same connection.
     member _.WaitSend() =
         m_SendLock.WaitAsync()
 
+    /// Wait to prevent conflicts between receiving processes by multiple threads on the same connection
     member _.WaitReceive() =
         m_ReceiveLock.WaitAsync()
 
+    /// Release the send lock.
     member _.ReleaseSend() =
         m_SendLock.Release() |> ignore
 
+    /// Release the receive lock.
     member _.ReleaseReceive() =
         m_ReceiveLock.Release() |> ignore
 
@@ -292,10 +371,10 @@ type iSCSI_Initiator(
         ( updater : SCSICommandPDU -> SCSICommandPDU )
         ( fuz : ( uint * uint ) voption )
         ( cid : CID_T )
-        ( argI : bool )
-        ( argF : bool )
-        ( argR : bool )
-        ( argW : bool )
+        ( argI : BitI )
+        ( argF : BitF )
+        ( argR : BitR )
+        ( argW : BitW )
         ( argATTR : TaskATTRCd )
         ( argLUN : LUN_T )
         ( argExpectedDataTransferLength : uint32 )
@@ -309,13 +388,13 @@ type iSCSI_Initiator(
             try
                 let itt = Interlocked.Increment( &m_ITT ) |> itt_me.fromPrim
                 let cmdsn =
-                    if argI then m_CmdSN else Interlocked.Increment( &m_CmdSN )
+                    if BitI.toBool argI then m_CmdSN else Interlocked.Increment( &m_CmdSN )
                     |> cmdsn_me.fromPrim
                 let pdu = {
-                    I = argI;
-                    F = argF;
-                    R = argR;
-                    W = argW;
+                    I = BitI.toBool argI;
+                    F = BitF.toBool argF;
+                    R = BitR.toBool argR;
+                    W = BitW.toBool argW;
                     ATTR = argATTR;
                     LUN = argLUN;
                     InitiatorTaskTag = itt;
@@ -380,7 +459,7 @@ type iSCSI_Initiator(
         ( updater : TaskManagementFunctionRequestPDU -> TaskManagementFunctionRequestPDU )
         ( fuz : ( uint * uint ) voption )
         ( cid : CID_T )
-        ( argI : bool )
+        ( argI : BitI )
         ( argFunction : TaskMgrReqCd )
         ( argLUN : LUN_T )
         ( argReferencedTaskTag : ITT_T )
@@ -393,10 +472,10 @@ type iSCSI_Initiator(
             try
                 let itt = Interlocked.Increment( &m_ITT ) |> itt_me.fromPrim
                 let cmdsn =
-                    if argI then m_CmdSN else Interlocked.Increment( &m_CmdSN )
+                    if BitI.toBool argI then m_CmdSN else Interlocked.Increment( &m_CmdSN )
                     |> cmdsn_me.fromPrim
                 let pdu = {
-                    I = argI;
+                    I = BitI.toBool argI;
                     Function = argFunction;
                     LUN = argLUN;
                     InitiatorTaskTag = itt;
@@ -463,7 +542,7 @@ type iSCSI_Initiator(
         ( updater : SCSIDataOutPDU -> SCSIDataOutPDU )
         ( fuz : ( uint * uint ) voption )
         ( cid : CID_T )
-        ( argF : bool )
+        ( argF : BitF )
         ( itt : ITT_T )
         ( argLUN : LUN_T )
         ( argTargetTransferTag : TTT_T )
@@ -476,7 +555,7 @@ type iSCSI_Initiator(
             do! con.WaitSend()
             try
                 let pdu = {
-                    F = argF;
+                    F = BitF.toBool argF;
                     LUN = argLUN;
                     InitiatorTaskTag = itt;
                     TargetTransferTag = argTargetTransferTag;
@@ -542,9 +621,9 @@ type iSCSI_Initiator(
         ( updater : TextRequestPDU -> TextRequestPDU )
         ( fuz : ( uint * uint ) voption )
         ( cid : CID_T )
-        ( argI : bool )
-        ( argF : bool )
-        ( argC : bool )
+        ( argI : BitI )
+        ( argF : BitF )
+        ( argC : BitC )
         ( argITT : ITT_T voption )
         ( argLUN : LUN_T )
         ( argTargetTransferTag : TTT_T )
@@ -561,12 +640,12 @@ type iSCSI_Initiator(
                     | ValueNone ->
                         Interlocked.Increment( &m_ITT ) |> itt_me.fromPrim
                 let cmdsn =
-                    if argI then m_CmdSN else Interlocked.Increment( &m_CmdSN )
+                    if BitI.toBool argI then m_CmdSN else Interlocked.Increment( &m_CmdSN )
                     |> cmdsn_me.fromPrim
                 let pdu = {
-                    I = argI;
-                    F = argF;
-                    C = argC;
+                    I = BitI.toBool argI;
+                    F = BitF.toBool argF;
+                    C = BitC.toBool argC;
                     LUN = argLUN;
                     InitiatorTaskTag = itt;
                     TargetTransferTag = argTargetTransferTag;
@@ -619,7 +698,7 @@ type iSCSI_Initiator(
         ( updater : LogoutRequestPDU -> LogoutRequestPDU )
         ( fuz : ( uint * uint ) voption )
         ( cid : CID_T )
-        ( argI : bool )
+        ( argI : BitI )
         ( argReasonCode : LogoutReqReasonCd )
         ( argCID : CID_T )
         : Task< struct( ITT_T * CMDSN_T ) > =
@@ -629,10 +708,10 @@ type iSCSI_Initiator(
             try
                 let itt = Interlocked.Increment( &m_ITT ) |> itt_me.fromPrim
                 let cmdsn =
-                    if argI then m_CmdSN else Interlocked.Increment( &m_CmdSN )
+                    if BitI.toBool argI then m_CmdSN else Interlocked.Increment( &m_CmdSN )
                     |> cmdsn_me.fromPrim
                 let pdu = {
-                    I = argI;
+                    I = BitI.toBool argI;
                     ReasonCode = argReasonCode;
                     InitiatorTaskTag = itt;
                     CID = argCID;
@@ -761,7 +840,7 @@ type iSCSI_Initiator(
         ( updater : NOPOutPDU -> NOPOutPDU )
         ( fuz : ( uint * uint ) voption )
         ( cid : CID_T )
-        ( argI : bool )
+        ( argI : BitI )
         ( argLUN : LUN_T )
         ( argTargetTransferTag : TTT_T )
         ( argPingData : PooledBuffer )
@@ -772,10 +851,10 @@ type iSCSI_Initiator(
             try
                 let itt = Interlocked.Increment( &m_ITT ) |> itt_me.fromPrim
                 let cmdsn =
-                    if argI then m_CmdSN else Interlocked.Increment( &m_CmdSN )
+                    if BitI.toBool argI then m_CmdSN else Interlocked.Increment( &m_CmdSN )
                     |> cmdsn_me.fromPrim
                 let pdu = {
-                    I = argI;
+                    I = BitI.toBool argI;
                     LUN = argLUN;
                     InitiatorTaskTag = itt;
                     TargetTransferTag = argTargetTransferTag;
@@ -885,7 +964,7 @@ type iSCSI_Initiator(
     /// <param name="immidiate">
     ///  Specify whether to deliver immediately or not.
     /// </param>
-    member this.CloseSession ( cid : CID_T ) ( immidiate : bool ) : Task<unit> =
+    member this.CloseSession ( cid : CID_T ) ( immidiate : BitI ) : Task<unit> =
         task {
             let! itt, _ = this.SendLogoutRequestPDU cid immidiate LogoutReqReasonCd.CLOSE_SESS cid
             let! rpdu5 = this.ReceiveSpecific<LogoutResponsePDU> cid
@@ -950,7 +1029,7 @@ type iSCSI_Initiator(
             let accessLength = blockCount * blockLength
             let rBuffer = Array.zeroCreate<byte>( int accessLength )
             let readCDB = GenScsiCDB.Read10 0uy false false false lba 0uy ( uint16 blockCount ) false false
-            let! itt, _ = this.SendSCSICommandPDU cid false true true false TaskATTRCd.SIMPLE_TASK lun accessLength readCDB PooledBuffer.Empty 0u
+            let! itt, _ = this.SendSCSICommandPDU cid BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK lun accessLength readCDB PooledBuffer.Empty 0u
 
             do! Functions.loopAsync ( fun () ->
                 task {
@@ -1023,7 +1102,7 @@ type iSCSI_Initiator(
                         |]
                     else
                         Array.Empty()
-                let! _ = this.SendTextRequestPDU cid true false false ValueNone lun_me.zero ( ttt_me.fromPrim 0xFFFFFFFFu ) textReq
+                let! _ = this.SendTextRequestPDU cid BitI.T BitF.F BitC.F ValueNone lun_me.zero ( ttt_me.fromPrim 0xFFFFFFFFu ) textReq
                 let! wresppdu = this.ReceiveSpecific<TextResponsePDU> cid
                 rv.Add wresppdu
 
@@ -1245,7 +1324,7 @@ type iSCSI_Initiator(
             let! rd = sess.SendTargetsTextRequest cid param
 
             // Logout
-            let! _ = sess.SendLogoutRequestPDU cid false LogoutReqReasonCd.CLOSE_SESS cid
+            let! _ = sess.SendLogoutRequestPDU cid BitI.F LogoutReqReasonCd.CLOSE_SESS cid
             let! _ = sess.ReceiveSpecific<LogoutResponsePDU> cid
 
             return rd

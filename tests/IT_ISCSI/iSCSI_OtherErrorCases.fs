@@ -151,7 +151,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
 
             // send read command with block count = 1, but iSCSI ExpectedDataTransferLength = 65536
             let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy 1us false false
-            let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 65536u readCDB PooledBuffer.Empty 0u
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 65536u readCDB PooledBuffer.Empty 0u
 
             // Reseive Data-In PDU
             let! dpdu = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
@@ -166,7 +166,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( rpdu.U ))
             Assert.True(( rpdu.ResidualCount = 65536u - m_MediaBlockSize ))
 
-            do! r1.CloseSession g_CID0 false
+            do! r1.CloseSession g_CID0 BitI.F
         }
         
     [<Fact>]
@@ -176,7 +176,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
 
             // send read command with block count = 0, but iSCSI ExpectedDataTransferLength = 65536
             let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy 0us false false
-            let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 65536u readCDB PooledBuffer.Empty 0u
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 65536u readCDB PooledBuffer.Empty 0u
 
             // receive SCSI Response
             let! rpdu = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
@@ -186,7 +186,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( rpdu.U ))
             Assert.True(( rpdu.ResidualCount = 65536u ))
 
-            do! r1.CloseSession g_CID0 false
+            do! r1.CloseSession g_CID0 BitI.F
         }
 
     [<Fact>]
@@ -197,7 +197,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
 
             // send read command with read size = 8192 bytes, but iSCSI ExpectedDataTransferLength = 512
             let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
-            let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 512u readCDB PooledBuffer.Empty 0u
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 512u readCDB PooledBuffer.Empty 0u
 
             // Reseive Data-In PDU
             let! dpdu = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
@@ -212,7 +212,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( rpdu.O ))
             Assert.True(( rpdu.ResidualCount = 8192u - 512u ))
 
-            do! r1.CloseSession g_CID0 false
+            do! r1.CloseSession g_CID0 BitI.F
         }
 
     [<Fact>]
@@ -223,7 +223,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
 
             // send read command with read size = 8192 bytes, but iSCSI ExpectedDataTransferLength = 0
             let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
-            let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 0u readCDB PooledBuffer.Empty 0u
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 0u readCDB PooledBuffer.Empty 0u
 
             // receive SCSI Response
             let! rpdu = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
@@ -233,7 +233,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( rpdu.O ))
             Assert.True(( rpdu.ResidualCount = 8192u ))
 
-            do! r1.CloseSession g_CID0 false
+            do! r1.CloseSession g_CID0 BitI.F
         }
 
     [<Fact>]
@@ -244,10 +244,10 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
 
             // send SCSI write command
             let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
-            let! itt, _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
 
             // Send Nop-Out with immidiate flag
-            let! itt2, _ = r1.SendNOPOutPDU g_CID0 true g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! itt2, _ = r1.SendNOPOutPDU g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive Nop-In PDU
             let! nopinPDU = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -255,7 +255,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
 
             // Send DataOut PDU
             let sendData = PooledBuffer.RentAndInit 4096
-            do! r1.SendSCSIDataOutPDU g_CID0 true itt g_LUN1 g_DefTTT datasn_me.zero 0u sendData
+            do! r1.SendSCSIDataOutPDU g_CID0 BitF.T itt g_LUN1 g_DefTTT datasn_me.zero 0u sendData
             sendData.Return()
 
             // receive SCSI Response
@@ -263,7 +263,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( rpdu.InitiatorTaskTag = itt ))
             Assert.True(( rpdu.Status = ScsiCmdStatCd.GOOD ))
 
-            do! r1.CloseSession g_CID0 false
+            do! r1.CloseSession g_CID0 BitI.F
         }
 
     [<Fact>]
@@ -274,11 +274,11 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
 
             // send SCSI write command
             let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
-            let! ittW, _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
+            let! ittW, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
 
             // send SCSI read command with immidiate flag
             let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
-            let! ittR, _ = r1.SendSCSICommandPDU g_CID0 true true true false TaskATTRCd.SIMPLE_TASK g_LUN1 4096u readCDB PooledBuffer.Empty 0u
+            let! ittR, _ = r1.SendSCSICommandPDU g_CID0 BitI.T BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 4096u readCDB PooledBuffer.Empty 0u
 
             // receive Data-In PDU for SCSI read command
             let! datainPDU = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
@@ -291,7 +291,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
 
             // Send DataOut PDU
             let sendData = PooledBuffer.RentAndInit 4096
-            do! r1.SendSCSIDataOutPDU g_CID0 true ittW g_LUN1 g_DefTTT datasn_me.zero 0u sendData
+            do! r1.SendSCSIDataOutPDU g_CID0 BitF.T ittW g_LUN1 g_DefTTT datasn_me.zero 0u sendData
             sendData.Return()
 
             // receive SCSI Response for SCSI write command
@@ -299,7 +299,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( respPDU_W.InitiatorTaskTag = ittW ))
             Assert.True(( respPDU_W.Status = ScsiCmdStatCd.GOOD ))
 
-            do! r1.CloseSession g_CID0 false
+            do! r1.CloseSession g_CID0 BitI.F
         }
 
     [<Fact>]
@@ -309,16 +309,16 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 4096u / m_MediaBlockSize
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP, cmdsnNOP = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP, cmdsnNOP = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU.InitiatorTaskTag = ittNOP ))
 
             // send SCSI write command
             let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
-            let! ittW, _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
+            let! ittW, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
 
             // send TMF request with immidiate flag
-            let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 true TaskMgrReqCd.ABORT_TASK g_LUN1 ittNOP cmdsnNOP datasn_me.zero
+            let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.ABORT_TASK g_LUN1 ittNOP cmdsnNOP datasn_me.zero
 
             // receive TMP response
             let! tmfPDU = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
@@ -327,7 +327,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
 
             // Send DataOut PDU
             let sendData = PooledBuffer.RentAndInit 4096
-            do! r1.SendSCSIDataOutPDU g_CID0 true ittW g_LUN1 g_DefTTT datasn_me.zero 0u sendData
+            do! r1.SendSCSIDataOutPDU g_CID0 BitF.T ittW g_LUN1 g_DefTTT datasn_me.zero 0u sendData
             sendData.Return()
 
             // receive SCSI Response for SCSI write command
@@ -335,7 +335,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( respPDU_W.InitiatorTaskTag = ittW ))
             Assert.True(( respPDU_W.Status = ScsiCmdStatCd.GOOD ))
 
-            do! r1.CloseSession g_CID0 false
+            do! r1.CloseSession g_CID0 BitI.F
         }
 
     [<Fact>]
@@ -346,10 +346,10 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
 
             // send SCSI write command
             let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
-            let! ittW, _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
+            let! ittW, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
 
             // send Text request with immidiate flag
-            let! ittTX, _ = r1.SendTextRequestPDU g_CID0 true true false ValueNone g_LUN1 g_DefTTT [||]
+            let! ittTX, _ = r1.SendTextRequestPDU g_CID0 BitI.T BitF.T BitC.F ValueNone g_LUN1 g_DefTTT [||]
 
             // receive text response
             let! txrPDU = r1.ReceiveSpecific<TextResponsePDU> g_CID0
@@ -359,7 +359,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
 
             // Send DataOut PDU
             let sendData = PooledBuffer.RentAndInit 4096
-            do! r1.SendSCSIDataOutPDU g_CID0 true ittW g_LUN1 g_DefTTT datasn_me.zero 0u sendData
+            do! r1.SendSCSIDataOutPDU g_CID0 BitF.T ittW g_LUN1 g_DefTTT datasn_me.zero 0u sendData
             sendData.Return()
 
             // receive SCSI Response for SCSI write command
@@ -367,7 +367,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( respPDU_W.InitiatorTaskTag = ittW ))
             Assert.True(( respPDU_W.Status = ScsiCmdStatCd.GOOD ))
 
-            do! r1.CloseSession g_CID0 false
+            do! r1.CloseSession g_CID0 BitI.F
         }
 
     [<Fact>]
@@ -378,9 +378,9 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
 
             // send SCSI write command
             let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
-            let! ittW, _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
+            let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
 
-            do! r1.CloseSession g_CID0 true
+            do! r1.CloseSession g_CID0 BitI.T
         }
 
     [<Fact>]
@@ -391,7 +391,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP, cmdsnNOP = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP, cmdsnNOP = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU.InitiatorTaskTag = ittNOP ))
             Assert.True(( nopinPDU.StatSN = sendExpStatSN1 ))
@@ -401,7 +401,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
 
             // send SCSI write command
             let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
-            let! ittW, _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
+            let! ittW, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
 
             // Send SNACK request
             do! r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.STATUS g_LUN1 g_DefITT g_DefTTT ( statsn_me.toPrim sendExpStatSN1 ) 1u
@@ -416,7 +416,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
 
             // Send DataOut PDU
             let sendData = PooledBuffer.RentAndInit 4096
-            do! r1.SendSCSIDataOutPDU g_CID0 true ittW g_LUN1 g_DefTTT datasn_me.zero 0u sendData
+            do! r1.SendSCSIDataOutPDU g_CID0 BitF.T ittW g_LUN1 g_DefTTT datasn_me.zero 0u sendData
             sendData.Return()
 
             // receive SCSI Response for SCSI write command
@@ -424,7 +424,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( respPDU_W.InitiatorTaskTag = ittW ))
             Assert.True(( respPDU_W.Status = ScsiCmdStatCd.GOOD ))
 
-            do! r1.CloseSession g_CID0 false
+            do! r1.CloseSession g_CID0 BitI.F
         }
 
     [<Theory>]
@@ -437,7 +437,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( r1.Connection( g_CID0 ).Params.HeaderDigest = DigestType.DST_CRC32C ))
 
             // Send Nop-Out PDU with header digest error
-            let! _ = r1.SendNOPOutPDU_Test id ( ValueSome( 8u, 40u ) ) g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOutPDU_Test id ( ValueSome( 8u, 40u ) ) g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // session recovery
             try
@@ -458,13 +458,13 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam m_defaultConnParam
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
 
             // Send Nop-Out PDU with data digest error
             let sendData = PooledBuffer.RentAndInit 1024
-            let! _ = r1.SendNOPOutPDU_Test id ( ValueSome( 100u, 100u ) ) g_CID0 false g_LUN1 g_DefTTT sendData
+            let! _ = r1.SendNOPOutPDU_Test id ( ValueSome( 100u, 100u ) ) g_CID0 BitI.F g_LUN1 g_DefTTT sendData
             sendData.Return()
 
             // Receive Reject PDU
@@ -475,11 +475,11 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP_2, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_2, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_2.InitiatorTaskTag = ittNOP_2 ))
 
-            do! r1.CloseSession g_CID0 false
+            do! r1.CloseSession g_CID0 BitI.F
         }
 
     [<Theory>]
@@ -491,14 +491,14 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam m_defaultConnParam
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
 
             // Send SCSI Command PDU with data digest error
             let sendData = PooledBuffer.RentAndInit 1024
             let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us false false
-            let! _ = r1.SendSCSICommandPDU_Test id ( ValueSome( 100u, 100u ) ) g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 1024u writeCDB sendData 0u
+            let! _ = r1.SendSCSICommandPDU_Test id ( ValueSome( 100u, 100u ) ) g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 1024u writeCDB sendData 0u
             sendData.Return()
 
             // Receive Reject PDU
@@ -509,11 +509,11 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP_2, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_2, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_2.InitiatorTaskTag = ittNOP_2 ))
 
-            do! r1.CloseSession g_CID0 false
+            do! r1.CloseSession g_CID0 BitI.F
         }
 
     [<Theory>]
@@ -526,17 +526,17 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 4096u / m_MediaBlockSize
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
 
             // Send SCSI Command PDU
             let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
-            let! itt, _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
 
             // Send Data-Out PDU with data digest error
             let sendData = PooledBuffer.RentAndInit 4096
-            do! r1.SendSCSIDataOutPDU_Test id ( ValueSome( 100u, 100u ) ) g_CID0 true itt g_LUN1 g_DefTTT datasn_me.zero 0u sendData
+            do! r1.SendSCSIDataOutPDU_Test id ( ValueSome( 100u, 100u ) ) g_CID0 BitF.T itt g_LUN1 g_DefTTT datasn_me.zero 0u sendData
             sendData.Return()
 
             // Receive Reject PDU
@@ -545,7 +545,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
 
             // Re-Send Data-Out PDU
             let sendData = PooledBuffer.RentAndInit 4096
-            do! r1.SendSCSIDataOutPDU g_CID0 true itt g_LUN1 g_DefTTT datasn_me.zero 0u sendData
+            do! r1.SendSCSIDataOutPDU g_CID0 BitF.T itt g_LUN1 g_DefTTT datasn_me.zero 0u sendData
             sendData.Return()
 
             // Receive SCSI Response PDU
@@ -554,11 +554,11 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( respPDU.Status = ScsiCmdStatCd.GOOD ))
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP_2, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_2, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_2.InitiatorTaskTag = ittNOP_2 ))
 
-            do! r1.CloseSession g_CID0 false
+            do! r1.CloseSession g_CID0 BitI.F
         }
 
     [<Theory>]
@@ -570,13 +570,13 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam m_defaultConnParam
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
 
             // send Text request with immidiate flag
             let sendData = Array.zeroCreate<byte> 256
-            let! _ = r1.SendTextRequestPDU_Test id ( ValueSome( 100u, 100u ) ) g_CID0 false true false ValueNone g_LUN1 g_DefTTT sendData
+            let! _ = r1.SendTextRequestPDU_Test id ( ValueSome( 100u, 100u ) ) g_CID0 BitI.F BitF.T BitC.F ValueNone g_LUN1 g_DefTTT sendData
 
             // Receive Reject PDU
             let! rejectPDU = r1.ReceiveSpecific<RejectPDU> g_CID0
@@ -586,11 +586,11 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP_2, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_2, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_2.InitiatorTaskTag = ittNOP_2 ))
 
-            do! r1.CloseSession g_CID0 false
+            do! r1.CloseSession g_CID0 BitI.F
         }
 
     [<Fact>]
@@ -625,7 +625,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! rejectPDU = r1.ReceiveSpecific<RejectPDU> g_CID0
             Assert.True(( rejectPDU.Reason = RejectReasonCd.PROTOCOL_ERR ))
 
-            do! r1.CloseSession g_CID0 false
+            do! r1.CloseSession g_CID0 BitI.F
         }
 
     [<Fact>]
@@ -634,7 +634,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
 
@@ -665,7 +665,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! rejectPDU = r1.ReceiveSpecific<RejectPDU> g_CID0
             Assert.True(( rejectPDU.Reason = RejectReasonCd.PROTOCOL_ERR ))
 
-            do! r1.CloseSession g_CID0 false
+            do! r1.CloseSession g_CID0 BitI.F
         }
 
     [<Fact>]
@@ -764,7 +764,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
                     TargetName = "";
             }
             let! r1 = iSCSI_Initiator.LoginForDiscoverySession sessParam m_defaultConnParam
-            let! _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             try
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
@@ -785,7 +785,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             }
             let! r1 = iSCSI_Initiator.LoginForDiscoverySession sessParam m_defaultConnParam
             let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy 0us false false
-            let! _ = r1.SendSCSICommandPDU g_CID0 false false false true TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
+            let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
             try
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
@@ -805,7 +805,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
                     TargetName = "";
             }
             let! r1 = iSCSI_Initiator.LoginForDiscoverySession sessParam m_defaultConnParam
-            do! r1.SendSCSIDataOutPDU g_CID0 true ( itt_me.fromPrim 1u ) g_LUN1 g_DefTTT datasn_me.zero 0u PooledBuffer.Empty
+            do! r1.SendSCSIDataOutPDU g_CID0 BitF.T ( itt_me.fromPrim 1u ) g_LUN1 g_DefTTT datasn_me.zero 0u PooledBuffer.Empty
             try
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
@@ -825,7 +825,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
                     TargetName = "";
             }
             let! r1 = iSCSI_Initiator.LoginForDiscoverySession sessParam m_defaultConnParam
-            let! _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 false TaskMgrReqCd.ABORT_TASK g_LUN1 ( itt_me.fromPrim 1u ) cmdsn_me.zero datasn_me.zero
+            let! _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.ABORT_TASK g_LUN1 ( itt_me.fromPrim 1u ) cmdsn_me.zero datasn_me.zero
             try
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
@@ -884,7 +884,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
 
             // Send SCSI Read command
             let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 accessBlockcount ) false false
-            let! itt, _ = r1.SendSCSICommandPDU g_CID0 false true true false TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
 
             // Receive SCSI Data-In PDUs
             for i = 0 to expRsult.Length - 1 do
@@ -915,7 +915,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
                         NegoStat_MaxRecvDataSegmentLength_I = NegoStatusValue.NSG_WaitSend;
                 }
                 IscsiTextEncode.CreateTextKeyValueString negoValue1 negoStat1
-            let! itt4, _ = r1.SendTextRequestPDU g_CID0 false false false ValueNone g_LUN1 g_DefTTT textRequest
+            let! itt4, _ = r1.SendTextRequestPDU g_CID0 BitI.F BitF.F BitC.F ValueNone g_LUN1 g_DefTTT textRequest
 
             // Receive text response PDU
             let! rpdu4 = r1.ReceiveSpecific<TextResponsePDU> g_CID0
@@ -924,7 +924,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( rpdu4.TextResponse.Length = 0 ))
 
             // Send text request. Negotiation reset. ( TTT = 0xFFFFFFFF )
-            let! _ = r1.SendTextRequestPDU g_CID0 false true false ( ValueSome itt4 ) g_LUN1 g_DefTTT [||]
+            let! _ = r1.SendTextRequestPDU g_CID0 BitI.F BitF.T BitC.F ( ValueSome itt4 ) g_LUN1 g_DefTTT [||]
 
             // Receive text response PDU
             let! rpdu5 = r1.ReceiveSpecific<TextResponsePDU> g_CID0
@@ -952,7 +952,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( rpdu7.SNACKTag = snacktag_me.fromPrim 0x12345678u ))
 
             r1.Connection( g_CID0 ).SkipExtStatSN ( statsn_me.fromPrim 1u )
-            do! r1.CloseSession g_CID0 false
+            do! r1.CloseSession g_CID0 BitI.F
         }
 
     [<Fact>]
@@ -961,7 +961,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Send empty text request.
-            let! itt4, _ = r1.SendTextRequestPDU g_CID0 false false false ValueNone g_LUN1 g_DefTTT [||]
+            let! itt4, _ = r1.SendTextRequestPDU g_CID0 BitI.F BitF.F BitC.F ValueNone g_LUN1 g_DefTTT [||]
 
             // Receive text response PDU
             let! rpdu4 = r1.ReceiveSpecific<TextResponsePDU> g_CID0
@@ -970,7 +970,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( rpdu4.TextResponse.Length = 0 ))
 
             // Send empty text request. F=1
-            let! _ = r1.SendTextRequestPDU g_CID0 false true false ( ValueSome itt4 ) g_LUN1 g_DefTTT [||]
+            let! _ = r1.SendTextRequestPDU g_CID0 BitI.F BitF.T BitC.F ( ValueSome itt4 ) g_LUN1 g_DefTTT [||]
 
             // Receive text response PDU
             let! rpdu5 = r1.ReceiveSpecific<TextResponsePDU> g_CID0
@@ -978,7 +978,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( rpdu5.InitiatorTaskTag = itt4 ))
             Assert.True(( rpdu5.TextResponse.Length = 0 ))
 
-            do! r1.CloseSession g_CID0 false
+            do! r1.CloseSession g_CID0 BitI.F
         }
 
     [<Fact>]
@@ -998,7 +998,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
                     let! rpdu1 = r1.ReceiveSpecific<RejectPDU> g_CID0
                     Assert.True(( rpdu1.Reason = RejectReasonCd.COM_NOT_SUPPORT ))
 
-            do! r1.CloseSession g_CID0 false
+            do! r1.CloseSession g_CID0 BitI.F
         }
 
     [<Fact>]
@@ -1007,7 +1007,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Send Nop-Out 1
-            let! ittNopOut1, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive Nop-In PDU for Nop-Out 1
             let! nopIn1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -1020,7 +1020,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let writeCDB = GenScsiCDB.Write10 0uy false false false 0xFFFFFFFEu 0uy 1us true false
             let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
             let! ittScsiCmd, _ =
-                r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB sendData 0u
+                r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB sendData 0u
             sendData.Return()
 
             let mutable flg = true
@@ -1033,14 +1033,14 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             r1.Connection( g_CID0 ).SkipExtStatSN ( statsn_me.fromPrim 1u )
 
             // Send Nop-Out 2 ( Sends acknowledgement to Nop-Out 1 )
-            let! ittNopOut2, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut2, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive SCSI Response PDU for SCSI write command
             let! scsiRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
             Assert.True(( scsiRespPDU.InitiatorTaskTag = ittScsiCmd ))
 
             // Send Nop-Out 3 ( Sends acknowledgement to SCSI Response )
-            let! ittNopOut3, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut3, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive Nop-In PDU for Nop-Out 2
             let! nopIn2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -1051,11 +1051,11 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( nopIn3.InitiatorTaskTag = ittNopOut3 ))
 
             // clear ACA status
-            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 false TaskMgrReqCd.CLEAR_ACA g_LUN1 ( itt_me.fromPrim 0xFFFFFFFFu ) cmdsn_me.zero datasn_me.zero
+            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 g_DefITT cmdsn_me.zero datasn_me.zero
             let! tmdRespPDU = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
             Assert.True(( tmdRespPDU.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
 
-            do! r1.CloseSession g_CID0 false
+            do! r1.CloseSession g_CID0 BitI.F
         }
 
     [<Fact>]
@@ -1067,7 +1067,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let writeCDB = GenScsiCDB.Write10 0uy false false false 0xFFFFFFFEu 0uy 1us true false
             let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
             let! ittScsiCmd, _ =
-                r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB sendData 0u
+                r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB sendData 0u
             sendData.Return()
 
             // Receive SCSI Response PDU for SCSI write command
@@ -1075,7 +1075,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( scsiRespPDU.InitiatorTaskTag = ittScsiCmd ))
 
             // Send Nop-Out 1
-            let! ittNopOut1, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive Nop-In PDU for Nop-Out 1
             let! nopIn1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -1085,7 +1085,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             r1.Connection( g_CID0 ).RewindExtStatSN ( statsn_me.fromPrim 1u )
 
             // clear ACA status
-            let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 false TaskMgrReqCd.CLEAR_ACA g_LUN1 ( itt_me.fromPrim 0xFFFFFFFFu ) cmdsn_me.zero datasn_me.zero
+            let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 g_DefITT cmdsn_me.zero datasn_me.zero
 
             let mutable flg = true
             while flg do
@@ -1097,7 +1097,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             r1.Connection( g_CID0 ).SkipExtStatSN ( statsn_me.fromPrim 1u )
 
             // Send Nop-Out 2 ( Sends acknowledgement to Nop-Out 1 )
-            let! ittNopOut2, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut2, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive TMF response PDU for CLEAR_ACA TMF request.
             let! tmdRespPDU = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
@@ -1105,7 +1105,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( tmdRespPDU.InitiatorTaskTag = ittTMF ))
 
             // Send Nop-Out 3 ( Sends acknowledgement to TMF Response )
-            let! ittNopOut3, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut3, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive Nop-In PDU for Nop-Out 2
             let! nopIn2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -1115,7 +1115,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! nopIn3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopIn3.InitiatorTaskTag = ittNopOut3 ))
 
-            do! r1.CloseSession g_CID0 false
+            do! r1.CloseSession g_CID0 BitI.F
         }
 
     [<Fact>]
@@ -1127,7 +1127,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let writeCDB1 = GenScsiCDB.Write10 0uy false false false 0xFFFFFFFEu 0uy 1us true false
             let sendData1 = PooledBuffer.Rent ( int m_MediaBlockSize )
             let! ittScsiCmd1, _ =
-                r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB1 sendData1 0u
+                r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB1 sendData1 0u
             sendData1.Return()
 
             // Receive SCSI Response PDU for SCSI write command
@@ -1136,7 +1136,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( scsiRespPDU1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
             // Send Nop-Out 1
-            let! ittNopOut1, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive Nop-In PDU for Nop-Out 1
             let! nopIn1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -1149,7 +1149,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let writeCDB2 = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us true false
             let sendData2 = PooledBuffer.Rent ( int m_MediaBlockSize )
             let! ittScsiCmd2, _ =
-                r1.SendSCSICommandPDU g_CID0 false true false true TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB2 sendData2 0u
+                r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB2 sendData2 0u
             sendData2.Return()
 
             Threading.Thread.Sleep 500
@@ -1158,7 +1158,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             r1.Connection( g_CID0 ).SkipExtStatSN ( statsn_me.fromPrim 1u )
 
             // Send Nop-Out 2 ( Sends acknowledgement to Nop-Out 1 )
-            let! ittNopOut2, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut2, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive SCSI response for SCSI write command request.
             let! scsiRespPDU2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
@@ -1166,7 +1166,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( scsiRespPDU2.Status = ScsiCmdStatCd.ACA_ACTIVE ))
 
             // Send Nop-Out 3 ( Sends acknowledgement to SCSI response )
-            let! ittNopOut3, _ = r1.SendNOPOutPDU g_CID0 false g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut3, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive Nop-In PDU for Nop-Out 2
             let! nopIn2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -1178,9 +1178,9 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
 
 
             // clear ACA status
-            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 false TaskMgrReqCd.CLEAR_ACA g_LUN1 ( itt_me.fromPrim 0xFFFFFFFFu ) cmdsn_me.zero datasn_me.zero
+            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 g_DefITT cmdsn_me.zero datasn_me.zero
             let! tmdRespPDU = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
             Assert.True(( tmdRespPDU.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
 
-            do! r1.CloseSession g_CID0 false
+            do! r1.CloseSession g_CID0 BitI.F
         }
