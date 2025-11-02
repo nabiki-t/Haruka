@@ -237,6 +237,120 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
         }
 
     [<Fact>]
+    member _.ResidualCount_BidirectionalCommand_001() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with MaxRecvDataSegmentLength_I = 4096u }
+            let blockCount = 4096u / m_MediaBlockSize
+
+            // send write command with write size = 4096 bytes, but ExpectedDataTransferLength=4096 and BidirectionalExpectedReadDataLength=4096
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let writeData = PooledBuffer.RentAndInit 4096
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB writeData 4096u
+            writeData.Return()
+
+            // receive SCSI Response
+            let! rpdu = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu.InitiatorTaskTag = itt ))
+            Assert.True(( rpdu.ResponseData.Count = 0 ))
+            Assert.True(( rpdu.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( rpdu.u ))
+            Assert.True(( rpdu.BidirectionalReadResidualCount = 4096u ))
+
+            do! r1.CloseSession g_CID0 BitI.F
+        }
+
+    [<Fact>]
+    member _.ResidualCount_BidirectionalCommand_002() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with MaxRecvDataSegmentLength_I = 4096u }
+            let blockCount = 4096u / m_MediaBlockSize
+
+            // send write command with write size = 4096 bytes, but ExpectedDataTransferLength=2048 and BidirectionalExpectedReadDataLength=4096
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let writeData = PooledBuffer.RentAndInit 4096
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 2048u writeCDB writeData 4096u
+            writeData.Return()
+
+            // receive SCSI Response
+            let! rpdu = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu.InitiatorTaskTag = itt ))
+            Assert.True(( rpdu.ResponseData.Count = 0 ))
+            Assert.True(( rpdu.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( rpdu.u ))
+            Assert.False(( rpdu.U ))
+            Assert.False(( rpdu.o ))
+            Assert.True(( rpdu.O ))
+            Assert.True(( rpdu.BidirectionalReadResidualCount = 4096u ))
+            Assert.True(( rpdu.ResidualCount = 2048u ))
+
+            do! r1.CloseSession g_CID0 BitI.F
+        }
+
+    [<Fact>]
+    member _.ResidualCount_BidirectionalCommand_003() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with MaxRecvDataSegmentLength_I = 4096u }
+            let blockCount = 4096u / m_MediaBlockSize
+
+            // send read command with read size = 4096 bytes, but ExpectedDataTransferLength=1024 and BidirectionalExpectedReadDataLength=512
+            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let writeData = PooledBuffer.RentAndInit 4096
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 1024u readCDB writeData 512u
+            writeData.Return()
+
+            // receive SCSI Data-In PDU
+            let! dpdu = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+            Assert.True(( dpdu.InitiatorTaskTag = itt ))
+            Assert.True(( dpdu.DataSegment.Count = 512 ))
+
+            // receive SCSI Response
+            let! rpdu = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu.InitiatorTaskTag = itt ))
+            Assert.True(( rpdu.ResponseData.Count = 0 ))
+            Assert.True(( rpdu.Status = ScsiCmdStatCd.GOOD ))
+            Assert.False(( rpdu.u ))
+            Assert.False(( rpdu.U ))
+            Assert.True(( rpdu.o ))
+            Assert.True(( rpdu.O ))
+            Assert.True(( rpdu.BidirectionalReadResidualCount = 4096u - 512u ))
+            Assert.True(( rpdu.ResidualCount = 3072u ))
+
+            do! r1.CloseSession g_CID0 BitI.F
+        }
+
+    [<Fact>]
+    member _.ResidualCount_BidirectionalCommand_004() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with MaxRecvDataSegmentLength_I = 4096u }
+            let blockCount = 4096u / m_MediaBlockSize
+
+            // send read command with read size = 4096 bytes, but ExpectedDataTransferLength=4096 and BidirectionalExpectedReadDataLength=5000
+            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let writeData = PooledBuffer.RentAndInit 4096
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u readCDB writeData 5000u
+            writeData.Return()
+
+            // receive SCSI Data-In PDU
+            let! dpdu = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+            Assert.True(( dpdu.InitiatorTaskTag = itt ))
+            Assert.True(( dpdu.DataSegment.Count = 4096 ))
+
+            // receive SCSI Response
+            let! rpdu = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu.InitiatorTaskTag = itt ))
+            Assert.True(( rpdu.ResponseData.Count = 0 ))
+            Assert.True(( rpdu.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( rpdu.u ))
+            Assert.False(( rpdu.U ))
+            Assert.False(( rpdu.o ))
+            Assert.False(( rpdu.O ))
+            Assert.True(( rpdu.ResidualCount = 0u ))
+            Assert.True(( rpdu.BidirectionalReadResidualCount = 5000u - 4096u ))
+
+            do! r1.CloseSession g_CID0 BitI.F
+        }
+
+    [<Fact>]
     member _.Immidiate_NopOut_001() =
         task {
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
@@ -1184,3 +1298,302 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
 
             do! r1.CloseSession g_CID0 BitI.F
         }
+
+    [<Fact>]
+    member _.InvalidScsiCommand_001() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            let blockCount = 4096u / m_MediaBlockSize
+
+            // send read command with read size = 4096 bytes, but R and W bits are both 0.
+            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 4096u readCDB PooledBuffer.Empty 0u
+
+            // Format errors cause session recovery
+            try
+                let! _ = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+                Assert.Fail __LINE__
+            with
+            | :? ConnectionErrorException
+            | :? SessionRecoveryException ->
+                ()
+        }
+
+    [<Theory>]
+    [<InlineData( TaskATTRCd.TAGLESS_TASK )>]
+    [<InlineData( TaskATTRCd.SIMPLE_TASK )>]
+    [<InlineData( TaskATTRCd.ORDERED_TASK )>]
+    [<InlineData( TaskATTRCd.HEAD_OF_QUEUE_TASK )>]
+    member _.ScsiCommand_VariousTag_001 ( attr : TaskATTRCd ) =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            let blockCount = 4096u / m_MediaBlockSize
+
+            // send read command
+            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F attr g_LUN1 4096u readCDB PooledBuffer.Empty 0u
+
+            // receive SCSI Data-In PDU
+            let! dpdu = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+            Assert.True(( dpdu.InitiatorTaskTag = itt ))
+            Assert.True(( dpdu.DataSegment.Count = 4096 ))
+
+            // receive SCSI Response
+            let! rpdu = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu.InitiatorTaskTag = itt ))
+            Assert.True(( rpdu.Status = ScsiCmdStatCd.GOOD ))
+
+            do! r1.CloseSession g_CID0 BitI.F
+        }
+
+    [<Fact>]
+    member _.ScsiCommand_ACATask_001 () =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            let blockCount = 4096u / m_MediaBlockSize
+
+            // send read command
+            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.ACA_TASK g_LUN1 4096u readCDB PooledBuffer.Empty 0u
+
+            // receive SCSI Response
+            let! rpdu = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu.InitiatorTaskTag = itt ))
+            Assert.True(( rpdu.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            Assert.True(( rpdu.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+
+            // clear ACA status
+            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 g_DefITT cmdsn_me.zero datasn_me.zero
+            let! tmdRespPDU = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
+            Assert.True(( tmdRespPDU.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            do! r1.CloseSession g_CID0 BitI.F
+        }
+
+    [<Fact>]
+    member _.ScsiCommand_ACATask_002 () =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            let blockCount = 4096u / m_MediaBlockSize
+
+            // Send SCSI write command ( it occurrs ACA )
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0xFFFFFFFEu 0uy 1us true false
+            let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
+            let! ittWrite, _ =
+                r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB sendData 0u
+            sendData.Return()
+
+            // receive SCSI Response
+            let! rpdu = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu.InitiatorTaskTag = ittWrite ))
+            Assert.True(( rpdu.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            Assert.True(( rpdu.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+
+            // send read command with ACA task attribute
+            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.ACA_TASK g_LUN1 4096u readCDB PooledBuffer.Empty 0u
+
+            // receive SCSI Data-In PDU
+            let! dpdu = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+            Assert.True(( dpdu.InitiatorTaskTag = itt ))
+            Assert.True(( dpdu.DataSegment.Count = 4096 ))
+
+            // receive SCSI Response
+            let! rpdu = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu.InitiatorTaskTag = itt ))
+            Assert.True(( rpdu.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( rpdu.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+
+            // clear ACA status
+            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 g_DefITT cmdsn_me.zero datasn_me.zero
+            let! tmdRespPDU = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
+            Assert.True(( tmdRespPDU.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            do! r1.CloseSession g_CID0 BitI.F
+        }
+
+    [<Fact>]
+    member _.UnexpectedSNACKRequest_001 () =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession { m_defaultSessParam with ErrorRecoveryLevel=1uy } m_defaultConnParam
+            let blockCount = 4096u / m_MediaBlockSize
+
+            // Send SCSI write command
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) true false
+            let sendData = PooledBuffer.Rent 4096
+            let! ittWrite, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB sendData 0u
+            sendData.Return()
+
+            // receive SCSI Response
+            let! rpdu = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu.InitiatorTaskTag = ittWrite ))
+            Assert.True(( rpdu.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( rpdu.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+
+            // Send Nop-Out to acknowledge SCSI Response
+            let! ittNopOut, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! nopInPDU = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( nopInPDU.InitiatorTaskTag = ittNopOut ))
+
+            // Send SNACK request for already received status
+            let! _ = r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.STATUS g_LUN1 g_DefITT g_DefTTT ( statsn_me.toPrim rpdu.StatSN ) 1u
+
+            // receive Reject PDU
+            let! rejPDU = r1.ReceiveSpecific<RejectPDU> g_CID0
+            Assert.True(( rejPDU.Reason = RejectReasonCd.PROTOCOL_ERR ))
+
+            do! r1.CloseSession g_CID0 BitI.F
+        }
+
+    [<Fact>]
+    member _.UnexpectedSNACKRequest_002 () =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession { m_defaultSessParam with ErrorRecoveryLevel=1uy } m_defaultConnParam
+            let blockCount = 4096u / m_MediaBlockSize
+
+            // Send SCSI write command
+            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) true false
+            let! ittWrite, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
+
+            // receive R2T PDU
+            let! r2tPDU = r1.ReceiveSpecific<R2TPDU> g_CID0
+            Assert.True(( r2tPDU.InitiatorTaskTag = ittWrite ))
+
+            // Send SNACK request for unsend R2T PDU
+            let begrun = ( datasn_me.toPrim r2tPDU.R2TSN ) + 1u
+            let! _ = r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.DATA_R2T g_LUN1 g_DefITT g_DefTTT begrun 1u
+
+            // receive Reject PDU
+            let! rejPDU = r1.ReceiveSpecific<RejectPDU> g_CID0
+            Assert.True(( rejPDU.Reason = RejectReasonCd.PROTOCOL_ERR ))
+
+            // Send Data-Out PDU
+            let sendData = PooledBuffer.Rent 4096
+            let! _ = r1.SendSCSIDataOutPDU g_CID0 BitF.T ittWrite g_LUN1 r2tPDU.TargetTransferTag datasn_me.zero 0u sendData
+            sendData.Return()
+
+            // receive SCSI Response
+            let! rpdu = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu.InitiatorTaskTag = ittWrite ))
+            Assert.True(( rpdu.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( rpdu.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+
+            do! r1.CloseSession g_CID0 BitI.F
+        }
+
+    [<Fact>]
+    member _.UnexpectedSNACKRequest_003 () =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession { m_defaultSessParam with ErrorRecoveryLevel=1uy } m_defaultConnParam
+            let blockCount = 8192u / m_MediaBlockSize
+
+            // send read command
+            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 8192u readCDB PooledBuffer.Empty 0u
+
+            // Receive SCSI Data-In PDU 0
+            let! dpdu1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+            Assert.True(( dpdu1.InitiatorTaskTag = itt ))
+            Assert.True(( dpdu1.BufferOffset = 0u ))
+            Assert.True(( dpdu1.DataSegment.Count = 4096 ))
+            Assert.True(( dpdu1.DataSN = datasn_me.fromPrim 0u ))
+
+            // Receive SCSI Data-In PDU 1
+            let! dpdu2 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+            Assert.True(( dpdu2.InitiatorTaskTag = itt ))
+            Assert.True(( dpdu2.BufferOffset = 4096u ))
+            Assert.True(( dpdu2.DataSegment.Count = 4096 ))
+            Assert.True(( dpdu2.DataSN = datasn_me.fromPrim 1u ))
+
+            // receive SCSI Response
+            let! rpdu = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu.InitiatorTaskTag = itt ))
+            Assert.True(( rpdu.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( rpdu.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+
+            // Send SNACK request for unsend Data-In PDU
+            let! _ = r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.DATA_R2T g_LUN1 g_DefITT g_DefTTT 2u 1u
+
+            // receive Reject PDU
+            let! rejPDU = r1.ReceiveSpecific<RejectPDU> g_CID0
+            Assert.True(( rejPDU.Reason = RejectReasonCd.PROTOCOL_ERR ))
+
+            // Send Nop-Out to acknowledge SCSI Response
+            let! ittNopOut, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! nopInPDU = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( nopInPDU.InitiatorTaskTag = ittNopOut ))
+
+            do! r1.CloseSession g_CID0 BitI.F
+        }
+
+    [<Fact>]
+    member _.UnexpectedSNACKRequest_004 () =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession { m_defaultSessParam with ErrorRecoveryLevel=1uy } m_defaultConnParam
+            let blockCount = 8192u / m_MediaBlockSize
+
+            // send read command
+            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 8192u readCDB PooledBuffer.Empty 0u
+
+            // Receive SCSI Data-In PDU 0
+            let! dpdu1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+            Assert.True(( dpdu1.InitiatorTaskTag = itt ))
+            Assert.True(( dpdu1.BufferOffset = 0u ))
+            Assert.True(( dpdu1.DataSegment.Count = 4096 ))
+            Assert.True(( dpdu1.DataSN = datasn_me.fromPrim 0u ))
+
+            // Receive SCSI Data-In PDU 1
+            let! dpdu2 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
+            Assert.True(( dpdu2.InitiatorTaskTag = itt ))
+            Assert.True(( dpdu2.BufferOffset = 4096u ))
+            Assert.True(( dpdu2.DataSegment.Count = 4096 ))
+            Assert.True(( dpdu2.DataSN = datasn_me.fromPrim 1u ))
+
+            // receive SCSI Response
+            let! rpdu = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( rpdu.InitiatorTaskTag = itt ))
+            Assert.True(( rpdu.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( rpdu.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+
+            // Send acknowledgement for Data-In PDU 0 and 1
+            let! _ = r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.DATA_ACK g_LUN1 g_DefITT g_DefTTT 0u 2u
+
+            // Send SNACK request for acknowledged Data-In PDU
+            let! _ = r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.DATA_R2T g_LUN1 g_DefITT g_DefTTT 1u 1u
+
+            // receive Reject PDU
+            let! rejPDU = r1.ReceiveSpecific<RejectPDU> g_CID0
+            Assert.True(( rejPDU.Reason = RejectReasonCd.PROTOCOL_ERR ))
+
+            // Send Nop-Out to acknowledge SCSI Response
+            let! ittNopOut, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! nopInPDU = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( nopInPDU.InitiatorTaskTag = ittNopOut ))
+
+            do! r1.CloseSession g_CID0 BitI.F
+        }
+
+    [<Fact>]
+    member _.UnexpectedNopResponse_001 () =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+
+            // Send Nop-Out with unexpected ITT and TTT ( format error )
+            let updater : ( NOPOutPDU -> NOPOutPDU ) = fun oldpdu -> {
+                oldpdu with
+                    InitiatorTaskTag = itt_me.fromPrim 0x11111111u
+            }
+            let! _ = r1.SendNOPOutPDU_Test updater ValueNone g_CID0 BitI.F g_LUN1 ( ttt_me.fromPrim 0x22222222u ) PooledBuffer.Empty
+
+            // Format errors cause session recovery
+            try
+                let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
+                Assert.Fail __LINE__
+            with
+            | :? ConnectionErrorException
+            | :? SessionRecoveryException ->
+                ()
+        }
+
+
