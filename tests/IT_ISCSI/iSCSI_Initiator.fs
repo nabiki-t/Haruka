@@ -1004,7 +1004,7 @@ type iSCSI_Initiator(
         m_Connections.Add( cid, iSCSI_Connection( conParams, r.Connection, r.ExpStatSN ) )
 
     /// <summary>
-    ///  Reads a specified range of data from the media.
+    ///  Read a specified range of data from the media.
     /// </summary>
     /// <param name="cid">
     ///  Specifies the connection to be used for sending and receiving PDUs.
@@ -1054,6 +1054,68 @@ type iSCSI_Initiator(
                 }
             )
             return rBuffer
+        }
+
+    /// <summary>
+    ///  Write data to specified range of the media.
+    /// </summary>
+    /// <param name="cid">
+    ///  Specifies the connection to be used for sending and receiving PDUs.
+    /// </param>
+    /// <param name="lun">
+    ///  Specify the LU to be read.
+    /// </param>
+    /// <param name="lba">
+    ///  Specifiy the start position to be read.
+    /// </param>
+    /// <param name="blockLength">
+    ///  Media block size.
+    /// </param>
+    /// <param name="bytesData">
+    ///  Data to be written.
+    /// </param>
+    member this.WriteMediaData ( cid : CID_T ) ( lun : LUN_T ) ( lba : uint32 ) ( blockLength : uint32 ) ( bytesData : byte[] ) : Task<unit> =
+        task {
+            let blockCount = uint16 ( bytesData.Length / int blockLength )
+            let mbl = m_SessParams.MaxBurstLength
+            let mrdsl = m_Connections.[cid].Params.MaxRecvDataSegmentLength_T
+            let writeCDB = GenScsiCDB.Write10 0uy false false false lba 0uy blockCount false false
+            let! itt, _ = this.SendSCSICommandPDU cid BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK lun ( uint32 bytesData.Length ) writeCDB PooledBuffer.Empty 0u
+
+            let loop () : Task<bool> =
+                task {
+                    let! pdu = this.Receive cid
+                    match pdu with
+                    | :? R2TPDU as x ->
+                        if x.InitiatorTaskTag <> itt then
+                            raise <| SessionRecoveryException( "Unexpedted ITT", m_SessParams.TSIH )
+
+                        let segs =
+                            Functions.DivideRespDataSegment x.BufferOffset x.DesiredDataTransferLength mbl mrdsl
+                            |> List.indexed
+                            |> List.map ( fun ( idx, struct( s, l , f ) ) -> struct( idx, s, l, f ) )
+
+                        for struct( idx, s, l, f ) in segs do
+                            let sendData = PooledBuffer.Rent( bytesData.[ ( int s ) .. ( int s + int l - 1 ) ] )
+                            let datasn = datasn_me.fromPrim ( uint32 idx )
+                            do! this.SendSCSIDataOutPDU cid ( BitF.ofBool f ) itt lun x.TargetTransferTag datasn s sendData
+                            sendData.Return()
+
+                        return true
+                    | :? SCSIResponsePDU as x ->
+                        if x.InitiatorTaskTag <> itt then
+                            raise <| SessionRecoveryException( "Unexpedted ITT", m_SessParams.TSIH )
+                        if x.Response <> iScsiSvcRespCd.COMMAND_COMPLETE then
+                            raise <| SessionRecoveryException( "Unexpedted Response", m_SessParams.TSIH )
+                        if x.Status <> ScsiCmdStatCd.GOOD then
+                            raise <| SessionRecoveryException( "Unexpedted Status", m_SessParams.TSIH )
+                        return false
+                    | _ ->
+                        raise <| SessionRecoveryException( "Unexpedted PDU", m_SessParams.TSIH )
+                        return false
+                }
+
+            do! Functions.loopAsync loop
         }
 
     /// <summary>

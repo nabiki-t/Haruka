@@ -315,7 +315,7 @@ type Session
                             else
                                 oldCIDs.Remove cid
                         )
-                    if Object.ReferenceEquals( wOld, wNew ) then
+                    if Functions.IsSame wOld wNew then
                         HLogger.Trace( LogID.I_CONNECTION_ALREADY_REMOVED, fun g -> g.Gen1( loginfo, m_I_TNexus.I_TNexusStr ) )
                     else
                         HLogger.Trace( LogID.I_CONNECTION_REMOVED_IN_SESSION, fun g -> g.Gen1( loginfo, m_I_TNexus.I_TNexusStr ) )
@@ -697,6 +697,38 @@ type Session
             )
             m_RespFense.Free()
 
+        // ------------------------------------------------------------------------
+        // Abort iSCSI tasks that match the specified criteria.
+        override this.AbortTask ( f : ( IIscsiTask -> bool ) ) : bool =
+            HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( m_ObjID, "Session.AbortTask" ) )
+
+            let updater ( oldQ : ProcessWaitQueue ) : struct( ProcessWaitQueue * bool ) =
+                let q, r = 
+                    oldQ.WaitingQueue
+                    |> Seq.mapFold ( fun s itr ->
+                        if f itr.Value then
+                            HLogger.Trace( LogID.I_ISCSI_TASK_ABORTED, fun g ->
+                                let struct( cid, concnt ) = itr.Value.AllegiantConnection
+                                let itt = itr.Value.InitiatorTaskTag
+                                let loginfo = struct ( m_ObjID, ValueSome( cid ), ValueSome( concnt ), ValueSome( m_TSIH ), itt, ValueNone )
+                                g.Gen0( loginfo )
+                            )
+                            ( KeyValuePair( itr.Key, IscsiTaskAborted( this :> ISession, itr.Value ) :> IIscsiTask ), true )
+                        else
+                            ( KeyValuePair( itr.Key, itr.Value ), s )
+                    ) false
+                if r then
+                    { oldQ with WaitingQueue = q.ToImmutableDictionary() }, true
+                else
+                    oldQ, false
+
+            if m_ProcessWaitQueue.Update updater then
+                this.ExecuteTasks ValueNone
+                true
+            else
+                false
+
+
     //=========================================================================
     // private method
     
@@ -924,22 +956,29 @@ type Session
                     argCmdSN
             let nextExpCmdSN = loop1( currentQ.ExpCmdSN )
 
-            // Delete a task that no longer has a source connection
             let nextWaitTaskList3 =
-                let wCIDs = m_CIDs.obj
-                nextWaitTaskList2
-                |> Array.filter ( fun itr ->
-                        let struct( cid, concnt ) = itr.Value.AllegiantConnection
-                        let r,v = wCIDs.TryGetValue cid
-                        if not r || v.Counter <> concnt then
-                            HLogger.Trace(
-                                LogID.W_ISCSI_TASK_REMOVED,
-                                fun g -> g.Gen3( loginfo, itr.Value.InitiatorTaskTag, itr.Value.CmdSN, "Connection removed" )
-                            )
-                            false
-                        else
-                            true
-                    )
+                // Delete tasks that no longer has the source connection.
+                let wNWTL1 =
+                    let wCIDs = m_CIDs.obj
+                    nextWaitTaskList2
+                    |> Array.filter ( fun itr ->
+                            let struct( cid, concnt ) = itr.Value.AllegiantConnection
+                            let r,v = wCIDs.TryGetValue cid
+                            if not r || v.Counter <> concnt then
+                                HLogger.Trace(
+                                    LogID.W_ISCSI_TASK_REMOVED,
+                                    fun g -> g.Gen3( loginfo, itr.Value.InitiatorTaskTag, itr.Value.CmdSN, "Connection removed" )
+                                )
+                                false
+                            else
+                                true
+                        )
+                // Delete removable task
+                let rmITT = 
+                    wNWTL1
+                    |> Array.choose ( fun itr -> if itr.Value.IsRemovable then Some itr.Key else None )
+                wNWTL1
+                |> Array.filter ( fun itr -> Array.exists ( (=) itr.Key ) rmITT |> not )
 
             let nonImmidiateTaskIdx2 =
                 if nextWaitTaskList3.Length = nextWaitTaskList2.Length then
@@ -996,11 +1035,11 @@ type Session
             let nonImm_RunList = List< unit -> unit >( nonImmidiateTaskIdx2.Count )
             let nextNextProcCmdSN = loop2( currentQ.NextProcCmdSN ) nonImm_RunList
 
-            // search removable task and delete that task
-            let rmITT = 
-                nextWaitTaskList3
-                |> Array.choose ( fun itr -> if itr.Value.IsRemovable then Some itr.Key else None )
+            // There may be tasks that can be deleted by calling the GetExecuteTask method, so delete them.
             let nextWaitTaskList4 =
+                let rmITT = 
+                    nextWaitTaskList3
+                    |> Array.choose ( fun itr -> if itr.Value.IsRemovable then Some itr.Key else None )
                 let v =
                     nextWaitTaskList3
                     |> Seq.filter ( fun itr -> Array.exists ( (=) itr.Key ) rmITT |> not )

@@ -16,6 +16,7 @@ open System.Collections.Generic
 
 open Xunit
 
+open Haruka.Commons
 open Haruka.Constants
 
 //=============================================================================
@@ -153,7 +154,7 @@ type PooledBuffer_Test() =
         let b = [| 0uy .. 255uy |]
         let p1 = PooledBuffer( b, 256 )
         let as1 = p1.GetArraySegment 1 5
-        Assert.True(( Object.ReferenceEquals( as1.Array, b ) ))
+        Assert.True(( Functions.IsSame as1.Array b ))
         Assert.True(( as1.Count = 5 ))
         Assert.True(( as1.Offset = 1 ))
         Assert.True(( as1.[0] = 1uy ))
@@ -166,7 +167,7 @@ type PooledBuffer_Test() =
     member _.Array_001() =
         let b = [| 0uy .. 255uy |]
         let p1 = PooledBuffer( b, 256 )
-        Assert.True(( Object.ReferenceEquals( p1.Array, b ) ))
+        Assert.True(( Functions.IsSame p1.Array b ))
 
     [<Fact>]
     member _.Length_001() =
@@ -185,7 +186,7 @@ type PooledBuffer_Test() =
         let b = [| 0uy .. 255uy |]
         let p1 = PooledBuffer( b, 256 )
         let as1 = p1.ArraySegment
-        Assert.True(( Object.ReferenceEquals( as1.Array, b ) ))
+        Assert.True(( Functions.IsSame as1.Array b ))
         Assert.True(( as1.Count = 256 ))
         Assert.True(( as1.Offset = 0 ))
 
@@ -315,7 +316,7 @@ type PooledBuffer_Test() =
         Assert.True(( p1.Length = 3 ))
         for i = 0 to 2 do
             Assert.True(( p1.Array.[i] = b1.[i] ))
-        Assert.False(( Object.ReferenceEquals( p1.Array, b1 ) ))
+        Assert.False(( Functions.IsSame p1.Array b1 ))
 
     [<Fact>]
     member _.static_RentAndInit_001() =
@@ -333,7 +334,7 @@ type PooledBuffer_Test() =
         let p2 = PooledBuffer.Truncate 8 p1
         Assert.True(( p1.Length = 15 ))
         Assert.True(( p2.Length = 8 ))
-        Assert.True(( Object.ReferenceEquals( p1.Array, p2.Array ) ))
+        Assert.True(( Functions.IsSame p1.Array p2.Array ))
 
     [<Fact>]
     member _.static_Truncate_002() =
@@ -341,7 +342,7 @@ type PooledBuffer_Test() =
         let p2 = PooledBuffer.Truncate 17 p1
         Assert.True(( p1.Length = 15 ))
         Assert.True(( p2.Length = 15 ))
-        Assert.True(( Object.ReferenceEquals( p1.Array, p2.Array ) ))
+        Assert.True(( Functions.IsSame p1.Array p2.Array ))
 
     [<Fact>]
     member _.static_Empty_001() =

@@ -25,9 +25,10 @@
     <Compile Include="ConfigurationMasterTest.fs" />
     <Compile Include="IscsiTextEncodeTest1.fs" />
     <Compile Include="IscsiTextEncodeTest2.fs" />
-    <Compile Include="IscsiTaskOnePDUCommandTest.fs" />
     <Compile Include="IscsiTaskScsiCommandTest.fs" />
+    <Compile Include="IscsiTaskOnePDUCommandTest.fs" />
     <Compile Include="IscsiTaskTextNegociationTest.fs" />
+    <Compile Include="IscsiTaskAbortedTest.fs" />
     <Compile Include="IscsiTCPSvPortTest.fs" />
     <Compile Include="PDUTest.fs" />
     <Compile Include="ConnectionTest.fs" />

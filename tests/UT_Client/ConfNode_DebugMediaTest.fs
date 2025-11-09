@@ -156,8 +156,8 @@ type ConfNode_DebugMedia_Test() =
 
         let pc1 = PrivateCaller( n )
         let pc2 = PrivateCaller( n2 )
-        Assert.True(( Object.ReferenceEquals( pc1.GetField( "m_MessageTable" ), pc2.GetField( "m_MessageTable" ) ) ))
-        Assert.True(( Object.ReferenceEquals( pc1.GetField( "m_ConfNodes" ), pc2.GetField( "m_ConfNodes" ) ) ))
+        Assert.Same( pc1.GetField( "m_MessageTable" ), pc2.GetField( "m_MessageTable" ) )
+        Assert.Same( pc1.GetField( "m_ConfNodes" ), pc2.GetField( "m_ConfNodes" ) )
 
     [<Fact>]
     member _.Validate_001() =
@@ -318,7 +318,7 @@ type ConfNode_DebugMedia_Test() =
         rel.AddRelation n.NodeID dm.NodeID
         let r = n.GetChildNodes<IConfigureNode>()
         Assert.True(( r.Length = 1 ))
-        Assert.True(( Object.ReferenceEquals( r.[0], dm ) ))
+        Assert.True(( Functions.IsSame r.[0] dm ))
         
     [<Fact>]
     member _.GetChildNode_003() =
@@ -335,8 +335,8 @@ type ConfNode_DebugMedia_Test() =
         let r = n.GetChildNodes<IConfigureNode>()
         Assert.True(( r.Length = 2 ))
         let wr =
-            ( Object.ReferenceEquals( r.[0], dm1 ) && Object.ReferenceEquals( r.[1], dm2 ) ) ||
-            ( Object.ReferenceEquals( r.[0], dm2 ) && Object.ReferenceEquals( r.[1], dm1 ) )
+            ( Functions.IsSame r.[0] dm1 ) && ( Functions.IsSame r.[1] dm2 ) ||
+            ( Functions.IsSame r.[0] dm2 ) && ( Functions.IsSame r.[1] dm1 )
         Assert.True wr
         
     [<Fact>]
@@ -356,7 +356,7 @@ type ConfNode_DebugMedia_Test() =
         rel.AddRelation n.NodeID dm3.NodeID
         let r = n.GetChildNodes<DummyNode2>()
         Assert.True(( r.Length = 1 ))
-        Assert.True(( Object.ReferenceEquals( r.[0], dm3 ) ))
+        Assert.True(( Functions.IsSame dm3 r.[0] ))
 
     [<Fact>]
     member _.GetDescendantNodes_001() =
@@ -395,8 +395,8 @@ type ConfNode_DebugMedia_Test() =
         let r = n.GetDescendantNodes<IConfigureNode>()
         Assert.True(( r.Length = 2 ))
         let wr =
-            ( Object.ReferenceEquals( r.[0], dm1 ) && Object.ReferenceEquals( r.[1], dm2 ) ) ||
-            ( Object.ReferenceEquals( r.[0], dm2 ) && Object.ReferenceEquals( r.[1], dm1 ) )
+            ( Functions.IsSame r.[0] dm1 ) && ( Functions.IsSame r.[1] dm2 ) ||
+            ( Functions.IsSame r.[0] dm2 ) && ( Functions.IsSame r.[1] dm1 ) 
         Assert.True wr
         
     [<Fact>]
@@ -416,7 +416,7 @@ type ConfNode_DebugMedia_Test() =
         rel.AddRelation dm2.NodeID dm3.NodeID
         let r = n.GetDescendantNodes<DummyNode2>()
         Assert.True(( r.Length = 1 ))
-        Assert.True(( Object.ReferenceEquals( r.[0], dm2 ) ))
+        Assert.True(( Functions.IsSame dm2 r.[0] ))
 
     [<Fact>]
     member _.GetParentNode_001() =
@@ -473,7 +473,7 @@ type ConfNode_DebugMedia_Test() =
         rel.AddRelation dm3.NodeID n.NodeID
         let r = n.GetParentNodes<DummyNode2>()
         Assert.True(( r.Length = 1 ))
-        Assert.True(( Object.ReferenceEquals( r.[0], dm3 ) ))
+        Assert.True(( Functions.IsSame dm3 r.[0] ))
 
     [<Fact>]
     member _.GetAncestorNode_001() =
@@ -495,7 +495,7 @@ type ConfNode_DebugMedia_Test() =
         rel.AddRelation dm.NodeID n.NodeID
         let r = n.GetAncestorNode<IConfigureNode>()
         Assert.True(( r.Length = 1 ))
-        Assert.True(( Object.ReferenceEquals( r.[0], dm ) ))
+        Assert.True(( Functions.IsSame dm r.[0] ))
         
     [<Fact>]
     member _.GetAncestorNode_003() =
@@ -512,8 +512,8 @@ type ConfNode_DebugMedia_Test() =
         let r = n.GetAncestorNode<IConfigureNode>()
         Assert.True(( r.Length = 2 ))
         let wr =
-            ( Object.ReferenceEquals( r.[0], dm1 ) && Object.ReferenceEquals( r.[1], dm2 ) ) ||
-            ( Object.ReferenceEquals( r.[0], dm2 ) && Object.ReferenceEquals( r.[1], dm1 ) )
+            ( Functions.IsSame r.[0] dm1 ) && ( Functions.IsSame r.[1] dm2 ) ||
+            ( Functions.IsSame r.[0] dm2 ) && ( Functions.IsSame r.[1] dm1 )
         Assert.True wr
 
         
@@ -534,7 +534,7 @@ type ConfNode_DebugMedia_Test() =
         rel.AddRelation dm3.NodeID dm2.NodeID
         let r = n.GetAncestorNode<DummyNode2>()
         Assert.True(( r.Length = 1 ))
-        Assert.True(( Object.ReferenceEquals( r.[0], dm2 ) ))
+        Assert.True(( Functions.IsSame dm2 r.[0] ))
 
     [<Fact>]
     member _.GenNewD_001() =

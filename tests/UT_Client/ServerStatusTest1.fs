@@ -1544,7 +1544,7 @@ type ServerStatus_Test1() =
 
         let cn = ( ss.ControllerNode :> IConfigureNode ).GetChildNodes<IConfigureNode>()
         Assert.True(( cn.Length = 1 ))
-        Assert.True(( Object.ReferenceEquals( cn.[0], newnode ) ))
+        Assert.True(( Functions.IsSame cn.[0] newnode ))
         Assert.True(( newnode.GetType().ToString() = resultTypeName ))
 
     [<Fact>]
@@ -1671,7 +1671,7 @@ type ServerStatus_Test1() =
         
         let cn = ( ss.ControllerNode :> IConfigureNode ).GetChildNodes<IConfigureNode>()
         Assert.True(( cn.Length = 1 ))
-        Assert.True(( Object.ReferenceEquals( cn.[0], tdnode ) ))
+        Assert.True(( Functions.IsSame cn.[0] tdnode ))
         match tdnode with
         | :? ConfNode_TargetDevice -> ()
         | _ -> Assert.Fail __LINE__
@@ -1733,7 +1733,7 @@ type ServerStatus_Test1() =
         
         let cn = ( ss.ControllerNode :> IConfigureNode ).GetChildNodes<IConfigureNode>()
         Assert.True(( cn.Length = 1 ))
-        Assert.True(( Object.ReferenceEquals( cn.[0], tdnode ) ))
+        Assert.True(( Functions.IsSame cn.[0] tdnode ))
         match tdnode with
         | :? ConfNode_TargetDevice -> ()
         | _ -> Assert.Fail __LINE__
@@ -1786,7 +1786,7 @@ type ServerStatus_Test1() =
         
         let cn = ( ss.ControllerNode :> IConfigureNode ).GetChildNodes<IConfigureNode>()
         Assert.True(( cn.Length = 1 ))
-        Assert.True(( Object.ReferenceEquals( cn.[0], tdnode ) ))
+        Assert.True(( Functions.IsSame cn.[0] tdnode ))
         match tdnode with
         | :? ConfNode_TargetDevice -> ()
         | _ -> Assert.Fail __LINE__
@@ -1843,7 +1843,7 @@ type ServerStatus_Test1() =
         
         let cn = ( ss.ControllerNode :> IConfigureNode ).GetChildNodes<IConfigureNode>()
         Assert.True(( cn.Length = 1 ))
-        Assert.True(( Object.ReferenceEquals( cn.[0], tdnode ) ))
+        Assert.True(( Functions.IsSame cn.[0] tdnode ))
         match tdnode with
         | :? ConfNode_TargetDevice -> ()
         | _ -> Assert.Fail __LINE__
@@ -1904,7 +1904,7 @@ type ServerStatus_Test1() =
         
         let cn = ( ss.ControllerNode :> IConfigureNode ).GetChildNodes<IConfigureNode>()
         Assert.True(( cn.Length = 1 ))
-        Assert.True(( Object.ReferenceEquals( cn.[0], tdnode ) ))
+        Assert.True(( Functions.IsSame cn.[0] tdnode ))
         match tdnode with
         | :? ConfNode_TargetDevice -> ()
         | _ -> Assert.Fail __LINE__
@@ -1985,7 +1985,7 @@ type ServerStatus_Test1() =
         
         let cn = ( ss.ControllerNode :> IConfigureNode ).GetChildNodes<IConfigureNode>()
         Assert.True(( cn.Length = 1 ))
-        Assert.True(( Object.ReferenceEquals( cn.[0], tdnode ) ))
+        Assert.True(( Functions.IsSame cn.[0] tdnode ))
         match tdnode with
         | :? ConfNode_TargetDevice -> ()
         | _ -> Assert.Fail __LINE__
@@ -2007,7 +2007,7 @@ type ServerStatus_Test1() =
         match c2.[0] with
         | :? ConfNode_TargetDevice -> ()
         | _ -> Assert.Fail __LINE__
-        Assert.True(( Object.ReferenceEquals( c2[0], tdnode ) ))
+        Assert.True(( Functions.IsSame c2[0] tdnode ))
 
     [<Fact>]
     member _.ImportTemporaryDump_013() =
@@ -2055,7 +2055,7 @@ type ServerStatus_Test1() =
         
         let cn = ( ss.ControllerNode :> IConfigureNode ).GetChildNodes<IConfigureNode>()
         Assert.True(( cn.Length = 1 ))
-        Assert.True(( Object.ReferenceEquals( cn.[0], tdnode ) ))
+        Assert.True(( Functions.IsSame cn.[0] tdnode ))
         match tdnode with
         | :? ConfNode_TargetDevice -> ()
         | _ -> Assert.Fail __LINE__

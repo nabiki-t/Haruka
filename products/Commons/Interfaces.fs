@@ -136,6 +136,12 @@ type IIscsiTask =
 
     // ------------------------------------------------------------------------
     /// <summary>
+    ///   Get the LUN value.
+    /// </summary>
+    abstract LUN : LUN_T voption
+
+    // ------------------------------------------------------------------------
+    /// <summary>
     ///   Get the Immidiate flag.
     /// </summary>
     abstract Immidiate : bool voption
@@ -1478,6 +1484,20 @@ type ISession =
     abstract NoticeUnlockResponseFence :
             mode:ResponseFenceNeedsFlag ->
             unit
+
+    // ------------------------------------------------------------------------
+    /// <summary>
+    ///   Abort iSCSI tasks that match the specified criteria.
+    /// </summary>
+    /// <param name="f">
+    ///   Aborts any task for which this function returns true.
+    /// </param>
+    /// <returns>
+    ///   True if any task was aborted; otherwise, false.
+    /// </returns>
+    abstract AbortTask :
+            f:( IIscsiTask -> bool ) ->
+            bool
 
 
 /// <summary>

@@ -6375,9 +6375,8 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 let st = Environment.TickCount
 
                 // receive reject PDU in the initiator
-                let pdu2 =
+                let! pdu2 =
                     PDU.Receive( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, cp, Standpoint.Initiator )
-                    |> Functions.RunTaskSynchronously
                 Assert.True( ( pdu2.Opcode = OpcodeCd.REJECT ) )
 
                 // reject PDU is sent after W_Mode lock is unlocked.
@@ -6686,3 +6685,190 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
 
         sess.DestroySession()
         GlbFunc.ClosePorts [| sp; cp; |]
+
+    [<Fact>]
+    member _.AbortTask_001() =
+        let sess, pc, killer, smStub, luStub, sp, cp =
+            Session_Test.CreateDefaultSessionObject
+                Session_Test.defaultSessionParam
+                Session_Test.defaultConnectionParam
+                cid_me.zero
+                cmdsn_me.zero
+                ( itt_me.fromPrim 0u )
+                false
+        let r = sess.AbortTask ( fun _ ->
+            Assert.Fail __LINE__
+            false
+        )
+        Assert.False( r )
+
+        sess.DestroySession()
+        GlbFunc.ClosePorts [| sp; cp; |]
+
+    [<Fact>]
+    member _.AbortTask_002() =
+        let sess, pc, killer, smStub, luStub, sp, cp =
+            Session_Test.CreateDefaultSessionObject
+                Session_Test.defaultSessionParam
+                Session_Test.defaultConnectionParam
+                cid_me.zero
+                cmdsn_me.zero
+                ( itt_me.fromPrim 0u )
+                false
+        let conn1 = sess.GetConnection cid_me.zero ( concnt_me.fromPrim 1 )
+
+        // pdus
+        let scsi1pdu = {
+            Session_Test.defaultScsiCommandPDUValues with
+                I = false;
+                F = false;
+                R = false;
+                W = true;
+                InitiatorTaskTag = itt_me.fromPrim 1u;
+                CmdSN = cmdsn_me.fromPrim 1u;
+                DataSegment = PooledBuffer.Empty;
+        }
+
+        // receive PDU in the target
+        sess.PushReceivedPDU conn1.Value scsi1pdu
+        let cnt1 = ( Session_Test.GetWaitingQueue pc ).Count
+        Assert.True(( 1 = cnt1 ))
+
+        let r = sess.AbortTask ( fun t ->
+            Assert.True(( t.InitiatorTaskTag = ValueSome( itt_me.fromPrim 1u ) ))
+            Assert.True(( t.TaskType = iSCSITaskType.SCSICommand ))
+            false
+        )
+        Assert.False( r )
+
+        let cnt1 = ( Session_Test.GetWaitingQueue pc ).Count
+        Assert.True(( 1 = cnt1 ))
+
+        sess.DestroySession()
+        GlbFunc.ClosePorts [| sp; cp; |]
+
+    [<Fact>]
+    member _.AbortTask_003() =
+        let sess, pc, killer, smStub, luStub, sp, cp =
+            Session_Test.CreateDefaultSessionObject
+                Session_Test.defaultSessionParam
+                Session_Test.defaultConnectionParam
+                cid_me.zero
+                cmdsn_me.zero
+                ( itt_me.fromPrim 0u )
+                false
+        let conn1 = sess.GetConnection cid_me.zero ( concnt_me.fromPrim 1 )
+        let mutable cnt = 0
+
+        // pdus
+        let scsi1pdu = {
+            Session_Test.defaultScsiCommandPDUValues with
+                I = false;
+                F = false;
+                R = false;
+                W = true;
+                InitiatorTaskTag = itt_me.fromPrim 1u;
+                CmdSN = cmdsn_me.fromPrim 1u;
+                DataSegment = PooledBuffer.Empty;
+        }
+        let noppdu2 = {
+            Session_Test.defaultNopOUTPDUValues with
+                I = false;
+                InitiatorTaskTag = itt_me.fromPrim 2u;
+                CmdSN = cmdsn_me.fromPrim 2u;
+        }
+
+        // receive PDU in the target
+        sess.PushReceivedPDU conn1.Value scsi1pdu
+        sess.PushReceivedPDU conn1.Value noppdu2
+        let cnt1 = ( Session_Test.GetWaitingQueue pc ).Count
+        Assert.True(( 2 = cnt1 ))
+
+        let r = sess.AbortTask ( fun t ->
+            cnt <- cnt + 1
+            if cnt = 1 then
+                Assert.True(( t.InitiatorTaskTag = ValueSome( itt_me.fromPrim 1u ) ))
+                Assert.True(( t.TaskType = iSCSITaskType.SCSICommand ))
+                true
+            else
+                Assert.True(( t.InitiatorTaskTag = ValueSome( itt_me.fromPrim 2u ) ))
+                Assert.True(( t.TaskType = iSCSITaskType.NOPOut ))
+                false
+        )
+        Assert.True( r )
+        Assert.True(( cnt = 2 ))
+
+        // receive Nop-IN PDU in the initiator
+        let pdu2 =
+            PDU.Receive( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, cp, Standpoint.Initiator )
+            |> Functions.RunTaskSynchronously
+        Assert.True( ( pdu2.Opcode = OpcodeCd.NOP_IN ) )
+        let itt2 = pdu2.InitiatorTaskTag
+        Assert.True(( itt2 = itt_me.fromPrim 2u ))
+
+        let cnt1 = ( Session_Test.GetWaitingQueue pc ).Count
+        Assert.True(( 0 = cnt1 ))
+
+        sess.DestroySession()
+        GlbFunc.ClosePorts [| sp; cp; |]
+
+    [<Fact>]
+    member _.AbortTask_004() =
+        let sess, pc, killer, smStub, luStub, sp, cp =
+            Session_Test.CreateDefaultSessionObject
+                Session_Test.defaultSessionParam
+                Session_Test.defaultConnectionParam
+                cid_me.zero
+                cmdsn_me.zero
+                ( itt_me.fromPrim 0u )
+                false
+        let conn1 = sess.GetConnection cid_me.zero ( concnt_me.fromPrim 1 )
+        let mutable cnt = 0
+
+        // pdus
+        let scsi1pdu = {
+            Session_Test.defaultScsiCommandPDUValues with
+                I = false;
+                F = false;
+                R = false;
+                W = true;
+                InitiatorTaskTag = itt_me.fromPrim 1u;
+                CmdSN = cmdsn_me.fromPrim 1u;
+                DataSegment = PooledBuffer.Empty;
+        }
+        let noppdu2 = {
+            Session_Test.defaultNopOUTPDUValues with
+                I = false;
+                InitiatorTaskTag = itt_me.fromPrim 2u;
+                CmdSN = cmdsn_me.fromPrim 2u;
+        }
+
+        // receive PDU in the target
+        sess.PushReceivedPDU conn1.Value scsi1pdu
+        sess.PushReceivedPDU conn1.Value noppdu2
+        let cnt1 = ( Session_Test.GetWaitingQueue pc ).Count
+        Assert.True(( 2 = cnt1 ))
+
+        let r = sess.AbortTask ( fun t ->
+            cnt <- cnt + 1
+            if cnt = 1 then
+                Assert.True(( t.InitiatorTaskTag = ValueSome( itt_me.fromPrim 1u ) ))
+                Assert.True(( t.TaskType = iSCSITaskType.SCSICommand ))
+                true
+            else
+                Assert.True(( t.InitiatorTaskTag = ValueSome( itt_me.fromPrim 2u ) ))
+                Assert.True(( t.TaskType = iSCSITaskType.NOPOut ))
+                true
+        )
+        Assert.True( r )
+        Assert.True(( cnt = 2 ))
+
+        let cnt1 = ( Session_Test.GetWaitingQueue pc ).Count
+        Assert.True(( 0 = cnt1 ))
+
+        sess.DestroySession()
+        GlbFunc.ClosePorts [| sp; cp; |]
+
+
+
+

@@ -735,6 +735,15 @@ type IscsiTaskScsiCommand
             | ValueNone -> 
                 ValueNone
 
+        // --------------------------------------------------------------------
+        // Implementation of IIscsiTask.LUN
+        override _.LUN : LUN_T voption =
+            match m_Command with
+            | ValueSome( x ) ->
+                ValueSome( x.LUN )
+            | ValueNone -> 
+                ValueNone
+
         // ------------------------------------------------------------------------
         // Implementation of IIscsiTask.Immidiate
         override _.Immidiate : bool voption =

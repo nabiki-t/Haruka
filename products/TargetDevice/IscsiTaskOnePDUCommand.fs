@@ -112,6 +112,11 @@ type IscsiTaskOnePDUCommand
         override _.CmdSN : CMDSN_T voption =
             ValueSome( m_Request.CmdSN )
 
+        // --------------------------------------------------------------------
+        // Implementation of IIscsiTask.LUN
+        override _.LUN : LUN_T voption =
+            m_Request.LUN
+
         // ------------------------------------------------------------------------
         // Implementation of IIscsiTask.Immidiate
         override _.Immidiate : bool voption =
@@ -214,23 +219,19 @@ type IscsiTaskOnePDUCommand
     ///   It dispatch task management request to the SCSI task router. Or, if the request is not supported, 
     ///   respond to task management response to the initiator.
     /// </summary>
-    /// <returns>
-    ///   Task object, that process the opration.
-    /// </returns>
     member private this.ExecuteTaskManagementRequest() : unit =
-        let taskRouter = m_Session.SCSITaskRouter
         let pdu = m_Request :?> TaskManagementFunctionRequestPDU
         match pdu.Function with
         | TaskMgrReqCd.ABORT_TASK ->
-            taskRouter.AbortTask ( this :> IIscsiTask ) pdu.LUN pdu.ReferencedTaskTag
+            this.ExecuteTMF_AbortTask()
         | TaskMgrReqCd.ABORT_TASK_SET ->
-            taskRouter.AbortTaskSet ( this :> IIscsiTask ) pdu.LUN
+            this.ExecuteTMF_AbortTaskSet()
         | TaskMgrReqCd.CLEAR_ACA ->
-            taskRouter.ClearACA ( this :> IIscsiTask ) pdu.LUN
+            this.ExecuteTMF_ClearACA()
         | TaskMgrReqCd.CLEAR_TASK_SET ->
-            taskRouter.ClearTaskSet ( this :> IIscsiTask ) pdu.LUN
+            this.ExecuteTMF_ClearTaskSet()
         | TaskMgrReqCd.LOGICAL_UNIT_RESET ->
-            taskRouter.LogicalUnitReset ( this :> IIscsiTask ) pdu.LUN
+            this.ExecuteTMF_LogicalUnitReset()
         | TaskMgrReqCd.TARGET_WARM_RESET
         | TaskMgrReqCd.TARGET_COLD_RESET ->
             // Haruka not supports the target reset request
@@ -262,6 +263,96 @@ type IscsiTaskOnePDUCommand
             let msg = sprintf "Unknown Task Management Function(0x%02X)" ( byte pdu.Function )
             HLogger.Trace( LogID.F_INTERNAL_ASSERTION, fun g -> g.Gen1( m_LogInfo, msg ) )
             raise <| new InternalAssertionException( msg )
+
+    // ------------------------------------------------------------------------
+    /// <summary>
+    ///   Execute ABORT TASK task management function request.
+    /// </summary>
+    member private this.ExecuteTMF_AbortTask() :unit =
+        let taskRouter = m_Session.SCSITaskRouter
+        let pdu = m_Request :?> TaskManagementFunctionRequestPDU
+
+        // Abort iSCSI tasks that match Referenced Task Tag
+        m_Session.AbortTask ( fun itrTask ->
+            ( Functions.IsSame itrTask this |> not ) &&
+            ( ValueOption.contains pdu.ReferencedTaskTag itrTask.InitiatorTaskTag )
+        )
+        |> ignore
+
+        // Abort SCSI task that match Referenced Task Tag
+        taskRouter.AbortTask ( this :> IIscsiTask ) pdu.LUN pdu.ReferencedTaskTag
+
+    // ------------------------------------------------------------------------
+    /// <summary>
+    ///   Execute ABORT_TASK_SET task management function request.
+    /// </summary>
+    member private this.ExecuteTMF_AbortTaskSet() :unit =
+        let taskRouter = m_Session.SCSITaskRouter
+        let pdu = m_Request :?> TaskManagementFunctionRequestPDU
+
+        // Aborts all tasks sent to the specified LU.
+        m_Session.AbortTask ( fun itrTask ->
+            ( Functions.IsSame itrTask this |> not ) &&
+            ( ValueOption.contains pdu.LUN itrTask.LUN )
+        )
+        |> ignore
+
+        taskRouter.AbortTaskSet ( this :> IIscsiTask ) pdu.LUN
+
+    // ------------------------------------------------------------------------
+    /// <summary>
+    ///   Execute CLEAR_ACA task management function request.
+    /// </summary>
+    member private this.ExecuteTMF_ClearACA() :unit =
+        let taskRouter = m_Session.SCSITaskRouter
+        let pdu = m_Request :?> TaskManagementFunctionRequestPDU
+
+        // Aborts all SCSI tasks with the ACA attribute sent to the specified LU.
+        m_Session.AbortTask (
+            function
+            | :? IscsiTaskScsiCommand as scsiTask ->
+                scsiTask.SCSICommandPDU
+                |> ValueOption.exists ( fun itr -> itr.ATTR = TaskATTRCd.ACA_TASK && itr.LUN = pdu.LUN )
+            | _ ->
+                false
+        )
+        |> ignore
+
+        taskRouter.ClearACA ( this :> IIscsiTask ) pdu.LUN
+
+    // ------------------------------------------------------------------------
+    /// <summary>
+    ///   Execute CLEAR_TASK_SET task management function request.
+    /// </summary>
+    member private this.ExecuteTMF_ClearTaskSet() :unit =
+        let taskRouter = m_Session.SCSITaskRouter
+        let pdu = m_Request :?> TaskManagementFunctionRequestPDU
+
+        // Aborts all tasks sent to the specified LU.
+        m_Session.AbortTask ( fun itrTask ->
+            ( Functions.IsSame itrTask this |> not ) &&
+            ( ValueOption.contains pdu.LUN itrTask.LUN )
+        )
+        |> ignore
+
+        taskRouter.ClearTaskSet ( this :> IIscsiTask ) pdu.LUN
+
+    // ------------------------------------------------------------------------
+    /// <summary>
+    ///   Execute LOGICAL_UNIT_RESET task management function request.
+    /// </summary>
+    member private this.ExecuteTMF_LogicalUnitReset() :unit =
+        let taskRouter = m_Session.SCSITaskRouter
+        let pdu = m_Request :?> TaskManagementFunctionRequestPDU
+
+        // Aborts all tasks sent to the specified LU.
+        m_Session.AbortTask ( fun itrTask ->
+            ( Functions.IsSame itrTask this |> not ) &&
+            ( ValueOption.contains pdu.LUN itrTask.LUN )
+        )
+        |> ignore
+
+        taskRouter.LogicalUnitReset ( this :> IIscsiTask ) pdu.LUN
 
     // ------------------------------------------------------------------------
     /// <summary>

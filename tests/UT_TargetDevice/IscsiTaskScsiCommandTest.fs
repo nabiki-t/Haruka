@@ -120,7 +120,7 @@ type IscsiTaskScsiCommand_Test () =
         Assert.True(( r.Session = sessStub ))
         let scmd = r.SCSICommandPDU
         Assert.True(( scmd.IsSome ))
-        Assert.True(( Object.ReferenceEquals( scmd.Value, defscmd ) ))
+        Assert.True(( Functions.IsSame scmd.Value defscmd ))
         Assert.True(( r.SCSIDataOutPDUs = [] ))
         Assert.True(( r.R2TPDU = Array.empty ))
         Assert.True(( r.Status = DATARECVSTAT.SOLICITED ))

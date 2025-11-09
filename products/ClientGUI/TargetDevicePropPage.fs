@@ -641,7 +641,7 @@ type TargetDevicePropPage(
     member private _.ShowCurrentLogParam ( actived : bool ) ( modified : bool ) ( logParam : TargetDeviceConf.T_LogParameters option ) : unit =
         if actived && not modified then
             let img = m_Config.Icons.Get IconImageIndex.III_STATUS_RUNNING
-            if img.IsSome && not ( Object.ReferenceEquals( m_CurrentStatusImage.Source, img ) ) then
+            if img.IsSome && not ( Functions.IsSame m_CurrentStatusImage.Source img.Value ) then
                 m_CurrentStatusImage.Source <- img.Value
             m_CurrentStatusTextBlock.Text <- "Running"
             m_CurrentSoftLimitTextBox.Text <- sprintf "%d" logParam.Value.SoftLimit
@@ -664,7 +664,7 @@ type TargetDevicePropPage(
                     IconImageIndex.III_STATUS_MODIFIED
 
             let img = m_Config.Icons.Get statIcon
-            if img.IsSome && not ( Object.ReferenceEquals( m_CurrentStatusImage.Source, img ) ) then
+            if img.IsSome && not ( Functions.IsSame m_CurrentStatusImage.Source img.Value ) then
                 m_CurrentStatusImage.Source <- img.Value
 
             m_CurrentSoftLimitTextBox.Text <- ""

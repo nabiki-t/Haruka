@@ -31,9 +31,10 @@
     </None>
     <Compile Include="ConfigurationMaster.fs" />
     <Compile Include="IscsiTextEncode.fs" />
-    <Compile Include="IscsiTaskOnePDUCommand.fs" />
     <Compile Include="IscsiTaskScsiCommand.fs" />
+    <Compile Include="IscsiTaskOnePDUCommand.fs" />
     <Compile Include="IscsiTaskTextNegociation.fs" />
+    <Compile Include="IscsiTaskAborted.fs" />
     <Compile Include="IscsiTCPSvPort.fs" />
     <Compile Include="PDU.fs" />
     <Compile Include="Connection.fs" />
@@ -43,8 +44,6 @@
     <Compile Include="StatusMaster.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
-
-  <ItemGroup />
 
   <ItemGroup>
     <ProjectReference Include="..\BlockDeviceLU\BlockDeviceLU.fsproj" />

@@ -1964,3 +1964,21 @@ type Functions() =
                 Functions.IPAddressToString x ( x.ToString() )
             | ValueNone ->
                 ""
+
+    /// <summary>
+    ///   Determine whether two object references of the same type refer to the same object.
+    /// </summary>
+    /// <param name="a">
+    ///  object reference 1
+    /// </param>
+    /// <param name="b">
+    ///  object reference 2
+    /// </param>
+    /// <returns>
+    ///  Returns true if both object references refer to the same object. 
+    /// </returns>
+    /// <remarks>
+    ///  This function is identical to Object.ReferenceEquals, except that it enforces the same reference type at compile time..
+    /// </remarks>
+    static member IsSame< 'T when 'T : not struct > ( a : 'T ) ( b : 'T ) : bool =
+        Object.ReferenceEquals( a, b )

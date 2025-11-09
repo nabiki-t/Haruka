@@ -52,6 +52,9 @@ open Haruka.IODataTypes
 /// <param name="m_CmdSN">
 ///   CmdSN value of the LAST PDU of text negotiation sequence.
 /// </param>
+/// <param name="m_LUN">
+///   LUN value of the LAST PDU of text negotiation sequence.
+/// </param>
 /// <param name="m_CurrentNegoParam">
 ///   The value of nagotiating text keys.
 ///   This value is updated when the target received a PDU that is set to 0 in C bit.
@@ -84,6 +87,7 @@ type IscsiTaskTextNegociation
         m_FirstIFlg : bool,
         m_FirstITT : ITT_T,
         m_CmdSN : CMDSN_T,
+        m_LUN : LUN_T,
         m_CurrentNegoParam : TextKeyValues,
         m_CurrentNogeStatus : TextKeyValuesStatus,
         m_contPDUs : TextRequestPDU list,
@@ -174,6 +178,7 @@ type IscsiTaskTextNegociation
             argPDU.I,
             argPDU.InitiatorTaskTag,
             argPDU.CmdSN,
+            argPDU.LUN,
             {
                 TextKeyValues.defaultTextKeyValues with
                     InitiatorAlias = TextValueType.Value( initParamSW.InitiatorAlias );
@@ -247,6 +252,7 @@ type IscsiTaskTextNegociation
                 firstIFllg,
                 firstITT,
                 argReceivedPDU.CmdSN,
+                argReceivedPDU.LUN,
                 curParam.CurrentNegoParam,
                 curParam.CurrentNegoStatus,
                 argReceivedPDU :: curParam.ContPDUs,
@@ -283,6 +289,7 @@ type IscsiTaskTextNegociation
                 firstIFllg,
                 firstITT,
                 argReceivedPDU.CmdSN,
+                argReceivedPDU.LUN,
                 curParam.CurrentNegoParam,
                 nextStatus_CLR,
                 curParam.ContPDUs,
@@ -369,6 +376,7 @@ type IscsiTaskTextNegociation
                 firstIFllg,
                 firstITT,
                 argReceivedPDU.CmdSN,
+                argReceivedPDU.LUN,
                 nextValues,
                 nextStatus_CLR,
                 [],
@@ -418,6 +426,11 @@ type IscsiTaskTextNegociation
         // Implementation of IIscsiTask.CmdSN
         override _.CmdSN : CMDSN_T voption =
             ValueSome( m_CmdSN )
+
+        // --------------------------------------------------------------------
+        // Implementation of IIscsiTask.LUN
+        override _.LUN : LUN_T voption =
+            ValueSome( m_LUN )
 
         // ------------------------------------------------------------------------
         // Implementation of IIscsiTask.Immidiate
@@ -472,7 +485,7 @@ type IscsiTaskTextNegociation
             let nextTask =
                 new IscsiTaskTextNegociation (
                     m_ObjID, m_StatusMaster, m_Session, m_AllegiantCID, m_AllegiantConCounter, m_FirstIFlg, m_FirstITT,
-                    m_CmdSN, m_CurrentNegoParam,  m_CurrentNogeStatus, m_contPDUs, argRespPDU, m_Initiator_Last_C,
+                    m_CmdSN, m_LUN, m_CurrentNegoParam,  m_CurrentNogeStatus, m_contPDUs, argRespPDU, m_Initiator_Last_C,
                     m_Initiator_Last_F, true )
             struct( ext, nextTask )
 

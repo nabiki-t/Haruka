@@ -139,7 +139,7 @@ type DebugMedia_Test () =
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
         let subMedia = dm.GetSubMedia()
         Assert.True(( subMedia.Length = 1 ))
-        Assert.True(( Object.ReferenceEquals( subMedia.Head, stub_media ) ))
+        Assert.True(( Functions.IsSame subMedia.Head stub_media ))
 
     [<Fact>]
     member _.Terminate_001() =
@@ -203,7 +203,7 @@ type DebugMedia_Test () =
         let mutable cnt = 0
         stub_media.p_TestUnitReady <- ( fun itt src ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
-            Assert.True(( Object.ReferenceEquals( src, defaultCommandSource ) ))
+            Assert.True(( Functions.IsSame src defaultCommandSource ))
             cnt <- cnt + 1
             ValueNone
         )
@@ -232,7 +232,7 @@ type DebugMedia_Test () =
         let mutable cnt = 0
         stub_media.p_TestUnitReady <- ( fun itt src ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
-            Assert.True(( Object.ReferenceEquals( src, defaultCommandSource ) ))
+            Assert.True(( Functions.IsSame src defaultCommandSource ))
             cnt <- cnt + 1
             ValueNone
         )
@@ -261,7 +261,7 @@ type DebugMedia_Test () =
         let mutable cnt = 0
         stub_media.p_TestUnitReady <- ( fun itt src ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
-            Assert.True(( Object.ReferenceEquals( src, defaultCommandSource ) ))
+            Assert.True(( Functions.IsSame src defaultCommandSource ))
             cnt <- cnt + 1
             ValueNone
         )
@@ -286,7 +286,7 @@ type DebugMedia_Test () =
         let mutable cnt = 0
         stub_media.p_TestUnitReady <- ( fun itt src ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
-            Assert.True(( Object.ReferenceEquals( src, defaultCommandSource ) ))
+            Assert.True(( Functions.IsSame src defaultCommandSource ))
             cnt <- cnt + 1
             ValueNone
         )
@@ -332,7 +332,7 @@ type DebugMedia_Test () =
         let mutable cnt = 0
         stub_media.p_ReadCapacity <- ( fun itt src ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
-            Assert.True(( Object.ReferenceEquals( src, defaultCommandSource ) ))
+            Assert.True(( Functions.IsSame src defaultCommandSource ))
             cnt <- cnt + 1
             123UL
         )
@@ -361,7 +361,7 @@ type DebugMedia_Test () =
         let mutable cnt = 0
         stub_media.p_ReadCapacity <- ( fun itt src ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
-            Assert.True(( Object.ReferenceEquals( src, defaultCommandSource ) ))
+            Assert.True(( Functions.IsSame src defaultCommandSource ))
             cnt <- cnt + 1
             123UL
         )
@@ -390,7 +390,7 @@ type DebugMedia_Test () =
         let mutable cnt = 0
         stub_media.p_ReadCapacity <- ( fun itt src ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
-            Assert.True(( Object.ReferenceEquals( src, defaultCommandSource ) ))
+            Assert.True(( Functions.IsSame src defaultCommandSource ))
             cnt <- cnt + 1
             123UL
         )
@@ -415,7 +415,7 @@ type DebugMedia_Test () =
         let mutable cnt = 0
         stub_media.p_ReadCapacity <- ( fun itt src ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
-            Assert.True(( Object.ReferenceEquals( src, defaultCommandSource ) ))
+            Assert.True(( Functions.IsSame src defaultCommandSource ))
             cnt <- cnt + 1
             123UL
         )
@@ -460,7 +460,7 @@ type DebugMedia_Test () =
         let mutable cnt = 0
         stub_media.p_Read <- ( fun itt src lba buf ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
-            Assert.True(( Object.ReferenceEquals( src, defaultCommandSource ) ))
+            Assert.True(( Functions.IsSame src defaultCommandSource ))
             cnt <- cnt + 1
             Task.FromResult 112
         )
@@ -684,7 +684,7 @@ type DebugMedia_Test () =
         let mutable cnt = 0
         stub_media.p_Write <- ( fun itt src lba off buf ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
-            Assert.True(( Object.ReferenceEquals( src, defaultCommandSource ) ))
+            Assert.True(( Functions.IsSame src defaultCommandSource ))
             cnt <- cnt + 1
             Task.FromResult 112
         )
@@ -909,7 +909,7 @@ type DebugMedia_Test () =
         let mutable cnt = 0
         stub_media.p_Format<- ( fun itt src ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
-            Assert.True(( Object.ReferenceEquals( src, defaultCommandSource ) ))
+            Assert.True(( Functions.IsSame src defaultCommandSource ))
             cnt <- cnt + 1
             Task.FromResult ()
         )

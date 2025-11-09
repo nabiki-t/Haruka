@@ -223,7 +223,7 @@ type Connection
                     match! this.ReceivePDUWithoutReject() with
                     | ValueSome( firstPDU ) ->
                         // Set initial StatSN value
-                        m_StatSN <- firstPDU.ExpStatSN
+                        m_StatSN <- ValueOption.get firstPDU.ExpStatSN
 
                         // Push received first PDU to session component
                         m_session.PushReceivedPDU this firstPDU
@@ -758,7 +758,7 @@ type Connection
 
                     // If the PDU is not saved for retransmission, 
                     // it will disappear after this method completes.
-                    let deletePDUinThisMethod = Object.ReferenceEquals( nextStat1, oldStat )
+                    let deletePDUinThisMethod = Functions.IsSame nextStat1 oldStat
 
                     let struct( resultFunc, nextStat2 ) =
                         if not( rSnackRequested && pdu.Opcode = OpcodeCd.SCSI_RES ) then
@@ -862,10 +862,11 @@ type Connection
                     let curStatSN = m_StatSN
                     let maxLimit = statsn_me.incr Constants.MAX_STATSN_DIFF curStatSN 
                     let minLimit = statsn_me.decr Constants.MAX_STATSN_DIFF curStatSN
+                    let expStatSN = lpdu.ExpStatSN
                     if  m_SWParams.ErrorRecoveryLevel = 0uy &&
-                        lpdu.HasExpStatSN &&
-                        ( statsn_me.lessThan lpdu.ExpStatSN minLimit ||
-                          statsn_me.lessThan maxLimit lpdu.ExpStatSN )
+                        expStatSN.IsSome &&
+                        ( statsn_me.lessThan expStatSN.Value minLimit ||
+                          statsn_me.lessThan maxLimit expStatSN.Value )
                     then
                         // When current StatSN and initiator's ExpStatSN are significantly different,
                         // it occurs session recovery.
@@ -873,16 +874,16 @@ type Connection
                         m_session.DestroySession()
                     else
                         // Delete acknowledged PDU by received ExpStatSN value.
-                        if lpdu.HasExpStatSN then
+                        if expStatSN.IsSome then
                             if HLogger.IsVerbose then
                                 let wloginfo = struct ( m_ObjID, ValueSome( m_CID ), ValueSome( m_Counter ), ValueSome( m_TSIH ), ValueSome( lpdu.InitiatorTaskTag ), ValueNone )
-                                HLogger.Trace( LogID.V_TRACE, fun g -> g.Gen1( wloginfo, sprintf "Received ExpStatSN=%d" lpdu.ExpStatSN ) )
+                                HLogger.Trace( LogID.V_TRACE, fun g -> g.Gen1( wloginfo, sprintf "Received ExpStatSN=%d" expStatSN.Value ) )
 
-                            this.DeleteAcknowledgedPDU lpdu.ExpStatSN
+                            this.DeleteAcknowledgedPDU expStatSN.Value
 
                         // Push the received PDU into session component
 //                        m_ReceiveTask.Enqueue ( fun () ->
-                            m_session.PushReceivedPDU this lpdu
+                        m_session.PushReceivedPDU this lpdu
 //                        )
                 | ValueNone ->
                     ()

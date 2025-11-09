@@ -17,6 +17,7 @@ open System.Collections.Generic
 
 open Xunit
 
+open Haruka.Commons
 open Haruka.Client
 open Haruka.IODataTypes
 open Haruka.Test
@@ -1475,8 +1476,8 @@ type ConfNodeRelation_Test() =
         let r = n.GetAllChildNodeList<DummyNode2>( node1.NodeID )
         Assert.True(( r.Length = 2 ))
         Assert.True((
-            Object.ReferenceEquals( r.[0], node2 ) && Object.ReferenceEquals( r.[1], node4 ) ||
-            Object.ReferenceEquals( r.[1], node2 ) && Object.ReferenceEquals( r.[0], node4 )
+            ( Functions.IsSame node2 r.[0] ) && ( Functions.IsSame node4 r.[1] ) ||
+            ( Functions.IsSame node2 r.[1] ) && ( Functions.IsSame node4 r.[0] )
         ))
 
     [<Fact>]

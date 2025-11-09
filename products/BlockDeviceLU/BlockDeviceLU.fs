@@ -638,7 +638,7 @@ type BlockDeviceLU
                         let oldTaskSet = m_TaskSet
                         let isExist =
                             oldTaskSet.Queue
-                            |> Seq.tryFind ( fun itr -> Object.ReferenceEquals( TaskStatus.getTask itr, argTask ) )
+                            |> Seq.tryFind ( fun itr ->  Functions.IsSame ( TaskStatus.getTask itr ) argTask )
                             |> Option.isSome
                         if not isExist then
                             // Ignore this notification.
@@ -685,7 +685,7 @@ type BlockDeviceLU
             for itr in oldTaskSet.Queue do
                 let t = TaskStatus.getTask itr
                 let wj = itn |> Array.exists ( fun itr -> ITNexus.Equals( itr, t.Source.I_TNexus ) )
-                if ( Object.ReferenceEquals( t, self ) |> not ) && ( t.TaskType = BlockDeviceTaskType.ScsiTask ) &&
+                if ( Functions.IsSame t self |> not ) && ( t.TaskType = BlockDeviceTaskType.ScsiTask ) &&
                     ( ( abortAllACATask && t.SCSICommand.ATTR = TaskATTRCd.ACA_TASK ) || wj ) then
                         // Notify removed tasks to termination
                         // this process must be performed synchronously
@@ -1437,7 +1437,7 @@ type BlockDeviceLU
         builder.Capacity <- curTS.Queue.Length
         for itr in curTS.Queue do
             let wr = TaskStatus.getTask itr
-            if Object.ReferenceEquals( wr, deltask ) |> not then
+            if Functions.IsSame wr deltask |> not then
                 builder.Add itr
         {
             curTS with

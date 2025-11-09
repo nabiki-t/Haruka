@@ -297,6 +297,7 @@ type iSCSITaskType =
     | TextNegociation
     | Logout
     | SNACK
+    | Aborted
 
 /// Initiator-side or target-side processing
 [<Struct; IsReadOnly>]

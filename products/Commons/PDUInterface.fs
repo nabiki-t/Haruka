@@ -41,11 +41,11 @@ type ILogicalPDU =
     /// Get CmdSN property
     abstract CmdSN : CMDSN_T
 
-    /// This PDU has ExpStatSN field or not
-    abstract HasExpStatSN : bool
-
     /// Get ExpStatSN property
-    abstract ExpStatSN : STATSN_T
+    abstract ExpStatSN : STATSN_T voption
+
+    /// Get LUN property
+    abstract LUN : LUN_T voption
 
     /// Update target variable values
     abstract UpdateTargetValues : STATSN_T -> CMDSN_T -> CMDSN_T -> ILogicalPDU
@@ -133,13 +133,13 @@ type SCSICommandPDU =
         member this.CmdSN : CMDSN_T =
             this.CmdSN
 
-        // This PDU has ExpStatSN field or not
-        member _.HasExpStatSN : bool =
-            true
-
         // Get ExpStatSN property
-        member this.ExpStatSN : STATSN_T =
-            this.ExpStatSN
+        member this.ExpStatSN : STATSN_T voption =
+            ValueSome this.ExpStatSN
+
+        /// Get LUN property
+        member this.LUN : LUN_T voption =
+            ValueSome this.LUN
 
         // Update target variable values
         // (There are no target values, so it's return the same SCSICommandPDU as is. )
@@ -250,13 +250,14 @@ type SCSIResponsePDU =
         member _.CmdSN : CMDSN_T =
             cmdsn_me.zero
 
-        // This PDU has ExpStatSN field or not
-        member _.HasExpStatSN : bool =
-            false
-
         // Get ExpStatSN property
-        member _.ExpStatSN : STATSN_T =
-            statsn_me.zero
+        member _.ExpStatSN : STATSN_T voption =
+            ValueNone
+
+        /// Get LUN property
+        /// According to the RFC3720 specification, the LUN field does not exist in the SCSI Response PDU, but since it is retained as a value, it is returned anyway.
+        member this.LUN : LUN_T voption =
+            ValueSome this.LUN
 
         // Update target variable values
         member this.UpdateTargetValues ( argStatSN : STATSN_T ) ( argExpCmdSN : CMDSN_T ) ( argMaxCmdSN : CMDSN_T ) : ILogicalPDU =
@@ -343,13 +344,13 @@ type TaskManagementFunctionRequestPDU =
         member this.CmdSN : CMDSN_T =
             this.CmdSN
 
-        // This PDU has ExpStatSN field or not
-        member _.HasExpStatSN : bool =
-            true
-
         // Get ExpStatSN property
-        member this.ExpStatSN : STATSN_T =
-            this.ExpStatSN
+        member this.ExpStatSN : STATSN_T voption =
+            ValueSome this.ExpStatSN
+
+        /// Get LUN property
+        member this.LUN : LUN_T voption =
+            ValueSome this.LUN
 
         // Update target variable values
         // (There are no target values, so it's return the same Task Management Function Request PDU as is. )
@@ -419,13 +420,13 @@ type TaskManagementFunctionResponsePDU =
         member _.CmdSN : CMDSN_T =
             cmdsn_me.zero
 
-        // This PDU has ExpStatSN field or not
-        member _.HasExpStatSN : bool =
-            false
-
         // Get ExpStatSN property
-        member _.ExpStatSN : STATSN_T =
-            statsn_me.zero
+        member _.ExpStatSN : STATSN_T voption =
+            ValueNone
+
+        /// Get LUN property
+        member _.LUN : LUN_T voption =
+            ValueNone
 
         // Update target variable values
         member this.UpdateTargetValues ( argStatSN : STATSN_T ) ( argExpCmdSN : CMDSN_T ) ( argMaxCmdSN : CMDSN_T ) : ILogicalPDU =
@@ -514,13 +515,13 @@ type SCSIDataOutPDU =
         member _.CmdSN : CMDSN_T =
             cmdsn_me.zero
 
-        // This PDU has ExpStatSN field or not
-        member _.HasExpStatSN : bool =
-            true
-
         // Get ExpStatSN property
-        member this.ExpStatSN : STATSN_T =
-            this.ExpStatSN
+        member this.ExpStatSN : STATSN_T voption =
+            ValueSome this.ExpStatSN
+
+        /// Get LUN property
+        member this.LUN : LUN_T voption =
+            ValueSome this.LUN
 
         // Update target variable values
         // (There are no target values, so it's return the same SCSI Data-Out PDU as is. )
@@ -661,13 +662,13 @@ type SCSIDataInPDU =
         member _.CmdSN : CMDSN_T =
             cmdsn_me.zero
 
-        // This PDU has ExpStatSN field or not
-        member _.HasExpStatSN : bool =
-            false
-
         // Get ExpStatSN property
-        member _.ExpStatSN : STATSN_T =
-            statsn_me.zero
+        member _.ExpStatSN : STATSN_T voption =
+            ValueNone
+
+        /// Get LUN property
+        member this.LUN : LUN_T voption =
+            ValueSome this.LUN
 
         // Update target variable values
         member this.UpdateTargetValues ( argStatSN : STATSN_T ) ( argExpCmdSN : CMDSN_T ) ( argMaxCmdSN : CMDSN_T ) : ILogicalPDU =
@@ -759,13 +760,13 @@ type R2TPDU =
         member _.CmdSN : CMDSN_T =
             cmdsn_me.zero
 
-        // This PDU has ExpStatSN field or not
-        member _.HasExpStatSN : bool =
-            false
-
         // Get ExpStatSN property
-        member _.ExpStatSN : STATSN_T =
-            statsn_me.zero
+        member _.ExpStatSN : STATSN_T voption =
+            ValueNone
+
+        /// Get LUN property
+        member this.LUN : LUN_T voption =
+            ValueSome this.LUN
 
         // Update target variable values
         member this.UpdateTargetValues ( argStatSN : STATSN_T ) ( argExpCmdSN : CMDSN_T ) ( argMaxCmdSN : CMDSN_T ) : ILogicalPDU =
@@ -858,13 +859,13 @@ type AsyncronousMessagePDU =
         member _.CmdSN : CMDSN_T =
             cmdsn_me.zero
 
-        // This PDU has ExpStatSN field or not
-        member _.HasExpStatSN : bool =
-            false
-
         // Get ExpStatSN property
-        member _.ExpStatSN : STATSN_T =
-            statsn_me.zero
+        member _.ExpStatSN : STATSN_T voption =
+            ValueNone
+
+        /// Get LUN property
+        member this.LUN : LUN_T voption =
+            ValueSome this.LUN
 
         // Update target variable values
         member this.UpdateTargetValues ( argStatSN : STATSN_T ) ( argExpCmdSN : CMDSN_T ) ( argMaxCmdSN : CMDSN_T ) : ILogicalPDU =
@@ -953,13 +954,13 @@ type TextRequestPDU =
         member this.CmdSN : CMDSN_T =
             this.CmdSN
 
-        // This PDU has ExpStatSN field or not
-        member _.HasExpStatSN : bool =
-            true
-
         // Get ExpStatSN property
-        member this.ExpStatSN : STATSN_T =
-            this.ExpStatSN
+        member this.ExpStatSN : STATSN_T voption =
+            ValueSome this.ExpStatSN
+
+        /// Get LUN property
+        member this.LUN : LUN_T voption =
+            ValueSome this.LUN
 
         // Update target variable values
         // (There are no target values, so it's return the same Text request PDU as is. )
@@ -1037,13 +1038,13 @@ type TextResponsePDU =
         member _.CmdSN : CMDSN_T =
             cmdsn_me.zero
 
-        // This PDU has ExpStatSN field or not
-        member _.HasExpStatSN : bool =
-            false
-
         // Get ExpStatSN property
-        member _.ExpStatSN : STATSN_T =
-            statsn_me.zero
+        member _.ExpStatSN : STATSN_T voption =
+            ValueNone
+
+        /// Get LUN property
+        member this.LUN : LUN_T voption =
+            ValueSome this.LUN
 
         // Update target variable values
         member this.UpdateTargetValues ( argStatSN : STATSN_T ) ( argExpCmdSN : CMDSN_T ) ( argMaxCmdSN : CMDSN_T ) : ILogicalPDU =
@@ -1140,13 +1141,13 @@ type LoginRequestPDU =
         member this.CmdSN : CMDSN_T =
             this.CmdSN
 
-        // This PDU has ExpStatSN field or not
-        member _.HasExpStatSN : bool =
-            true
-
         // Get ExpStatSN property
-        member this.ExpStatSN : STATSN_T =
-            this.ExpStatSN
+        member this.ExpStatSN : STATSN_T voption =
+            ValueSome this.ExpStatSN
+
+        /// Get LUN property
+        member _.LUN : LUN_T voption =
+            ValueNone
 
         // Update target variable values
         // (There are no target values, so it's return the same Login request PDU as is. )
@@ -1233,13 +1234,13 @@ type LoginResponsePDU =
         member _.CmdSN : CMDSN_T =
             cmdsn_me.zero
 
-        // This PDU has ExpStatSN field or not
-        member _.HasExpStatSN : bool =
-            false
-
         // Get ExpStatSN property
-        member _.ExpStatSN : STATSN_T =
-            statsn_me.zero
+        member _.ExpStatSN : STATSN_T voption =
+            ValueNone
+
+        /// Get LUN property
+        member _.LUN : LUN_T voption =
+            ValueNone
 
         // Update target variable values
         member this.UpdateTargetValues ( argStatSN : STATSN_T ) ( argExpCmdSN : CMDSN_T ) ( argMaxCmdSN : CMDSN_T ) : ILogicalPDU =
@@ -1320,13 +1321,13 @@ type LogoutRequestPDU =
         member this.CmdSN : CMDSN_T =
             this.CmdSN
 
-        // This PDU has ExpStatSN field or not
-        member _.HasExpStatSN : bool =
-            true
-
         // Get ExpStatSN property
-        member this.ExpStatSN : STATSN_T =
-            this.ExpStatSN
+        member this.ExpStatSN : STATSN_T voption =
+            ValueSome this.ExpStatSN
+
+        /// Get LUN property
+        member _.LUN : LUN_T voption =
+            ValueNone
 
         // Update target variable values
         // (There are no target values, so it's return the same Logout request PDU as is. )
@@ -1401,13 +1402,13 @@ type LogoutResponsePDU =
         member _.CmdSN : CMDSN_T =
             cmdsn_me.zero
 
-        // This PDU has ExpStatSN field or not
-        member _.HasExpStatSN : bool =
-            false
-
         // Get ExpStatSN property
-        member _.ExpStatSN : STATSN_T =
-            statsn_me.zero
+        member _.ExpStatSN : STATSN_T voption =
+            ValueNone
+
+        /// Get LUN property
+        member _.LUN : LUN_T voption =
+            ValueNone
 
         // Update target variable values
         member this.UpdateTargetValues ( argStatSN : STATSN_T ) ( argExpCmdSN : CMDSN_T ) ( argMaxCmdSN : CMDSN_T ) : ILogicalPDU =
@@ -1492,13 +1493,13 @@ type SNACKRequestPDU =
         member _.CmdSN : CMDSN_T =
             cmdsn_me.zero
 
-        // This PDU has ExpStatSN field or not
-        member _.HasExpStatSN : bool =
-            true
-
         // Get ExpStatSN property
-        member this.ExpStatSN : STATSN_T =
-            this.ExpStatSN
+        member this.ExpStatSN : STATSN_T voption =
+            ValueSome this.ExpStatSN
+
+        /// Get LUN property
+        member this.LUN : LUN_T voption =
+            ValueSome this.LUN
 
         // Update target variable values
         // (There are no target values, so it's return the same SNACK request PDU as is. )
@@ -1569,13 +1570,13 @@ type RejectPDU =
         member _.CmdSN : CMDSN_T =
             cmdsn_me.zero
 
-        // This PDU has ExpStatSN field or not
-        member _.HasExpStatSN : bool =
-            false
-
         // Get ExpStatSN property
-        member _.ExpStatSN : STATSN_T =
-            statsn_me.zero
+        member _.ExpStatSN : STATSN_T voption =
+            ValueNone
+
+        /// Get LUN property
+        member _.LUN : LUN_T voption =
+            ValueNone
 
         // Update target variable values
         member this.UpdateTargetValues ( argStatSN : STATSN_T ) ( argExpCmdSN : CMDSN_T ) ( argMaxCmdSN : CMDSN_T ) : ILogicalPDU =
@@ -1661,13 +1662,13 @@ type NOPOutPDU =
         member this.CmdSN : CMDSN_T =
             this.CmdSN
 
-        // This PDU has ExpStatSN field or not
-        member _.HasExpStatSN : bool =
-            true
-
         // Get ExpStatSN property
-        member this.ExpStatSN : STATSN_T =
-            this.ExpStatSN
+        member this.ExpStatSN : STATSN_T voption =
+            ValueSome this.ExpStatSN
+
+        /// Get LUN property
+        member this.LUN : LUN_T voption =
+            ValueSome this.LUN
 
         // Update target variable values
         // (There are no target values, so it's return the same NOP-Out PDU as is. )
@@ -1738,13 +1739,13 @@ type NOPInPDU =
         member _.CmdSN : CMDSN_T =
             cmdsn_me.zero
 
-        // This PDU has ExpStatSN field or not
-        member _.HasExpStatSN : bool =
-            false
-
         // Get ExpStatSN property
-        member _.ExpStatSN : STATSN_T =
-            statsn_me.zero
+        member _.ExpStatSN : STATSN_T voption =
+            ValueNone
+
+        /// Get LUN property
+        member this.LUN : LUN_T voption =
+            ValueSome this.LUN
 
         // Update target variable values
         member this.UpdateTargetValues ( argStatSN : STATSN_T ) ( argExpCmdSN : CMDSN_T ) ( argMaxCmdSN : CMDSN_T ) : ILogicalPDU =

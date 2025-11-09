@@ -282,7 +282,7 @@ type ConfNode_MemBufferMedia_Test() =
         rel.AddRelation n.NodeID dm3.NodeID
         let r = n.GetChildNodes<DummyNode2>()
         Assert.True(( r.Length = 1 ))
-        Assert.True(( Object.ReferenceEquals( r.[0], dm3 ) ))
+        Assert.True(( Functions.IsSame dm3 r.[0] ))
 
     [<Fact>]
     member _.GetDescendantNodes_001() =
@@ -339,7 +339,7 @@ type ConfNode_MemBufferMedia_Test() =
         rel.AddRelation dm2.NodeID dm3.NodeID
         let r = n.GetDescendantNodes<DummyNode2>()
         Assert.True(( r.Length = 1 ))
-        Assert.True(( Object.ReferenceEquals( r.[0], dm2 ) ))
+        Assert.True(( Functions.IsSame dm2 r.[0] ))
 
     [<Fact>]
     member _.GetParentNode_001() =
@@ -396,7 +396,7 @@ type ConfNode_MemBufferMedia_Test() =
         rel.AddRelation dm3.NodeID n.NodeID
         let r = n.GetParentNodes<DummyNode2>()
         Assert.True(( r.Length = 1 ))
-        Assert.True(( Object.ReferenceEquals( r.[0], dm3 ) ))
+        Assert.True(( Functions.IsSame dm3 r.[0] ))
 
     [<Fact>]
     member _.GetAncestorNode_001() =
@@ -453,7 +453,7 @@ type ConfNode_MemBufferMedia_Test() =
         rel.AddRelation dm3.NodeID dm2.NodeID
         let r = n.GetAncestorNode<DummyNode2>()
         Assert.True(( r.Length = 1 ))
-        Assert.True(( Object.ReferenceEquals( r.[0], dm2 ) ))
+        Assert.True(( Functions.IsSame dm2 r.[0] ))
 
     [<Fact>]
     member _.GenNewD_001() =

@@ -173,6 +173,7 @@ type LogID =
     | I_RESPONSE_WITH_CA_NOT_EST_ACA        = 0x20006400
     | I_CLEAR_ACA_AND_EST_NEW_ACA           = 0x20006500
     | I_CLEAR_ACA_AND_RESPONSE_CA           = 0x20006600
+    | I_ISCSI_TASK_ABORTED                  = 0x20006700
 
     | W_UNEXPECTED_ERROR                    = 0x30000000
     | W_DATA_DIGEST_ERROR                   = 0x30000100
@@ -1557,6 +1558,7 @@ type HLogger() =
             ( LogID.I_RESPONSE_WITH_CA_NOT_EST_ACA,     "Response CA, the ACA status will not be Established." )
             ( LogID.I_CLEAR_ACA_AND_EST_NEW_ACA,        "Old ACA status is cleared and new ACA status is established." )
             ( LogID.I_CLEAR_ACA_AND_RESPONSE_CA,        "Old ACA status is cleared and response CA." )
+            ( LogID.I_ISCSI_TASK_ABORTED,               "iSCSI task is aborted. " )
 
             ( LogID.W_UNEXPECTED_ERROR,                 "Unexpedted error. Exception={0}, message={1}" )
             ( LogID.W_DATA_DIGEST_ERROR,                "Data digest error. Received PDU is discarded." )

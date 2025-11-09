@@ -543,7 +543,8 @@ type LoginNegociator
                         raise <| SessionRecoveryException ( msg, tsih_me.zero )
                         return LoopState.Terminate()
                 }
-            do! Functions.loopAsyncWithArgs negoloop struct( next2_CPDU, next2_CPDU.ExpStatSN )
+            let wstatsn = next2_CPDU.ExpStatSN  // Since this is a PDU received by the target, ExpStatSN must exist.
+            do! Functions.loopAsyncWithArgs negoloop struct( next2_CPDU, wstatsn.Value )
         }
 
     // ------------------------------------------------------------------------

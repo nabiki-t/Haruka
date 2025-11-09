@@ -1072,8 +1072,8 @@ type MemBufferMedia_Test () =
 
         Assert.True(( m_Buffer.[0] <> null ))
         Assert.True(( m_Buffer.[1] <> null ))
-        Assert.False(( Object.ReferenceEquals( wb0, m_Buffer.[0] ) ))
-        Assert.False(( Object.ReferenceEquals( wb1, m_Buffer.[1] ) ))
+        Assert.False(( Functions.IsSame wb0 m_Buffer.[0] ))
+        Assert.False(( Functions.IsSame wb1 m_Buffer.[1] ))
         
     [<Fact>]
     member _.MediaControl_001() =

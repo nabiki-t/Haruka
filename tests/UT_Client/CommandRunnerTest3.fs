@@ -2529,9 +2529,9 @@ type CommandRunner_Test3() =
         Assert.True(( stat.IsSome ))
         match stat.Value with
         | ( x_ss, x_cc, x_tn ) ->
-            Assert.True(( Object.ReferenceEquals( x_ss, ss ) ))
-            Assert.True(( Object.ReferenceEquals( x_cc, cc ) ))
-            Assert.True(( Object.ReferenceEquals( x_tn, tn2 ) ))
+            Assert.True(( Functions.IsSame x_ss ss ))
+            Assert.True(( Functions.IsSame x_cc cc ))
+            Assert.True(( Functions.IsSame x_tn tn2 ))
         Assert.True(( flg1 ))
         let out_rs = CheckOutputMessage out_ms out_ws "T " "Set CHAP authentication"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]

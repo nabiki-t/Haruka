@@ -1226,7 +1226,7 @@ type StatusMaster_Test () =
         Assert.True(( r.IsNone ))
         let r2 = sm.GetSession ( tsih_me.fromPrim 1us )
         Assert.True(( r2.IsSome ))
-        Assert.True(( Object.ReferenceEquals( r2.Value, sess_stub1 ) ))
+        Assert.True(( Functions.IsSame r2.Value sess_stub1 ))
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName0

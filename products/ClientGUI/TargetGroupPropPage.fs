@@ -466,7 +466,7 @@ type TargetGroupPropPage(
             m_InactivateButton.IsEnabled <- false
             m_UnloadButton.IsEnabled <- false
             let img = m_Config.Icons.Get IconImageIndex.III_TARGET_GROUP_MODIFIED
-            if img.IsSome && not ( Object.ReferenceEquals( m_CurrentStatusImage.Source, img ) ) then
+            if img.IsSome && not ( Functions.IsSame m_CurrentStatusImage.Source img.Value ) then
                 m_CurrentStatusImage.Source <- img.Value
 
         elif not tdActived then
@@ -477,7 +477,7 @@ type TargetGroupPropPage(
             m_InactivateButton.IsEnabled <- false
             m_UnloadButton.IsEnabled <- false
             let img = m_Config.Icons.Get IconImageIndex.III_TARGET_GROUP_UNLOADED
-            if img.IsSome && not ( Object.ReferenceEquals( m_CurrentStatusImage.Source, img ) ) then
+            if img.IsSome && not ( Functions.IsSame m_CurrentStatusImage.Source img.Value ) then
                 m_CurrentStatusImage.Source <- img.Value
 
         elif not tgLoaded then
@@ -488,7 +488,7 @@ type TargetGroupPropPage(
             m_InactivateButton.IsEnabled <- false
             m_UnloadButton.IsEnabled <- false
             let img = m_Config.Icons.Get IconImageIndex.III_TARGET_GROUP_UNLOADED
-            if img.IsSome && not ( Object.ReferenceEquals( m_CurrentStatusImage.Source, img ) ) then
+            if img.IsSome && not ( Functions.IsSame m_CurrentStatusImage.Source img.Value ) then
                 m_CurrentStatusImage.Source <- img.Value
 
         elif not tgActived then
@@ -499,7 +499,7 @@ type TargetGroupPropPage(
             m_InactivateButton.IsEnabled <- false
             m_UnloadButton.IsEnabled <- true
             let img = m_Config.Icons.Get IconImageIndex.III_TARGET_GROUP_LOADED
-            if img.IsSome && not ( Object.ReferenceEquals( m_CurrentStatusImage.Source, img ) ) then
+            if img.IsSome && not ( Functions.IsSame m_CurrentStatusImage.Source img.Value ) then
                 m_CurrentStatusImage.Source <- img.Value
 
         else
@@ -510,6 +510,6 @@ type TargetGroupPropPage(
             m_InactivateButton.IsEnabled <- true
             m_UnloadButton.IsEnabled <- true
             let img = m_Config.Icons.Get IconImageIndex.III_TARGET_GROUP_ACTIVE
-            if img.IsSome && not ( Object.ReferenceEquals( m_CurrentStatusImage.Source, img ) ) then
+            if img.IsSome && not ( Functions.IsSame m_CurrentStatusImage.Source img.Value ) then
                 m_CurrentStatusImage.Source <- img.Value
 

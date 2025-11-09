@@ -31,6 +31,7 @@ type public CISCSITask_Stub() =
     let mutable f_GetTaskType : ( unit -> iSCSITaskType ) option = None
     let mutable f_GetTaskTypeName : ( unit -> string ) option = None
     let mutable f_GetCmdSN : ( unit -> CMDSN_T voption ) option = None
+    let mutable f_GetLUN : ( unit -> LUN_T voption ) option = None
     let mutable f_GetImmidiate: ( unit -> bool voption ) option = None
     let mutable f_GetInitiatorTaskTag : ( unit -> ITT_T voption ) option = None
     let mutable f_IsExecutable : ( unit -> bool ) option = None
@@ -43,6 +44,7 @@ type public CISCSITask_Stub() =
     member _.p_GetTaskType with set v = f_GetTaskType <- Some( v )
     member _.p_GetTaskTypeName with set v = f_GetTaskTypeName <- Some( v )
     member _.p_GetCmdSN with set v = f_GetCmdSN <- Some( v )
+    member _.p_GetLUN with set v = f_GetLUN <- Some( v )
     member _.p_GetImmidiate with set v = f_GetImmidiate <- Some( v )
     member _.p_GetInitiatorTaskTag with set v = f_GetInitiatorTaskTag <- Some( v )
     member _.p_IsExecutable with set v = f_IsExecutable <- Some( v )
@@ -58,6 +60,8 @@ type public CISCSITask_Stub() =
             f_GetTaskTypeName.Value ()
         override _.CmdSN with get() =
             f_GetCmdSN.Value ()
+        override _.LUN with get() =
+            f_GetLUN.Value ()
         override _.Immidiate with get() =
             f_GetImmidiate.Value ()
         override _.InitiatorTaskTag with get() =
@@ -243,6 +247,7 @@ type public CSession_Stub() =
     let mutable f_ResendPDUForRSnack : ( CID_T -> CONCNT_T -> ILogicalPDU -> unit ) option = None
     let mutable f_NoticeUpdateSessionParameter : ( IscsiNegoParamSW -> unit ) option = None
     let mutable f_NoticeUnlockResponseFence : ( ResponseFenceNeedsFlag -> unit ) option = None
+    let mutable f_AbortTask : ( ( IIscsiTask -> bool ) -> bool ) option = None
 
     member val dummy : obj = box () with get, set
     member _.p_Terminate with set v = f_Terminate <- Some( v )
@@ -270,6 +275,7 @@ type public CSession_Stub() =
     member _.p_ResendPDUForRSnack with set v = f_ResendPDUForRSnack <- Some( v )
     member _.p_NoticeUpdateSessionParameter with set v = f_NoticeUpdateSessionParameter <- Some( v )
     member _.p_NoticeUnlockResponseFence with set v = f_NoticeUnlockResponseFence <- Some( v )
+    member _.p_AbortTask with set v = f_AbortTask <- Some( v )
 
     interface ISession with
         override _.Terminate () =
@@ -347,6 +353,8 @@ type public CSession_Stub() =
             f_NoticeUpdateSessionParameter.Value argSWParams
         override _.NoticeUnlockResponseFence ( mode : ResponseFenceNeedsFlag ) : unit =
             f_NoticeUnlockResponseFence.Value mode
+        override _.AbortTask ( f : ( IIscsiTask -> bool ) ) : bool =
+            f_AbortTask.Value f
 
 /// <summary>
 ///  Default stub class for IProtocolService.

@@ -135,6 +135,23 @@ type IscsiTaskOnePDUCommand_Test () =
         ResponseFence = ResponseFenceNeedsFlag.Immediately;
     }
 
+    static member defaultScsiCommandPDUValues = {
+        I = true;
+        F = true;
+        R = false;
+        W = true;
+        ATTR = TaskATTRCd.SIMPLE_TASK;
+        LUN = lun_me.zero;
+        InitiatorTaskTag = itt_me.fromPrim 1u;
+        ExpectedDataTransferLength = 256u;
+        CmdSN = cmdsn_me.zero;
+        ExpStatSN = statsn_me.fromPrim 1u;
+        ScsiCDB = [| 0uy .. 15uy |];
+        DataSegment = PooledBuffer.Rent [| 0uy .. 255uy |];
+        BidirectionalExpectedReadDataLength = 0u;
+        ByteCount = 0u;
+    }
+
     static member defaultSCSIResponsePDUValues = {
         o = false;
         u = false;
@@ -489,6 +506,7 @@ type IscsiTaskOnePDUCommand_Test () =
     member _.GetExecuteTask_006_ExecuteTaskManagementRequest_001() =
         let mutable cnt = 0
         let mutable cnt2 = 0
+        let mutable cnt3 = 0
         let taskRouterStub = new CProtocolService_Stub()
         let sessStub = new CSession_Stub(
             p_GetTSIH = ( fun () -> tsih_me.zero ),
@@ -506,6 +524,23 @@ type IscsiTaskOnePDUCommand_Test () =
                 false
             ) :> IIscsiTask
 
+        sessStub.p_AbortTask <- ( fun f ->
+            cnt3 <- cnt3 + 1
+            Assert.False(( f iscsitask ))
+
+            let dt1 = CISCSITask_Stub( p_GetInitiatorTaskTag = fun _ -> ValueSome( itt_me.fromPrim 99u ) )
+            Assert.False(( f dt1 ))
+
+            let oITT = IscsiTaskOnePDUCommand_Test.defaultTaskManagementRequestPDUValues.ReferencedTaskTag
+            let dt2 = CISCSITask_Stub( p_GetInitiatorTaskTag = fun _ -> ValueSome( oITT ) )
+            Assert.True(( f dt2 ))
+
+            let dt3 = CISCSITask_Stub( p_GetInitiatorTaskTag = fun _ -> ValueNone )
+            Assert.False(( f dt3 ))
+
+            true
+        )
+
         taskRouterStub.p_AbortTask <- ( fun iscsitask lun rtt ->
             cnt2 <- cnt2 + 1
             Assert.True(( iSCSITaskType.SCSITaskManagement = iscsitask.TaskType ))
@@ -521,11 +556,13 @@ type IscsiTaskOnePDUCommand_Test () =
 
         Assert.True(( 1 = cnt ))
         Assert.True(( 1 = cnt2 ))
+        Assert.True(( 1 = cnt3 ))
 
     [<Fact>]
     member _.GetExecuteTask_007_ExecuteTaskManagementRequest_002() =
         let mutable cnt = 0
         let mutable cnt2 = 0
+        let mutable cnt3 = 0
         let taskRouterStub = new CProtocolService_Stub()
         let sessStub = new CSession_Stub(
             p_GetTSIH = ( fun () -> tsih_me.zero ),
@@ -543,6 +580,23 @@ type IscsiTaskOnePDUCommand_Test () =
                 false
             ) :> IIscsiTask
 
+        sessStub.p_AbortTask <- ( fun f ->
+            cnt3 <- cnt3 + 1
+            Assert.False(( f iscsitask ))
+
+            let dt1 = CISCSITask_Stub( p_GetLUN = fun _ -> ValueSome( lun_me.fromPrim 99UL ) )
+            Assert.False(( f dt1 ))
+
+            let oLUN = IscsiTaskOnePDUCommand_Test.defaultTaskManagementRequestPDUValues.LUN
+            let dt2 = CISCSITask_Stub( p_GetLUN = fun _ -> ValueSome( oLUN ) )
+            Assert.True(( f dt2 ))
+
+            let dt3 = CISCSITask_Stub( p_GetLUN = fun _ -> ValueNone )
+            Assert.False(( f dt3 ))
+
+            true
+        )
+
         taskRouterStub.p_AbortTaskSet <- ( fun iscsitask lun ->
             cnt2 <- cnt2 + 1
             Assert.True(( iSCSITaskType.SCSITaskManagement = iscsitask.TaskType ))
@@ -557,11 +611,13 @@ type IscsiTaskOnePDUCommand_Test () =
 
         Assert.True(( 1 = cnt ))
         Assert.True(( 1 = cnt2 ))
+        Assert.True(( 1 = cnt3 ))
 
     [<Fact>]
     member _.GetExecuteTask_008_ExecuteTaskManagementRequest_003() =
         let mutable cnt = 0
         let mutable cnt2 = 0
+        let mutable cnt3 = 0
         let taskRouterStub = new CProtocolService_Stub()
         let sessStub = new CSession_Stub(
             p_GetTSIH = ( fun () -> tsih_me.zero ),
@@ -579,6 +635,72 @@ type IscsiTaskOnePDUCommand_Test () =
                 false
             ) :> IIscsiTask
 
+        sessStub.p_AbortTask <- ( fun f ->
+            cnt3 <- cnt3 + 1
+            Assert.False(( f iscsitask ))
+
+            // Not a SCSI task
+            let dt1 = CISCSITask_Stub()
+            Assert.False(( f dt1 ))
+
+            // SCSI Command PDU is not present
+            let scsiTask1 =
+                new IscsiTaskScsiCommand(
+                    objidx_me.NewID(), sessStub :> ISession,
+                    cid_me.fromPrim 0us, concnt_me.fromPrim 0,
+                    ValueNone,
+                    [], Array.empty, DATARECVSTAT.UNSOLICITED, 0u, false
+                )
+            Assert.False(( f scsiTask1 ))
+
+            // Not an ACA task
+            let cmdpdu2 = {
+                IscsiTaskOnePDUCommand_Test.defaultScsiCommandPDUValues with
+                    ATTR = TaskATTRCd.SIMPLE_TASK;
+                    LUN = IscsiTaskOnePDUCommand_Test.defaultTaskManagementRequestPDUValues.LUN;
+            }
+            let scsiTask2 =
+                new IscsiTaskScsiCommand(
+                    objidx_me.NewID(), sessStub :> ISession,
+                    cid_me.fromPrim 0us, concnt_me.fromPrim 0,
+                    ValueSome cmdpdu2,
+                    [], Array.empty, DATARECVSTAT.UNSOLICITED, 0u, false
+                )
+            Assert.False(( f scsiTask2 ))   
+
+            // LUN do not match
+            let cmdpdu3 = {
+                IscsiTaskOnePDUCommand_Test.defaultScsiCommandPDUValues with
+                    ATTR = TaskATTRCd.ACA_TASK;
+                    LUN = lun_me.fromPrim 9999UL;
+            }
+            let scsiTask3 =
+                new IscsiTaskScsiCommand(
+                    objidx_me.NewID(), sessStub :> ISession,
+                    cid_me.fromPrim 0us, concnt_me.fromPrim 0,
+                    ValueSome cmdpdu3,
+                    [], Array.empty, DATARECVSTAT.UNSOLICITED, 0u, false
+                )
+            Assert.False(( f scsiTask3 ))
+
+            // ACA task and LUN match
+            let cmdpdu4 = {
+                IscsiTaskOnePDUCommand_Test.defaultScsiCommandPDUValues with
+                    ATTR = TaskATTRCd.ACA_TASK;
+                    LUN = IscsiTaskOnePDUCommand_Test.defaultTaskManagementRequestPDUValues.LUN;
+            }
+            let scsiTask4 =
+                new IscsiTaskScsiCommand(
+                    objidx_me.NewID(), sessStub :> ISession,
+                    cid_me.fromPrim 0us, concnt_me.fromPrim 0,
+                    ValueSome cmdpdu4,
+                    [], Array.empty, DATARECVSTAT.UNSOLICITED, 0u, false
+                )
+            Assert.True(( f scsiTask4 ))
+
+            true
+        )
+
         taskRouterStub.p_ClearACA <- ( fun iscsitask lun ->
             cnt2 <- cnt2 + 1
             Assert.True(( iSCSITaskType.SCSITaskManagement = iscsitask.TaskType ))
@@ -593,11 +715,13 @@ type IscsiTaskOnePDUCommand_Test () =
 
         Assert.True(( 1 = cnt ))
         Assert.True(( 1 = cnt2 ))
+        Assert.True(( 1 = cnt3 ))
 
     [<Fact>]
     member _.GetExecuteTask_009_ExecuteTaskManagementRequest_004() =
         let mutable cnt = 0
         let mutable cnt2 = 0
+        let mutable cnt3 = 0
         let taskRouterStub = new CProtocolService_Stub()
         let sessStub = new CSession_Stub(
             p_GetTSIH = ( fun () -> tsih_me.zero ),
@@ -615,6 +739,23 @@ type IscsiTaskOnePDUCommand_Test () =
                 false
             ) :> IIscsiTask
 
+        sessStub.p_AbortTask <- ( fun f ->
+            cnt3 <- cnt3 + 1
+            Assert.False(( f iscsitask ))
+
+            let dt1 = CISCSITask_Stub( p_GetLUN = fun _ -> ValueSome( lun_me.fromPrim 99UL ) )
+            Assert.False(( f dt1 ))
+
+            let oLUN = IscsiTaskOnePDUCommand_Test.defaultTaskManagementRequestPDUValues.LUN
+            let dt2 = CISCSITask_Stub( p_GetLUN = fun _ -> ValueSome( oLUN ) )
+            Assert.True(( f dt2 ))
+
+            let dt3 = CISCSITask_Stub( p_GetLUN = fun _ -> ValueNone )
+            Assert.False(( f dt3 ))
+
+            true
+        )
+
         taskRouterStub.p_ClearTaskSet <- ( fun iscsitask lun ->
             cnt2 <- cnt2 + 1
             Assert.True(( iSCSITaskType.SCSITaskManagement = iscsitask.TaskType ))
@@ -629,11 +770,13 @@ type IscsiTaskOnePDUCommand_Test () =
 
         Assert.True(( 1 = cnt ))
         Assert.True(( 1 = cnt2 ))
+        Assert.True(( 1 = cnt3 ))
 
     [<Fact>]
     member _.GetExecuteTask_010_ExecuteTaskManagementRequest_005() =
         let mutable cnt = 0
         let mutable cnt2 = 0
+        let mutable cnt3 = 0
         let taskRouterStub = new CProtocolService_Stub()
         let sessStub = new CSession_Stub(
             p_GetTSIH = ( fun () -> tsih_me.zero ),
@@ -651,6 +794,23 @@ type IscsiTaskOnePDUCommand_Test () =
                 false
             ) :> IIscsiTask
 
+        sessStub.p_AbortTask <- ( fun f ->
+            cnt3 <- cnt3 + 1
+            Assert.False(( f iscsitask ))
+
+            let dt1 = CISCSITask_Stub( p_GetLUN = fun _ -> ValueSome( lun_me.fromPrim 99UL ) )
+            Assert.False(( f dt1 ))
+
+            let oLUN = IscsiTaskOnePDUCommand_Test.defaultTaskManagementRequestPDUValues.LUN
+            let dt2 = CISCSITask_Stub( p_GetLUN = fun _ -> ValueSome( oLUN ) )
+            Assert.True(( f dt2 ))
+
+            let dt3 = CISCSITask_Stub( p_GetLUN = fun _ -> ValueNone )
+            Assert.False(( f dt3 ))
+
+            true
+        )
+
         taskRouterStub.p_LogicalUnitReset <- ( fun iscsitask lun ->
             cnt2 <- cnt2 + 1
             Assert.True(( iSCSITaskType.SCSITaskManagement = iscsitask.TaskType ))
@@ -665,12 +825,11 @@ type IscsiTaskOnePDUCommand_Test () =
 
         Assert.True(( 1 = cnt ))
         Assert.True(( 1 = cnt2 ))
+        Assert.True(( 1 = cnt3 ))
 
     [<Fact>]
     member _.GetExecuteTask_011_ExecuteTaskManagementRequest_006() =
-        let mutable cnt = 0
         let mutable cnt2 = 0
-        let taskRouterStub = new CProtocolService_Stub()
         let sessStub = new CSession_Stub(
             p_GetTSIH = ( fun () -> tsih_me.zero ),
             p_SendOtherResponsePDU = ( fun cid concount pdu ->
@@ -679,8 +838,7 @@ type IscsiTaskOnePDUCommand_Test () =
                 let respdu = pdu :?> TaskManagementFunctionResponsePDU
                 Assert.True(( TaskMgrResCd.TASK_MGR_NOT_SUPPORT = respdu.Response ))
                 Assert.True(( itt_me.fromPrim 0u = respdu.InitiatorTaskTag ))
-            ),
-            p_GetSCSITaskRouter = ( fun () -> cnt <- cnt + 1; taskRouterStub )
+            )
         )
         let iscsitask =
             new IscsiTaskOnePDUCommand(
@@ -698,17 +856,13 @@ type IscsiTaskOnePDUCommand_Test () =
         Assert.True( nxt.Executed )
         ext()
 
-        Assert.True(( 1 = cnt ))
         Assert.True(( 1 = cnt2 ))
 
     [<Fact>]
     member _.GetExecuteTask_013_ExecuteTaskManagementRequest_008() =
-        let mutable cnt = 0
         let mutable cnt2 = 0
-        let taskRouterStub = new CProtocolService_Stub()
         let sessStub = new CSession_Stub(
             p_GetTSIH = ( fun () -> tsih_me.zero ),
-            p_GetSCSITaskRouter = ( fun () -> cnt <- cnt + 1; taskRouterStub ),
             p_SendOtherResponsePDU = ( fun cid concount pdu ->
                 cnt2 <- cnt2 + 1
                 Assert.True(( OpcodeCd.SCSI_TASK_MGR_RES = pdu.Opcode ))
@@ -733,18 +887,13 @@ type IscsiTaskOnePDUCommand_Test () =
         Assert.True( nxt.Executed )
         ext()
 
-        Assert.True(( 1 = cnt ))
         Assert.True(( 1 = cnt2 ))
 
     [<Fact>]
     member _.GetExecuteTask_016_ExecuteTaskManagementRequest_011() =
-        let mutable cnt = 0
         let mutable cnt2 = 0
-        let taskRouterStub = new CProtocolService_Stub()
-        let connStub = new CConnection_Stub()
         let sessStub = new CSession_Stub(
             p_GetTSIH = ( fun () -> tsih_me.zero ),
-            p_GetSCSITaskRouter = ( fun () -> cnt <- cnt + 1; taskRouterStub ),
             p_SendOtherResponsePDU = ( fun cid concount pdu ->
                 cnt2 <- cnt2 + 1
                 Assert.True(( OpcodeCd.SCSI_TASK_MGR_RES = pdu.Opcode ))
@@ -769,7 +918,6 @@ type IscsiTaskOnePDUCommand_Test () =
         Assert.True( nxt.Executed )
         ext()
 
-        Assert.True(( 1 = cnt ))
         Assert.True(( 1 = cnt2 ))
 
     [<Fact>]
@@ -777,7 +925,6 @@ type IscsiTaskOnePDUCommand_Test () =
         let mutable cnt = 0
         let sessStub = new CSession_Stub(
             p_GetTSIH = ( fun () -> tsih_me.zero ),
-//            p_GetAllConnections = ( fun () -> cnt <- cnt + 1; [| connStub1; connStub2; |] ),
             p_SendOtherResponsePDU = ( fun cid concnt pdu ->
                 cnt <- cnt + 1
                 Assert.True(( cid_me.fromPrim 1us = cid ))
