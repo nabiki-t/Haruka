@@ -310,29 +310,13 @@ type StatusMaster(
 
             |> m_Sessions.Update< IKiller, ISession voption >
 
-(*
         // --------------------------------------------------------------------
-        // Implementation of IStatus.ReinstateSession
-        override this.ReinstateSession ( argI_TNexus : ITNexus ) ( oldTsih : TSIH_T ) ( newTsih : TSIH_T ) ( sessionParameter : IscsiNegoParamSW ) ( newCmdSN : CMDSN_T ) : unit =
-            if HLogger.IsVerbose then
-                HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( m_ObjID, "StatusMaster.ReinstateSession" ) )
-
-            // Remove old session object
-            let r, wSess = m_Sessions.obj.TryGetValue( oldTsih )
-            if r then wSess.DestroySession()
-
-            // create new session
-            ( this :> IStatus ).CreateNewSession argI_TNexus newTsih sessionParameter newCmdSN
-*)
-        // --------------------------------------------------------------------
-        // Implementation of IStatus.ReinstateSession
+        // Implementation of IStatus.RemoveSession
         override _.RemoveSession ( tsih : TSIH_T ) : unit =
             if HLogger.IsVerbose then
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( m_ObjID, "StatusMaster.RemoveSession" ) )
 
             m_Sessions.Update( fun ( oldVal : ImmutableDictionary< TSIH_T, ISession > ) ->
-                // This method is called after a session has been destroyed, but depending on the timing,
-                // it may be called after ReinstateSession method with the same TSIH.
                 let r, s = oldVal.TryGetValue tsih
                 if not r then
                     HLogger.Trace( LogID.I_SESSION_REMOVED , fun g -> g.Gen0( m_ObjID, ValueNone, ValueNone, ValueSome tsih, ValueNone, ValueNone ) )

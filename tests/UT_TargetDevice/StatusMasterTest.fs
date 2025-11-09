@@ -1231,71 +1231,7 @@ type StatusMaster_Test () =
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName0
         GlbFunc.DeleteDir pDirName
-(*
-    [<Fact>]
-    member this.ReinstateSession_001() =
-        let pDirName = this.GetTestDirName "ReinstateSession_001"
-        GlbFunc.CreateDir pDirName |> ignore
 
-        let targetDeviceConfName = StatusMaster_Test.CreateEmptyTDConf pDirName
-        let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
-        File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
-
-        let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
-        let pc_sm = new PrivateCaller( sm )
-
-        let itn2 = new ITNexus( "initiator002", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target002", tpgt_me.fromPrim 0us );
-        let r = sm.ReinstateSession itn2 ( tsih_me.fromPrim 2us ) StatusMaster_Test.defaultSessParam ( cmdsn_me.zero )
-        Assert.True(( r = tsih_me.fromPrim 2us ))
-
-        let m_Sessions2 = pc_sm.GetField( "m_Sessions" ) :?> OptimisticLock<ImmutableDictionary< TSIH_T, ISession >>
-        Assert.True(( m_Sessions2.obj.Count = 1 ) )
-        Assert.True(( m_Sessions2.obj.ContainsKey( tsih_me.fromPrim 2us ) ))
-
-        GlbFunc.DeleteFile targetDeviceConfName
-        GlbFunc.DeleteFile targetGroupConfName0
-        GlbFunc.DeleteDir pDirName
-
-    [<Fact>]
-    member this.ReinstateSession_002() =
-        let pDirName = this.GetTestDirName "ReinstateSession_002"
-        GlbFunc.CreateDir pDirName |> ignore
-
-        let targetDeviceConfName = StatusMaster_Test.CreateEmptyTDConf pDirName
-        let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
-        File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
-
-        let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
-        let pc_sm = new PrivateCaller( sm )
-        let mutable cnt = 0
-
-        let itn1 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 0us );
-        let sess_stub1 = new CSession_Stub(
-            p_GetI_TNexus = ( fun () -> itn1 ),
-            p_DestroySession = ( fun () -> cnt <- cnt + 1 )
-        )
-        let m_sessions1 =
-            [
-                KeyValuePair< TSIH_T, ISession >( tsih_me.fromPrim 1us, sess_stub1 );
-            ]
-            |> ImmutableDictionary.CreateRange< TSIH_T, ISession >
-            |> OptimisticLock
-        pc_sm.SetField( "m_Sessions", m_sessions1 )
-
-        let r = sm.ReinstateSession itn1 ( tsih_me.fromPrim 1us ) StatusMaster_Test.defaultSessParam ( cmdsn_me.zero )
-        Assert.True(( r = tsih_me.fromPrim 1us ))
-
-        let m_Sessions2 = pc_sm.GetField( "m_Sessions" ) :?> OptimisticLock<ImmutableDictionary< TSIH_T, ISession >>
-        Assert.True(( m_Sessions2.obj.Count = 1 ) )
-        Assert.True(( m_Sessions2.obj.ContainsKey( tsih_me.fromPrim 1us ) ))
-        Assert.True(( cnt = 1 ))
-
-        GlbFunc.DeleteFile targetDeviceConfName
-        GlbFunc.DeleteFile targetGroupConfName0
-        GlbFunc.DeleteDir pDirName
-*)
     [<Fact>]
     member this.GetLU_001() =
         let pDirName = this.GetTestDirName "GetLU_001"
