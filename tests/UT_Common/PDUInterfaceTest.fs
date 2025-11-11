@@ -47,7 +47,7 @@ type PDUInterface_Test () =
                 ByteCount = 0u;
             } :> ILogicalPDU
         let r1 = pdu.UpdateTargetValues ( statsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 2u )
-        Assert.True(( r1 = pdu ))
+        Assert.True(( Functions.IsSame r1 pdu ))
    
     [<Fact>]
     member _.SCSICommandPDU_002() =
@@ -69,7 +69,7 @@ type PDUInterface_Test () =
                 ByteCount = 0u;
             } :> ILogicalPDU
         let r2 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 2u )
-        Assert.True(( r2 = pdu ))
+        Assert.True(( Functions.IsSame r2 pdu ))
    
     [<Fact>]
     member _.SCSICommandPDU_003() =
@@ -139,28 +139,27 @@ type PDUInterface_Test () =
                 LUN = lun_me.zero;
             } :> ILogicalPDU
         let r1 = pdu.UpdateTargetValues ( statsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 2u )
-        Assert.True(( r1 = {
-                o = false;
-                u = false;
-                O = false;
-                U = false;
-                Response = iScsiSvcRespCd.COMMAND_COMPLETE;
-                Status = ScsiCmdStatCd.ACA_ACTIVE;
-                InitiatorTaskTag = itt_me.fromPrim 0u;
-                SNACKTag = snacktag_me.fromPrim 0u;
-                StatSN = statsn_me.fromPrim 1u;
-                ExpCmdSN = cmdsn_me.fromPrim 1u;
-                MaxCmdSN = cmdsn_me.fromPrim 2u;
-                ExpDataSN = datasn_me.zero;
-                BidirectionalReadResidualCount = 0u;
-                ResidualCount = 0u;
-                SenseLength = 0us;
-                SenseData = ArraySegment.Empty;
-                ResponseData = ArraySegment.Empty;
-                ResponseFence = ResponseFenceNeedsFlag.W_Mode;
-                DataInBuffer = PooledBuffer.Empty;
-                LUN = lun_me.zero;
-        } ))
+        let r2 = r1 :?> SCSIResponsePDU
+        Assert.True(( r2.o = false ))
+        Assert.True(( r2.u = false ))
+        Assert.True(( r2.O = false ))
+        Assert.True(( r2.U = false ))
+        Assert.True(( r2.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+        Assert.True(( r2.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+        Assert.True(( r2.InitiatorTaskTag = itt_me.fromPrim 0u ))
+        Assert.True(( r2.SNACKTag = snacktag_me.fromPrim 0u ))
+        Assert.True(( r2.StatSN = statsn_me.fromPrim 1u ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 1u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 2u ))
+        Assert.True(( r2.ExpDataSN = datasn_me.zero ))
+        Assert.True(( r2.BidirectionalReadResidualCount = 0u ))
+        Assert.True(( r2.ResidualCount = 0u ))
+        Assert.True(( r2.SenseLength = 0us ))
+        Assert.True(( r2.SenseData = ArraySegment.Empty ))
+        Assert.True(( r2.ResponseData = ArraySegment.Empty ))
+        Assert.True(( r2.ResponseFence = ResponseFenceNeedsFlag.W_Mode ))
+        Assert.True(( r2.DataInBuffer.Length = 0 ))
+        Assert.True(( r2.LUN = lun_me.zero ))
 
     [<Fact>]
     member _.SCSIResponsePDU_002() =
@@ -187,29 +186,28 @@ type PDUInterface_Test () =
                 DataInBuffer = PooledBuffer.Empty;
                 LUN = lun_me.zero;
             } :> ILogicalPDU
-        let r2 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 4u ) ( cmdsn_me.fromPrim 5u ) ( cmdsn_me.fromPrim 6u )
-        Assert.True(( r2 = {
-                o = false;
-                u = false;
-                O = false;
-                U = false;
-                Response = iScsiSvcRespCd.COMMAND_COMPLETE;
-                Status = ScsiCmdStatCd.ACA_ACTIVE;
-                InitiatorTaskTag = itt_me.fromPrim 0u;
-                SNACKTag = snacktag_me.fromPrim 0u;
-                StatSN = statsn_me.zero;
-                ExpCmdSN = cmdsn_me.fromPrim 5u;
-                MaxCmdSN = cmdsn_me.fromPrim 6u;
-                ExpDataSN = datasn_me.zero;
-                BidirectionalReadResidualCount = 0u;
-                ResidualCount = 0u;
-                SenseLength = 0us;
-                SenseData = ArraySegment.Empty;
-                ResponseData = ArraySegment.Empty;
-                ResponseFence = ResponseFenceNeedsFlag.W_Mode;
-                DataInBuffer = PooledBuffer.Empty;
-                LUN = lun_me.zero;
-        } ))
+        let r1 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 4u ) ( cmdsn_me.fromPrim 5u ) ( cmdsn_me.fromPrim 6u )
+        let r2 = r1 :?> SCSIResponsePDU
+        Assert.True(( r2.o = false ))
+        Assert.True(( r2.u = false ))
+        Assert.True(( r2.O = false ))
+        Assert.True(( r2.U = false ))
+        Assert.True(( r2.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+        Assert.True(( r2.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+        Assert.True(( r2.InitiatorTaskTag = itt_me.fromPrim 0u ))
+        Assert.True(( r2.SNACKTag = snacktag_me.fromPrim 0u ))
+        Assert.True(( r2.StatSN = statsn_me.zero ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 5u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 6u ))
+        Assert.True(( r2.ExpDataSN = datasn_me.zero ))
+        Assert.True(( r2.BidirectionalReadResidualCount = 0u ))
+        Assert.True(( r2.ResidualCount = 0u ))
+        Assert.True(( r2.SenseLength = 0us ))
+        Assert.True(( r2.SenseData = ArraySegment.Empty ))
+        Assert.True(( r2.ResponseData = ArraySegment.Empty ))
+        Assert.True(( r2.ResponseFence = ResponseFenceNeedsFlag.W_Mode ))
+        Assert.True(( r2.DataInBuffer.Length = 0 ))
+        Assert.True(( r2.LUN = lun_me.zero ))
 
     [<Fact>]
     member _.SCSIResponsePDU_003() =
@@ -281,7 +279,7 @@ type PDUInterface_Test () =
                 ByteCount = 0u;
             } :> ILogicalPDU
         let r1 = pdu.UpdateTargetValues ( statsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 2u )
-        Assert.True(( r1 = pdu ))
+        Assert.True(( Functions.IsSame r1 pdu ))
 
     [<Fact>]
     member _.TaskManagementFunctionRequestPDU_002() =
@@ -299,7 +297,7 @@ type PDUInterface_Test () =
                 ByteCount = 0u;
             } :> ILogicalPDU
         let r2 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 2u )
-        Assert.True(( r2 = pdu ))
+        Assert.True(( Functions.IsSame r2 pdu ))
 
     [<Fact>]
     member _.TaskManagementFunctionRequestPDU_003() =
@@ -347,14 +345,13 @@ type PDUInterface_Test () =
                 ResponseFence = ResponseFenceNeedsFlag.R_Mode;
             } :> ILogicalPDU
         let r1 = pdu.UpdateTargetValues ( statsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 2u )
-        Assert.True(( r1 = {
-                Response = TaskMgrResCd.AUTH_FAILED;
-                InitiatorTaskTag = itt_me.fromPrim 0u;
-                StatSN = statsn_me.fromPrim 1u;
-                ExpCmdSN = cmdsn_me.fromPrim 1u;
-                MaxCmdSN = cmdsn_me.fromPrim 2u;
-                ResponseFence = ResponseFenceNeedsFlag.R_Mode;
-        } ))
+        let r2 = r1 :?> TaskManagementFunctionResponsePDU
+        Assert.True(( r2.Response = TaskMgrResCd.AUTH_FAILED ))
+        Assert.True(( r2.InitiatorTaskTag = itt_me.fromPrim 0u ))
+        Assert.True(( r2.StatSN = statsn_me.fromPrim 1u ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 1u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 2u ))
+        Assert.True(( r2.ResponseFence = ResponseFenceNeedsFlag.R_Mode ))
         
     [<Fact>]
     member _.TaskManagementFunctionResponsePDU_002() =
@@ -367,15 +364,14 @@ type PDUInterface_Test () =
                 MaxCmdSN = cmdsn_me.zero;
                 ResponseFence = ResponseFenceNeedsFlag.R_Mode;
             } :> ILogicalPDU
-        let r2 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 4u ) ( cmdsn_me.fromPrim 5u ) ( cmdsn_me.fromPrim 6u )
-        Assert.True(( r2 = {
-                Response = TaskMgrResCd.AUTH_FAILED;
-                InitiatorTaskTag = itt_me.fromPrim 0u;
-                StatSN = statsn_me.zero;
-                ExpCmdSN = cmdsn_me.fromPrim 5u;
-                MaxCmdSN = cmdsn_me.fromPrim 6u;
-                ResponseFence = ResponseFenceNeedsFlag.R_Mode;
-        } ))
+        let r1 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 4u ) ( cmdsn_me.fromPrim 5u ) ( cmdsn_me.fromPrim 6u )
+        let r2 = r1 :?> TaskManagementFunctionResponsePDU
+        Assert.True(( r2.Response = TaskMgrResCd.AUTH_FAILED ))
+        Assert.True(( r2.InitiatorTaskTag = itt_me.fromPrim 0u ))
+        Assert.True(( r2.StatSN = statsn_me.zero ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 5u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 6u ))
+        Assert.True(( r2.ResponseFence = ResponseFenceNeedsFlag.R_Mode ))
         
     [<Fact>]
     member _.TaskManagementFunctionResponsePDU_003() =
@@ -418,7 +414,7 @@ type PDUInterface_Test () =
                 ByteCount = 0u;
             } :> ILogicalPDU
         let r1 = pdu.UpdateTargetValues ( statsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 2u )
-        Assert.True(( r1 = pdu ))
+        Assert.True(( Functions.IsSame r1 pdu ))
 
     [<Fact>]
     member _.SCSIDataOutPDU_002() =
@@ -435,7 +431,7 @@ type PDUInterface_Test () =
                 ByteCount = 0u;
             } :> ILogicalPDU
         let r2 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 2u )
-        Assert.True(( r2 = pdu ))
+        Assert.True(( Functions.IsSame r2 pdu ))
 
     [<Fact>]
     member _.SCSIDataOutPDU_003() =
@@ -534,12 +530,13 @@ type PDUInterface_Test () =
 
     [<Fact>]
     member _.SCSIDataOutPDU_008() =
-        let v = SCSIDataOutPDU.AppendParamList ( PooledBuffer( [| 0uy; 1uy; 2uy; 0uy; |], 2 ) ) [] 10
+        let p = PooledBuffer.Rent( [| 0uy; 1uy; 2uy; 0uy; |], 2 )
+        let v = SCSIDataOutPDU.AppendParamList p [] 10
         Assert.True(( PooledBuffer.ValueEqualsWithArray v [| 0uy; 1uy |] ))
 
     [<Fact>]
     member _.SCSIDataOutPDU_009() =
-        let cmdData = PooledBuffer( [| 1uy; 99uy; |], 1 )
+        let cmdData = PooledBuffer.Rent( [| 1uy; 99uy; |], 1 )
         let data = [
             { 
                 F = false;
@@ -549,7 +546,8 @@ type PDUInterface_Test () =
                 ExpStatSN = statsn_me.zero;
                 DataSN = datasn_me.zero;
                 BufferOffset = 15u;
-                DataSegment = PooledBuffer( [| 15uy; 16uy; 17uy; 18uy; 19uy; 0uy; 0uy; |], 5 );
+                DataSegment =
+                    PooledBuffer.Rent( [| 15uy; 16uy; 17uy; 18uy; 19uy; 0uy; 0uy; |], 5 )
                 ByteCount = 0u;
             };
         ]
@@ -587,25 +585,24 @@ type PDUInterface_Test () =
                 ResponseFence = ResponseFenceNeedsFlag.W_Mode;
             } :> ILogicalPDU
         let r1 = pdu.UpdateTargetValues ( statsn_me.fromPrim 10u ) ( cmdsn_me.fromPrim 11u ) ( cmdsn_me.fromPrim 12u )
-        Assert.True(( r1 = {
-                F = false;
-                A = false;
-                O = false;
-                U = false;
-                S = false;
-                Status = ScsiCmdStatCd.BUSY;
-                LUN = lun_me.zero;
-                InitiatorTaskTag = itt_me.fromPrim 0u;
-                TargetTransferTag = ttt_me.fromPrim 0u;
-                StatSN = statsn_me.zero;
-                ExpCmdSN = cmdsn_me.fromPrim 11u;
-                MaxCmdSN = cmdsn_me.fromPrim 12u;
-                DataSN = datasn_me.zero;
-                BufferOffset = 0u;
-                ResidualCount = 0u;
-                DataSegment = ArraySegment.Empty;
-                ResponseFence = ResponseFenceNeedsFlag.W_Mode;
-        } ))
+        let r2 = r1 :?> SCSIDataInPDU
+        Assert.True(( r2.F = false ))
+        Assert.True(( r2.A = false ))
+        Assert.True(( r2.O = false ))
+        Assert.True(( r2.U = false ))
+        Assert.True(( r2.S = false ))
+        Assert.True(( r2.Status = ScsiCmdStatCd.BUSY ))
+        Assert.True(( r2.LUN = lun_me.zero ))
+        Assert.True(( r2.InitiatorTaskTag = itt_me.fromPrim 0u ))
+        Assert.True(( r2.TargetTransferTag = ttt_me.fromPrim 0u ))
+        Assert.True(( r2.StatSN = statsn_me.zero ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 11u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 12u ))
+        Assert.True(( r2.DataSN = datasn_me.zero ))
+        Assert.True(( r2.BufferOffset = 0u ))
+        Assert.True(( r2.ResidualCount = 0u ))
+        Assert.True(( r2.DataSegment.Count = 0 ))
+        Assert.True(( r2.ResponseFence = ResponseFenceNeedsFlag.W_Mode ))
 
     [<Fact>]
     member _.SCSIDataInPDU_002() =
@@ -629,26 +626,25 @@ type PDUInterface_Test () =
                 DataSegment = ArraySegment.Empty;
                 ResponseFence = ResponseFenceNeedsFlag.W_Mode;
             } :> ILogicalPDU
-        let r2 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 13u ) ( cmdsn_me.fromPrim 14u ) ( cmdsn_me.fromPrim 15u )
-        Assert.True(( r2 = {
-                F = false;
-                A = false;
-                O = false;
-                U = false;
-                S = false;
-                Status = ScsiCmdStatCd.BUSY;
-                LUN = lun_me.zero;
-                InitiatorTaskTag = itt_me.fromPrim 0u;
-                TargetTransferTag = ttt_me.fromPrim 0u;
-                StatSN = statsn_me.zero;
-                ExpCmdSN = cmdsn_me.fromPrim 14u;
-                MaxCmdSN = cmdsn_me.fromPrim 15u;
-                DataSN = datasn_me.zero;
-                BufferOffset = 0u;
-                ResidualCount = 0u;
-                DataSegment = ArraySegment.Empty;
-                ResponseFence = ResponseFenceNeedsFlag.W_Mode;
-        } ))
+        let r1 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 13u ) ( cmdsn_me.fromPrim 14u ) ( cmdsn_me.fromPrim 15u )
+        let r2 = r1 :?> SCSIDataInPDU
+        Assert.True(( r2.F = false ))
+        Assert.True(( r2.A = false ))
+        Assert.True(( r2.O = false ))
+        Assert.True(( r2.U = false ))
+        Assert.True(( r2.S = false ))
+        Assert.True(( r2.Status = ScsiCmdStatCd.BUSY ))
+        Assert.True(( r2.LUN = lun_me.zero ))
+        Assert.True(( r2.InitiatorTaskTag = itt_me.fromPrim 0u ))
+        Assert.True(( r2.TargetTransferTag = ttt_me.fromPrim 0u ))
+        Assert.True(( r2.StatSN = statsn_me.zero ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 14u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 15u ))
+        Assert.True(( r2.DataSN = datasn_me.zero ))
+        Assert.True(( r2.BufferOffset = 0u ))
+        Assert.True(( r2.ResidualCount = 0u ))
+        Assert.True(( r2.DataSegment.Count = 0 ))
+        Assert.True(( r2.ResponseFence = ResponseFenceNeedsFlag.W_Mode ))
 
     [<Fact>]
     member _.SCSIDataInPDU_003() =
@@ -721,25 +717,24 @@ type PDUInterface_Test () =
                 ResponseFence = ResponseFenceNeedsFlag.W_Mode;
             } :> ILogicalPDU
         let r1 = pdu.UpdateTargetValues ( statsn_me.fromPrim 10u ) ( cmdsn_me.fromPrim 11u ) ( cmdsn_me.fromPrim 12u )
-        Assert.True(( r1 = {
-                F = false;
-                A = false;
-                O = false;
-                U = false;
-                S = true;
-                Status = ScsiCmdStatCd.BUSY;
-                LUN = lun_me.zero;
-                InitiatorTaskTag = itt_me.fromPrim 0u;
-                TargetTransferTag = ttt_me.fromPrim 0u;
-                StatSN = statsn_me.fromPrim 10u;
-                ExpCmdSN = cmdsn_me.fromPrim 11u;
-                MaxCmdSN = cmdsn_me.fromPrim 12u;
-                DataSN = datasn_me.zero;
-                BufferOffset = 0u;
-                ResidualCount = 0u;
-                DataSegment = ArraySegment.Empty;
-                ResponseFence = ResponseFenceNeedsFlag.W_Mode;
-        } ))
+        let r2 = r1 :?> SCSIDataInPDU
+        Assert.True(( r2.F = false ))
+        Assert.True(( r2.A = false ))
+        Assert.True(( r2.O = false ))
+        Assert.True(( r2.U = false ))
+        Assert.True(( r2.S = true ))
+        Assert.True(( r2.Status = ScsiCmdStatCd.BUSY ))
+        Assert.True(( r2.LUN = lun_me.zero ))
+        Assert.True(( r2.InitiatorTaskTag = itt_me.fromPrim 0u ))
+        Assert.True(( r2.TargetTransferTag = ttt_me.fromPrim 0u ))
+        Assert.True(( r2.StatSN = statsn_me.fromPrim 10u ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 11u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 12u ))
+        Assert.True(( r2.DataSN = datasn_me.zero ))
+        Assert.True(( r2.BufferOffset = 0u ))
+        Assert.True(( r2.ResidualCount = 0u ))
+        Assert.True(( r2.DataSegment.Count = 0 ))
+        Assert.True(( r2.ResponseFence = ResponseFenceNeedsFlag.W_Mode ))
 
     [<Fact>]
     member _.SCSIDataInPDU_006() =
@@ -763,26 +758,25 @@ type PDUInterface_Test () =
                 DataSegment = ArraySegment.Empty;
                 ResponseFence = ResponseFenceNeedsFlag.W_Mode;
             } :> ILogicalPDU
-        let r2 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 13u ) ( cmdsn_me.fromPrim 14u ) ( cmdsn_me.fromPrim 15u )
-        Assert.True(( r2 = {
-                F = false;
-                A = false;
-                O = false;
-                U = false;
-                S = true;
-                Status = ScsiCmdStatCd.BUSY;
-                LUN = lun_me.zero;
-                InitiatorTaskTag = itt_me.fromPrim 0u;
-                TargetTransferTag = ttt_me.fromPrim 0u;
-                StatSN = statsn_me.zero;
-                ExpCmdSN = cmdsn_me.fromPrim 14u;
-                MaxCmdSN = cmdsn_me.fromPrim 15u;
-                DataSN = datasn_me.zero;
-                BufferOffset = 0u;
-                ResidualCount = 0u;
-                DataSegment = ArraySegment.Empty;
-                ResponseFence = ResponseFenceNeedsFlag.W_Mode;
-        } ))
+        let r1 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 13u ) ( cmdsn_me.fromPrim 14u ) ( cmdsn_me.fromPrim 15u )
+        let r2 = r1 :?> SCSIDataInPDU
+        Assert.True(( r2.F = false ))
+        Assert.True(( r2.A = false ))
+        Assert.True(( r2.O = false ))
+        Assert.True(( r2.U = false ))
+        Assert.True(( r2.S = true ))
+        Assert.True(( r2.Status = ScsiCmdStatCd.BUSY ))
+        Assert.True(( r2.LUN = lun_me.zero ))
+        Assert.True(( r2.InitiatorTaskTag = itt_me.fromPrim 0u ))
+        Assert.True(( r2.TargetTransferTag = ttt_me.fromPrim 0u ))
+        Assert.True(( r2.StatSN = statsn_me.zero ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 14u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 15u ))
+        Assert.True(( r2.DataSN = datasn_me.zero ))
+        Assert.True(( r2.BufferOffset = 0u ))
+        Assert.True(( r2.ResidualCount = 0u ))
+        Assert.True(( r2.DataSegment.Count = 0 ))
+        Assert.True(( r2.ResponseFence = ResponseFenceNeedsFlag.W_Mode ))
 
     [<Fact>]
     member _.SCSIDataInPDU_007() =
@@ -847,17 +841,16 @@ type PDUInterface_Test () =
                 DesiredDataTransferLength = 0u;
             } :> ILogicalPDU
         let r1 = pdu.UpdateTargetValues ( statsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 2u )
-        Assert.True(( r1 = {
-                LUN = lun_me.zero;
-                InitiatorTaskTag = itt_me.fromPrim 0u;
-                TargetTransferTag = ttt_me.fromPrim 0u;
-                StatSN = statsn_me.fromPrim 1u;
-                ExpCmdSN = cmdsn_me.fromPrim 1u;
-                MaxCmdSN = cmdsn_me.fromPrim 2u;
-                R2TSN = datasn_me.zero;
-                BufferOffset = 0u;
-                DesiredDataTransferLength = 0u;
-        } ))
+        let r2 = r1 :?> R2TPDU
+        Assert.True(( r2.LUN = lun_me.zero ))
+        Assert.True(( r2.InitiatorTaskTag = itt_me.fromPrim 0u ))
+        Assert.True(( r2.TargetTransferTag = ttt_me.fromPrim 0u ))
+        Assert.True(( r2.StatSN = statsn_me.fromPrim 1u ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 1u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 2u ))
+        Assert.True(( r2.R2TSN = datasn_me.zero ))
+        Assert.True(( r2.BufferOffset = 0u ))
+        Assert.True(( r2.DesiredDataTransferLength = 0u ))
 
     [<Fact>]
     member _.R2TPDU_002() =
@@ -873,18 +866,17 @@ type PDUInterface_Test () =
                 BufferOffset = 0u;
                 DesiredDataTransferLength = 0u;
             } :> ILogicalPDU
-        let r2 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 4u ) ( cmdsn_me.fromPrim 5u ) ( cmdsn_me.fromPrim 6u )
-        Assert.True(( r2 = {
-                LUN = lun_me.zero;
-                InitiatorTaskTag = itt_me.fromPrim 0u;
-                TargetTransferTag = ttt_me.fromPrim 0u;
-                StatSN = statsn_me.fromPrim 4u;
-                ExpCmdSN = cmdsn_me.fromPrim 5u;
-                MaxCmdSN = cmdsn_me.fromPrim 6u;
-                R2TSN = datasn_me.zero;
-                BufferOffset = 0u;
-                DesiredDataTransferLength = 0u;
-        } ))
+        let r1 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 4u ) ( cmdsn_me.fromPrim 5u ) ( cmdsn_me.fromPrim 6u )
+        let r2 = r1 :?> R2TPDU
+        Assert.True(( r2.LUN = lun_me.zero ))
+        Assert.True(( r2.InitiatorTaskTag = itt_me.fromPrim 0u ))
+        Assert.True(( r2.TargetTransferTag = ttt_me.fromPrim 0u ))
+        Assert.True(( r2.StatSN = statsn_me.fromPrim 4u ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 5u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 6u ))
+        Assert.True(( r2.R2TSN = datasn_me.zero ))
+        Assert.True(( r2.BufferOffset = 0u ))
+        Assert.True(( r2.DesiredDataTransferLength = 0u ))
 
     [<Fact>]
     member _.R2TPDU_003() =
@@ -936,20 +928,19 @@ type PDUInterface_Test () =
                 ISCSIEventData = Array.empty;
             } :> ILogicalPDU
         let r1 = pdu.UpdateTargetValues ( statsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 2u ) ( cmdsn_me.fromPrim 3u )
-        Assert.True(( r1 = {
-                LUN = lun_me.zero;
-                StatSN = statsn_me.fromPrim 1u;
-                ExpCmdSN = cmdsn_me.fromPrim 2u;
-                MaxCmdSN = cmdsn_me.fromPrim 3u;
-                AsyncEvent = AsyncEventCd.CONNECTION_CLOSE;
-                AsyncVCode = 0uy;
-                Parameter1 = 0us;
-                Parameter2 = 0us;
-                Parameter3 = 0us;
-                SenseLength = 0us;
-                SenseData = Array.empty;
-                ISCSIEventData = Array.empty;
-        } ))
+        let r2 = r1 :?> AsyncronousMessagePDU
+        Assert.True(( r2.LUN = lun_me.zero ))
+        Assert.True(( r2.StatSN = statsn_me.fromPrim 1u ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 2u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 3u ))
+        Assert.True(( r2.AsyncEvent = AsyncEventCd.CONNECTION_CLOSE ))
+        Assert.True(( r2.AsyncVCode = 0uy ))
+        Assert.True(( r2.Parameter1 = 0us ))
+        Assert.True(( r2.Parameter2 = 0us ))
+        Assert.True(( r2.Parameter3 = 0us ))
+        Assert.True(( r2.SenseLength = 0us ))
+        Assert.True(( r2.SenseData = Array.empty ))
+        Assert.True(( r2.ISCSIEventData = Array.empty ))
 
     [<Fact>]
     member _.AsyncronousMessagePDU_002() =
@@ -968,21 +959,20 @@ type PDUInterface_Test () =
                 SenseData = Array.empty;
                 ISCSIEventData = Array.empty;
             } :> ILogicalPDU
-        let r2 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 4u ) ( cmdsn_me.fromPrim 5u ) ( cmdsn_me.fromPrim 6u )
-        Assert.True(( r2 = {
-                LUN = lun_me.zero;
-                StatSN = statsn_me.zero;
-                ExpCmdSN = cmdsn_me.fromPrim 5u;
-                MaxCmdSN = cmdsn_me.fromPrim 6u;
-                AsyncEvent = AsyncEventCd.CONNECTION_CLOSE;
-                AsyncVCode = 0uy;
-                Parameter1 = 0us;
-                Parameter2 = 0us;
-                Parameter3 = 0us;
-                SenseLength = 0us;
-                SenseData = Array.empty;
-                ISCSIEventData = Array.empty;
-        } ))
+        let r1 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 4u ) ( cmdsn_me.fromPrim 5u ) ( cmdsn_me.fromPrim 6u )
+        let r2 = r1 :?> AsyncronousMessagePDU
+        Assert.True(( r2.LUN = lun_me.zero ))
+        Assert.True(( r2.StatSN = statsn_me.zero ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 5u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 6u ))
+        Assert.True(( r2.AsyncEvent = AsyncEventCd.CONNECTION_CLOSE ))
+        Assert.True(( r2.AsyncVCode = 0uy ))
+        Assert.True(( r2.Parameter1 = 0us ))
+        Assert.True(( r2.Parameter2 = 0us ))
+        Assert.True(( r2.Parameter3 = 0us ))
+        Assert.True(( r2.SenseLength = 0us ))
+        Assert.True(( r2.SenseData = Array.empty ))
+        Assert.True(( r2.ISCSIEventData = Array.empty ))
 
     [<Fact>]
     member _.AsyncronousMessagePDU_003() =
@@ -1107,17 +1097,16 @@ type PDUInterface_Test () =
                 TextResponse = Array.empty;
             } :> ILogicalPDU
         let r1 = pdu.UpdateTargetValues ( statsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 2u ) ( cmdsn_me.fromPrim 3u )
-        Assert.True(( r1 = {
-                F = false;
-                C = false;
-                LUN = lun_me.zero;
-                InitiatorTaskTag = itt_me.fromPrim 0u;
-                TargetTransferTag = ttt_me.fromPrim 0u;
-                StatSN = statsn_me.fromPrim 1u;
-                ExpCmdSN = cmdsn_me.fromPrim 2u;
-                MaxCmdSN = cmdsn_me.fromPrim 3u;
-                TextResponse = Array.empty;
-        } ))
+        let r2 = r1 :?> TextResponsePDU
+        Assert.True(( r2.F = false ))
+        Assert.True(( r2.C = false ))
+        Assert.True(( r2.LUN = lun_me.zero ))
+        Assert.True(( r2.InitiatorTaskTag = itt_me.fromPrim 0u ))
+        Assert.True(( r2.TargetTransferTag = ttt_me.fromPrim 0u ))
+        Assert.True(( r2.StatSN = statsn_me.fromPrim 1u ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 2u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 3u ))
+        Assert.True(( r2.TextResponse = Array.empty ))
 
     [<Fact>]
     member _.TextResponsePDU_002() =
@@ -1133,18 +1122,17 @@ type PDUInterface_Test () =
                 MaxCmdSN = cmdsn_me.zero;
                 TextResponse = Array.empty;
             } :> ILogicalPDU
-        let r2 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 4u ) ( cmdsn_me.fromPrim 5u ) ( cmdsn_me.fromPrim 6u )
-        Assert.True(( r2 = {
-                F = false;
-                C = false;
-                LUN = lun_me.zero;
-                InitiatorTaskTag = itt_me.fromPrim 0u;
-                TargetTransferTag = ttt_me.fromPrim 0u;
-                StatSN = statsn_me.zero;
-                ExpCmdSN = cmdsn_me.fromPrim 5u;
-                MaxCmdSN = cmdsn_me.fromPrim 6u;
-                TextResponse = Array.empty;
-        } ))
+        let r1 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 4u ) ( cmdsn_me.fromPrim 5u ) ( cmdsn_me.fromPrim 6u )
+        let r2 = r1 :?> TextResponsePDU
+        Assert.True(( r2.F = false ))
+        Assert.True(( r2.C = false ))
+        Assert.True(( r2.LUN = lun_me.zero ))
+        Assert.True(( r2.InitiatorTaskTag = itt_me.fromPrim 0u ))
+        Assert.True(( r2.TargetTransferTag = ttt_me.fromPrim 0u ))
+        Assert.True(( r2.StatSN = statsn_me.zero ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 5u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 6u ))
+        Assert.True(( r2.TextResponse = Array.empty ))
 
     [<Fact>]
     member _.TextResponsePDU_003() =
@@ -1284,22 +1272,21 @@ type PDUInterface_Test () =
                 TextResponse = Array.empty;
             } :> ILogicalPDU
         let r1 = pdu.UpdateTargetValues ( statsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 2u ) ( cmdsn_me.fromPrim 3u )
-        Assert.True(( r1 = {
-                T = false;
-                C = false;
-                CSG = LoginReqStateCd.OPERATIONAL; 
-                NSG = LoginReqStateCd.OPERATIONAL;
-                VersionMax = 0uy;
-                VersionActive = 0uy;
-                ISID = isid_me.zero;
-                TSIH = tsih_me.fromPrim 0us;
-                InitiatorTaskTag = itt_me.fromPrim 0u;
-                StatSN = statsn_me.fromPrim 1u;
-                ExpCmdSN = cmdsn_me.fromPrim 2u;
-                MaxCmdSN = cmdsn_me.fromPrim 3u;
-                Status = LoginResStatCd.AUTH_FAILURE;
-                TextResponse = Array.empty;
-        } ))
+        let r2 = r1 :?> LoginResponsePDU
+        Assert.True(( r2.T = false ))
+        Assert.True(( r2.C = false ))
+        Assert.True(( r2.CSG = LoginReqStateCd.OPERATIONAL ))
+        Assert.True(( r2.NSG = LoginReqStateCd.OPERATIONAL ))
+        Assert.True(( r2.VersionMax = 0uy ))
+        Assert.True(( r2.VersionActive = 0uy ))
+        Assert.True(( r2.ISID = isid_me.zero ))
+        Assert.True(( r2.TSIH = tsih_me.fromPrim 0us ))
+        Assert.True(( r2.InitiatorTaskTag = itt_me.fromPrim 0u ))
+        Assert.True(( r2.StatSN = statsn_me.fromPrim 1u ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 2u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 3u ))
+        Assert.True(( r2.Status = LoginResStatCd.AUTH_FAILURE ))
+        Assert.True(( r2.TextResponse = Array.empty ))
 
     [<Fact>]
     member _.LoginResponsePDU_002() =
@@ -1320,23 +1307,22 @@ type PDUInterface_Test () =
                 Status = LoginResStatCd.AUTH_FAILURE;
                 TextResponse = Array.empty;
             } :> ILogicalPDU
-        let r2 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 4u ) ( cmdsn_me.fromPrim 5u ) ( cmdsn_me.fromPrim 6u )
-        Assert.True(( r2 = {
-                T = false;
-                C = false;
-                CSG = LoginReqStateCd.OPERATIONAL; 
-                NSG = LoginReqStateCd.OPERATIONAL;
-                VersionMax = 0uy;
-                VersionActive = 0uy;
-                ISID = isid_me.zero;
-                TSIH = tsih_me.fromPrim 0us;
-                InitiatorTaskTag = itt_me.fromPrim 0u;
-                StatSN = statsn_me.zero;
-                ExpCmdSN = cmdsn_me.fromPrim 5u;
-                MaxCmdSN = cmdsn_me.fromPrim 6u;
-                Status = LoginResStatCd.AUTH_FAILURE;
-                TextResponse = Array.empty;
-        } ))
+        let r1 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 4u ) ( cmdsn_me.fromPrim 5u ) ( cmdsn_me.fromPrim 6u )
+        let r2 = r1 :?> LoginResponsePDU
+        Assert.True(( r2.T = false ))
+        Assert.True(( r2.C = false ))
+        Assert.True(( r2.CSG = LoginReqStateCd.OPERATIONAL ))
+        Assert.True(( r2.NSG = LoginReqStateCd.OPERATIONAL ))
+        Assert.True(( r2.VersionMax = 0uy ))
+        Assert.True(( r2.VersionActive = 0uy ))
+        Assert.True(( r2.ISID = isid_me.zero ))
+        Assert.True(( r2.TSIH = tsih_me.fromPrim 0us ))
+        Assert.True(( r2.InitiatorTaskTag = itt_me.fromPrim 0u ))
+        Assert.True(( r2.StatSN = statsn_me.zero ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 5u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 6u ))
+        Assert.True(( r2.Status = LoginResStatCd.AUTH_FAILURE ))
+        Assert.True(( r2.TextResponse = Array.empty ))
 
     [<Fact>]
     member _.LoginResponsePDU_003() =
@@ -1452,16 +1438,15 @@ type PDUInterface_Test () =
                 CloseAllegiantConnection = true;
             } :> ILogicalPDU
         let r1 = pdu.UpdateTargetValues ( statsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 2u ) ( cmdsn_me.fromPrim 3u )
-        Assert.True(( r1 = {
-                Response = LogoutResCd.CLEANUP_FAILED;
-                InitiatorTaskTag = itt_me.fromPrim 0u;
-                StatSN = statsn_me.fromPrim 1u;
-                ExpCmdSN = cmdsn_me.fromPrim 2u;
-                MaxCmdSN = cmdsn_me.fromPrim 3u;
-                Time2Wait = 0us;
-                Time2Retain = 0us;
-                CloseAllegiantConnection = true;
-        } ))
+        let r2 = r1 :?> LogoutResponsePDU
+        Assert.True(( r2.Response = LogoutResCd.CLEANUP_FAILED ))
+        Assert.True(( r2.InitiatorTaskTag = itt_me.fromPrim 0u ))
+        Assert.True(( r2.StatSN = statsn_me.fromPrim 1u ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 2u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 3u ))
+        Assert.True(( r2.Time2Wait = 0us ))
+        Assert.True(( r2.Time2Retain = 0us ))
+        Assert.True(( r2.CloseAllegiantConnection = true ))
 
     [<Fact>]
     member _.LogoutResponsePDU_002() =
@@ -1476,17 +1461,16 @@ type PDUInterface_Test () =
                 Time2Retain = 0us;
                 CloseAllegiantConnection = true;
             } :> ILogicalPDU
-        let r2 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 4u ) ( cmdsn_me.fromPrim 5u ) ( cmdsn_me.fromPrim 6u )
-        Assert.True(( r2 = {
-                Response = LogoutResCd.CLEANUP_FAILED;
-                InitiatorTaskTag = itt_me.fromPrim 0u;
-                StatSN = statsn_me.zero;
-                ExpCmdSN = cmdsn_me.fromPrim 5u;
-                MaxCmdSN = cmdsn_me.fromPrim 6u;
-                Time2Wait = 0us;
-                Time2Retain = 0us;
-                CloseAllegiantConnection = true;
-        } ))
+        let r1 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 4u ) ( cmdsn_me.fromPrim 5u ) ( cmdsn_me.fromPrim 6u )
+        let r2 = r1 :?> LogoutResponsePDU
+        Assert.True(( r2.Response = LogoutResCd.CLEANUP_FAILED ))
+        Assert.True(( r2.InitiatorTaskTag = itt_me.fromPrim 0u ))
+        Assert.True(( r2.StatSN = statsn_me.zero ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 5u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 6u ))
+        Assert.True(( r2.Time2Wait = 0us ))
+        Assert.True(( r2.Time2Retain = 0us ))
+        Assert.True(( r2.CloseAllegiantConnection = true ))
 
     [<Fact>]
     member _.LogoutResponsePDU_003() =
@@ -1592,14 +1576,13 @@ type PDUInterface_Test () =
                 HeaderData = Array.empty;
             } :> ILogicalPDU
         let r1 = pdu.UpdateTargetValues ( statsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 2u ) ( cmdsn_me.fromPrim 3u )
-        Assert.True(( r1 = {
-                Reason = RejectReasonCd.COM_NOT_SUPPORT;
-                StatSN = statsn_me.fromPrim 1u;
-                ExpCmdSN = cmdsn_me.fromPrim 2u;
-                MaxCmdSN = cmdsn_me.fromPrim 3u;
-                DataSN_or_R2TSN = datasn_me.zero;
-                HeaderData = Array.empty;
-        } ))
+        let r2 = r1 :?> RejectPDU
+        Assert.True(( r2.Reason = RejectReasonCd.COM_NOT_SUPPORT ))
+        Assert.True(( r2.StatSN = statsn_me.fromPrim 1u ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 2u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 3u ))
+        Assert.True(( r2.DataSN_or_R2TSN = datasn_me.zero ))
+        Assert.True(( r2.HeaderData = Array.empty ))
 
     [<Fact>]
     member _.RejectPDU_002() =
@@ -1612,15 +1595,14 @@ type PDUInterface_Test () =
                 DataSN_or_R2TSN = datasn_me.zero;
                 HeaderData = Array.empty;
             } :> ILogicalPDU
-        let r2 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 4u ) ( cmdsn_me.fromPrim 5u ) ( cmdsn_me.fromPrim 6u )
-        Assert.True(( r2 = {
-                Reason = RejectReasonCd.COM_NOT_SUPPORT;
-                StatSN = statsn_me.zero;
-                ExpCmdSN = cmdsn_me.fromPrim 5u;
-                MaxCmdSN = cmdsn_me.fromPrim 6u;
-                DataSN_or_R2TSN = datasn_me.zero;
-                HeaderData = Array.empty;
-        } ))
+        let r1 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 4u ) ( cmdsn_me.fromPrim 5u ) ( cmdsn_me.fromPrim 6u )
+        let r2 = r1 :?> RejectPDU
+        Assert.True(( r2.Reason = RejectReasonCd.COM_NOT_SUPPORT ))
+        Assert.True(( r2.StatSN = statsn_me.zero ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 5u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 6u ))
+        Assert.True(( r2.DataSN_or_R2TSN = datasn_me.zero ))
+        Assert.True(( r2.HeaderData = Array.empty ))
 
     [<Fact>]
     member _.RejectPDU_003() =
@@ -1723,15 +1705,14 @@ type PDUInterface_Test () =
                 PingData = PooledBuffer.Empty;
             } :> ILogicalPDU
         let r1 = pdu.UpdateTargetValues ( statsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 2u ) ( cmdsn_me.fromPrim 3u )
-        Assert.True(( r1 = {
-                LUN = lun_me.zero;
-                InitiatorTaskTag = itt_me.fromPrim 0xFFFFFFFFu;
-                TargetTransferTag = ttt_me.fromPrim 0u;
-                StatSN = statsn_me.fromPrim 1u;
-                ExpCmdSN = cmdsn_me.fromPrim 2u;
-                MaxCmdSN = cmdsn_me.fromPrim 3u;
-                PingData = PooledBuffer.Empty;
-        } ))
+        let r2 = r1 :?> NOPInPDU
+        Assert.True(( r2.LUN = lun_me.zero ))
+        Assert.True(( r2.InitiatorTaskTag = itt_me.fromPrim 0xFFFFFFFFu ))
+        Assert.True(( r2.TargetTransferTag = ttt_me.fromPrim 0u ))
+        Assert.True(( r2.StatSN = statsn_me.fromPrim 1u ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 2u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 3u ))
+        Assert.True(( r2.PingData.Length = 0 ))
 
     [<Fact>]
     member _.NOPInPDU_002() =
@@ -1746,15 +1727,14 @@ type PDUInterface_Test () =
                 PingData = PooledBuffer.Empty;
             } :> ILogicalPDU
         let r2 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 4u ) ( cmdsn_me.fromPrim 5u ) ( cmdsn_me.fromPrim 6u )
-        Assert.True(( r2 = {
-                LUN = lun_me.zero;
-                InitiatorTaskTag = itt_me.fromPrim 0xFFFFFFFFu;
-                TargetTransferTag = ttt_me.fromPrim 0u;
-                StatSN = statsn_me.zero;
-                ExpCmdSN = cmdsn_me.fromPrim 5u;
-                MaxCmdSN = cmdsn_me.fromPrim 6u;
-                PingData = PooledBuffer.Empty;
-        } ))
+        let r3 = r2 :?> NOPInPDU
+        Assert.True(( r3.LUN = lun_me.zero ))
+        Assert.True(( r3.InitiatorTaskTag = itt_me.fromPrim 0xFFFFFFFFu ))
+        Assert.True(( r3.TargetTransferTag = ttt_me.fromPrim 0u ))
+        Assert.True(( r3.StatSN = statsn_me.zero ))
+        Assert.True(( r3.ExpCmdSN = cmdsn_me.fromPrim 5u ))
+        Assert.True(( r3.MaxCmdSN = cmdsn_me.fromPrim 6u ))
+        Assert.True(( r3.PingData.Length = 0 ))
 
     [<Fact>]
     member _.NOPInPDU_003() =
@@ -1797,15 +1777,14 @@ type PDUInterface_Test () =
                 PingData = PooledBuffer.Empty;
             } :> ILogicalPDU
         let r1 = pdu.UpdateTargetValues ( statsn_me.fromPrim 1u ) ( cmdsn_me.fromPrim 2u ) ( cmdsn_me.fromPrim 3u )
-        Assert.True(( r1 = {
-                LUN = lun_me.zero;
-                InitiatorTaskTag = itt_me.fromPrim 0u;
-                TargetTransferTag = ttt_me.fromPrim 0u;
-                StatSN = statsn_me.fromPrim 1u;
-                ExpCmdSN = cmdsn_me.fromPrim 2u;
-                MaxCmdSN = cmdsn_me.fromPrim 3u;
-                PingData = PooledBuffer.Empty;
-        } ))
+        let r2 = r1 :?> NOPInPDU
+        Assert.True(( r2.LUN = lun_me.zero ))
+        Assert.True(( r2.InitiatorTaskTag = itt_me.fromPrim 0u ))
+        Assert.True(( r2.TargetTransferTag = ttt_me.fromPrim 0u ))
+        Assert.True(( r2.StatSN = statsn_me.fromPrim 1u ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 2u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 3u ))
+        Assert.True(( r2.PingData.Length = 0 ))
 
     [<Fact>]
     member _.NOPInPDU_006() =
@@ -1819,16 +1798,15 @@ type PDUInterface_Test () =
                 MaxCmdSN = cmdsn_me.zero;
                 PingData = PooledBuffer.Empty;
             } :> ILogicalPDU
-        let r2 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 4u ) ( cmdsn_me.fromPrim 5u ) ( cmdsn_me.fromPrim 6u )
-        Assert.True(( r2 = {
-                LUN = lun_me.zero;
-                InitiatorTaskTag = itt_me.fromPrim 0u;
-                TargetTransferTag = ttt_me.fromPrim 0u;
-                StatSN = statsn_me.zero;
-                ExpCmdSN = cmdsn_me.fromPrim 5u;
-                MaxCmdSN = cmdsn_me.fromPrim 6u;
-                PingData = PooledBuffer.Empty;
-        } ))
+        let r1 = pdu.UpdateTargetValuesForResend ( statsn_me.fromPrim 4u ) ( cmdsn_me.fromPrim 5u ) ( cmdsn_me.fromPrim 6u )
+        let r2 = r1 :?> NOPInPDU
+        Assert.True(( r2.LUN = lun_me.zero ))
+        Assert.True(( r2.InitiatorTaskTag = itt_me.fromPrim 0u ))
+        Assert.True(( r2.TargetTransferTag = ttt_me.fromPrim 0u ))
+        Assert.True(( r2.StatSN = statsn_me.zero ))
+        Assert.True(( r2.ExpCmdSN = cmdsn_me.fromPrim 5u ))
+        Assert.True(( r2.MaxCmdSN = cmdsn_me.fromPrim 6u ))
+        Assert.True(( r2.PingData.Length = 0 ))
 
     [<Fact>]
     member _.NOPInPDU_007() =

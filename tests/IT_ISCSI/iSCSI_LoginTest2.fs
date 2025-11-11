@@ -624,7 +624,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             rand.NextBytes( buf2.ArraySegment.AsSpan() )
             let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT buf2
             let! rpdu4 = r1.ReceiveSpecific<NOPInPDU> g_CID0
-            let buf2_2 = PooledBuffer.Truncate ( int mrdsl_i ) buf2
+            let buf2_2 = PooledBuffer.Rent( buf2, int mrdsl_i )
             Assert.True(( PooledBuffer.ValueEquals rpdu4.PingData buf2_2 ))
             buf2.Return()
             rpdu4.PingData.Return()
@@ -671,7 +671,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             rand.NextBytes( buf3.ArraySegment.AsSpan() )
             let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT buf3
             let! rpdu5 = r1.ReceiveSpecific<NOPInPDU> g_CID0
-            let buf3_2 = PooledBuffer.Truncate ( int mrdsl_i ) buf3
+            let buf3_2 = PooledBuffer.Rent( buf3, int mrdsl_i )
             Assert.True(( PooledBuffer.ValueEquals rpdu5.PingData buf3_2 ))
             buf3.Return()
             rpdu5.PingData.Return()

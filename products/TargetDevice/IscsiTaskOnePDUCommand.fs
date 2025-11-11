@@ -197,8 +197,8 @@ type IscsiTaskOnePDUCommand
             | ValueSome( conn ) ->
                 if HLogger.IsVerbose then HLogger.Trace( LogID.V_TRACE, fun g -> g.Gen1( m_LogInfo, "Nop-Out Request." ) )
                 let mrsli = conn.CurrentParams.MaxRecvDataSegmentLength_I
-                let respPingData =
-                    PooledBuffer.Truncate ( int mrsli ) nopOutPDU.PingData
+                let respPingDataLen = min ( int mrsli ) nopOutPDU.PingData.Length
+                let respPingData = PooledBuffer.Rent( nopOutPDU.PingData, respPingDataLen )
                 m_Session.SendOtherResponsePDU
                     m_AllegiantCID
                     m_AllegiantConCounter

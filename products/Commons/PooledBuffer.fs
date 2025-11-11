@@ -12,9 +12,8 @@ namespace Haruka.Constants
 // Import declaration
 
 open System
-open System.Runtime.CompilerServices
-open System.Collections.Generic
 open System.Buffers
+open System.Threading
 
 //=============================================================================
 // Class implementation
@@ -22,129 +21,27 @@ open System.Buffers
 /// <summary>
 ///  An alias to indicate that this is a buffer allocated from an ArrayPool.
 /// </summary>
-/// <param name="m_Buffer">
+/// <param name="argBuffer">
 ///  The buffer allocated from the ArrayPool.
 /// </param>
 /// <param name="m_Length">
 ///  The size requested when allocating the buffer, which may differ from the size actually allocated.
 /// </param>
-[<CustomEquality; NoComparison; Struct; IsReadOnly;>]
-type PooledBuffer(
-    m_Buffer : byte[],
-    m_Length : int ) =
+type PooledBuffer private ( argBuffer : byte[], m_Length : int ) =
 
-
-    //=========================================================================
-    // Interface method
-
-    // Imprementation of IEquatable interface
-    interface IEquatable<PooledBuffer> with
-
-        /// <summary>
-        ///  Equals method. 
-        ///  If they refer to the same buffer and have the same requested size, they are determined to be the same.
-        /// </summary>
-        /// <param name="v">
-        ///  The targets for comparison.
-        /// </param>
-        /// <returns>
-        ///  True if this object and 'v' can be considered equal, false otherwise.
-        /// </returns>
-        member _.Equals( v : PooledBuffer ) : bool =
-            Object.ReferenceEquals( m_Buffer, v.Array ) && m_Length = v.Length
-
-    // Imprementation of IEqualityComparer interface
-    interface IEqualityComparer<PooledBuffer> with
-
-        /// <summary>
-        ///  Equals method. 
-        ///  If they refer to the same buffer and have the same requested size, they are determined to be the same.
-        /// </summary>
-        /// <param name="v1">
-        ///  The targets for comparison 1.
-        /// </param>
-        /// <param name="v2">
-        ///  The targets for comparison 2.
-        /// </param>
-        /// <returns>
-        ///  True if 'v1' and 'v2' can be considered equal, false otherwise.
-        /// </returns>
-        member _.Equals ( v1 : PooledBuffer, v2 : PooledBuffer ) : bool =
-            Object.ReferenceEquals( v1.Array, v2.Array ) && v1.Length = v2.Length
-
-        /// <summary>
-        ///  Returns hash value.
-        /// </summary>
-        /// <param name="v">
-        ///  The object for which the hash value is to be calculated.
-        /// </param>
-        /// <returns>
-        ///  Equal to the GetHashCode value of the buffer.
-        /// </returns>
-        member _.GetHashCode ( v : PooledBuffer ): int = 
-            v.Array.GetHashCode()
-
-    //=========================================================================
-    // override method
-
-    /// <summary>
-    ///  Equals method. 
-    ///  If they refer to the same buffer and have the same requested size, they are determined to be the same.
-    /// </summary>
-    /// <param name="v">
-    ///  The targets for comparison.
-    /// </param>
-    /// <returns>
-    ///  True if this object and 'v' can be considered equal, false otherwise.
-    /// </returns>
-    override _.Equals( v : obj ) : bool =
-        match v with
-        | :? PooledBuffer as x ->
-            Object.ReferenceEquals( m_Buffer, x.Array ) && m_Length = x.Length
-        | _ -> false
-
-    /// <summary>
-    ///  Returns hash value.
-    /// </summary>
-    /// <returns>
-    ///  Equal to the GetHashCode value of the buffer.
-    /// </returns>
-    override _.GetHashCode() : int =
-        m_Buffer.GetHashCode()
-
-    /// <summary>
-    ///  Convert to string value.
-    /// </summary>
-    /// <returns>
-    ///  Returns a fixed value "PooledBuffer".
-    /// </returns>
-    override _.ToString() : string =
-        "PooledBuffer"
-
+    /// Allocated buffer. After release, it references an array of length 0.
+    let mutable m_Buffer = argBuffer
 
     //=========================================================================
     // Public method
-
-
-    /// <summary>
-    ///  Equals method. 
-    ///  If they refer to the same buffer and have the same requested size, they are determined to be the same.
-    /// </summary>
-    /// <param name="v">
-    ///  The targets for comparison.
-    /// </param>
-    /// <returns>
-    ///  True if this object and 'v' can be considered equal, false otherwise.
-    /// </returns>
-    member _.Equals ( v : PooledBuffer ) : bool =
-        Object.ReferenceEquals( m_Buffer, v.Array ) && m_Length = v.Length
 
     /// <summary>
     ///  Release buffer.
     /// </summary>
     member _.Return() : unit =
-        if m_Buffer.Length > 0 then
-            ArrayPool<byte>.Shared.Return m_Buffer
+        let v = Interlocked.Exchange( &m_Buffer, Array.Empty<byte>() )
+        if v.Length > 0 then
+            ArrayPool<byte>.Shared.Return v
 
     /// <summary>
     ///  Duplicating part of the buffer.
@@ -176,6 +73,8 @@ type PooledBuffer(
         ArraySegment<byte>( m_Buffer, s, len )
 
     /// Returns a reference to the buffer.
+    /// Do not return a referenced array using ArrayPoo.Return,
+    /// as doing so may result in the array being returned twice.
     member _.Array = m_Buffer
 
     /// Returns the length requested when allocating the buffer. Same as Count property.
@@ -297,6 +196,47 @@ type PooledBuffer(
         Array.blit v 0 b 0 v.Length
         PooledBuffer( b, v.Length )
 
+    /// <summary>
+    ///  Allocate buffer from ArrayPool and initialize contents from specified array.
+    /// </summary>
+    /// <param name="v">
+    ///  array that holds initial contents.
+    /// </param>
+    /// <param name="nlen">
+    ///  The new length of the array.
+    /// </param>
+    /// <returns>
+    ///  Allocated buffer.
+    /// </returns>
+    /// <remarks>
+    ///  If the value of nlen is greater than the length of the original array v, an expanded array is allocated.
+    ///  The expanded part is not initialized.
+    /// </remarks>
+    static member Rent ( v : byte[], nlen : int ) : PooledBuffer =
+        let b = ArrayPool<byte>.Shared.Rent nlen
+        Array.blit v 0 b 0 ( min v.Length nlen )
+        PooledBuffer( b, nlen )
+
+    /// <summary>
+    ///  Allocate buffer from ArrayPool and initialize contents from specified array.
+    /// </summary>
+    /// <param name="v">
+    ///  array that holds initial contents.
+    /// </param>
+    /// <param name="nlen">
+    ///  The new length of the array.
+    /// </param>
+    /// <returns>
+    ///  Allocated buffer.
+    /// </returns>
+    /// <remarks>
+    ///  If the value of nlen is greater than the length of the original array v, an expanded array is allocated.
+    ///  The expanded part is not initialized.
+    /// </remarks>
+    static member Rent ( v : PooledBuffer, nlen : int ) : PooledBuffer =
+        let b = ArrayPool<byte>.Shared.Rent nlen
+        Array.blit v.Array 0 b 0 ( min v.Length nlen )
+        PooledBuffer( b, nlen )
 
     /// <summary>
     ///  Release a buffer.
@@ -315,34 +255,8 @@ type PooledBuffer(
     /// </param>
     static member Return( s : PooledBuffer seq ) : unit =
         s
-        |> Seq.filter ( fun itr -> itr.Length > 0 )
-        |> Seq.fold ( fun ( acc : PooledBuffer list ) x ->
-            if not ( acc |> List.exists ( fun y -> Object.ReferenceEquals( x.Array, y.Array ) ) ) then
-                x :: acc
-            else
-                acc
-        ) []
+        |> Seq.filter ( fun itr -> itr.Array.Length > 0 )
         |> Seq.iter PooledBuffer.Return
-
-    /// <summary>
-    ///  Truncate buffer length.
-    /// </summary>
-    /// <param name="count">
-    ///  The new buffer length.
-    ///  If this value greater than or equals length of old buffer, returned buffer length will be equals to old buffer length.
-    /// </param>
-    /// <param name="b">
-    ///  The buffer that will be truncated.
-    /// </param>
-    /// <returns>
-    ///  Truncated buffer.
-    /// </returns>
-    /// <remarks>
-    ///  Returned buffer refers to same array of old buffer. It not create new buffer.
-    ///  Note that if Return method is called on both the old and new buffers, a double release of the buffers will occur.
-    /// </remarks>
-    static member Truncate ( count : int ) ( b : PooledBuffer ) : PooledBuffer =
-        PooledBuffer( b.Array, min count b.Length )
 
     /// Empty
     static member Empty : PooledBuffer =

@@ -187,7 +187,8 @@ type PRManager_Test2 () =
             defaultSource with
                 I_TNexus = new ITNexus( "initiator111", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us );
         }
-        let v = pm.Register source ( itt_me.fromPrim 0u ) NO_RESERVATION ( uint32 param.Length - 4u ) ( PooledBuffer( param, param.Length - 4 ) )
+        let pp = PooledBuffer.Rent( param, param.Length - 4 )
+        let v = pm.Register source ( itt_me.fromPrim 0u ) NO_RESERVATION ( uint32 param.Length - 4u ) pp
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
@@ -1441,7 +1442,8 @@ type PRManager_Test2 () =
             defaultSource with
                 I_TNexus = initITN1;
         }
-        let v = pm.Clear source ( itt_me.fromPrim 0u ) PR_TYPE.NO_RESERVATION ( uint32 param.Length - 4u ) ( PooledBuffer( param, param.Length - 4 ) )
+        let pp = PooledBuffer.Rent( param, param.Length - 4 )
+        let v = pm.Clear source ( itt_me.fromPrim 0u ) PR_TYPE.NO_RESERVATION ( uint32 param.Length - 4u ) pp
         Assert.True(( v = ScsiCmdStatCd.RESERVATION_CONFLICT ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
@@ -1659,7 +1661,8 @@ type PRManager_Test2 () =
             | 3 -> Assert.True(( itr = "initiator002,i,0x410001010001" ))
             | _ -> Assert.Fail __LINE__
         )
-        let v = pm.Clear source ( itt_me.fromPrim 0u ) PR_TYPE.NO_RESERVATION ( uint32 param.Length - 4u ) ( PooledBuffer( param, param.Length - 4 ) )
+        let pp = PooledBuffer.Rent( param, param.Length - 4 )
+        let v = pm.Clear source ( itt_me.fromPrim 0u ) PR_TYPE.NO_RESERVATION ( uint32 param.Length - 4u ) pp
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
@@ -1893,7 +1896,7 @@ type PRManager_Test2 () =
             0x00uy; 0x00uy;                 // Obsolute
             0xCCuy; 0xCCuy; 0xCCuy; 0xCCuy; // Dummy buffer
         |]
-        let parambuf = PooledBuffer( param, param.Length - 4 )
+        let parambuf = PooledBuffer.Rent( param, param.Length - 4 )
         let source = {
             defaultSource with
                 I_TNexus = initITN2;

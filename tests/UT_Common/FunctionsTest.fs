@@ -302,7 +302,8 @@ type Functions_Test () =
 
     [<Fact>]
     member _.NetworkBytesToInt16_InPooledBuffer_001() =
-        Assert.True( Functions.NetworkBytesToInt16_InPooledBuffer ( PooledBuffer( [| 0uy .. 16uy |], 8 ) ) 1 = 0x0102s )
+        let p = PooledBuffer.Rent( [| 0uy .. 16uy |], 8 )
+        Assert.True( Functions.NetworkBytesToInt16_InPooledBuffer p 1 = 0x0102s )
 
     [<Fact>]
     member _.NetworkBytesToUInt16_001() =
@@ -310,7 +311,8 @@ type Functions_Test () =
 
     [<Fact>]
     member _.NetworkBytesToUInt16_InPooledBuffer_001() =
-        Assert.True( Functions.NetworkBytesToUInt16_InPooledBuffer ( PooledBuffer( [| 0uy .. 16uy |], 8 ) ) 2 = 0x0203us )
+        let p = PooledBuffer.Rent( [| 0uy .. 16uy |], 8 )
+        Assert.True( Functions.NetworkBytesToUInt16_InPooledBuffer p 2 = 0x0203us )
 
     [<Fact>]
     member _.NetworkBytesToInt32_001() =
@@ -318,7 +320,8 @@ type Functions_Test () =
 
     [<Fact>]
     member _.NetworkBytesToInt32_InPooledBuffer_001() =
-        Assert.True( Functions.NetworkBytesToInt32_InPooledBuffer ( PooledBuffer( [| 0uy .. 16uy |], 8 ) ) 3 = 0x03040506 )
+        let p = PooledBuffer.Rent( [| 0uy .. 16uy |], 8 )
+        Assert.True( Functions.NetworkBytesToInt32_InPooledBuffer p 3 = 0x03040506 )
 
     [<Fact>]
     member _.NetworkBytesToUInt32_001() =
@@ -326,7 +329,8 @@ type Functions_Test () =
 
     [<Fact>]
     member _.NetworkBytesToUInt32_InPooledBuffer_001() =
-        Assert.True( Functions.NetworkBytesToUInt32_InPooledBuffer ( PooledBuffer( [| 0uy .. 16uy |], 8 ) ) 4 = 0x04050607u )
+        let p = PooledBuffer.Rent( [| 0uy .. 16uy |], 8 )
+        Assert.True( Functions.NetworkBytesToUInt32_InPooledBuffer p 4 = 0x04050607u )
 
     [<Fact>]
     member _.NetworkBytesToInt64_001() =
@@ -334,7 +338,8 @@ type Functions_Test () =
 
     [<Fact>]
     member _.NetworkBytesToInt64_InPooledBuffer_001() =
-        Assert.True( Functions.NetworkBytesToInt64_InPooledBuffer ( PooledBuffer( [| 0uy .. 16uy |], 15 ) ) 5 = 0x05060708090A0B0CL )
+        let p = PooledBuffer.Rent( [| 0uy .. 16uy |], 15 )
+        Assert.True( Functions.NetworkBytesToInt64_InPooledBuffer p 5 = 0x05060708090A0B0CL )
 
     [<Fact>]
     member _.NetworkBytesToUInt64_001() =
@@ -342,7 +347,8 @@ type Functions_Test () =
 
     [<Fact>]
     member _.NetworkBytesToUInt64_InPooledBuffer_001() =
-        Assert.True( Functions.NetworkBytesToUInt64_InPooledBuffer ( PooledBuffer( [| 0uy .. 16uy |], 15 ) ) 6 = 0x060708090A0B0C0DUL )
+        let p = PooledBuffer.Rent( [| 0uy .. 16uy |], 15 )
+        Assert.True( Functions.NetworkBytesToUInt64_InPooledBuffer p 6 = 0x060708090A0B0C0DUL )
 
     [<Fact>]
     member _.IntToNetworkBytes_001() =

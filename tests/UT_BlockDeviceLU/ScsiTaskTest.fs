@@ -760,12 +760,13 @@ type ScsiTask_Test () =
             {
                 defaultSCSIDataOutPDU with
                     DataSegment =
-                        PooledBuffer ( [|
+                        let v = [|
                             0x00uy; 0x00uy; 0x00uy; 0x08uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER, BLOCK DESCRIPTOR LENGTH
                             0x11uy; 0x22uy; 0x33uy; 0x44uy; // NUMBER OF BLOCKS
                             0x00uy; 0xAAuy; 0xBBuy; 0xCCuy; // BLOCK LENGTH
                             0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // Dummy buffer
-                        |], 12 )
+                        |]
+                        PooledBuffer.Rent( v, 12 )
             }
         ]
         let select_task, ilu = createDefScsiTask defaultSCSICommandPDU select_cdb data false
@@ -803,24 +804,26 @@ type ScsiTask_Test () =
         let cmd = {
             defaultSCSICommandPDU with
                 DataSegment =
-                    PooledBuffer ( [|
+                    let v = [|
                         0x00uy; 0x00uy; 0x00uy; 0x00uy;
                         0x01uy; 0x00uy; 0x00uy; 0x10uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
                         0x11uy; 0x22uy; 0x33uy; 0x44uy; // NUMBER OF BLOCKS
                         0xAAuy; 0xAAuy;                 // dummy buffer
-                    |], 12 )
+                    |]
+                    PooledBuffer.Rent( v, 12 )
         }
         let data = [
             {
                 defaultSCSIDataOutPDU with
                     BufferOffset = 12u;
                     DataSegment = 
-                        PooledBuffer ( [|
+                        let v = [|
                             0x11uy; 0x22uy; 0x33uy; 0x44uy;
                             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
                             0xFFuy; 0xEEuy; 0xDDuy; 0xCCuy; // BLOCK LENGTH
                             0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // dummy buffer
-                        |], 12 )
+                        |]
+                        PooledBuffer.Rent( v, 12 )
             }
         ]
         let select_task, ilu = createDefScsiTask cmd select_cdb data false
@@ -4184,7 +4187,7 @@ type ScsiTask_Test () =
                         0x00uy; 0x00uy;                 // Obsolute
                         0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // dummy buffer
                     |]
-                    PooledBuffer( w, w.Length - 4 )
+                    PooledBuffer.Rent( w, w.Length - 4 )
         }
         let cdb : PersistentReserveOutCDB = {
             OperationCode = 0x5Fuy;

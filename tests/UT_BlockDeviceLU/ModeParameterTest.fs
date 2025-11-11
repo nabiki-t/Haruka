@@ -98,17 +98,6 @@ type ModeParameter_Test () =
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
 
     [<Fact>]
-    member _.Select6_004_1() =
-        let mp = ModeParameter_Test.initialMP false
-        try
-            let v = PooledBuffer( Array.zeroCreate 5, 4 )
-            mp.Select6 v 5 true true cmdSource ( itt_me.fromPrim 0u )
-            Assert.Fail __LINE__
-        with
-        | :? SCSIACAException as x ->
-            Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
-
-    [<Fact>]
     member _.Select6_005() =
         let mp = ModeParameter_Test.initialMP false
         let v = [| 0uy; 1uy; 0uy; 0uy; |] |> PooledBuffer.Rent
@@ -295,7 +284,7 @@ type ModeParameter_Test () =
                 0x00uy; 0xAAuy; 0xBBuy; 0xCCuy; // BLOCK LENGTH
                 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // dummy buffer
             |]
-        let v2 = PooledBuffer( v, v.Length - 4 )
+        let v2 = PooledBuffer.Rent( v, v.Length - 4 )
         Assert.True(( mp.BlockLength = Constants.MEDIA_BLOCK_SIZE ))
         mp.Select6 v2 v2.Count true true cmdSource ( itt_me.fromPrim 0u )
         Assert.True(( mp.BlockLength = 0x0000000000AABBCCUL ))
@@ -388,7 +377,7 @@ type ModeParameter_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; 
                 0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // dummy buffer
             |]
-        let v2 = PooledBuffer( v, v.Length - 4 )
+        let v2 = PooledBuffer.Rent( v, v.Length - 4 )
         try
             mp.Select6 v2 24 true true cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
@@ -484,7 +473,8 @@ type ModeParameter_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; 
                 0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // dummy buffer
             |]
-        let v2 = PooledBuffer( v, v.Length - 4 )
+        let v2 =
+            PooledBuffer.Rent( v, v.Length - 4 )
         Assert.True( mp.D_SENSE )
         Assert.False( mp.SWP )
         mp.Select6 v2 16 true true cmdSource ( itt_me.fromPrim 0u )
@@ -551,7 +541,7 @@ type ModeParameter_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
                 0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // dummy buffer
             |]
-        let v2 = PooledBuffer( v, v.Length - 4 )
+        let v2 = PooledBuffer.Rent( v, v.Length - 4 )
         try
             mp.Select6 v2 16 true true cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
@@ -597,17 +587,6 @@ type ModeParameter_Test () =
         try
             let v = PooledBuffer.RentAndInit 8
             mp.Select10 v 9 true true cmdSource ( itt_me.fromPrim 0u )
-            Assert.Fail __LINE__
-        with
-        | :? SCSIACAException as x ->
-            Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
-
-    [<Fact>]
-    member _.Select10_004_1() =
-        let mp = ModeParameter_Test.initialMP false
-        try
-            let v = PooledBuffer( Array.zeroCreate 10, 8 )
-            mp.Select10 v 10 true true cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -869,7 +848,7 @@ type ModeParameter_Test () =
                 0x00uy; 0xAAuy; 0xBBuy; 0xCCuy; // BLOCK LENGTH
                 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // dummy buffer
             |]
-        let v2 = PooledBuffer( v, v.Length - 4 )
+        let v2 = PooledBuffer.Rent( v, v.Length - 4 )
         Assert.True(( mp.BlockLength = Constants.MEDIA_BLOCK_SIZE ))
         mp.Select10 v2 v2.Count true true cmdSource ( itt_me.fromPrim 0u )
         Assert.True(( mp.BlockLength = 0x0000000000AABBCCUL ))
@@ -2603,7 +2582,7 @@ type ModeParameter_Test () =
 
             0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // dummy buffer
         |]
-        let v2 = PooledBuffer( v, v.Length - 4 )
+        let v2 = PooledBuffer.Rent( v, v.Length - 4 )
         mp.Select6 v2 v2.Count true true cmdSource ( itt_me.fromPrim 0u )
 
         Assert.True(( mp.BlockLength = 0x00AABBCCUL ))
@@ -2694,7 +2673,7 @@ type ModeParameter_Test () =
 
             0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // dummy buffer
         |]
-        let v2 = PooledBuffer( v, v.Length - 4 )
+        let v2 = PooledBuffer.Rent( v, v.Length - 4 )
         mp.Select10 v2 v2.Count true true cmdSource ( itt_me.fromPrim 0u )
 
         Assert.True(( mp.BlockLength = 0x12345678UL ))

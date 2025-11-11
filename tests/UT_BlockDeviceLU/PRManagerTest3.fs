@@ -1098,7 +1098,8 @@ type PRManager_Test3 () =
             defaultSource with
                 I_TNexus = sourceITN
         }
-        let v = pm.RegisterAndIgnoreExistingKey source ( itt_me.fromPrim 0u ) NO_RESERVATION ( uint32 param.Length - 4u ) ( PooledBuffer( param, param.Length - 4 ) )
+        let pp = PooledBuffer.Rent( param, param.Length - 4 )
+        let v = pm.RegisterAndIgnoreExistingKey source ( itt_me.fromPrim 0u ) NO_RESERVATION ( uint32 param.Length - 4u ) pp
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
@@ -1308,7 +1309,8 @@ type PRManager_Test3 () =
             defaultSource with
                 I_TNexus = initITN1;
         }
-        let v = pm.RegisterAndMove source ( itt_me.fromPrim 0u ) NO_RESERVATION ( uint32 param.Length - 4u ) ( PooledBuffer( param, param.Length - 4 ) )
+        let pp = PooledBuffer.Rent( param, param.Length - 4 )
+        let v = pm.RegisterAndMove source ( itt_me.fromPrim 0u ) NO_RESERVATION ( uint32 param.Length - 4u ) pp
         Assert.True(( v = ScsiCmdStatCd.RESERVATION_CONFLICT ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
@@ -2462,7 +2464,8 @@ type PRManager_Test3 () =
             defaultSource with
                 I_TNexus = initITN2;
         }
-        let v = pm.Reserve source ( itt_me.fromPrim 0u ) PR_TYPE.WRITE_EXCLUSIVE ( uint32 param.Length - 4u ) ( PooledBuffer( param, param.Length - 4 ) )
+        let pp = PooledBuffer.Rent( param, param.Length - 4 )
+        let v = pm.Reserve source ( itt_me.fromPrim 0u ) PR_TYPE.WRITE_EXCLUSIVE ( uint32 param.Length - 4u ) pp
         Assert.True(( v = ScsiCmdStatCd.RESERVATION_CONFLICT ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
@@ -2941,7 +2944,8 @@ type PRManager_Test3 () =
             defaultSource with
                 I_TNexus = initITN1;
         }
-        let v = pm.Release source ( itt_me.fromPrim 0u ) PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS ( uint32 param.Length - 4u ) ( PooledBuffer( param, param.Length - 4 ) )
+        let pp = PooledBuffer.Rent( param, param.Length - 4 )
+        let v = pm.Release source ( itt_me.fromPrim 0u ) PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS ( uint32 param.Length - 4u ) pp
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
