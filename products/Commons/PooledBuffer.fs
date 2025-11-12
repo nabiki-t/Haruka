@@ -24,13 +24,16 @@ open System.Threading
 /// <param name="argBuffer">
 ///  The buffer allocated from the ArrayPool.
 /// </param>
-/// <param name="m_Length">
+/// <param name="argLength">
 ///  The size requested when allocating the buffer, which may differ from the size actually allocated.
 /// </param>
-type PooledBuffer private ( argBuffer : byte[], m_Length : int ) =
+type PooledBuffer private ( argBuffer : byte[], argLength : int ) =
 
     /// Allocated buffer. After release, it references an array of length 0.
     let mutable m_Buffer = argBuffer
+
+    /// Requested buffer length.
+    let mutable m_Length = argLength
 
     //=========================================================================
     // Public method
@@ -42,6 +45,7 @@ type PooledBuffer private ( argBuffer : byte[], m_Length : int ) =
         let v = Interlocked.Exchange( &m_Buffer, Array.Empty<byte>() )
         if v.Length > 0 then
             ArrayPool<byte>.Shared.Return v
+        m_Length <- 0
 
     /// <summary>
     ///  Duplicating part of the buffer.
@@ -88,6 +92,27 @@ type PooledBuffer private ( argBuffer : byte[], m_Length : int ) =
 
     /// Accessing elements of a buffer.
     member _.Item with get ( idx : int ) = m_Buffer.[ idx ]
+
+    /// Buffer is allocated of not.
+    member _.IsEmpty() = ( Array.isEmpty m_Buffer )
+
+    /// <summary>
+    ///  Truncate buffer size.
+    /// </summary>
+    /// <param name="s">
+    ///  Specifies the number of bytes to truncate the buffer length to.
+    /// </param>
+    /// <remarks>
+    ///  If the value of s is greater than the buffer length (request size), nothing is done.
+    ///  If it is less than 0, the buffer length is truncated to 0.
+    /// </remarks>
+    member this.Truncate ( s : int ) : unit =
+        let o = m_Length    // old value
+        let n =
+            min o s     // new value
+            |> max 0
+        let r = Interlocked.CompareExchange( &m_Length, n, o )
+        if r <> o then this.Truncate s
 
     //=========================================================================
     // static method
@@ -164,8 +189,14 @@ type PooledBuffer private ( argBuffer : byte[], m_Length : int ) =
     /// <returns>
     ///  Allocated buffer. This buffer is not initialized.
     /// </returns>
+    /// <remarks>
+    ///  If the requested buffer length is less than 0, a zero-length buffer is allocated.
+    /// </remarks>
     static member Rent ( s : int ) : PooledBuffer =
-        PooledBuffer( ArrayPool<byte>.Shared.Rent s, s )
+        if s <= 0 then
+            PooledBuffer.Empty
+        else
+            PooledBuffer( ArrayPool<byte>.Shared.Rent s, s )
 
     /// <summary>
     ///  Get buffer from ArrayPool
@@ -175,12 +206,16 @@ type PooledBuffer private ( argBuffer : byte[], m_Length : int ) =
     /// </param>
     /// <returns>
     ///  Allocated and zero cleared buffer.
+    ///  If the requested buffer length is less than 0, a zero-length buffer is allocated.
     /// </returns>
     static member RentAndInit ( s : int ) : PooledBuffer =
-        let r = PooledBuffer.Rent s
-        for i = 0 to s - 1 do
-            r.Array.[i] <- 0uy
-        r
+        if s <= 0 then
+            PooledBuffer.Empty
+        else
+            let r = PooledBuffer.Rent s
+            for i = 0 to s - 1 do
+                r.Array.[i] <- 0uy
+            r
 
     /// <summary>
     ///  Allocate buffer from ArrayPool and initialize contents from specified array.
@@ -192,9 +227,12 @@ type PooledBuffer private ( argBuffer : byte[], m_Length : int ) =
     ///  Allocated buffer.
     /// </returns>
     static member Rent ( v : byte[] ) : PooledBuffer =
-        let b = ArrayPool<byte>.Shared.Rent v.Length
-        Array.blit v 0 b 0 v.Length
-        PooledBuffer( b, v.Length )
+        if v.Length = 0 then
+            PooledBuffer.Empty
+        else
+            let b = ArrayPool<byte>.Shared.Rent v.Length
+            Array.blit v 0 b 0 v.Length
+            PooledBuffer( b, v.Length )
 
     /// <summary>
     ///  Allocate buffer from ArrayPool and initialize contents from specified array.
@@ -211,11 +249,15 @@ type PooledBuffer private ( argBuffer : byte[], m_Length : int ) =
     /// <remarks>
     ///  If the value of nlen is greater than the length of the original array v, an expanded array is allocated.
     ///  The expanded part is not initialized.
+    ///  If the requested buffer length is less than 0, a zero-length buffer is allocated.
     /// </remarks>
     static member Rent ( v : byte[], nlen : int ) : PooledBuffer =
-        let b = ArrayPool<byte>.Shared.Rent nlen
-        Array.blit v 0 b 0 ( min v.Length nlen )
-        PooledBuffer( b, nlen )
+        if nlen <= 0 then
+            PooledBuffer.Empty
+        else
+            let b = ArrayPool<byte>.Shared.Rent nlen
+            Array.blit v 0 b 0 ( min v.Length nlen )
+            PooledBuffer( b, nlen )
 
     /// <summary>
     ///  Allocate buffer from ArrayPool and initialize contents from specified array.
@@ -232,11 +274,15 @@ type PooledBuffer private ( argBuffer : byte[], m_Length : int ) =
     /// <remarks>
     ///  If the value of nlen is greater than the length of the original array v, an expanded array is allocated.
     ///  The expanded part is not initialized.
+    ///  If the requested buffer length is less than 0, a zero-length buffer is allocated.
     /// </remarks>
     static member Rent ( v : PooledBuffer, nlen : int ) : PooledBuffer =
-        let b = ArrayPool<byte>.Shared.Rent nlen
-        Array.blit v.Array 0 b 0 ( min v.Length nlen )
-        PooledBuffer( b, nlen )
+        if nlen <= 0 then
+            PooledBuffer.Empty
+        else
+            let b = ArrayPool<byte>.Shared.Rent nlen
+            Array.blit v.Array 0 b 0 ( min v.Length nlen )
+            PooledBuffer( b, nlen )
 
     /// <summary>
     ///  Release a buffer.
@@ -261,4 +307,10 @@ type PooledBuffer private ( argBuffer : byte[], m_Length : int ) =
     /// Empty
     static member Empty : PooledBuffer =
         PooledBuffer( Array.Empty<byte>(), 0 )
+
+    /// Buffer is allocated or not.
+    static member IsEmpty ( v : PooledBuffer ) : bool =
+        v.IsEmpty()
+
+
 
