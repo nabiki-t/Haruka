@@ -2964,54 +2964,73 @@ type BlockDeviceLU_Test () =
 
     [<Fact>]
     member _.FindQueueByITT_001() =
+        let itn1 = ITNexus( "INIT1", isid_me.zero, "TARG1", tpgt_me.fromPrim 0us );
+        let itn2 = ITNexus( "INIT2", isid_me.zero, "TARG2", tpgt_me.fromPrim 0us );
+        let src1 = { BlockDeviceLU_Test.cmdSource() with I_TNexus = itn1 }
+        let src2 = { BlockDeviceLU_Test.cmdSource() with I_TNexus = itn2 }
         let testTasks =
             [|
                 TaskStatus.TASK_STAT_Running(
                     new CBlockDeviceTask_Stub(
-                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u )
+                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
+                        p_GetSource = ( fun () -> src1 )
                     ) :> IBlockDeviceTask
                 );
                 TaskStatus.TASK_STAT_Running(
                     new CBlockDeviceTask_Stub(
-                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u )
+                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
+                        p_GetSource = ( fun () -> src1 )
                     ) :> IBlockDeviceTask
                 );
                 TaskStatus.TASK_STAT_Running(
                     new CBlockDeviceTask_Stub(
-                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 2u )
+                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 2u ),
+                        p_GetSource = ( fun () -> src1 )
                     ) :> IBlockDeviceTask
                 );
                 TaskStatus.TASK_STAT_Running(
                     new CBlockDeviceTask_Stub(
-                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 3u )
+                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 3u ),
+                        p_GetSource = ( fun () -> src1 )
                     ) :> IBlockDeviceTask
                 );
                 TaskStatus.TASK_STAT_Running(
                     new CBlockDeviceTask_Stub(
-                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 4u )
+                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 4u ),
+                        p_GetSource = ( fun () -> src1 )
+                    ) :> IBlockDeviceTask
+                );
+                TaskStatus.TASK_STAT_Running(
+                    new CBlockDeviceTask_Stub(
+                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 5u ),
+                        p_GetSource = ( fun () -> src2 )
                     ) :> IBlockDeviceTask
                 );
             |]
         let immTestTasks = testTasks.ToImmutableArray()
 
-
         let r1 =
-            PrivateCaller.Invoke< BlockDeviceLU >( "FindQueueByITT", [| immTestTasks :> obj; ( itt_me.fromPrim 0u ) :> obj; |] ) :?> int
+            PrivateCaller.Invoke< BlockDeviceLU >( "FindQueueByITT", [| immTestTasks :> obj; src1 :> obj; ( itt_me.fromPrim 0u ) :> obj; |] ) :?> int
         Assert.True(( r1 = 0 ))
 
         let r2 =
-            PrivateCaller.Invoke< BlockDeviceLU >( "FindQueueByITT", [| immTestTasks :> obj; ( itt_me.fromPrim 4u ) :> obj; |] ) :?> int
+            PrivateCaller.Invoke< BlockDeviceLU >( "FindQueueByITT", [| immTestTasks :> obj; src1 :> obj; ( itt_me.fromPrim 4u ) :> obj; |] ) :?> int
         Assert.True(( r2 = 4 ))
 
-        let r2 =
-            PrivateCaller.Invoke< BlockDeviceLU >( "FindQueueByITT", [| immTestTasks :> obj; ( itt_me.fromPrim 5u ) :> obj; |] ) :?> int
-        Assert.True(( r2 = -1 ))
+        let r3 =
+            PrivateCaller.Invoke< BlockDeviceLU >( "FindQueueByITT", [| immTestTasks :> obj; src1 :> obj; ( itt_me.fromPrim 5u ) :> obj; |] ) :?> int
+        Assert.True(( r3 = -1 ))
+
+        let r4 =
+            PrivateCaller.Invoke< BlockDeviceLU >( "FindQueueByITT", [| immTestTasks :> obj; src2 :> obj; ( itt_me.fromPrim 5u ) :> obj; |] ) :?> int
+        Assert.True(( r4 = 5 ))
 
     [<Fact>]
     member _.FindQueueByITT_002() =
         let tasks = ImmutableArray< TaskStatus >.Empty
+        let source = BlockDeviceLU_Test.cmdSource()
         let r1 =
-            PrivateCaller.Invoke< BlockDeviceLU >( "FindQueueByITT", [| tasks :> obj; ( itt_me.fromPrim 0u ) :> obj; |] ) :?> int
+            PrivateCaller.Invoke< BlockDeviceLU >( "FindQueueByITT", [| tasks :> obj; source :> obj; ( itt_me.fromPrim 0u ) :> obj; |] ) :?> int
         Assert.True(( r1 = -1 ))
 
     [<Fact>]
@@ -3409,7 +3428,8 @@ type BlockDeviceLU_Test () =
         let testTask =
             TaskStatus.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
-                    p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u )
+                    p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
+                    p_GetSource = ( fun () -> source )
                 )
             )
         let queue1 = {

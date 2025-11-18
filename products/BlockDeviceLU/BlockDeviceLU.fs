@@ -731,6 +731,9 @@ type BlockDeviceLU
     /// <param name="q">
     ///  SCSI task queue vector.
     /// </param>
+    /// <param name="source">
+    ///  Source information of received SCSI command.
+    /// </param>
     /// <param name="itt">
     ///  Initiator Task Tag
     /// </param>
@@ -741,11 +744,11 @@ type BlockDeviceLU
     /// <remarks>
     ///   Call this method in critical section at task set lock.
     /// </remarks>
-    static member private FindQueueByITT ( q : ImmutableArray< TaskStatus > ) ( itt : ITT_T ) : int =
+    static member private FindQueueByITT ( q : ImmutableArray< TaskStatus > ) ( source : CommandSourceInfo ) ( itt : ITT_T ) : int =
         let rec loop ( cnt : int ) : int =
             if cnt < q.Length then
                 let t1 = q.[ cnt ] |> TaskStatus.getTask
-                if itt = t1.InitiatorTaskTag then
+                if itt = t1.InitiatorTaskTag && ITNexus.Equals( t1.Source.I_TNexus, source.I_TNexus )  then
                     cnt
                 else
                     loop ( cnt + 1 )
@@ -754,6 +757,15 @@ type BlockDeviceLU
         loop 0
 
 
+    /// <summary>
+    ///  Returns the buffer used by the received SCSI command to the ArrayPool
+    /// </summary>
+    /// <param name="command">
+    ///  SCSI command
+    /// </param>
+    /// <param name="data">
+    ///  List of SCSI Data-Out PDUs.
+    /// </param>
     static member private ReturnDataSegment ( command : SCSICommandPDU ) ( data : SCSIDataOutPDU list ) : uint =
         data
         |> List.map _.DataSegment
@@ -983,7 +995,7 @@ type BlockDeviceLU
     ///   Call this method in critical section at task set lock.
     /// </remarks>
     member private _.CheckOverlappedTask ( argQ : ImmutableArray< TaskStatus > ) ( source : CommandSourceInfo ) ( itt : ITT_T ) : unit =
-        if ( BlockDeviceLU.FindQueueByITT argQ itt ) <> -1 then
+        if ( BlockDeviceLU.FindQueueByITT argQ source itt ) <> -1 then
             // ACA estblished
             let loginfo = struct ( m_ObjID, ValueSome( source ), ValueSome( itt ), ValueSome( m_LUN ) )
             let msg = "Overlapped task is detected."
