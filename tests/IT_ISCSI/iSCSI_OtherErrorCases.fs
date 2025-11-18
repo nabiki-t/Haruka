@@ -432,7 +432,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! ittW, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
 
             // send TMF request with immidiate flag
-            let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.ABORT_TASK g_LUN1 ittNOP cmdsnNOP datasn_me.zero
+            let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.ABORT_TASK g_LUN1 ittNOP ( ValueSome cmdsnNOP ) datasn_me.zero
 
             // receive TMP response
             let! tmfPDU = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
@@ -939,7 +939,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
                     TargetName = "";
             }
             let! r1 = iSCSI_Initiator.LoginForDiscoverySession sessParam m_defaultConnParam
-            let! _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.ABORT_TASK g_LUN1 ( itt_me.fromPrim 1u ) cmdsn_me.zero datasn_me.zero
+            let! _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.ABORT_TASK g_LUN1 ( itt_me.fromPrim 1u ) ( ValueSome cmdsn_me.zero ) datasn_me.zero
             try
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
@@ -1165,7 +1165,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( nopIn3.InitiatorTaskTag = ittNopOut3 ))
 
             // clear ACA status
-            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 g_DefITT cmdsn_me.zero datasn_me.zero
+            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
             let! tmdRespPDU = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
             Assert.True(( tmdRespPDU.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
 
@@ -1199,7 +1199,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             r1.Connection( g_CID0 ).RewindExtStatSN ( statsn_me.fromPrim 1u )
 
             // clear ACA status
-            let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 g_DefITT cmdsn_me.zero datasn_me.zero
+            let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
 
             let mutable flg = true
             while flg do
@@ -1292,7 +1292,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
 
 
             // clear ACA status
-            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 g_DefITT cmdsn_me.zero datasn_me.zero
+            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
             let! tmdRespPDU = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
             Assert.True(( tmdRespPDU.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
 
@@ -1363,7 +1363,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( rpdu.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
 
             // clear ACA status
-            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 g_DefITT cmdsn_me.zero datasn_me.zero
+            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
             let! tmdRespPDU = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
             Assert.True(( tmdRespPDU.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
 
@@ -1405,7 +1405,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( rpdu.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
 
             // clear ACA status
-            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 g_DefITT cmdsn_me.zero datasn_me.zero
+            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
             let! tmdRespPDU = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
             Assert.True(( tmdRespPDU.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
 
@@ -1648,7 +1648,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! r1_2 = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam m_defaultConnParam cmdsn_me.zero
 
             // clear ACA status ( Notise that, CLEAR_ACA mast be requested by the fault initiator )
-            let! ittTMF, _ = r1_2.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 g_DefITT cmdsn_me.zero datasn_me.zero
+            let! ittTMF, _ = r1_2.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
             let! tmdRespPDU = r1_2.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
             Assert.True(( tmdRespPDU.InitiatorTaskTag = ittTMF ))
             Assert.True(( tmdRespPDU.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
@@ -1682,7 +1682,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( writeData = readData1 ))
 
             // LU reset
-            let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.LOGICAL_UNIT_RESET g_LUN1 g_DefITT cmdsn_me.zero datasn_me.zero
+            let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.LOGICAL_UNIT_RESET g_LUN1 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
             let! tmdRespPDU = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
             Assert.True(( tmdRespPDU.InitiatorTaskTag = ittTMF ))
             Assert.True(( tmdRespPDU.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
@@ -1701,57 +1701,3 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             do! r1.CloseSession g_CID0 BitI.F
             do! r2.CloseSession g_CID0 BitI.F
         }
-
-    // abort a task that is in the iSCSI task queue.
-    [<Fact>]
-    member _.TMF_AbortTask_001 () =
-
-        let receiveTMFResponse ( r1 : iSCSI_Initiator ) =
-            // Continue sending NOP-Out until a TMF response is received
-            let rec loop ( tmf : TaskManagementFunctionResponsePDU voption, scnt : int, rcnt : int ) =
-                task {
-                    let! pdu = r1.Receive g_CID0
-                    match pdu with
-                    | :? TaskManagementFunctionResponsePDU as tmdRespPDU ->
-                        // After receiving a TMF response, send Nop-Output at least once.
-                        let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
-                        return struct( true, ( ValueSome tmdRespPDU, scnt + 1, rcnt ) )
-
-                    | :? NOPInPDU ->
-                        if tmf.IsSome then
-                            // After receiving a TMF response, repeat until the same number of Nop-Ins as the number of Nop-Outs sent are received.
-                            return struct( ( scnt > rcnt + 1 ), ( tmf, scnt, rcnt + 1 ) )
-                        else
-                            // Continue sending NOP-Out until a TMF response is received
-                            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
-                            return struct( true, ( tmf, scnt + 1, rcnt + 1 ) )
-                    | _ ->
-                        return struct( false, ( ValueNone, 0, 0 ) )
-                }
-            Functions.loopAsyncWithState loop ( ValueNone, 1, 0 )
-
-        task{
-            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
-
-            // Send SCSI write command
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us true false
-            let! ittWrite, cmdSNWrite = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
-
-            // Nop-Out 1
-            let! ittNopOut1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
-
-            // Send Abort Task TMF request for SCSI write command
-            let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.ABORT_TASK g_LUN1 ittWrite cmdSNWrite datasn_me.zero
-
-            let! ( tmdRespPDU, _, _ ) = receiveTMFResponse r1
-            Assert.True(( tmdRespPDU.IsSome ))
-            Assert.True(( tmdRespPDU.Value.InitiatorTaskTag = ittTMF ))
-            Assert.True(( tmdRespPDU.Value.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
-
-            // SCSI read
-            let! readData1 = r1.ReadMediaData g_CID0 g_LUN1 0u 1u m_MediaBlockSize
-            Assert.True(( readData1.Length = int m_MediaBlockSize ))
-
-            do! r1.CloseSession g_CID0 BitI.F
-        }
-

@@ -242,7 +242,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
 
             // Send TaskMgrReq with same CmdSN as Nop-Out 2
-            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.ABORT_TASK g_LUN1 ( itt_me.fromPrim 1u ) ( cmdsn_me.fromPrim 1u ) datasn_me.zero
+            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.ABORT_TASK g_LUN1 ( itt_me.fromPrim 1u ) ( ValueSome ( cmdsn_me.fromPrim 1u ) ) datasn_me.zero
             let! pdu2_2 = r1.ReceiveSpecific<RejectPDU> g_CID0
             Assert.True(( pdu2_2.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
             Assert.True(( pdu2_2.ExpCmdSN = cmdsn_me.fromPrim 2u ))
@@ -1265,7 +1265,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Send TaskMgrReq for clear ACA
             let sendExpStatSN2 = r1.Connection( g_CID0 ).ExpStatSN
-            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 g_DefITT cmdsn_me.zero datasn_me.zero
+            let! _, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
             let! pdu2 = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
             Assert.True(( pdu2.StatSN = sendExpStatSN2 ))
             Assert.True(( pdu2.Response = TaskMgrResCd.FUNCTION_COMPLETE ))

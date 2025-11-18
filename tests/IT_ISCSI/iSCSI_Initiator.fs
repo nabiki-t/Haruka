@@ -448,6 +448,7 @@ type iSCSI_Initiator(
     /// </param>
     /// <param name="argRefCmdSN">
     ///  TaskManagementFunctionRequestPDU RefCmdSN field value.
+    ///  If ValueNone is specified, RefCmdSN is set to CmdSN value of this TMF command.
     /// </param>
     /// <param name="argExpDataSN">
     ///  TaskManagementFunctionRequestPDU ExpDataSN field value.
@@ -463,7 +464,7 @@ type iSCSI_Initiator(
         ( argFunction : TaskMgrReqCd )
         ( argLUN : LUN_T )
         ( argReferencedTaskTag : ITT_T )
-        ( argRefCmdSN : CMDSN_T )
+        ( argRefCmdSN : CMDSN_T voption )
         ( argExpDataSN : DATASN_T )
         : Task< struct( ITT_T * CMDSN_T ) > =
         task {
@@ -482,7 +483,7 @@ type iSCSI_Initiator(
                     ReferencedTaskTag = argReferencedTaskTag;
                     CmdSN = cmdsn;
                     ExpStatSN = con.ExpStatSN;
-                    RefCmdSN = argRefCmdSN;
+                    RefCmdSN = ValueOption.defaultValue cmdsn argRefCmdSN
                     ExpDataSN = argExpDataSN;
                     ByteCount = 0u;
                 }

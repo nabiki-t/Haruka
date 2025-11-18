@@ -92,6 +92,15 @@ let MediaCreateProcStub( args : string[] ) : int =
 let ControllerStarter( workPath : string ) : int =
 
     let controllerExeName = GlbFunc.controllerExePath
+    let stdOutLogName = Functions.AppendPathName workPath "stdout.txt"
+    let stdErrLogName = Functions.AppendPathName workPath "stderr.txt"
+    let stdoutLog = new StreamWriter( File.Open( stdOutLogName, FileMode.Create, FileAccess.Write, FileShare.Read ) )
+    let stderrLog = new StreamWriter( File.Open( stdErrLogName, FileMode.Create, FileAccess.Write, FileShare.Read ) )
+    let semaStdOut = new SemaphoreSlim( 1 )
+    let semaStdErr = new SemaphoreSlim( 1 )
+
+    semaStdOut.Wait()
+    semaStdErr.Wait()
 
     // Start controller process
     let ctrlProc2 = new Process(
@@ -109,20 +118,38 @@ let ControllerStarter( workPath : string ) : int =
     ctrlProc2.Start() |> ignore
 
     fun () -> task {
-        while true do
-            let s = ctrlProc2.StandardOutput.ReadLine()
-            if s <> null then
-                stdout.WriteLine s
-                stdout.Flush()
+        try
+            try
+                let mutable flg = true
+                while flg do
+                    let s = ctrlProc2.StandardOutput.ReadLine()
+                    if s <> null then
+                        stdoutLog.WriteLine s
+                        stdoutLog.Flush()
+                    else
+                        flg <- false
+            with
+            | _ -> ()
+        finally
+            semaStdOut.Release() |> ignore
     }
     |> Functions.StartTask
         
     fun () -> task {
-        while true do
-            let s = ctrlProc2.StandardError.ReadLine()
-            if s <> null then
-                stderr.WriteLine s
-                stderr.Flush()
+        try
+            try
+                let mutable flg = true
+                while flg do
+                    let s = ctrlProc2.StandardError.ReadLine()
+                    if s <> null then
+                        stderrLog.WriteLine s
+                        stderrLog.Flush()
+                    else
+                        flg <- false
+            with
+            | _ -> ()
+        finally
+            semaStdErr.Release() |> ignore
     }
     |> Functions.StartTask
 
@@ -135,8 +162,16 @@ let ControllerStarter( workPath : string ) : int =
     // Terminate the controller launched as a child process
     ctrlProc2.Kill()
 
-    stdout.Flush()
-    stderr.Flush()
+    // Wait for the log output task to terminate.
+    semaStdOut.Wait()
+    semaStdErr.Wait()
+
+    stdoutLog.Flush()
+    stdoutLog.Close()
+    stdoutLog.Dispose()
+    stderrLog.Flush()
+    stderrLog.Close()
+    stderrLog.Dispose()
 
     // change current directory to the parent of working path
     let parentPath = Path.GetDirectoryName( workPath )
