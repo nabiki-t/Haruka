@@ -6245,7 +6245,7 @@ type BlockDeviceLU_Test () =
             Assert.Fail __LINE__
         )
 
-        pc.SetField( "m_LUResetFlag", true )
+        pc.SetField( "m_LUResetFlag", LUResetStatus.Discarded )
         ( lu :> ILU ).SCSICommand source scsicmd scsidata
 
     [<Fact>]

@@ -52,6 +52,13 @@ type BlockDeviceType =
     /// Dummy device for REPORT LUNS well known LU
     | BDT_Dummy
 
+/// Indicates whether the LU has been reset.
+type LUResetStatus =
+    /// No reset has occurred and it is available
+    | Valid
+    /// This LU has already been reset and is no longer available.
+    | Discarded
+
 [<NoComparison>]
 type TaskSet = {
     /// Task queue of task set.
@@ -140,7 +147,7 @@ type BlockDeviceLU
 
     // Logical Unit Reset flag.
     // Default is false. If logical unit reset is started, this flag is set to true.
-    let mutable  m_LUResetFlag = false
+    let mutable  m_LUResetFlag = LUResetStatus.Valid
 
     /// Resource counter for read data
     let m_ReadBytesCounter = new ResCounter( Constants.RECOUNTER_SPAN_SEC, Constants.RESCOUNTER_LENGTH_SEC )
@@ -181,7 +188,7 @@ type BlockDeviceLU
                 g.Gen1( loginfo, msg )
             )
 
-            if Volatile.Read( &m_LUResetFlag ) then
+            if Volatile.Read( &m_LUResetFlag ) = LUResetStatus.Discarded then
                 // Request was ignored in LUReset.
                 HLogger.Trace( LogID.I_IGNORED_REQ_IN_LURESET, fun g -> g.Gen1( loginfo, "BlockDeviceLU.AbortTask." ) )
             else
@@ -231,7 +238,7 @@ type BlockDeviceLU
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "BlockDeviceLU.AbortTaskSet." ) )
             HLogger.Trace( LogID.I_TMF_REQUESTED, fun g -> g.Gen1( loginfo, "AbortTaskSet()" ) )
 
-            if Volatile.Read( &m_LUResetFlag ) then
+            if Volatile.Read( &m_LUResetFlag ) = LUResetStatus.Discarded then
                 // Request was ignored in LUReset.
                 HLogger.Trace( LogID.I_IGNORED_REQ_IN_LURESET, fun g -> g.Gen1( loginfo, "BlockDeviceLU.AbortTaskSet." ) )
             else
@@ -280,7 +287,7 @@ type BlockDeviceLU
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "BlockDeviceLU.ClearACA." ) )
             HLogger.Trace( LogID.I_TMF_REQUESTED, fun g -> g.Gen1( loginfo, "ClearACA()" ) )
 
-            if Volatile.Read( &m_LUResetFlag ) then
+            if Volatile.Read( &m_LUResetFlag ) = LUResetStatus.Discarded then
                 // Request was ignored in LUReset.
                 HLogger.Trace( LogID.I_IGNORED_REQ_IN_LURESET, fun g -> g.Gen1( loginfo, "BlockDeviceLU.ClearACA." ) )
             else
@@ -335,7 +342,7 @@ type BlockDeviceLU
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "BlockDeviceLU.ClearTaskSet." ) )
             HLogger.Trace( LogID.I_TMF_REQUESTED, fun g -> g.Gen1( loginfo, "ClearTaskSet()" ) )
 
-            if Volatile.Read( &m_LUResetFlag ) then
+            if Volatile.Read( &m_LUResetFlag ) = LUResetStatus.Discarded then
                 // Request was ignored in LUReset.
                 HLogger.Trace( LogID.I_IGNORED_REQ_IN_LURESET, fun g -> g.Gen1( loginfo, "BlockDeviceLU.ClearTaskSet." ) )
             else
@@ -379,12 +386,11 @@ type BlockDeviceLU
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "BlockDeviceLU.LogicalUnitReset." ) )
             HLogger.Trace( LogID.I_TMF_REQUESTED, fun g -> g.Gen1( loginfo, "LogicalUnitReset()" ) )
 
-            if Volatile.Read( &m_LUResetFlag ) then
+            // Set LUResetFlag to true, and start logical unit reset.
+            if Interlocked.Exchange( &m_LUResetFlag, LUResetStatus.Discarded ) = LUResetStatus.Discarded then
                 // Request was ignored in LUReset.
                 HLogger.Trace( LogID.I_IGNORED_REQ_IN_LURESET, fun g -> g.Gen1( loginfo, "BlockDeviceLU.LogicalUnitReset." ) )
             else
-                // Set LUResetFlag to true, and start logical unit reset.
-                Volatile.Write( &m_LUResetFlag, true )
 
                 m_TaskSetQueue.Enqueue( fun () ->
 
@@ -456,7 +462,7 @@ type BlockDeviceLU
             if HLogger.IsVerbose then
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "BlockDeviceLU.SCSICommand." ) )
 
-            if Volatile.Read( &m_LUResetFlag ) then
+            if Volatile.Read( &m_LUResetFlag ) = LUResetStatus.Discarded then
                 // Request was ignored in LUReset.
                 HLogger.Trace( LogID.I_IGNORED_REQ_IN_LURESET, fun g -> g.Gen1( loginfo, "BlockDeviceLU.SCSICommand." ) )
             else
@@ -502,7 +508,7 @@ type BlockDeviceLU
         // ------------------------------------------------------------------------
         // Get Logical Unit Reset status flag value.
         override _.LUResetStatus with get() =
-            Volatile.Read &m_LUResetFlag
+            Volatile.Read &m_LUResetFlag = LUResetStatus.Discarded
 
         // ------------------------------------------------------------------------
         // Obtain the total number of read bytes.
@@ -1469,9 +1475,7 @@ type BlockDeviceLU
         let loginfo = struct ( m_ObjID, ValueSome source, ValueSome itt, ValueSome m_LUN )
 
         // If LUReset is already performed, silentry ignore this notify.
-        if not <| Volatile.Read( &m_LUResetFlag ) then
-            // Set LUResetFlag to true, and start logical unit reset.
-            Volatile.Write( &m_LUResetFlag, true )
+        if Interlocked.Exchange( &m_LUResetFlag, LUResetStatus.Discarded ) = LUResetStatus.Valid then
 
             let oldTaskSet = m_TaskSet
 
