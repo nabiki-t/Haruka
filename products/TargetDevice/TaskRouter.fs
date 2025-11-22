@@ -13,6 +13,7 @@ namespace Haruka.TargetDevice
 
 open System
 open System.Collections.Concurrent
+open System.Collections.Frozen
 
 open Haruka
 open Haruka.Constants
@@ -60,26 +61,12 @@ type TaskRouter
     let m_ObjID = objidx_me.NewID()
 
     /// Interface of Logical unit component, indexed by LUN
-    let m_LU =
-        [|
+    let m_LUN =
+        let v = [|
             yield lun_me.zero;
             for i in m_SessionParameter.TargetConf.LUN -> i
         |]
-        |> Array.map ( fun itr ->
-            match m_Status.GetLU itr with
-            | ValueSome( lu ) ->
-                HLogger.Trace( LogID.I_ASSIGN_LU_TO_SESSION, fun g ->
-                    g.Gen0( m_ObjID, ValueNone, ValueNone, ValueSome m_TSIH, ValueNone, ValueSome itr )
-                )
-                ( itr, lu )
-            | ValueNone ->
-                HLogger.Trace( LogID.E_MISSING_LU, fun g ->
-                    g.Gen0( m_ObjID, ValueNone, ValueNone, ValueSome m_TSIH, ValueNone, ValueSome itr )
-                )
-                let msg = "This LU is not assigned to session."
-                raise <| SessionRecoveryException( msg, m_TSIH )
-        )
-        |> Functions.ToFrozenDictionary
+        v.ToFrozenSet()
 
     let m_CommandSourcePool =
         ConcurrentDictionary< uint64, CommandSourceInfo >()
@@ -90,6 +77,21 @@ type TaskRouter
             let loginfo = struct ( m_ObjID, ValueNone, ValueNone, ValueSome( m_TSIH ), ValueNone, ValueNone )
             g.Gen2( loginfo, "TaskRouter", "" )
         )
+
+        // Let StatusMaster instantiate LU objects.
+        for itr in m_LUN do
+            match m_Status.GetLU itr with
+            | ValueSome( _ ) ->
+                HLogger.Trace( LogID.I_ASSIGN_LU_TO_SESSION, fun g ->
+                    g.Gen0( m_ObjID, ValueNone, ValueNone, ValueSome m_TSIH, ValueNone, ValueSome itr )
+                )
+            | ValueNone ->
+                HLogger.Trace( LogID.E_MISSING_LU, fun g ->
+                    g.Gen0( m_ObjID, ValueNone, ValueNone, ValueSome m_TSIH, ValueNone, ValueSome itr )
+                )
+                let msg = "This LU is not assigned to session."
+                raise <| SessionRecoveryException( msg, m_TSIH )
+
 
     //=========================================================================
     // Interface method
@@ -111,13 +113,8 @@ type TaskRouter
             if HLogger.IsVerbose then
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( m_ObjID, ValueSome cmdSource, itt, ValueSome lun, msg ) )
 
-            match m_LU.TryGetValue( lun ) with
-            | false, _ ->
-                let msg = sprintf "Unknown LU target(LUN=%s)." ( lun_me.toString lun )
-                HLogger.Trace( LogID.E_MISSING_LU, fun g -> g.Gen1( m_ObjID, ValueSome cmdSource, itt, ValueSome lun, msg ) )
-                raise <| SessionRecoveryException( msg, m_TSIH )
-            | true, lu ->
-                lu.AbortTask cmdSource itt.Value referencedTaskTag
+            let lu = this.GetLU lun cmdSource itt
+            lu.AbortTask cmdSource itt.Value referencedTaskTag
 
         // ------------------------------------------------------------------------
         // ABORT TASK SET task management function request.
@@ -129,13 +126,8 @@ type TaskRouter
             if HLogger.IsVerbose then
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( m_ObjID, ValueSome cmdSource, itt, ValueSome lun, "TaskRouter.AbortTask." ) )
 
-            match m_LU.TryGetValue( lun ) with
-            | false, _ ->
-                let msg = sprintf "Unknown LU target(LUN=%s)." ( lun_me.toString lun )
-                HLogger.Trace( LogID.E_MISSING_LU, fun g -> g.Gen1( m_ObjID, ValueSome cmdSource, itt, ValueSome lun, msg ) )
-                raise <| SessionRecoveryException( msg, m_TSIH )
-            | true, lu ->
-                lu.AbortTaskSet cmdSource itt.Value
+            let lu = this.GetLU lun cmdSource itt
+            lu.AbortTaskSet cmdSource itt.Value
 
         // ------------------------------------------------------------------------
         // CLEAR ACA task management function request.
@@ -147,13 +139,8 @@ type TaskRouter
             if HLogger.IsVerbose then
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( m_ObjID, ValueSome cmdSource, itt, ValueSome lun, "TaskRouter.AbortTaskSet." ) )
 
-            match m_LU.TryGetValue( lun ) with
-            | false, _ ->
-                let msg = sprintf "Unknown LU target(LUN=%s)." ( lun_me.toString lun )
-                HLogger.Trace( LogID.E_MISSING_LU, fun g -> g.Gen1( m_ObjID, ValueSome cmdSource, itt, ValueSome lun, msg ) )
-                raise <| SessionRecoveryException( msg, m_TSIH )
-            | true, lu ->
-                lu.ClearACA cmdSource itt.Value
+            let lu = this.GetLU lun cmdSource itt
+            lu.ClearACA cmdSource itt.Value
 
         // ------------------------------------------------------------------------
         // CLEAR TASK SET task management function request.
@@ -165,13 +152,8 @@ type TaskRouter
             if HLogger.IsVerbose then
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( m_ObjID, ValueSome cmdSource, itt, ValueSome lun, "TaskRouter.ClearTaskSet." ) )
 
-            match m_LU.TryGetValue( lun ) with
-            | false, _ ->
-                let msg = sprintf "Unknown LU target(LUN=%s)." ( lun_me.toString lun )
-                HLogger.Trace( LogID.E_MISSING_LU, fun g -> g.Gen1( m_ObjID, ValueSome cmdSource, itt, ValueSome lun, msg ) )
-                raise <| SessionRecoveryException( msg, m_TSIH )
-            | true, lu ->
-                lu.ClearTaskSet cmdSource itt.Value
+            let lu = this.GetLU lun cmdSource itt
+            lu.ClearTaskSet cmdSource itt.Value
 
         // ------------------------------------------------------------------------
         // LOGICAL UNIT RESET task management function request.
@@ -184,13 +166,8 @@ type TaskRouter
             if HLogger.IsVerbose then
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "TaskRouter.LogicalUnitReset." ) )
 
-            match m_LU.TryGetValue( lun ) with
-            | false, _ ->
-                let msg = sprintf "Unknown LU target(LUN=%s)." ( lun_me.toString lun )
-                HLogger.Trace( LogID.E_MISSING_LU, fun g -> g.Gen1( loginfo, msg ) )
-                raise <| SessionRecoveryException( msg, m_TSIH )
-            | true, lu ->
-                lu.LogicalUnitReset ( ValueSome cmdSource ) itt
+            let lu = this.GetLU lun cmdSource itt
+            lu.LogicalUnitReset ( ValueSome cmdSource ) itt
 
         // ------------------------------------------------------------------------
         // SCSI Command request.
@@ -202,13 +179,8 @@ type TaskRouter
             if HLogger.IsVerbose then
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "TaskRouter.SCSICommand." ) )
 
-            match m_LU.TryGetValue( lun ) with
-            | false, _ ->
-                let msg = sprintf "Unknown LU target(LUN=%s)." ( lun_me.toString lun )
-                HLogger.Trace( LogID.E_MISSING_LU, fun g -> g.Gen1( loginfo, msg ) )
-                raise <| SessionRecoveryException( msg, m_TSIH )
-            | true, lu ->
-               lu.SCSICommand cmdSource command data
+            let lu = this.GetLU lun cmdSource ( ValueSome itt )
+            lu.SCSICommand cmdSource command data
 
         // ------------------------------------------------------------------------
         // Send response data to the initiator.
@@ -277,16 +249,19 @@ type TaskRouter
         // Get LUNs which is accessable from same target.
         override _.GetLUNs() : LUN_T[] =
             [|
-                for itr in m_LU -> itr.Key
+                for itr in m_LUN -> itr
             |]
 
         // ------------------------------------------------------------------------
         // Get used count of the task queue.
         override _.GetTaskQueueUsage() : int =
             let wusage = [|
-                for itr in m_LU do
-                    if itr.Key <> lun_me.zero then
-                        yield itr.Value.GetTaskQueueUsage( m_TSIH )
+                for itr in m_LUN do
+                    if itr <> lun_me.zero then
+                        match m_Status.GetLU itr with
+                        | ValueSome x ->
+                            yield x.GetTaskQueueUsage( m_TSIH )
+                        | _ -> ()
             |]
 
             if wusage.Length <= 0 then
@@ -308,3 +283,16 @@ type TaskRouter
             SessionKiller = m_Killer;
         })
 
+    member private this.GetLU ( lun : LUN_T ) ( cmdSource : CommandSourceInfo ) ( itt : ITT_T voption ) : ILU =
+        if m_LUN.Contains lun |> not then
+            let msg = "Unknown LU target"
+            HLogger.Trace( LogID.E_MISSING_LU, fun g -> g.Gen1( m_ObjID, ValueSome cmdSource, itt, ValueSome lun, msg ) )
+            raise <| SessionRecoveryException( msg, m_TSIH )
+
+        match m_Status.GetLU lun with
+        | ValueSome x ->
+            x
+        | ValueNone ->
+            let msg = sprintf "Missing LU object"
+            HLogger.Trace( LogID.E_MISSING_LU, fun g -> g.Gen1( m_ObjID, ValueSome cmdSource, itt, ValueSome lun, msg ) )
+            raise <| SessionRecoveryException( msg, m_TSIH )

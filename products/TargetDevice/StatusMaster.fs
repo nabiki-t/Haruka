@@ -70,7 +70,7 @@ type StatusMaster(
         OptimisticLock( ImmutableDictionary< TSIH_T, ISession >.Empty )
 
     /// LU objects.
-    let m_LU = ConcurrentDictionary< LUN_T, Lazy<ILU> >()
+    let m_LU = OptimisticLock( ImmutableDictionary< LUN_T, Lazy<ILU> >.Empty )
 
     /// New TSIH generator.
     let mutable m_newTSIHGen = 0L
@@ -336,80 +336,29 @@ type StatusMaster(
             if HLogger.IsVerbose then
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( m_ObjID, "StatusMaster.GetLU" ) )
 
-            let luConfigs =
-                [
-                    for ( conf, k ) in m_config.GetAllTargetGroupConf() do
-                        for itr in conf.LogicalUnit do
-                            yield struct ( itr, k )
-                ]
-            let tryGetLUObject() =
-                try
-                    m_LU.GetOrAdd(
-                        argLUN,
-                        ( fun lun ->
-                            // If not exist, create new LU object and return created new object.
-                            let struct ( luinfo, wKiller ) : struct ( TargetGroupConf.T_LogicalUnit * IKiller ) =
-                                if lun = lun_me.zero then
-                                    struct (
-                                        {
-                                            LUN = lun;
-                                            LUName = "LUN_0 Logical unit";
-                                            WorkPath = "";
-                                            LUDevice = TargetGroupConf.U_DummyDevice()
-                                        },
-                                        // LUN 0 belongs to target device, so killer object of status master is used for LUN 0.
-                                        m_Killer
-                                    )
-                                else
-                                    luConfigs |> List.find ( fun struct ( conf, _ ) -> conf.LUN = lun )
-                            assert( luinfo.LUN = argLUN )
+            let rLU =
+                m_LU.Update< Lazy<ILU> voption >( fun oldObj ->
+                    let r, v = oldObj.TryGetValue argLUN
+                    if r && ( not v.Value.LUResetStatus ) then
+                        // If a valid LU exists, it is returned.
+                        struct( oldObj, ValueSome v )
+                    else
+                        // delete discarded LU object
+                        let n1 = if r then oldObj.Remove argLUN else oldObj
 
-                            match luinfo.LUDevice with
-                            | TargetGroupConf.T_DEVICE.U_BlockDevice( x ) ->
-                                lazy
-                                    let o = new BlockDeviceLU( BlockDeviceType.BDT_Normal, this, luinfo.LUN, x, luinfo.WorkPath, wKiller ) :> ILU
-                                    HLogger.Trace( LogID.I_CREATE_LU_COMPONENT, fun g -> g.Gen0 m_ObjID )
-                                    o
-                            | TargetGroupConf.T_DEVICE.U_DummyDevice( _ ) ->
-                                lazy
-                                    let dummyDeviceConf : TargetGroupConf.T_BlockDevice = {
-                                        Peripheral = TargetGroupConf.T_MEDIA.U_DummyMedia({
-                                            IdentNumber = mediaidx_me.zero;
-                                            MediaName = "";
-                                        })
-                                    }
-                                    let o = new BlockDeviceLU( BlockDeviceType.BDT_Dummy, this, luinfo.LUN, dummyDeviceConf, luinfo.WorkPath, wKiller ) :> ILU
-                                    HLogger.Trace( LogID.I_CREATE_LU_COMPONENT, fun g -> g.Gen0 m_ObjID )
-                                    o
-                        )
-                    )
-                    |> ValueSome
-                with
-                | :? KeyNotFoundException as x ->
-                    HLogger.Trace( LogID.E_FAILED_CREATE_LU, fun g -> g.Gen1( m_ObjID, "Specified LUN is unknown." ) )
-                    ValueNone
-                | _ as x ->
-                    HLogger.UnexpectedException( fun g -> g.GenExp( m_ObjID, x ) )
-                    ValueNone
-
-            let rec loop cnt =
-                if cnt < 100 then
-                    match tryGetLUObject() with
-                    | ValueNone ->
-                        ValueNone
-                    | ValueSome( rLU ) ->
-                        if rLU.Value.LUResetStatus then
-                            // Depending on the timing, it maybe LU is going to perform LU reset.
-                            // In this case, wait for a time and retry to create LU object.
-                            Thread.Sleep 10
-                            loop ( cnt + 1 )
-                        else
-                            ValueSome( rLU.Value )
-                else
-                    HLogger.Trace( LogID.E_LU_CREATE_RETRY_OVER, fun g -> g.Gen0 m_ObjID )
-                    ValueNone
-
-            loop 0
+                        // Create new LU object
+                        match this.CreateNewLUObject argLUN with
+                        | ValueSome( newLUobj ) ->
+                            let n2 = n1.Add( argLUN, newLUobj )
+                            struct( n2, ValueSome newLUobj )
+                        | ValueNone ->
+                            struct( n1, ValueNone )
+                )
+            match rLU with
+            | ValueSome( v ) ->
+                ValueSome v.Value
+            | ValueNone ->
+                ValueNone
 
         // ------------------------------------------------------------------------
         // Implementation of IStatus.CreateMedia
@@ -434,11 +383,11 @@ type StatusMaster(
         // Notify Logical Unit Reset.
         override _.NotifyLUReset ( lun : LUN_T ) ( lu : ILU ) : unit =
             // Remove resetted old LU
-            let r, _ = m_LU.TryRemove( lun )
-            if r then
-                HLogger.Trace( LogID.I_LU_REMOVED, fun g -> g.Gen1( m_ObjID, lun_me.toString lun ) )
-            else
+            let struct( oldObj, newObj ) = m_LU.Update ( fun oldLUs -> oldLUs.Remove lun )
+            if Functions.IsSame oldObj newObj then
                 HLogger.Trace( LogID.I_LU_ALREADY_DELETED, fun g -> g.Gen1( m_ObjID, lun_me.toString lun ) )
+            else
+                HLogger.Trace( LogID.I_LU_REMOVED, fun g -> g.Gen1( m_ObjID, lun_me.toString lun ) )
 
         // ------------------------------------------------------------------------
         // Process parent control request.
@@ -619,6 +568,71 @@ type StatusMaster(
 
     // ------------------------------------------------------------------------
     /// <summary>
+    ///  Create a new LU object.
+    /// </summary>
+    /// <param name="argLUN">
+    ///  Specify the LUN of the new LU to be created.
+    /// </param>
+    /// <returns>
+    ///  Newly constructed LU object, or ValueNone if specified LUN missing.
+    /// </returns>
+    member private _.CreateNewLUObject ( argLUN : LUN_T ) : Lazy<ILU> voption =
+        // Search LU configurations
+        let luconfs : struct ( TargetGroupConf.T_LogicalUnit * IKiller ) voption =
+            if argLUN = lun_me.zero then
+                // create dummy configurations for LUN 0.
+                let dummyConf : TargetGroupConf.T_LogicalUnit = {
+                    LUN = argLUN;
+                    LUName = "LUN_0 Logical unit";
+                    WorkPath = "";
+                    LUDevice = TargetGroupConf.U_DummyDevice();
+                }
+                // LUN 0 belongs to target device, so killer object of status master is used for LUN 0.
+                struct ( dummyConf, m_Killer ) |> ValueSome
+            else
+                let v =
+                    m_config.GetAllTargetGroupConf()
+                    |> Array.choose ( fun itr ->
+                        let tgconf, k = itr
+                        let luconf =
+                            tgconf.LogicalUnit
+                            |> List.tryFind ( fun itr2 -> itr2.LUN = argLUN )
+                        match luconf with
+                        | Some( x ) -> Some( struct( x, k ) )
+                        | None -> None
+                    )
+                if v.Length > 0 then
+                    v.[0] |> ValueSome
+                else
+                    HLogger.Trace( LogID.E_FAILED_CREATE_LU, fun g -> g.Gen1( m_ObjID, "Specified LUN is unknown." ) )
+                    ValueNone
+
+        // Create LU object
+        match luconfs with
+        | ValueSome( struct( luinfo, wKiller ) ) ->
+            match luinfo.LUDevice with
+            | TargetGroupConf.T_DEVICE.U_BlockDevice( x ) ->
+                lazy
+                    let o = new BlockDeviceLU( BlockDeviceType.BDT_Normal, this, luinfo.LUN, x, luinfo.WorkPath, wKiller ) :> ILU
+                    HLogger.Trace( LogID.I_CREATE_LU_COMPONENT, fun g -> g.Gen0 m_ObjID )
+                    o
+            | TargetGroupConf.T_DEVICE.U_DummyDevice( _ ) ->
+                lazy
+                    let dummyDeviceConf : TargetGroupConf.T_BlockDevice = {
+                        Peripheral = TargetGroupConf.T_MEDIA.U_DummyMedia({
+                            IdentNumber = mediaidx_me.zero;
+                            MediaName = "";
+                        })
+                    }
+                    let o = new BlockDeviceLU( BlockDeviceType.BDT_Dummy, this, luinfo.LUN, dummyDeviceConf, luinfo.WorkPath, wKiller ) :> ILU
+                    HLogger.Trace( LogID.I_CREATE_LU_COMPONENT, fun g -> g.Gen0 m_ObjID )
+                    o
+            |> ValueSome
+        | ValueNone ->
+            ValueNone
+
+    // ------------------------------------------------------------------------
+    /// <summary>
     ///   Timer event. This method is called every second.
     /// </summary>
     /// <remarks>
@@ -786,9 +800,11 @@ type StatusMaster(
                         false, "Specified target group is still used."
                     else
                         // remove already create LU object instance.
-                        x.LogicalUnit
-                        |> List.map _.LUN
-                        |> List.iter ( fun itr -> m_LU.Remove itr |> ignore )
+                        let deletedLUNs = x.LogicalUnit |> List.map _.LUN
+                        m_LU.Update( fun oldObj ->
+                            oldObj.RemoveRange( deletedLUNs )
+                        )
+                        |> ignore
 
                         // All LUs are terminated when configuration is unloaded.
                         m_config.UnloadTargetGroup( id )
@@ -1149,7 +1165,7 @@ type StatusMaster(
             g.Gen1( m_ObjID, msg )
         )
         task {
-            let r, activeLU = m_LU.TryGetValue( lun )
+            let r, activeLU = m_LU.obj.TryGetValue( lun )
             let res1 : TargetDeviceCtrlRes.T_LUStatus =
                 if r && activeLU.IsValueCreated then
                     let rLU = activeLU.Value
@@ -1243,7 +1259,7 @@ type StatusMaster(
     member private _.ProcReq_LUReset ( lun : LUN_T ) : Task<unit> =
         HLogger.Trace( LogID.V_CTRL_REQ_RECEIVED, fun g -> g.Gen1( m_ObjID, sprintf "LUReset(%s)" ( lun_me.toString lun ) ) )
         task {
-            let r, activeLU = m_LU.TryGetValue( lun )
+            let r, activeLU = m_LU.obj.TryGetValue( lun )
             let f = ( r && activeLU.IsValueCreated )
             let extf =
                 m_config.GetAllTargetGroupConf()
@@ -1300,7 +1316,7 @@ type StatusMaster(
             g.Gen1( m_ObjID, msg )
         )
         task {
-            let r, activeLU = m_LU.TryGetValue( lun )
+            let r, activeLU = m_LU.obj.TryGetValue( lun )
             let f = ( r && activeLU.IsValueCreated )
             let extf =
                 m_config.GetAllTargetGroupConf()

@@ -1243,8 +1243,6 @@ type StatusMaster_Test () =
 
         let killer = new HKiller()
         let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
-        let pc_sm = new PrivateCaller( sm )
-        let m_LU = pc_sm.GetField( "m_LU" ) :?> ConcurrentDictionary< LUN_T, Lazy<ILU> >
 
         let lu1 = sm.GetLU( lun_me.fromPrim 0UL )
         match lu1.Value with
@@ -1305,8 +1303,6 @@ type StatusMaster_Test () =
 
         let killer = new HKiller()
         let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
-        let pc_sm = new PrivateCaller( sm )
-        let m_LU = pc_sm.GetField( "m_LU" ) :?> ConcurrentDictionary< LUN_T, Lazy<ILU> >
 
         let lu1 = sm.GetLU( lun_me.fromPrim 1UL )
         match lu1.Value with
@@ -1333,8 +1329,6 @@ type StatusMaster_Test () =
 
         let killer = new HKiller()
         let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
-        let pc_sm = new PrivateCaller( sm )
-        let m_LU = pc_sm.GetField( "m_LU" ) :?> ConcurrentDictionary< LUN_T, Lazy<ILU> >
 
         let lu1 = sm.GetLU( lun_me.fromPrim 2UL )
         Assert.True(( lu1.IsNone ))
@@ -1355,17 +1349,21 @@ type StatusMaster_Test () =
         let killer = new HKiller()
         let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
-        let m_LU = pc_sm.GetField( "m_LU" ) :?> ConcurrentDictionary< LUN_T, Lazy<ILU> >
 
-        Assert.True(( m_LU.Count = 0 ))
+        let m_LU0 = pc_sm.GetField( "m_LU" ) :?> OptimisticLock< ImmutableDictionary< LUN_T, Lazy<ILU> > >
+        Assert.True(( m_LU0.obj.Count = 0 ))
 
         let lu1 = sm.GetLU( lun_me.fromPrim 0UL )
-        Assert.True(( m_LU.Count = 1 ))
+        let m_LU1 = pc_sm.GetField( "m_LU" ) :?> OptimisticLock< ImmutableDictionary< LUN_T, Lazy<ILU> > >
+        Assert.True(( lu1.IsSome ))
+        Assert.True(( m_LU1.obj.Count = 1 ))
 
         let lu2 = sm.GetLU( lun_me.fromPrim 0UL )
-        Assert.True(( m_LU.Count = 1 ))
+        let m_LU2 = pc_sm.GetField( "m_LU" ) :?> OptimisticLock< ImmutableDictionary< LUN_T, Lazy<ILU> > >
+        Assert.True(( lu2.IsSome ))
+        Assert.True(( m_LU2.obj.Count = 1 ))
 
-        Assert.True(( lu1 = lu2 ))
+        Assert.True(( Functions.IsSame lu1.Value lu2.Value ))
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName0
@@ -1383,39 +1381,6 @@ type StatusMaster_Test () =
         let killer = new HKiller()
         let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
-        let m_LU = pc_sm.GetField( "m_LU" ) :?> ConcurrentDictionary< LUN_T, Lazy<ILU> >
-
-        let mutable cnt = 0
-        let lun_stub = new CLU_Stub(
-            p_GetLUResetStatus = ( fun () ->
-                cnt <- cnt + 1
-                cnt = 1
-            )
-        ) 
-        m_LU.TryAdd( lun_me.fromPrim 0UL, lazy( lun_stub :> ILU ) ) |> ignore
-
-        let lu1 = sm.GetLU( lun_me.fromPrim 0UL )
-        Assert.True(( m_LU.Count = 1 ))
-        Assert.True(( lu1.Value = ( lun_stub :> ILU  ) ))
-        Assert.True(( cnt = 2 ))
-
-        GlbFunc.DeleteFile targetDeviceConfName
-        GlbFunc.DeleteFile targetGroupConfName0
-        GlbFunc.DeleteDir pDirName
-
-    [<Fact>]
-    member this.GetLU_006() =
-        let pDirName = this.GetTestDirName "GetLU_006"
-        GlbFunc.CreateDir pDirName |> ignore
-
-        let targetDeviceConfName = StatusMaster_Test.CreateEmptyTDConf pDirName
-        let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
-        File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
-
-        let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
-        let pc_sm = new PrivateCaller( sm )
-        let m_LU = pc_sm.GetField( "m_LU" ) :?> ConcurrentDictionary< LUN_T, Lazy<ILU> >
 
         let mutable cnt = 0
         let lun_stub = new CLU_Stub(
@@ -1424,12 +1389,17 @@ type StatusMaster_Test () =
                 true
             )
         ) 
-        m_LU.TryAdd( lun_me.fromPrim 0UL, lazy( lun_stub :> ILU ) ) |> ignore
+
+        let m_LU1 = pc_sm.GetField( "m_LU" ) :?> OptimisticLock< ImmutableDictionary< LUN_T, Lazy<ILU> > >
+        m_LU1.Update( fun o ->
+            o.Add( lun_me.fromPrim 0UL, lazy( lun_stub :> ILU ) )
+        ) |> ignore
 
         let lu1 = sm.GetLU( lun_me.fromPrim 0UL )
-        Assert.True(( m_LU.Count = 1 ))
-        Assert.True(( lu1.IsNone ))
-        Assert.True(( cnt = 100 ))
+
+        Assert.True(( m_LU1.obj.Count = 1 ))
+        Assert.False(( Functions.IsSame lu1.Value ( lun_stub :> ILU  ) ))
+        Assert.True(( cnt = 1 ))
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName0
@@ -1507,14 +1477,16 @@ type StatusMaster_Test () =
         let killer = new HKiller()
         let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
-        let m_LU = pc_sm.GetField( "m_LU" ) :?> ConcurrentDictionary< LUN_T, Lazy<ILU> >
+        let m_LU = pc_sm.GetField( "m_LU" ) :?> OptimisticLock< ImmutableDictionary< LUN_T, Lazy<ILU> > >
 
-        let lun_stub = new CLU_Stub() 
-        m_LU.TryAdd( lun_me.fromPrim 0UL, lazy( lun_stub :> ILU ) ) |> ignore
+        let lun_stub = new CLU_Stub()
+        m_LU.Update( fun o ->
+            o.Add( lun_me.fromPrim 0UL, lazy( lun_stub :> ILU ) )
+        ) |> ignore
 
         sm.NotifyLUReset ( lun_me.fromPrim 0UL ) lun_stub
 
-        Assert.True(( m_LU.Count = 0 ))
+        Assert.True(( m_LU.obj.Count = 0 ))
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName0
@@ -1532,14 +1504,16 @@ type StatusMaster_Test () =
         let killer = new HKiller()
         let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
-        let m_LU = pc_sm.GetField( "m_LU" ) :?> ConcurrentDictionary< LUN_T, Lazy<ILU> >
+        let m_LU = pc_sm.GetField( "m_LU" ) :?> OptimisticLock< ImmutableDictionary< LUN_T, Lazy<ILU> > >
 
-        let lun_stub = new CLU_Stub() 
-        m_LU.TryAdd( lun_me.fromPrim 0UL, lazy( lun_stub :> ILU ) ) |> ignore
-
+        let lun_stub = new CLU_Stub()
+        m_LU.Update( fun o ->
+            o.Add( lun_me.fromPrim 0UL, lazy( lun_stub :> ILU ) )
+        )
+        |> ignore
         sm.NotifyLUReset ( lun_me.fromPrim 1UL ) ( new CLU_Stub()  )
 
-        Assert.True(( m_LU.Count = 1 ))
+        Assert.True(( m_LU.obj.Count = 1 ))
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName0
@@ -2288,8 +2262,8 @@ type StatusMaster_Test () =
                 // create LU object in tgid1
                 sm.GetLU ( lun_me.fromPrim 2UL ) |> ignore
 
-                let m_LU1 = pc.GetField( "m_LU" ) :?> ConcurrentDictionary< LUN_T, Lazy<ILU> >
-                Assert.True( m_LU1.Count = 1 )
+                let m_LU1 = pc.GetField( "m_LU" ) :?> OptimisticLock< ImmutableDictionary< LUN_T, Lazy<ILU> > >
+                Assert.True( m_LU1.obj.Count = 1 )
 
                 // inactivate target group tgid1
                 let req1 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
@@ -2310,8 +2284,8 @@ type StatusMaster_Test () =
                 let m_ActiveTargetGroups2 = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
                 Assert.True( m_ActiveTargetGroups2.Count = 1 )
 
-                let m_LU2 = pc.GetField( "m_LU" ) :?> ConcurrentDictionary< LUN_T, Lazy<ILU> >
-                Assert.True( m_LU2.Count = 1 )
+                let m_LU2 = pc.GetField( "m_LU" ) :?> OptimisticLock< ImmutableDictionary< LUN_T, Lazy<ILU> > >
+                Assert.True( m_LU2.obj.Count = 1 )
 
                 // Unload target group tgid1
                 let req2 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
@@ -2329,8 +2303,8 @@ type StatusMaster_Test () =
                 | _ ->
                     Assert.Fail __LINE__
 
-                let m_LU3 = pc.GetField( "m_LU" ) :?> ConcurrentDictionary< LUN_T, Lazy<ILU> >
-                Assert.True( m_LU3.Count = 0 )
+                let m_LU3 = pc.GetField( "m_LU" ) :?> OptimisticLock< ImmutableDictionary< LUN_T, Lazy<ILU> > >
+                Assert.True( m_LU3.obj.Count = 0 )
 
                 let m_ActiveTargetGroups3 = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
                 Assert.True( m_ActiveTargetGroups3.Count = 1 )
@@ -4131,9 +4105,8 @@ type StatusMaster_Test () =
                     [
                         KeyValuePair< LUN_T, Lazy<ILU> >( lun_me.fromPrim 1UL, lazy( new CLU_Stub() :> ILU ) )
                     ]
-                    |> ConcurrentDictionary
                 let pc = PrivateCaller( sm )
-                pc.SetField( "m_LU", m_LUs1 )
+                pc.SetField( "m_LU", OptimisticLock( m_LUs1.ToImmutableDictionary() ) )
 
                 let req1 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
                     Request = TargetDeviceCtrlReq.T_Request.U_GetLUStatus( lun_me.fromPrim 1UL )
@@ -4204,9 +4177,8 @@ type StatusMaster_Test () =
                     [
                         KeyValuePair< LUN_T, Lazy<ILU> >( lun_me.fromPrim 1UL, lu1 )
                     ]
-                    |> ConcurrentDictionary
                 let pc = PrivateCaller( sm )
-                pc.SetField( "m_LU", m_LUs1 )
+                pc.SetField( "m_LU", OptimisticLock( m_LUs1.ToImmutableDictionary() ) )
 
                 let req1 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
                     Request = TargetDeviceCtrlReq.T_Request.U_GetLUStatus( lun_me.fromPrim 1UL )
@@ -4375,9 +4347,8 @@ type StatusMaster_Test () =
                     [
                         KeyValuePair< LUN_T, Lazy<ILU> >( lun_me.fromPrim 1UL, lazy( new CLU_Stub() :> ILU ) )
                     ]
-                    |> ConcurrentDictionary
                 let pc = PrivateCaller( sm )
-                pc.SetField( "m_LU", m_LUs1 )
+                pc.SetField( "m_LU", OptimisticLock( m_LUs1.ToImmutableDictionary() ) )
 
                 let req1 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
                     Request = TargetDeviceCtrlReq.T_Request.U_LUReset( lun_me.fromPrim 1UL )
@@ -4443,9 +4414,8 @@ type StatusMaster_Test () =
                     [
                         KeyValuePair< LUN_T, Lazy<ILU> >( lun_me.fromPrim 1UL, lu1 )
                     ]
-                    |> ConcurrentDictionary
                 let pc = PrivateCaller( sm )
-                pc.SetField( "m_LU", m_LUs1 )
+                pc.SetField( "m_LU", OptimisticLock( m_LUs1.ToImmutableDictionary() ) )
 
                 let req1 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
                     Request = TargetDeviceCtrlReq.T_Request.U_LUReset( lun_me.fromPrim 1UL )
@@ -4607,9 +4577,8 @@ type StatusMaster_Test () =
                     [
                         KeyValuePair< LUN_T, Lazy<ILU> >( lun_me.fromPrim 1UL, lazy( new CLU_Stub() :> ILU ) )
                     ]
-                    |> ConcurrentDictionary
                 let pc = PrivateCaller( sm )
-                pc.SetField( "m_LU", m_LUs1 )
+                pc.SetField( "m_LU", OptimisticLock( m_LUs1.ToImmutableDictionary() ) )
 
                 let req1 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
                     Request = TargetDeviceCtrlReq.T_Request.U_GetMediaStatus( { 
@@ -4679,9 +4648,8 @@ type StatusMaster_Test () =
                     [
                         KeyValuePair< LUN_T, Lazy<ILU> >( lun_me.fromPrim 1UL, lu1 )
                     ]
-                    |> ConcurrentDictionary
                 let pc = PrivateCaller( sm )
-                pc.SetField( "m_LU", m_LUs1 )
+                pc.SetField( "m_LU", OptimisticLock( m_LUs1.ToImmutableDictionary() ) )
 
                 let req1 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
                     Request = TargetDeviceCtrlReq.T_Request.U_GetMediaStatus( { 
@@ -4768,9 +4736,8 @@ type StatusMaster_Test () =
                     [
                         KeyValuePair< LUN_T, Lazy<ILU> >( lun_me.fromPrim 1UL, lu1 )
                     ]
-                    |> ConcurrentDictionary
                 let pc = PrivateCaller( sm )
-                pc.SetField( "m_LU", m_LUs1 )
+                pc.SetField( "m_LU", OptimisticLock( m_LUs1.ToImmutableDictionary() ) )
 
                 let req1 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
                     Request = TargetDeviceCtrlReq.T_Request.U_GetMediaStatus( { 
@@ -5066,9 +5033,8 @@ type StatusMaster_Test () =
                     [
                         KeyValuePair< LUN_T, Lazy<ILU> >( lun_me.fromPrim 1UL, lu1 )
                     ]
-                    |> ConcurrentDictionary
                 let pc = PrivateCaller( sm )
-                pc.SetField( "m_LU", m_LUs1 )
+                pc.SetField( "m_LU", OptimisticLock( m_LUs1.ToImmutableDictionary() ) )
 
                 let mediaCtrlReqStr =
                     MediaCtrlReq.ReaderWriter.ToString {

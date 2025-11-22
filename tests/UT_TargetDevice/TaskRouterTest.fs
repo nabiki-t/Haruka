@@ -69,7 +69,8 @@ type TaskRouter_Test () =
                 DataSequenceInOrder = false;
                 ErrorRecoveryLevel = 1uy;
             }
-        status_stub.p_GetLU <- ( fun _ -> ValueSome( new CLU_Stub() :> ILU ) ) 
+        let lu1 = new CLU_Stub()
+        status_stub.p_GetLU <- ( fun _ -> ValueSome( lu1 :> ILU ) ) 
         let taskRouter =
             new TaskRouter(
                 status_stub,
@@ -84,13 +85,13 @@ type TaskRouter_Test () =
                 swParam,
                 k1
             ) :> IProtocolService
-        let lu1 = new CLU_Stub()
+        
         let lus =
-            [|
-                ( lun_me.fromPrim 3UL, lu1 :> ILU )
+            let v = [|
+                lun_me.fromPrim 3UL
             |]
-            |> Functions.ToFrozenDictionary
-        PrivateCaller( taskRouter ).SetField( "m_LU", lus )
+            v.ToFrozenSet()
+        PrivateCaller( taskRouter ).SetField( "m_LUN", lus )
 
         k1, status_stub, session, taskRouter, lu1
 
@@ -152,20 +153,10 @@ type TaskRouter_Test () =
                 swParam,
                 k1
             )
-        let lus = PrivateCaller( taskRouter ).GetField( "m_LU" ) :?> FrozenDictionary< LUN_T, ILU >
-        Assert.True( ( lus.Count = 2 ) )
-
-        match lus.TryGetValue( lun_me.fromPrim 0UL ) with
-        | false, _ ->
-            Assert.Fail __LINE__
-        | true, x ->
-            Assert.True( ( x :?> CLU_Stub ).dummy :?> LUN_T = lun_me.fromPrim 0UL )
-
-        match lus.TryGetValue( lun_me.fromPrim 1UL ) with
-        | false, _ ->
-            Assert.Fail __LINE__
-        | true, x ->
-            Assert.True( ( x :?> CLU_Stub ).dummy :?> LUN_T = lun_me.fromPrim 1UL )
+        let lus = PrivateCaller( taskRouter ).GetField( "m_LUN" ) :?> FrozenSet< LUN_T >
+        Assert.True(( lus.Count = 2 ))
+        Assert.True(( lus.Contains( lun_me.fromPrim 0UL ) ))
+        Assert.True(( lus.Contains( lun_me.fromPrim 1UL ) ))
 
         k1.NoticeTerminate()
 
@@ -290,17 +281,11 @@ type TaskRouter_Test () =
                 swParam,
                 k1
             )
-        let lus = PrivateCaller( taskRouter ).GetField( "m_LU" ) :?> FrozenDictionary< LUN_T, ILU >
-        Assert.True( ( lus.Count = 3 ) )
-
-        let lu1 = lus.Item( lun_me.fromPrim 0UL ) :?> CLU_Stub
-        Assert.True( ( lu1.dummy = box( lun_me.fromPrim 0UL ) ) )
-
-        let lu1 = lus.Item( lun_me.fromPrim 1UL ) :?> CLU_Stub
-        Assert.True( ( lu1.dummy = box( lun_me.fromPrim 1UL ) ) )
-
-        let lu2 = lus.Item( lun_me.fromPrim 3UL ) :?> CLU_Stub
-        Assert.True( ( lu2.dummy = box( lun_me.fromPrim 3UL ) ) )
+        let lus = PrivateCaller( taskRouter ).GetField( "m_LUN" ) :?> FrozenSet< LUN_T >
+        Assert.True(( lus.Count = 3 ))
+        Assert.True(( lus.Contains( lun_me.fromPrim 0UL ) ))
+        Assert.True(( lus.Contains( lun_me.fromPrim 1UL ) ))
+        Assert.True(( lus.Contains( lun_me.fromPrim 3UL ) ))
 
         k1.NoticeTerminate()
 
@@ -364,28 +349,13 @@ type TaskRouter_Test () =
                 swParam,
                 k1
             )
-        let lus = PrivateCaller( taskRouter ).GetField( "m_LU" ) :?> FrozenDictionary< LUN_T, ILU >
-        Assert.True( ( lus.Count = 5 ) )
-
-        match lus.TryGetValue( lun_me.fromPrim 0UL ) with
-        | false, _ -> Assert.Fail __LINE__
-        | _ -> ()
-
-        match lus.TryGetValue( lun_me.fromPrim 1UL ) with
-        | false, _ -> Assert.Fail __LINE__
-        | _ -> ()
-
-        match lus.TryGetValue( lun_me.fromPrim 2UL ) with
-        | false, _ -> Assert.Fail __LINE__
-        | _ -> ()
-
-        match lus.TryGetValue( lun_me.fromPrim 3UL ) with
-        | false, _ -> Assert.Fail __LINE__
-        | _ -> ()
-
-        match lus.TryGetValue( lun_me.fromPrim 4UL ) with
-        | false, _ -> Assert.Fail __LINE__
-        | _ -> ()
+        let lus = PrivateCaller( taskRouter ).GetField( "m_LUN" ) :?> FrozenSet< LUN_T >
+        Assert.True(( lus.Count = 5 ))
+        Assert.True(( lus.Contains( lun_me.fromPrim 0UL ) ))
+        Assert.True(( lus.Contains( lun_me.fromPrim 1UL ) ))
+        Assert.True(( lus.Contains( lun_me.fromPrim 2UL ) ))
+        Assert.True(( lus.Contains( lun_me.fromPrim 3UL ) ))
+        Assert.True(( lus.Contains( lun_me.fromPrim 4UL ) ))
 
         k1.NoticeTerminate()
 
@@ -855,14 +825,14 @@ type TaskRouter_Test () =
             TaskRouter_Test.createDefaultTaskRouter()
         let pc = PrivateCaller( taskRouter )
         let lu1 = new CLU_Stub() :> ILU
-        let m_LU =
-            [|
-                ( lun_me.fromPrim 1UL, lu1 );
-                ( lun_me.fromPrim 2UL, lu1 );
-                ( lun_me.fromPrim 3UL, lu1 );
+        let m_LUN =
+            let v = [|
+                lun_me.fromPrim 1UL;
+                lun_me.fromPrim 2UL;
+                lun_me.fromPrim 3UL;
             |]
-            |> Functions.ToFrozenDictionary
-        pc.SetField( "m_LU", m_LU )
+            v.ToFrozenSet()
+        pc.SetField( "m_LUN", m_LUN )
 
         let expect = [|
             lun_me.fromPrim 1UL;
@@ -878,7 +848,7 @@ type TaskRouter_Test () =
         let k1, status_stub, session, taskRouter, _ =
             TaskRouter_Test.createDefaultTaskRouter()
         let pc = PrivateCaller( taskRouter )
-        pc.SetField( "m_LU", ( [||] : KeyValuePair< LUN_T, ILU >[] ).ToFrozenDictionary() )
+        pc.SetField( "m_LUN", ( [||] : LUN_T[] ).ToFrozenSet() )
         
         let expect = Array.empty
         Assert.True(( expect = taskRouter.GetLUNs() ))
@@ -890,7 +860,7 @@ type TaskRouter_Test () =
         let k1, status_stub, session, taskRouter, _ =
             TaskRouter_Test.createDefaultTaskRouter()
         let pc = PrivateCaller( taskRouter )
-        pc.SetField( "m_LU", ( [||] : KeyValuePair< LUN_T, ILU >[] ).ToFrozenDictionary() )
+        pc.SetField( "m_LUN", ( [||] : LUN_T[] ).ToFrozenSet() )
 
         Assert.True(( 0 = taskRouter.GetTaskQueueUsage() ))
         k1.NoticeTerminate()
@@ -901,13 +871,12 @@ type TaskRouter_Test () =
         let k1, status_stub, session, taskRouter, _ =
             TaskRouter_Test.createDefaultTaskRouter()
         let pc = PrivateCaller( taskRouter )
-        let lu0 = new CLU_Stub() :> ILU
-        let m_LU =
-            [|
-                ( lun_me.fromPrim 0UL, lu0 );
+        let m_LUN =
+            let v = [|
+                lun_me.fromPrim 0UL;
             |]
-            |> Functions.ToFrozenDictionary
-        pc.SetField( "m_LU", m_LU )
+            v.ToFrozenSet()
+        pc.SetField( "m_LUN", m_LUN )
 
         Assert.True(( 0 = taskRouter.GetTaskQueueUsage() ))
         k1.NoticeTerminate()
@@ -919,7 +888,6 @@ type TaskRouter_Test () =
             TaskRouter_Test.createDefaultTaskRouter()
         let pc = PrivateCaller( taskRouter )
 
-        let lu0 = new CLU_Stub()
         let lu1 = new CLU_Stub(
             p_GetTaskQueueUsage = ( fun argtsih ->
                 Assert.True(( argtsih = tsih_me.fromPrim 12us ))
@@ -927,13 +895,18 @@ type TaskRouter_Test () =
             )
         )
 
-        let m_LU =
-            [|
-                ( lun_me.fromPrim 0UL, lu0 :> ILU );
-                ( lun_me.fromPrim 1UL, lu1 :> ILU );
+        let m_LUN =
+            let v = [|
+                lun_me.fromPrim 0UL;
+                lun_me.fromPrim 1UL;
             |]
-            |> Functions.ToFrozenDictionary
-        pc.SetField( "m_LU", m_LU )
+            v.ToFrozenSet()
+        pc.SetField( "m_LUN", m_LUN )
+
+        status_stub.p_GetLU <- ( fun lun ->
+            Assert.True(( lun = lun_me.fromPrim 1UL ))
+            ValueSome( lu1 )
+        )
 
         Assert.True(( 98 = taskRouter.GetTaskQueueUsage() ))
         k1.NoticeTerminate()
@@ -945,7 +918,6 @@ type TaskRouter_Test () =
             TaskRouter_Test.createDefaultTaskRouter()
         let pc = PrivateCaller( taskRouter )
 
-        let lu0 = new CLU_Stub()
         let lu1 = new CLU_Stub(
             p_GetTaskQueueUsage = ( fun argtsih ->
                 Assert.True(( argtsih = tsih_me.fromPrim 12us ))
@@ -965,15 +937,27 @@ type TaskRouter_Test () =
             )
         )
 
-        let m_LU =
-            [|
-                ( lun_me.fromPrim 0UL, lu0 :> ILU );
-                ( lun_me.fromPrim 1UL, lu1 :> ILU );
-                ( lun_me.fromPrim 2UL, lu2 :> ILU );
-                ( lun_me.fromPrim 3UL, lu3 :> ILU );
+        let m_LUN =
+            let v = [|
+                lun_me.fromPrim 0UL;
+                lun_me.fromPrim 1UL;
+                lun_me.fromPrim 2UL;
+                lun_me.fromPrim 3UL;
             |]
-            |> Functions.ToFrozenDictionary
-        pc.SetField( "m_LU", m_LU )
+            v.ToFrozenSet()
+        pc.SetField( "m_LUN", m_LUN )
+
+        status_stub.p_GetLU <- ( fun lun ->
+            if lun = lun_me.fromPrim 1UL then
+                ValueSome lu1
+            elif lun = lun_me.fromPrim 2UL then
+                ValueSome lu2
+            elif lun = lun_me.fromPrim 3UL then
+                ValueSome lu3
+            else
+                Assert.Fail __LINE__
+                ValueNone
+        )
 
         Assert.True(( 8 = taskRouter.GetTaskQueueUsage() ))
         k1.NoticeTerminate()
