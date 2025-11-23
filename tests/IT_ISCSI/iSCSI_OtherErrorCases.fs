@@ -1701,3 +1701,106 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             do! r1.CloseSession g_CID0 BitI.F
             do! r2.CloseSession g_CID0 BitI.F
         }
+
+    [<Theory>]
+    [<InlineData( TaskMgrReqCd.ABORT_TASK )>]
+    [<InlineData( TaskMgrReqCd.ABORT_TASK_SET )>]
+    [<InlineData( TaskMgrReqCd.CLEAR_ACA )>]
+    [<InlineData( TaskMgrReqCd.CLEAR_TASK_SET )>]
+    [<InlineData( TaskMgrReqCd.LOGICAL_UNIT_RESET )>]
+    [<InlineData( TaskMgrReqCd.TARGET_WARM_RESET )>]
+    [<InlineData( TaskMgrReqCd.TARGET_COLD_RESET )>]
+    member _.UnknownLUN_TMF_001 ( tmr : TaskMgrReqCd ) =
+        task{
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            let errorLUN = lun_me.fromPrim 0xFFFFUL
+
+            let! _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F tmr errorLUN g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
+
+            try
+                let! _ = r1.Receive g_CID0
+                Assert.Fail __LINE__
+            with
+            | :? SessionRecoveryException
+            | :? ConnectionErrorException ->
+                ()
+        }
+
+    [<Fact>]
+    member _.UnknownLUN_SCSICommand_001 () =
+        task{
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            let errorLUN = lun_me.fromPrim 0xFFFFUL
+
+            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy 1us false false
+            let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK errorLUN 8192u readCDB PooledBuffer.Empty 0u
+
+            try
+                let! _ = r1.Receive g_CID0
+                Assert.Fail __LINE__
+            with
+            | :? SessionRecoveryException
+            | :? ConnectionErrorException ->
+                ()
+        }
+
+    [<Fact>]
+    member _.UnknownLUN_NOP_001 () =
+        task{
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            let errorLUN = lun_me.fromPrim 0xFFFFUL
+
+            // NOP does not use the LUN value
+            let! ittNopOut1, _ = r1.SendNOPOutPDU g_CID0 BitI.F errorLUN g_DefTTT PooledBuffer.Empty
+            let! nopInPDU1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( nopInPDU1.InitiatorTaskTag = ittNopOut1 ))
+
+            do! r1.CloseSession g_CID0 BitI.F
+        }
+
+    [<Fact>]
+    member _.UnknownLUN_TextRequest_001() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            let errorLUN = lun_me.fromPrim 0xFFFFUL
+
+            // Text-request and text-response does not use the LUN value
+            let! itt4, _ = r1.SendTextRequestPDU g_CID0 BitI.F BitF.T BitC.F ValueNone errorLUN g_DefTTT [||]
+            let! rpdu4 = r1.ReceiveSpecific<TextResponsePDU> g_CID0
+            Assert.True(( rpdu4.F ))
+            Assert.True(( rpdu4.InitiatorTaskTag = itt4 ))
+            Assert.True(( rpdu4.TextResponse.Length = 0 ))
+
+            do! r1.CloseSession g_CID0 BitI.F
+        }
+
+    [<Fact>]
+    member _.UnknownLUN_SNACK_001() =
+        task {
+            let! r1 = iSCSI_Initiator.CreateInitialSession { m_defaultSessParam with ErrorRecoveryLevel = 1uy } m_defaultConnParam
+            let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
+            let errorLUN = lun_me.fromPrim 0xFFFFUL
+
+            // Send Nop-Out and receive Nop-In
+            let! ittNOP1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! nopinPDU = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( nopinPDU.InitiatorTaskTag = ittNOP1 ))
+            Assert.True(( nopinPDU.StatSN = sendExpStatSN1 ))
+
+            // rewind ExpStatSN
+            r1.Connection( g_CID0 ).RewindExtStatSN( statsn_me.fromPrim 1u )
+
+            // Send SNACK request with unknown LUN.
+            // SNACK does not use the LUN value.
+            do! r1.SendSNACKRequestPDU g_CID0 SnackReqTypeCd.STATUS errorLUN g_DefITT g_DefTTT ( statsn_me.toPrim sendExpStatSN1 ) 1u
+
+            // Receive Nop-In
+            let! nopinPDU_2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( nopinPDU_2.InitiatorTaskTag = ittNOP1 ))
+            Assert.True(( nopinPDU_2.StatSN = sendExpStatSN1 ))
+
+            // skip ExpStatSN
+            r1.Connection( g_CID0 ).SkipExtStatSN( statsn_me.fromPrim 1u )
+
+            do! r1.CloseSession g_CID0 BitI.F
+        }
