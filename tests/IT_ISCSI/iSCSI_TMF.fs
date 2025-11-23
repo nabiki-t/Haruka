@@ -75,12 +75,12 @@ type iSCSI_TMF_Fixture() =
         client.RunCommand "start" "Started" "T > "
         client.RunCommand "select 0" "" "LU> "
         client.RunCommand "select 0" "" "MD> "
-        client.RunCommand "add trap /e Format /a Delay /ms 1000" "Trap added." "MD> "
+        client.RunCommand "add trap /e Format /a Delay /ms 800" "Trap added." "MD> "
         client.RunCommand "unselect" "" "LU> "
         client.RunCommand "unselect" "" "T > "
         client.RunCommand "select 1" "" "LU> "
         client.RunCommand "select 0" "" "MD> "
-        client.RunCommand "add trap /e Format /a Delay /ms 1000" "Trap added." "MD> "
+        client.RunCommand "add trap /e Format /a Delay /ms 800" "Trap added." "MD> "
         client.RunCommand "unselect" "" "LU> "
         client.RunCommand "unselect" "" "T > "
 
@@ -669,6 +669,251 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             Assert.True(( readData2.Length = int m_MediaBlockSize ))
 
             do! r1.CloseSession g_CID0 BitI.F
+        }
+
+    // abort tasks that is in the SCSI task set.
+    [<Fact>]
+    member _.TMF_ClearTaskSet_002 () =
+
+        task{
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            let! r2 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            let formatCDB = GenScsiCDB.FormatUnit false false false false false 0uy true false
+
+            // Send SCSI format command to LU 1 on session 1
+            let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 0u formatCDB PooledBuffer.Empty 0u
+
+            // Send SCSI format command to LU 1 on session 2
+            let! ittFormat_s2l1, _ = r2.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 0u formatCDB PooledBuffer.Empty 0u
+
+            // Send SCSI format command to LU 2
+            let! ittFormat_s1l2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN2 0u formatCDB PooledBuffer.Empty 0u
+
+            do! Task.Delay 50
+
+            // Send Clear Task Set TMF request to LU 1
+            let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.CLEAR_TASK_SET g_LUN1 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
+
+            // receive TMF response
+            let! tmfPDU = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
+            Assert.True(( tmfPDU.InitiatorTaskTag = ittTMF ))
+            Assert.True(( tmfPDU.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            // Send Nop-Out and receive Nop-In ( Send acknowledge for receiving TMF response )
+            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
+
+            // Receive SCSI Response from LU 1 on session 2
+            let! scsiRespPdu_s2 = r2.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( scsiRespPdu_s2.InitiatorTaskTag = ittFormat_s2l1 ))
+            Assert.True(( scsiRespPdu_s2.Status = ScsiCmdStatCd.TASK_ABORTED ))
+            Assert.True(( scsiRespPdu_s2.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+
+            // Receive SCSI Response from LU 2
+            let! scsiRespPdu_s1 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( scsiRespPdu_s1.InitiatorTaskTag = ittFormat_s1l2 ))
+            Assert.True(( scsiRespPdu_s1.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( scsiRespPdu_s1.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+
+            // SCSI read from LU 1 on session 1
+            let! readData_s1l1 = r1.ReadMediaData g_CID0 g_LUN1 0u 1u m_MediaBlockSize
+            Assert.True(( readData_s1l1.Length = int m_MediaBlockSize ))
+
+            // SCSI read from LU 1 on session 2
+            let! readData_s2l1 = r2.ReadMediaData g_CID0 g_LUN1 0u 1u m_MediaBlockSize
+            Assert.True(( readData_s2l1.Length = int m_MediaBlockSize ))
+
+            // SCSI read from LU 2
+            let! readData_s1l2 = r1.ReadMediaData g_CID0 g_LUN2 0u 1u m_MediaBlockSize
+            Assert.True(( readData_s1l2.Length = int m_MediaBlockSize ))
+
+            do! r1.CloseSession g_CID0 BitI.F
+            do! r2.CloseSession g_CID0 BitI.F
+        }
+
+    // abort tasks that is in the iSCSI task queue.
+    [<Fact>]
+    member _.TMF_LogicalUnitReset_001 () =
+        task{
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+
+            // Send SCSI write command to LU 1
+            let writeCDB_lu1 = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us true false
+            let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB_lu1 PooledBuffer.Empty 0u
+
+            // Send Nop-Out 1 to LU 1
+            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+
+            // Send SCSI write command to LU 2
+            let writeCDB_lu2 = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us true false
+            let! ittWrite_lu2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN2 ( uint m_MediaBlockSize ) writeCDB_lu2 PooledBuffer.Empty 0u
+
+            // Send Logical Unit Reset TMF request to LU 1
+            let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.LOGICAL_UNIT_RESET g_LUN1 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
+
+            // Receive TMF response
+            let! tmfRespPdu = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
+            Assert.True(( tmfRespPdu.InitiatorTaskTag = ittTMF ))
+            Assert.True(( tmfRespPdu.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            // Send SCSI Data-Out PDU for LU2
+            let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
+            let! _ = r1.SendSCSIDataOutPDU g_CID0 BitF.T ittWrite_lu2 g_LUN2 g_DefTTT datasn_me.zero 0u sendData
+            sendData.Return()
+
+            // Receive SCSI Response from LU 2
+            let! scsiRespPdu = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( scsiRespPdu.InitiatorTaskTag = ittWrite_lu2 ))
+            Assert.True(( scsiRespPdu.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( scsiRespPdu.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+
+            // SCSI read from LU 1
+            let! readData1 = r1.ReadMediaData g_CID0 g_LUN1 0u 1u m_MediaBlockSize
+            Assert.True(( readData1.Length = int m_MediaBlockSize ))
+
+            // SCSI read from LU 2
+            let! readData2 = r1.ReadMediaData g_CID0 g_LUN2 0u 1u m_MediaBlockSize
+            Assert.True(( readData2.Length = int m_MediaBlockSize ))
+
+            do! r1.CloseSession g_CID0 BitI.F
+
+            m_ClientProc.RunCommand "select 0" "" "LU> "
+            m_ClientProc.RunCommand "select 0" "" "MD> "
+            m_ClientProc.RunCommand "add trap /e Format /a Delay /ms 800" "Trap added." "MD> "
+            m_ClientProc.RunCommand "unselect" "" "LU> "
+            m_ClientProc.RunCommand "unselect" "" "T > "
+        }
+
+    // abort tasks that is in the SCSI task set.
+    [<Fact>]
+    member _.TMF_LogicalUnitReset_002 () =
+
+        task{
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            let! r2 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            let formatCDB = GenScsiCDB.FormatUnit false false false false false 0uy true false
+
+            // Send SCSI format command to LU 1 on session 1
+            let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 0u formatCDB PooledBuffer.Empty 0u
+
+            // Send SCSI format command to LU 1 on session 2
+            let! ittFormat_s2l1, _ = r2.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 0u formatCDB PooledBuffer.Empty 0u
+
+            // Send SCSI format command to LU 2
+            let! ittFormat_s1l2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN2 0u formatCDB PooledBuffer.Empty 0u
+
+            do! Task.Delay 50
+
+            // Send Logical Unit Reset TMF request to LU 1
+            let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.LOGICAL_UNIT_RESET g_LUN1 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
+
+            // receive TMF response
+            let! tmfPDU = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
+            Assert.True(( tmfPDU.InitiatorTaskTag = ittTMF ))
+            Assert.True(( tmfPDU.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            // Send Nop-Out and receive Nop-In ( Send acknowledge for receiving TMF response )
+            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
+
+            // Receive SCSI Response from LU 1 on session 2
+            let! scsiRespPdu_s2 = r2.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( scsiRespPdu_s2.InitiatorTaskTag = ittFormat_s2l1 ))
+            Assert.True(( scsiRespPdu_s2.Status = ScsiCmdStatCd.TASK_ABORTED ))
+            Assert.True(( scsiRespPdu_s2.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+
+            // Receive SCSI Response from LU 2
+            let! scsiRespPdu_s1 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( scsiRespPdu_s1.InitiatorTaskTag = ittFormat_s1l2 ))
+            Assert.True(( scsiRespPdu_s1.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( scsiRespPdu_s1.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
+
+            // SCSI read from LU 1 on session 1
+            let! readData_s1l1 = r1.ReadMediaData g_CID0 g_LUN1 0u 1u m_MediaBlockSize
+            Assert.True(( readData_s1l1.Length = int m_MediaBlockSize ))
+
+            // SCSI read from LU 1 on session 2
+            let! readData_s2l1 = r2.ReadMediaData g_CID0 g_LUN1 0u 1u m_MediaBlockSize
+            Assert.True(( readData_s2l1.Length = int m_MediaBlockSize ))
+
+            // SCSI read from LU 2
+            let! readData_s1l2 = r1.ReadMediaData g_CID0 g_LUN2 0u 1u m_MediaBlockSize
+            Assert.True(( readData_s1l2.Length = int m_MediaBlockSize ))
+
+            do! r1.CloseSession g_CID0 BitI.F
+            do! r2.CloseSession g_CID0 BitI.F
+
+            m_ClientProc.RunCommand "select 0" "" "LU> "
+            m_ClientProc.RunCommand "select 0" "" "MD> "
+            m_ClientProc.RunCommand "add trap /e Format /a Delay /ms 800" "Trap added." "MD> "
+            m_ClientProc.RunCommand "unselect" "" "LU> "
+            m_ClientProc.RunCommand "unselect" "" "T > "
+        }
+
+    // Perform LU reset on LUN 0.
+    [<Fact>]
+    member _.TMF_LogicalUnitReset_003 () =
+
+        task{
+            let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            let! r2 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+            let formatCDB = GenScsiCDB.FormatUnit false false false false false 0uy true false
+
+            // Send SCSI format command to LU 1 on session 1
+            let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 0u formatCDB PooledBuffer.Empty 0u
+
+            // Send SCSI format command to LU 2 on session 2
+            let! _ = r2.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN2 0u formatCDB PooledBuffer.Empty 0u
+
+            do! Task.Delay 50
+
+            // Send Logical Unit Reset TMF request to LU 0
+            let! _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.LOGICAL_UNIT_RESET g_LUN0 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
+
+            // receive response
+            try
+                let! _ = r1.Receive g_CID0
+                Assert.Fail __LINE__
+            with
+            | :? SessionRecoveryException
+            | :? ConnectionErrorException ->
+                ()
+
+            // receive response
+            try
+                let! _ = r2.Receive g_CID0
+                Assert.Fail __LINE__
+            with
+            | :? SessionRecoveryException
+            | :? ConnectionErrorException ->
+                ()
+
+            // Reconnect
+            let! r3 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
+
+            // SCSI read from LU 1
+            let! readData_s1l1 = r3.ReadMediaData g_CID0 g_LUN1 0u 1u m_MediaBlockSize
+            Assert.True(( readData_s1l1.Length = int m_MediaBlockSize ))
+
+            // SCSI read from LU 2
+            let! readData_s1l2 = r3.ReadMediaData g_CID0 g_LUN2 0u 1u m_MediaBlockSize
+            Assert.True(( readData_s1l2.Length = int m_MediaBlockSize ))
+
+            do! r3.CloseSession g_CID0 BitI.F
+
+            m_ClientProc.RunCommand "select 0" "" "LU> "
+            m_ClientProc.RunCommand "select 0" "" "MD> "
+            m_ClientProc.RunCommand "add trap /e Format /a Delay /ms 800" "Trap added." "MD> "
+            m_ClientProc.RunCommand "unselect" "" "LU> "
+            m_ClientProc.RunCommand "unselect" "" "T > "
+
+            m_ClientProc.RunCommand "select 1" "" "LU> "
+            m_ClientProc.RunCommand "select 0" "" "MD> "
+            m_ClientProc.RunCommand "add trap /e Format /a Delay /ms 800" "Trap added." "MD> "
+            m_ClientProc.RunCommand "unselect" "" "LU> "
+            m_ClientProc.RunCommand "unselect" "" "T > "
         }
 
 
