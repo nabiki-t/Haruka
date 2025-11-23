@@ -233,18 +233,7 @@ type IscsiTaskOnePDUCommand
             this.ExecuteTMF_LogicalUnitReset()
         | TaskMgrReqCd.TARGET_WARM_RESET
         | TaskMgrReqCd.TARGET_COLD_RESET ->
-            // Haruka not supports the target reset request
-            m_Session.SendOtherResponsePDU
-                m_AllegiantCID
-                m_AllegiantConCounter
-                {
-                    Response = TaskMgrResCd.TASK_MGR_NOT_SUPPORT;
-                    InitiatorTaskTag = pdu.InitiatorTaskTag;
-                    StatSN = statsn_me.zero;
-                    ExpCmdSN = cmdsn_me.zero;
-                    MaxCmdSN = cmdsn_me.zero;
-                    ResponseFence = ResponseFenceNeedsFlag.R_Mode;
-                }
+            this.ExecuteTMF_TargetReset()
         | TaskMgrReqCd.TASK_REASSIGN ->
             // Haruka not supports the task reassign task management request
             m_Session.SendOtherResponsePDU
@@ -352,6 +341,24 @@ type IscsiTaskOnePDUCommand
         |> ignore
 
         taskRouter.LogicalUnitReset ( this :> IIscsiTask ) pdu.LUN
+
+    // ------------------------------------------------------------------------
+    /// <summary>
+    ///   Execute TARGET_WARM_RESET or TARGET_COLD_RESET task management function request.
+    /// </summary>
+    /// <remarks>
+    ///   Haruka does not distinguish between TARGET_WARM_RESET and TARGET_COLD_RESET and implements them identically.
+    /// </remarks>
+    member private this.ExecuteTMF_TargetReset() :unit =
+        let taskRouter = m_Session.SCSITaskRouter
+        let pdu = m_Request :?> TaskManagementFunctionRequestPDU
+
+        // Aborts all tasks sent to the all LU.
+        m_Session.AbortTask ( fun itrTask ->
+            ( Functions.IsSame itrTask this |> not )
+        )
+        |> ignore
+        taskRouter.TargetReset ( this :> IIscsiTask ) pdu.LUN
 
     // ------------------------------------------------------------------------
     /// <summary>

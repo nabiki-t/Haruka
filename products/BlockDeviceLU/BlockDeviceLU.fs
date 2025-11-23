@@ -379,9 +379,9 @@ type BlockDeviceLU
 
         // ------------------------------------------------------------------------
         // LOGICAL UNIT RESET task management function request.
-        override this.LogicalUnitReset ( source : CommandSourceInfo voption ) ( initiatorTaskTag : ITT_T voption ) : unit =
+        override this.LogicalUnitReset ( source : CommandSourceInfo voption ) ( initiatorTaskTag : ITT_T voption ) ( needResp : bool ) : unit =
             let loginfo = struct ( m_ObjID, source, initiatorTaskTag, ValueSome( m_LUN ) )
-            let fromI = source.IsSome && initiatorTaskTag.IsSome
+            let fromI = source.IsSome && initiatorTaskTag.IsSome    // Whether the reset is based on the initiator's request
             if HLogger.IsVerbose then
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "BlockDeviceLU.LogicalUnitReset." ) )
             HLogger.Trace( LogID.I_TMF_REQUESTED, fun g -> g.Gen1( loginfo, "LogicalUnitReset()" ) )
@@ -427,7 +427,7 @@ type BlockDeviceLU
 
 
                         // return response
-                        if fromI then
+                        if fromI && needResp then
                             source.Value.ProtocolService.SendOtherResponse source.Value.CID source.Value.ConCounter {
                                 Response = TaskMgrResCd.FUNCTION_COMPLETE;
                                 InitiatorTaskTag = initiatorTaskTag.Value;

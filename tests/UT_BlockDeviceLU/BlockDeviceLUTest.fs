@@ -1461,7 +1461,7 @@ type BlockDeviceLU_Test () =
 
         pc.Invoke( "NotifyLUReset", source, itt_me.fromPrim 0u ) :?> unit
 
-        ( lu :> ILU ).LogicalUnitReset ( ValueSome source ) ( ValueSome( itt_me.fromPrim 0u ) )
+        ( lu :> ILU ).LogicalUnitReset ( ValueSome source ) ( ValueSome( itt_me.fromPrim 0u ) ) true
 
         Assert.True(( cnt = 0 ))
 
@@ -1532,7 +1532,7 @@ type BlockDeviceLU_Test () =
                 p_GetTaskType = ( fun () -> BlockDeviceTaskType.InternalTask ),
                 p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
                 p_NotifyTerminate = ( fun flg ->
-                    Assert.True( flg )
+                    Assert.True( flg )      // True if LU Reset is requested by another session
                     cnt.[3] <- cnt.[3] + 1
                 ),
                 p_GetSource = ( fun () -> 
@@ -1575,7 +1575,7 @@ type BlockDeviceLU_Test () =
         media.p_GetMediaIndex <- ( fun () -> mediaidx_me.zero )
         media.p_GetDescriptString <- ( fun () -> "" )
 
-        ( lu :> ILU ).LogicalUnitReset ( ValueSome source ) ( ValueSome ( itt_me.fromPrim 0u ) )
+        ( lu :> ILU ).LogicalUnitReset ( ValueSome source ) ( ValueSome ( itt_me.fromPrim 0u ) ) true
 
         Assert.True(( sema1.Wait 100000 ))
         Assert.True(( cnt1 = 1 ))
@@ -1643,7 +1643,7 @@ type BlockDeviceLU_Test () =
             sema3.Release() |> ignore
         )
 
-        ( lu :> ILU ).LogicalUnitReset ( ValueSome source ) ( ValueSome ( itt_me.fromPrim 0u ) )
+        ( lu :> ILU ).LogicalUnitReset ( ValueSome source ) ( ValueSome ( itt_me.fromPrim 0u ) ) true
 
         Assert.True(( sema1.Wait 100000 ))
         Assert.True(( cnt1 = 1 ))
@@ -1688,7 +1688,7 @@ type BlockDeviceLU_Test () =
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
                     p_NotifyTerminate = ( fun flg ->
                         cnt2 <- cnt2 + 1
-                        Assert.True( flg )
+                        Assert.True( flg )      // True if LU Reset is requested by another session
                         sema2.Release() |> ignore
                         raise <| Exception( "" )
                     ),
@@ -1723,7 +1723,7 @@ type BlockDeviceLU_Test () =
             sema4.Release() |> ignore
         )
 
-        ( lu :> ILU ).LogicalUnitReset ( ValueSome source ) ( ValueSome ( itt_me.fromPrim 0u ) )
+        ( lu :> ILU ).LogicalUnitReset ( ValueSome source ) ( ValueSome ( itt_me.fromPrim 0u ) ) true
 
         Assert.True(( sema1.Wait 100000 ))
         Assert.True(( cnt1 = 1 ))
@@ -1797,7 +1797,7 @@ type BlockDeviceLU_Test () =
             sema4.Release() |> ignore
         )
 
-        ( lu :> ILU ).LogicalUnitReset ( ValueSome source ) ( ValueSome ( itt_me.fromPrim 0u ) )
+        ( lu :> ILU ).LogicalUnitReset ( ValueSome source ) ( ValueSome ( itt_me.fromPrim 0u ) ) true
 
         Assert.True(( sema1.Wait 100000 ))
         Assert.True(( cnt1 = 1 ))
@@ -1813,6 +1813,92 @@ type BlockDeviceLU_Test () =
 
         let m_TaskSet = pc.GetField( "m_TaskSet" ) :?> TaskSet
         Assert.True(( m_TaskSet.Queue.Length = 0 ))
+
+    [<Fact>]
+    member this.LogicalUnitReset_007() =
+        let mutable cnt3 = 0
+        let mutable cnt4 = 0
+        let media, sm, lu = this.createBlockDevice()
+        let source = BlockDeviceLU_Test.cmdSource()
+        let sema3 = new SemaphoreSlim( 0 )
+        let sema4 = new SemaphoreSlim( 0 )
+
+        media.p_NotifyLUReset <- ( fun _ _ ->
+            cnt3 <- cnt3 + 1
+            sema3.Release() |> ignore
+        )
+        media.p_GetMediaIndex <- ( fun () -> mediaidx_me.zero )
+        media.p_GetDescriptString <- ( fun () -> "" )
+        sm.p_NotifyLUReset <- ( fun lun lu ->
+            Assert.True(( lun = lun_me.zero ))
+            cnt4 <- cnt4 + 1
+            sema4.Release() |> ignore
+        )
+
+        ( lu :> ILU ).LogicalUnitReset ( ValueSome source ) ( ValueSome ( itt_me.fromPrim 0u ) ) false
+
+        Assert.True(( sema3.Wait 100000 ))
+        Assert.True(( cnt3 = 1 ))
+
+        Assert.True(( sema4.Wait 100000 ))
+        Assert.True(( cnt4 = 1 ))
+
+    [<Fact>]
+    member this.LogicalUnitReset_008() =
+        let mutable cnt1 = 0
+        let mutable cnt3 = 0
+        let mutable cnt4 = 0
+        let media, sm, lu = this.createBlockDevice()
+        let source = BlockDeviceLU_Test.cmdSource()
+        let pc = new PrivateCaller( lu )
+        let sema1 = new SemaphoreSlim( 0 )
+        let sema3 = new SemaphoreSlim( 0 )
+        let sema4 = new SemaphoreSlim( 0 )
+
+        let testTasks = [|
+            TaskStatus.TASK_STAT_Running(
+                new CBlockDeviceTask_Stub(
+                    p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
+                    p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
+                    p_NotifyTerminate = ( fun flg ->
+                        cnt1 <- cnt1 + 1
+                        Assert.True( flg )  // Always true for LU Reset based on internal request
+                        sema1.Release() |> ignore
+                    ),
+                    p_GetSource = ( fun () -> source ),
+                    p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
+                )
+            );
+        |]
+        let queue1 = {
+            Queue = testTasks.ToImmutableArray();
+            ACA = ValueNone;
+        }
+        pc.SetField( "m_TaskSet", queue1 )
+
+        media.p_NotifyLUReset <- ( fun _ _ ->
+            cnt3 <- cnt3 + 1
+            sema3.Release() |> ignore
+        )
+        media.p_GetMediaIndex <- ( fun () -> mediaidx_me.zero )
+        media.p_GetDescriptString <- ( fun () -> "" )
+        sm.p_NotifyLUReset <- ( fun lun lu ->
+            Assert.True(( lun = lun_me.zero ))
+            cnt4 <- cnt4 + 1
+            sema4.Release() |> ignore
+        )
+
+        // LU Reset based on internal request
+        ( lu :> ILU ).LogicalUnitReset ValueNone ValueNone true
+
+        Assert.True(( sema1.Wait 100000 ))
+        Assert.True(( cnt1 = 1 ))
+
+        Assert.True(( sema3.Wait 100000 ))
+        Assert.True(( cnt3 = 1 ))
+
+        Assert.True(( sema4.Wait 100000 ))
+        Assert.True(( cnt4 = 1 ))
 
     [<Fact>]
     member this.NotifyLUReset_001() =

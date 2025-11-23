@@ -367,6 +367,7 @@ type public CProtocolService_Stub() =
     let mutable f_ClearACA : ( IIscsiTask -> LUN_T -> unit ) option = None
     let mutable f_ClearTaskSet : ( IIscsiTask -> LUN_T -> unit ) option = None
     let mutable f_LogicalUnitReset : ( IIscsiTask -> LUN_T -> unit ) option = None
+    let mutable f_TargetReset : ( IIscsiTask -> LUN_T -> unit ) option = None
     let mutable f_SCSICommand : ( CID_T -> CONCNT_T -> SCSICommandPDU -> SCSIDataOutPDU list -> unit ) option = None
     let mutable f_SendSCSIResponse : ( SCSICommandPDU -> CID_T -> CONCNT_T -> uint32 -> iScsiSvcRespCd -> ScsiCmdStatCd -> PooledBuffer -> PooledBuffer -> uint32 -> ResponseFenceNeedsFlag -> unit ) option = None
     let mutable f_SendOtherResponse : ( CID_T -> CONCNT_T -> ILogicalPDU -> LUN_T -> unit ) option = None
@@ -383,6 +384,7 @@ type public CProtocolService_Stub() =
     member _.p_ClearACA with set v = f_ClearACA <- Some( v )
     member _.p_ClearTaskSet with set v = f_ClearTaskSet <- Some( v )
     member _.p_LogicalUnitReset with set v = f_LogicalUnitReset <- Some( v )
+    member _.p_TargetReset with set v = f_TargetReset <- Some( v )
     member _.p_SCSICommand with set v = f_SCSICommand <- Some( v )
     member _.p_SendSCSIResponse with set v = f_SendSCSIResponse <- Some( v )
     member _.p_SendOtherResponse with set v = f_SendOtherResponse <- Some( v )
@@ -405,6 +407,8 @@ type public CProtocolService_Stub() =
             f_ClearTaskSet.Value iScsiTask lun
         override _.LogicalUnitReset ( iScsiTask : IIscsiTask ) ( lun : LUN_T ) : unit =
             f_LogicalUnitReset.Value iScsiTask lun
+        override _.TargetReset ( iScsiTask : IIscsiTask ) ( lun : LUN_T ) : unit =
+            f_TargetReset.Value iScsiTask lun
         override _.SCSICommand ( cid:CID_T ) ( counter:CONCNT_T ) ( command:SCSICommandPDU ) ( data:SCSIDataOutPDU list ) : unit =
             f_SCSICommand.Value cid counter command data
         override _.SendSCSIResponse
@@ -443,7 +447,7 @@ type public CLU_Stub() =
     let mutable f_AbortTaskSet : ( CommandSourceInfo -> ITT_T -> unit ) option = None
     let mutable f_ClearACA : ( CommandSourceInfo -> ITT_T -> unit ) option = None
     let mutable f_ClearTaskSet : ( CommandSourceInfo -> ITT_T -> unit ) option = None
-    let mutable f_LogicalUnitReset : ( CommandSourceInfo voption -> ITT_T voption -> unit ) option = None
+    let mutable f_LogicalUnitReset : ( CommandSourceInfo voption -> ITT_T voption -> bool -> unit ) option = None
     let mutable f_SCSICommand : ( CommandSourceInfo -> SCSICommandPDU -> SCSIDataOutPDU list -> unit ) option = None
     let mutable f_GetLUResetStatus : ( unit -> bool ) option = None
     let mutable f_GetReadBytesCount : ( unit -> ResCountResult array ) option = None
@@ -482,8 +486,8 @@ type public CLU_Stub() =
             f_ClearACA.Value source initiatorTaskTag
         override _.ClearTaskSet ( source : CommandSourceInfo ) ( initiatorTaskTag : ITT_T ) : unit =
             f_ClearTaskSet.Value source initiatorTaskTag
-        override _.LogicalUnitReset ( source : CommandSourceInfo voption ) ( initiatorTaskTag : ITT_T voption ) : unit =
-            f_LogicalUnitReset.Value source initiatorTaskTag
+        override _.LogicalUnitReset ( source : CommandSourceInfo voption ) ( initiatorTaskTag : ITT_T voption ) ( needResp : bool ) : unit =
+            f_LogicalUnitReset.Value source initiatorTaskTag needResp
         override _.SCSICommand ( source : CommandSourceInfo ) ( command:SCSICommandPDU ) ( data:SCSIDataOutPDU list ) : unit =
             f_SCSICommand.Value source command data
         override _.LUResetStatus with get() : bool =

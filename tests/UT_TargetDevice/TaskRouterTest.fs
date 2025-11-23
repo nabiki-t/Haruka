@@ -531,11 +531,12 @@ type TaskRouter_Test () =
             TaskRouter_Test.createDefaultTaskRouter()
 
         let mutable wcnt = 0
-        lu1.p_LogicalUnitReset <- ( fun ( source : CommandSourceInfo voption ) ( initiatorTaskTag : ITT_T voption ) ->
+        lu1.p_LogicalUnitReset <- ( fun ( source : CommandSourceInfo voption ) ( initiatorTaskTag : ITT_T voption ) ( needResp : bool ) ->
             Assert.True( ( cid_me.fromPrim 1us = source.Value.CID ) )
             Assert.True( ( concnt_me.fromPrim 2 = source.Value.ConCounter ) )
             Assert.True( ( tsih_me.fromPrim 12us = source.Value.TSIH ) )
             Assert.True( ( itt_me.fromPrim 3u = initiatorTaskTag.Value ) )
+            Assert.True needResp
             wcnt <- 1
         )
 
@@ -564,6 +565,117 @@ type TaskRouter_Test () =
             Assert.True( x.Message.Contains( "Unknown LU target" ) )
 
         k1.NoticeTerminate()
+
+    // Transfer TargetReset request to LU 0
+    [<Fact>]
+    member _.TargetReset_001() =
+        let k1, status_stub, session, taskRouter, _ =
+            TaskRouter_Test.createDefaultTaskRouter()
+
+        let lus =
+            let v = [|
+                lun_me.fromPrim 0UL;
+                lun_me.fromPrim 1UL;
+            |]
+            v.ToFrozenSet()
+        PrivateCaller( taskRouter ).SetField( "m_LUN", lus )
+
+        let lu0 = new CLU_Stub()
+        status_stub.p_GetLU <- ( fun lun ->
+            Assert.True(( lun = lun_me.zero ))
+            ValueSome( lu0 :> ILU )
+        ) 
+
+        let mutable wcnt = 0
+        lu0.p_LogicalUnitReset <- ( fun ( source : CommandSourceInfo voption ) ( initiatorTaskTag : ITT_T voption ) ( needResp : bool ) ->
+            Assert.True( ( cid_me.fromPrim 1us = source.Value.CID ) )
+            Assert.True( ( concnt_me.fromPrim 2 = source.Value.ConCounter ) )
+            Assert.True( ( tsih_me.fromPrim 12us = source.Value.TSIH ) )
+            Assert.True( ( itt_me.fromPrim 3u = initiatorTaskTag.Value ) )
+            Assert.True needResp
+            wcnt <- 1
+        )
+
+        let s1 = new CISCSITask_Stub()
+        s1.p_GetAllegiantConnection <- ( fun _ -> ( cid_me.fromPrim 1us, concnt_me.fromPrim 2 ) )
+        s1.p_GetInitiatorTaskTag <- ( fun _ -> ValueSome( itt_me.fromPrim 3u ) )
+        taskRouter.TargetReset s1 ( lun_me.fromPrim 0UL )
+        Assert.True( ( 1 = wcnt ) )
+
+        k1.NoticeTerminate()
+
+    // Transfer TargetReset request to other than LU 0
+    [<Fact>]
+    member _.TargetReset_002() =
+        let k1, status_stub, session, taskRouter, _ =
+            TaskRouter_Test.createDefaultTaskRouter()
+
+        let lus =
+            let v = [|
+                lun_me.fromPrim 0UL;
+                lun_me.fromPrim 1UL;
+                lun_me.fromPrim 2UL;
+            |]
+            v.ToFrozenSet()
+        PrivateCaller( taskRouter ).SetField( "m_LUN", lus )
+
+        let lu1 = new CLU_Stub()
+        let lu2 = new CLU_Stub()
+        status_stub.p_GetLU <- ( fun lun ->
+            if lun = lun_me.fromPrim 1UL then
+                ValueSome( lu1 :> ILU )
+            elif lun = lun_me.fromPrim 2UL then
+                ValueSome( lu2 :> ILU )
+            else
+                Assert.Fail __LINE__
+                ValueNone
+        ) 
+
+        let mutable wcnt1 = 0
+        lu1.p_LogicalUnitReset <- ( fun ( source : CommandSourceInfo voption ) ( initiatorTaskTag : ITT_T voption ) ( needResp : bool ) ->
+            Assert.True(( cid_me.fromPrim 1us = source.Value.CID ))
+            Assert.True(( concnt_me.fromPrim 2 = source.Value.ConCounter ))
+            Assert.True(( tsih_me.fromPrim 12us = source.Value.TSIH ))
+            Assert.True(( itt_me.fromPrim 3u = initiatorTaskTag.Value ))
+            Assert.True needResp
+            wcnt1 <- wcnt1 + 1
+        )
+
+        lu2.p_LogicalUnitReset <- ( fun ( source : CommandSourceInfo voption ) ( initiatorTaskTag : ITT_T voption ) ( needResp : bool ) ->
+            Assert.True( ( cid_me.fromPrim 1us = source.Value.CID ) )
+            Assert.True( ( concnt_me.fromPrim 2 = source.Value.ConCounter ) )
+            Assert.True( ( tsih_me.fromPrim 12us = source.Value.TSIH ) )
+            Assert.True( ( itt_me.fromPrim 3u = initiatorTaskTag.Value ) )
+            Assert.False needResp
+            wcnt1 <- wcnt1 + 1
+        )
+
+        let s1 = new CISCSITask_Stub()
+        s1.p_GetAllegiantConnection <- ( fun _ -> ( cid_me.fromPrim 1us, concnt_me.fromPrim 2 ) )
+        s1.p_GetInitiatorTaskTag <- ( fun _ -> ValueSome( itt_me.fromPrim 3u ) )
+        taskRouter.TargetReset s1 ( lun_me.fromPrim 1UL ) // other than 0
+
+        Assert.True(( 2 = wcnt1 ))
+
+        k1.NoticeTerminate()
+
+    // Transfer TargetReset request to missing LU
+    [<Fact>]
+    member _.TargetReset_003() =
+        let k1, _, _, taskRouter, _ =
+            TaskRouter_Test.createDefaultTaskRouter()
+
+        let s1 = new CISCSITask_Stub()
+        s1.p_GetAllegiantConnection <- ( fun _ -> ( cid_me.fromPrim 1us, concnt_me.fromPrim 2 ) )
+        s1.p_GetInitiatorTaskTag <- ( fun _ -> ValueSome( itt_me.fromPrim 3u ) )
+        try
+            taskRouter.TargetReset s1 ( lun_me.fromPrim 99UL )
+        with
+        | :? SessionRecoveryException ->
+            ()
+
+        k1.NoticeTerminate()
+
 
     // Transfer SCSICommand request to an existing LU
     [<Fact>]

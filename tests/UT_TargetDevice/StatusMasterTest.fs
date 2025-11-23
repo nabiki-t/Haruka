@@ -4403,9 +4403,10 @@ type StatusMaster_Test () =
                 let m_LUs1 =
                     let lu1 = lazy (
                         new CLU_Stub(
-                            p_LogicalUnitReset = ( fun s itt ->
+                            p_LogicalUnitReset = ( fun s itt needResp ->
                                 Assert.True(( s.IsNone ))
                                 Assert.True(( itt.IsNone ))
+                                Assert.False needResp
                                 flg <- true
                             )
                         ) :> ILU

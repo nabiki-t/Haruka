@@ -260,6 +260,23 @@ type IProtocolService =
 
     // ------------------------------------------------------------------------
     /// <summary>
+    ///   TARGET WARM RESET or TARGET COLD RESET task management function request.
+    ///   It resets all logical unit which can be accessed from the session.
+    /// </summary>
+    /// <param name="iScsiTask">
+    ///   Received the task management request PDUs.
+    /// </param>
+    /// <param name="lun">
+    ///   The value of the LUN field specified in the PDU.
+    /// </param>
+    /// <remarks>
+    ///   If LUN 0 is specified, LOGICAL UNIT RESET is executed for the LUN 0.
+    ///   In all other cases, LOGICAL UNIT RESET is executed for all LUs accessible from the session, regardless of the LUN specified.
+    /// </remarks>
+    abstract TargetReset : iScsiTask:IIscsiTask -> lun:LUN_T -> unit
+
+    // ------------------------------------------------------------------------
+    /// <summary>
     ///   SCSI Command request.
     ///   It request processing of SCSI Command request PDU.
     /// </summary>
@@ -736,7 +753,12 @@ type ILU =
     /// <param name="initiatorTaskTag">
     ///   Initiator Task Tag value of received task managedmt requst.
     /// </param>
-    abstract LogicalUnitReset : source:CommandSourceInfo voption -> initiatorTaskTag:ITT_T voption -> unit
+    /// <param name="needResp">
+    ///   Whether a response to the initiator is required.
+    ///   If the source or initiatorTaskTag is not specified (i.e., in the case of a reset based on an internal request),
+    ///   no response is sent to the initiator regardless of the needResp setting.
+    /// </param>
+    abstract LogicalUnitReset : source:CommandSourceInfo voption -> initiatorTaskTag:ITT_T voption -> needResp:bool -> unit
 
     // ------------------------------------------------------------------------
     /// <summary>

@@ -172,7 +172,34 @@ type TaskRouter
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "TaskRouter.LogicalUnitReset." ) )
 
             let lu = this.GetLU lun cmdSource itt
-            lu.LogicalUnitReset ( ValueSome cmdSource ) itt
+            lu.LogicalUnitReset ( ValueSome cmdSource ) itt true
+
+        // ------------------------------------------------------------------------
+        // TARGET WARM RESET or TARGET COLD RESET task management function request.
+        // It resets all logical unit which can be accessed from the session.
+        override this.TargetReset ( iScsiTask : IIscsiTask ) ( lun : LUN_T ) : unit =
+            let struct( cid, counter ) = iScsiTask.AllegiantConnection
+            let cmdSource = this.GetCommandSourceObject cid counter
+            let itt = iScsiTask.InitiatorTaskTag
+            let loginfo = struct( m_ObjID, ValueSome cmdSource, itt, ValueSome lun )
+            if HLogger.IsVerbose then
+                HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "TaskRouter.TargetReset." ) )
+
+            if m_LUN.Contains lun |> not then
+                let msg = "Unknown LU target"
+                HLogger.Trace( LogID.E_MISSING_LU, fun g -> g.Gen1( m_ObjID, ValueSome cmdSource, itt, ValueSome lun, msg ) )
+                raise <| SessionRecoveryException( msg, m_TSIH )
+
+            if lun = lun_me.zero then
+                let lu = this.GetLU lun cmdSource itt
+                lu.LogicalUnitReset ( ValueSome cmdSource ) itt true
+            else
+                m_LUN
+                |> Seq.filter ( (<>) lun_me.zero )
+                |> Seq.iter ( fun itrLUN ->
+                    let lu = this.GetLU itrLUN cmdSource itt
+                    lu.LogicalUnitReset ( ValueSome cmdSource ) itt ( itrLUN = lun )
+                )
 
         // ------------------------------------------------------------------------
         // SCSI Command request.

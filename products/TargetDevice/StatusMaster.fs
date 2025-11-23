@@ -1273,7 +1273,7 @@ type StatusMaster(
             if f then
                 let rLU = activeLU.Value
                 HLogger.Trace( LogID.I_CTRL_REQ_LURESET, fun g -> g.Gen1( m_ObjID, lun_me.toString lun ) )
-                rLU.LogicalUnitReset ValueNone ValueNone
+                rLU.LogicalUnitReset ValueNone ValueNone false
             elif extf then
                 // LU object is not created yet.
                 // The request is ignored and it considered that the request is successed.
