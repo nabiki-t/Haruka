@@ -68,6 +68,11 @@ type TaskRouter
         |]
         v.ToFrozenSet()
 
+    /// <summary>
+    ///  A cache for reusing CommandSource objects.
+    ///  In the current implementation, the constructed CommandSource object is not deleted until the session is destroyed.
+    ///  If the connection is repeatedly reconnected while the session is maintained, garbage will accumulate, but we will not worry about it.
+    /// </summary>
     let m_CommandSourcePool =
         ConcurrentDictionary< uint64, CommandSourceInfo >()
 
@@ -255,23 +260,34 @@ type TaskRouter
         // ------------------------------------------------------------------------
         // Get used count of the task queue.
         override _.GetTaskQueueUsage() : int =
-            let wusage = [|
-                for itr in m_LUN do
-                    if itr <> lun_me.zero then
-                        match m_Status.GetLU itr with
-                        | ValueSome x ->
-                            yield x.GetTaskQueueUsage( m_TSIH )
-                        | _ -> ()
-            |]
-
-            if wusage.Length <= 0 then
-                0
-            else
-                wusage |> Array.max
+            m_LUN
+            |> Seq.fold ( fun ( m : int ) lun ->
+                if lun = lun_me.zero then
+                    m
+                else
+                    match m_Status.GetLU lun with
+                    | ValueSome x ->
+                        let r = x.GetTaskQueueUsage( m_TSIH )
+                        max r m
+                    | _ ->
+                        m
+            ) 0
 
     //=========================================================================
     // Private method
 
+    /// <summary>
+    ///  Gets a CommandSource object from the cache, or constructs a new one if it does not exist.
+    /// </summary>
+    /// <param name="cid">
+    ///  Connection ID.
+    /// </param>
+    /// <param name="conCounter">
+    ///  Connection counter.
+    /// </param>
+    /// <returns>
+    ///  CommandSource object.
+    /// </returns>
     member private this.GetCommandSourceObject ( cid : CID_T ) ( conCounter : CONCNT_T ) : CommandSourceInfo =
         let idx = ( cid_me.toPrim cid |> uint64 ) <<< 32 ||| ( concnt_me.toPrim conCounter |> uint64 )
         m_CommandSourcePool.GetOrAdd( idx, fun _ -> {
@@ -283,7 +299,25 @@ type TaskRouter
             SessionKiller = m_Killer;
         })
 
-    member private this.GetLU ( lun : LUN_T ) ( cmdSource : CommandSourceInfo ) ( itt : ITT_T voption ) : ILU =
+    /// <summary>
+    ///  Obtains the LU object held by the Status Master.
+    /// </summary>
+    /// <param name="lun">
+    ///  LUN.
+    /// </param>
+    /// <param name="cmdSource">
+    ///  Information indicating the source of the command. This is used for logging.
+    /// </param>
+    /// <param name="itt">
+    ///  ITT of the command. This is used for logging.
+    /// </param>
+    /// <returns>
+    ///  LU object.
+    /// </returns>
+    /// <remarks>
+    ///  If an inaccessible LUN is specified from the session, session recovery is performed.
+    /// </remarks>
+    member private _.GetLU ( lun : LUN_T ) ( cmdSource : CommandSourceInfo ) ( itt : ITT_T voption ) : ILU =
         if m_LUN.Contains lun |> not then
             let msg = "Unknown LU target"
             HLogger.Trace( LogID.E_MISSING_LU, fun g -> g.Gen1( m_ObjID, ValueSome cmdSource, itt, ValueSome lun, msg ) )
