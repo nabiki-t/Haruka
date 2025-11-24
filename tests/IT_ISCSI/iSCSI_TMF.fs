@@ -1063,4 +1063,24 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
         }
 
+    [<Theory>]
+    [<InlineData( 0uy, 0uy )>]
+    [<InlineData( 1uy, 1uy )>]
+    [<InlineData( 2uy, 1uy )>]
+    member _.TMF_TaskReAssign_001 ( erl1 : byte ) ( erl2 : byte ) =
+        task{
+            let! r1 = iSCSI_Initiator.CreateInitialSession { m_defaultSessParam with ErrorRecoveryLevel = erl1 } m_defaultConnParam
+            Assert.True(( r1.Params.ErrorRecoveryLevel = erl2 ))
+
+            // Send Task Re-Assign TMF request
+            let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.TASK_REASSIGN g_LUN1 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
+
+            // Receive TMF response
+            let! tmfRespPdu = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
+            Assert.True(( tmfRespPdu.InitiatorTaskTag = ittTMF ))
+            Assert.True(( tmfRespPdu.Response = TaskMgrResCd.TASK_REASSIGN_NOT_SUPPORT ))
+
+            do! r1.CloseSession g_CID0 BitI.F
+        }
+
 
