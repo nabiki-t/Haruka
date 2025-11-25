@@ -1029,7 +1029,7 @@ type iSCSI_Initiator(
         task {
             let accessLength = blockCount * blockLength
             let rBuffer = Array.zeroCreate<byte>( int accessLength )
-            let readCDB = GenScsiCDB.Read10 0uy false false false lba 0uy ( uint16 blockCount ) false false
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F lba 0uy ( uint16 blockCount ) NACA.F LINK.F
             let! itt, _ = this.SendSCSICommandPDU cid BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK lun accessLength readCDB PooledBuffer.Empty 0u
 
             do! Functions.loopAsync ( fun () ->
@@ -1080,7 +1080,7 @@ type iSCSI_Initiator(
             let blockCount = uint16 ( bytesData.Length / int blockLength )
             let mbl = m_SessParams.MaxBurstLength
             let mrdsl = m_Connections.[cid].Params.MaxRecvDataSegmentLength_T
-            let writeCDB = GenScsiCDB.Write10 0uy false false false lba 0uy blockCount false false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F lba 0uy blockCount NACA.F LINK.F
             let! itt, _ = this.SendSCSICommandPDU cid BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK lun ( uint32 bytesData.Length ) writeCDB PooledBuffer.Empty 0u
 
             let loop () : Task<bool> =

@@ -150,7 +150,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // send read command with block count = 1, but iSCSI ExpectedDataTransferLength = 65536
-            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy 1us false false
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.F LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 65536u readCDB PooledBuffer.Empty 0u
 
             // Reseive Data-In PDU
@@ -175,7 +175,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // send read command with block count = 0, but iSCSI ExpectedDataTransferLength = 65536
-            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy 0us false false
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 0us NACA.F LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 65536u readCDB PooledBuffer.Empty 0u
 
             // receive SCSI Response
@@ -196,7 +196,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 8192u / m_MediaBlockSize
 
             // send read command with read size = 8192 bytes, but iSCSI ExpectedDataTransferLength = 512
-            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.F LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 512u readCDB PooledBuffer.Empty 0u
 
             // Reseive Data-In PDU
@@ -222,7 +222,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 8192u / m_MediaBlockSize
 
             // send read command with read size = 8192 bytes, but iSCSI ExpectedDataTransferLength = 0
-            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.F LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 0u readCDB PooledBuffer.Empty 0u
 
             // receive SCSI Response
@@ -243,7 +243,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 4096u / m_MediaBlockSize
 
             // send write command with write size = 4096 bytes, but ExpectedDataTransferLength=4096 and BidirectionalExpectedReadDataLength=4096
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.F LINK.F
             let writeData = PooledBuffer.RentAndInit 4096
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB writeData 4096u
             writeData.Return()
@@ -266,7 +266,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 4096u / m_MediaBlockSize
 
             // send write command with write size = 4096 bytes, but ExpectedDataTransferLength=2048 and BidirectionalExpectedReadDataLength=4096
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.F LINK.F
             let writeData = PooledBuffer.RentAndInit 4096
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 2048u writeCDB writeData 4096u
             writeData.Return()
@@ -293,7 +293,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 4096u / m_MediaBlockSize
 
             // send read command with read size = 4096 bytes, but ExpectedDataTransferLength=1024 and BidirectionalExpectedReadDataLength=512
-            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.F LINK.F
             let writeData = PooledBuffer.RentAndInit 4096
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 1024u readCDB writeData 512u
             writeData.Return()
@@ -325,7 +325,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 4096u / m_MediaBlockSize
 
             // send read command with read size = 4096 bytes, but ExpectedDataTransferLength=4096 and BidirectionalExpectedReadDataLength=5000
-            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.F LINK.F
             let writeData = PooledBuffer.RentAndInit 4096
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u readCDB writeData 5000u
             writeData.Return()
@@ -357,7 +357,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 4096u / m_MediaBlockSize
 
             // send SCSI write command
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.F LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
 
             // Send Nop-Out with immidiate flag
@@ -387,11 +387,11 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 4096u / m_MediaBlockSize
 
             // send SCSI write command
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.F LINK.F
             let! ittW, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
 
             // send SCSI read command with immidiate flag
-            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.F LINK.F
             let! ittR, _ = r1.SendSCSICommandPDU g_CID0 BitI.T BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 4096u readCDB PooledBuffer.Empty 0u
 
             // receive Data-In PDU for SCSI read command
@@ -428,7 +428,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( nopinPDU.InitiatorTaskTag = ittNOP ))
 
             // send SCSI write command
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.F LINK.F
             let! ittW, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
 
             // send TMF request with immidiate flag
@@ -459,7 +459,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 4096u / m_MediaBlockSize
 
             // send SCSI write command
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.F LINK.F
             let! ittW, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
 
             // send Text request with immidiate flag
@@ -491,7 +491,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 4096u / m_MediaBlockSize
 
             // send SCSI write command
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.F LINK.F
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
 
             do! r1.CloseSession g_CID0 BitI.T
@@ -514,7 +514,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             r1.Connection( g_CID0 ).RewindExtStatSN( statsn_me.fromPrim 1u )
 
             // send SCSI write command
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.F LINK.F
             let! ittW, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
 
             // Send SNACK request
@@ -611,7 +611,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
 
             // Send SCSI Command PDU with data digest error
             let sendData = PooledBuffer.RentAndInit 1024
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us false false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.F LINK.F
             let! _ = r1.SendSCSICommandPDU_Test id ( ValueSome( 100u, 100u ) ) g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 1024u writeCDB sendData 0u
             sendData.Return()
 
@@ -645,7 +645,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
 
             // Send SCSI Command PDU
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.F LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
 
             // Send Data-Out PDU with data digest error
@@ -898,7 +898,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
                     TargetName = "";
             }
             let! r1 = iSCSI_Initiator.LoginForDiscoverySession sessParam m_defaultConnParam
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy 0us false false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 0us NACA.F LINK.F
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
             try
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -997,7 +997,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             |]
 
             // Send SCSI Read command
-            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 accessBlockcount ) false false
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockcount ) NACA.F LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
 
             // Receive SCSI Data-In PDUs
@@ -1131,7 +1131,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             r1.Connection( g_CID0 ).RewindExtStatSN ( statsn_me.fromPrim 1u )
 
             // Send SCSI write command ( it occurrs ACA )
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0xFFFFFFFEu 0uy 1us true false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0xFFFFFFFEu 0uy 1us NACA.T LINK.F
             let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
             let! ittScsiCmd, _ =
                 r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB sendData 0u
@@ -1178,7 +1178,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Send SCSI write command ( it occurrs ACA )
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0xFFFFFFFEu 0uy 1us true false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0xFFFFFFFEu 0uy 1us NACA.T LINK.F
             let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
             let! ittScsiCmd, _ =
                 r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB sendData 0u
@@ -1238,7 +1238,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Send SCSI write command ( it occurrs ACA )
-            let writeCDB1 = GenScsiCDB.Write10 0uy false false false 0xFFFFFFFEu 0uy 1us true false
+            let writeCDB1 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0xFFFFFFFEu 0uy 1us NACA.T LINK.F
             let sendData1 = PooledBuffer.Rent ( int m_MediaBlockSize )
             let! ittScsiCmd1, _ =
                 r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB1 sendData1 0u
@@ -1260,7 +1260,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             r1.Connection( g_CID0 ).RewindExtStatSN ( statsn_me.fromPrim 1u )
 
             // Send SCSI write command
-            let writeCDB2 = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us true false
+            let writeCDB2 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.T LINK.F
             let sendData2 = PooledBuffer.Rent ( int m_MediaBlockSize )
             let! ittScsiCmd2, _ =
                 r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB2 sendData2 0u
@@ -1306,7 +1306,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 4096u / m_MediaBlockSize
 
             // send read command with read size = 4096 bytes, but R and W bits are both 0.
-            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.F LINK.F
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 4096u readCDB PooledBuffer.Empty 0u
 
             // Format errors cause session recovery
@@ -1330,7 +1330,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 4096u / m_MediaBlockSize
 
             // send read command
-            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.F LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F attr g_LUN1 4096u readCDB PooledBuffer.Empty 0u
 
             // receive SCSI Data-In PDU
@@ -1353,7 +1353,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 4096u / m_MediaBlockSize
 
             // send read command
-            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.F LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.ACA_TASK g_LUN1 4096u readCDB PooledBuffer.Empty 0u
 
             // receive SCSI Response
@@ -1377,7 +1377,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 4096u / m_MediaBlockSize
 
             // Send SCSI write command ( it occurrs ACA )
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0xFFFFFFFEu 0uy 1us true false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0xFFFFFFFEu 0uy 1us NACA.T LINK.F
             let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
             let! ittWrite, _ =
                 r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB sendData 0u
@@ -1390,7 +1390,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( rpdu.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
 
             // send read command with ACA task attribute
-            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.F LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.ACA_TASK g_LUN1 4096u readCDB PooledBuffer.Empty 0u
 
             // receive SCSI Data-In PDU
@@ -1419,7 +1419,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 4096u / m_MediaBlockSize
 
             // Send SCSI write command
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) true false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.T LINK.F
             let sendData = PooledBuffer.Rent 4096
             let! ittWrite, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB sendData 0u
             sendData.Return()
@@ -1452,7 +1452,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 4096u / m_MediaBlockSize
 
             // Send SCSI write command
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy ( uint16 blockCount ) true false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.T LINK.F
             let! ittWrite, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
 
             // receive R2T PDU
@@ -1488,7 +1488,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 8192u / m_MediaBlockSize
 
             // send read command
-            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.F LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 8192u readCDB PooledBuffer.Empty 0u
 
             // Receive SCSI Data-In PDU 0
@@ -1533,7 +1533,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 8192u / m_MediaBlockSize
 
             // send read command
-            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy ( uint16 blockCount ) false false
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 blockCount ) NACA.F LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 8192u readCDB PooledBuffer.Empty 0u
 
             // Receive SCSI Data-In PDU 0
@@ -1616,7 +1616,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( writeData = readData1 ))
 
             // Establishing ACA status
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0xFFFFFFFEu 0uy 1us true false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0xFFFFFFFEu 0uy 1us NACA.T LINK.F
             let wsendData = PooledBuffer.Rent ( int m_MediaBlockSize )
             let! ittScsiCmd, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB wsendData 0u
             wsendData.Return()
@@ -1636,7 +1636,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
                 ()
 
             // check ACA status is retained after session recovery
-            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy 1us true false
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.T LINK.F
             let! itt, _ = r2.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) readCDB PooledBuffer.Empty 0u
             let! rpdu = r2.ReceiveSpecific<SCSIResponsePDU> g_CID0
             Assert.True(( rpdu.InitiatorTaskTag = itt ))
@@ -1732,7 +1732,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
             let errorLUN = lun_me.fromPrim 0xFFFFUL
 
-            let readCDB = GenScsiCDB.Read10 0uy false false false 0u 0uy 1us false false
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.F LINK.F
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK errorLUN 8192u readCDB PooledBuffer.Empty 0u
 
             try

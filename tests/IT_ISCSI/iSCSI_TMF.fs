@@ -200,7 +200,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Send SCSI write command
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us true false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.T LINK.F
             let! ittWrite, cmdSNWrite = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
 
             // Nop-Out 1
@@ -228,7 +228,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Send SCSI write command ( Immidiate command )
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us true false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.T LINK.F
             let! ittWrite, _ = r1.SendSCSICommandPDU g_CID0 BitI.T BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
 
             // Nop-Out 1
@@ -257,7 +257,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Send SCSI format command
-            let formatCDB = GenScsiCDB.FormatUnit false false false false false 0uy true false
+            let formatCDB = GenScsiCDB.FormatUnit FMTPINFO.F RTO_REQ.F LONGLIST.F FMTDATA.F CMPLIST.F 0uy NACA.T LINK.F
             let! ittFormat, cmdSNFormat = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 0u formatCDB PooledBuffer.Empty 0u
 
             // Send Abort Task TMF request for SCSI write command
@@ -286,7 +286,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Send SCSI format command ( Immidiate command )
-            let formatCDB = GenScsiCDB.FormatUnit false false false false false 0uy true false
+            let formatCDB = GenScsiCDB.FormatUnit FMTPINFO.F RTO_REQ.F LONGLIST.F FMTDATA.F CMPLIST.F 0uy NACA.T LINK.F
             let! ittFormat, _ = r1.SendSCSICommandPDU g_CID0 BitI.T BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 0u formatCDB PooledBuffer.Empty 0u
 
             // Send Abort Task TMF request for SCSI write command
@@ -314,7 +314,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Send SCSI write command
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us true false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.T LINK.F
             let! ittWrite, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
 
             // Send Abort Task TMF request for itself
@@ -377,14 +377,14 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Send SCSI write command to LU 1
-            let writeCDB_lu1 = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us true false
+            let writeCDB_lu1 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.T LINK.F
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB_lu1 PooledBuffer.Empty 0u
 
             // Send Nop-Out 1 to LU 1
             let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Send SCSI write command to LU 2
-            let writeCDB_lu2 = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us true false
+            let writeCDB_lu2 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.T LINK.F
             let! ittWrite_lu2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN2 ( uint m_MediaBlockSize ) writeCDB_lu2 PooledBuffer.Empty 0u
 
             // Send Abort Task Set TMF request to LU 1
@@ -426,14 +426,14 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             let! r2 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with CID = g_CID1 }
 
             // Send SCSI format command from session 1 to LU 1
-            let formatCDB_lu1 = GenScsiCDB.FormatUnit false false false false false 0uy true false
+            let formatCDB_lu1 = GenScsiCDB.FormatUnit FMTPINFO.F RTO_REQ.F LONGLIST.F FMTDATA.F CMPLIST.F 0uy NACA.T LINK.F
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 0u formatCDB_lu1 PooledBuffer.Empty 0u
 
             // Send SCSI format command from session 2 to LU 1
             let! ittFormat_s2l1, _ = r2.SendSCSICommandPDU g_CID1 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 0u formatCDB_lu1 PooledBuffer.Empty 0u
 
             // Send SCSI format command to LU 2
-            let formatCDB_lu2 = GenScsiCDB.FormatUnit false false false false false 0uy true false
+            let formatCDB_lu2 = GenScsiCDB.FormatUnit FMTPINFO.F RTO_REQ.F LONGLIST.F FMTDATA.F CMPLIST.F 0uy NACA.T LINK.F
             let! ittFormat_s1l2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN2 0u formatCDB_lu2 PooledBuffer.Empty 0u
 
             do! Task.Delay 50
@@ -483,7 +483,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
 
             // Send SCSI write command to LU 1, this command establlish ACA.
-            let writeCDB1_lu1 = GenScsiCDB.Write10 0uy false false false 0xFFFFFFFEu 0uy 1us true false
+            let writeCDB1_lu1 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0xFFFFFFFEu 0uy 1us NACA.T LINK.F
             let! ittWrite1_lu1, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB1_lu1 sendData 0u
 
             // Receive SCSI response PDU from LU 1
@@ -493,7 +493,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             Assert.True(( scsiRespPdu1_lu1.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
 
             // Send SCSI write command to LU 2, this command establlish ACA.
-            let writeCDB1_lu2 = GenScsiCDB.Write10 0uy false false false 0xFFFFFFFEu 0uy 1us true false
+            let writeCDB1_lu2 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0xFFFFFFFEu 0uy 1us NACA.T LINK.F
             let! ittWrite1_lu2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN2 ( uint m_MediaBlockSize ) writeCDB1_lu2 sendData 0u
 
             // Receive SCSI response PDU from LU 2
@@ -503,11 +503,11 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             Assert.True(( scsiRespPdu1_lu2.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
 
             // Send SCSI write command to LU 1
-            let writeCDB2_lu1 = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us true false
+            let writeCDB2_lu1 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.T LINK.F
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.ACA_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB2_lu1 PooledBuffer.Empty 0u
 
             // Send SCSI write command to LU 2
-            let writeCDB2_lu2 = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us true false
+            let writeCDB2_lu2 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.T LINK.F
             let! ittWrite2_lu2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.ACA_TASK g_LUN2 ( uint m_MediaBlockSize ) writeCDB2_lu2 PooledBuffer.Empty 0u
 
             // Send Clear ACA TMF request to LU 1
@@ -556,7 +556,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
 
             // Send SCSI write command to LU 1, this command establlish ACA.
-            let writeCDB1_lu1 = GenScsiCDB.Write10 0uy false false false 0xFFFFFFFEu 0uy 1us true false
+            let writeCDB1_lu1 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0xFFFFFFFEu 0uy 1us NACA.T LINK.F
             let! ittWrite1_lu1, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB1_lu1 sendData 0u
 
             // Receive SCSI response PDU from LU 1
@@ -566,7 +566,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             Assert.True(( scsiRespPdu1_lu1.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
 
             // Send SCSI write command to LU 2, this command establlish ACA.
-            let writeCDB1_lu2 = GenScsiCDB.Write10 0uy false false false 0xFFFFFFFEu 0uy 1us true false
+            let writeCDB1_lu2 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0xFFFFFFFEu 0uy 1us NACA.T LINK.F
             let! ittWrite1_lu2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN2 ( uint m_MediaBlockSize ) writeCDB1_lu2 sendData 0u
 
             // Receive SCSI response PDU from LU 2
@@ -576,11 +576,11 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             Assert.True(( scsiRespPdu1_lu2.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
 
             // Send SCSI format command to LU 1
-            let formatCDB_lu1 = GenScsiCDB.FormatUnit false false false false false 0uy true false
+            let formatCDB_lu1 = GenScsiCDB.FormatUnit FMTPINFO.F RTO_REQ.F LONGLIST.F FMTDATA.F CMPLIST.F 0uy NACA.T LINK.F
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.ACA_TASK g_LUN1 0u formatCDB_lu1 PooledBuffer.Empty 0u
 
             // Send SCSI format command to LU 2
-            let formatCDB_lu2 = GenScsiCDB.FormatUnit false false false false false 0uy true false
+            let formatCDB_lu2 = GenScsiCDB.FormatUnit FMTPINFO.F RTO_REQ.F LONGLIST.F FMTDATA.F CMPLIST.F 0uy NACA.T LINK.F
             let! ittFormat_lu2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.ACA_TASK g_LUN2 0u formatCDB_lu2 PooledBuffer.Empty 0u
 
             do! Task.Delay 50
@@ -631,14 +631,14 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Send SCSI write command to LU 1
-            let writeCDB_lu1 = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us true false
+            let writeCDB_lu1 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.T LINK.F
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB_lu1 PooledBuffer.Empty 0u
 
             // Send Nop-Out 1 to LU 1
             let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Send SCSI write command to LU 2
-            let writeCDB_lu2 = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us true false
+            let writeCDB_lu2 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.T LINK.F
             let! ittWrite_lu2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN2 ( uint m_MediaBlockSize ) writeCDB_lu2 PooledBuffer.Empty 0u
 
             // Send Clear Task Set TMF request to LU 1
@@ -678,7 +678,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
         task{
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
             let! r2 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
-            let formatCDB = GenScsiCDB.FormatUnit false false false false false 0uy true false
+            let formatCDB = GenScsiCDB.FormatUnit FMTPINFO.F RTO_REQ.F LONGLIST.F FMTDATA.F CMPLIST.F 0uy NACA.T LINK.F
 
             // Send SCSI format command to LU 1 on session 1
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 0u formatCDB PooledBuffer.Empty 0u
@@ -739,14 +739,14 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Send SCSI write command to LU 1
-            let writeCDB_lu1 = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us true false
+            let writeCDB_lu1 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.T LINK.F
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB_lu1 PooledBuffer.Empty 0u
 
             // Send Nop-Out 1 to LU 1
             let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Send SCSI write command to LU 2
-            let writeCDB_lu2 = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us true false
+            let writeCDB_lu2 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.T LINK.F
             let! ittWrite_lu2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN2 ( uint m_MediaBlockSize ) writeCDB_lu2 PooledBuffer.Empty 0u
 
             // Send Logical Unit Reset TMF request to LU 1
@@ -792,7 +792,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
         task{
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
             let! r2 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
-            let formatCDB = GenScsiCDB.FormatUnit false false false false false 0uy true false
+            let formatCDB = GenScsiCDB.FormatUnit FMTPINFO.F RTO_REQ.F LONGLIST.F FMTDATA.F CMPLIST.F 0uy NACA.T LINK.F
 
             // Send SCSI format command to LU 1 on session 1
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 0u formatCDB PooledBuffer.Empty 0u
@@ -862,7 +862,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
         task{
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
             let! r2 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
-            let formatCDB = GenScsiCDB.FormatUnit false false false false false 0uy true false
+            let formatCDB = GenScsiCDB.FormatUnit FMTPINFO.F RTO_REQ.F LONGLIST.F FMTDATA.F CMPLIST.F 0uy NACA.T LINK.F
 
             // Send SCSI format command to LU 1 on session 1
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 0u formatCDB PooledBuffer.Empty 0u
@@ -929,7 +929,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             let! r2 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Send SCSI write command to LU 1 and 2 on session 1
-            let writeCDB = GenScsiCDB.Write10 0uy false false false 0u 0uy 1us true false
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.T LINK.F
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN2 ( uint m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
 
@@ -998,7 +998,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
         task{
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
             let! r2 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
-            let formatCDB = GenScsiCDB.FormatUnit false false false false false 0uy true false
+            let formatCDB = GenScsiCDB.FormatUnit FMTPINFO.F RTO_REQ.F LONGLIST.F FMTDATA.F CMPLIST.F 0uy NACA.T LINK.F
 
             // Send SCSI format command to LU 1 and 2 on session 1
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 0u formatCDB PooledBuffer.Empty 0u
