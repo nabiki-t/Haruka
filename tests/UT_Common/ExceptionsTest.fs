@@ -2868,3 +2868,678 @@ type Exceptions_Test () =
             |]
         let d = sd.GetSenseData( false )
         Assert.True( ( d = exp ) )
+
+    [<Fact>]
+    member _.Parse_Desc_001() =
+        let sd1 = new SenseData(
+            true,
+            SenseKeyCd.ILLEGAL_REQUEST,
+            ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
+            // m_Information
+            ValueSome { Information = [| 1uy .. 4uy |] },
+            // m_CommandSpecific
+            ValueSome { CommandSpecific = [| 2uy .. 5uy |] },
+            // m_SenseKeySpecific
+            ValueSome( senseKeySpecificSenseDataDesc.FieldPointer(
+                { CommandData = true; BPV = true; BitPointer = 1uy; FieldPointer = 2us }
+            ) ),
+            // m_FieldReplaceableUnit
+            ValueSome { FieldReplaceableUnitCode = 0xEFuy },
+            // m_VendorSpecific
+            ValueSome { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 1uy .. 255uy |] },
+            // m_BlockCommand
+            ValueSome { ILI = true }
+        )
+        let v = sd1.GetSenseData true
+        let sd2_o = ParseSenseData.Parse v
+        Assert.True(( sd2_o.IsSome ))
+        let sd2 = sd2_o.Value
+        Assert.True(( sd2.IsCurrent ))
+        Assert.True(( sd2.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+        Assert.True(( sd2.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
+        Assert.True(( sd2.Information |> ValueOption.isSome ))
+        Assert.True(( sd2.Information |> ValueOption.get |> _.Information = [| 0uy; 0uy; 0uy; 0uy; 1uy; 2uy; 3uy; 4uy |] ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.isSome ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.get |> _.CommandSpecific = [| 0uy; 0uy; 0uy; 0uy; 2uy; 3uy; 4uy; 5uy |] ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.isSome ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.get |> _.CommandData ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.get |> _.BPV ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.get |> _.BitPointer = 1uy ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.get |> _.FieldPointer = 2us ))
+        Assert.True(( sd2.ActualRetryCount |> ValueOption.isNone ))
+        Assert.True(( sd2.ProgressIndication |> ValueOption.isNone ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.isSome ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.get |> _.FieldReplaceableUnitCode = 0xEFuy ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.isSome ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.get |> _.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.get |> _.VendorSpecific = [| 1uy .. 202uy |] ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.isSome ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.get |> _.ILI ))
+
+    [<Fact>]
+    member _.Parse_Desc_002() =
+        let sd1 = new SenseData(
+            true,
+            SenseKeyCd.HARDWARE_ERROR,
+            ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
+            // m_Information
+            ValueSome { Information = [| 1uy .. 8uy |] },
+            // m_CommandSpecific
+            ValueSome { CommandSpecific = [| 2uy .. 9uy |] },
+            // m_SenseKeySpecific
+            ValueSome( senseKeySpecificSenseDataDesc.ActualRetryCount(
+                { ActualRetryCount = 8us; }
+            ) ),
+            // m_FieldReplaceableUnit
+            ValueSome { FieldReplaceableUnitCode = 0xEFuy },
+            // m_VendorSpecific
+            ValueSome { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 1uy .. 201uy |] },
+            // m_BlockCommand
+            ValueSome { ILI = true }
+        )
+        let v = sd1.GetSenseData true
+        let sd2_o = ParseSenseData.Parse v
+        Assert.True(( sd2_o.IsSome ))
+        let sd2 = sd2_o.Value
+        Assert.True(( sd2.IsCurrent ))
+        Assert.True(( sd2.SenseKey = SenseKeyCd.HARDWARE_ERROR ))
+        Assert.True(( sd2.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
+        Assert.True(( sd2.Information |> ValueOption.isSome ))
+        Assert.True(( sd2.Information |> ValueOption.get |> _.Information = [| 1uy .. 8uy |] ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.isSome ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.get |> _.CommandSpecific = [| 2uy .. 9uy |] ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.ActualRetryCount |> ValueOption.isSome ))
+        Assert.True(( sd2.ActualRetryCount |> ValueOption.get |> _.ActualRetryCount = 8us ))
+        Assert.True(( sd2.ProgressIndication |> ValueOption.isNone ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.isSome ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.get |> _.FieldReplaceableUnitCode = 0xEFuy ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.isSome ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.get |> _.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.get |> _.VendorSpecific = [| 1uy .. 201uy |] ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.isSome ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.get |> _.ILI ))
+
+    [<Fact>]
+    member _.Parse_Desc_003() =
+        let sd1 = new SenseData(
+            true,
+            SenseKeyCd.NO_SENSE,
+            ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
+            // m_Information
+            ValueSome { Information = [| 1uy .. 10uy |] },
+            // m_CommandSpecific
+            ValueSome { CommandSpecific = [| 2uy .. 11uy |] },
+            // m_SenseKeySpecific
+            ValueSome( senseKeySpecificSenseDataDesc.ProgressIndication(
+                { ProgressIndication = 0xAABBus; }
+            ) ),
+            // m_FieldReplaceableUnit
+            ValueSome { FieldReplaceableUnitCode = 0xEFuy },
+            // m_VendorSpecific
+            ValueSome { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 1uy .. 202uy |] },
+            // m_BlockCommand
+            ValueSome { ILI = true }
+        )
+        let v = sd1.GetSenseData true
+        let sd2_o = ParseSenseData.Parse v
+        Assert.True(( sd2_o.IsSome ))
+        let sd2 = sd2_o.Value
+        Assert.True(( sd2.IsCurrent ))
+        Assert.True(( sd2.SenseKey = SenseKeyCd.NO_SENSE ))
+        Assert.True(( sd2.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
+        Assert.True(( sd2.Information |> ValueOption.isSome ))
+        Assert.True(( sd2.Information |> ValueOption.get |> _.Information = [| 1uy .. 8uy |] ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.isSome ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.get |> _.CommandSpecific = [| 2uy .. 9uy |] ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.ActualRetryCount |> ValueOption.isNone ))
+        Assert.True(( sd2.ProgressIndication |> ValueOption.isSome ))
+        Assert.True(( sd2.ProgressIndication |> ValueOption.get |> _.ProgressIndication = 0xAABBus ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.isSome ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.get |> _.FieldReplaceableUnitCode = 0xEFuy ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.isSome ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.get |> _.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.get |> _.VendorSpecific = [| 1uy .. 202uy |] ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.isSome ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.get |> _.ILI ))
+
+    [<Fact>]
+    member _.Parse_Desc_004() =
+        let sd1 = new SenseData(
+            true,
+            SenseKeyCd.COPY_ABORTED,
+            ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
+            // m_Information
+            ValueSome { Information = [| 1uy .. 4uy |] },
+            // m_CommandSpecific
+            ValueSome { CommandSpecific = [| 2uy .. 5uy |] },
+            // m_SenseKeySpecific
+            ValueSome( senseKeySpecificSenseDataDesc.SegmentPointer(
+                { SD = true; BPV = true; BitPointer = 6uy; FieldPointer = 7us; }
+            ) ),
+            // m_FieldReplaceableUnit
+            ValueSome { FieldReplaceableUnitCode = 0xEFuy },
+            // m_VendorSpecific
+            ValueSome { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 1uy .. 255uy |] },
+            // m_BlockCommand
+            ValueSome { ILI = true }
+        )
+        let v = sd1.GetSenseData true
+        let sd2_o = ParseSenseData.Parse v
+        Assert.True(( sd2_o.IsSome ))
+        let sd2 = sd2_o.Value
+        Assert.True(( sd2.IsCurrent ))
+        Assert.True(( sd2.SenseKey = SenseKeyCd.COPY_ABORTED ))
+        Assert.True(( sd2.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
+        Assert.True(( sd2.Information |> ValueOption.isSome ))
+        Assert.True(( sd2.Information |> ValueOption.get |> _.Information = [| 0uy; 0uy; 0uy; 0uy; 1uy; 2uy; 3uy; 4uy |] ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.isSome ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.get |> _.CommandSpecific = [| 0uy; 0uy; 0uy; 0uy; 2uy; 3uy; 4uy; 5uy |] ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.ActualRetryCount |> ValueOption.isNone ))
+        Assert.True(( sd2.ProgressIndication |> ValueOption.isNone ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.isSome ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.get |> _.SD ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.get |> _.BPV ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.get |> _.BitPointer = 6uy ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.get |> _.FieldPointer = 7us ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.isSome ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.get |> _.FieldReplaceableUnitCode = 0xEFuy ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.isSome ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.get |> _.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.get |> _.VendorSpecific = [| 1uy .. 202uy |] ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.isSome ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.get |> _.ILI ))
+
+    [<Fact>]
+    member _.Parse_Desc_005() =
+        let sd1 = new SenseData(
+            false,
+            SenseKeyCd.MISCOMPARE,
+            ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
+            // m_Information
+            ValueNone,
+            // m_CommandSpecific
+            ValueNone,
+            // m_SenseKeySpecific
+            ValueNone,
+            // m_FieldReplaceableUnit
+            ValueNone,
+            // m_VendorSpecific
+            ValueNone,
+            // m_BlockCommand
+            ValueNone
+        )
+        let v = sd1.GetSenseData true
+        let sd2_o = ParseSenseData.Parse v
+        Assert.True(( sd2_o.IsSome ))
+        let sd2 = sd2_o.Value
+        Assert.False(( sd2.IsCurrent ))
+        Assert.True(( sd2.SenseKey = SenseKeyCd.MISCOMPARE ))
+        Assert.True(( sd2.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
+        Assert.True(( sd2.Information |> ValueOption.isNone ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.isNone ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.ActualRetryCount |> ValueOption.isNone ))
+        Assert.True(( sd2.ProgressIndication |> ValueOption.isNone ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.isNone ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.isNone ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.isNone ))
+
+    [<Fact>]
+    member _.Parse_Desc_006() =
+        let sd1 = new SenseData(
+            true,
+            SenseKeyCd.COPY_ABORTED,
+            ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
+            // m_Information
+            ValueSome { Information = [| 1uy .. 4uy |] },
+            // m_CommandSpecific
+            ValueNone,
+            // m_SenseKeySpecific
+            ValueNone,
+            // m_FieldReplaceableUnit
+            ValueNone,
+            // m_VendorSpecific
+            ValueNone,
+            // m_BlockCommand
+            ValueNone
+        )
+        let v = sd1.GetSenseData true
+        let sd2_o = ParseSenseData.Parse v
+        Assert.True(( sd2_o.IsSome ))
+        let sd2 = sd2_o.Value
+        Assert.True(( sd2.IsCurrent ))
+        Assert.True(( sd2.SenseKey = SenseKeyCd.COPY_ABORTED ))
+        Assert.True(( sd2.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
+        Assert.True(( sd2.Information |> ValueOption.isSome ))
+        Assert.True(( sd2.Information |> ValueOption.get |> _.Information = [| 0uy; 0uy; 0uy; 0uy; 1uy; 2uy; 3uy; 4uy |] ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.isNone ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.ActualRetryCount |> ValueOption.isNone ))
+        Assert.True(( sd2.ProgressIndication |> ValueOption.isNone ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.isNone ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.isNone ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.isNone ))
+
+    [<Fact>]
+    member _.Parse_Desc_007() =
+        let sd1 = new SenseData(
+            true,
+            SenseKeyCd.COPY_ABORTED,
+            ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
+            // m_Information
+            ValueNone,
+            // m_CommandSpecific
+            ValueSome { CommandSpecific = [| 2uy .. 5uy |] },
+            // m_SenseKeySpecific
+            ValueNone,
+            // m_FieldReplaceableUnit
+            ValueNone,
+            // m_VendorSpecific
+            ValueNone,
+            // m_BlockCommand
+            ValueNone
+        )
+        let v = sd1.GetSenseData true
+        let sd2_o = ParseSenseData.Parse v
+        Assert.True(( sd2_o.IsSome ))
+        let sd2 = sd2_o.Value
+        Assert.True(( sd2.IsCurrent ))
+        Assert.True(( sd2.SenseKey = SenseKeyCd.COPY_ABORTED ))
+        Assert.True(( sd2.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
+        Assert.True(( sd2.Information |> ValueOption.isNone ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.isSome ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.get |> _.CommandSpecific = [| 0uy; 0uy; 0uy; 0uy; 2uy; 3uy; 4uy; 5uy |] ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.ActualRetryCount |> ValueOption.isNone ))
+        Assert.True(( sd2.ProgressIndication |> ValueOption.isNone ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.isNone ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.isNone ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.isNone ))
+
+    [<Fact>]
+    member _.Parse_Desc_008() =
+        let sd1 = new SenseData(
+            true,
+            SenseKeyCd.COPY_ABORTED,
+            ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
+            // m_Information
+            ValueNone,
+            // m_CommandSpecific
+            ValueNone,
+            // m_SenseKeySpecific
+            ValueSome( senseKeySpecificSenseDataDesc.SegmentPointer(
+                { SD = true; BPV = true; BitPointer = 6uy; FieldPointer = 7us; }
+            ) ),
+            // m_FieldReplaceableUnit
+            ValueNone,
+            // m_VendorSpecific
+            ValueNone,
+            // m_BlockCommand
+            ValueNone
+        )
+        let v = sd1.GetSenseData true
+        let sd2_o = ParseSenseData.Parse v
+        Assert.True(( sd2_o.IsSome ))
+        let sd2 = sd2_o.Value
+        Assert.True(( sd2.IsCurrent ))
+        Assert.True(( sd2.SenseKey = SenseKeyCd.COPY_ABORTED ))
+        Assert.True(( sd2.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
+        Assert.True(( sd2.Information |> ValueOption.isNone ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.isNone ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.ActualRetryCount |> ValueOption.isNone ))
+        Assert.True(( sd2.ProgressIndication |> ValueOption.isNone ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.isSome ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.get |> _.SD ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.get |> _.BPV ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.get |> _.BitPointer = 6uy ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.get |> _.FieldPointer = 7us ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.isNone ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.isNone ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.isNone ))
+
+    [<Fact>]
+    member _.Parse_Desc_009() =
+        let sd1 = new SenseData(
+            true,
+            SenseKeyCd.COPY_ABORTED,
+            ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
+            // m_Information
+            ValueNone,
+            // m_CommandSpecific
+            ValueNone,
+            // m_SenseKeySpecific
+            ValueNone,
+            // m_FieldReplaceableUnit
+            ValueSome { FieldReplaceableUnitCode = 0xEFuy },
+            // m_VendorSpecific
+            ValueNone,
+            // m_BlockCommand
+            ValueNone
+        )
+        let v = sd1.GetSenseData true
+        let sd2_o = ParseSenseData.Parse v
+        Assert.True(( sd2_o.IsSome ))
+        let sd2 = sd2_o.Value
+        Assert.True(( sd2.IsCurrent ))
+        Assert.True(( sd2.SenseKey = SenseKeyCd.COPY_ABORTED ))
+        Assert.True(( sd2.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
+        Assert.True(( sd2.Information |> ValueOption.isNone ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.isNone ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.ActualRetryCount |> ValueOption.isNone ))
+        Assert.True(( sd2.ProgressIndication |> ValueOption.isNone ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.isSome ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.get |> _.FieldReplaceableUnitCode = 0xEFuy ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.isNone ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.isNone ))
+
+    [<Fact>]
+    member _.Parse_Desc_010() =
+        let sd1 = new SenseData(
+            true,
+            SenseKeyCd.COPY_ABORTED,
+            ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
+            // m_Information
+            ValueNone,
+            // m_CommandSpecific
+            ValueNone,
+            // m_SenseKeySpecific
+            ValueNone,
+            // m_FieldReplaceableUnit
+            ValueNone,
+            // m_VendorSpecific
+            ValueSome { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 1uy .. 255uy |] },
+            // m_BlockCommand
+            ValueNone
+        )
+        let v = sd1.GetSenseData true
+        let sd2_o = ParseSenseData.Parse v
+        Assert.True(( sd2_o.IsSome ))
+        let sd2 = sd2_o.Value
+        Assert.True(( sd2.IsCurrent ))
+        Assert.True(( sd2.SenseKey = SenseKeyCd.COPY_ABORTED ))
+        Assert.True(( sd2.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
+        Assert.True(( sd2.Information |> ValueOption.isNone ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.isNone ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.ActualRetryCount |> ValueOption.isNone ))
+        Assert.True(( sd2.ProgressIndication |> ValueOption.isNone ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.isNone ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.isSome ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.get |> _.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.get |> _.VendorSpecific = [| 1uy .. 242uy |] ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.isNone ))
+
+    [<Fact>]
+    member _.Parse_Desc_011() =
+        let sd1 = new SenseData(
+            true,
+            SenseKeyCd.COPY_ABORTED,
+            ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
+            // m_Information
+            ValueNone,
+            // m_CommandSpecific
+            ValueNone,
+            // m_SenseKeySpecific
+            ValueNone,
+            // m_FieldReplaceableUnit
+            ValueNone,
+            // m_VendorSpecific
+            ValueNone,
+            // m_BlockCommand
+            ValueSome { ILI = true }
+        )
+        let v = sd1.GetSenseData true
+        let sd2_o = ParseSenseData.Parse v
+        Assert.True(( sd2_o.IsSome ))
+        let sd2 = sd2_o.Value
+        Assert.True(( sd2.IsCurrent ))
+        Assert.True(( sd2.SenseKey = SenseKeyCd.COPY_ABORTED ))
+        Assert.True(( sd2.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
+        Assert.True(( sd2.Information |> ValueOption.isNone ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.isNone ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.ActualRetryCount |> ValueOption.isNone ))
+        Assert.True(( sd2.ProgressIndication |> ValueOption.isNone ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.isNone ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.isNone ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.isSome ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.get |> _.ILI ))
+
+    [<Fact>]
+    member _.Parse_Fixed_001() =
+        let sd1 = new SenseData(
+            true,
+            SenseKeyCd.ILLEGAL_REQUEST,
+            ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
+            // m_Information
+            ValueSome { Information = [| 1uy .. 4uy |] },
+            // m_CommandSpecific
+            ValueSome { CommandSpecific = [| 2uy .. 5uy |] },
+            // m_SenseKeySpecific
+            ValueSome( senseKeySpecificSenseDataDesc.FieldPointer(
+                { CommandData = true; BPV = true; BitPointer = 1uy; FieldPointer = 2us }
+            ) ),
+            // m_FieldReplaceableUnit
+            ValueSome { FieldReplaceableUnitCode = 0xEFuy },
+            // m_VendorSpecific
+            ValueSome { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 1uy .. 255uy |] },
+            // m_BlockCommand
+            ValueSome { ILI = true }
+        )
+        let v = sd1.GetSenseData false
+        let sd2_o = ParseSenseData.Parse v
+        Assert.True(( sd2_o.IsSome ))
+        let sd2 = sd2_o.Value
+        Assert.True(( sd2.IsCurrent ))
+        Assert.True(( sd2.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+        Assert.True(( sd2.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
+        Assert.True(( sd2.Information |> ValueOption.isSome ))
+        Assert.True(( sd2.Information |> ValueOption.get |> _.Information = [| 1uy .. 4uy |] ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.isSome ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.get |> _.CommandSpecific = [| 2uy .. 5uy |] ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.isSome ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.get |> _.CommandData ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.get |> _.BPV ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.get |> _.BitPointer = 1uy ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.get |> _.FieldPointer = 2us ))
+        Assert.True(( sd2.ActualRetryCount |> ValueOption.isNone ))
+        Assert.True(( sd2.ProgressIndication |> ValueOption.isNone ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.isSome ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.get |> _.FieldReplaceableUnitCode = 0xEFuy ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.isSome ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.get |> _.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.get |> _.VendorSpecific = [| 1uy .. 234uy |] ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.isSome ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.get |> _.ILI ))
+
+    [<Fact>]
+    member _.Parse_Fixed_002() =
+        let sd1 = new SenseData(
+            true,
+            SenseKeyCd.HARDWARE_ERROR,
+            ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
+            // m_Information
+            ValueSome { Information = [| 1uy; 2uy |] },
+            // m_CommandSpecific
+            ValueSome { CommandSpecific = [| 2uy; 3uy |] },
+            // m_SenseKeySpecific
+            ValueSome( senseKeySpecificSenseDataDesc.ActualRetryCount(
+                { ActualRetryCount = 8us; }
+            ) ),
+            // m_FieldReplaceableUnit
+            ValueSome { FieldReplaceableUnitCode = 0xEFuy },
+            // m_VendorSpecific
+            ValueSome { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 1uy .. 233uy |] },
+            // m_BlockCommand
+            ValueSome { ILI = true }
+        )
+        let v = sd1.GetSenseData false
+        let sd2_o = ParseSenseData.Parse v
+        Assert.True(( sd2_o.IsSome ))
+        let sd2 = sd2_o.Value
+        Assert.True(( sd2.IsCurrent ))
+        Assert.True(( sd2.SenseKey = SenseKeyCd.HARDWARE_ERROR ))
+        Assert.True(( sd2.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
+        Assert.True(( sd2.Information |> ValueOption.isSome ))
+        Assert.True(( sd2.Information |> ValueOption.get |> _.Information = [| 0uy; 0uy; 1uy; 2uy |] ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.isSome ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.get |> _.CommandSpecific = [| 0uy; 0uy; 2uy; 3uy |] ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.ActualRetryCount |> ValueOption.isSome ))
+        Assert.True(( sd2.ActualRetryCount |> ValueOption.get |> _.ActualRetryCount = 8us ))
+        Assert.True(( sd2.ProgressIndication |> ValueOption.isNone ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.isSome ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.get |> _.FieldReplaceableUnitCode = 0xEFuy ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.isSome ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.get |> _.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.get |> _.VendorSpecific = [| 1uy .. 233uy |] ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.isSome ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.get |> _.ILI ))
+
+    [<Fact>]
+    member _.Parse_Fixed_003() =
+        let sd1 = new SenseData(
+            true,
+            SenseKeyCd.NO_SENSE,
+            ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
+            // m_Information
+            ValueSome { Information = [| 1uy .. 5uy |] },
+            // m_CommandSpecific
+            ValueSome { CommandSpecific = [| 2uy .. 6uy |] },
+            // m_SenseKeySpecific
+            ValueSome( senseKeySpecificSenseDataDesc.ProgressIndication(
+                { ProgressIndication = 0xAABBus; }
+            ) ),
+            // m_FieldReplaceableUnit
+            ValueSome { FieldReplaceableUnitCode = 0xEFuy },
+            // m_VendorSpecific
+            ValueSome { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 1uy .. 234uy |] },
+            // m_BlockCommand
+            ValueSome { ILI = true }
+        )
+        let v = sd1.GetSenseData false
+        let sd2_o = ParseSenseData.Parse v
+        Assert.True(( sd2_o.IsSome ))
+        let sd2 = sd2_o.Value
+        Assert.True(( sd2.IsCurrent ))
+        Assert.True(( sd2.SenseKey = SenseKeyCd.NO_SENSE ))
+        Assert.True(( sd2.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
+        Assert.True(( sd2.Information |> ValueOption.isNone ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.isSome ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.get |> _.CommandSpecific = [| 0uy; 0uy; 0uy; 0uy |] ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.ActualRetryCount |> ValueOption.isNone ))
+        Assert.True(( sd2.ProgressIndication |> ValueOption.isSome ))
+        Assert.True(( sd2.ProgressIndication |> ValueOption.get |> _.ProgressIndication = 0xAABBus ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.isSome ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.get |> _.FieldReplaceableUnitCode = 0xEFuy ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.isSome ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.get |> _.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.get |> _.VendorSpecific = [| 1uy .. 234uy |] ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.isSome ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.get |> _.ILI ))
+
+    [<Fact>]
+    member _.Parse_Fixed_004() =
+        let sd1 = new SenseData(
+            true,
+            SenseKeyCd.COPY_ABORTED,
+            ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
+            // m_Information
+            ValueSome { Information = [| 1uy .. 4uy |] },
+            // m_CommandSpecific
+            ValueSome { CommandSpecific = [| 2uy .. 5uy |] },
+            // m_SenseKeySpecific
+            ValueSome( senseKeySpecificSenseDataDesc.SegmentPointer(
+                { SD = true; BPV = true; BitPointer = 6uy; FieldPointer = 7us; }
+            ) ),
+            // m_FieldReplaceableUnit
+            ValueSome { FieldReplaceableUnitCode = 0xEFuy },
+            // m_VendorSpecific
+            ValueSome { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 1uy .. 255uy |] },
+            // m_BlockCommand
+            ValueSome { ILI = true }
+        )
+        let v = sd1.GetSenseData false
+        let sd2_o = ParseSenseData.Parse v
+        Assert.True(( sd2_o.IsSome ))
+        let sd2 = sd2_o.Value
+        Assert.True(( sd2.IsCurrent ))
+        Assert.True(( sd2.SenseKey = SenseKeyCd.COPY_ABORTED ))
+        Assert.True(( sd2.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
+        Assert.True(( sd2.Information |> ValueOption.isSome ))
+        Assert.True(( sd2.Information |> ValueOption.get |> _.Information = [| 1uy .. 4uy |] ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.isSome ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.get |> _.CommandSpecific = [| 2uy .. 5uy |] ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.ActualRetryCount |> ValueOption.isNone ))
+        Assert.True(( sd2.ProgressIndication |> ValueOption.isNone ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.isSome ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.get |> _.SD ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.get |> _.BPV ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.get |> _.BitPointer = 6uy ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.get |> _.FieldPointer = 7us ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.isSome ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.get |> _.FieldReplaceableUnitCode = 0xEFuy ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.isSome ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.get |> _.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.get |> _.VendorSpecific = [| 1uy .. 234uy |] ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.isSome ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.get |> _.ILI ))
+
+    [<Fact>]
+    member _.Parse_Fixed_005() =
+        let sd1 = new SenseData(
+            false,
+            SenseKeyCd.MISCOMPARE,
+            ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
+            // m_Information
+            ValueNone,
+            // m_CommandSpecific
+            ValueNone,
+            // m_SenseKeySpecific
+            ValueNone,
+            // m_FieldReplaceableUnit
+            ValueNone,
+            // m_VendorSpecific
+            ValueNone,
+            // m_BlockCommand
+            ValueNone
+        )
+        let v = sd1.GetSenseData false
+        let sd2_o = ParseSenseData.Parse v
+        Assert.True(( sd2_o.IsSome ))
+        let sd2 = sd2_o.Value
+        Assert.False(( sd2.IsCurrent ))
+        Assert.True(( sd2.SenseKey = SenseKeyCd.MISCOMPARE ))
+        Assert.True(( sd2.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
+        Assert.True(( sd2.Information |> ValueOption.isNone ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.isSome ))
+        Assert.True(( sd2.CommandSpecific |> ValueOption.get |> _.CommandSpecific = [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; |] ))
+        Assert.True(( sd2.FieldPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.ActualRetryCount |> ValueOption.isNone ))
+        Assert.True(( sd2.ProgressIndication |> ValueOption.isNone ))
+        Assert.True(( sd2.SegmentPointer |> ValueOption.isNone ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.isSome ))
+        Assert.True(( sd2.FieldReplaceableUnit |> ValueOption.get |> _.FieldReplaceableUnitCode = 0uy ))
+        Assert.True(( sd2.VendorSpecific |> ValueOption.isNone ))
+        Assert.True(( sd2.BlockCommand |> ValueOption.isSome ))
+        Assert.False(( sd2.BlockCommand |> ValueOption.get |> _.ILI ))
+

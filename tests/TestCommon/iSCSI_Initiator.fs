@@ -2024,7 +2024,8 @@ type iSCSI_Initiator(
                     | _ -> ()
 
                     if recvPDU.Status <> LoginResStatCd.SUCCESS then
-                        let msg = sprintf "Unexpected login response status(%s) was received." ( recvPDU.Status.ToString() )
+                        let stat = recvPDU.Status
+                        let msg = sprintf "Unexpected login response status(%s) was received." ( stat.ToString() )
                         raise <| SessionRecoveryException ( msg, tsih_me.zero )
 
                     rv.Add recvPDU
@@ -2130,7 +2131,8 @@ type iSCSI_Initiator(
                     if emptyLoginResponsePDU.StatSN <> loginRequest.ExpStatSN then
                         raise <| SessionRecoveryException ( "Unexpected StatSN value.", tsih_me.zero )
                     if emptyLoginResponsePDU.Status <> LoginResStatCd.SUCCESS then
-                        let msg = sprintf "Unexpected login response status(%s) was received." ( emptyLoginResponsePDU.Status.ToString() )
+                        let stat = emptyLoginResponsePDU.Status
+                        let msg = sprintf "Unexpected login response status(%s) was received." ( stat.ToString() )
                         raise <| SessionRecoveryException ( msg, tsih_me.zero )
 
             let lastSendExpStatSN = statsn_me.incr ( uint sendTextResponses.Length - 1u ) nextExpStatSN

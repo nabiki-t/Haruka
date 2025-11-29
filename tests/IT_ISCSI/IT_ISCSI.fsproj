@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <Compile Include="ClientProc.fs" />
-    <Compile Include="iSCSI_Initiator.fs" />
     <Compile Include="TestFunctions.fs" />
     <Compile Include="iSCSI_LoginTest1.fs" />
     <Compile Include="iSCSI_LoginTest2.fs" />

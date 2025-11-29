@@ -26,6 +26,8 @@
     <Compile Include="Stub.fs" />
     <Compile Include="StubProcCtrl.fs" />
     <Compile Include="GenScsiCDB.fs" />
+    <Compile Include="iSCSI_Initiator.fs" />
+    <Compile Include="ParseSenseData.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
 
@@ -33,6 +35,7 @@
     <ProjectReference Include="..\..\products\BlockDeviceLU\BlockDeviceLU.fsproj" />
     <ProjectReference Include="..\..\products\Commons\Commons.fsproj" />
     <ProjectReference Include="..\..\products\Constants\Constants.fsproj" />
+    <ProjectReference Include="..\..\products\TargetDevice\TargetDevice.fsproj" />
   </ItemGroup>
 
 </Project>
