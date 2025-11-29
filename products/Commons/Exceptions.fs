@@ -94,16 +94,16 @@ type segmentPointerSenseKeySpecificData = {
 /// <remarks>
 /// To set a value for one of the fields.
 /// </remarks>
-type senseKeySpecificSenseDataDesc = {
+type senseKeySpecificSenseDataDesc =
     /// Field pointer sense key specific data ( Sense key is ILLEGAL REQUEST )
-    FieldPointer : fieldPointerSenseKeySpecificData option;
+    | FieldPointer of fieldPointerSenseKeySpecificData
     /// Actual retry count sense key specific data ( Sense key is HARDWARE ERROR, MEDIUM ERROR, RECOVERED ERROR )
-    ActualRetryCount : actualRetryCountSenseKeySpecificData option;
+    | ActualRetryCount of actualRetryCountSenseKeySpecificData
     /// Progress indication sense key specific data ( Sense key is NO SENSE, NOT READY )
-    ProgressIndication : progressIndicationSenseKeySpecificData option;
+    | ProgressIndication of progressIndicationSenseKeySpecificData
     /// Segment pointer sense key specific data ( Sense key is COPY ABORTED )
-    SegmentPointer : segmentPointerSenseKeySpecificData option;
-}
+    | SegmentPointer of segmentPointerSenseKeySpecificData
+
 
 /// <summary>
 /// It defines data type of argument that is passed to SenseData class
@@ -179,12 +179,12 @@ type SenseData
         m_IsCurrent : bool,
         m_SenseKey : SenseKeyCd,
         m_ASC : ASCCd,
-        m_Information : informationSenseDataDesc option,
-        m_CommandSpecific : commandSpecificSenseDataDesc option,
-        m_SenseKeySpecific : senseKeySpecificSenseDataDesc option,
-        m_FieldReplaceableUnit : fieldReplaceableUnitSenseDataDesc option,
-        m_VendorSpecific : vendorSpecificSenseDataDesc option,
-        m_BlockCommand : blockCommandSenseDataDesc option
+        m_Information : informationSenseDataDesc voption,
+        m_CommandSpecific : commandSpecificSenseDataDesc voption,
+        m_SenseKeySpecific : senseKeySpecificSenseDataDesc voption,
+        m_FieldReplaceableUnit : fieldReplaceableUnitSenseDataDesc voption,
+        m_VendorSpecific : vendorSpecificSenseDataDesc voption,
+        m_BlockCommand : blockCommandSenseDataDesc voption
     ) =
 
         /// Arguments of m_SenseKeySpecific and m_SenseKey is valid or not.
@@ -195,28 +195,24 @@ type SenseData
             else
                 match m_SenseKey with
                 | SenseKeyCd.ILLEGAL_REQUEST ->
-                    m_SenseKeySpecific.Value.FieldPointer.IsSome && 
-                    m_SenseKeySpecific.Value.ActualRetryCount.IsNone &&
-                    m_SenseKeySpecific.Value.ProgressIndication.IsNone &&
-                    m_SenseKeySpecific.Value.SegmentPointer.IsNone
+                    match m_SenseKeySpecific.Value with
+                    | FieldPointer( _ ) -> true
+                    | _ -> false
                 | SenseKeyCd.HARDWARE_ERROR
                 | SenseKeyCd.MEDIUM_ERROR
                 | SenseKeyCd.RECOVERED_ERROR ->
-                    m_SenseKeySpecific.Value.FieldPointer.IsNone && 
-                    m_SenseKeySpecific.Value.ActualRetryCount.IsSome &&
-                    m_SenseKeySpecific.Value.ProgressIndication.IsNone &&
-                    m_SenseKeySpecific.Value.SegmentPointer.IsNone
+                    match m_SenseKeySpecific.Value with
+                    | ActualRetryCount( _ ) -> true
+                    | _ -> false
                 | SenseKeyCd.NO_SENSE
                 | SenseKeyCd.NOT_READY ->
-                    m_SenseKeySpecific.Value.FieldPointer.IsNone && 
-                    m_SenseKeySpecific.Value.ActualRetryCount.IsNone &&
-                    m_SenseKeySpecific.Value.ProgressIndication.IsSome &&
-                    m_SenseKeySpecific.Value.SegmentPointer.IsNone
+                    match m_SenseKeySpecific.Value with
+                    | ProgressIndication( _ ) -> true
+                    | _ -> false
                 | SenseKeyCd.COPY_ABORTED ->
-                    m_SenseKeySpecific.Value.FieldPointer.IsNone && 
-                    m_SenseKeySpecific.Value.ActualRetryCount.IsNone &&
-                    m_SenseKeySpecific.Value.ProgressIndication.IsNone &&
-                    m_SenseKeySpecific.Value.SegmentPointer.IsSome
+                    match m_SenseKeySpecific.Value with
+                    | SegmentPointer( _ ) -> true
+                    | _ -> false
                 | _ ->
                     false
         do
@@ -256,12 +252,12 @@ type SenseData
                     argIsCurrent,
                     argSenseKey,
                     argASC,
-                    Some argInformation,
-                    None,
-                    None,
-                    None,
+                    ValueSome argInformation,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
                     SenseData.GetOptionalVendorSpecificDesc( argDescType, argMessage ),
-                    None
+                    ValueNone
                 )
 
         /// <summary>
@@ -297,12 +293,12 @@ type SenseData
                     argIsCurrent,
                     argSenseKey,
                     argASC,
-                    None,
-                    Some argCommandSpecific,
-                    None,
-                    None,
+                    ValueNone,
+                    ValueSome argCommandSpecific,
+                    ValueNone,
+                    ValueNone,
                     SenseData.GetOptionalVendorSpecificDesc( argDescType, argMessage ),
-                    None
+                    ValueNone
                 )
 
         /// <summary>
@@ -338,17 +334,12 @@ type SenseData
                     argIsCurrent,
                     argSenseKey,
                     argASC,
-                    None,
-                    None,
-                    Some {
-                        FieldPointer = Some argFieldPointer;
-                        ActualRetryCount = None;
-                        ProgressIndication = None;
-                        SegmentPointer = None;
-                    },
-                    None,
+                    ValueNone,
+                    ValueNone,
+                    ValueSome( senseKeySpecificSenseDataDesc.FieldPointer( argFieldPointer ) ),
+                    ValueNone,
                     SenseData.GetOptionalVendorSpecificDesc( argDescType, argMessage ),
-                    None
+                    ValueNone
                 )
 
         /// <summary>
@@ -384,17 +375,12 @@ type SenseData
                     argIsCurrent,
                     argSenseKey,
                     argASC,
-                    None,
-                    None,
-                    Some {
-                        FieldPointer = None;
-                        ActualRetryCount = Some argActualRetryCount;
-                        ProgressIndication = None;
-                        SegmentPointer = None;
-                    },
-                    None,
+                    ValueNone,
+                    ValueNone,
+                    ValueSome( senseKeySpecificSenseDataDesc.ActualRetryCount( argActualRetryCount ) ),
+                    ValueNone,
                     SenseData.GetOptionalVendorSpecificDesc( argDescType, argMessage ),
-                    None
+                    ValueNone
                 )
 
         /// <summary>
@@ -430,17 +416,12 @@ type SenseData
                     argIsCurrent,
                     argSenseKey,
                     argASC,
-                    None,
-                    None,
-                    Some {
-                        FieldPointer = None;
-                        ActualRetryCount = None;
-                        ProgressIndication = Some argProgressIndication;
-                        SegmentPointer = None;
-                    },
-                    None,
+                    ValueNone,
+                    ValueNone,
+                    ValueSome( senseKeySpecificSenseDataDesc.ProgressIndication( argProgressIndication ) ),
+                    ValueNone,
                     SenseData.GetOptionalVendorSpecificDesc( argDescType, argMessage ),
-                    None
+                    ValueNone
                 )
 
         /// <summary>
@@ -476,17 +457,12 @@ type SenseData
                     argIsCurrent,
                     argSenseKey,
                     argASC,
-                    None,
-                    None,
-                    Some {
-                        FieldPointer = None;
-                        ActualRetryCount = None;
-                        ProgressIndication = None;
-                        SegmentPointer = Some argSegmentPointer;
-                    },
-                    None,
+                    ValueNone,
+                    ValueNone,
+                    ValueSome( senseKeySpecificSenseDataDesc.SegmentPointer( argSegmentPointer ) ),
+                    ValueNone,
                     SenseData.GetOptionalVendorSpecificDesc( argDescType, argMessage ),
-                    None
+                    ValueNone
                 )
 
         /// <summary>
@@ -522,12 +498,12 @@ type SenseData
                     argIsCurrent,
                     argSenseKey,
                     argASC,
-                    None,
-                    None,
-                    None,
-                    Some argFieldReplaceableUnit,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueSome argFieldReplaceableUnit,
                     SenseData.GetOptionalVendorSpecificDesc( argDescType, argMessage ),
-                    None
+                    ValueNone
                 )
 
         /// <summary>
@@ -551,7 +527,7 @@ type SenseData
             argASC : ASCCd,
             argVendorSpecific : vendorSpecificSenseDataDesc
             ) =
-                new SenseData( argIsCurrent, argSenseKey, argASC, None, None, None, None, Some argVendorSpecific, None )
+                new SenseData( argIsCurrent, argSenseKey, argASC, ValueNone, ValueNone, ValueNone, ValueNone, ValueSome argVendorSpecific, ValueNone )
 
         /// <summary>
         ///  SenseData class constractor with Block command sense data descriptor.
@@ -586,12 +562,12 @@ type SenseData
                     argIsCurrent,
                     argSenseKey,
                     argASC,
-                    None,
-                    None,
-                    None,
-                    None,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
                     SenseData.GetOptionalVendorSpecificDesc( argDescType, argMessage ),
-                    Some argBlockCommand
+                    ValueSome argBlockCommand
                 )
 
         /// <summary>
@@ -619,12 +595,12 @@ type SenseData
                     argIsCurrent,
                     argSenseKey,
                     argASC,
-                    None,
-                    None,
-                    None,
-                    None,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
                     SenseData.GetOptionalVendorSpecificDesc( Some VendorSpecificSenseDataDescType.TEXT_MESSAGE, Some argMessage ),
-                    None
+                    ValueNone
                 )
 
         /// <summary>
@@ -640,14 +616,14 @@ type SenseData
         ///  If both argument argDescType and argMessage is specified, it returns vendor specific sense data descriptor stracture.
         ///  If not, returns None.
         /// </returns>
-        static member private GetOptionalVendorSpecificDesc( argDescType : VendorSpecificSenseDataDescType option, argMessage : string option ) : vendorSpecificSenseDataDesc option =
+        static member private GetOptionalVendorSpecificDesc( argDescType : VendorSpecificSenseDataDescType option, argMessage : string option ) : vendorSpecificSenseDataDesc voption =
             if box argMessage <> null && box argDescType <> null then
-                Some {
+                ValueSome {
                     DescriptorType = argDescType.Value;
                     VendorSpecific = Encoding.GetEncoding( "utf-8" ).GetBytes( argMessage.Value )
                 }
             else
-                None
+                ValueNone
 
         /// <summary>
         ///  Get sense data byte array for sending response to initiator.
@@ -847,37 +823,35 @@ type SenseData
         /// </param>
         member private _.GetSenseKeySpecificSenseDataBytes( argSKS ) : byte[] =
             [|
-                if argSKS.FieldPointer.IsSome then
+                match argSKS with
+                | FieldPointer( x ) ->
                     // Field pointer sense key specific data
                     yield
                         0x80uy |||
-                        ( Functions.SetBitflag argSKS.FieldPointer.Value.CommandData 0x40uy ) |||
-                        ( Functions.SetBitflag argSKS.FieldPointer.Value.BPV 0x08uy ) |||
-                        ( argSKS.FieldPointer.Value.BitPointer &&& 0x07uy );
-                    yield ( argSKS.FieldPointer.Value.FieldPointer >>> 8 ) |> byte;
-                    yield argSKS.FieldPointer.Value.FieldPointer |> byte;
-                elif argSKS.ActualRetryCount.IsSome then
+                        ( Functions.SetBitflag x.CommandData 0x40uy ) |||
+                        ( Functions.SetBitflag x.BPV 0x08uy ) |||
+                        ( x.BitPointer &&& 0x07uy );
+                    yield ( x.FieldPointer >>> 8 ) |> byte;
+                    yield x.FieldPointer |> byte;
+                | ActualRetryCount( x ) ->
                     // Actual retry count sense key specific data
                     yield 0x80uy;
-                    yield ( argSKS.ActualRetryCount.Value.ActualRetryCount >>> 8 ) |> byte;
-                    yield argSKS.ActualRetryCount.Value.ActualRetryCount |> byte;
-                elif argSKS.ProgressIndication.IsSome then
+                    yield ( x.ActualRetryCount >>> 8 ) |> byte;
+                    yield x.ActualRetryCount |> byte;
+                | ProgressIndication( x ) ->
                     // Progress indication sense key specific data
                     yield 0x80uy;
-                    yield ( argSKS.ProgressIndication.Value.ProgressIndication >>> 8 ) |> byte;
-                    yield argSKS.ProgressIndication.Value.ProgressIndication |> byte;
-                elif argSKS.SegmentPointer.IsSome then
+                    yield ( x.ProgressIndication >>> 8 ) |> byte;
+                    yield x.ProgressIndication |> byte;
+                | SegmentPointer( x ) ->
                     // Segment pointer sense key specific data
                     yield
                         0x80uy |||
-                        ( Functions.SetBitflag argSKS.SegmentPointer.Value.SD 0x20uy ) |||
-                        ( Functions.SetBitflag argSKS.SegmentPointer.Value.BPV 0x08uy ) |||
-                        ( argSKS.SegmentPointer.Value.BitPointer &&& 0x07uy );
-                    yield ( argSKS.SegmentPointer.Value.FieldPointer >>> 8 ) |> byte;
-                    yield argSKS.SegmentPointer.Value.FieldPointer |> byte;
-                else
-                    yield! [| 0x00uy; 0x00uy; 0x00uy |];
-                    assert( false )
+                        ( Functions.SetBitflag x.SD 0x20uy ) |||
+                        ( Functions.SetBitflag x.BPV 0x08uy ) |||
+                        ( x.BitPointer &&& 0x07uy );
+                    yield ( x.FieldPointer >>> 8 ) |> byte;
+                    yield x.FieldPointer |> byte;
             |]
 
         /// Current error or not.
@@ -893,39 +867,67 @@ type SenseData
             m_ASC
 
         /// Get Information sense data
-        member _.Information : informationSenseDataDesc option =
+        member _.Information : informationSenseDataDesc voption =
             m_Information
 
         /// Get Command-specific information sense data
-        member _.CommandSpecific : commandSpecificSenseDataDesc option =
+        member _.CommandSpecific : commandSpecificSenseDataDesc voption =
             m_CommandSpecific
 
         /// Get Field pointer sense key specific data
-        member _.FieldPointer : fieldPointerSenseKeySpecificData option =
-            if m_SenseKeySpecific.IsSome then m_SenseKeySpecific.Value.FieldPointer else None
+        member _.FieldPointer : fieldPointerSenseKeySpecificData voption =
+            if m_SenseKeySpecific.IsSome then 
+                match m_SenseKeySpecific.Value with
+                | FieldPointer( x ) ->
+                    ValueSome x
+                | _ ->
+                    ValueNone
+            else
+                ValueNone
 
         /// Get Actual retry count sense key specific data
-        member _.ActualRetryCount : actualRetryCountSenseKeySpecificData option =
-            if m_SenseKeySpecific.IsSome then m_SenseKeySpecific.Value.ActualRetryCount else None
+        member _.ActualRetryCount : actualRetryCountSenseKeySpecificData voption =
+            if m_SenseKeySpecific.IsSome then 
+                match m_SenseKeySpecific.Value with
+                | ActualRetryCount( x ) ->
+                    ValueSome x
+                | _ ->
+                    ValueNone
+            else
+                ValueNone
 
         /// Get Progress indication sense key specific data
-        member _.ProgressIndication : progressIndicationSenseKeySpecificData option =
-            if m_SenseKeySpecific.IsSome then m_SenseKeySpecific.Value.ProgressIndication else None
+        member _.ProgressIndication : progressIndicationSenseKeySpecificData voption =
+            if m_SenseKeySpecific.IsSome then 
+                match m_SenseKeySpecific.Value with
+                | ProgressIndication( x ) ->
+                    ValueSome x
+                | _ ->
+                    ValueNone
+            else
+                ValueNone
 
         /// Get Segment pointer sense key specific data
-        member _.SegmentPointer : segmentPointerSenseKeySpecificData option =
-            if m_SenseKeySpecific.IsSome then m_SenseKeySpecific.Value.SegmentPointer else None
+        member _.SegmentPointer : segmentPointerSenseKeySpecificData voption =
+            if m_SenseKeySpecific.IsSome then 
+                match m_SenseKeySpecific.Value with
+                | SegmentPointer( x ) ->
+                    ValueSome x
+                | _ ->
+                    ValueNone
+            else
+                ValueNone
 
         /// Get Field replaceable unit sense data
-        member _.FieldReplaceableUnit : fieldReplaceableUnitSenseDataDesc option =
+        member _.FieldReplaceableUnit : fieldReplaceableUnitSenseDataDesc voption =
             m_FieldReplaceableUnit
 
         /// Get Vendor specific sense data
-        member _.VendorSpecific : vendorSpecificSenseDataDesc option =
+        member _.VendorSpecific : vendorSpecificSenseDataDesc voption =
             m_VendorSpecific
 
         /// Get Block command sense data
-        member _.BlockCommand : blockCommandSenseDataDesc option =
+        member _.BlockCommand : blockCommandSenseDataDesc voption =
             m_BlockCommand
 
         /// Get sense data description string for log output.

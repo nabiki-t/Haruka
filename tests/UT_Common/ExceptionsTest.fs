@@ -31,40 +31,16 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.ABORTED_COMMAND,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
-                None,   // m_SenseKeySpecific
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
+                ValueNone,   // m_SenseKeySpecific
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
         Assert.True( result )
-
-    [<Fact>]
-    member _.Test_m_SenseKeySpecificArgsValid_002() =
-        let sd =
-            new SenseData(
-                true,
-                SenseKeyCd.ILLEGAL_REQUEST,
-                ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
-                // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
-            )
-        let pc = new PrivateCaller( sd )
-        let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
-        Assert.False( result )
 
     [<Fact>]
     member _.Test_m_SenseKeySpecificArgsValid_003() =
@@ -73,18 +49,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.ILLEGAL_REQUEST,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = Some { CommandData = true; BPV = true; BitPointer = 0uy; FieldPointer = 0us };
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome( senseKeySpecificSenseDataDesc.FieldPointer(
+                    { CommandData = true; BPV = true; BitPointer = 0uy; FieldPointer = 0us }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -97,18 +70,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.ILLEGAL_REQUEST,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = Some{ ActualRetryCount = 0us; };
-                    ProgressIndication = None;
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome ( senseKeySpecificSenseDataDesc.ActualRetryCount (
+                    { ActualRetryCount = 0us; }
+                ) ) ,
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -121,18 +91,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.ILLEGAL_REQUEST,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = Some { ProgressIndication = 0us };
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome ( senseKeySpecificSenseDataDesc.ProgressIndication (
+                    { ProgressIndication = 0us }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -145,42 +112,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.ILLEGAL_REQUEST,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = Some { SD = true; BPV = false; BitPointer = 0uy; FieldPointer = 0us; };
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
-            )
-        let pc = new PrivateCaller( sd )
-        let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
-        Assert.False( result )
-
-    [<Fact>]
-    member _.Test_m_SenseKeySpecificArgsValid_007() =
-        let sd =
-            new SenseData(
-                true,
-                SenseKeyCd.HARDWARE_ERROR,
-                ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
-                // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome ( senseKeySpecificSenseDataDesc.SegmentPointer (
+                    { SD = true; BPV = false; BitPointer = 0uy; FieldPointer = 0us; }
+                ) ) ,
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -193,18 +133,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.HARDWARE_ERROR,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = Some { CommandData = true; BPV = true; BitPointer = 0uy; FieldPointer = 0us };
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome ( senseKeySpecificSenseDataDesc.FieldPointer( 
+                    { CommandData = true; BPV = true; BitPointer = 0uy; FieldPointer = 0us };
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -217,18 +154,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.HARDWARE_ERROR,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = Some{ ActualRetryCount = 0us; };
-                    ProgressIndication = None;
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome ( senseKeySpecificSenseDataDesc.ActualRetryCount(
+                    { ActualRetryCount = 0us; }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -241,18 +175,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.HARDWARE_ERROR,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = Some { ProgressIndication = 0us };
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome ( senseKeySpecificSenseDataDesc.ProgressIndication(
+                    { ProgressIndication = 0us }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -265,42 +196,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.HARDWARE_ERROR,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = Some { SD = true; BPV = false; BitPointer = 0uy; FieldPointer = 0us; };
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
-            )
-        let pc = new PrivateCaller( sd )
-        let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
-        Assert.False( result )
-
-    [<Fact>]
-    member _.Test_m_SenseKeySpecificArgsValid_012() =
-        let sd =
-            new SenseData(
-                true,
-                SenseKeyCd.MEDIUM_ERROR,
-                ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
-                // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome ( senseKeySpecificSenseDataDesc.SegmentPointer(
+                    { SD = true; BPV = false; BitPointer = 0uy; FieldPointer = 0us; }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -313,18 +217,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.MEDIUM_ERROR,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = Some { CommandData = true; BPV = true; BitPointer = 0uy; FieldPointer = 0us };
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome( senseKeySpecificSenseDataDesc.FieldPointer(
+                    { CommandData = true; BPV = true; BitPointer = 0uy; FieldPointer = 0us }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -337,18 +238,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.MEDIUM_ERROR,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = Some{ ActualRetryCount = 0us; };
-                    ProgressIndication = None;
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome( senseKeySpecificSenseDataDesc.ActualRetryCount(
+                    { ActualRetryCount = 0us; }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -361,18 +259,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.MEDIUM_ERROR,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = Some { ProgressIndication = 0us };
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome( senseKeySpecificSenseDataDesc.ProgressIndication(
+                    { ProgressIndication = 0us }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -385,42 +280,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.MEDIUM_ERROR,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = Some { SD = true; BPV = false; BitPointer = 0uy; FieldPointer = 0us; };
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
-            )
-        let pc = new PrivateCaller( sd )
-        let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
-        Assert.False( result )
-
-    [<Fact>]
-    member _.Test_m_SenseKeySpecificArgsValid_017() =
-        let sd =
-            new SenseData(
-                true,
-                SenseKeyCd.RECOVERED_ERROR,
-                ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
-                // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome( senseKeySpecificSenseDataDesc.SegmentPointer(
+                    { SD = true; BPV = false; BitPointer = 0uy; FieldPointer = 0us; }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -433,18 +301,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.RECOVERED_ERROR,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = Some { CommandData = true; BPV = true; BitPointer = 0uy; FieldPointer = 0us };
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome( senseKeySpecificSenseDataDesc.FieldPointer(
+                    { CommandData = true; BPV = true; BitPointer = 0uy; FieldPointer = 0us }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -457,18 +322,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.RECOVERED_ERROR,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = Some{ ActualRetryCount = 0us; };
-                    ProgressIndication = None;
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome( senseKeySpecificSenseDataDesc.ActualRetryCount(
+                    { ActualRetryCount = 0us; }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -481,18 +343,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.RECOVERED_ERROR,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = Some { ProgressIndication = 0us };
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome( senseKeySpecificSenseDataDesc.ProgressIndication(
+                    { ProgressIndication = 0us }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -505,42 +364,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.RECOVERED_ERROR,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = Some { SD = true; BPV = false; BitPointer = 0uy; FieldPointer = 0us; };
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
-            )
-        let pc = new PrivateCaller( sd )
-        let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
-        Assert.False( result )
-
-    [<Fact>]
-    member _.Test_m_SenseKeySpecificArgsValid_022() =
-        let sd =
-            new SenseData(
-                true,
-                SenseKeyCd.NO_SENSE,
-                ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
-                // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome( senseKeySpecificSenseDataDesc.SegmentPointer(
+                    { SD = true; BPV = false; BitPointer = 0uy; FieldPointer = 0us; }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -553,18 +385,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.NO_SENSE,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = Some { CommandData = true; BPV = true; BitPointer = 0uy; FieldPointer = 0us };
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome( senseKeySpecificSenseDataDesc.FieldPointer(
+                    { CommandData = true; BPV = true; BitPointer = 0uy; FieldPointer = 0us }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -577,18 +406,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.NO_SENSE,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = Some{ ActualRetryCount = 0us; };
-                    ProgressIndication = None;
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome( senseKeySpecificSenseDataDesc.ActualRetryCount(
+                    { ActualRetryCount = 0us; }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -601,18 +427,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.NO_SENSE,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = Some { ProgressIndication = 0us };
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome( senseKeySpecificSenseDataDesc.ProgressIndication(
+                    { ProgressIndication = 0us }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -625,42 +448,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.NO_SENSE,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = Some { SD = true; BPV = false; BitPointer = 0uy; FieldPointer = 0us; };
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
-            )
-        let pc = new PrivateCaller( sd )
-        let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
-        Assert.False( result )
-
-    [<Fact>]
-    member _.Test_m_SenseKeySpecificArgsValid_027() =
-        let sd =
-            new SenseData(
-                true,
-                SenseKeyCd.NOT_READY,
-                ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
-                // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome( senseKeySpecificSenseDataDesc.SegmentPointer(
+                    { SD = true; BPV = false; BitPointer = 0uy; FieldPointer = 0us; }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -673,18 +469,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.NOT_READY,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = Some { CommandData = true; BPV = true; BitPointer = 0uy; FieldPointer = 0us };
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome( senseKeySpecificSenseDataDesc.FieldPointer(
+                    { CommandData = true; BPV = true; BitPointer = 0uy; FieldPointer = 0us }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -697,18 +490,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.NOT_READY,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = Some{ ActualRetryCount = 0us; };
-                    ProgressIndication = None;
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome( senseKeySpecificSenseDataDesc.ActualRetryCount(
+                    { ActualRetryCount = 0us; }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -721,18 +511,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.NOT_READY,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = Some { ProgressIndication = 0us };
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome( senseKeySpecificSenseDataDesc.ProgressIndication(
+                    { ProgressIndication = 0us }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -745,42 +532,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.NOT_READY,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = Some { SD = true; BPV = false; BitPointer = 0uy; FieldPointer = 0us; };
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
-            )
-        let pc = new PrivateCaller( sd )
-        let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
-        Assert.False( result )
-
-    [<Fact>]
-    member _.Test_m_SenseKeySpecificArgsValid_032() =
-        let sd =
-            new SenseData(
-                true,
-                SenseKeyCd.COPY_ABORTED,
-                ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
-                // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome( senseKeySpecificSenseDataDesc.SegmentPointer(
+                    { SD = true; BPV = false; BitPointer = 0uy; FieldPointer = 0us; }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -793,18 +553,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.COPY_ABORTED,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = Some { CommandData = true; BPV = true; BitPointer = 0uy; FieldPointer = 0us };
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome( senseKeySpecificSenseDataDesc.FieldPointer(
+                    { CommandData = true; BPV = true; BitPointer = 0uy; FieldPointer = 0us }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -817,18 +574,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.COPY_ABORTED,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = Some{ ActualRetryCount = 0us; };
-                    ProgressIndication = None;
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome( senseKeySpecificSenseDataDesc.ActualRetryCount(
+                    { ActualRetryCount = 0us; }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -841,18 +595,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.COPY_ABORTED,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = Some { ProgressIndication = 0us };
-                    SegmentPointer = None;
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome( senseKeySpecificSenseDataDesc.ProgressIndication(
+                    { ProgressIndication = 0us }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -865,18 +616,15 @@ type Exceptions_Test () =
                 true,
                 SenseKeyCd.COPY_ABORTED,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
-                None,   // m_Information
-                None,   // m_CommandSpecific
+                ValueNone,   // m_Information
+                ValueNone,   // m_CommandSpecific
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = Some { SD = true; BPV = false; BitPointer = 0uy; FieldPointer = 0us; };
-                },   
-                None,   // m_FieldReplaceableUnit
-                None,   // m_VendorSpecific
-                None    // m_BlockCommand
+                ValueSome( senseKeySpecificSenseDataDesc.SegmentPointer(
+                    { SD = true; BPV = false; BitPointer = 0uy; FieldPointer = 0us; }
+                ) ),
+                ValueNone,   // m_FieldReplaceableUnit
+                ValueNone,   // m_VendorSpecific
+                ValueNone    // m_BlockCommand
             )
         let pc = new PrivateCaller( sd )
         let result = pc.GetField( "m_SenseKeySpecificArgsValid" ) :?> bool
@@ -890,39 +638,36 @@ type Exceptions_Test () =
                 SenseKeyCd.COPY_ABORTED,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
                 // m_Information
-                Some { Information = [| 0uy .. 5uy |] },
+                ValueSome { Information = [| 0uy .. 5uy |] },
                 // m_CommandSpecific
-                Some { CommandSpecific = [| 1uy .. 6uy |] },
+                ValueSome { CommandSpecific = [| 1uy .. 6uy |] },
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = Some { SD = true; BPV = false; BitPointer = 0uy; FieldPointer = 0us; };
-                },
+                ValueSome( senseKeySpecificSenseDataDesc.SegmentPointer(
+                    { SD = true; BPV = false; BitPointer = 0uy; FieldPointer = 0us; }
+                ) ),
                 // m_FieldReplaceableUnit
-                Some { FieldReplaceableUnitCode = 1uy },
+                ValueSome { FieldReplaceableUnitCode = 1uy },
                 // m_VendorSpecific
-                Some { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 2uy .. 7uy |] },
+                ValueSome { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 2uy .. 7uy |] },
                 // m_BlockCommand
-                Some { ILI = true }
+                ValueSome { ILI = true }
             )
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( ( sd.Information.Value.Information = [| 0uy .. 5uy |] ) )
-        Assert.True( ( sd.CommandSpecific.Value.CommandSpecific = [| 1uy .. 6uy |] ) )
-        Assert.True( ( sd.FieldPointer = None ) )
-        Assert.True( ( sd.ActualRetryCount = None ) )
-        Assert.True( ( sd.ProgressIndication = None ) )
-        Assert.True( ( sd.SegmentPointer.Value.SD =  true ) )
-        Assert.True( ( sd.SegmentPointer.Value.BPV = false ) )
-        Assert.True( ( sd.SegmentPointer.Value.BitPointer = 0uy ) )
-        Assert.True( ( sd.SegmentPointer.Value.FieldPointer = 0us ) )
-        Assert.True( ( sd.FieldReplaceableUnit.Value.FieldReplaceableUnitCode = 1uy ) )
-        Assert.True( ( sd.VendorSpecific.Value.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ) )
-        Assert.True( ( sd.VendorSpecific.Value.VendorSpecific = [| 2uy .. 7uy |] ) )
-        Assert.True( ( sd.BlockCommand.Value.ILI = true ) )
+        Assert.True( ( sd.Information |> ValueOption.get |> _.Information = [| 0uy .. 5uy |] ) )
+        Assert.True( ( sd.CommandSpecific |> ValueOption.get |> _.CommandSpecific = [| 1uy .. 6uy |] ) )
+        Assert.True( ( sd.FieldPointer = ValueNone ) )
+        Assert.True( ( sd.ActualRetryCount = ValueNone ) )
+        Assert.True( ( sd.ProgressIndication = ValueNone ) )
+        Assert.True( ( sd.SegmentPointer |> ValueOption.get |> _.SD =  true ) )
+        Assert.True( ( sd.SegmentPointer |> ValueOption.get |> _.BPV = false ) )
+        Assert.True( ( sd.SegmentPointer |> ValueOption.get |> _.BitPointer = 0uy ) )
+        Assert.True( ( sd.SegmentPointer |> ValueOption.get |> _.FieldPointer = 0us ) )
+        Assert.True( ( sd.FieldReplaceableUnit |> ValueOption.get |> _.FieldReplaceableUnitCode = 1uy ) )
+        Assert.True( ( sd.VendorSpecific |> ValueOption.get |> _.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ) )
+        Assert.True( ( sd.VendorSpecific |> ValueOption.get |> _.VendorSpecific = [| 2uy .. 7uy |] ) )
+        Assert.True( ( sd.BlockCommand |> ValueOption.get |> _.ILI = true ) )
 
     [<Fact>]
     member _.Test_Constractor_002() =
@@ -939,16 +684,16 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( ( sd.Information.Value.Information = [| 0uy .. 5uy |] ) )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( ( sd.VendorSpecific.Value.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ) )
-        Assert.True( ( sd.VendorSpecific.Value.VendorSpecific = System.Text.Encoding.GetEncoding( "utf-8" ).GetBytes( "abcdefg" ) ) )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( ( sd.Information |> ValueOption.get |> _.Information = [| 0uy .. 5uy |] ) )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer  |> ValueOption.isNone )
+        Assert.True( sd.ActualRetryCount  |> ValueOption.isNone )
+        Assert.True( sd.ProgressIndication  |> ValueOption.isNone )
+        Assert.True( sd.SegmentPointer  |> ValueOption.isNone )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( ( sd.VendorSpecific |> ValueOption.get |> _.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ) )
+        Assert.True( ( sd.VendorSpecific |> ValueOption.get |> _.VendorSpecific = System.Text.Encoding.GetEncoding( "utf-8" ).GetBytes( "abcdefg" ) ) )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_003() =
@@ -964,15 +709,15 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( ( sd.Information.Value.Information = [| 0uy .. 5uy |] ) )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( sd.VendorSpecific.IsNone )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( ( sd.Information |> ValueOption.get |> _.Information = [| 0uy .. 5uy |] ) )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer |> ValueOption.isNone )
+        Assert.True( sd.ActualRetryCount |> ValueOption.isNone )
+        Assert.True( sd.ProgressIndication |> ValueOption.isNone )
+        Assert.True( sd.SegmentPointer |> ValueOption.isNone )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( sd.VendorSpecific |> ValueOption.isNone )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_004() =
@@ -987,15 +732,15 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( ( sd.Information.Value.Information = [| 0uy .. 5uy |] ) )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( sd.VendorSpecific.IsNone )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( ( sd.Information |> ValueOption.get |> _.Information = [| 0uy .. 5uy |] ) )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer |> ValueOption.isNone )
+        Assert.True( sd.ActualRetryCount |> ValueOption.isNone )
+        Assert.True( sd.ProgressIndication |> ValueOption.isNone )
+        Assert.True( sd.SegmentPointer |> ValueOption.isNone )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( sd.VendorSpecific |> ValueOption.isNone )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_005() =
@@ -1012,16 +757,16 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( ( sd.CommandSpecific.Value.CommandSpecific = [| 1uy .. 6uy |] ) )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( ( sd.VendorSpecific.Value.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ) )
-        Assert.True( ( sd.VendorSpecific.Value.VendorSpecific = System.Text.Encoding.GetEncoding( "utf-8" ).GetBytes( "abcdefg" ) ) )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( ( sd.CommandSpecific |> ValueOption.get |> _.CommandSpecific = [| 1uy .. 6uy |] ) )
+        Assert.True( sd.FieldPointer |> ValueOption.isNone )
+        Assert.True( sd.ActualRetryCount |> ValueOption.isNone )
+        Assert.True( sd.ProgressIndication |> ValueOption.isNone )
+        Assert.True( sd.SegmentPointer |> ValueOption.isNone )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( ( sd.VendorSpecific |> ValueOption.get |> _.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ) )
+        Assert.True( ( sd.VendorSpecific |> ValueOption.get |> _.VendorSpecific = System.Text.Encoding.GetEncoding( "utf-8" ).GetBytes( "abcdefg" ) ) )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_006() =
@@ -1037,15 +782,15 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( ( sd.CommandSpecific.Value.CommandSpecific = [| 1uy .. 6uy |] ) )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( sd.VendorSpecific.IsNone )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( ( sd.CommandSpecific |> ValueOption.get |> _.CommandSpecific = [| 1uy .. 6uy |] ) )
+        Assert.True( sd.FieldPointer |> ValueOption.isNone )
+        Assert.True( sd.ActualRetryCount |> ValueOption.isNone )
+        Assert.True( sd.ProgressIndication |> ValueOption.isNone )
+        Assert.True( sd.SegmentPointer |> ValueOption.isNone )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( sd.VendorSpecific |> ValueOption.isNone )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_007() =
@@ -1060,15 +805,15 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( ( sd.CommandSpecific.Value.CommandSpecific = [| 1uy .. 6uy |] ) )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( sd.VendorSpecific.IsNone )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( ( sd.CommandSpecific |> ValueOption.get |> _.CommandSpecific = [| 1uy .. 6uy |] ) )
+        Assert.True( sd.FieldPointer |> ValueOption.isNone )
+        Assert.True( sd.ActualRetryCount |> ValueOption.isNone )
+        Assert.True( sd.ProgressIndication |> ValueOption.isNone )
+        Assert.True( sd.SegmentPointer |> ValueOption.isNone )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( sd.VendorSpecific |> ValueOption.isNone )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_008() =
@@ -1085,19 +830,19 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.Value.CommandData )
-        Assert.True( sd.FieldPointer.Value.BPV )
-        Assert.True( ( sd.FieldPointer.Value.BitPointer = 0uy ) )
-        Assert.True( ( sd.FieldPointer.Value.FieldPointer = 0us ) )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( ( sd.VendorSpecific.Value.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ) )
-        Assert.True( ( sd.VendorSpecific.Value.VendorSpecific = System.Text.Encoding.GetEncoding( "utf-8" ).GetBytes( "abcdefg" ) ) )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer |> ValueOption.get |> _.CommandData )
+        Assert.True( sd.FieldPointer |> ValueOption.get |> _.BPV )
+        Assert.True( ( sd.FieldPointer |> ValueOption.get |> _.BitPointer = 0uy ) )
+        Assert.True( ( sd.FieldPointer |> ValueOption.get |> _.FieldPointer = 0us ) )
+        Assert.True( sd.ActualRetryCount |> ValueOption.isNone )
+        Assert.True( sd.ProgressIndication |> ValueOption.isNone )
+        Assert.True( sd.SegmentPointer |> ValueOption.isNone )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( ( sd.VendorSpecific |> ValueOption.get |> _.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ) )
+        Assert.True( ( sd.VendorSpecific |> ValueOption.get |> _.VendorSpecific = System.Text.Encoding.GetEncoding( "utf-8" ).GetBytes( "abcdefg" ) ) )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_009() =
@@ -1113,18 +858,18 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.Value.CommandData )
-        Assert.True( sd.FieldPointer.Value.BPV )
-        Assert.True( ( sd.FieldPointer.Value.BitPointer = 0uy ) )
-        Assert.True( ( sd.FieldPointer.Value.FieldPointer = 0us ) )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( sd.VendorSpecific.IsNone )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer |> ValueOption.get |> _.CommandData )
+        Assert.True( sd.FieldPointer |> ValueOption.get |> _.BPV )
+        Assert.True( ( sd.FieldPointer |> ValueOption.get |> _.BitPointer = 0uy ) )
+        Assert.True( ( sd.FieldPointer |> ValueOption.get |> _.FieldPointer = 0us ) )
+        Assert.True( sd.ActualRetryCount |> ValueOption.isNone )
+        Assert.True( sd.ProgressIndication |> ValueOption.isNone )
+        Assert.True( sd.SegmentPointer |> ValueOption.isNone )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( sd.VendorSpecific |> ValueOption.isNone )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_010() =
@@ -1139,18 +884,18 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.Value.CommandData )
-        Assert.True( sd.FieldPointer.Value.BPV )
-        Assert.True( ( sd.FieldPointer.Value.BitPointer = 0uy ) )
-        Assert.True( ( sd.FieldPointer.Value.FieldPointer = 0us ) )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( sd.VendorSpecific.IsNone )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer |> ValueOption.get |> _.CommandData )
+        Assert.True( sd.FieldPointer |> ValueOption.get |> _.BPV )
+        Assert.True( ( sd.FieldPointer |> ValueOption.get |> _.BitPointer = 0uy ) )
+        Assert.True( ( sd.FieldPointer |> ValueOption.get |> _.FieldPointer = 0us ) )
+        Assert.True( sd.ActualRetryCount |> ValueOption.isNone )
+        Assert.True( sd.ProgressIndication |> ValueOption.isNone )
+        Assert.True( sd.SegmentPointer |> ValueOption.isNone )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( sd.VendorSpecific |> ValueOption.isNone )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_011() =
@@ -1167,16 +912,16 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( ( sd.ActualRetryCount.Value.ActualRetryCount = 0us ) )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( ( sd.VendorSpecific.Value.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ) )
-        Assert.True( ( sd.VendorSpecific.Value.VendorSpecific = System.Text.Encoding.GetEncoding( "utf-8" ).GetBytes( "OPQRSTUVWX" ) ) )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer |> ValueOption.isNone )
+        Assert.True( ( sd.ActualRetryCount |> ValueOption.get |> _.ActualRetryCount = 0us ) )
+        Assert.True( sd.ProgressIndication |> ValueOption.isNone )
+        Assert.True( sd.SegmentPointer |> ValueOption.isNone )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( ( sd.VendorSpecific |> ValueOption.get |> _.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ) )
+        Assert.True( ( sd.VendorSpecific |> ValueOption.get |> _.VendorSpecific = System.Text.Encoding.GetEncoding( "utf-8" ).GetBytes( "OPQRSTUVWX" ) ) )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_012() =
@@ -1192,15 +937,15 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( ( sd.ActualRetryCount.Value.ActualRetryCount = 0us ) )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( sd.VendorSpecific.IsNone )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer |> ValueOption.isNone )
+        Assert.True( ( sd.ActualRetryCount |> ValueOption.get |> _.ActualRetryCount = 0us ) )
+        Assert.True( sd.ProgressIndication |> ValueOption.isNone )
+        Assert.True( sd.SegmentPointer |> ValueOption.isNone )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( sd.VendorSpecific |> ValueOption.isNone )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_013() =
@@ -1215,15 +960,15 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( ( sd.ActualRetryCount.Value.ActualRetryCount = 0us ) )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( sd.VendorSpecific.IsNone )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer |> ValueOption.isNone )
+        Assert.True( ( sd.ActualRetryCount |> ValueOption.get |> _.ActualRetryCount = 0us ) )
+        Assert.True( sd.ProgressIndication |> ValueOption.isNone )
+        Assert.True( sd.SegmentPointer |> ValueOption.isNone )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( sd.VendorSpecific |> ValueOption.isNone )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_014() =
@@ -1240,16 +985,16 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.BLOCK_SEQUENCE_ERROR ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( ( sd.ProgressIndication.Value.ProgressIndication = 0us ) )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( ( sd.VendorSpecific.Value.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ) )
-        Assert.True( ( sd.VendorSpecific.Value.VendorSpecific = System.Text.Encoding.GetEncoding( "utf-8" ).GetBytes( "abcdefg" ) ) )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer |> ValueOption.isNone )
+        Assert.True( sd.ActualRetryCount |> ValueOption.isNone )
+        Assert.True( ( sd.ProgressIndication |> ValueOption.get |> _.ProgressIndication = 0us ) )
+        Assert.True( sd.SegmentPointer |> ValueOption.isNone )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( ( sd.VendorSpecific |> ValueOption.get |> _.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ) )
+        Assert.True( ( sd.VendorSpecific |> ValueOption.get |> _.VendorSpecific = System.Text.Encoding.GetEncoding( "utf-8" ).GetBytes( "abcdefg" ) ) )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_015() =
@@ -1265,15 +1010,15 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( ( sd.ProgressIndication.Value.ProgressIndication = 0us ) )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( sd.VendorSpecific.IsNone )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer |> ValueOption.isNone )
+        Assert.True( sd.ActualRetryCount |> ValueOption.isNone )
+        Assert.True( ( sd.ProgressIndication |> ValueOption.get |> _.ProgressIndication = 0us ) )
+        Assert.True( sd.SegmentPointer |> ValueOption.isNone )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( sd.VendorSpecific |> ValueOption.isNone )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_016() =
@@ -1288,15 +1033,15 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.BLANK_CHECK ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( ( sd.ProgressIndication.Value.ProgressIndication = 0us ) )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( sd.VendorSpecific.IsNone )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer |> ValueOption.isNone )
+        Assert.True( sd.ActualRetryCount |> ValueOption.isNone )
+        Assert.True( ( sd.ProgressIndication |> ValueOption.get |> _.ProgressIndication = 0us ) )
+        Assert.True( sd.SegmentPointer |> ValueOption.isNone )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( sd.VendorSpecific |> ValueOption.isNone )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_017() =
@@ -1313,19 +1058,19 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.True( sd.SegmentPointer.Value.SD )
-        Assert.False( sd.SegmentPointer.Value.BPV )
-        Assert.True( ( sd.SegmentPointer.Value.BitPointer = 0uy ) )
-        Assert.True( ( sd.SegmentPointer.Value.FieldPointer = 0us ) )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( ( sd.VendorSpecific.Value.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ) )
-        Assert.True( ( sd.VendorSpecific.Value.VendorSpecific = System.Text.Encoding.GetEncoding( "utf-8" ).GetBytes( "abcdefg" ) ) )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer |> ValueOption.isNone )
+        Assert.True( sd.ActualRetryCount |> ValueOption.isNone )
+        Assert.True( sd.ProgressIndication |> ValueOption.isNone )
+        Assert.True( sd.SegmentPointer |> ValueOption.get |> _.SD )
+        Assert.False( sd.SegmentPointer |> ValueOption.get |> _.BPV )
+        Assert.True( ( sd.SegmentPointer |> ValueOption.get |> _.BitPointer = 0uy ) )
+        Assert.True( ( sd.SegmentPointer |> ValueOption.get |> _.FieldPointer = 0us ) )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( ( sd.VendorSpecific |> ValueOption.get |> _.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ) )
+        Assert.True( ( sd.VendorSpecific |> ValueOption.get |> _.VendorSpecific = System.Text.Encoding.GetEncoding( "utf-8" ).GetBytes( "abcdefg" ) ) )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_018() =
@@ -1341,18 +1086,18 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.True( sd.SegmentPointer.Value.SD )
-        Assert.True( sd.SegmentPointer.Value.BPV )
-        Assert.True( ( sd.SegmentPointer.Value.BitPointer = 0uy ) )
-        Assert.True( ( sd.SegmentPointer.Value.FieldPointer = 0us ) )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( sd.VendorSpecific.IsNone )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer |> ValueOption.isNone )
+        Assert.True( sd.ActualRetryCount |> ValueOption.isNone )
+        Assert.True( sd.ProgressIndication |> ValueOption.isNone )
+        Assert.True( sd.SegmentPointer |> ValueOption.get |> _.SD )
+        Assert.True( sd.SegmentPointer |> ValueOption.get |> _.BPV )
+        Assert.True( ( sd.SegmentPointer |> ValueOption.get |> _.BitPointer = 0uy ) )
+        Assert.True( ( sd.SegmentPointer |> ValueOption.get |> _.FieldPointer = 0us ) )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( sd.VendorSpecific |> ValueOption.isNone )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_019() =
@@ -1367,18 +1112,18 @@ type Exceptions_Test () =
         Assert.False( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.False( sd.SegmentPointer.Value.SD )
-        Assert.True( sd.SegmentPointer.Value.BPV )
-        Assert.True( ( sd.SegmentPointer.Value.BitPointer = 0uy ) )
-        Assert.True( ( sd.SegmentPointer.Value.FieldPointer = 0us ) )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( sd.VendorSpecific.IsNone )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer |> ValueOption.isNone )
+        Assert.True( sd.ActualRetryCount |> ValueOption.isNone )
+        Assert.True( sd.ProgressIndication |> ValueOption.isNone )
+        Assert.False( sd.SegmentPointer |> ValueOption.get |> _.SD )
+        Assert.True( sd.SegmentPointer |> ValueOption.get |> _.BPV )
+        Assert.True( ( sd.SegmentPointer |> ValueOption.get |> _.BitPointer = 0uy ) )
+        Assert.True( ( sd.SegmentPointer |> ValueOption.get |> _.FieldPointer = 0us ) )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( sd.VendorSpecific |> ValueOption.isNone )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_020() =
@@ -1395,16 +1140,16 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( ( sd.FieldReplaceableUnit.Value.FieldReplaceableUnitCode = 1uy ) )
-        Assert.True( ( sd.VendorSpecific.Value.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ) )
-        Assert.True( ( sd.VendorSpecific.Value.VendorSpecific = System.Text.Encoding.GetEncoding( "utf-8" ).GetBytes( "abcdefg" ) ) )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer |> ValueOption.isNone )
+        Assert.True( sd.ActualRetryCount |> ValueOption.isNone )
+        Assert.True( sd.ProgressIndication |> ValueOption.isNone )
+        Assert.True( sd.SegmentPointer |> ValueOption.isNone )
+        Assert.True( ( sd.FieldReplaceableUnit |> ValueOption.get |> _.FieldReplaceableUnitCode = 1uy ) )
+        Assert.True( ( sd.VendorSpecific |> ValueOption.get |> _.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ) )
+        Assert.True( ( sd.VendorSpecific |> ValueOption.get |> _.VendorSpecific = System.Text.Encoding.GetEncoding( "utf-8" ).GetBytes( "abcdefg" ) ) )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_021() =
@@ -1420,15 +1165,15 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( ( sd.FieldReplaceableUnit.Value.FieldReplaceableUnitCode = 1uy ) )
-        Assert.True( sd.VendorSpecific.IsNone )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer |> ValueOption.isNone )
+        Assert.True( sd.ActualRetryCount |> ValueOption.isNone )
+        Assert.True( sd.ProgressIndication |> ValueOption.isNone )
+        Assert.True( sd.SegmentPointer |> ValueOption.isNone )
+        Assert.True( ( sd.FieldReplaceableUnit |> ValueOption.get |> _.FieldReplaceableUnitCode = 1uy ) )
+        Assert.True( sd.VendorSpecific |> ValueOption.isNone )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_022() =
@@ -1443,15 +1188,15 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( ( sd.FieldReplaceableUnit.Value.FieldReplaceableUnitCode = 1uy ) )
-        Assert.True( sd.VendorSpecific.IsNone )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer |> ValueOption.isNone )
+        Assert.True( sd.ActualRetryCount |> ValueOption.isNone )
+        Assert.True( sd.ProgressIndication |> ValueOption.isNone )
+        Assert.True( sd.SegmentPointer |> ValueOption.isNone )
+        Assert.True( ( sd.FieldReplaceableUnit |> ValueOption.get |> _.FieldReplaceableUnitCode = 1uy ) )
+        Assert.True( sd.VendorSpecific |> ValueOption.isNone )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_023() =
@@ -1466,16 +1211,16 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( ( sd.VendorSpecific.Value.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ) )
-        Assert.True( ( sd.VendorSpecific.Value.VendorSpecific = [| 2uy .. 7uy |] ) )
-        Assert.True( sd.BlockCommand.IsNone )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer |> ValueOption.isNone )
+        Assert.True( sd.ActualRetryCount |> ValueOption.isNone )
+        Assert.True( sd.ProgressIndication |> ValueOption.isNone )
+        Assert.True( sd.SegmentPointer |> ValueOption.isNone )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( ( sd.VendorSpecific |> ValueOption.get |> _.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ) )
+        Assert.True( ( sd.VendorSpecific |> ValueOption.get |> _.VendorSpecific = [| 2uy .. 7uy |] ) )
+        Assert.True( sd.BlockCommand |> ValueOption.isNone )
 
     [<Fact>]
     member _.Test_Constractor_024() =
@@ -1492,16 +1237,16 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( ( sd.VendorSpecific.Value.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ) )
-        Assert.True( ( sd.VendorSpecific.Value.VendorSpecific = System.Text.Encoding.GetEncoding( "utf-8" ).GetBytes( "abcdefg" ) ) )
-        Assert.True( sd.BlockCommand.Value.ILI )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer |> ValueOption.isNone )
+        Assert.True( sd.ActualRetryCount |> ValueOption.isNone )
+        Assert.True( sd.ProgressIndication |> ValueOption.isNone )
+        Assert.True( sd.SegmentPointer |> ValueOption.isNone )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( ( sd.VendorSpecific |> ValueOption.get |> _.DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE ) )
+        Assert.True( ( sd.VendorSpecific |> ValueOption.get |> _.VendorSpecific = System.Text.Encoding.GetEncoding( "utf-8" ).GetBytes( "abcdefg" ) ) )
+        Assert.True( sd.BlockCommand |> ValueOption.get |> _.ILI )
 
     [<Fact>]
     member _.Test_Constractor_025() =
@@ -1517,15 +1262,15 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( sd.VendorSpecific.IsNone )
-        Assert.True( sd.BlockCommand.Value.ILI )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer |> ValueOption.isNone )
+        Assert.True( sd.ActualRetryCount |> ValueOption.isNone )
+        Assert.True( sd.ProgressIndication |> ValueOption.isNone )
+        Assert.True( sd.SegmentPointer |> ValueOption.isNone )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( sd.VendorSpecific |> ValueOption.isNone )
+        Assert.True( sd.BlockCommand |> ValueOption.get |> _.ILI )
 
     [<Fact>]
     member _.Test_Constractor_026() =
@@ -1540,15 +1285,15 @@ type Exceptions_Test () =
         Assert.True( sd.IsCurrent )
         Assert.True(( sd.SenseKey = SenseKeyCd.COPY_ABORTED ))
         Assert.True(( sd.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-        Assert.True( sd.Information.IsNone )
-        Assert.True( sd.CommandSpecific.IsNone )
-        Assert.True( sd.FieldPointer.IsNone )
-        Assert.True( sd.ActualRetryCount.IsNone )
-        Assert.True( sd.ProgressIndication.IsNone )
-        Assert.True( sd.SegmentPointer.IsNone )
-        Assert.True( sd.FieldReplaceableUnit.IsNone )
-        Assert.True( sd.VendorSpecific.IsNone )
-        Assert.True( sd.BlockCommand.Value.ILI )
+        Assert.True( sd.Information |> ValueOption.isNone )
+        Assert.True( sd.CommandSpecific |> ValueOption.isNone )
+        Assert.True( sd.FieldPointer |> ValueOption.isNone )
+        Assert.True( sd.ActualRetryCount |> ValueOption.isNone )
+        Assert.True( sd.ProgressIndication |> ValueOption.isNone )
+        Assert.True( sd.SegmentPointer |> ValueOption.isNone )
+        Assert.True( sd.FieldReplaceableUnit |> ValueOption.isNone )
+        Assert.True( sd.VendorSpecific |> ValueOption.isNone )
+        Assert.True( sd.BlockCommand |> ValueOption.get |> _.ILI )
 
     [<Fact>]
     member _.Test_GetSenseData_Information_001() =
@@ -2784,22 +2529,19 @@ type Exceptions_Test () =
                 SenseKeyCd.COPY_ABORTED,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
                 // m_Information
-                Some { Information = [| 1uy .. 8uy |] },
+                ValueSome { Information = [| 1uy .. 8uy |] },
                 // m_CommandSpecific
-                Some { CommandSpecific = [| 2uy .. 9uy |] },
+                ValueSome { CommandSpecific = [| 2uy .. 9uy |] },
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = Some { SD = true; BPV = false; BitPointer = 1uy; FieldPointer = 0xFFEEus; };
-                },
+                ValueSome( senseKeySpecificSenseDataDesc.SegmentPointer(
+                    { SD = true; BPV = false; BitPointer = 1uy; FieldPointer = 0xFFEEus; }
+                ) ),
                 // m_FieldReplaceableUnit
-                Some { FieldReplaceableUnitCode = 0xEFuy },
+                ValueSome { FieldReplaceableUnitCode = 0xEFuy },
                 // m_VendorSpecific
-                Some { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 0x01uy; 0x02uy; |] },
+                ValueSome { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 0x01uy; 0x02uy; |] },
                 // m_BlockCommand
-                Some { ILI = true }
+                ValueSome { ILI = true }
             )
         let exp =
             [|
@@ -2862,22 +2604,19 @@ type Exceptions_Test () =
                 SenseKeyCd.NO_SENSE,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
                 // m_Information
-                Some { Information = [| 1uy .. 9uy |] },
+                ValueSome { Information = [| 1uy .. 9uy |] },
                 // m_CommandSpecific
-                Some { CommandSpecific = [| 2uy .. 0xAuy |] },
+                ValueSome { CommandSpecific = [| 2uy .. 0xAuy |] },
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = Some { ProgressIndication = 0xAABBus; };
-                    SegmentPointer = None;
-                },
+                ValueSome( senseKeySpecificSenseDataDesc.ProgressIndication(
+                    { ProgressIndication = 0xAABBus; }
+                ) ),
                 // m_FieldReplaceableUnit
-                Some { FieldReplaceableUnitCode = 0xEFuy },
+                ValueSome { FieldReplaceableUnitCode = 0xEFuy },
                 // m_VendorSpecific
-                Some { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 1uy .. 202uy |] },
+                ValueSome { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 1uy .. 202uy |] },
                 // m_BlockCommand
-                Some { ILI = true }
+                ValueSome { ILI = true }
             )
         let exp =
             [|
@@ -2940,22 +2679,19 @@ type Exceptions_Test () =
                 SenseKeyCd.HARDWARE_ERROR,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
                 // m_Information
-                Some { Information = Array.empty },
+                ValueSome { Information = Array.empty },
                 // m_CommandSpecific
-                Some { CommandSpecific = Array.empty },
+                ValueSome { CommandSpecific = Array.empty },
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = Some { ActualRetryCount = 0xACBDus; };
-                    ProgressIndication = None
-                    SegmentPointer = None;
-                },
+                ValueSome( senseKeySpecificSenseDataDesc.ActualRetryCount(
+                    { ActualRetryCount = 0xACBDus; }
+                ) ),
                 // m_FieldReplaceableUnit
-                Some { FieldReplaceableUnitCode = 0xEFuy },
+                ValueSome { FieldReplaceableUnitCode = 0xEFuy },
                 // m_VendorSpecific
-                Some { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 1uy .. 203uy |] },
+                ValueSome { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 1uy .. 203uy |] },
                 // m_BlockCommand
-                Some { ILI = true }
+                ValueSome { ILI = true }
             )
         let exp =
             [|
@@ -3018,22 +2754,19 @@ type Exceptions_Test () =
                 SenseKeyCd.COPY_ABORTED,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
                 // m_Information
-                Some { Information = [| 1uy .. 4uy |] },
+                ValueSome { Information = [| 1uy .. 4uy |] },
                 // m_CommandSpecific
-                Some { CommandSpecific = [| 2uy .. 5uy |] },
+                ValueSome { CommandSpecific = [| 2uy .. 5uy |] },
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = None;
-                    SegmentPointer = Some { SD = true; BPV = false; BitPointer = 1uy; FieldPointer = 0xFFEEus; };
-                },
+                ValueSome( senseKeySpecificSenseDataDesc.SegmentPointer(
+                    { SD = true; BPV = false; BitPointer = 1uy; FieldPointer = 0xFFEEus; }
+                ) ),
                 // m_FieldReplaceableUnit
-                Some { FieldReplaceableUnitCode = 0xEFuy },
+                ValueSome { FieldReplaceableUnitCode = 0xEFuy },
                 // m_VendorSpecific
-                Some { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 0x01uy; 0x02uy; |] },
+                ValueSome { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 0x01uy; 0x02uy; |] },
                 // m_BlockCommand
-                Some { ILI = true }
+                ValueSome { ILI = true }
             )
         let exp =
             [|
@@ -3062,22 +2795,19 @@ type Exceptions_Test () =
                 SenseKeyCd.NO_SENSE,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
                 // m_Information
-                Some { Information = [| 1uy .. 4uy |] },
+                ValueSome { Information = [| 1uy .. 4uy |] },
                 // m_CommandSpecific
-                Some { CommandSpecific = [| 2uy .. 5uy |] },
+                ValueSome { CommandSpecific = [| 2uy .. 5uy |] },
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = Some { ProgressIndication = 0xAABBus; };
-                    SegmentPointer = None;
-                },
+                ValueSome( senseKeySpecificSenseDataDesc.ProgressIndication(
+                    { ProgressIndication = 0xAABBus; }
+                ) ),
                 // m_FieldReplaceableUnit
-                Some { FieldReplaceableUnitCode = 0xEFuy },
+                ValueSome { FieldReplaceableUnitCode = 0xEFuy },
                 // m_VendorSpecific
-                Some { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 1uy .. 234uy |] },
+                ValueSome { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 1uy .. 234uy |] },
                 // m_BlockCommand
-                Some { ILI = true }
+                ValueSome { ILI = true }
             )
         let exp =
             [|
@@ -3106,22 +2836,19 @@ type Exceptions_Test () =
                 SenseKeyCd.NO_SENSE,
                 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
                 // m_Information
-                Some { Information = [| 1uy .. 4uy |] },
+                ValueSome { Information = [| 1uy .. 4uy |] },
                 // m_CommandSpecific
-                Some { CommandSpecific = [| 2uy .. 5uy |] },
+                ValueSome { CommandSpecific = [| 2uy .. 5uy |] },
                 // m_SenseKeySpecific
-                Some {
-                    FieldPointer = None;
-                    ActualRetryCount = None;
-                    ProgressIndication = Some { ProgressIndication = 0xAABBus; };
-                    SegmentPointer = None;
-                },
+                ValueSome( senseKeySpecificSenseDataDesc.ProgressIndication(
+                    { ProgressIndication = 0xAABBus; }
+                ) ),
                 // m_FieldReplaceableUnit
-                Some { FieldReplaceableUnitCode = 0xEFuy },
+                ValueSome { FieldReplaceableUnitCode = 0xEFuy },
                 // m_VendorSpecific
-                Some { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 1uy .. 235uy |] },
+                ValueSome { DescriptorType = VendorSpecificSenseDataDescType.TEXT_MESSAGE; VendorSpecific = [| 1uy .. 235uy |] },
                 // m_BlockCommand
-                Some { ILI = true }
+                ValueSome { ILI = true }
             )
         let exp =
             [|

@@ -2160,12 +2160,12 @@ type ScsiTask_Test () =
                         true,
                         SenseKeyCd.ILLEGAL_REQUEST,
                         ASCCd.INVALID_FIELD_IN_CDB,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None,
-                        None
+                        ValueNone,
+                        ValueNone,
+                        ValueNone,
+                        ValueNone,
+                        ValueNone,
+                        ValueNone
                     ),
                     ""
                 )

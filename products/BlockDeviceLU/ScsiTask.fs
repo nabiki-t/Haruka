@@ -1190,12 +1190,12 @@ type ScsiTask
                     true,
                     SenseKeyCd.NO_SENSE,
                     ASCCd.NO_ADDITIONAL_SENSE_INFORMATION,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone
                 )
                 s.GetSenseData cdb.DESC
             | ValueSome( x ) ->
@@ -1257,12 +1257,12 @@ type ScsiTask
                     true,
                     SenseKeyCd.NOT_READY,
                     v,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone
                 )
 
                 let result = ( s.GetSenseData true )

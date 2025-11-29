@@ -80,12 +80,12 @@ type SendErrorStatusTest_Test () =
                     true,
                     SenseKeyCd.ILLEGAL_REQUEST,
                     ASCCd.INVALID_FIELD_IN_CDB,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone
         )
         let t, ilu = createDefTask 55u true iScsiSvcRespCd.COMMAND_COMPLETE ScsiCmdStatCd.GOOD s
         let psStub = t.Source.ProtocolService :?> CProtocolService_Stub
@@ -125,12 +125,12 @@ type SendErrorStatusTest_Test () =
                     true,
                     SenseKeyCd.ILLEGAL_REQUEST,
                     ASCCd.INVALID_FIELD_IN_CDB,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone
         )
         let t, ilu = createDefTask 0u false iScsiSvcRespCd.COMMAND_COMPLETE ScsiCmdStatCd.GOOD s
         let psStub = t.Source.ProtocolService :?> CProtocolService_Stub
@@ -156,12 +156,12 @@ type SendErrorStatusTest_Test () =
                     true,
                     SenseKeyCd.ILLEGAL_REQUEST,
                     ASCCd.INVALID_FIELD_IN_CDB,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone
         )
         let t, ilu = createDefTask 99u false iScsiSvcRespCd.COMMAND_COMPLETE ScsiCmdStatCd.GOOD s
         let psStub = t.Source.ProtocolService :?> CProtocolService_Stub
@@ -184,12 +184,12 @@ type SendErrorStatusTest_Test () =
                     true,
                     SenseKeyCd.ILLEGAL_REQUEST,
                     ASCCd.INVALID_FIELD_IN_CDB,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone
         )
         let t, ilu = createDefTask 0u false iScsiSvcRespCd.COMMAND_COMPLETE ScsiCmdStatCd.GOOD s
         let psStub = t.Source.ProtocolService :?> CProtocolService_Stub
@@ -209,12 +209,12 @@ type SendErrorStatusTest_Test () =
                     true,
                     SenseKeyCd.ILLEGAL_REQUEST,
                     ASCCd.INVALID_FIELD_IN_CDB,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone
         )
         let t, ilu = createDefTask 0u true iScsiSvcRespCd.COMMAND_COMPLETE ScsiCmdStatCd.GOOD s
         let psStub = t.Source.ProtocolService :?> CProtocolService_Stub
@@ -256,12 +256,12 @@ type SendErrorStatusTest_Test () =
                     true,
                     SenseKeyCd.ILLEGAL_REQUEST,
                     ASCCd.INVALID_FIELD_IN_CDB,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    None
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone,
+                    ValueNone
         )
         let t, ilu = createDefTask 0u true iScsiSvcRespCd.COMMAND_COMPLETE ScsiCmdStatCd.GOOD s
         let psStub = t.Source.ProtocolService :?> CProtocolService_Stub
