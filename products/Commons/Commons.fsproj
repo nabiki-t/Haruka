@@ -54,6 +54,7 @@
     <Compile Include="PooledBuffer.fs" />
     <Compile Include="OptimisticLock.fs" />
     <Compile Include="WorkingQueue.fs" />
+    <Compile Include="TaskWaiter.fs" />
     <Compile Include="ResCounter.fs" />
     <Compile Include="ResponseFence.fs" />
     <Compile Include="Functions.fs" />

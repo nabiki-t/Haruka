@@ -46,6 +46,7 @@
     <Compile Include="IPConditionTest.fs" />
     <Compile Include="PooledBufferTest.fs" />
     <Compile Include="WorkingQueueTest.fs" />
+    <Compile Include="TaskWaiterTest.fs" />
     <Compile Include="StringTableTests.fs" />
     <Compile Include="ConstantsTest.fs" />
     <Compile Include="ExceptionsTest.fs" />
