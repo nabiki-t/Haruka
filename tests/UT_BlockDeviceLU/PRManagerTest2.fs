@@ -1692,7 +1692,7 @@ type PRManager_Test2 () =
         |]
         let parambuf = PooledBuffer.Rent param
 
-        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort defaultSource ( itt_me.fromPrim 0u ) PR_TYPE.NO_RESERVATION ( uint32 parambuf.Count ) parambuf
+        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort defaultSource ( itt_me.fromPrim 0u ) PR_TYPE.NO_RESERVATION parambuf.uCount parambuf
         Assert.True(( stat = ScsiCmdStatCd.RESERVATION_CONFLICT ))
         Assert.True(( rITN.Length = 0 ))
         Assert.True(( prType = NO_RESERVATION ))
@@ -1736,7 +1736,7 @@ type PRManager_Test2 () =
         |]
         let parambuf = PooledBuffer.Rent param
 
-        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort defaultSource ( itt_me.fromPrim 0u ) PR_TYPE.NO_RESERVATION ( uint32 parambuf.Count ) parambuf
+        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort defaultSource ( itt_me.fromPrim 0u ) PR_TYPE.NO_RESERVATION parambuf.uCount parambuf
         Assert.True(( stat = ScsiCmdStatCd.RESERVATION_CONFLICT ))
         Assert.True(( rITN.Length = 0 ))
         Assert.True(( prType = PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY ))
@@ -1791,7 +1791,7 @@ type PRManager_Test2 () =
                 I_TNexus = initITN4;
         }
 
-        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.NO_RESERVATION ( uint32 parambuf.Count ) parambuf
+        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.NO_RESERVATION parambuf.uCount parambuf
         Assert.True(( stat = ScsiCmdStatCd.RESERVATION_CONFLICT ))
         Assert.True(( rITN.Length = 0 ))
         Assert.True(( prType = PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY ))
@@ -1846,7 +1846,7 @@ type PRManager_Test2 () =
                 I_TNexus = initITN2;
         }
 
-        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.NO_RESERVATION ( uint32 parambuf.Count ) parambuf
+        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.NO_RESERVATION parambuf.uCount parambuf
         Assert.True(( stat = ScsiCmdStatCd.RESERVATION_CONFLICT ))
         Assert.True(( rITN.Length = 0 ))
         Assert.True(( prType = PR_TYPE.NO_RESERVATION ))
@@ -1909,7 +1909,7 @@ type PRManager_Test2 () =
             | _ -> Assert.Fail __LINE__
         )
 
-        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.NO_RESERVATION ( uint32 parambuf.Count ) parambuf
+        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.NO_RESERVATION parambuf.uCount parambuf
         Assert.True(( stat = ScsiCmdStatCd.GOOD ))
         Assert.True(( rITN.Length = 1 ))
         Assert.True(( rITN.[0] = initITN1 ))
@@ -1974,7 +1974,7 @@ type PRManager_Test2 () =
             | _ -> Assert.Fail __LINE__
         )
 
-        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.EXCLUSIVE_ACCESS ( uint32 parambuf.Count ) parambuf
+        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.EXCLUSIVE_ACCESS parambuf.uCount parambuf
         Assert.True(( stat = ScsiCmdStatCd.GOOD ))
         Assert.True(( rITN.Length = 3 ))
         Assert.True(( rITN.[0] = initITN1 ))
@@ -2037,7 +2037,7 @@ type PRManager_Test2 () =
             | _ -> Assert.Fail __LINE__
         )
 
-        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.EXCLUSIVE_ACCESS ( uint32 parambuf.Count ) parambuf
+        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.EXCLUSIVE_ACCESS parambuf.uCount parambuf
         Assert.True(( stat = ScsiCmdStatCd.GOOD ))
         Assert.True(( rITN.Length = 1 ))
         Assert.True(( rITN.[0] = initITN3 ))
@@ -2094,7 +2094,7 @@ type PRManager_Test2 () =
         }
 
         try
-            let _ = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.EXCLUSIVE_ACCESS ( uint32 parambuf.Count ) parambuf
+            let _ = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.EXCLUSIVE_ACCESS parambuf.uCount parambuf
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -2147,7 +2147,7 @@ type PRManager_Test2 () =
             | _ -> Assert.Fail __LINE__
         )
 
-        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS ( uint32 parambuf.Count ) parambuf
+        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS parambuf.uCount parambuf
         Assert.True(( stat = ScsiCmdStatCd.GOOD ))
         Assert.True(( rITN.Length = 1 ))
         Assert.True(( rITN.[0] = initITN1 ))
@@ -2214,7 +2214,7 @@ type PRManager_Test2 () =
             | _ -> Assert.Fail __LINE__
         )
 
-        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.NO_RESERVATION ( uint32 parambuf.Count ) parambuf
+        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.NO_RESERVATION parambuf.uCount parambuf
         Assert.True(( stat = ScsiCmdStatCd.GOOD ))
         Assert.True(( rITN.Length = 2 ))
         Assert.True(( rITN.[0] = initITN1 ))
@@ -2282,7 +2282,7 @@ type PRManager_Test2 () =
             | _ -> Assert.Fail __LINE__
         )
 
-        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY ( uint32 parambuf.Count ) parambuf
+        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY parambuf.uCount parambuf
         Assert.True(( stat = ScsiCmdStatCd.GOOD ))
         Assert.True(( rITN.Length = 3 ))
         Assert.True(( rITN.[0] = initITN1 ))
@@ -2349,7 +2349,7 @@ type PRManager_Test2 () =
             | _ -> Assert.Fail __LINE__
         )
 
-        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY ( uint32 parambuf.Count ) parambuf
+        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY parambuf.uCount parambuf
         Assert.True(( stat = ScsiCmdStatCd.GOOD ))
         Assert.True(( rITN.Length = 2 ))
         Assert.True(( rITN.[0] = initITN1 ))
@@ -2408,7 +2408,7 @@ type PRManager_Test2 () =
                 I_TNexus = initITN2;
         }
 
-        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.NO_RESERVATION ( uint32 parambuf.Count ) parambuf
+        let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.NO_RESERVATION parambuf.uCount parambuf
         Assert.True(( stat = ScsiCmdStatCd.RESERVATION_CONFLICT ))
         Assert.True(( rITN.Length = 0 ))
         Assert.True(( prType = PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY ))

@@ -2043,7 +2043,7 @@ type PRManager(
 
         assert( ( int paramLen ) >= 0 )
         assert( paramLen >=  24u )
-        assert( param.Count >= ( int paramLen ) )
+        assert( param.uCount >= paramLen )
         let loginfo = struct ( objID, ValueSome( source ), ValueSome( itt ), ValueSome( lun ) )
 
         let rec loop ( pos : int ) cont =

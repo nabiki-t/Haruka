@@ -93,7 +93,7 @@ type iSCSI_LoginTest1_Fixture() =
             let tempPath = Path.GetTempPath()
             Functions.AppendPathName tempPath ( Guid.NewGuid().ToString( "N" ) )
         let controllPortNo = GlbFunc.nextTcpPortNo()
-        let controller, client = TestFunctions.StartHarukaController workPath controllPortNo
+        let controller, client = ControllerFunc.StartHarukaController workPath controllPortNo
         let iscsiPort = AddDefaultConf client
         controller, client, iscsiPort
 

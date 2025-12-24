@@ -1248,40 +1248,6 @@ type iSCSI_Initiator(
     // static public member
 
     /// <summary>
-    ///  Initialize Haruka configuration directory
-    /// </summary>
-    /// <param name="workPath">
-    ///  Path name of the working folder.
-    /// </param>
-    /// <param name="controllPortNo">
-    ///  The TCP port number used for client connections to the controller.
-    /// </param>
-    static member InitializeConfigDir ( workPath : string ) ( controllPortNo : int ) : unit =
-        let curdir = Path.GetDirectoryName workPath
-
-        // Initialize Haruka configuration directory
-        let ctrlProc1 = new Process(
-            StartInfo = ProcessStartInfo(
-                FileName = GlbFunc.controllerExePath,
-                Arguments = sprintf "ID \"%s\" /p %d /a ::1 /o" workPath controllPortNo,
-                CreateNoWindow = false,
-                RedirectStandardError = true,
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                WorkingDirectory = curdir
-            ),
-            EnableRaisingEvents = true
-        )
-        if ctrlProc1.Start() |> not then
-            raise <| TestException( "Failed to start controller proc." )
-
-        if ctrlProc1.WaitForExit( 5000 ) |> not then
-            raise <| TestException( "The controller process does not terminate." )
-
-        if ctrlProc1.ExitCode <> 0 then
-            raise <| TestException( "The controller process terminated abnormally." )
-
-    /// <summary>
     ///  Create session instance and login the leading connection. ISID will be newly issued.
     /// </summary>
     /// <param name="exp_SessParams">

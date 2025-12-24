@@ -4270,7 +4270,7 @@ type ScsiTask_Test () =
                 0x00uy; 0x00uy;                 // Obsolute
             |]
             |> PooledBuffer.Rent
-        let v = prManager.Register stask.Source ( itt_me.fromPrim 0u ) NO_RESERVATION ( uint32 param.Count ) param
+        let v = prManager.Register stask.Source ( itt_me.fromPrim 0u ) NO_RESERVATION param.uCount param
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         psStub.p_SendSCSIResponse <- ( fun _ _ _ resvLen resp stat _ _ _ _ ->

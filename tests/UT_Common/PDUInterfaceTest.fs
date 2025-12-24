@@ -827,6 +827,296 @@ type PDUInterface_Test () =
         Assert.True(( pdu.NeedResponseFence = ResponseFenceNeedsFlag.W_Mode ))
 
     [<Fact>]
+    member _.SCSIDataInPDU_009() =
+        let r = SCSIDataInPDU.AppendDataInList ( ArraySegment<byte>() ) [] 0
+        Assert.True(( r.IsEmpty() ))
+
+    [<Fact>]
+    member _.SCSIDataInPDU_010() =
+        let r = SCSIDataInPDU.AppendDataInList ( ArraySegment<byte>() ) [] 100
+        Assert.True(( r.IsEmpty() ))
+
+    [<Fact>]
+    member _.SCSIDataInPDU_011() =
+        let respData = ArraySegment<byte>( [| 0uy .. 255uy |], 10, 20 ) 
+        let r = SCSIDataInPDU.AppendDataInList respData [] 100
+        Assert.True(( r.Length = 20 ))
+        Assert.True(( PooledBuffer.ValueEqualsWithArray r [| 10uy .. 29uy |] ))
+
+    [<Fact>]
+    member _.SCSIDataInPDU_012() =
+        let defaultPDU =
+            {
+                F = false;
+                A = false;
+                O = false;
+                U = false;
+                S = true;
+                Status = ScsiCmdStatCd.BUSY;
+                LUN = lun_me.zero;
+                InitiatorTaskTag = itt_me.fromPrim 0u;
+                TargetTransferTag = ttt_me.fromPrim 0u;
+                StatSN = statsn_me.zero;
+                ExpCmdSN = cmdsn_me.zero;
+                MaxCmdSN = cmdsn_me.zero;
+                DataSN = datasn_me.zero;
+                BufferOffset = 0u;
+                ResidualCount = 0u;
+                DataSegment = ArraySegment.Empty;
+                ResponseFence = ResponseFenceNeedsFlag.W_Mode;
+            }
+        let li =
+            [
+                {
+                    defaultPDU with
+                        BufferOffset = 0u;
+                        DataSegment = ArraySegment.Empty;
+                }
+            ]
+
+        let respData = ArraySegment<byte>() 
+        let r = SCSIDataInPDU.AppendDataInList respData li 100
+        Assert.True(( r.IsEmpty() ))
+
+    [<Fact>]
+    member _.SCSIDataInPDU_013() =
+        let defaultPDU =
+            {
+                F = false;
+                A = false;
+                O = false;
+                U = false;
+                S = true;
+                Status = ScsiCmdStatCd.BUSY;
+                LUN = lun_me.zero;
+                InitiatorTaskTag = itt_me.fromPrim 0u;
+                TargetTransferTag = ttt_me.fromPrim 0u;
+                StatSN = statsn_me.zero;
+                ExpCmdSN = cmdsn_me.zero;
+                MaxCmdSN = cmdsn_me.zero;
+                DataSN = datasn_me.zero;
+                BufferOffset = 0u;
+                ResidualCount = 0u;
+                DataSegment = ArraySegment.Empty;
+                ResponseFence = ResponseFenceNeedsFlag.W_Mode;
+            }
+        let li =
+            [
+                {
+                    defaultPDU with
+                        BufferOffset = 10u;
+                        DataSegment = ArraySegment<byte>( [| 0uy .. 255uy |], 50, 10 ) ;
+                }
+            ]
+        let respData = ArraySegment<byte>( [| 0uy .. 255uy |], 10, 10 ) 
+
+        let r = SCSIDataInPDU.AppendDataInList respData li 100
+        Assert.True(( r.Length = 20 ))
+        let exp = [| 10uy; 11uy; 12uy; 13uy; 14uy; 15uy; 16uy; 17uy; 18uy; 19uy; 50uy; 51uy; 52uy; 53uy; 54uy; 55uy; 56uy; 57uy; 58uy; 59uy |]
+        Assert.True(( PooledBuffer.ValueEqualsWithArray r exp ))
+
+    [<Fact>]
+    member _.SCSIDataInPDU_014() =
+        let defaultPDU =
+            {
+                F = false;
+                A = false;
+                O = false;
+                U = false;
+                S = true;
+                Status = ScsiCmdStatCd.BUSY;
+                LUN = lun_me.zero;
+                InitiatorTaskTag = itt_me.fromPrim 0u;
+                TargetTransferTag = ttt_me.fromPrim 0u;
+                StatSN = statsn_me.zero;
+                ExpCmdSN = cmdsn_me.zero;
+                MaxCmdSN = cmdsn_me.zero;
+                DataSN = datasn_me.zero;
+                BufferOffset = 0u;
+                ResidualCount = 0u;
+                DataSegment = ArraySegment.Empty;
+                ResponseFence = ResponseFenceNeedsFlag.W_Mode;
+            }
+        let li =
+            [
+                {
+                    defaultPDU with
+                        BufferOffset = 10u;
+                        DataSegment = ArraySegment<byte>( [| 0uy .. 255uy |], 10, 5 ) ;
+                }
+            ]
+        let respData = ArraySegment<byte>( [| 0uy .. 255uy |], 0, 5 ) 
+
+        let r = SCSIDataInPDU.AppendDataInList respData li 100
+        Assert.True(( r.Length = 15 ))
+        let exp = [| 0uy; 1uy; 2uy; 3uy; 4uy; 0uy; 0uy; 0uy; 0uy; 0uy; 10uy; 11uy; 12uy; 13uy; 14uy; |]
+        Assert.True(( PooledBuffer.ValueEqualsWithArray r exp ))
+
+    [<Fact>]
+    member _.SCSIDataInPDU_015() =
+        let defaultPDU =
+            {
+                F = false;
+                A = false;
+                O = false;
+                U = false;
+                S = true;
+                Status = ScsiCmdStatCd.BUSY;
+                LUN = lun_me.zero;
+                InitiatorTaskTag = itt_me.fromPrim 0u;
+                TargetTransferTag = ttt_me.fromPrim 0u;
+                StatSN = statsn_me.zero;
+                ExpCmdSN = cmdsn_me.zero;
+                MaxCmdSN = cmdsn_me.zero;
+                DataSN = datasn_me.zero;
+                BufferOffset = 0u;
+                ResidualCount = 0u;
+                DataSegment = ArraySegment.Empty;
+                ResponseFence = ResponseFenceNeedsFlag.W_Mode;
+            }
+        let li =
+            [
+                {
+                    defaultPDU with
+                        BufferOffset = 3u;
+                        DataSegment = ArraySegment<byte>( [| 0uy .. 255uy |], 10, 5 ) ;
+                }
+            ]
+        let respData = ArraySegment<byte>( [| 0uy .. 255uy |], 0, 5 ) 
+
+        let r = SCSIDataInPDU.AppendDataInList respData li 100
+        Assert.True(( r.Length = 8 ))
+        let exp = [| 0uy; 1uy; 2uy; 10uy; 11uy; 12uy; 13uy; 14uy; |]
+        Assert.True(( PooledBuffer.ValueEqualsWithArray r exp ))
+
+    [<Fact>]
+    member _.SCSIDataInPDU_016() =
+        let defaultPDU =
+            {
+                F = false;
+                A = false;
+                O = false;
+                U = false;
+                S = true;
+                Status = ScsiCmdStatCd.BUSY;
+                LUN = lun_me.zero;
+                InitiatorTaskTag = itt_me.fromPrim 0u;
+                TargetTransferTag = ttt_me.fromPrim 0u;
+                StatSN = statsn_me.zero;
+                ExpCmdSN = cmdsn_me.zero;
+                MaxCmdSN = cmdsn_me.zero;
+                DataSN = datasn_me.zero;
+                BufferOffset = 0u;
+                ResidualCount = 0u;
+                DataSegment = ArraySegment.Empty;
+                ResponseFence = ResponseFenceNeedsFlag.W_Mode;
+            }
+        let li =
+            [
+                {
+                    defaultPDU with
+                        BufferOffset = 5u;
+                        DataSegment = ArraySegment<byte>( [| 0uy .. 255uy |], 10, 5 ) ;
+                }
+            ]
+        let respData = ArraySegment<byte>( [| 0uy .. 255uy |], 0, 5 )
+
+        let r = SCSIDataInPDU.AppendDataInList respData li 8
+        Assert.True(( r.Length = 8 ))
+        let exp = [| 0uy; 1uy; 2uy; 3uy; 4uy; 10uy; 11uy; 12uy; |]
+        Assert.True(( PooledBuffer.ValueEqualsWithArray r exp ))
+
+    [<Fact>]
+    member _.SCSIDataInPDU_017() =
+        let defaultPDU =
+            {
+                F = false;
+                A = false;
+                O = false;
+                U = false;
+                S = true;
+                Status = ScsiCmdStatCd.BUSY;
+                LUN = lun_me.zero;
+                InitiatorTaskTag = itt_me.fromPrim 0u;
+                TargetTransferTag = ttt_me.fromPrim 0u;
+                StatSN = statsn_me.zero;
+                ExpCmdSN = cmdsn_me.zero;
+                MaxCmdSN = cmdsn_me.zero;
+                DataSN = datasn_me.zero;
+                BufferOffset = 0u;
+                ResidualCount = 0u;
+                DataSegment = ArraySegment.Empty;
+                ResponseFence = ResponseFenceNeedsFlag.W_Mode;
+            }
+        let li =
+            [
+                {
+                    defaultPDU with
+                        BufferOffset = 10u;
+                        DataSegment = ArraySegment<byte>( [| 0uy .. 255uy |], 20, 5 ) ;
+                }
+                {
+                    defaultPDU with
+                        BufferOffset = 15u;
+                        DataSegment = ArraySegment<byte>() ;
+                }
+                {
+                    defaultPDU with
+                        BufferOffset = 5u;
+                        DataSegment = ArraySegment<byte>( [| 0uy .. 255uy |], 10, 5 ) ;
+                }
+                {
+                    defaultPDU with
+                        BufferOffset = 9999u;
+                        DataSegment = ArraySegment<byte>( [| 0uy .. 255uy |], 0, 250 ) ;
+                }
+            ]
+        let respData = ArraySegment<byte>( [| 0uy .. 255uy |], 0, 5 )
+
+        let r = SCSIDataInPDU.AppendDataInList respData li 15
+        Assert.True(( r.Length = 15 ))
+        let exp = [| 0uy; 1uy; 2uy; 3uy; 4uy; 10uy; 11uy; 12uy; 13uy; 14uy; 20uy; 21uy; 22uy; 23uy; 24uy |]
+        Assert.True(( PooledBuffer.ValueEqualsWithArray r exp ))
+
+    [<Fact>]
+    member _.SCSIDataInPDU_018() =
+        let defaultPDU =
+            {
+                F = false;
+                A = false;
+                O = false;
+                U = false;
+                S = true;
+                Status = ScsiCmdStatCd.BUSY;
+                LUN = lun_me.zero;
+                InitiatorTaskTag = itt_me.fromPrim 0u;
+                TargetTransferTag = ttt_me.fromPrim 0u;
+                StatSN = statsn_me.zero;
+                ExpCmdSN = cmdsn_me.zero;
+                MaxCmdSN = cmdsn_me.zero;
+                DataSN = datasn_me.zero;
+                BufferOffset = 0u;
+                ResidualCount = 0u;
+                DataSegment = ArraySegment.Empty;
+                ResponseFence = ResponseFenceNeedsFlag.W_Mode;
+            }
+        let li =
+            [
+                {
+                    defaultPDU with
+                        BufferOffset = 9999u;
+                        DataSegment = ArraySegment<byte>( [| 0uy .. 255uy |], 0, 250 ) ;
+                }
+            ]
+        let respData = ArraySegment<byte>()
+
+        let r = SCSIDataInPDU.AppendDataInList respData li 50
+        Assert.True(( r.Length = 50 ))
+        let exp = Array.zeroCreate 50
+        Assert.True(( PooledBuffer.ValueEqualsWithArray r exp ))
+
+
+    [<Fact>]
     member _.R2TPDU_001() =
         let pdu =
             {

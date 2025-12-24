@@ -99,6 +99,24 @@ type PooledBuffer_Test() =
         Assert.True(( p1.Length = 0 ))
 
     [<Fact>]
+    member _.uLength_001() =
+        let b = [| 0uy .. 255uy |]
+        let p1 = PooledBuffer.Rent( b, 99 )
+        Assert.True(( p1.uLength = 99u ))
+
+    [<Fact>]
+    member _.uLength_002() =
+        let p1 = PooledBuffer.Rent 10
+        Assert.True(( p1.uLength = 10u ))
+        p1.Return()
+        Assert.True(( p1.uLength = 0u ))
+
+    [<Fact>]
+    member _.uLength_003() =
+        let p1 = PooledBuffer.Rent 0
+        Assert.True(( p1.uLength = 0u ))
+
+    [<Fact>]
     member _.Count_001() =
         let b = [| 0uy .. 255uy |]
         let p1 = PooledBuffer.Rent( b, 88 )
@@ -115,6 +133,24 @@ type PooledBuffer_Test() =
     member _.Count_003() =
         let p1 = PooledBuffer.Rent 0
         Assert.True(( p1.Count = 0 ))
+
+    [<Fact>]
+    member _.uCount_001() =
+        let b = [| 0uy .. 255uy |]
+        let p1 = PooledBuffer.Rent( b, 88 )
+        Assert.True(( p1.uCount = 88u ))
+
+    [<Fact>]
+    member _.uCount_002() =
+        let p1 = PooledBuffer.Rent 20
+        Assert.True(( p1.uCount = 20u ))
+        p1.Return()
+        Assert.True(( p1.uCount = 0u ))
+
+    [<Fact>]
+    member _.uCount_003() =
+        let p1 = PooledBuffer.Rent 0
+        Assert.True(( p1.uCount = 0u ))
 
     [<Fact>]
     member _.ArraySegment_001() =

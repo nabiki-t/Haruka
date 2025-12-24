@@ -21,12 +21,12 @@ open Haruka.Commons
 type EVPD =
     | T     // EVPD flag is 1
     | F     // EVPD flag is 0
-    /// Convert BitF to bool
+    /// Convert EVPD to bool
     static member toBool =
         function
         | T -> true
         | F -> false
-    /// Convert bool to BitF
+    /// Convert bool to EVPD
     static member ofBool =
         function
         | true -> T
@@ -36,12 +36,12 @@ type EVPD =
 type PF =
     | T     // PF flag is 1
     | F     // PF flag is 0
-    /// Convert BitF to bool
+    /// Convert PF to bool
     static member toBool =
         function
         | T -> true
         | F -> false
-    /// Convert bool to BitF
+    /// Convert bool to PF
     static member ofBool =
         function
         | true -> T
@@ -51,12 +51,12 @@ type PF =
 type SP =
     | T     // SP flag is 1
     | F     // SP flag is 0
-    /// Convert BitF to bool
+    /// Convert SP to bool
     static member toBool =
         function
         | T -> true
         | F -> false
-    /// Convert bool to BitF
+    /// Convert bool to SP
     static member ofBool =
         function
         | true -> T
@@ -66,12 +66,12 @@ type SP =
 type DBD =
     | T     // DBD flag is 1
     | F     // DBD flag is 0
-    /// Convert BitF to bool
+    /// Convert DBD to bool
     static member toBool =
         function
         | T -> true
         | F -> false
-    /// Convert bool to BitF
+    /// Convert bool to DBD
     static member ofBool =
         function
         | true -> T
@@ -81,12 +81,12 @@ type DBD =
 type LLBAA =
     | T     // LLBAA flag is 1
     | F     // LLBAA flag is 0
-    /// Convert BitF to bool
+    /// Convert LLBAA to bool
     static member toBool =
         function
         | T -> true
         | F -> false
-    /// Convert bool to BitF
+    /// Convert bool to LLBAA
     static member ofBool =
         function
         | true -> T
@@ -96,12 +96,12 @@ type LLBAA =
 type IMMED =
     | T     // IMMED flag is 1
     | F     // IMMED flag is 0
-    /// Convert BitF to bool
+    /// Convert IMMED to bool
     static member toBool =
         function
         | T -> true
         | F -> false
-    /// Convert bool to BitF
+    /// Convert bool to IMMED
     static member ofBool =
         function
         | true -> T
@@ -111,12 +111,12 @@ type IMMED =
 type DESC =
     | T     // DESC flag is 1
     | F     // DESC flag is 0
-    /// Convert BitF to bool
+    /// Convert DESC to bool
     static member toBool =
         function
         | T -> true
         | F -> false
-    /// Convert bool to BitF
+    /// Convert bool to DESC
     static member ofBool =
         function
         | true -> T
@@ -126,12 +126,12 @@ type DESC =
 type FMTPINFO =
     | T     // FMTPINFO flag is 1
     | F     // FMTPINFO flag is 0
-    /// Convert BitF to bool
+    /// Convert FMTPINFO to bool
     static member toBool =
         function
         | T -> true
         | F -> false
-    /// Convert bool to BitF
+    /// Convert bool to FMTPINFO
     static member ofBool =
         function
         | true -> T
@@ -141,12 +141,12 @@ type FMTPINFO =
 type RTO_REQ =
     | T     // RTO_REQ flag is 1
     | F     // RTO_REQ flag is 0
-    /// Convert BitF to bool
+    /// Convert RTO_REQ to bool
     static member toBool =
         function
         | T -> true
         | F -> false
-    /// Convert bool to BitF
+    /// Convert bool to RTO_REQ
     static member ofBool =
         function
         | true -> T
@@ -156,12 +156,12 @@ type RTO_REQ =
 type LONGLIST =
     | T     // LONGLIST flag is 1
     | F     // LONGLIST flag is 0
-    /// Convert BitF to bool
+    /// Convert LONGLIST to bool
     static member toBool =
         function
         | T -> true
         | F -> false
-    /// Convert bool to BitF
+    /// Convert bool to LONGLIST
     static member ofBool =
         function
         | true -> T
@@ -171,12 +171,12 @@ type LONGLIST =
 type FMTDATA =
     | T     // FMTDATA flag is 1
     | F     // FMTDATA flag is 0
-    /// Convert BitF to bool
+    /// Convert FMTDATA to bool
     static member toBool =
         function
         | T -> true
         | F -> false
-    /// Convert bool to BitF
+    /// Convert bool to FMTDATA
     static member ofBool =
         function
         | true -> T
@@ -186,12 +186,12 @@ type FMTDATA =
 type CMPLIST =
     | T     // CMPLIST flag is 1
     | F     // CMPLIST flag is 0
-    /// Convert BitF to bool
+    /// Convert CMPLIST to bool
     static member toBool =
         function
         | T -> true
         | F -> false
-    /// Convert bool to BitF
+    /// Convert bool to CMPLIST
     static member ofBool =
         function
         | true -> T
@@ -201,12 +201,12 @@ type CMPLIST =
 type DPO =
     | T     // DPO flag is 1
     | F     // DPO flag is 0
-    /// Convert BitF to bool
+    /// Convert DPO to bool
     static member toBool =
         function
         | T -> true
         | F -> false
-    /// Convert bool to BitF
+    /// Convert bool to DPO
     static member ofBool =
         function
         | true -> T
@@ -216,12 +216,12 @@ type DPO =
 type FUA =
     | T     // FUA flag is 1
     | F     // FUA flag is 0
-    /// Convert BitF to bool
+    /// Convert FUA to bool
     static member toBool =
         function
         | T -> true
         | F -> false
-    /// Convert bool to BitF
+    /// Convert bool to FUA
     static member ofBool =
         function
         | true -> T
@@ -231,12 +231,12 @@ type FUA =
 type FUA_NV =
     | T     // FUA_NV flag is 1
     | F     // FUA_NV flag is 0
-    /// Convert BitF to bool
+    /// Convert FUA_NV to bool
     static member toBool =
         function
         | T -> true
         | F -> false
-    /// Convert bool to BitF
+    /// Convert bool to FUA_NV
     static member ofBool =
         function
         | true -> T
@@ -246,12 +246,12 @@ type FUA_NV =
 type PMI =
     | T     // PMI flag is 1
     | F     // PMI flag is 0
-    /// Convert BitF to bool
+    /// Convert PMI to bool
     static member toBool =
         function
         | T -> true
         | F -> false
-    /// Convert bool to BitF
+    /// Convert bool to PMI
     static member ofBool =
         function
         | true -> T
@@ -261,12 +261,12 @@ type PMI =
 type SYNC_NV =
     | T     // SYNC_NV flag is 1
     | F     // SYNC_NV flag is 0
-    /// Convert BitF to bool
+    /// Convert SYNC_NV to bool
     static member toBool =
         function
         | T -> true
         | F -> false
-    /// Convert bool to BitF
+    /// Convert bool to SYNC_NV
     static member ofBool =
         function
         | true -> T
@@ -276,12 +276,12 @@ type SYNC_NV =
 type NACA =
     | T     // NACA flag is 1
     | F     // NACA flag is 0
-    /// Convert BitF to bool
+    /// Convert NACA to bool
     static member toBool =
         function
         | T -> true
         | F -> false
-    /// Convert bool to BitF
+    /// Convert bool to NACA
     static member ofBool =
         function
         | true -> T
@@ -291,12 +291,12 @@ type NACA =
 type LINK =
     | T     // LINK flag is 1
     | F     // LINK flag is 0
-    /// Convert BitF to bool
+    /// Convert LINK to bool
     static member toBool =
         function
         | T -> true
         | F -> false
-    /// Convert bool to BitF
+    /// Convert bool to LINK
     static member ofBool =
         function
         | true -> T
@@ -1110,7 +1110,7 @@ type GenScsiCDB() =
     /// <returns>
     ///  Generated WRITE(6) CDB with padding to 16 byte.
     /// </returns>
-    static member Write6 ( argLBA : uint32 ) ( argTransferLength : byte )( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
+    static member Write6 ( argLBA : uint32 ) ( argTransferLength : byte ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
         [|
             0x0Auy;                                                                             // OPERATION CODE
             byte( ( argLBA &&& 0x001F0000u ) >>> 16 );                                          // LOGICAL BLOCK ADDRESS

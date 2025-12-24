@@ -115,7 +115,7 @@ type ClientConfigTest() =
     member _.Test() =
         task {
             // Initialize working folder, Start controller and client process
-            let controller, client = TestFunctions.StartHarukaController workPath controllPortNo
+            let controller, client = ControllerFunc.StartHarukaController workPath controllPortNo
 
             // Add and start the target device.
             client.RunCommand "create" "Created" "CR> "

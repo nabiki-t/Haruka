@@ -519,7 +519,7 @@ type IscsiTaskOnePDUCommand
         // Maximum sense data length is 252 bytes and minimum MaxRecvDataSegmentLength is 512 bytes,
         // So, sense data should always be stored in the SCSI Response PDU.
         // And, it should not be truncated by MaxRecvDataSegmentLength_I.
-        let realSendDataLength = uint32 argSendDataBytes.Length
+        let realSendDataLength = argSendDataBytes.uLength
 
         // Search the DataIn PDU that has 1 in A bit.
         //let ackDataInPDU = oldDataInPDUs |> Array.tryFind ( fun itr -> itr.A )

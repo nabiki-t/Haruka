@@ -8,21 +8,8 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OtherFlags>--warnon:3390</OtherFlags>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OtherFlags>--warnon:3390</OtherFlags>
-  </PropertyGroup>
-
   <ItemGroup>
-    <Compile Include="iSCSI_LoginTest1.fs" />
-    <Compile Include="iSCSI_LoginTest2.fs" />
-    <Compile Include="iSCSI_Numbering.fs" />
-    <Compile Include="iSCSI_OtherErrorCases.fs" />
-    <Compile Include="iSCSI_TMF.fs" />
-    <Compile Include="ClientConfigTest.fs" />
+    <Compile Include="TaskQueue.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
 
@@ -41,6 +28,7 @@
     <ProjectReference Include="..\..\products\Controller\Controller.fsproj" />
     <ProjectReference Include="..\..\products\SimpleMedia\SimpleMedia.fsproj" />
     <ProjectReference Include="..\..\products\TargetDevice\TargetDevice.fsproj" />
+    <ProjectReference Include="..\IT_ISCSI\IT_ISCSI.fsproj" />
     <ProjectReference Include="..\TestCommon\TestCommon.fsproj" />
   </ItemGroup>
 

@@ -84,8 +84,14 @@ type PooledBuffer private ( argBuffer : byte[], argLength : int ) =
     /// Returns the length requested when allocating the buffer. Same as Count property.
     member _.Length = m_Length
 
+    /// Returns the length requested when allocating the buffer. Same as Count property.
+    member _.uLength = m_Length |> uint32
+
     /// Returns the length requested when allocating the buffer. Same as Length property.
     member _.Count = m_Length
+
+    /// Returns the length requested when allocating the buffer. Same as Length property.
+    member _.uCount = m_Length |> uint32
 
     /// Returns an ArraySegment that references the entire buffer.
     member _.ArraySegment = ArraySegment<byte>( m_Buffer, 0, m_Length )

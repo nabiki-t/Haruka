@@ -25,9 +25,13 @@
     <Compile Include="PrivateCaller.fs" />
     <Compile Include="Stub.fs" />
     <Compile Include="StubProcCtrl.fs" />
+    <Compile Include="ClientProc.fs" />
+    <Compile Include="ControllerFunc.fs" />
     <Compile Include="GenScsiCDB.fs" />
-    <Compile Include="iSCSI_Initiator.fs" />
+    <Compile Include="GenScsiParams.fs" />
     <Compile Include="ParseSenseData.fs" />
+    <Compile Include="iSCSI_Initiator.fs" />
+    <Compile Include="SCSI_Initiator.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
 

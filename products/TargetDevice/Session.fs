@@ -465,7 +465,7 @@ type Session
             let itt = reqCmdPDU.InitiatorTaskTag
             let lun = reqCmdPDU.LUN
             let argSendDataBytes = if senseData.Count > 0 then senseData else resData
-            let SPDTL = ( uint32 argSendDataBytes.Count )  // SCSI-Presented Data Transfer Length
+            let SPDTL = argSendDataBytes.uCount // SCSI-Presented Data Transfer Length
             let bidirectCmd = reqCmdPDU.R && reqCmdPDU.W
             let readOnlyCmd = reqCmdPDU.R && ( not reqCmdPDU.W )
             let writeOnlyCmd = ( not reqCmdPDU.R ) && reqCmdPDU.W

@@ -544,7 +544,7 @@ type PDU() =
             raise <| SessionRecoveryException ( msg, wtsih )
         
         // Check F, W flag and expected data length
-        if retvalue.W && retvalue.ExpectedDataTransferLength = uint32 a.m_DataSegment.Count then
+        if retvalue.W && retvalue.ExpectedDataTransferLength = a.m_DataSegment.uCount then
             // If write expected data transfer length equals following immidiate data length, F bit is must be 1.
             if not retvalue.F then
                 let msg = "If there are no following data PDU, F bit is must be 1."
@@ -2220,7 +2220,7 @@ type PDU() =
                         }
                 |]
             let AHSLength = Array.fold ( fun acc i -> acc + 4 + i.AHSSpecific2.Length ) 0 vAHS
-            let wDataSegmentLength = uint32 dataSegment.Count
+            let wDataSegmentLength = dataSegment.uCount
 
             // AHS Length must less than or equal 255.
             assert( AHSLength <= 255 )
@@ -2648,7 +2648,7 @@ type PDU() =
 
         task {
             let dataSegment = argPDU.DataSegment
-            let wDataSegmentLength = uint32 dataSegment.Count
+            let wDataSegmentLength = dataSegment.uCount
             let wbuf = PooledBuffer.RentAndInit 48
 
             // Create BHS data
@@ -3832,7 +3832,7 @@ type PDU() =
 
         task {
             let wDataSegment = argPDU.PingData
-            let wDataSegmentLength = uint32 wDataSegment.Count
+            let wDataSegmentLength = wDataSegment.uCount
             let wbuf = PooledBuffer.RentAndInit 48
 
             // Create BHS data
@@ -3931,7 +3931,7 @@ type PDU() =
 
         task {
             let wDataSegment = argPDU.PingData
-            let wDataSegmentLength = uint32 wDataSegment.Count
+            let wDataSegmentLength = wDataSegment.uCount
             let wbuf = PooledBuffer.RentAndInit 48
 
             // Create BHS data

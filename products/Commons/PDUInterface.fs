@@ -579,12 +579,12 @@ type SCSIDataOutPDU =
                     let struct( wOffset, wDataSeg ) =
                         seglist
                         |> Array.maxBy( fun struct ( bOffset, dataSeg ) -> bOffset + (uint)dataSeg.Count )
-                    min ( wOffset + ( uint wDataSeg.Count ) ) ( uint maxlen )
+                    min ( wOffset + wDataSeg.uCount ) ( uint maxlen )
                 let wv = PooledBuffer.Rent( int paramlength )
 
                 for struct ( bOffset, dataSeg ) in seglist do
                     if bOffset < paramlength && dataSeg.Count > 0 then
-                        let wcnt =  ( min ( bOffset + ( uint dataSeg.Count ) ) paramlength ) - bOffset
+                        let wcnt =  ( min ( bOffset + dataSeg.uCount ) paramlength ) - bOffset
                         Array.blit dataSeg.Array 0 wv.Array ( int bOffset ) ( int wcnt )
                 wv
 
@@ -705,6 +705,48 @@ type SCSIDataInPDU =
         // Target does not receive this PDU from the initiator.
         member _.ByteCount : uint32 voption =
             ValueNone
+
+    /// <summary>
+    ///  Append input data in some SCSI Data-In PDUs to one bytes array.
+    /// </summary>
+    /// <param name="respPduData">
+    ///  Data segment bytes array in SCSI Response PDU.
+    /// </param>
+    /// <param name="dins">
+    ///  SCSI Data-In PDUs list
+    /// </param>
+    /// <param name="maxlen">
+    ///  Maximum length of result array.
+    /// </param>
+    /// <returns>
+    ///  parameter data bytes array. The buffer is allocaled by ArrayPool. It must be returned to ArrayPool.
+    /// </returns>
+    static member AppendDataInList ( respPduData : ArraySegment<byte> ) ( dins : SCSIDataInPDU list ) ( maxlen : int ) : PooledBuffer =
+        if maxlen <= 0 then
+            PooledBuffer.Empty
+        else
+            let seglist = 
+                dins
+                |> Seq.map ( fun itr -> struct ( itr.BufferOffset, itr.DataSegment ) )
+                |> Seq.insertAt 0 struct ( 0u, respPduData )
+                |> Seq.filter ( fun struct ( _, seg ) -> seg.Count > 0 )
+                |> Seq.toArray
+
+            if seglist.Length <= 0 then
+                PooledBuffer.Empty
+            else
+                let datalength =
+                    let struct( wOffset, wDataSeg ) =
+                        seglist
+                        |> Array.maxBy( fun struct ( bOffset, dataSeg ) -> bOffset + (uint)dataSeg.Count )
+                    min ( wOffset + ( uint wDataSeg.Count ) ) ( uint maxlen )
+                let wv = PooledBuffer.Rent( int datalength )
+
+                for struct ( bOffset, dataSeg ) in seglist do
+                    if bOffset < datalength && dataSeg.Count > 0 then
+                        let wcnt =  ( min ( bOffset + ( uint dataSeg.Count ) ) datalength ) - bOffset
+                        Array.blit dataSeg.Array dataSeg.Offset wv.Array ( int bOffset ) ( int wcnt )
+                wv
 
 
 /// <summary>
