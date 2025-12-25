@@ -264,25 +264,25 @@ type PooledBuffer_Test() =
         Assert.False(( PooledBuffer.ValueEqualsWithArray p1 b2 ))
 
     [<Fact>]
-    member _.static_Rent_001() =
+    member _.static_Rent_001_001() =
         let p1 = PooledBuffer.Rent 10
         Assert.True(( p1.Array.Length >= 10 ))
         Assert.True(( p1.Length = 10 ))
 
     [<Fact>]
-    member _.static_Rent_002() =
+    member _.static_Rent_001_002() =
         let p1 = PooledBuffer.Rent 0
         Assert.True(( p1.Array.Length = 0 ))
         Assert.True(( p1.Length = 0 ))
 
     [<Fact>]
-    member _.static_Rent_003() =
+    member _.static_Rent_001_003() =
         let p1 = PooledBuffer.Rent -1
         Assert.True(( p1.Array.Length = 0 ))
         Assert.True(( p1.Length = 0 ))
 
     [<Fact>]
-    member _.static_Rent_004() =
+    member _.static_Rent_002_001() =
         let b1 = [| 1uy; 2uy; 3uy |]
         let p1 = PooledBuffer.Rent b1
         Assert.True(( p1.Length = 3 ))
@@ -291,59 +291,307 @@ type PooledBuffer_Test() =
         Assert.False(( Functions.IsSame p1.Array b1 ))
 
     [<Fact>]
-    member _.static_Rent_005() =
+    member _.static_Rent_002_002() =
         let b1 = [||]
         let p1 = PooledBuffer.Rent b1
         Assert.True(( p1.Array.Length = 0 ))
         Assert.True(( p1.Length = 0 ))
 
     [<Fact>]
-    member _.static_Rent_006() =
-        let b1 = [| 1uy; 2uy; 3uy; 4uy |]
+    member _.static_Rent_003_001() =
+        let b1 = 
+            let v = Array.zeroCreate 128
+            Random.Shared.NextBytes v
+            v
         let p1 = PooledBuffer.Rent( b1, 0 )
         Assert.True(( p1.Length = 0 ))
         Assert.True(( p1.Array.Length = 0 ))
 
     [<Fact>]
-    member _.static_Rent_007() =
-        let b1 = [| 1uy; 2uy; 3uy; 4uy |]
-        let p1 = PooledBuffer.Rent( b1, 4 )
-        Assert.True(( p1.Length = 4 ))
-        Assert.True(( p1.Array.[ 0 .. 3 ] = b1 ))
+    member _.static_Rent_003_002() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            v
+        let p1 = PooledBuffer.Rent( b1, 97 )
+        Assert.True(( p1.Length = 97 ))
+        Assert.True(( p1.Array.[ 0 .. 96 ] = b1 ))
         Assert.False(( Functions.IsSame p1.Array b1 ))
 
     [<Fact>]
-    member _.static_Rent_008() =
-        let b1 = [| 1uy; 2uy; 3uy; 4uy |]
-        let p1 = PooledBuffer.Rent( b1, 5 )
-        Assert.True(( p1.Length = 5 ))
-        Assert.True(( p1.Array.[ 0 .. 3 ] = b1 ))
-        Assert.True(( p1.Array.Length >= 5 ))
+    member _.static_Rent_003_003() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            v
+        let p1 = PooledBuffer.Rent( b1, 98 )
+        Assert.True(( p1.Length = 98 ))
+        Assert.True(( p1.Array.[ 0 .. 96 ] = b1 ))
+        Assert.True(( p1.Array.Length >= 98 ))
         Assert.False(( Functions.IsSame p1.Array b1 ))
 
     [<Fact>]
-    member _.static_Rent_009() =
-        let b1 = PooledBuffer.Rent [| 1uy; 2uy; 3uy; 4uy |]
+    member _.static_Rent_004_001() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            v
+        let p1 = PooledBuffer.Rent( b1, 0, 97 )
+        Assert.True(( p1.Length = 97 ))
+        Assert.True(( p1.Array.[ 0 .. 96 ] = b1 ))
+        Assert.True(( p1.Array.Length >= 97 ))
+        Assert.False(( Functions.IsSame p1.Array b1 ))
+
+    [<Fact>]
+    member _.static_Rent_004_002() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            v
+        let p1 = PooledBuffer.Rent( b1, 0, 98 )
+        Assert.True(( p1.Length = 98 ))
+        Assert.True(( p1.Array.[ 0 .. 96 ] = b1 ))
+        Assert.True(( p1.Array.Length >= 97 ))
+        Assert.False(( Functions.IsSame p1.Array b1 ))
+
+    [<Fact>]
+    member _.static_Rent_004_003() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            v
+        let p1 = PooledBuffer.Rent( b1, 0, 96 )
+        Assert.True(( p1.Length = 96 ))
+        Assert.True(( p1.Array.[ 0 .. 95 ] = b1.[ 0 .. 95 ] ))
+        Assert.True(( p1.Array.Length >= 96 ))
+        Assert.False(( Functions.IsSame p1.Array b1 ))
+
+    [<Fact>]
+    member _.static_Rent_004_004() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            v
+        let p1 = PooledBuffer.Rent( b1, 0, 0 )
+        Assert.True(( p1.Length = 0 ))
+        Assert.False(( Functions.IsSame p1.Array b1 ))
+
+    [<Fact>]
+    member _.static_Rent_004_005() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            v
+        let p1 = PooledBuffer.Rent( b1, 0, -1 )
+        Assert.True(( p1.Length = 0 ))
+        Assert.False(( Functions.IsSame p1.Array b1 ))
+
+    [<Fact>]
+    member _.static_Rent_004_006() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            v
+        let p1 = PooledBuffer.Rent( b1, 1, 96 )
+        Assert.True(( p1.Length = 96 ))
+        Assert.True(( p1.Array.[ 0 .. 95 ] = b1.[ 1 .. 96 ] ))
+        Assert.True(( p1.Array.Length >= 96 ))
+        Assert.False(( Functions.IsSame p1.Array b1 ))
+
+    [<Fact>]
+    member _.static_Rent_004_007() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            v
+        let p1 = PooledBuffer.Rent( b1, 1, 95 )
+        Assert.True(( p1.Length = 95 ))
+        Assert.True(( p1.Array.[ 0 .. 94 ] = b1.[ 1 .. 95 ] ))
+        Assert.True(( p1.Array.Length >= 95 ))
+        Assert.False(( Functions.IsSame p1.Array b1 ))
+
+    [<Fact>]
+    member _.static_Rent_004_008() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            v
+        let p1 = PooledBuffer.Rent( b1, 80, 97 )
+        Assert.True(( p1.Length = 97 ))
+        Assert.True(( p1.Array.[ 0 .. 16 ] = b1.[ 80 .. 96 ] ))
+        Assert.True(( p1.Array.Length >= 97 ))
+        Assert.False(( Functions.IsSame p1.Array b1 ))
+
+    [<Fact>]
+    member _.static_Rent_004_009() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            v
+        let p1 = PooledBuffer.Rent( b1, -1, 10 )
+        Assert.True(( p1.Length = 10 ))
+        Assert.True(( p1.Array.[ 0 .. 9 ] = b1.[ 0 .. 9 ] ))
+        Assert.True(( p1.Array.Length >= 10 ))
+        Assert.False(( Functions.IsSame p1.Array b1 ))
+
+    [<Fact>]
+    member _.static_Rent_004_010() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            v
+        let p1 = PooledBuffer.Rent( b1, 97, 10 )
+        Assert.True(( p1.Length = 10 ))
+        Assert.True(( p1.Array.Length >= 10 ))
+        Assert.False(( Functions.IsSame p1.Array b1 ))
+
+    [<Fact>]
+    member _.static_Rent_005_001() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            v
         let p1 = PooledBuffer.Rent( b1, 0 )
         Assert.True(( p1.Length = 0 ))
         Assert.True(( p1.Array.Length = 0 ))
 
     [<Fact>]
-    member _.static_Rent_010() =
-        let b1 = PooledBuffer.Rent [| 1uy; 2uy; 3uy; 4uy |]
-        let p1 = PooledBuffer.Rent( b1, 4 )
-        Assert.True(( p1.Length = 4 ))
-        Assert.True(( p1.Array.Length >= 4 ))
-        Assert.True(( p1.Array.[ 0 .. 3 ] = b1.Array.[ 0 .. 3 ] ))
+    member _.static_Rent_005_002() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            PooledBuffer.Rent v
+        let p1 = PooledBuffer.Rent( b1, 97 )
+        Assert.True(( p1.Length = 97 ))
+        Assert.True(( p1.Array.Length >= 97 ))
+        Assert.True(( p1.Array.[ 0 .. 96 ] = b1.Array.[ 0 .. 96 ] ))
         Assert.False(( Functions.IsSame p1.Array b1.Array ))
 
     [<Fact>]
-    member _.static_Rent_011() =
-        let b1 = PooledBuffer.Rent [| 1uy; 2uy; 3uy; 4uy |]
-        let p1 = PooledBuffer.Rent( b1, 5 )
-        Assert.True(( p1.Length = 5 ))
-        Assert.True(( p1.Array.Length >= 5 ))
-        Assert.True(( p1.Array.[ 0 .. 3 ] = b1.Array.[ 0 .. 3 ] ))
+    member _.static_Rent_005_003() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            PooledBuffer.Rent v
+        let p1 = PooledBuffer.Rent( b1, 98 )
+        Assert.True(( p1.Length = 98 ))
+        Assert.True(( p1.Array.Length >= 98 ))
+        Assert.True(( p1.Array.[ 0 .. 96 ] = b1.Array.[ 0 .. 96 ] ))
+        Assert.False(( Functions.IsSame p1.Array b1.Array ))
+
+    [<Fact>]
+    member _.static_Rent_006_001() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            PooledBuffer.Rent v
+        let p1 = PooledBuffer.Rent( b1, 0, 97 )
+        Assert.True(( p1.Length = 97 ))
+        Assert.True(( p1.Array.[ 0 .. 96 ] = b1.Array.[ 0 .. 96 ] ))
+        Assert.True(( p1.Array.Length >= 97 ))
+        Assert.False(( Functions.IsSame p1.Array b1.Array ))
+
+    [<Fact>]
+    member _.static_Rent_006_002() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            PooledBuffer.Rent v
+        let p1 = PooledBuffer.Rent( b1, 0, 98 )
+        Assert.True(( p1.Length = 98 ))
+        Assert.True(( p1.Array.[ 0 .. 96 ] = b1.Array.[ 0 .. 96 ] ))
+        Assert.True(( p1.Array.Length >= 97 ))
+        Assert.False(( Functions.IsSame p1.Array b1.Array ))
+
+    [<Fact>]
+    member _.static_Rent_006_003() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            PooledBuffer.Rent v
+        let p1 = PooledBuffer.Rent( b1, 0, 96 )
+        Assert.True(( p1.Length = 96 ))
+        Assert.True(( p1.Array.[ 0 .. 95 ] = b1.Array.[ 0 .. 95 ] ))
+        Assert.True(( p1.Array.Length >= 96 ))
+        Assert.False(( Functions.IsSame p1.Array b1.Array ))
+
+    [<Fact>]
+    member _.static_Rent_006_004() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            PooledBuffer.Rent v
+        let p1 = PooledBuffer.Rent( b1, 0, 0 )
+        Assert.True(( p1.Length = 0 ))
+        Assert.False(( Functions.IsSame p1.Array b1.Array ))
+
+    [<Fact>]
+    member _.static_Rent_006_005() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            PooledBuffer.Rent v
+        let p1 = PooledBuffer.Rent( b1, 0, -1 )
+        Assert.True(( p1.Length = 0 ))
+        Assert.False(( Functions.IsSame p1.Array b1.Array ))
+
+    [<Fact>]
+    member _.static_Rent_006_006() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            PooledBuffer.Rent v
+        let p1 = PooledBuffer.Rent( b1, 1, 96 )
+        Assert.True(( p1.Length = 96 ))
+        Assert.True(( p1.Array.[ 0 .. 95 ] = b1.Array.[ 1 .. 96 ] ))
+        Assert.True(( p1.Array.Length >= 96 ))
+        Assert.False(( Functions.IsSame p1.Array b1.Array ))
+
+    [<Fact>]
+    member _.static_Rent_006_007() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            PooledBuffer.Rent v
+        let p1 = PooledBuffer.Rent( b1, 1, 95 )
+        Assert.True(( p1.Length = 95 ))
+        Assert.True(( p1.Array.[ 0 .. 94 ] = b1.Array.[ 1 .. 95 ] ))
+        Assert.True(( p1.Array.Length >= 95 ))
+        Assert.False(( Functions.IsSame p1.Array b1.Array ))
+
+    [<Fact>]
+    member _.static_Rent_006_008() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            PooledBuffer.Rent v
+        let p1 = PooledBuffer.Rent( b1, 80, 97 )
+        Assert.True(( p1.Length = 97 ))
+        Assert.True(( p1.Array.[ 0 .. 16 ] = b1.Array.[ 80 .. 96 ] ))
+        Assert.True(( p1.Array.Length >= 97 ))
+        Assert.False(( Functions.IsSame p1.Array b1.Array ))
+
+    [<Fact>]
+    member _.static_Rent_006_009() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            PooledBuffer.Rent v
+        let p1 = PooledBuffer.Rent( b1, -1, 10 )
+        Assert.True(( p1.Length = 10 ))
+        Assert.True(( p1.Array.[ 0 .. 9 ] = b1.Array.[ 0 .. 9 ] ))
+        Assert.True(( p1.Array.Length >= 10 ))
+        Assert.False(( Functions.IsSame p1.Array b1.Array ))
+
+    [<Fact>]
+    member _.static_Rent_006_010() =
+        let b1 = 
+            let v = Array.zeroCreate 97
+            Random.Shared.NextBytes v
+            PooledBuffer.Rent v
+        let p1 = PooledBuffer.Rent( b1, 97, 10 )
+        Assert.True(( p1.Length = 10 ))
+        Assert.True(( p1.Array.Length >= 10 ))
         Assert.False(( Functions.IsSame p1.Array b1.Array ))
 
     [<Fact>]

@@ -1544,7 +1544,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( r2t1.DesiredDataTransferLength = 3000u ))
 
             // Send Data-Out PDU 1
-            let writeData1 = PooledBuffer.Rent( writeData.[ 0 .. 2999 ] )
+            let writeData1 = PooledBuffer.Rent( writeData, 0, 3000 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 r2t1.TargetTransferTag datasn_me.zero r2t1.BufferOffset writeData1
             writeData1.Return()
 
@@ -1554,7 +1554,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( r2t2.DesiredDataTransferLength = 3000u ))
 
             // Send Data-Out PDU 2
-            let writeData2 = PooledBuffer.Rent( writeData.[ 3000 .. 5999 ] )
+            let writeData2 = PooledBuffer.Rent( writeData, 3000, 3000 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 r2t2.TargetTransferTag datasn_me.zero r2t2.BufferOffset writeData2
             writeData2.Return()
 
@@ -1564,7 +1564,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( r2t3.DesiredDataTransferLength = 2192u ))
 
             // Send Data-Out PDU 2
-            let writeData3 = PooledBuffer.Rent( writeData.[ 6000 .. 8191 ] )
+            let writeData3 = PooledBuffer.Rent( writeData, 6000, 2192 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 r2t3.TargetTransferTag datasn_me.zero r2t3.BufferOffset writeData3
             writeData3.Return()
 
@@ -1689,7 +1689,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( r2t1.DesiredDataTransferLength = 3000u ))
 
             // Send Data-Out PDU 1
-            let writeData1 = PooledBuffer.Rent( writeData.[ 0 .. 2999 ] )
+            let writeData1 = PooledBuffer.Rent( writeData, 0, 3000 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 r2t1.TargetTransferTag datasn_me.zero r2t1.BufferOffset writeData1
             writeData1.Return()
 
@@ -1699,7 +1699,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( r2t2.DesiredDataTransferLength = 3000u ))
 
             // Send Data-Out PDU 2
-            let writeData2 = PooledBuffer.Rent( writeData.[ 3000 .. 5999 ] )
+            let writeData2 = PooledBuffer.Rent( writeData, 3000, 3000 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 r2t2.TargetTransferTag datasn_me.zero r2t2.BufferOffset writeData2
             writeData2.Return()
 
@@ -1709,7 +1709,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( r2t3.DesiredDataTransferLength = 2192u ))
 
             // Send Data-Out PDU 2
-            let writeData3 = PooledBuffer.Rent( writeData.[ 6000 .. 8191 ] )
+            let writeData3 = PooledBuffer.Rent( writeData, 6000, 2192 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 r2t3.TargetTransferTag datasn_me.zero r2t3.BufferOffset writeData3
             writeData3.Return()
 
@@ -2026,7 +2026,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Random.Shared.NextBytes( writtenData )
 
             // Send data-Out PDU 1
-            let writtenData1 = PooledBuffer.Rent writtenData.[ 0 .. 4095 ]
+            let writtenData1 = PooledBuffer.Rent( writtenData, 0, 4096 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.F writeITT g_LUN1 r2tPDU.TargetTransferTag datasn_me.zero 0u writtenData1
 
             // Send data-Out PDU 2 ( Out of range )
@@ -2079,12 +2079,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Random.Shared.NextBytes( writtenData )
 
             // Send data-Out PDU 1
-            let writtenData1 = PooledBuffer.Rent writtenData.[ 0 .. 1023 ]
+            let writtenData1 = PooledBuffer.Rent( writtenData, 0, 1024 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.F writeITT g_LUN1 r2tPDU.TargetTransferTag datasn_me.zero 0u writtenData1
             writtenData1.Return()
 
             // Send data-Out PDU 2
-            let writtenData2 = PooledBuffer.Rent writtenData.[ 1024 .. 2047 ]
+            let writtenData2 = PooledBuffer.Rent( writtenData, 1024, 1024 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 1u ) 1024u writtenData2
             writtenData2.Return()
 
@@ -2122,12 +2122,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Random.Shared.NextBytes( writtenData )
 
             // Send data-Out PDU 1
-            let writtenData1 = PooledBuffer.Rent writtenData.[ 0 .. 1023 ]
+            let writtenData1 = PooledBuffer.Rent( writtenData, 0, 1024 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.F writeITT g_LUN1 r2tPDU.TargetTransferTag datasn_me.zero 0u writtenData1
             writtenData1.Return()
 
             // Send data-Out PDU 2
-            let writtenData2 = PooledBuffer.Rent writtenData.[ 1024 .. 2047 ]
+            let writtenData2 = PooledBuffer.Rent( writtenData, 1024, 1024 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 r2tPDU.TargetTransferTag ( datasn_me.fromPrim 1u ) 1024u writtenData2
             writtenData2.Return()
 
@@ -2139,7 +2139,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( r2tPDU2.DesiredDataTransferLength = 2048u ))
 
             // Send data-Out PDU 2
-            let writtenData3 = PooledBuffer.Rent writtenData.[ 2048 .. 4095 ]
+            let writtenData3 = PooledBuffer.Rent( writtenData, 2048, 2048 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 r2tPDU2.TargetTransferTag ( datasn_me.fromPrim 2u ) 2048u writtenData3
             writtenData3.Return()
 
@@ -2184,22 +2184,22 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Random.Shared.NextBytes( writtenData )
 
             // Send data-Out PDU 0 for R2T 0
-            let writtenData0 = PooledBuffer.Rent writtenData.[ 0 .. 2047 ]
+            let writtenData0 = PooledBuffer.Rent( writtenData, 0, 2048 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.F writeITT g_LUN1 vTTT.[0] datasn_me.zero 0u writtenData0
             writtenData0.Return()
 
             // Send data-Out PDU 1 for R2T 0
-            let writtenData1 = PooledBuffer.Rent writtenData.[ 2048 .. 4095 ]
+            let writtenData1 = PooledBuffer.Rent( writtenData, 2048, 2048 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 vTTT.[0] ( datasn_me.fromPrim 1u ) 2048u writtenData1
             writtenData1.Return()
 
             // Send data-Out PDU 2 for R2T 1
-            let writtenData2 = PooledBuffer.Rent writtenData.[ 4096 .. 6143 ]
+            let writtenData2 = PooledBuffer.Rent( writtenData, 4096, 2048 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.F writeITT g_LUN1 vTTT.[1] datasn_me.zero 4096u writtenData2
             writtenData2.Return()
 
             // Send data-Out PDU 3 for R2T 2
-            let writtenData3 = PooledBuffer.Rent writtenData.[ 6144 .. 8191 ]
+            let writtenData3 = PooledBuffer.Rent( writtenData, 6144, 2048 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 vTTT.[1] ( datasn_me.fromPrim 1u ) 6144u writtenData3
             writtenData3.Return()
 
@@ -2244,42 +2244,42 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Random.Shared.NextBytes( writtenData )
 
             // Send data-Out PDU 0 for R2T 0
-            let writtenData0 = PooledBuffer.Rent writtenData.[ 0 .. 1023 ]
+            let writtenData0 = PooledBuffer.Rent( writtenData, 0, 1024 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.F writeITT g_LUN1 vTTT.[0] datasn_me.zero 0u writtenData0
             writtenData0.Return()
 
             // Send data-Out PDU 1 for R2T 1
-            let writtenData1 = PooledBuffer.Rent writtenData.[ 4096 .. 5119 ]
+            let writtenData1 = PooledBuffer.Rent( writtenData, 4096, 1024 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.F writeITT g_LUN1 vTTT.[1] datasn_me.zero 4096u writtenData1
             writtenData1.Return()
 
             // Send data-Out PDU 2 for R2T 0
-            let writtenData2 = PooledBuffer.Rent writtenData.[ 1024 .. 2047 ]
+            let writtenData2 = PooledBuffer.Rent( writtenData, 1024, 1024 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.F writeITT g_LUN1 vTTT.[0] ( datasn_me.fromPrim 1u ) 1024u writtenData2
             writtenData2.Return()
 
             // Send data-Out PDU 3 for R2T 1
-            let writtenData3 = PooledBuffer.Rent writtenData.[ 5120 .. 6143 ]
+            let writtenData3 = PooledBuffer.Rent( writtenData, 5120, 1024 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.F writeITT g_LUN1 vTTT.[1] ( datasn_me.fromPrim 1u ) 5120u writtenData3
             writtenData3.Return()
 
             // Send data-Out PDU 4 for R2T 0
-            let writtenData4 = PooledBuffer.Rent writtenData.[ 2048 .. 3071 ]
+            let writtenData4 = PooledBuffer.Rent( writtenData, 2048, 1024 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.F writeITT g_LUN1 vTTT.[0] ( datasn_me.fromPrim 2u ) 2048u writtenData4
             writtenData4.Return()
 
             // Send data-Out PDU 5 for R2T 1
-            let writtenData5 = PooledBuffer.Rent writtenData.[ 6144 .. 7167 ]
+            let writtenData5 = PooledBuffer.Rent( writtenData, 6144, 1024 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.F writeITT g_LUN1 vTTT.[1] ( datasn_me.fromPrim 2u ) 6144u writtenData5
             writtenData5.Return()
 
             // Send data-Out PDU 6 for R2T 0
-            let writtenData6 = PooledBuffer.Rent writtenData.[ 3072 .. 4095 ]
+            let writtenData6 = PooledBuffer.Rent( writtenData, 3072, 1024 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 vTTT.[0] ( datasn_me.fromPrim 3u ) 3072u writtenData6
             writtenData6.Return()
 
             // Send data-Out PDU 7 for R2T 1
-            let writtenData7 = PooledBuffer.Rent writtenData.[ 7168 .. 8191 ]
+            let writtenData7 = PooledBuffer.Rent( writtenData, 7168, 1024 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 vTTT.[1] ( datasn_me.fromPrim 3u ) 7168u writtenData7
             writtenData7.Return()
 
@@ -2324,12 +2324,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Random.Shared.NextBytes( writtenData )
 
             // Send data-Out PDU 0 for R2T 0 ( F=1 )
-            let writtenData0 = PooledBuffer.Rent writtenData.[ 0 .. 1023 ]
+            let writtenData0 = PooledBuffer.Rent( writtenData, 0, 1024 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 vTTT.[0] datasn_me.zero 0u writtenData0
             writtenData0.Return()
 
             // Send data-Out PDU 1 for R2T 1 ( F=1 )
-            let writtenData1 = PooledBuffer.Rent writtenData.[ 4096 .. 5119 ]
+            let writtenData1 = PooledBuffer.Rent( writtenData, 4096, 1024 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 vTTT.[1] datasn_me.zero 4096u writtenData1
             writtenData1.Return()
 
@@ -2348,12 +2348,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( r_r2tPDU1.DesiredDataTransferLength = 3072u ))
 
             // Send data-Out PDU 2 for Recovery R2T 0
-            let writtenData2 = PooledBuffer.Rent writtenData.[ 1024 .. 4095 ]
+            let writtenData2 = PooledBuffer.Rent( writtenData, 1024, 3072 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 r_r2tPDU0.TargetTransferTag datasn_me.zero 1024u writtenData2
             writtenData2.Return()
 
             // Send data-Out PDU 3 for Recovery R2T 1
-            let writtenData3 = PooledBuffer.Rent writtenData.[ 5120 .. 8191 ]
+            let writtenData3 = PooledBuffer.Rent( writtenData, 5120, 3072 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 r_r2tPDU1.TargetTransferTag datasn_me.zero 5120u writtenData3
             writtenData3.Return()
 
@@ -2398,12 +2398,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Random.Shared.NextBytes( writtenData )
 
             // Send data-Out PDU 0 for R2T 0 ( F=1 )
-            let writtenData0 = PooledBuffer.Rent writtenData.[ 4096 .. 5119 ]   // Out of range for R2T 0
+            let writtenData0 = PooledBuffer.Rent( writtenData, 4096, 1024 )     // Out of range for R2T 0
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 vTTT.[0] datasn_me.zero 4096u writtenData0
             writtenData0.Return()
 
             // Send data-Out PDU 1 for R2T 1 ( F=1 )
-            let writtenData1 = PooledBuffer.Rent writtenData.[ 0 .. 1023 ]   // Out of range for R2T 1
+            let writtenData1 = PooledBuffer.Rent( writtenData, 0, 1024 )    // Out of range for R2T 1
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 vTTT.[1] datasn_me.zero 0u writtenData1
             writtenData1.Return()
 
@@ -2425,12 +2425,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( r_r2tPDU1.DesiredDataTransferLength = 3072u ))
 
             // Send data-Out PDU 2 for Recovery R2T 0
-            let writtenData2 = PooledBuffer.Rent writtenData.[ 1024 .. 4095 ]
+            let writtenData2 = PooledBuffer.Rent( writtenData, 1024, 3072 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 r_r2tPDU0.TargetTransferTag datasn_me.zero 1024u writtenData2
             writtenData2.Return()
 
             // Send data-Out PDU 3 for Recovery R2T 1
-            let writtenData3 = PooledBuffer.Rent writtenData.[ 5120 .. 8191 ]
+            let writtenData3 = PooledBuffer.Rent( writtenData, 5120, 3072 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 r_r2tPDU1.TargetTransferTag datasn_me.zero 5120u writtenData3
             writtenData3.Return()
 
@@ -2486,12 +2486,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Random.Shared.NextBytes( writtenData )
 
             // Send data-Out PDU 0 for R2T 0
-            let writtenData0 = PooledBuffer.Rent writtenData.[ 0 .. 4095 ]
+            let writtenData0 = PooledBuffer.Rent( writtenData, 0, 4096 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 vTTT.[0] datasn_me.zero 0u writtenData0
             writtenData0.Return()
 
             // Send data-Out PDU 1 for R2T 1 ( F=1 )
-            let writtenData1 = PooledBuffer.Rent writtenData.[ 4096 .. 8191 ]
+            let writtenData1 = PooledBuffer.Rent( writtenData, 4096, 4096 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 vTTT.[1] datasn_me.zero 4096u writtenData1
             writtenData1.Return()
 
@@ -2563,14 +2563,14 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Send SCSI write
             let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.F LINK.F
-            let writtenData1 = PooledBuffer.Rent writtenData.[ 0 .. range1Count - 1 ]
+            let writtenData1 = PooledBuffer.Rent( writtenData, 0, range1Count )
             let scsiCommandFFlag = ( range2Count = 0 ) |> BitF.ofBool
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 BitI.F scsiCommandFFlag BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB writtenData1 0u
             writtenData1.Return()
 
             // Send Unsolicited Data-Out PDU
             if scsiCommandFFlag = BitF.F then
-                let writtenData2 = PooledBuffer.Rent writtenData.[ range2Start .. range2Start + range2Count - 1 ]
+                let writtenData2 = PooledBuffer.Rent( writtenData, range2Start, range2Count )
                 do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 g_DefTTT datasn_me.zero ( uint32 range2Start ) writtenData2
                 writtenData2.Return()
 
@@ -2586,7 +2586,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Send Solicited Data-Out PDU
             if expR2TLength > 0u then
-                let writtenData3 = PooledBuffer.Rent writtenData.[ range3Start .. range3Start + range3Count - 1 ]
+                let writtenData3 = PooledBuffer.Rent( writtenData, range3Start, range3Count )
                 do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 r2tTTT datasn_me.zero ( uint32 range3Start ) writtenData3
                 writtenData3.Return()
 
@@ -2611,7 +2611,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
                 // Send Solicited Data-Out PDU
                 if expRR2TLength > 0u then
-                    let writtenData4 = PooledBuffer.Rent writtenData.[ range4Start .. range4Start + range4Count - 1 ]
+                    let writtenData4 = PooledBuffer.Rent( writtenData, range4Start, range4Count )
                     do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 rr2tTTT datasn_me.zero ( uint32 range4Start ) writtenData4
                     writtenData4.Return()
 
@@ -2622,7 +2622,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                     Assert.True(( rr2tPDU2.R2TSN = datasn_me.fromPrim 2u ))
 
                     // Send all of solicited Data
-                    let writtenData5 = PooledBuffer.Rent writtenData.[ int rr2tPDU2.BufferOffset .. int ( rr2tPDU2.BufferOffset + rr2tPDU2.DesiredDataTransferLength - 1u ) ]
+                    let writtenData5 = PooledBuffer.Rent( writtenData, int rr2tPDU2.BufferOffset, int rr2tPDU2.DesiredDataTransferLength )
                     do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 rr2tPDU2.TargetTransferTag datasn_me.zero rr2tPDU2.BufferOffset writtenData5
                     writtenData5.Return()
 
@@ -2749,12 +2749,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Send SCSI write ( dropped at target )
             let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.F LINK.F
-            let writtenData0 = PooledBuffer.Rent writtenData.[ 0 .. 1023 ]
+            let writtenData0 = PooledBuffer.Rent( writtenData, 0, 1024 )
             let! writeITT1, writeCmdSN1 =
                 r1.SendSCSICommandPDU_Test id ( ValueSome( 500u, 600u ) ) g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB writtenData0 0u
 
             // Send Data-Out PDU
-            let writtenData1 = PooledBuffer.Rent writtenData.[ 1024 .. 4095 ]
+            let writtenData1 = PooledBuffer.Rent( writtenData, 1024, 3072 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT1 g_LUN1 g_DefTTT datasn_me.zero 1024u writtenData1
             writtenData1.Return()
 

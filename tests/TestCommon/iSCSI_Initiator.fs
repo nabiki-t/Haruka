@@ -1097,7 +1097,7 @@ type iSCSI_Initiator(
                             |> List.map ( fun ( idx, struct( s, l , f ) ) -> struct( idx, s, l, f ) )
 
                         for struct( idx, s, l, f ) in segs do
-                            let sendData = PooledBuffer.Rent( bytesData.[ ( int s ) .. ( int s + int l - 1 ) ] )
+                            let sendData = PooledBuffer.Rent( bytesData, int s, int l )
                             let datasn = datasn_me.fromPrim ( uint32 idx )
                             do! this.SendSCSIDataOutPDU cid ( BitF.ofBool f ) itt lun x.TargetTransferTag datasn s sendData
                             sendData.Return()

@@ -258,11 +258,36 @@ type PooledBuffer private ( argBuffer : byte[], argLength : int ) =
     ///  If the requested buffer length is less than 0, a zero-length buffer is allocated.
     /// </remarks>
     static member Rent ( v : byte[], nlen : int ) : PooledBuffer =
+        PooledBuffer.Rent ( v, 0, nlen )
+
+    /// <summary>
+    ///  Allocate buffer from ArrayPool and initialize contents from specified array.
+    /// </summary>
+    /// <param name="v">
+    ///  array that holds initial contents.
+    /// </param>
+    /// <param name="spos">
+    ///  Start byte position os source array.
+    /// </param>
+    /// <param name="nlen">
+    ///  The new length of the array.
+    /// </param>
+    /// <returns>
+    ///  Allocated buffer.
+    /// </returns>
+    /// <remarks>
+    ///  If the value of nlen is greater than the length of the original array v, an expanded array is allocated.
+    ///  The expanded part is not initialized.
+    ///  If the requested buffer length is less than 0, a zero-length buffer is allocated.
+    /// </remarks>
+    static member Rent ( v : byte[], spos : int, nlen : int ) : PooledBuffer =
         if nlen <= 0 then
             PooledBuffer.Empty
         else
             let b = ArrayPool<byte>.Shared.Rent nlen
-            Array.blit v 0 b 0 ( min v.Length nlen )
+            let wspos = spos |> max 0 |> min v.Length
+            let wcnt = min ( v.Length - wspos ) nlen
+            Array.blit v wspos b 0 wcnt
             PooledBuffer( b, nlen )
 
     /// <summary>
@@ -283,11 +308,36 @@ type PooledBuffer private ( argBuffer : byte[], argLength : int ) =
     ///  If the requested buffer length is less than 0, a zero-length buffer is allocated.
     /// </remarks>
     static member Rent ( v : PooledBuffer, nlen : int ) : PooledBuffer =
+        PooledBuffer.Rent( v, 0, nlen )
+
+    /// <summary>
+    ///  Allocate buffer from ArrayPool and initialize contents from specified array.
+    /// </summary>
+    /// <param name="v">
+    ///  array that holds initial contents.
+    /// </param>
+    /// <param name="spos">
+    ///  Start byte position os source array.
+    /// </param>
+    /// <param name="nlen">
+    ///  The new length of the array.
+    /// </param>
+    /// <returns>
+    ///  Allocated buffer.
+    /// </returns>
+    /// <remarks>
+    ///  If the value of nlen is greater than the length of the original array v, an expanded array is allocated.
+    ///  The expanded part is not initialized.
+    ///  If the requested buffer length is less than 0, a zero-length buffer is allocated.
+    /// </remarks>
+    static member Rent ( v : PooledBuffer, spos : int, nlen : int ) : PooledBuffer =
         if nlen <= 0 then
             PooledBuffer.Empty
         else
             let b = ArrayPool<byte>.Shared.Rent nlen
-            Array.blit v.Array 0 b 0 ( min v.Length nlen )
+            let wspos = spos |> max 0 |> min v.Length
+            let wcnt = min ( v.Length - wspos ) nlen
+            Array.blit v.Array wspos b 0 wcnt
             PooledBuffer( b, nlen )
 
     /// <summary>
