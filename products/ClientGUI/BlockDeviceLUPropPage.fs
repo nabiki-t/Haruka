@@ -90,6 +90,7 @@ type BlockDeviceLUPropPage(
     let m_ErrorMessageLabel = m_PropPage.FindName( "ErrorMessageLabel" ) :?> TextBlock
     let m_LUNTextBox = m_PropPage.FindName( "LUNTextBox" ) :?> TextBox
     let m_LUNameTextBox = m_PropPage.FindName( "LUNameTextBox" ) :?> TextBox
+    let m_MaxMultiplicityTextBox = m_PropPage.FindName( "MaxMultiplicityTextBox" ) :?> TextBox
 
     // Graph Writer object
     let m_ReadBytesGraphWriter = new GraphWriter( m_ReadBytesCanvas, GraphColor.GC_RED, GuiConst.USAGE_GRAPH_PNT_CNT )
@@ -265,7 +266,17 @@ type BlockDeviceLUPropPage(
                 let msg = m_Config.MessagesText.GetMessage( "MSG_INVALID_LU_NAME" )
                 raise <| Exception msg
 
-            let newNode = m_ServerStatus.UpdateBlockDeviceLUNode bdn lun luName
+            let maxMultiplicity = 
+                try
+                    UInt32.Parse m_MaxMultiplicityTextBox.Text
+                with
+                | _ ->
+                    let mins = sprintf "%d" Constants.LU_MIN_MULTIPLICITY
+                    let maxs = sprintf "%d" Constants.LU_MAX_MULTIPLICITY
+                    let msg = m_Config.MessagesText.GetMessage( "MSG_INVALID_LU_MAXMULTIPLICITY", mins, maxs )
+                    raise <| Exception msg
+
+            let newNode = m_ServerStatus.UpdateBlockDeviceLUNode bdn lun luName maxMultiplicity
             this.ShowConfigValue false false
             m_MainWindow.NoticeUpdateConfig newNode
 
@@ -334,6 +345,7 @@ type BlockDeviceLUPropPage(
         m_LUNTextBox.Text <- lun_me.toString bdn.LUN
         m_LUNameTextBox.IsEnabled <- editmode && ( not loaded )
         m_LUNameTextBox.Text <- bdn.LUName
+        m_MaxMultiplicityTextBox.Text <- sprintf "%d" bdn.MaxMultiplicity
 
     /// <summary>
     ///  Set ACA status value to the controllers

@@ -27,6 +27,7 @@
       <item name='LUN' constraint='LUN_T' />
       <item name='LUName' constraint='string' minvalue='0' maxvalue='MAX_LU_NAME_STR_LENGTH' />
       <item name='WorkPath' constraint='string' hidden='true' />
+      <item name='MaxMultiplicity' constraint='unsignedInt' mincount='0' maxcount='1' minvalue='LU_MIN_MULTIPLICITY' maxvalue='LU_MAX_MULTIPLICITY' defaultref='LU_DEF_MULTIPLICITY' />
       <item name='LUDevice' constraint='DEVICE' />
     </item>
   </form>

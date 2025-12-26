@@ -126,6 +126,10 @@
       <Value>Invalid LUN value. The LUN must be specified in decimal or hexadecimal with a leading 0x.</Value>
     </Message>
     <Message>
+      <Name>MSG_INVALID_LU_MAXMULTIPLICITY</Name>
+      <Value>Invalid max multiplicity value. Must be {0} to {1}.</Value>
+    </Message>
+    <Message>
       <Name>MSG_INVALID_LU_NAME</Name>
       <Value>LU name length must be 0 to {0}.</Value>
     </Message>

@@ -106,7 +106,7 @@ type ConfNode_MemBufferMedia_Test() =
     member _.Validate_001() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_MemBufferMedia( st, rel, rel.NextID, defaultConf ) :> IMediaNode
         rel.AddNode lu
         rel.AddNode n
@@ -118,7 +118,7 @@ type ConfNode_MemBufferMedia_Test() =
     member _.Validate_002() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_MemBufferMedia( st, rel, rel.NextID, defaultConf ) :> IMediaNode
         rel.AddNode lu
         rel.AddNode n
@@ -130,7 +130,7 @@ type ConfNode_MemBufferMedia_Test() =
     member _.Validate_IdentNumber_001() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let confVal = {
             defaultConf with
                 IdentNumber = mediaidx_me.fromPrim 0u;
@@ -149,7 +149,7 @@ type ConfNode_MemBufferMedia_Test() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let mediaMaxSize = ( uint64 Array.MaxLength ) * Constants.MEDIA_BLOCK_SIZE * Constants.MEMBUFFER_BUF_LINE_BLOCK_SIZE
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let confVal = {
             defaultConf with
                 BytesCount = mediaMaxSize;
@@ -166,7 +166,7 @@ type ConfNode_MemBufferMedia_Test() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let mediaMaxSize = ( uint64 Array.MaxLength ) * Constants.MEDIA_BLOCK_SIZE * Constants.MEMBUFFER_BUF_LINE_BLOCK_SIZE
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let confVal = {
             defaultConf with
                 BytesCount = mediaMaxSize + 1UL;
@@ -185,7 +185,7 @@ type ConfNode_MemBufferMedia_Test() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let d1 = new DummyNode( rel.NextID, "D1" ) :> IConfigureNode
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_MemBufferMedia( st, rel, rel.NextID, defaultConf ) :> IMediaNode
 
         rel.AddNode lu
@@ -214,8 +214,8 @@ type ConfNode_MemBufferMedia_Test() =
     member _.Validate_ParentCount_002() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
-        let lu1 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
-        let lu2 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 2UL, "" ) :> IConfigureNode
+        let lu1 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
+        let lu2 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 2UL, "" , Constants.LU_DEF_MULTIPLICITY) :> IConfigureNode
         let n = new ConfNode_MemBufferMedia( st, rel, rel.NextID, defaultConf ) :> IMediaNode
         rel.AddNode lu1
         rel.AddNode lu2

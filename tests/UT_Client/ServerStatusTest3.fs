@@ -238,7 +238,7 @@ type ServerStatus_Test3() =
                 do! cc1.InactivateTargetGroup tdid1 tgid1
                 do! cc1.UnloadTargetGroup tdid1 tgid1
 
-                let _ = ss.AddDummyDeviceLUNode tNodes1.[0] ( lun_me.fromPrim 2UL ) "luname002"
+                let _ = ss.AddDummyDeviceLUNode tNodes1.[0] ( lun_me.fromPrim 2UL ) "luname002" Constants.LU_DEF_MULTIPLICITY
 
                 do! ss.Publish cc1
 
@@ -288,12 +288,14 @@ type ServerStatus_Test3() =
                     LUN = lun1;
                     LUName = "";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.U_DummyDevice( );
                 };
                 {
                     LUN = lun2;
                     LUName = "";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.U_DummyDevice();
                 };
             ];
@@ -388,6 +390,7 @@ type ServerStatus_Test3() =
                                 LUN = lun_me.fromPrim ( uint64 j + 1UL );
                                 LUName = "";
                                 WorkPath = "";
+                                MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                                 LUDevice = TargetGroupConf.U_DummyDevice();
                             }];
                         }

@@ -85,6 +85,7 @@ type CtrlConnection_Test2() =
                         LUN = lun_me.fromPrim 1UL;
                         LUName = "";
                         WorkPath = "";
+                        MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                         LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                     }
                 ];
@@ -164,6 +165,7 @@ type CtrlConnection_Test2() =
                         LUN = lun_me.fromPrim 1UL;
                         LUName = "";
                         WorkPath = "";
+                        MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                         LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                     }
                 ];
@@ -243,6 +245,7 @@ type CtrlConnection_Test2() =
                         LUN = lun_me.fromPrim 1UL;
                         LUName = "";
                         WorkPath = "";
+                        MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                         LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                     }
                 ];
@@ -322,6 +325,7 @@ type CtrlConnection_Test2() =
                         LUN = lun_me.fromPrim 1UL;
                         LUName = "";
                         WorkPath = "";
+                        MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                         LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                     }
                 ];
@@ -396,6 +400,7 @@ type CtrlConnection_Test2() =
                         LUN = lun_me.fromPrim 1UL;
                         LUName = "";
                         WorkPath = "";
+                        MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                         LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                     }
                 ];
@@ -515,6 +520,7 @@ type CtrlConnection_Test2() =
                         LUN = lun_me.fromPrim 1UL;
                         LUName = "";
                         WorkPath = "";
+                        MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                         LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                     }
                 ];

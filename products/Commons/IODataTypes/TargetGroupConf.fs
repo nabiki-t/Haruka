@@ -62,6 +62,7 @@ and [<NoComparison>]T_LogicalUnit = {
     LUN : LUN_T;
     LUName : string;
     WorkPath : string;
+    MaxMultiplicity : uint32;
     LUDevice : T_DEVICE;
 }
 
@@ -247,6 +248,14 @@ type ReaderWriter() =
               <xsd:restriction base='xsd:string'>
                 <xsd:minLength value='0' />
                 <xsd:maxLength value='256' />
+              </xsd:restriction>
+            </xsd:simpleType>
+          </xsd:element>
+          <xsd:element name='MaxMultiplicity' minOccurs='0' maxOccurs='1' >
+            <xsd:simpleType>
+              <xsd:restriction base='xsd:unsignedInt'>
+                <xsd:minInclusive value='1' />
+                <xsd:maxInclusive value='256' />
               </xsd:restriction>
             </xsd:simpleType>
           </xsd:element>
@@ -593,6 +602,12 @@ type ReaderWriter() =
             LUName =
                 elem.Element( XName.Get "LUName" ).Value;
             WorkPath = "";
+            MaxMultiplicity = 
+                let subElem = elem.Element( XName.Get "MaxMultiplicity" )
+                if subElem = null then
+                    8u;
+                else
+                    UInt32.Parse( subElem.Value );
             LUDevice =
                 ReaderWriter.Read_T_DEVICE( elem.Element( XName.Get "LUDevice" ) );
         }
@@ -674,7 +689,7 @@ type ReaderWriter() =
             MaxMultiplicity = 
                 let subElem = elem.Element( XName.Get "MaxMultiplicity" )
                 if subElem = null then
-                    10u;
+                    8u;
                 else
                     UInt32.Parse( subElem.Value );
             QueueWaitTimeOut = 
@@ -1033,6 +1048,11 @@ type ReaderWriter() =
             if (elem.LUName).Length > 256 then
                 raise <| ConfRWException( "Max value(string) restriction error. LUName" )
             yield sprintf "%s%s<LUName>%s</LUName>" singleIndent indentStr ( ReaderWriter.xmlEncode(elem.LUName) )
+            if (elem.MaxMultiplicity) < 1u then
+                raise <| ConfRWException( "Min value(unsignedInt) restriction error. MaxMultiplicity" )
+            if (elem.MaxMultiplicity) > 256u then
+                raise <| ConfRWException( "Max value(unsignedInt) restriction error. MaxMultiplicity" )
+            yield sprintf "%s%s<MaxMultiplicity>%d</MaxMultiplicity>" singleIndent indentStr (elem.MaxMultiplicity)
             yield! ReaderWriter.T_DEVICE_toString ( indent + 1 ) indentStep ( elem.LUDevice ) "LUDevice"
             yield sprintf "%s</%s>" indentStr elemName
         }

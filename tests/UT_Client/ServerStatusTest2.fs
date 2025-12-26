@@ -173,7 +173,7 @@ type ServerStatus_Test2() =
                             LUN = [];
                             Auth = TargetGroupConf.T_Auth.U_None();
                         }
-                let _ = ss.AddDummyDeviceLUNode tNode ( lun_me.fromPrim 1UL ) "luname001"
+                let _ = ss.AddDummyDeviceLUNode tNode ( lun_me.fromPrim 1UL ) "luname001" Constants.LU_DEF_MULTIPLICITY
 
                 do! ss.Publish cc1
 
@@ -244,7 +244,7 @@ type ServerStatus_Test2() =
                             LUN = [];
                             Auth = TargetGroupConf.T_Auth.U_None();
                         }
-                let _ = ss.AddDummyDeviceLUNode tNode ( lun_me.fromPrim 1UL ) "luname001"
+                let _ = ss.AddDummyDeviceLUNode tNode ( lun_me.fromPrim 1UL ) "luname001" Constants.LU_DEF_MULTIPLICITY
 
                 do! ss.Publish cc1
 
@@ -420,7 +420,7 @@ type ServerStatus_Test2() =
                             LUN = [];
                             Auth = TargetGroupConf.T_Auth.U_None();
                         }
-                let _ = ss.AddDummyDeviceLUNode tNodeA ( lun_me.fromPrim 1UL ) "luname001"
+                let _ = ss.AddDummyDeviceLUNode tNodeA ( lun_me.fromPrim 1UL ) "luname001" Constants.LU_DEF_MULTIPLICITY
                 Assert.True(( ( tgNodeA :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
 
                 let tgidB = GlbFunc.newTargetGroupID()
@@ -433,7 +433,7 @@ type ServerStatus_Test2() =
                             LUN = [];
                             Auth = TargetGroupConf.T_Auth.U_None();
                         }
-                let _ = ss.AddDummyDeviceLUNode tNodeB ( lun_me.fromPrim 11UL ) "luname011"
+                let _ = ss.AddDummyDeviceLUNode tNodeB ( lun_me.fromPrim 11UL ) "luname011" Constants.LU_DEF_MULTIPLICITY
                 Assert.True(( ( tgNodeB :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
 
                 do! ss.Publish cc1

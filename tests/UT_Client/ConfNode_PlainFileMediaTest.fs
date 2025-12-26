@@ -165,7 +165,7 @@ type ConfNode_PlainFileMedia_Test() =
     member _.Validate_001() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, defaultConf ) :> IMediaNode
         rel.AddNode lu
         rel.AddNode n
@@ -177,7 +177,7 @@ type ConfNode_PlainFileMedia_Test() =
     member _.Validate_002() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, defaultConf ) :> IMediaNode
         rel.AddNode lu
         rel.AddNode n
@@ -197,7 +197,7 @@ type ConfNode_PlainFileMedia_Test() =
             QueueWaitTimeOut = Constants.PLAINFILE_MIN_QUEUEWAITTIMEOUT - 1;
             WriteProtect = true;
         }
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let d1 = new DummyNode( rel.NextID, "D1" ) :> IConfigureNode
         let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, confVal ) :> IMediaNode
         rel.AddNode lu
@@ -212,7 +212,7 @@ type ConfNode_PlainFileMedia_Test() =
     member _.Validate_IdentNumber_001() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let confVal = {
             defaultConf with
                 IdentNumber = mediaidx_me.fromPrim 0u;
@@ -234,7 +234,7 @@ type ConfNode_PlainFileMedia_Test() =
             defaultConf with
                 FileName = "";
         }
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, confVal ) :> IMediaNode
         rel.AddNode lu
         rel.AddNode n
@@ -252,7 +252,7 @@ type ConfNode_PlainFileMedia_Test() =
             defaultConf with
                 FileName = "a";
         }
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, confVal ) :> IMediaNode
         rel.AddNode lu
         rel.AddNode n
@@ -268,7 +268,7 @@ type ConfNode_PlainFileMedia_Test() =
             defaultConf with
                 FileName = String.replicate Constants.MAX_FILENAME_STR_LENGTH "a";
         }
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, confVal ) :> IMediaNode
         rel.AddNode lu
         rel.AddNode n
@@ -284,7 +284,7 @@ type ConfNode_PlainFileMedia_Test() =
             defaultConf with
                 FileName = String.replicate ( Constants.MAX_FILENAME_STR_LENGTH + 1 ) "a";
         }
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, confVal ) :> IMediaNode
         rel.AddNode lu
         rel.AddNode n
@@ -302,7 +302,7 @@ type ConfNode_PlainFileMedia_Test() =
             defaultConf with
                 MaxMultiplicity = Constants.PLAINFILE_MIN_MAXMULTIPLICITY - 1u;
         }
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, confVal ) :> IMediaNode
         rel.AddNode lu
         rel.AddNode n
@@ -320,7 +320,7 @@ type ConfNode_PlainFileMedia_Test() =
             defaultConf with
                 MaxMultiplicity = Constants.PLAINFILE_MIN_MAXMULTIPLICITY;
         }
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, confVal ) :> IMediaNode
         rel.AddNode lu
         rel.AddNode n
@@ -336,7 +336,7 @@ type ConfNode_PlainFileMedia_Test() =
             defaultConf with
                 MaxMultiplicity = Constants.PLAINFILE_MAX_MAXMULTIPLICITY;
         }
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, confVal ) :> IMediaNode
         rel.AddNode lu
         rel.AddNode n
@@ -352,7 +352,7 @@ type ConfNode_PlainFileMedia_Test() =
             defaultConf with
                 MaxMultiplicity = Constants.PLAINFILE_MAX_MAXMULTIPLICITY + 1u;
         }
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, confVal ) :> IMediaNode
         rel.AddNode lu
         rel.AddNode n
@@ -370,7 +370,7 @@ type ConfNode_PlainFileMedia_Test() =
             defaultConf with
                 QueueWaitTimeOut = Constants.PLAINFILE_MIN_QUEUEWAITTIMEOUT - 1;
         }
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, confVal ) :> IMediaNode
         rel.AddNode lu
         rel.AddNode n
@@ -388,7 +388,7 @@ type ConfNode_PlainFileMedia_Test() =
             defaultConf with
                 QueueWaitTimeOut = Constants.PLAINFILE_MIN_QUEUEWAITTIMEOUT;
         }
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, confVal ) :> IMediaNode
         rel.AddNode lu
         rel.AddNode n
@@ -404,7 +404,7 @@ type ConfNode_PlainFileMedia_Test() =
             defaultConf with
                 QueueWaitTimeOut = Constants.PLAINFILE_MAX_QUEUEWAITTIMEOUT;
         }
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, confVal ) :> IMediaNode
         rel.AddNode lu
         rel.AddNode n
@@ -420,7 +420,7 @@ type ConfNode_PlainFileMedia_Test() =
             defaultConf with
                 QueueWaitTimeOut = Constants.PLAINFILE_MAX_QUEUEWAITTIMEOUT + 1;
         }
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, confVal ) :> IMediaNode
         rel.AddNode lu
         rel.AddNode n
@@ -435,7 +435,7 @@ type ConfNode_PlainFileMedia_Test() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let d1 = new DummyNode( rel.NextID, "D1" ) :> IConfigureNode
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, defaultConf ) :> IMediaNode
 
         rel.AddNode lu
@@ -464,8 +464,8 @@ type ConfNode_PlainFileMedia_Test() =
     member _.Validate_ParentCount_002() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
-        let lu1 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
-        let lu2 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 2UL, "" ) :> IConfigureNode
+        let lu1 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
+        let lu2 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 2UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, defaultConf ) :> IMediaNode
         rel.AddNode lu1
         rel.AddNode lu2

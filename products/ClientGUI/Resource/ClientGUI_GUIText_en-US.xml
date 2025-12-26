@@ -853,7 +853,11 @@
       <Name>LUNameTextBlock</Name>
       <Value>LU Name</Value>
     </Message>
-   </Section>
+    <Message>
+      <Name>MaxMultiplicityTextBlock</Name>
+      <Value>Max Multiplicity</Value>
+    </Message>
+  </Section>
 
   <!-- Dummy Device LU property page -->
   <Section>
@@ -933,7 +937,11 @@
       <Message>
         <Name>LUNameTextBlock</Name>
         <Value>LU Name</Value>
-      </Message>    
+      </Message>
+      <Message>
+        <Name>MaxMultiplicityTextBlock</Name>
+        <Value>Max Multiplicity</Value>
+      </Message>
   </Section>
 
   <!-- Plain File Media property page -->

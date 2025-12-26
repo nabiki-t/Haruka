@@ -1334,7 +1334,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     try
                         let lun = lun_me.fromStringValue entValue
                         do! ss.CheckTargetGroupUnloaded cc x
-                        let n = ss.UpdateDummyDeviceLUNode x lun ( x :> ILUNode ).LUName
+                        let n = ss.UpdateDummyDeviceLUNode x lun ( x :> ILUNode ).LUName ( x :> ILUNode ).MaxMultiplicity
                         return Some ( ss, cc, ( n :> IConfigureNode ) )
                     with
                     | :? FormatException
@@ -1345,11 +1345,24 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
                 | "NAME" ->
                     do! ss.CheckTargetGroupUnloaded cc x
-                    let n = ss.UpdateDummyDeviceLUNode x ( x :> ILUNode ).LUN entValue
+                    let n = ss.UpdateDummyDeviceLUNode x ( x :> ILUNode ).LUN entValue ( x :> ILUNode ).MaxMultiplicity
                     return Some ( ss, cc, ( n :> IConfigureNode ) )
 
+                | "MAXMULTIPLICITY" ->
+                    try
+                        let mm = UInt32.Parse entValue
+                        do! ss.CheckTargetGroupUnloaded cc x
+                        let n = ss.UpdateDummyDeviceLUNode x ( x :> ILUNode ).LUN ( x :> ILUNode ).LUName mm
+                        return Some ( ss, cc, ( n :> IConfigureNode ) )
+                    with
+                    | :? FormatException
+                    | :? OverflowException ->
+                        m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "MaxMultiplicity" )
+                        |> this.Output 0
+                        return Some ( ss, cc, cn )
+
                 | _ ->
-                    m_Messages.GetMessage( "CMDMSG_UNKNOWN_PARAMETER_NAME", "LUN,Name" )
+                    m_Messages.GetMessage( "CMDMSG_UNKNOWN_PARAMETER_NAME", "LUN,Name,MaxMultiplicity" )
                     |> this.Output 0
                     return Some ( ss, cc, cn )
 
@@ -1359,7 +1372,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     try
                         let lun = lun_me.fromStringValue entValue
                         do! ss.CheckTargetGroupUnloaded cc x
-                        let n = ss.UpdateBlockDeviceLUNode x lun ( x :> ILUNode ).LUName
+                        let n = ss.UpdateBlockDeviceLUNode x lun ( x :> ILUNode ).LUName ( x :> ILUNode ).MaxMultiplicity
                         return Some ( ss, cc, ( n :> IConfigureNode ) )
                     with
                     | :? FormatException
@@ -1370,11 +1383,24 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
                 | "NAME" ->
                     do! ss.CheckTargetGroupUnloaded cc x
-                    let n = ss.UpdateBlockDeviceLUNode x ( x :> ILUNode ).LUN entValue
+                    let n = ss.UpdateBlockDeviceLUNode x ( x :> ILUNode ).LUN entValue ( x :> ILUNode ).MaxMultiplicity
                     return Some ( ss, cc, ( n :> IConfigureNode ) )
 
+                | "MAXMULTIPLICITY" ->
+                    try
+                        let mm = UInt32.Parse entValue
+                        do! ss.CheckTargetGroupUnloaded cc x
+                        let n = ss.UpdateBlockDeviceLUNode x ( x :> ILUNode ).LUN ( x :> ILUNode ).LUName mm
+                        return Some ( ss, cc, ( n :> IConfigureNode ) )
+                    with
+                    | :? FormatException
+                    | :? OverflowException ->
+                        m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "MaxMultiplicity" )
+                        |> this.Output 0
+                        return Some ( ss, cc, cn )
+
                 | _ ->
-                    m_Messages.GetMessage( "CMDMSG_UNKNOWN_PARAMETER_NAME", "LUN,Name" )
+                    m_Messages.GetMessage( "CMDMSG_UNKNOWN_PARAMETER_NAME", "LUN,Name,MaxMultiplicity" )
                     |> this.Output 0
                     return Some ( ss, cc, cn )
 
@@ -2758,7 +2784,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 else
                     let luname = cmd.DefaultNamedString "/n" ( sprintf "LU_%d" ( lun_me.toPrim lun ) )
                     do! ss.CheckTargetGroupUnloaded cc cn
-                    let newnode = ss.AddBlockDeviceLUNode tnode lun luname
+                    let newnode = ss.AddBlockDeviceLUNode tnode lun luname Constants.LU_DEF_MULTIPLICITY
                     this.Output 0 ( sprintf "Created : %s" ( newnode :> IConfigureNode ).ShortDescriptString )
         }
 

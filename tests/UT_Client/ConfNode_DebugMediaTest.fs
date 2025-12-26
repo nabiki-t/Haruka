@@ -70,7 +70,7 @@ type ConfNode_DebugMedia_Test() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let n = new ConfNode_DebugMedia( st, rel, rel.NextID, mediaidx_me.fromPrim 1u, "aaa" )
-        let dlu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.zero, "" ) :> ILUNode
+        let dlu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.zero, "", 8u ) :> ILUNode
         rel.AddNode n
         rel.AddNode dlu
         rel.AddRelation ( n :> IMediaNode ).NodeID dlu.NodeID
@@ -163,7 +163,7 @@ type ConfNode_DebugMedia_Test() =
     member _.Validate_001() =
         let rel = new ConfNodeRelation()
         let msgtbl = new StringTable( "" )
-        let lu = new ConfNode_DummyDeviceLU( msgtbl, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( msgtbl, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_DebugMedia( msgtbl, rel, rel.NextID, mediaidx_me.fromPrim 1u, "" ) :> IMediaNode
         let dm1 = new ConfNode_DummyMedia( msgtbl, rel, rel.NextID, mediaidx_me.fromPrim 2u, "" ) :> IMediaNode
         rel.AddNode lu
@@ -178,7 +178,7 @@ type ConfNode_DebugMedia_Test() =
     member _.Validate_002() =
         let rel = new ConfNodeRelation()
         let msgtbl = new StringTable( "" )
-        let lu = new ConfNode_DummyDeviceLU( msgtbl, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( msgtbl, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_DebugMedia( msgtbl, rel, rel.NextID, mediaidx_me.fromPrim 1u, "" ) :> IMediaNode
         let dm1 = new ConfNode_DummyMedia( msgtbl, rel, rel.NextID, mediaidx_me.fromPrim 2u, "" ) :> IMediaNode
         rel.AddNode lu
@@ -193,7 +193,7 @@ type ConfNode_DebugMedia_Test() =
     member _.Validate_003() =
         let rel = new ConfNodeRelation()
         let msgtbl = new StringTable( "" )
-        let lu = new ConfNode_DummyDeviceLU( msgtbl, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( msgtbl, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY) :> IConfigureNode
         let n = new ConfNode_DebugMedia( msgtbl, rel, rel.NextID, mediaidx_me.fromPrim 0u, "" ) :> IMediaNode
         let dm1 = new ConfNode_DummyMedia( msgtbl, rel, rel.NextID, mediaidx_me.fromPrim 2u, "" ) :> IMediaNode
         rel.AddNode lu
@@ -211,7 +211,7 @@ type ConfNode_DebugMedia_Test() =
     member _.Validate_004() =
         let rel = new ConfNodeRelation()
         let msgtbl = new StringTable( "" )
-        let lu = new ConfNode_DummyDeviceLU( msgtbl, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( msgtbl, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_DebugMedia( msgtbl, rel, rel.NextID, mediaidx_me.fromPrim 1u, "" ) :> IMediaNode
 
         rel.AddNode lu
@@ -227,7 +227,7 @@ type ConfNode_DebugMedia_Test() =
     member _.Validate_005() =
         let rel = new ConfNodeRelation()
         let msgtbl = new StringTable( "" )
-        let lu = new ConfNode_DummyDeviceLU( msgtbl, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( msgtbl, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_DebugMedia( msgtbl, rel, rel.NextID, mediaidx_me.fromPrim 1u, "" ) :> IMediaNode
         let dm1 = new ConfNode_DummyMedia( msgtbl, rel, rel.NextID, mediaidx_me.fromPrim 2u, "" ) :> IMediaNode
         let dm2 = new ConfNode_DummyMedia( msgtbl, rel, rel.NextID, mediaidx_me.fromPrim 3u, "" ) :> IMediaNode
@@ -249,9 +249,9 @@ type ConfNode_DebugMedia_Test() =
     member _.Validate_006() =
         let rel = new ConfNodeRelation()
         let msgtbl = new StringTable( "" )
-        let lu = new ConfNode_DummyDeviceLU( msgtbl, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
+        let lu = new ConfNode_DummyDeviceLU( msgtbl, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_DebugMedia( msgtbl, rel, rel.NextID, mediaidx_me.fromPrim 1u, "" ) :> IMediaNode
-        let d1 = new ConfNode_DummyDeviceLU( msgtbl, rel, rel.NextID, lun_me.fromPrim 2UL, "" ) :> IConfigureNode
+        let d1 = new ConfNode_DummyDeviceLU( msgtbl, rel, rel.NextID, lun_me.fromPrim 2UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
 
         rel.AddNode lu
         rel.AddNode n
@@ -268,8 +268,8 @@ type ConfNode_DebugMedia_Test() =
     member _.Validate_007() =
         let rel = new ConfNodeRelation()
         let msgtbl = new StringTable( "" )
-        let lu1 = new ConfNode_DummyDeviceLU( msgtbl, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> IConfigureNode
-        let lu2 = new ConfNode_DummyDeviceLU( msgtbl, rel, rel.NextID, lun_me.fromPrim 2UL, "" ) :> IConfigureNode
+        let lu1 = new ConfNode_DummyDeviceLU( msgtbl, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
+        let lu2 = new ConfNode_DummyDeviceLU( msgtbl, rel, rel.NextID, lun_me.fromPrim 2UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let n = new ConfNode_DebugMedia( msgtbl, rel, rel.NextID, mediaidx_me.fromPrim 1u, "" ) :> IMediaNode
         let dm1 = new ConfNode_DummyMedia( msgtbl, rel, rel.NextID, mediaidx_me.fromPrim 2u, "" ) :> IMediaNode
         rel.AddNode lu1

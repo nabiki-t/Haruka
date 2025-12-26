@@ -996,7 +996,7 @@ type ServerStatus_Test4() =
                 let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
 
-                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 1UL ) "luname001"
+                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 1UL ) "luname001" Constants.LU_DEF_MULTIPLICITY
                 let pnodes1 = ( luNode :> ILUNode ).GetParentNodes<IConfigureNode>()
                 Assert.True(( pnodes1.Length = 1 ))
                 Assert.True(( pnodes1.[0] = tNode1 ))
@@ -1061,12 +1061,14 @@ type ServerStatus_Test4() =
                                 LUN = lun_me.fromPrim 1UL;
                                 LUName = "";
                                 WorkPath = "";
+                                MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                                 LUDevice = TargetGroupConf.U_DummyDevice();
                             }
                             {
                                 LUN = lun_me.fromPrim 2UL;
                                 LUName = "";
                                 WorkPath = "";
+                                MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                                 LUDevice = TargetGroupConf.U_DummyDevice();
                             };
                         ];
@@ -1141,7 +1143,7 @@ type ServerStatus_Test4() =
                 let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
 
-                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 1UL ) "luname001"
+                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 1UL ) "luname001" Constants.LU_DEF_MULTIPLICITY
                 let pnodes1 = ( luNode :> ILUNode ).GetParentNodes<IConfigureNode>()
                 Assert.True(( pnodes1.Length = 1 ))
                 Assert.True(( pnodes1.[0] = tNode1 ))
@@ -1287,7 +1289,7 @@ type ServerStatus_Test4() =
                 let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
 
-                let luNode = ss.AddBlockDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022"
+                let luNode = ss.AddBlockDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
                 let pnodes = ( luNode :> IConfigureNode ).GetParentNodes<IConfigureNode>()
                 Assert.True(( pnodes.Length = 1 ))
                 Assert.True(( pnodes.[0] = tNode1 ))
@@ -1332,7 +1334,7 @@ type ServerStatus_Test4() =
                 let tNodes = ( tgNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_Target>()
                 Assert.True(( tNodes.Length = 1 ))
 
-                let luNode = ss.AddBlockDeviceLUNode tNodes.[0] ( lun_me.fromPrim 22UL ) "luname022"
+                let luNode = ss.AddBlockDeviceLUNode tNodes.[0] ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
                 let pnodes = ( luNode :> IConfigureNode ).GetParentNodes<IConfigureNode>()
                 Assert.True(( pnodes.Length = 1 ))
                 Assert.True(( pnodes.[0] = tNodes.[0] ))
@@ -1373,7 +1375,7 @@ type ServerStatus_Test4() =
                 let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true
                 Assert.True(( ( tgNode :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
                 
-                let luNode = ss.AddBlockDeviceLUNode_InTargetGroup tgNode ( lun_me.fromPrim 22UL ) "luname022"
+                let luNode = ss.AddBlockDeviceLUNode_InTargetGroup tgNode ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
                 let pnodes = ( luNode :> IConfigureNode ).GetParentNodes<IConfigureNode>()
 
                 let tgNode2 = 
@@ -1418,7 +1420,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tgNodes.Length = 1 ))
                 Assert.True(( ( tgNodes.[0] :> IConfigFileNode ).Modified = ModifiedStatus.NotModified ))
 
-                let luNode = ss.AddBlockDeviceLUNode_InTargetGroup tgNodes.[0] ( lun_me.fromPrim 22UL ) "luname022"
+                let luNode = ss.AddBlockDeviceLUNode_InTargetGroup tgNodes.[0] ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
 
                 let tgNode2 = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                 Assert.True(( tgNode2.Length = 1 ))
@@ -1474,9 +1476,9 @@ type ServerStatus_Test4() =
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
                 let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
-                let luNode = ss.AddBlockDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022"
+                let luNode = ss.AddBlockDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
 
-                let luNode2 = ss.UpdateBlockDeviceLUNode luNode ( lun_me.fromPrim 33UL ) "luname033"
+                let luNode2 = ss.UpdateBlockDeviceLUNode luNode ( lun_me.fromPrim 33UL ) "luname033" Constants.LU_DEF_MULTIPLICITY
                 Assert.True(( ( luNode2 :> ILUNode ).LUN = lun_me.fromPrim 33UL ))
                 Assert.True(( ( luNode2 :> ILUNode ).LUName = "luname033" ))
 
@@ -1520,6 +1522,7 @@ type ServerStatus_Test4() =
                                 LUN = lun_me.fromPrim 1UL;
                                 LUName = "";
                                 WorkPath = "";
+                                MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                                 LUDevice = TargetGroupConf.U_BlockDevice({
                                     Peripheral = TargetGroupConf.U_DummyMedia({
                                         IdentNumber = mediaidx_me.fromPrim 1u;
@@ -1548,9 +1551,10 @@ type ServerStatus_Test4() =
                 let luNodes = ( tNodes.[0] :> IConfigureNode ).GetChildNodes<IConfigureNode>()
                 Assert.True(( luNodes.Length = 1 ))
 
-                let luNode2 = ss.UpdateBlockDeviceLUNode ( luNodes.[0] :?> ConfNode_BlockDeviceLU ) ( lun_me.fromPrim 33UL ) "luname033"
+                let luNode2 = ss.UpdateBlockDeviceLUNode ( luNodes.[0] :?> ConfNode_BlockDeviceLU ) ( lun_me.fromPrim 33UL ) "luname033" ( Constants.LU_MIN_MULTIPLICITY + 1u )
                 Assert.True(( ( luNode2 :> ILUNode ).LUN = lun_me.fromPrim 33UL ))
                 Assert.True(( ( luNode2 :> ILUNode ).LUName = "luname033" ))
+                Assert.True(( ( luNode2 :> ILUNode ).MaxMultiplicity = Constants.LU_MIN_MULTIPLICITY + 1u ))
 
                 let pnodes = ( luNode2 :> IConfigureNode ).GetParentNodes<IConfigureNode>()
                 Assert.True(( pnodes.Length = 1 ))
@@ -1592,7 +1596,7 @@ type ServerStatus_Test4() =
                 let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
 
-                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022"
+                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
                 let pnodes = ( luNode :> IConfigureNode ).GetParentNodes<IConfigureNode>()
                 Assert.True(( pnodes.Length = 1 ))
                 Assert.True(( pnodes.[0] = tNode1 ))
@@ -1635,7 +1639,7 @@ type ServerStatus_Test4() =
                 let tNodes = ( tgNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_Target>()
                 Assert.True(( tNodes.Length = 1 ))
 
-                let luNode = ss.AddDummyDeviceLUNode tNodes.[0] ( lun_me.fromPrim 22UL ) "luname022"
+                let luNode = ss.AddDummyDeviceLUNode tNodes.[0] ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
                 let pnodes = ( luNode :> IConfigureNode ).GetParentNodes<IConfigureNode>()
                 Assert.True(( pnodes.Length = 1 ))
                 Assert.True(( pnodes.[0] = tNodes.[0] ))
@@ -1677,11 +1681,12 @@ type ServerStatus_Test4() =
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
                 let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
-                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022"
+                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
 
-                let luNode2 = ss.UpdateDummyDeviceLUNode luNode ( lun_me.fromPrim 33UL ) "luname033"
+                let luNode2 = ss.UpdateDummyDeviceLUNode luNode ( lun_me.fromPrim 33UL ) "luname033" ( Constants.LU_DEF_MULTIPLICITY + 1u )
                 Assert.True(( ( luNode2 :> ILUNode ).LUN = lun_me.fromPrim 33UL ))
                 Assert.True(( ( luNode2 :> ILUNode ).LUName = "luname033" ))
+                Assert.True(( ( luNode2 :> ILUNode ).MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY + 1u ))
 
                 let clist = ( tNode1 :> IConfigureNode ).GetChildNodes<IConfigureNode>()
                 Assert.True(( clist.Length = 1 ))
@@ -1724,9 +1729,10 @@ type ServerStatus_Test4() =
                 let luNodes = ( tNodes.[0] :> IConfigureNode ).GetChildNodes<IConfigureNode>()
                 Assert.True(( luNodes.Length = 1 ))
 
-                let luNode2 = ss.UpdateDummyDeviceLUNode ( luNodes.[0] :?> ConfNode_DummyDeviceLU ) ( lun_me.fromPrim 33UL ) "luname033"
+                let luNode2 = ss.UpdateDummyDeviceLUNode ( luNodes.[0] :?> ConfNode_DummyDeviceLU ) ( lun_me.fromPrim 33UL ) "luname033" Constants.LU_DEF_MULTIPLICITY
                 Assert.True(( ( luNode2 :> ILUNode ).LUN = lun_me.fromPrim 33UL ))
                 Assert.True(( ( luNode2 :> ILUNode ).LUName = "luname033" ))
+                Assert.True(( ( luNode2 :> ILUNode ).MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY ))
 
                 let pnodes = ( luNode2 :> IConfigureNode ).GetParentNodes<IConfigureNode>()
                 Assert.True(( pnodes.Length = 1 ))
@@ -1765,7 +1771,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
                 let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
-                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022"
+                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
 
                 let mNode = ss.AddPlainFileMediaNode luNode ServerStatus_Test1.defaultSF
                 let pnodes = ( mNode :> IConfigureNode ).GetParentNodes<IConfigureNode>()
@@ -1850,7 +1856,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
                 let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
-                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022"
+                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
                 let mNode = ss.AddPlainFileMediaNode luNode ServerStatus_Test1.defaultSF
 
                 let conf = {
@@ -1907,6 +1913,7 @@ type ServerStatus_Test4() =
                                 LUN = lun_me.fromPrim 1UL;
                                 LUName = "";
                                 WorkPath = "";
+                                MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                                 LUDevice = TargetGroupConf.U_BlockDevice({
                                     Peripheral = TargetGroupConf.U_PlainFile( ServerStatus_Test1.defaultSF )
                                 });
@@ -1982,7 +1989,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
                 let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
-                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022"
+                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
 
                 let mNode = ss.AddMemBufferMediaNode luNode {
                     IdentNumber = mediaidx_me.fromPrim 1u;
@@ -2075,7 +2082,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
                 let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
-                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022"
+                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
                 let mNode = ss.AddMemBufferMediaNode luNode {
                     IdentNumber = mediaidx_me.fromPrim 1u;
                     MediaName = "";
@@ -2137,6 +2144,7 @@ type ServerStatus_Test4() =
                                 LUN = lun_me.fromPrim 1UL;
                                 LUName = "";
                                 WorkPath = "";
+                                MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                                 LUDevice = TargetGroupConf.U_BlockDevice({
                                     Peripheral = TargetGroupConf.U_MemBuffer({
                                         IdentNumber = mediaidx_me.fromPrim 1u;
@@ -2217,7 +2225,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
                 let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
-                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022"
+                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
 
                 let mNode = ss.AddDummyMediaNode luNode ( mediaidx_me.fromPrim 1u ) ""
                 let pnodes = ( mNode :> IConfigureNode ).GetParentNodes<IConfigureNode>()
@@ -2302,7 +2310,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
                 let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
-                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022"
+                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
                 let mNode = ss.AddDummyMediaNode luNode ( mediaidx_me.fromPrim 1u ) ""
 
                 let mNode2 = ss.UpdateDummyMediaNode mNode ( mediaidx_me.fromPrim 2u ) "ggg"
@@ -2356,6 +2364,7 @@ type ServerStatus_Test4() =
                                 LUN = lun_me.fromPrim 1UL;
                                 LUName = "";
                                 WorkPath = "";
+                                MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                                 LUDevice = TargetGroupConf.U_BlockDevice({
                                     Peripheral = TargetGroupConf.U_DummyMedia({
                                         IdentNumber = mediaidx_me.fromPrim 1u;
@@ -2431,7 +2440,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
                 let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
-                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022"
+                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
 
                 let mNode = ss.AddDebugMediaNode luNode ( mediaidx_me.fromPrim 1u ) ""
                 let pnodes = ( mNode :> IConfigureNode ).GetParentNodes<IConfigureNode>()
@@ -2516,7 +2525,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
                 let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
-                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022"
+                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
                 let mNode = ss.AddDebugMediaNode luNode ( mediaidx_me.fromPrim 1u ) ""
 
                 let mNode2 = ss.UpdateDebugMediaNode mNode ( mediaidx_me.fromPrim 2u ) "ggg"
@@ -2572,6 +2581,7 @@ type ServerStatus_Test4() =
                                 LUN = lun_me.fromPrim 1UL;
                                 LUName = "";
                                 WorkPath = "";
+                                MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                                 LUDevice = TargetGroupConf.U_BlockDevice({
                                     Peripheral = TargetGroupConf.U_DebugMedia({
                                         IdentNumber = mediaidx_me.fromPrim 1u;

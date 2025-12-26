@@ -104,6 +104,8 @@ type BlockDeviceLU
 
     /// Semaphore that gurds the task set.
     let m_TaskSetQueue = new LambdaQueue( 1u )
+
+    /// A queue for concurrent task execution
     let m_ExecuteQueue = new TaskQueue( 4u )
 
     /// the Task set.

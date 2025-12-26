@@ -69,6 +69,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 1UL;
                     LUName = "luname001";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.U_DummyDevice();
             }];
         }
@@ -91,6 +92,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun;
                     LUName = "lunametest";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.U_DummyDevice();
             }];
         }
@@ -329,12 +331,14 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 1UL;
                     LUName = "luname001";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.U_DummyDevice();
                 }
                 {
                     LUN = lun_me.fromPrim 2UL;
                     LUName = "luname002";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.U_DummyDevice();
                 }
             ];
@@ -418,6 +422,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 2UL;
                     LUName = "luname002";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.U_DummyDevice();
                 }
             ];
@@ -688,6 +693,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 1UL;
                     LUName = "luname001";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.U_DummyDevice();
             }];
         }
@@ -712,6 +718,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 2UL;
                     LUName = "luname999";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.U_DummyDevice();
             }];
         }
@@ -756,6 +763,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 1UL;
                     LUName = "luname001";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.U_DummyDevice();
             }];
         }
@@ -788,6 +796,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 2UL;
                     LUName = "luname999";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.U_DummyDevice();
             }];
         }
@@ -836,6 +845,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 1UL;
                     LUName = "luname001";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.U_DummyDevice();
             }];
         }
@@ -892,6 +902,7 @@ type ConfigurationMaster_Test () =
                         LUN = lun_me.fromPrim ( uint64 i );
                         LUName = sprintf "luname%d" i;
                         WorkPath = "";
+                        MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                         LUDevice = TargetGroupConf.U_DummyDevice();
                     }
             ];
@@ -945,6 +956,7 @@ type ConfigurationMaster_Test () =
                         LUN = lun_me.fromPrim ( uint64 i );
                         LUName = sprintf "luname%d" i;
                         WorkPath = "";
+                        MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                         LUDevice = TargetGroupConf.U_DummyDevice();
                     }
             ];
@@ -1001,6 +1013,7 @@ type ConfigurationMaster_Test () =
                         LUN = lun_me.fromPrim ( uint64 i + 1UL );
                         LUName = "";
                         WorkPath = "";
+                        MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                         LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                     }
             ];
@@ -1031,6 +1044,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim i;
                     LUName = "";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                 }
             ];
@@ -1079,6 +1093,7 @@ type ConfigurationMaster_Test () =
                         LUN = lun_me.fromPrim ( uint64 i + 1UL );
                         LUName = "";
                         WorkPath = "";
+                        MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                         LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                     }
             ];
@@ -1109,6 +1124,7 @@ type ConfigurationMaster_Test () =
                         LUN = lun_me.fromPrim ( uint64 i );
                         LUName = "";
                         WorkPath = "";
+                        MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                         LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                     }
             ];
@@ -1158,12 +1174,14 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 1UL;
                     LUName = "luname001";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                 };
                 {
                     LUN = lun_me.fromPrim 2UL;
                     LUName = "luname002";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                 };
             ];
@@ -1190,12 +1208,14 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 2UL;
                     LUName = "luname002";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                 };
                 {
                     LUN = lun_me.fromPrim 3UL;
                     LUName = "luname003";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                 };
             ];
@@ -1251,12 +1271,14 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 0UL;
                     LUName = "luname000";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                 };
                 {
                     LUN = lun_me.fromPrim 3UL;
                     LUName = "luname003";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                 };
             ];
@@ -1309,12 +1331,14 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 1UL;
                     LUName = "luname001";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                 };
                 {
                     LUN = lun_me.fromPrim 2UL;
                     LUName = "luname002";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                 };
             ];
@@ -1366,12 +1390,14 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 1UL;
                     LUName = "luname001";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                 };
                 {
                     LUN = lun_me.fromPrim 2UL;
                     LUName = "luname002";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                 };
             ];
@@ -1427,6 +1453,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 1UL;
                     LUName = "luname001";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
             };];
         }
@@ -1476,6 +1503,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 1UL;
                     LUName = "luname001";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
             };];
         }
@@ -1500,6 +1528,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 2UL;
                     LUName = "luname002";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
             };];
         }
@@ -1554,6 +1583,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 1UL;
                     LUName = "luname001";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
             };];
         }
@@ -1604,6 +1634,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 1UL;
                     LUName = "luname001";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
             };];
         }
@@ -1628,6 +1659,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 2UL;
                     LUName = "luname002";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
             };];
         }
@@ -1681,6 +1713,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 2UL;
                     LUName = "luname002";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
             };];
         }
@@ -1732,6 +1765,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 1UL;
                     LUName = "lu001";
                     WorkPath = "c:\\";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.U_BlockDevice( {
                         Peripheral = TargetGroupConf.U_DummyMedia( {
                             IdentNumber = mediaidx_me.fromPrim 1u;
@@ -1743,6 +1777,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 2UL;
                     LUName = "lu002";
                     WorkPath = "c:\\";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.U_BlockDevice( {
                         Peripheral = TargetGroupConf.U_DummyMedia({
                             IdentNumber = mediaidx_me.fromPrim 1u;
@@ -1800,6 +1835,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 2UL;
                     LUName = "luname002";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
             }];
         }
@@ -1857,6 +1893,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 2UL;
                     LUName = "luname002";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
             };];
         }
@@ -1882,6 +1919,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 3UL;
                     LUName = "luname003";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
             };];
         }
@@ -2136,6 +2174,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 2UL;
                     LUName = "luname002";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
             };];
         }
@@ -2160,6 +2199,7 @@ type ConfigurationMaster_Test () =
                     LUN = lun_me.fromPrim 3UL;
                     LUName = "luname003";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
             };];
         }

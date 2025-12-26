@@ -585,6 +585,7 @@ type StatusMaster(
                     LUN = argLUN;
                     LUName = "LUN_0 Logical unit";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.U_DummyDevice();
                 }
                 // LUN 0 belongs to target device, so killer object of status master is used for LUN 0.

@@ -139,7 +139,7 @@
     </Message>
     <Message>
       <Name>CHKMSG_INVALID_QUEUEWAITTIMEOUT</Name>
-      <Value>Queue wait timeout Value {0} is out of range. Must be {1} to {2}.</Value>
+      <Value>Queue wait timeout value {0} is out of range. Must be {1} to {2}.</Value>
     </Message>
     <Message>
       <Name>CHKMSG_INVALID_RELATION</Name>
@@ -164,6 +164,10 @@
     <Message>
       <Name>CHKMSG_LU_NAME_TOO_LONG</Name>
       <Value>LU name name is too long. Must be less than or equal {0}.</Value>
+    </Message>
+    <Message>
+      <Name>CHKMSG_INVALID_LU_MAXMULTIPLICITY</Name>
+      <Value>LU max multiplicity value {0} is out of range. Must be {1} to {2}.</Value>
     </Message>
     <Message>
       <Name>CHKMSG_MISSING_LU</Name>

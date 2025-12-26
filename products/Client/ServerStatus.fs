@@ -248,7 +248,7 @@ type ServerStatus(
                         match clu.LUDevice with
                         | TargetGroupConf.T_DEVICE.U_BlockDevice( x ) ->
                             let luConfID = m_ConfNodes.NextID
-                            let lu = ConfNode_BlockDeviceLU( m_MessageTable, m_ConfNodes, luConfID, clu.LUN, clu.LUName )
+                            let lu = ConfNode_BlockDeviceLU( m_MessageTable, m_ConfNodes, luConfID, clu.LUN, clu.LUName, clu.MaxMultiplicity )
                             m_ConfNodes.AddNode lu
 
                             // Add media components
@@ -258,7 +258,7 @@ type ServerStatus(
 
                         | TargetGroupConf.T_DEVICE.U_DummyDevice( x ) ->
                             let luConfID = m_ConfNodes.NextID
-                            let lu = ConfNode_DummyDeviceLU( m_MessageTable, m_ConfNodes, luConfID, clu.LUN, clu.LUName )
+                            let lu = ConfNode_DummyDeviceLU( m_MessageTable, m_ConfNodes, luConfID, clu.LUN, clu.LUName, clu.MaxMultiplicity )
                             m_ConfNodes.AddNode lu
                             Some <| KeyValuePair< LUN_T, CONFNODE_T >( clu.LUN, luConfID )
                     else
@@ -942,14 +942,17 @@ type ServerStatus(
     /// <param name="argLUName">
     ///  LU name of the new LU.
     /// </param>
+    /// <param name="argMaxMultiplicity">
+    ///  Number of concurrent SCSI tasks within a LU.
+    /// </param>
     /// <returns>
     ///  Created block device LU node.
     ///  Added LU node has no media nodes. So, in this state, configuration files can't be uploaded.
     /// </returns>
-    abstract AddBlockDeviceLUNode : tnode:ConfNode_Target -> argLUN:LUN_T -> argLUName:string -> ConfNode_BlockDeviceLU
-    default this.AddBlockDeviceLUNode tnode argLUN argLUName =
+    abstract AddBlockDeviceLUNode : tnode:ConfNode_Target -> argLUN:LUN_T -> argLUName:string -> argMaxMultiplicity:uint32 -> ConfNode_BlockDeviceLU
+    default this.AddBlockDeviceLUNode tnode argLUN argLUName argMaxMultiplicity =
         let tgNode = this.IdentifyTargetGroupNode tnode
-        let n = new ConfNode_BlockDeviceLU( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, argLUN, argLUName )
+        let n = new ConfNode_BlockDeviceLU( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, argLUN, argLUName, argMaxMultiplicity )
         m_ConfNodes.AddNode n
         m_ConfNodes.AddRelation ( tnode :> IConfigureNode ).NodeID  ( n :> IConfigureNode ).NodeID
         if ( tgNode :> IConfigFileNode ).Modified = ModifiedStatus.NotModified then
@@ -968,6 +971,9 @@ type ServerStatus(
     /// <param name="argLUName">
     ///  LU name of the new LU.
     /// </param>
+    /// <param name="argMaxMultiplicity">
+    ///  Number of concurrent SCSI tasks within a LU.
+    /// </param>
     /// <returns>
     ///  Created block device LU node.
     ///  Added LU node has no media nodes. So, in this state, configuration files can't be uploaded.
@@ -976,9 +982,9 @@ type ServerStatus(
     ///  The block device LU node will be child of specified target group node.
     ///  So this LU is no accessible from any target until adding relation from one.
     /// </remarks>
-    abstract AddBlockDeviceLUNode_InTargetGroup : tgnode:ConfNode_TargetGroup -> argLUN:LUN_T -> argLUName:string -> ConfNode_BlockDeviceLU
-    default this.AddBlockDeviceLUNode_InTargetGroup tgnode argLUN argLUName =
-        let n = new ConfNode_BlockDeviceLU( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, argLUN, argLUName )
+    abstract AddBlockDeviceLUNode_InTargetGroup : tgnode:ConfNode_TargetGroup -> argLUN:LUN_T -> argLUName:string -> argMaxMultiplicity:uint32 -> ConfNode_BlockDeviceLU
+    default this.AddBlockDeviceLUNode_InTargetGroup tgnode argLUN argLUName argMaxMultiplicity =
+        let n = new ConfNode_BlockDeviceLU( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, argLUN, argLUName, argMaxMultiplicity )
         m_ConfNodes.AddNode n
         m_ConfNodes.AddRelation ( tgnode :> IConfigureNode ).NodeID  ( n :> IConfigureNode ).NodeID
         if ( tgnode :> IConfigFileNode ).Modified = ModifiedStatus.NotModified then
@@ -997,15 +1003,18 @@ type ServerStatus(
     /// <param name="argLUName">
     ///  LU name of the new LU.
     /// </param>
+    /// <param name="argMaxMultiplicity">
+    ///  Number of concurrent SCSI tasks within a LU.
+    /// </param>
     /// <returns>
     ///  Updated block device LU node.
     ///  If a new node is added after being deleted, the node ID will be changed and relational child node are deleted.
     ///  This method can update attribute value without changing node ID and relations.
     /// </returns>
-    abstract UpdateBlockDeviceLUNode : lunode:ConfNode_BlockDeviceLU -> argLUN:LUN_T -> argLUName:string -> ConfNode_BlockDeviceLU
-    default this.UpdateBlockDeviceLUNode lunode argLUN argLUName =
+    abstract UpdateBlockDeviceLUNode : lunode:ConfNode_BlockDeviceLU -> argLUN:LUN_T -> argLUName:string -> argMaxMultiplicity:uint32 -> ConfNode_BlockDeviceLU
+    default this.UpdateBlockDeviceLUNode lunode argLUN argLUName argMaxMultiplicity =
         let tgNode = this.IdentifyTargetGroupNode lunode
-        let n = lunode.CreateUpdatedNode argLUN argLUName
+        let n = lunode.CreateUpdatedNode argLUN argLUName argMaxMultiplicity
         m_ConfNodes.Update n
         if ( tgNode :> IConfigFileNode ).Modified = ModifiedStatus.NotModified then
             tgNode.SetModified() |> m_ConfNodes.Update
@@ -1023,14 +1032,17 @@ type ServerStatus(
     /// <param name="argLUName">
     ///  LU name of the new LU.
     /// </param>
+    /// <param name="argMaxMultiplicity">
+    ///  Number of concurrent SCSI tasks within a LU.
+    /// </param>
     /// <returns>
     ///  Created dummy device LU node.
     ///  Added LU node has no media nodes. So, in this state, configuration files can't be uploaded.
     /// </returns>
-    abstract AddDummyDeviceLUNode : tnode:ConfNode_Target -> argLUN:LUN_T -> argLUName:string -> ConfNode_DummyDeviceLU
-    default this.AddDummyDeviceLUNode tnode argLUN argLUName =
+    abstract AddDummyDeviceLUNode : tnode:ConfNode_Target -> argLUN:LUN_T -> argLUName:string -> argMaxMultiplicity:uint32 -> ConfNode_DummyDeviceLU
+    default this.AddDummyDeviceLUNode tnode argLUN argLUName argMaxMultiplicity =
         let tgNode = this.IdentifyTargetGroupNode tnode
-        let n = new ConfNode_DummyDeviceLU( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, argLUN, argLUName )
+        let n = new ConfNode_DummyDeviceLU( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, argLUN, argLUName, argMaxMultiplicity )
         m_ConfNodes.AddNode n
         m_ConfNodes.AddRelation ( tnode :> IConfigureNode ).NodeID  ( n :> IConfigureNode ).NodeID
         if ( tgNode :> IConfigFileNode ).Modified = ModifiedStatus.NotModified then
@@ -1049,15 +1061,18 @@ type ServerStatus(
     /// <param name="argLUName">
     ///  LU name of the new LU.
     /// </param>
+    /// <param name="argMaxMultiplicity">
+    ///  Number of concurrent SCSI tasks within a LU.
+    /// </param>
     /// <returns>
     ///  Updated dummy device LU node.
     ///  If a new node is added after being deleted, the node ID will be changed and relational child node are deleted.
     ///  This method can update attribute value without changing node ID and relations.
     /// </returns>
-    abstract UpdateDummyDeviceLUNode : lunode:ConfNode_DummyDeviceLU -> argLUN:LUN_T -> argLUName:string -> ConfNode_DummyDeviceLU
-    default this.UpdateDummyDeviceLUNode lunode argLUN argLUName =
+    abstract UpdateDummyDeviceLUNode : lunode:ConfNode_DummyDeviceLU -> argLUN:LUN_T -> argLUName:string -> argMaxMultiplicity:uint32 -> ConfNode_DummyDeviceLU
+    default this.UpdateDummyDeviceLUNode lunode argLUN argLUName argMaxMultiplicity =
         let tgNode = this.IdentifyTargetGroupNode lunode
-        let n = lunode.CreateUpdatedNode argLUN argLUName
+        let n = lunode.CreateUpdatedNode argLUN argLUName argMaxMultiplicity
         m_ConfNodes.Update n
         if ( tgNode :> IConfigFileNode ).Modified = ModifiedStatus.NotModified then
             tgNode.SetModified() |> m_ConfNodes.Update

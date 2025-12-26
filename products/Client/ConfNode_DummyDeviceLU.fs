@@ -39,12 +39,16 @@ open Haruka.IODataTypes
 /// <param name="m_LUName">
 ///  Logical unit name.
 /// </param>
+/// <param name="m_MaxMultiplicity">
+///  Number of concurrent SCSI tasks within a LU.
+/// </param>
 type ConfNode_DummyDeviceLU(
         m_MessageTable : StringTable,
         m_ConfNodes : ConfNodeRelation,
         m_NodeID : CONFNODE_T,
         m_LUN : LUN_T,
-        m_LUName : string
+        m_LUName : string,
+        m_MaxMultiplicity : uint32
     ) =
 
     /// <summary>
@@ -72,7 +76,8 @@ type ConfNode_DummyDeviceLU(
             |> Dictionary
         let lun = Functions.SearchAndConvert d "LUN" lun_me.fromStringValue ( lun_me.fromPrim 1UL )
         let name = Functions.SearchAndConvert d "Name" id ""
-        new ConfNode_DummyDeviceLU( argMessageTable, argConfNodes, newNodeID, lun, name )
+        let maxMultiplicity : uint32 = Functions.SearchAndConvert d "MaxMultiplicity" UInt32.Parse Constants.LU_DEF_MULTIPLICITY
+        new ConfNode_DummyDeviceLU( argMessageTable, argConfNodes, newNodeID, lun, name, maxMultiplicity )
 
     //=========================================================================
     // Interface method
@@ -104,6 +109,15 @@ type ConfNode_DummyDeviceLU(
                 let maxr = Constants.MAX_LU_NAME_STR_LENGTH
                 if maxr < v then
                     ( m_NodeID, m_MessageTable.GetMessage( "CHKMSG_LU_NAME_TOO_LONG", maxr.ToString() ) ) :: argmsg
+                else
+                    argmsg
+            )
+            |> ( fun argmsg ->
+                if m_MaxMultiplicity < Constants.LU_MIN_MULTIPLICITY || m_MaxMultiplicity > Constants.LU_MAX_MULTIPLICITY then
+                    let vs = sprintf "%d" m_MaxMultiplicity
+                    let mins = sprintf "%d" Constants.LU_MIN_MULTIPLICITY
+                    let maxs = sprintf "%d" Constants.LU_MAX_MULTIPLICITY
+                    ( m_NodeID, m_MessageTable.GetMessage( "CHKMSG_INVALID_LU_MAXMULTIPLICITY", vs, mins, maxs ) ) :: argmsg
                 else
                     argmsg
             )
@@ -186,6 +200,7 @@ type ConfNode_DummyDeviceLU(
                 yield sprintf "Values  :"
                 yield sprintf "  LUN : %s" ( lun_me.toString m_LUN )
                 yield sprintf "  Name(string) : %s" m_LUName
+                yield sprintf "  MaxMultiplicity(uint32) : %d" m_MaxMultiplicity
             ]
 
         // ------------------------------------------------------------------------
@@ -213,6 +228,10 @@ type ConfNode_DummyDeviceLU(
                         Name = "Name";
                         Value = m_LUName;
                     }
+                    yield {
+                        Name = "MaxMultiplicity";
+                        Value = sprintf "%d" m_MaxMultiplicity;
+                    }
                 ]
             }
 
@@ -227,12 +246,18 @@ type ConfNode_DummyDeviceLU(
             m_LUName
 
         // --------------------------------------------------------------------
+        // Implementation of ILUNode.MaxMultiplicity property
+        override _.MaxMultiplicity : uint32 =
+            m_MaxMultiplicity
+
+        // --------------------------------------------------------------------
         // Implementation of ILUNode.LUConfData property
         override _.LUConfData : TargetGroupConf.T_LogicalUnit =
             {
                 LUN = m_LUN;
                 LUName = "";
                 WorkPath = "";
+                MaxMultiplicity = m_MaxMultiplicity;
                 LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
             }
 
@@ -266,11 +291,15 @@ type ConfNode_DummyDeviceLU(
     /// <param name="argLUName">
     ///  Logical unit name.
     /// </param>
+    /// <param name="argMaxMultiplicity">
+    ///  Number of concurrent SCSI tasks within a LU.
+    /// </param>
     /// <returns>
     ///  Created new node that has specified new values and same node ID.
     /// </returns>
     member _.CreateUpdatedNode 
         ( argLUN : LUN_T ) 
-        ( argLUName : string ) : ConfNode_DummyDeviceLU =
-        new ConfNode_DummyDeviceLU( m_MessageTable, m_ConfNodes, m_NodeID, argLUN, argLUName )
+        ( argLUName : string )
+        ( argMaxMultiplicity : uint32 ) : ConfNode_DummyDeviceLU =
+        new ConfNode_DummyDeviceLU( m_MessageTable, m_ConfNodes, m_NodeID, argLUN, argLUName, argMaxMultiplicity )
 

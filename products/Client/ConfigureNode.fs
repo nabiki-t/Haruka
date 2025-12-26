@@ -217,6 +217,12 @@ type ILUNode =
 
     // ------------------------------------------------------------------------
     /// <summary>
+    /// property of maxMultiplicity
+    /// </summary>
+    abstract MaxMultiplicity : uint32
+
+    // ------------------------------------------------------------------------
+    /// <summary>
     /// Get configuration data
     /// </summary>
     abstract LUConfData : TargetGroupConf.T_LogicalUnit

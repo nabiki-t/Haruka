@@ -1635,10 +1635,10 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_DummyDeviceLUNode :?> ConfNode_DummyDeviceLU
         let mutable flg1 = false
 
-        ss.p_UpdateDummyDeviceLUNode <- ( fun argnode arglun argname ->
+        ss.p_UpdateDummyDeviceLUNode <- ( fun argnode arglun argname mm ->
             flg1 <- true
             Assert.True(( arglun = lun_me.fromPrim 5UL ))
-            initnode.CreateUpdatedNode arglun argname
+            initnode.CreateUpdatedNode arglun argname mm
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 

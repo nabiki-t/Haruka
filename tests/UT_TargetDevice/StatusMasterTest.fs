@@ -55,6 +55,7 @@ type StatusMaster_Test () =
                     LUN = lun_me.fromPrim ( uint64 idx + 1UL );
                     LUName = "luname";
                     WorkPath = "";
+                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                 }];
         } : TargetGroupConf.T_TargetGroup )
@@ -571,12 +572,14 @@ type StatusMaster_Test () =
                         LUN = lun_me.fromPrim ( uint64 1UL );
                         LUName = "LU001";
                         WorkPath = "";
+                        MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                         LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                     };
                     {
                         LUN = lun_me.fromPrim ( uint64 2UL );
                         LUName = "LU002";
                         WorkPath = "";
+                        MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                         LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice();
                     };
                 ];
@@ -4913,6 +4916,7 @@ type StatusMaster_Test () =
                         LUN = lun_me.fromPrim 1UL;
                         LUName = "luname";
                         WorkPath = "";
+                        MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                         LUDevice = TargetGroupConf.T_DEVICE.U_BlockDevice({
                             Peripheral = TargetGroupConf.U_DebugMedia({
                                 IdentNumber = mediaidx_me.fromPrim 1u;

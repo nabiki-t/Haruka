@@ -750,7 +750,7 @@ type ConfNode_Controller_Test() =
         let np = new ConfNode_NetworkPortal( st, rel, rel.NextID, defNetworkPortalConf ) :> IConfigureNode
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let tn = new ConfNode_Target( st, rel, rel.NextID, defaultTargetConf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode n
         rel.AddNode td
         rel.AddNode np
@@ -777,7 +777,7 @@ type ConfNode_Controller_Test() =
             let np = new ConfNode_NetworkPortal( st, rel, rel.NextID, defNetworkPortalConf ) :> IConfigureNode
             let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
             let tn = new ConfNode_Target( st, rel, rel.NextID, defaultTargetConf ) :> IConfigureNode
-            let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+            let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
             rel.AddNode td
             rel.AddNode np
             rel.AddNode tg
@@ -803,7 +803,7 @@ type ConfNode_Controller_Test() =
             let np = new ConfNode_NetworkPortal( st, rel, rel.NextID, defNetworkPortalConf ) :> IConfigureNode
             let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
             let tn = new ConfNode_Target( st, rel, rel.NextID, defaultTargetConf ) :> IConfigureNode
-            let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+            let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
             rel.AddNode td
             rel.AddNode np
             rel.AddNode tg
@@ -831,7 +831,7 @@ type ConfNode_Controller_Test() =
         let np1 = new ConfNode_NetworkPortal( st, rel, rel.NextID, defNetworkPortalConf ) :> IConfigureNode
         let tg1 = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let tn1 = new ConfNode_Target( st, rel, rel.NextID, defaultTargetConf ) :> IConfigureNode
-        let dd1 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd1 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode td1
         rel.AddNode np1
         rel.AddNode tg1
@@ -846,7 +846,7 @@ type ConfNode_Controller_Test() =
         let np2 = new ConfNode_NetworkPortal( st, rel, rel.NextID, defNetworkPortalConf ) :> IConfigureNode
         let tg2 = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let tn2 = new ConfNode_Target( st, rel, rel.NextID, defaultTargetConf ) :> IConfigureNode
-        let dd2 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd2 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode td2
         rel.AddNode np2
         rel.AddNode tg2
@@ -905,7 +905,7 @@ type ConfNode_Controller_Test() =
         let np = new ConfNode_NetworkPortal( st, rel, rel.NextID, defNetworkPortalConf ) :> IConfigureNode
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let tn = new ConfNode_Target( st, rel, rel.NextID, defaultTargetConf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         let dn = DummyNode( rel.NextID, "a" ) :> IConfigureNode
         rel.AddNode n
         rel.AddNode td

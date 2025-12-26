@@ -1888,7 +1888,7 @@ module Constants =
 
     /// Default multiplicity for plain file media.
     let PLAINFILE_DEF_MAXMULTIPLICITY : uint32 =
-        10u
+        8u
 
     /// Minimum queue wait timeout value in millisecond for plain file media.
     let PLAINFILE_MIN_QUEUEWAITTIMEOUT : int =
@@ -2008,6 +2008,18 @@ module Constants =
 
     let DEBUG_MEDIA_MAX_TRAP_COUNT : int =
         16
+
+    /// Minimum number of concurrent SCSI tasks within a LU
+    let LU_MIN_MULTIPLICITY : uint32 =
+        1u
+
+    /// Maximum number of concurrently executing SCSI tasks within a LU
+    let LU_MAX_MULTIPLICITY : uint32 =
+        256u
+
+    /// Default number of concurrent SCSI tasks within a LU
+    let LU_DEF_MULTIPLICITY : uint32 =
+        8u
 
     //=============================================================================
     // Constants convertion functions

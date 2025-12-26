@@ -221,7 +221,7 @@ type ConfNode_Target_Test() =
         let rel = new ConfNodeRelation()
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, defaultConf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -241,7 +241,7 @@ type ConfNode_Target_Test() =
 
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -264,7 +264,7 @@ type ConfNode_Target_Test() =
 
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -287,7 +287,7 @@ type ConfNode_Target_Test() =
 
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -308,7 +308,7 @@ type ConfNode_Target_Test() =
 
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -339,7 +339,7 @@ type ConfNode_Target_Test() =
         }
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -370,7 +370,7 @@ type ConfNode_Target_Test() =
         }
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -399,7 +399,7 @@ type ConfNode_Target_Test() =
         }
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -428,7 +428,7 @@ type ConfNode_Target_Test() =
         }
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -459,7 +459,7 @@ type ConfNode_Target_Test() =
         }
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -490,7 +490,7 @@ type ConfNode_Target_Test() =
         }
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -521,7 +521,7 @@ type ConfNode_Target_Test() =
         }
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -550,7 +550,7 @@ type ConfNode_Target_Test() =
         }
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -579,7 +579,7 @@ type ConfNode_Target_Test() =
         }
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -610,7 +610,7 @@ type ConfNode_Target_Test() =
         }
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -641,7 +641,7 @@ type ConfNode_Target_Test() =
         }
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -672,7 +672,7 @@ type ConfNode_Target_Test() =
         }
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -701,7 +701,7 @@ type ConfNode_Target_Test() =
         }
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -730,7 +730,7 @@ type ConfNode_Target_Test() =
         }
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -761,7 +761,7 @@ type ConfNode_Target_Test() =
         }
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -792,7 +792,7 @@ type ConfNode_Target_Test() =
         }
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -823,7 +823,7 @@ type ConfNode_Target_Test() =
         }
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -852,7 +852,7 @@ type ConfNode_Target_Test() =
         }
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -881,7 +881,7 @@ type ConfNode_Target_Test() =
         }
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -912,7 +912,7 @@ type ConfNode_Target_Test() =
         }
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -943,7 +943,7 @@ type ConfNode_Target_Test() =
         }
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -965,7 +965,7 @@ type ConfNode_Target_Test() =
 
         let vdd = [|
             for i = 1 to Constants.MAX_LOGICALUNIT_COUNT_IN_TD do
-                let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+                let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
                 rel.AddNode dd
                 yield dd
         |]
@@ -987,7 +987,7 @@ type ConfNode_Target_Test() =
 
         let vdd = [|
             for i = 1 to Constants.MAX_LOGICALUNIT_COUNT_IN_TD + 1 do
-                let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+                let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
                 rel.AddNode dd
                 yield dd
         |]
@@ -1020,7 +1020,7 @@ type ConfNode_Target_Test() =
         let rel = new ConfNodeRelation()
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, defaultConf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd
@@ -1052,18 +1052,18 @@ type ConfNode_Target_Test() =
         let rel = new ConfNodeRelation()
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let n = new ConfNode_Target( st, rel, rel.NextID, defaultConf ) :> IConfigureNode
-        let dd1 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 0UL, "" ) :> ILUNode
+        let dd1 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 0UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg
         rel.AddNode n
         rel.AddNode dd1
         rel.AddRelation tg.NodeID n.NodeID
         rel.AddRelation n.NodeID dd1.NodeID
 
-        let dd2 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 0UL, "" ) :> ILUNode
+        let dd2 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 0UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode dd2
         rel.AddRelation n.NodeID dd2.NodeID
 
-        let dd3 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 0UL, "" ) :> ILUNode
+        let dd3 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 0UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode dd3
         rel.AddRelation n.NodeID dd3.NodeID
 
@@ -1079,7 +1079,7 @@ type ConfNode_Target_Test() =
         let tg1 = new DummyNode( rel.NextID, "D1" ) :> IConfigureNode
         let tg2 = new DummyNode( rel.NextID, "D1" ) :> IConfigureNode
         let n = new ConfNode_Target( st, rel, rel.NextID, defaultConf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode tg1
         rel.AddNode tg2
         rel.AddNode n
@@ -1097,7 +1097,7 @@ type ConfNode_Target_Test() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let n = new ConfNode_Target( st, rel, rel.NextID, defaultConf ) :> IConfigureNode
-        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "" ) :> ILUNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode n
         rel.AddNode dd
         rel.AddRelation n.NodeID dd.NodeID
@@ -1143,11 +1143,11 @@ type ConfNode_Target_Test() =
         let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
         rel.AddNode n
 
-        let dd1 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 10UL, "" ) :> ILUNode
+        let dd1 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 10UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode dd1
         rel.AddRelation n.NodeID dd1.NodeID
 
-        let dd2 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 11UL, "" ) :> ILUNode
+        let dd2 = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 11UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
         rel.AddNode dd2
         rel.AddRelation n.NodeID dd2.NodeID
 
