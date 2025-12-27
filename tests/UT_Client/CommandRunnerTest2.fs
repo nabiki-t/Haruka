@@ -1650,6 +1650,7 @@ type CommandRunner_Test2() =
         Assert.True(( cc :> CtrlConnection = r_cc ))
         Assert.True(( ( r_cn :?> ILUNode ).LUN = lun_me.fromPrim 5UL ))
         Assert.True(( ( r_cn :?> ILUNode ).LUName = "" ))
+        Assert.True(( ( r_cn :?> ILUNode ).MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY ))
         Assert.True(( flg1 ))
         let out_rs = CheckOutputMessage out_ms out_ws "LU" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -1673,10 +1674,10 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_DummyDeviceLUNode :?> ConfNode_DummyDeviceLU
         let mutable flg1 = false
 
-        ss.p_UpdateDummyDeviceLUNode <- ( fun argnode arglun argname ->
+        ss.p_UpdateDummyDeviceLUNode <- ( fun argnode arglun argname argmm ->
             flg1 <- true
             Assert.True(( argname = "aaa" ))
-            initnode.CreateUpdatedNode arglun argname
+            initnode.CreateUpdatedNode arglun argname argmm
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
@@ -1688,13 +1689,53 @@ type CommandRunner_Test2() =
         Assert.True(( cc :> CtrlConnection = r_cc ))
         Assert.True(( ( r_cn :?> ILUNode ).LUN = lun_me.zero ))
         Assert.True(( ( r_cn :?> ILUNode ).LUName = "aaa" ))
+        Assert.True(( ( r_cn :?> ILUNode ).MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY ))
         Assert.True(( flg1 ))
         let out_rs = CheckOutputMessage out_ms out_ws "LU" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
-    [<InlineData( "set aaaa -1" )>]
+    [<InlineData( "set MAXMULTIPLICITY 2" )>]
     member _.set_DummyDeviceLU_004 ( cmdstr : string ) =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
+        let initnode = CommandRunner_Test1.m_DummyDeviceLUNode :?> ConfNode_DummyDeviceLU
+        let mutable flg1 = false
+
+        ss.p_UpdateDummyDeviceLUNode <- ( fun argnode arglun argname argmm ->
+            flg1 <- true
+            Assert.True(( argmm = 2u ))
+            initnode.CreateUpdatedNode arglun argname argmm
+        )
+        ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
+        Assert.True(( r ))
+        Assert.True(( stat.IsSome ))
+        let r_ss, r_cc, r_cn = stat.Value
+        Assert.True(( ss :> ServerStatus = r_ss ))
+        Assert.True(( cc :> CtrlConnection = r_cc ))
+        Assert.True(( ( r_cn :?> ILUNode ).LUN = lun_me.zero ))
+        Assert.True(( ( r_cn :?> ILUNode ).LUName = "" ))
+        Assert.True(( ( r_cn :?> ILUNode ).MaxMultiplicity = 2u ))
+        Assert.True(( flg1 ))
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" ""
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Theory>]
+    [<InlineData( "set MAXMULTIPLICITY -1" )>]
+    [<InlineData( "set MAXMULTIPLICITY aaaaa" )>]
+    [<InlineData( "set MAXMULTIPLICITY 4294967296" )>]
+    member _.set_DummyDeviceLU_005 ( cmdstr : string ) =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
+        let initnode = CommandRunner_Test1.m_DummyDeviceLUNode :?> ConfNode_DummyDeviceLU
+        let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
+        Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Theory>]
+    [<InlineData( "set aaaa -1" )>]
+    member _.set_DummyDeviceLU_006 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let initnode = CommandRunner_Test1.m_DummyDeviceLUNode :?> ConfNode_DummyDeviceLU
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
@@ -1711,10 +1752,10 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
         let mutable flg1 = false
 
-        ss.p_UpdateBlockDeviceLUNode <- ( fun argnode arglun argname ->
+        ss.p_UpdateBlockDeviceLUNode <- ( fun argnode arglun argname argmm ->
             flg1 <- true
             Assert.True(( arglun = lun_me.fromPrim 1234605616436508552UL ))
-            initnode.CreateUpdatedNode arglun argname
+            initnode.CreateUpdatedNode arglun argname argmm
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
@@ -1726,6 +1767,7 @@ type CommandRunner_Test2() =
         Assert.True(( cc :> CtrlConnection = r_cc ))
         Assert.True(( ( r_cn :?> ILUNode ).LUN = lun_me.fromPrim 1234605616436508552UL ))
         Assert.True(( ( r_cn :?> ILUNode ).LUName = "" ))
+        Assert.True(( ( r_cn :?> ILUNode ).MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY ))
         Assert.True(( flg1 ))
         let out_rs = CheckOutputMessage out_ms out_ws "LU" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -1749,10 +1791,10 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
         let mutable flg1 = false
 
-        ss.p_UpdateBlockDeviceLUNode <- ( fun argnode arglun argname ->
+        ss.p_UpdateBlockDeviceLUNode <- ( fun argnode arglun argname argmm ->
             flg1 <- true
             Assert.True(( argname = "bbb" ))
-            initnode.CreateUpdatedNode arglun argname
+            initnode.CreateUpdatedNode arglun argname argmm
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
@@ -1764,13 +1806,53 @@ type CommandRunner_Test2() =
         Assert.True(( cc :> CtrlConnection = r_cc ))
         Assert.True(( ( r_cn :?> ILUNode ).LUN = lun_me.zero ))
         Assert.True(( ( r_cn :?> ILUNode ).LUName = "bbb" ))
+        Assert.True(( ( r_cn :?> ILUNode ).MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY ))
         Assert.True(( flg1 ))
         let out_rs = CheckOutputMessage out_ms out_ws "LU" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
-    [<InlineData( "set aaaa -1" )>]
+    [<InlineData( "set MAXMULTIPLICITY 2" )>]
     member _.set_BlockDeviceLU_004 ( cmdstr : string ) =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
+        let initnode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+        let mutable flg1 = false
+
+        ss.p_UpdateBlockDeviceLUNode <- ( fun argnode arglun argname argmm ->
+            flg1 <- true
+            Assert.True(( argmm = 2u ))
+            initnode.CreateUpdatedNode arglun argname argmm
+        )
+        ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
+        Assert.True(( r ))
+        Assert.True(( stat.IsSome ))
+        let r_ss, r_cc, r_cn = stat.Value
+        Assert.True(( ss :> ServerStatus = r_ss ))
+        Assert.True(( cc :> CtrlConnection = r_cc ))
+        Assert.True(( ( r_cn :?> ILUNode ).LUN = lun_me.zero ))
+        Assert.True(( ( r_cn :?> ILUNode ).LUName = "" ))
+        Assert.True(( ( r_cn :?> ILUNode ).MaxMultiplicity = 2u ))
+        Assert.True(( flg1 ))
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" ""
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Theory>]
+    [<InlineData( "set MAXMULTIPLICITY -1" )>]
+    [<InlineData( "set MAXMULTIPLICITY aaaaa" )>]
+    [<InlineData( "set MAXMULTIPLICITY 4294967296" )>]
+    member _.set_BlockDeviceLU_005 ( cmdstr : string ) =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
+        let initnode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+        let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
+        Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Theory>]
+    [<InlineData( "set aaaa -1" )>]
+    member _.set_BlockDeviceLU_006 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let initnode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
