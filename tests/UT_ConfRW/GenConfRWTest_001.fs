@@ -3459,3 +3459,105 @@ type GenConfRW_Test_001 () =
         | :? Xunit.Sdk.FailException -> reraise();
         | _->
             ()
+
+    [<Theory>]
+    [<InlineData( "<Test><D1>-1</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>4294967296</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D2>0</D2><D2>0</D2><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D3>0</D3><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D4>0</D4></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D5>0</D5></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D6>0</D6></Test>" )>]
+    member _.SingleValue_ITT_001 ( s : string ) =
+        try
+            ConfRW_002_ITT_T.ConfRW_UT002_ITT_T.LoadString s |> ignore
+            Assert.Fail __LINE__
+        with
+        | :? Xunit.Sdk.FailException -> reraise();
+        | _->
+            ()
+
+    [<Theory>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 2u )>]
+    [<InlineData( "<Test><D1>3</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 3u )>]
+    [<InlineData( "<Test><D1>4</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 4u )>]
+    [<InlineData( "<Test><D1>5</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 5u )>]
+    member _.SingleValue_ITT_002 ( s : string ) ( exr : uint32 ) =
+        let r = ConfRW_002_ITT_T.ConfRW_UT002_ITT_T.LoadString s
+        Assert.True( r.D1 = itt_me.fromPrim exr )
+
+    static member m_SingleValue_ITT_003_data = [|
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>0</D3></Test>" :> obj; [ itt_me.fromPrim 0u; itt_me.fromPrim 1u; ] :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D2>2</D2><D3>0</D3></Test>" :> obj; [ itt_me.fromPrim 0u; itt_me.fromPrim 1u; itt_me.fromPrim 2u; ] :> obj |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_ITT_003_data" )>]
+    member _.SingleValue_ITT_003 ( s : String ) ( exr : ITT_T list ) =
+        let r = ConfRW_002_ITT_T.ConfRW_UT002_ITT_T.LoadString s
+        Assert.True( r.D2 = exr )
+
+    static member m_SingleValue_ITT_004_data = [|
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2></Test>" :> obj; None :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>1</D3></Test>" :> obj; Some( itt_me.fromPrim 1u ) :> obj |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_ITT_004_data" )>]
+    member _.SingleValue_ITT_004 ( s : String ) ( exr : ITT_T option ) =
+        let r = ConfRW_002_ITT_T.ConfRW_UT002_ITT_T.LoadString s
+        Assert.True( r.D3 = exr )
+
+    static member m_SingleValue_ITT_005_data = [|
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2></Test>" :> obj; itt_me.fromPrim 98u :> obj; itt_me.fromPrim ( uint32 Constants.MAX_TARGET_DEVICE_COUNT ) :> obj; |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D7>4</D7><D8>5</D8></Test>" :> obj; itt_me.fromPrim 4u :> obj; itt_me.fromPrim 5u :> obj; |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_ITT_005_data" )>]
+    member _.SingleValue_ITT_005 ( s : string ) ( exr_D7 : ITT_T ) ( exr_D8 : ITT_T ) =
+        let r = ConfRW_002_ITT_T.ConfRW_UT002_ITT_T.LoadString s
+        Assert.True( r.D4 = itt_me.fromPrim 0u; )
+        Assert.True( r.D5 = itt_me.fromPrim 99u; )
+        Assert.True( r.D6 = itt_me.fromPrim ( uint32 Constants.MAX_TARGET_DEVICE_COUNT ) )
+        Assert.True( r.D7 = exr_D7 )
+        Assert.True( r.D8 = exr_D8 )
+
+    static member m_SingleValue_ITT_006_data = [|
+        [|
+            ( { D1 = itt_me.fromPrim 2u; D2 = [ itt_me.fromPrim 0u; itt_me.fromPrim 1u; ]; D3 = None; D4 = itt_me.fromPrim 0u; D5 = itt_me.fromPrim 0u; D6 = itt_me.fromPrim 1u; D7 = itt_me.fromPrim 2u; D8 = itt_me.fromPrim 3u; } : ConfRW_002_ITT_T.T_Test ) :> obj;
+            "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D7>2</D7><D8>3</D8></Test>" :> obj
+        |];
+        [|
+            ( { D1 = itt_me.fromPrim 3u; D2 = [ itt_me.fromPrim 0u; itt_me.fromPrim 1u; itt_me.fromPrim 2u; ]; D3 = None; D4 = itt_me.fromPrim 0u; D5 = itt_me.fromPrim 0u; D6 = itt_me.fromPrim 2u; D7 = itt_me.fromPrim 3u; D8 = itt_me.fromPrim 4u; } : ConfRW_002_ITT_T.T_Test ) :> obj;
+            "<Test><D1>3</D1><D2>0</D2><D2>1</D2><D2>2</D2><D7>3</D7><D8>4</D8></Test>" :> obj
+        |];
+        [|
+            ( { D1 = itt_me.fromPrim 2u; D2 = [ itt_me.fromPrim 0u; itt_me.fromPrim 1u; ]; D3 = Some( itt_me.fromPrim 5u ); D4 = itt_me.fromPrim 0u; D5 = itt_me.fromPrim 0u; D6 = itt_me.fromPrim 3u; D7 = itt_me.fromPrim 4u; D8 = itt_me.fromPrim 5u; } : ConfRW_002_ITT_T.T_Test ) :> obj;
+            "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>5</D3><D7>4</D7><D8>5</D8></Test>" :> obj
+        |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_ITT_006_data" )>]
+    member _.SingleValue_ITT_006 ( s : ConfRW_002_ITT_T.T_Test ) ( exr : string ) =
+        let r = ConfRW_002_ITT_T.ConfRW_UT002_ITT_T.ToString s
+        Assert.True(( r = exr ))
+
+    static member m_SingleValue_ITT_007_data = [|
+        [| ( { D1 = itt_me.fromPrim 2u; D2 = [ itt_me.fromPrim 0u; ]; D3 = None; D4 = itt_me.fromPrim 0u; D5 = itt_me.fromPrim 0u; D6 = itt_me.fromPrim 1u; D7 = itt_me.fromPrim 2u; D8 = itt_me.fromPrim 3u; } : ConfRW_002_ITT_T.T_Test ) :> obj |];
+        [| ( { D1 = itt_me.fromPrim 2u; D2 = [ itt_me.fromPrim 0u; itt_me.fromPrim 1u; itt_me.fromPrim 2u; itt_me.fromPrim 3u; ]; D3 = None; D4 = itt_me.fromPrim 0u; D5 = itt_me.fromPrim 0u; D6 = itt_me.fromPrim 1u; D7 = itt_me.fromPrim 2u; D8 = itt_me.fromPrim 3u; } : ConfRW_002_ITT_T.T_Test ) :> obj |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_ITT_007_data" )>]
+    member _.SingleValue_ITT_007 ( s : ConfRW_002_ITT_T.T_Test ) =
+        try
+            ConfRW_002_ITT_T.ConfRW_UT002_ITT_T.ToString s |> ignore
+            Assert.Fail __LINE__
+        with
+        | :? Xunit.Sdk.FailException -> reraise();
+        | _->
+            ()

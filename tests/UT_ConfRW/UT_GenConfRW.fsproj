@@ -35,6 +35,7 @@
     <Compile Include="ConfRW\ConfRWTest_002_iSCSIName.fs" />
     <Compile Include="ConfRW\ConfRWTest_002_IPCondition.fs" />
     <Compile Include="ConfRW\ConfRWTest_002_ISID.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_ITT_T.fs" />
     <Compile Include="ConfRW\ConfRWTest_002_long.fs" />
     <Compile Include="ConfRW\ConfRWTest_002_LUN_T.fs" />
     <Compile Include="ConfRW\ConfRWTest_002_MEDIAIDX_T.fs" />
@@ -82,6 +83,7 @@
     <Content Include="ConfRW\ConfRWTest_002_iSCSIName.xml" />
     <Content Include="ConfRW\ConfRWTest_002_IPCondition.xml" />
     <Content Include="ConfRW\ConfRWTest_002_ISID.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_ITT_T.xml" />
     <Content Include="ConfRW\ConfRWTest_002_long.xml" />
     <Content Include="ConfRW\ConfRWTest_002_LUN_T.xml" />
     <Content Include="ConfRW\ConfRWTest_002_MEDIAIDX_T.xml" />

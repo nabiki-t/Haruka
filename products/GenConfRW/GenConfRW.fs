@@ -254,6 +254,7 @@ let GetPrimeTypeName( tName : string ) : string =
     | "CONCNT_T" -> "CONCNT_T"
     | "unit" -> "unit"
     | "IPCondition" -> "IPCondition"
+    | "ITT_T" -> "ITT_T"
     | _ -> sprintf "T_%s" tName
 
 /// <summary>
@@ -655,6 +656,13 @@ let OutputOwnNode ( outfile : TextWriter ) ( elem : XElement ) ( indent : int ) 
                 fprintfn outfile "%s  </xsd:simpleType>" indentStr
                 fprintfn outfile "%s</xsd:element>" indentStr
 
+            | "ITT_T" ->
+                fprintfn outfile "%s%s" indentStr ( GenElementTagStr "" elem parentIsSelection )
+                fprintfn outfile "%s  <xsd:simpleType>" indentStr
+                fprintfn outfile "%s    <xsd:restriction base='xsd:unsignedInt' />" indentStr
+                fprintfn outfile "%s  </xsd:simpleType>" indentStr
+                fprintfn outfile "%s</xsd:element>" indentStr
+
             | _ ->
                 // If the constraint specifies a type name other than the default type,
                 // it is a reference to a type defined separately.
@@ -781,6 +789,8 @@ let callReadFuncStr ( className : string ) ( elemCallName : string ) ( constrain
         sprintf "()"
     | "IPCondition" ->
         sprintf "IPCondition.Parse( %s.Value )" elemCallName
+    | "ITT_T" ->
+        sprintf "itt_me.fromPrim( UInt32.Parse( %s.Value ) )" elemCallName
     | _ ->
         sprintf "%s.Read_T_%s( %s )" className constraintStr elemCallName
 
@@ -865,6 +875,8 @@ let genSetDefaultValueStr ( defValue : string ) ( constraintStr : string ) : str
         sprintf "()"
     | "IPCondition" ->
         sprintf "IPCondition.Parse( \"%s\" )" defValue
+    | "ITT_T" ->
+        sprintf "itt_me.fromPrim( %su )" defValue
     | _ ->
         raise <| new System.Exception( "Unknown type name. " + constraintStr )
 
@@ -960,6 +972,8 @@ let genSetDefaultValueStr_Default ( constraintStr : string ) : string =
         "()"
     | "IPCondition" ->
         "IPCondition.Loopback"
+    | "ITT_T" ->
+        "itt_me.fromPrim 0u"
     | _ ->
         raise <| new System.Exception( "Unknown type name. " + constraintStr )
 
@@ -1345,6 +1359,9 @@ let callWriteFuncStr ( outfile : TextWriter ) ( indent : int ) ( className : str
 
     | "IPCondition" ->
         fprintfn outfile "%syield sprintf \"%%s%%s<%s>%%s</%s>\" singleIndent indentStr ( IPCondition.ToString(%s) )" indentStr elemName elemName elemCallName
+
+    | "ITT_T" ->
+        fprintfn outfile "%syield sprintf \"%%s%%s<%s>%%d</%s>\" singleIndent indentStr ( itt_me.toPrim (%s) )" indentStr elemName elemName elemCallName
 
     | _ ->
         fprintfn outfile "%syield! %s.T_%s_toString ( indent + 1 ) indentStep ( %s ) \"%s\"" indentStr className constraintStr elemCallName elemName
