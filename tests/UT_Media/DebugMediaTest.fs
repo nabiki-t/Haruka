@@ -266,15 +266,16 @@ type DebugMedia_Test () =
             ValueNone
         )
 
-        for _ = 1 to Constants.DEBUG_MEDIA_MAX_TRAP_COUNT do
-            AddCounterAction 1 ( MediaCtrlReq.U_TestUnitReady() ) dm
+        for i = 1 to Constants.DEBUG_MEDIA_MAX_TRAP_COUNT do
+            AddCounterAction i ( MediaCtrlReq.U_TestUnitReady() ) dm
 
         let r2 = dm.TestUnitReady ( itt_me.fromPrim 99u ) defaultCommandSource
         Assert.True(( r2 = ValueNone ))
         Assert.True(( cnt = 1 ))
 
-        let r4 = GetCounterValue 1 dm
-        Assert.True(( r4 = Constants.DEBUG_MEDIA_MAX_TRAP_COUNT ))
+        for i = 1 to Constants.DEBUG_MEDIA_MAX_TRAP_COUNT do
+            let r4 = GetCounterValue i dm
+            Assert.True(( r4 = 1 ))
 
     [<Fact>]
     member _.TestUnitReady_004() =
@@ -395,15 +396,16 @@ type DebugMedia_Test () =
             123UL
         )
 
-        for _ = 1 to Constants.DEBUG_MEDIA_MAX_TRAP_COUNT do
-            AddCounterAction 1 ( MediaCtrlReq.U_ReadCapacity() ) dm
+        for i = 1 to Constants.DEBUG_MEDIA_MAX_TRAP_COUNT do
+            AddCounterAction i ( MediaCtrlReq.U_ReadCapacity() ) dm
 
         let r2 = dm.ReadCapacity ( itt_me.fromPrim 99u ) defaultCommandSource
         Assert.True(( r2 = 123UL ))
         Assert.True(( cnt = 1 ))
 
-        let r4 = GetCounterValue 1 dm
-        Assert.True(( r4 = Constants.DEBUG_MEDIA_MAX_TRAP_COUNT ))
+        for i = 1 to Constants.DEBUG_MEDIA_MAX_TRAP_COUNT do
+            let r4 = GetCounterValue i dm
+            Assert.True(( r4 = 1 ))
 
     [<Fact>]
     member _.ReadCapacity_004() =
@@ -615,8 +617,8 @@ type DebugMedia_Test () =
             Task.FromResult 112
         )
 
-        for _ = 1 to Constants.DEBUG_MEDIA_MAX_TRAP_COUNT do
-            AddCounterAction 1 ( MediaCtrlReq.U_Read({ StartLBA = 10UL; EndLBA = 20UL; }) ) dm
+        for i = 1 to Constants.DEBUG_MEDIA_MAX_TRAP_COUNT do
+            AddCounterAction i ( MediaCtrlReq.U_Read({ StartLBA = 10UL; EndLBA = 20UL; }) ) dm
 
         let buf = Array.zeroCreate< byte >( int Constants.MEDIA_BLOCK_SIZE * 1 )
         let r2 =
@@ -625,8 +627,9 @@ type DebugMedia_Test () =
         Assert.True(( r2 = 112 ))
         Assert.True(( cnt = 1 ))
 
-        let r4 = GetCounterValue 1 dm
-        Assert.True(( r4 = Constants.DEBUG_MEDIA_MAX_TRAP_COUNT ))
+        for i = 1 to Constants.DEBUG_MEDIA_MAX_TRAP_COUNT do
+            let r4 = GetCounterValue i dm
+            Assert.True(( r4 = 1 ))
 
     [<Fact>]
     member _.Read_007() =
@@ -839,8 +842,8 @@ type DebugMedia_Test () =
             Task.FromResult 112
         )
 
-        for _ = 1 to Constants.DEBUG_MEDIA_MAX_TRAP_COUNT do
-            AddCounterAction 1 ( MediaCtrlReq.U_Write({ StartLBA = 10UL; EndLBA = 20UL; }) ) dm
+        for i = 1 to Constants.DEBUG_MEDIA_MAX_TRAP_COUNT do
+            AddCounterAction i ( MediaCtrlReq.U_Write({ StartLBA = 10UL; EndLBA = 20UL; }) ) dm
 
         let buf = Array.zeroCreate< byte >( int Constants.MEDIA_BLOCK_SIZE * 10 )
         let r2 =
@@ -849,8 +852,9 @@ type DebugMedia_Test () =
         Assert.True(( r2 = 112 ))
         Assert.True(( cnt = 1 ))
 
-        let r4 = GetCounterValue 1 dm
-        Assert.True(( r4 = Constants.DEBUG_MEDIA_MAX_TRAP_COUNT ))
+        for i = 1 to Constants.DEBUG_MEDIA_MAX_TRAP_COUNT do
+            let r4 = GetCounterValue i dm
+            Assert.True(( r4 = 1 ))
 
     [<Fact>]
     member _.Write_007() =
@@ -968,15 +972,16 @@ type DebugMedia_Test () =
             Task.FromResult ()
         )
 
-        for _ = 1 to Constants.DEBUG_MEDIA_MAX_TRAP_COUNT do
-            AddCounterAction 1 ( MediaCtrlReq.U_Format() ) dm
+        for i = 1 to Constants.DEBUG_MEDIA_MAX_TRAP_COUNT do
+            AddCounterAction i ( MediaCtrlReq.U_Format() ) dm
 
         dm.Format ( itt_me.fromPrim 99u ) defaultCommandSource
         |> Functions.RunTaskSynchronously
         Assert.True(( cnt = 1 ))
 
-        let r4 = GetCounterValue 1 dm
-        Assert.True(( r4 = Constants.DEBUG_MEDIA_MAX_TRAP_COUNT ))
+        for i = 1 to Constants.DEBUG_MEDIA_MAX_TRAP_COUNT do
+            let r4 = GetCounterValue i dm
+            Assert.True(( r4 = 1 ))
 
     [<Fact>]
     member _.Format_004() =

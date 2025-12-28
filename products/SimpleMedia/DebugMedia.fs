@@ -16,6 +16,8 @@ open System
 open System.Threading.Tasks
 open System.Collections.Generic
 open System.Collections.Concurrent
+open System.Collections.Immutable
+open System.Threading
 
 open Haruka.Constants
 open Haruka.Commons
@@ -40,8 +42,14 @@ type private DebugEvent =
 type private DebugAction =
     | ACA of string
     | LUReset of string
-    | Count of int
+    | Count of ( int * int[] )
     | Delay of int  // ignored for TestUnitReady and ReadCapacity event.
+
+[<NoComparison>]
+type private DebugRegist = {
+    event : DebugEvent;
+    action : DebugAction;
+}
 
 //=============================================================================
 // Class implementation
@@ -76,10 +84,7 @@ type DebugMedia
     let m_Peripheral = m_StatusMaster.CreateMedia m_Config.Peripheral m_LUN m_Killer
 
     /// Debug actions
-    let m_Action = List< DebugEvent * DebugAction >()
-
-    /// Debug counters
-    let m_Counters = ConcurrentDictionary< int, int >()
+    let m_Action = OptimisticLock( Map< int, DebugRegist > [||] )
 
     do
         m_Killer.Add this
@@ -110,8 +115,7 @@ type DebugMedia
                     let loginfo = struct( m_ObjID, ValueNone, ValueNone, ValueSome( m_LUN ) )
                     g.Gen1( loginfo, "DebugMedia.Initialize." )
                 )
-            m_Action.Clear()
-            m_Counters.Clear()
+            m_Action.Update ( fun _ -> Map< int, DebugRegist > [||] ) |> ignore
             m_Peripheral.Initialize()
 
         // ------------------------------------------------------------------------
@@ -122,8 +126,7 @@ type DebugMedia
                     let loginfo = struct( m_ObjID, ValueNone, ValueNone, ValueSome( m_LUN ) )
                     g.Gen1( loginfo, "DebugMedia.Closing." )
                 )
-            m_Action.Clear()
-            m_Counters.Clear()
+            m_Action.Update ( fun _ -> Map< int, DebugRegist > [||] ) |> ignore
             m_Peripheral.Closing()
 
         // ------------------------------------------------------------------------
@@ -136,10 +139,11 @@ type DebugMedia
                 )
 
             // Do debug action
-            for ( de, da ) in m_Action do
-                match de with
+            let act = m_Action.obj
+            for itr in act do
+                match itr.Value.event with
                 | DebugEvent.TestUnitReady ->
-                    this.DoActionSync source da // ignore Delay action.
+                    this.DoActionSync source itr.Value.action // ignore Delay action.
                 | _ -> ()
 
             // Call peripheral media interface.
@@ -155,10 +159,11 @@ type DebugMedia
                 )
 
             // Do debug action
-            for ( de, da ) in m_Action do
-                match de with
+            let act = m_Action.obj
+            for itr in act do
+                match itr.Value.event with
                 | DebugEvent.ReadCapacity ->
-                    this.DoActionSync source da // ignore Delay action.
+                    this.DoActionSync source itr.Value.action // ignore Delay action.
                 | _ -> ()
 
             // Call peripheral media interface.
@@ -186,14 +191,14 @@ type DebugMedia
                         d
 
                 // Do debug action
-                for i = 0 to m_Action.Count - 1 do
-                    let ( de, da ) = m_Action.[i]
-                    match de with
+                let act = m_Action.obj
+                for itr in act do
+                    match itr.Value.event with
                     | DebugEvent.Read( s, e ) ->
                         if argLBA > e || ( argLBA + readBlockCount - 1UL ) < s then
                             ()
                         else
-                            do! this.DoAction source da
+                            do! this.DoAction source itr.Value.action
                     | _ -> ()
 
                 // Call peripheral media interface.
@@ -224,14 +229,14 @@ type DebugMedia
                         d
 
                 // Do debug action
-                for i = 0 to m_Action.Count - 1 do
-                    let ( de, da ) = m_Action.[i]
-                    match de with
+                let act = m_Action.obj
+                for itr in act do
+                    match itr.Value.event with
                     | DebugEvent.Write( s, e ) ->
                         if writeStartLBA > e || ( writeStartLBA + writeBlockCount - 1UL ) < s then
                             ()
                         else
-                            do! this.DoAction source da
+                            do! this.DoAction source itr.Value.action
                     | _ -> ()
 
                 // Call peripheral media interface.
@@ -249,11 +254,11 @@ type DebugMedia
                     )
 
                 // Do debug action
-                for i = 0 to m_Action.Count - 1 do
-                    let ( de, da ) = m_Action.[i]
-                    match de with
+                let act = m_Action.obj
+                for itr in act do
+                    match itr.Value.event with
                     | DebugEvent.Format ->
-                        do! this.DoAction source da
+                        do! this.DoAction source itr.Value.action
                     | _ -> ()
 
                 // Call peripheral media interface.
@@ -274,67 +279,20 @@ type DebugMedia
 
         // ------------------------------------------------------------------------
         // Media control request.
-        override _.MediaControl ( request : MediaCtrlReq.T_Request ) : Task<MediaCtrlRes.T_Response> =
+        override this.MediaControl ( request : MediaCtrlReq.T_Request ) : Task<MediaCtrlRes.T_Response> =
             task {
                 match request with
                 | MediaCtrlReq.U_Debug( x ) ->
                     let result =
                         match x with
                         | MediaCtrlReq.U_GetAllTraps() ->
-                            MediaCtrlRes.U_AllTraps( {
-                                Trap = 
-                                    m_Action
-                                    |> Seq.map ( DebugMedia.ConvertInternalToResTrap m_Counters )
-                                    |> Seq.toList;
-                            })
-
+                            this.MediaControl_GetAllTraps()
                         | MediaCtrlReq.U_AddTrap( y ) ->
-                            if m_Action.Count >= Constants.DEBUG_MEDIA_MAX_TRAP_COUNT then
-                                MediaCtrlRes.U_AddTrapResult({
-                                    Result = false;
-                                    ErrorMessage = "The number of registered traps has exceeded the limit.";
-                                })
-                            else
-                                let errorCheck =
-                                    match y.Event with
-                                    | MediaCtrlReq.U_Read( z ) ->
-                                        z.StartLBA <= z.EndLBA
-                                    | MediaCtrlReq.U_Write( z ) ->
-                                        z.StartLBA <= z.EndLBA
-                                    | _ ->
-                                        true
-                                if errorCheck then
-                                    m_Action.Add( DebugMedia.ConvertReqTrapToInternal y )
-                                    match y.Action with
-                                    | MediaCtrlReq.U_Count( z ) ->
-                                        // add or clear counter value
-                                        m_Counters.AddOrUpdate( z, 0, fun _ _ -> 0 ) |> ignore
-                                    | _ -> ()
-                                    MediaCtrlRes.U_AddTrapResult({
-                                        Result = true;
-                                        ErrorMessage = "";
-                                    })
-                                else
-                                    MediaCtrlRes.U_AddTrapResult({
-                                        Result = false;
-                                        ErrorMessage = "Invalid value.";
-                                    })
-
+                            this.MediaControl_AddTrap y
                         | MediaCtrlReq.U_ClearTraps() ->
-                            m_Action.Clear()
-                            m_Counters.Clear()
-                            MediaCtrlRes.U_ClearTrapsResult( {
-                                Result = true;
-                                ErrorMessage = "";
-                            })
-
+                            this.MediaControl_ClearTraps()
                         | MediaCtrlReq.U_GetCounterValue( y ) ->
-                            let r, v = m_Counters.TryGetValue( y )
-                            if r then
-                                MediaCtrlRes.U_CounterValue( v )
-                            else
-                                MediaCtrlRes.U_CounterValue( -1 )
-
+                            this.MediaControl_GetCounterValue y
                     return MediaCtrlRes.U_Debug result
 //                | _ ->
 //                    return MediaCtrlRes.U_Unexpected( sprintf "Unexpected request. File=%s, Line=%d" __SOURCE_FILE__ __LINE__ )
@@ -416,13 +374,111 @@ type DebugMedia
             raise <| SCSIACAException( source, true, SenseKeyCd.MEDIUM_ERROR, ASCCd.LOGICAL_UNIT_FAILURE, x )
         | DebugAction.LUReset( x ) ->
             raise <| Exception( x )
-        | DebugAction.Count( x ) ->
-            m_Counters.AddOrUpdate( x, 1, fun _ o ->
-                if o = Int32.MaxValue then 0 else o + 1
-            )
-            |> ignore
+        | DebugAction.Count( _, x2 ) ->
+            Interlocked.Increment( &( x2.[0] ) ) |> ignore
         | DebugAction.Delay( x ) ->
             ()  // ignore DebugAction.Delay action
+
+    /// <summary>
+    ///  GetAllTraps media control request.
+    /// </summary>
+    /// <returns>
+    ///  Response data that will be returned to client.
+    /// </returns>
+    member private _.MediaControl_GetAllTraps () : MediaCtrlRes.T_Debug =
+        MediaCtrlRes.U_AllTraps( {
+            Trap =
+                m_Action.obj.Values
+                |> Seq.map DebugMedia.ConvertInternalToResTrap
+                |> Seq.toList;
+        })
+
+    /// <summary>
+    ///  AddTrap media control request.
+    /// </summary>
+    /// <param name="y" >
+    ///  AddTrap argument data.
+    /// </param>
+    /// <returns>
+    ///  Response data that will be returned to client.
+    /// </returns>
+    member private _.MediaControl_AddTrap ( y : MediaCtrlReq.T_AddTrap ) : MediaCtrlRes.T_Debug =
+        m_Action.Update ( fun old ->
+            if old.Count >= Constants.DEBUG_MEDIA_MAX_TRAP_COUNT then
+                let result2 =
+                    MediaCtrlRes.U_AddTrapResult({
+                        Result = false;
+                        ErrorMessage = "The number of registered traps has exceeded the limit.";
+                    })
+                struct( old, result2 )
+            else
+                let errorCheck =
+                    match y.Event with
+                    | MediaCtrlReq.U_Read( z ) ->
+                        z.StartLBA <= z.EndLBA
+                    | MediaCtrlReq.U_Write( z ) ->
+                        z.StartLBA <= z.EndLBA
+                    | _ ->
+                        true
+                if errorCheck then
+                    let next = old.Add( old.Count, DebugMedia.ConvertReqTrapToInternal y )
+                    let result2 =
+                        MediaCtrlRes.U_AddTrapResult({
+                            Result = true;
+                            ErrorMessage = "";
+                        })
+                    struct( next, result2 )
+                else
+                    let result2 =
+                        MediaCtrlRes.U_AddTrapResult({
+                            Result = false;
+                            ErrorMessage = "Invalid value.";
+                        })
+                    struct( old, result2 )
+        )
+
+    /// <summary>
+    ///  ClearTraps media control request.
+    /// </summary>
+    /// <returns>
+    ///  Response data that will be returned to client.
+    /// </returns>
+    member private _.MediaControl_ClearTraps () : MediaCtrlRes.T_Debug =
+        m_Action.Update ( fun _ -> Map< int, DebugRegist > [||] ) |> ignore
+        MediaCtrlRes.U_ClearTrapsResult( {
+            Result = true;
+            ErrorMessage = "";
+        })
+
+    /// <summary>
+    ///  AddTrap media control request.
+    /// </summary>
+    /// <param name="index" >
+    ///  Counter index value specified in AddTrap media control request.
+    /// </param>
+    /// <returns>
+    ///  Response data that will be returned to client.
+    /// </returns>
+    /// <remarks>
+    ///  If there is no counter that matches the index value, -1 is returned.
+    ///  If there are multiple counters that match the index value, the first counter value is returned.
+    /// </remarks>
+    member private _.MediaControl_GetCounterValue ( index : int ) : MediaCtrlRes.T_Debug =
+        let act = m_Action.obj
+        let r =
+            act.Values
+            |> Seq.choose ( fun itr ->
+                match itr.action with
+                | DebugAction.Count( zi, zv ) when zi = index ->
+                    Some( zv.[0] )
+                | _ ->
+                    None
+            )
+            |> Seq.toArray
+        if r.Length > 0 then
+            MediaCtrlRes.U_CounterValue( r.[0] )
+        else
+            MediaCtrlRes.U_CounterValue( -1 )
 
     //=========================================================================
     // static method
@@ -436,7 +492,7 @@ type DebugMedia
     /// <returns>
     ///  Converted data.
     /// </returns>
-    static member private ConvertReqTrapToInternal ( trap : MediaCtrlReq.T_AddTrap ) : ( DebugEvent * DebugAction ) =
+    static member private ConvertReqTrapToInternal ( trap : MediaCtrlReq.T_AddTrap ) : DebugRegist =
         let de =
             match trap.Event with
             | MediaCtrlReq.U_TestUnitReady() ->
@@ -456,29 +512,26 @@ type DebugMedia
             | MediaCtrlReq.U_LUReset( x ) ->
                 DebugAction.LUReset( x )
             | MediaCtrlReq.U_Count( x ) ->
-                DebugAction.Count( x )
+                DebugAction.Count( x, [| 0 |] )
             | MediaCtrlReq.U_Delay( x ) ->
                 DebugAction.Delay( x )
-        ( de, da )
+        {
+            event = de;
+            action = da;
+        }
 
     /// <summary>
     ///  Convert internal structure to MediaCtrlRes.T_Trap record.
     /// </summary>
-    /// <param name="counter">
-    ///  debug counter
-    /// </param>
-    /// <param name="de">
-    ///  Debug event data
-    /// </param>
-    /// <param name="da">
-    ///  Debug action data
+    /// <param name="dr">
+    ///  Debug event and action record.
     /// </param>
     /// <returns>
     ///  Converted MediaCtrlRes.T_Trap record.
     /// </returns>
-    static member private ConvertInternalToResTrap ( counter : ConcurrentDictionary< int, int > ) ( de : DebugEvent, da : DebugAction ) : ( MediaCtrlRes.T_Trap )  =
+    static member private ConvertInternalToResTrap ( dr : DebugRegist ) : ( MediaCtrlRes.T_Trap )  =
         let te =
-            match de with
+            match dr.event with
             | DebugEvent.TestUnitReady ->
                 MediaCtrlRes.U_TestUnitReady()
             | DebugEvent.ReadCapacity ->
@@ -496,17 +549,13 @@ type DebugMedia
             | DebugEvent.Format ->
                 MediaCtrlRes.U_Format()
         let ta =
-            match da with
+            match dr.action with
             | DebugAction.ACA( x ) ->
                 MediaCtrlRes.U_ACA( x )
             | DebugAction.LUReset( x ) ->
                 MediaCtrlRes.U_LUReset( x )
-            | DebugAction.Count( x ) ->
-                let r, v = counter.TryGetValue( x )
-                if r then
-                    MediaCtrlRes.U_Count( { Index = x; Value = v; } )
-                else
-                    MediaCtrlRes.U_Count( { Index = x; Value = -1; } )
+            | DebugAction.Count( xi, xv ) ->
+                MediaCtrlRes.U_Count( { Index = xi; Value = xv.[0]; } )
             | DebugAction.Delay( x ) ->
                 MediaCtrlRes.U_Delay( x )
         {
