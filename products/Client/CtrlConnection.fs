@@ -1605,7 +1605,7 @@ type CtrlConnection(
                         if not z.Result then
                             raise <| RequestError( z.ErrorMessage )
                     | _ ->
-                        raise <| RequestError( m_MessageTable.GetMessage( "ERRMSG_UNEXPECTED_RESPONSE", "DebugMedia_GetAllTraps" ) )
+                        raise <| RequestError( m_MessageTable.GetMessage( "ERRMSG_UNEXPECTED_RESPONSE", "DebugMedia_AddTrap" ) )
                 | MediaCtrlRes.U_Unexpected( y ) ->
                     raise <| RequestError( y )
         }
@@ -1640,7 +1640,7 @@ type CtrlConnection(
                         if not z.Result then
                             raise <| RequestError( z.ErrorMessage )
                     | _ ->
-                        raise <| RequestError( m_MessageTable.GetMessage( "ERRMSG_UNEXPECTED_RESPONSE", "DebugMedia_GetAllTraps" ) )
+                        raise <| RequestError( m_MessageTable.GetMessage( "ERRMSG_UNEXPECTED_RESPONSE", "DebugMedia_ClearTraps" ) )
                 | MediaCtrlRes.U_Unexpected( y ) ->
                     raise <| RequestError( y )
         }
@@ -1677,7 +1677,7 @@ type CtrlConnection(
                     | MediaCtrlRes.U_CounterValue( z ) ->
                         z
                     | _ ->
-                        raise <| RequestError( m_MessageTable.GetMessage( "ERRMSG_UNEXPECTED_RESPONSE", "DebugMedia_GetAllTraps" ) )
+                        raise <| RequestError( m_MessageTable.GetMessage( "ERRMSG_UNEXPECTED_RESPONSE", "DebugMedia_GetCounterValue" ) )
                 | MediaCtrlRes.U_Unexpected( y ) ->
                     raise <| RequestError( y )
         }
