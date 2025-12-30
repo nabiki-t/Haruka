@@ -42,9 +42,10 @@ type TaskWaiter_Test() =
                 Assert.True(( w.Count = 0 ))
             };
             fun () -> task {
-                do! Task.Delay 500
+                while w.Count = 0 do
+                    do! Task.Delay 10
                 Assert.True(( w.Count = 1 ))
-                w.Notify 0 99
+                w.Notify( 0, 99 )
             };
         |]
         |> Functions.RunTaskInPallalel
@@ -70,10 +71,64 @@ type TaskWaiter_Test() =
                 Assert.True(( w.Count = 0 ))
             };
             fun () -> task {
+                while w.Count = 0 do
+                    do! Task.Delay 10
+                w.Notify( 1, 100 )
+                w.Notify( 2, 200 )
+                w.Notify( 3, 300 )
+            };
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.TaskIgnore
+
+    [<Fact>]
+    member _.Wait_Notify_Notify_Reset_001() =
+        let w = TaskWaiter<int, int>()
+        Assert.True(( w.Count = 0 ))
+
+        [|
+            fun () -> task {
+                let! res = w.Wait( 0 )
+                Assert.True(( res = 99 ))
+                Assert.True(( w.Count = 1 ))
+
+                w.Notify( 0, 88 )   // ignored
+                let! res2 = w.Wait( 0 )
+                Assert.True(( res2 = 99 ))
+
+                w.Reset 0
+                Assert.True(( w.Count = 0 ))
+            };
+            fun () -> task {
+                while w.Count = 0 do
+                    do! Task.Delay 10
+                Assert.True(( w.Count = 1 ))
+                w.Notify( 0, 99 )
+            };
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.TaskIgnore
+
+    [<Fact>]
+    member _.Wait_Wait_Notify_001() =
+        let w = TaskWaiter<int, int>()
+        Assert.True(( w.Count = 0 ))
+
+        [|
+            fun () -> task {
+                let! res = w.Wait( 0 )
+                Assert.True(( res = 88 ))
+                Assert.True(( w.Count = 1 ))
+            };
+            fun () -> task {
+                let! res = w.Wait( 0 )
+                Assert.True(( res = 88 ))
+                Assert.True(( w.Count = 1 ))
+            };
+            fun () -> task {
                 do! Task.Delay 500
-                w.Notify 1 100
-                w.Notify 2 200
-                w.Notify 3 300
+                Assert.True(( w.Count = 1 ))
+                w.Notify( 0, 88 )
             };
         |]
         |> Functions.RunTaskInPallalel
@@ -97,9 +152,10 @@ type TaskWaiter_Test() =
                 Assert.True(( w.Count = 0 ))
             };
             fun () -> task {
-                do! Task.Delay 500
+                while w.Count = 0 do
+                    do! Task.Delay 10
                 Assert.True(( w.Count = 1 ))
-                w.SetException 0 ( ArgumentException "aaaa" )
+                w.SetException( 0, ArgumentException "aaaa" )
             };
         |]
         |> Functions.RunTaskInPallalel
@@ -139,10 +195,11 @@ type TaskWaiter_Test() =
                 Assert.True(( w.Count = 0 ))
             };
             fun () -> task {
-                do! Task.Delay 500
-                w.SetException 1 ( ArgumentException "1111" )
-                w.SetException 2 ( ArgumentException "2222" )
-                w.SetException 3 ( ArgumentException "3333" )
+                while w.Count = 0 do
+                    do! Task.Delay 10
+                w.SetException( 1, ArgumentException "1111" )
+                w.SetException( 2, ArgumentException "2222" )
+                w.SetException( 3, ArgumentException "3333" )
             };
         |]
         |> Functions.RunTaskInPallalel
@@ -181,9 +238,46 @@ type TaskWaiter_Test() =
                 w.Reset 3
             };
             fun () -> task {
-                do! Task.Delay 500
+                while w.Count < 3 do
+                    do! Task.Delay 10
                 Assert.True(( w.Count = 3 ))
                 w.SetExceptionForAll ( ArgumentException "aaaa" )
+            };
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.TaskIgnore
+
+    [<Fact>]
+    member _.Wait_Exception_Exception_Reset_001() =
+        let w = TaskWaiter<int, int>()
+        Assert.True(( w.Count = 0 ))
+
+        [|
+            fun () -> task {
+                try
+                    let! _ = w.Wait( 0 )
+                    Assert.Fail __LINE__
+                with
+                | :? ArgumentException as x ->
+                    Assert.True(( x.Message = "1111" ))
+
+                w.SetException( 0, ArgumentException "2222" )   // ignored
+
+                try
+                    let! _ = w.Wait( 0 )
+                    Assert.Fail __LINE__
+                with
+                | :? ArgumentException as x ->
+                    Assert.True(( x.Message = "1111" ))
+
+                w.Reset 0
+                Assert.True(( w.Count = 0 ))
+            };
+            fun () -> task {
+                while w.Count = 0 do
+                    do! Task.Delay 10
+                Assert.True(( w.Count = 1 ))
+                w.SetException( 0, ArgumentException "1111" )
             };
         |]
         |> Functions.RunTaskInPallalel
@@ -195,7 +289,7 @@ type TaskWaiter_Test() =
             let w = TaskWaiter<int, int>()
             Assert.True(( w.Count = 0 ))
 
-            w.Notify 1 100
+            w.Notify( 1, 100 )
             Assert.True(( w.Count = 1 ))
 
             let! res1 = w.Wait( 1 )
@@ -212,9 +306,9 @@ type TaskWaiter_Test() =
             let w = TaskWaiter<int, int>()
             Assert.True(( w.Count = 0 ))
 
-            w.Notify 1 100
-            w.Notify 2 200
-            w.Notify 3 300
+            w.Notify( 1, 100 )
+            w.Notify( 2, 200 )
+            w.Notify( 3, 300 )
             Assert.True(( w.Count = 3 ))
 
             let! res1 = w.Wait( 1 )
@@ -232,12 +326,53 @@ type TaskWaiter_Test() =
         }
 
     [<Fact>]
+    member _.Notify_Wait_Wait_Reset_001() =
+        task {
+            let w = TaskWaiter<int, int>()
+            Assert.True(( w.Count = 0 ))
+
+            w.Notify( 1, 100 )
+            Assert.True(( w.Count = 1 ))
+
+            let! res1 = w.Wait( 1 )
+            Assert.True(( res1 = 100 ))
+            Assert.True(( w.Count = 1 ))
+
+            let! res2 = w.Wait( 1 )
+            Assert.True(( res2 = 100 ))
+            Assert.True(( w.Count = 1 ))
+
+            w.Reset 1
+            Assert.True(( w.Count = 0 ))
+        }
+
+    [<Fact>]
+    member _.Notify_Notify_Wait_Reset_001() =
+        task {
+            let w = TaskWaiter<int, int>()
+            Assert.True(( w.Count = 0 ))
+
+            w.Notify( 1, 100 )
+            Assert.True(( w.Count = 1 ))
+
+            w.Notify( 1, 200 )      // ignored
+            Assert.True(( w.Count = 1 ))
+
+            let! res1 = w.Wait( 1 )
+            Assert.True(( res1 = 100 ))
+            Assert.True(( w.Count = 1 ))
+
+            w.Reset 1
+            Assert.True(( w.Count = 0 ))
+        }
+
+    [<Fact>]
     member _.Exception_Wait_Reset_001() =
         task {
             let w = TaskWaiter<int, int>()
             Assert.True(( w.Count = 0 ))
 
-            w.SetException 0 ( ArgumentException "aaaa" )
+            w.SetException( 0, ArgumentException "aaaa" )
             Assert.True(( w.Count = 1 ))
 
             try
@@ -258,9 +393,9 @@ type TaskWaiter_Test() =
             let w = TaskWaiter<int, int>()
             Assert.True(( w.Count = 0 ))
 
-            w.SetException 1 ( ArgumentException "1111" )
-            w.SetException 2 ( ArgumentException "2222" )
-            w.SetException 3 ( ArgumentException "3333" )
+            w.SetException( 1, ArgumentException "1111" )
+            w.SetException( 2, ArgumentException "2222" )
+            w.SetException( 3, ArgumentException "3333" )
             Assert.True(( w.Count = 3 ))
 
             try
@@ -301,7 +436,7 @@ type TaskWaiter_Test() =
             w.SetExceptionForAll ( ArgumentException "aaaa" )
             Assert.True(( w.Count = 0 ))
 
-            w.Notify 1 100
+            w.Notify( 1, 100 )
             Assert.True(( w.Count = 1 ))
 
             let! res1 = w.Wait( 1 )
@@ -313,15 +448,44 @@ type TaskWaiter_Test() =
         }
 
     [<Fact>]
+    member _.Exception_Wait_Wait_Reset_001() =
+        task {
+            let w = TaskWaiter<int, int>()
+            Assert.True(( w.Count = 0 ))
+
+            w.SetException( 0, ArgumentException "aaaa" )
+            Assert.True(( w.Count = 1 ))
+
+            try
+                let! _ = w.Wait( 0 )
+                Assert.Fail __LINE__
+            with
+            | :? ArgumentException as x ->
+                Assert.True(( x.Message = "aaaa" ))
+            Assert.True(( w.Count = 1 ))
+
+            try
+                let! _ = w.Wait( 0 )
+                Assert.Fail __LINE__
+            with
+            | :? ArgumentException as x ->
+                Assert.True(( x.Message = "aaaa" ))
+            Assert.True(( w.Count = 1 ))
+
+            w.Reset 0
+            Assert.True(( w.Count = 0 ))
+        }
+
+    [<Fact>]
     member _.Notify_Exception_Wait_Reset_001() =
         task {
             let w = TaskWaiter<int, int>()
             Assert.True(( w.Count = 0 ))
 
-            w.Notify 1 100
+            w.Notify( 1, 100 )
             Assert.True(( w.Count = 1 ))
 
-            w.SetException 1 ( ArgumentException "1111" )
+            w.SetException( 1, ArgumentException "1111" )   // ignored
             Assert.True(( w.Count = 1 ))
 
             let! res1 = w.Wait( 1 )
@@ -338,14 +502,14 @@ type TaskWaiter_Test() =
             let w = TaskWaiter<int, int>()
             Assert.True(( w.Count = 0 ))
 
-            w.Notify 1 100
-            w.Notify 2 200
-            w.Notify 3 300
+            w.Notify( 1, 100 )
+            w.Notify( 2, 200 )
+            w.Notify( 3, 300 )
             Assert.True(( w.Count = 3 ))
 
-            w.SetException 1 ( ArgumentException "1111" )
-            w.SetException 2 ( ArgumentException "2222" )
-            w.SetException 3 ( ArgumentException "3333" )
+            w.SetException( 1, ArgumentException "1111" )   // ignored
+            w.SetException( 2, ArgumentException "2222" )   // ignored
+            w.SetException( 3, ArgumentException "3333" )   // ignored
             Assert.True(( w.Count = 3 ))
 
             let! res1 = w.Wait( 1 )
@@ -368,12 +532,12 @@ type TaskWaiter_Test() =
             let w = TaskWaiter<int, int>()
             Assert.True(( w.Count = 0 ))
 
-            w.Notify 1 100
-            w.Notify 2 200
-            w.Notify 3 300
+            w.Notify( 1, 100 )
+            w.Notify( 2, 200 )
+            w.Notify( 3, 300 )
             Assert.True(( w.Count = 3 ))
 
-            w.SetExceptionForAll ( ArgumentException "aaaa" )
+            w.SetExceptionForAll ( ArgumentException "aaaa" )   // ignored
             Assert.True(( w.Count = 3 ))
 
             let! res1 = w.Wait( 1 )
@@ -396,10 +560,10 @@ type TaskWaiter_Test() =
             let w = TaskWaiter<int, int>()
             Assert.True(( w.Count = 0 ))
 
-            w.SetException 1 ( ArgumentException "1111" )
+            w.SetException( 1, ArgumentException "1111" )
             Assert.True(( w.Count = 1 ))
 
-            w.Notify 1 100
+            w.Notify( 1, 100 )                  // ignored
             Assert.True(( w.Count = 1 ))
 
             try
@@ -420,14 +584,14 @@ type TaskWaiter_Test() =
             let w = TaskWaiter<int, int>()
             Assert.True(( w.Count = 0 ))
 
-            w.SetException 1 ( ArgumentException "1111" )
-            w.SetException 2 ( ArgumentException "2222" )
-            w.SetException 3 ( ArgumentException "3333" )
+            w.SetException( 1, ArgumentException "1111" )
+            w.SetException( 2, ArgumentException "2222" )
+            w.SetException( 3, ArgumentException "3333" )
             Assert.True(( w.Count = 3 ))
 
-            w.Notify 1 100
-            w.Notify 2 200
-            w.Notify 3 300
+            w.Notify( 1, 100 )                // ignored
+            w.Notify( 2, 200 )                // ignored
+            w.Notify( 3, 300 )                // ignored
             Assert.True(( w.Count = 3 ))
 
             try
@@ -470,7 +634,7 @@ type TaskWaiter_Test() =
     member _.Reset_002() =
         let w = TaskWaiter<int, int>()
         Assert.True(( w.Count = 0 ))
-        w.Notify 99 99
+        w.Notify( 99, 99 )
         Assert.True(( w.Count = 1 ))
         w.Reset 1
         Assert.True(( w.Count = 1 ))
@@ -479,7 +643,7 @@ type TaskWaiter_Test() =
     member _.Reset_003() =
         let w = TaskWaiter<int, int>()
         Assert.True(( w.Count = 0 ))
-        w.Notify 99 99
+        w.Notify( 99, 99 )
         Assert.True(( w.Count = 1 ))
         w.Reset 99
         Assert.True(( w.Count = 0 ))
@@ -489,10 +653,61 @@ type TaskWaiter_Test() =
         task {
             let w = TaskWaiter<int, int>()
             Assert.True(( w.Count = 0 ))
-            w.Notify 99 99
+            w.Notify( 99, 99 )
             Assert.True(( w.Count = 1 ))
             let! res = w.WaitAndReset 99
             Assert.True(( res = 99 ))
             Assert.True(( w.Count = 0 ))
         }
-        
+
+    [<Fact>]
+    member _.Registered_001() =
+        let w = TaskWaiter<int, int>()
+        let r = w.Registered
+        Assert.True(( r.Length = 0 ))
+
+    [<Fact>]
+    member _.Registered_002() =
+        let w = TaskWaiter<int, int>()
+        w.Notify( 0, 0 )
+        let r = w.Registered
+        Assert.True(( r.Length = 1 ))
+        Assert.True(( r.[0] = struct ( 0, false ) ))
+
+    [<Fact>]
+    member _.Registered_003() =
+        let w = TaskWaiter<int, int>()
+        w.SetException( 0, ArgumentException "1111" )
+        let r = w.Registered
+        Assert.True(( r.Length = 1 ))
+        Assert.True(( r.[0] = struct ( 0, false ) ))
+
+    [<Fact>]
+    member _.Registered_004() =
+        let w = TaskWaiter<int, int>()
+        [|
+            fun () -> task {
+                let! _ = w.Wait( 0 )
+
+                let r1 = w.Registered
+                Assert.True(( r1.Length = 1 ))
+                Assert.True(( r1.[0] = struct ( 0, false ) ))
+
+                w.Reset 0
+
+                let r2 = w.Registered
+                Assert.True(( r2.Length = 0 ))
+            };
+            fun () -> task {
+                while w.Count = 0 do
+                    do! Task.Delay 10
+                let r = w.Registered
+                Assert.True(( r.Length = 1 ))
+                Assert.True(( r.[0] = struct ( 0, true ) ))
+                w.Notify( 0, 0 )
+            };
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.TaskIgnore
+
+
