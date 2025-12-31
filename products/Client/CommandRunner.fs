@@ -322,6 +322,8 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             CommandReader.CmdRule_add_trap;
             CommandReader.CmdRule_clear_trap;
             CommandReader.CmdRule_traps;
+            CommandReader.CmdRule_task_list;
+            CommandReader.CmdRule_task_resume;
         |]
 
     /// <summary>
@@ -617,6 +619,14 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
                     | CommandVarb.Traps ->
                         do! this.Command_Traps cmd ss cc cn
+                        return struct( true, stat )
+
+                    | CommandVarb.Task_List ->
+                        do! this.Command_TaskList cmd ss cc cn
+                        return struct( true, stat )
+
+                    | CommandVarb.Task_Resume ->
+                        do! this.Command_TaskResume cmd ss cc cn
                         return struct( true, stat )
 
                     | _ ->
@@ -3490,6 +3500,8 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     MediaCtrlReq.U_Count( idx )
                 elif String.Compare( actionStr, "Delay", StringComparison.OrdinalIgnoreCase ) = 0 then
                     MediaCtrlReq.U_Delay( msec )
+                elif String.Compare( actionStr, "Wait", StringComparison.OrdinalIgnoreCase ) = 0 then
+                    MediaCtrlReq.U_Wait()
                 else
                     raise <| Exception "Unexpected error."
 
@@ -3598,7 +3610,88 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                                 sprintf "Count( Index=%d, Count=%d )" x.Index x.Value
                             | MediaCtrlRes.U_Delay( x ) ->
                                 sprintf "Delay( MiliSec=%d )" x
+                            | MediaCtrlRes.U_Wait() ->
+                                sprintf "Wait"
                         this.Output 1 ( sprintf "%s : %s" eventStr actionStr )
+                | _ ->
+                    raise <| Exception "Unexpected error."
+            else
+                m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
+                |> this.Output 0
+        }
+
+    /// <summary>
+    ///  Execute Task List command.
+    /// </summary>
+    /// <param name="cmd">
+    ///  User entered command.
+    /// </param>
+    /// <param name="ss">
+    ///  Editing configuration data.
+    /// </param>
+    /// <param name="cc">
+    ///  Connection to the controller.
+    /// </param>
+    /// <param name="cn">
+    ///  Current node. cn must be LU or media node.
+    /// </param>
+    member private this.Command_TaskList
+        ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
+        : Task =
+        task {
+            let tdnoe = ss.GetAncestorTargetDevice cn
+            let lunode = ss.GetAncestorLogicalUnit cn
+            let! tdlist = cc.GetTargetDeviceProcs()
+
+            if tdnoe.IsNone || lunode.IsNone then
+                raise <| Exception "Unexpected error."
+            elif List.exists ( (=) tdnoe.Value.TargetDeviceID ) tdlist then
+                match cn with
+                | :? ConfNode_DebugMedia as x ->
+                    let mediaidx = ( x :> IMediaNode ).IdentNumber
+                    let! tlist = cc.DebugMedia_GetTaskWaitStatus tdnoe.Value.TargetDeviceID lunode.Value.LUN mediaidx
+                    this.Output 0 ( sprintf "Task wait status( ID : %d )" ( mediaidx_me.toPrim mediaidx ) )
+                    for itr in tlist do
+                        this.Output 1 ( sprintf "%s( TSIH=%d, ITT=%d )" itr.Description itr.TSIH itr.ITT )
+                | _ ->
+                    raise <| Exception "Unexpected error."
+            else
+                m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
+                |> this.Output 0
+        }
+
+    /// <summary>
+    ///  Execute Task Release command.
+    /// </summary>
+    /// <param name="cmd">
+    ///  User entered command.
+    /// </param>
+    /// <param name="ss">
+    ///  Editing configuration data.
+    /// </param>
+    /// <param name="cc">
+    ///  Connection to the controller.
+    /// </param>
+    /// <param name="cn">
+    ///  Current node. cn must be LU or media node.
+    /// </param>
+    member private this.Command_TaskResume
+        ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
+        : Task =
+        task {
+            let tdnoe = ss.GetAncestorTargetDevice cn
+            let lunode = ss.GetAncestorLogicalUnit cn
+            let! tdlist = cc.GetTargetDeviceProcs()
+
+            if tdnoe.IsNone || lunode.IsNone then
+                raise <| Exception "Unexpected error."
+            elif List.exists ( (=) tdnoe.Value.TargetDeviceID ) tdlist then
+                match cn with
+                | :? ConfNode_DebugMedia as x ->
+                    let itt = cmd.DefaultNamedUInt32 "/i" 0u |> itt_me.fromPrim
+                    let tsih = cmd.DefaultNamedUInt32 "/t" 0u |> uint16 |> tsih_me.fromPrim
+                    do! cc.DebugMedia_Resume tdnoe.Value.TargetDeviceID lunode.Value.LUN ( x :> IMediaNode ).IdentNumber tsih itt
+                    this.Output 0 ( sprintf "Task( TSIH=%d, ITT=%d ) resumed." tsih itt )
                 | _ ->
                     raise <| Exception "Unexpected error."
             else

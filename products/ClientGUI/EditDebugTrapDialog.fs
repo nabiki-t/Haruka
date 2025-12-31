@@ -120,7 +120,7 @@ type EditDebugTrapDialog( m_Config : GUIConfig ) as this =
     ///  Selection of EventCombo has changed.
     ///  If entered value is acceptable, OK button will be enebled.
     /// </summary>
-    member private _.OnSelectionChanged_EventCombo() : unit =
+    member private this.OnSelectionChanged_EventCombo() : unit =
         match m_EventCombo.SelectedIndex with
         | 2     // Read
         | 3 ->  // Write
@@ -130,12 +130,13 @@ type EditDebugTrapDialog( m_Config : GUIConfig ) as this =
         | _ ->
             m_StartLBATextBox.IsEnabled <- false
             m_EndLBATextBox.IsEnabled <- false
+        m_OKButton.IsEnabled <- this.Validate()
 
     /// <summary>
     ///  Selection of EventCombo has changed.
     ///  If entered value is acceptable, OK button will be enebled.
     /// </summary>
-    member private _.OnSelectionChanged_ActionCombo() : unit =
+    member private this.OnSelectionChanged_ActionCombo() : unit =
         match m_ActionCombo.SelectedIndex with
         | 0     // ACA
         | 1 ->  // LUReset
@@ -148,6 +149,7 @@ type EditDebugTrapDialog( m_Config : GUIConfig ) as this =
         | _ ->
             m_MessageTextBox.IsEnabled <- false
             m_CountIndexTextBox.IsEnabled <- false
+        m_OKButton.IsEnabled <- this.Validate()
 
     /// <summary>
     ///  Input value of text box has changed.
@@ -209,6 +211,8 @@ type EditDebugTrapDialog( m_Config : GUIConfig ) as this =
                         let r, v = Int32.TryParse m_CountIndexTextBox.Text
                         if r then v else 0
                     MediaCtrlReq.U_Delay( counter )
+                | 4 ->  // Wait
+                    MediaCtrlReq.U_Wait()
                 | _ ->  // This branch is never executed.
                     MediaCtrlReq.U_Count( 0 )
 
@@ -266,13 +270,28 @@ type EditDebugTrapDialog( m_Config : GUIConfig ) as this =
                 true
             | 1 ->  // LUReset
                 true
-            | 2     // Count
-            | 3 ->  // Delay
+            | 2 ->  // Count
                 let t = m_CountIndexTextBox.Text
                 if t.Length = 0 then
                     true
                 else
                     Int32.TryParse t |> fst
+            | 3 ->  // Delay
+                let eventidx = m_EventCombo.SelectedIndex
+                if eventidx = 0 || eventidx = 1 then
+                    false   // Delay action cannot be used with TestUnitReady and ReadCapacity.
+                else
+                    let t = m_CountIndexTextBox.Text
+                    if t.Length = 0 then
+                        true
+                    else
+                        Int32.TryParse t |> fst
+            | 4 ->  // Wait
+                let eventidx = m_EventCombo.SelectedIndex
+                if eventidx = 0 || eventidx = 1 then
+                    false   // Wait action cannot be used with TestUnitReady and ReadCapacity.
+                else
+                    true
             | _ ->
                 false
 

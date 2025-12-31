@@ -48,70 +48,60 @@ type DebugMedia_Test () =
         });
     }
 
-    let AddCounterAction ( num : int ) ( a : MediaCtrlReq.T_Event ) ( media : IMedia ) =
+    let SendMediaCtrl ( media : IMedia ) ( ctrl : MediaCtrlReq.T_Debug ) : MediaCtrlRes.T_Debug =
         let r1 =
-            media.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_AddTrap({
-                        Event = a;
-                        Action = MediaCtrlReq.U_Count( num );
-                    })
-                )
-            )
+            media.MediaControl( MediaCtrlReq.U_Debug( ctrl ) )
             |> Functions.RunTaskSynchronously
         match r1 with
         | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_AddTrapResult( y ) ->
-                Assert.True(( y.Result ))
-                Assert.True(( y.ErrorMessage = "" ))
-            | _ ->
-                Assert.Fail __LINE__
+            x
+        | _ ->
+            Assert.Fail __LINE__
+            MediaCtrlRes.U_CounterValue( 0 )
+
+    let AddTrap ( media : IMedia ) ( t : MediaCtrlReq.T_AddTrap ) =
+        let r1 = SendMediaCtrl media ( MediaCtrlReq.U_AddTrap( t ) )
+        match r1 with
+        | MediaCtrlRes.U_AddTrapResult( y ) ->
+            Assert.True(( y.Result ))
+            Assert.True(( y.ErrorMessage = "" ))
         | _ ->
             Assert.Fail __LINE__
 
+    let AddCounterAction ( num : int ) ( a : MediaCtrlReq.T_Event ) ( media : IMedia ) =
+        AddTrap media ( {
+            Event = a;
+            Action = MediaCtrlReq.U_Count( num );
+        })
 
     let GetAllTraps( media : IMedia ) =
-        let r1 =
-            media.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_GetAllTraps()
-                )
-            )
-            |> Functions.RunTaskSynchronously
-
+        let r1 = SendMediaCtrl media ( MediaCtrlReq.U_GetAllTraps() )
         match r1 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_AllTraps( y ) ->
-                y.Trap
-            | _ ->
-                Assert.Fail __LINE__
-                []
+        | MediaCtrlRes.U_AllTraps( y ) ->
+            y.Trap
         | _ ->
             Assert.Fail __LINE__
             []
 
     let GetCounterValue ( num : int ) ( media : IMedia ) =
         let r1 =
-            media.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_GetCounterValue ( num )
-                )
-            )
-            |> Functions.RunTaskSynchronously
+            SendMediaCtrl media ( MediaCtrlReq.U_GetCounterValue ( num ) )
 
         match r1 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_CounterValue( y ) ->
-                y
-            | _ ->
-                Assert.Fail __LINE__
-                -2
+        | MediaCtrlRes.U_CounterValue( y ) ->
+            y
         | _ ->
             Assert.Fail __LINE__
             -2
+
+    let GetTaskWaitStatus ( media : IMedia ) =
+        let resp3 = SendMediaCtrl media ( MediaCtrlReq.U_GetTaskWaitStatus() )
+        match resp3 with
+        | MediaCtrlRes.U_AllTaskWaitStatus( y ) ->
+            y.TaskWaitStatus
+        | _ ->
+            Assert.Fail __LINE__
+            []
 
 
     do
@@ -293,26 +283,10 @@ type DebugMedia_Test () =
         )
 
         // Add delay action
-        let r1 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_AddTrap({
-                        Event = MediaCtrlReq.U_TestUnitReady();
-                        Action = MediaCtrlReq.U_Delay( 10000 );
-                    })
-                )
-            )
-            |> Functions.RunTaskSynchronously
-        match r1 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_AddTrapResult( y ) ->
-                Assert.True(( y.Result ))
-                Assert.True(( y.ErrorMessage = "" ))
-            | _ ->
-                Assert.Fail __LINE__
-        | _ ->
-            Assert.Fail __LINE__
+        AddTrap dm ({
+            Event = MediaCtrlReq.U_TestUnitReady();
+            Action = MediaCtrlReq.U_Delay( 10000 );
+        })
 
         let startTime = Environment.TickCount64
         let r2 = dm.TestUnitReady ( itt_me.fromPrim 99u ) defaultCommandSource
@@ -423,26 +397,10 @@ type DebugMedia_Test () =
         )
 
         // Add delay action
-        let r1 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_AddTrap({
-                        Event = MediaCtrlReq.U_ReadCapacity();
-                        Action = MediaCtrlReq.U_Delay( 10000 );
-                    })
-                )
-            )
-            |> Functions.RunTaskSynchronously
-        match r1 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_AddTrapResult( y ) ->
-                Assert.True(( y.Result ))
-                Assert.True(( y.ErrorMessage = "" ))
-            | _ ->
-                Assert.Fail __LINE__
-        | _ ->
-            Assert.Fail __LINE__
+        AddTrap dm ({
+            Event = MediaCtrlReq.U_ReadCapacity();
+            Action = MediaCtrlReq.U_Delay( 10000 );
+        })
 
         let startTime = Environment.TickCount64
         let r2 = dm.ReadCapacity ( itt_me.fromPrim 99u ) defaultCommandSource
@@ -645,26 +603,10 @@ type DebugMedia_Test () =
         )
 
         // Add delay action
-        let r1 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_AddTrap({
-                        Event = MediaCtrlReq.U_Read( { StartLBA = 0UL; EndLBA = UInt64.MaxValue; } );
-                        Action = MediaCtrlReq.U_Delay( 1000 );
-                    })
-                )
-            )
-            |> Functions.RunTaskSynchronously
-        match r1 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_AddTrapResult( y ) ->
-                Assert.True(( y.Result ))
-                Assert.True(( y.ErrorMessage = "" ))
-            | _ ->
-                Assert.Fail __LINE__
-        | _ ->
-            Assert.Fail __LINE__
+        AddTrap dm ({
+            Event = MediaCtrlReq.U_Read( { StartLBA = 0UL; EndLBA = UInt64.MaxValue; } );
+            Action = MediaCtrlReq.U_Delay( 1000 );
+        })
 
         let startTime = Environment.TickCount64
         let buf = Array.zeroCreate< byte >( int Constants.MEDIA_BLOCK_SIZE * 1 )
@@ -870,26 +812,10 @@ type DebugMedia_Test () =
         )
 
         // Add delay action
-        let r1 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_AddTrap({
-                        Event = MediaCtrlReq.U_Write( { StartLBA = 0UL; EndLBA = UInt64.MaxValue; } );
-                        Action = MediaCtrlReq.U_Delay( 1000 );
-                    })
-                )
-            )
-            |> Functions.RunTaskSynchronously
-        match r1 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_AddTrapResult( y ) ->
-                Assert.True(( y.Result ))
-                Assert.True(( y.ErrorMessage = "" ))
-            | _ ->
-                Assert.Fail __LINE__
-        | _ ->
-            Assert.Fail __LINE__
+        AddTrap dm ({
+            Event = MediaCtrlReq.U_Write( { StartLBA = 0UL; EndLBA = UInt64.MaxValue; } );
+            Action = MediaCtrlReq.U_Delay( 1000 );
+        })
 
         let startTime = Environment.TickCount64
         let buf = Array.zeroCreate< byte >( int Constants.MEDIA_BLOCK_SIZE * 10 )
@@ -997,26 +923,10 @@ type DebugMedia_Test () =
         )
 
         // Add delay action
-        let r1 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_AddTrap({
-                        Event = MediaCtrlReq.U_Format();
-                        Action = MediaCtrlReq.U_Delay( 1000 );
-                    })
-                )
-            )
-            |> Functions.RunTaskSynchronously
-        match r1 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_AddTrapResult( y ) ->
-                Assert.True(( y.Result ))
-                Assert.True(( y.ErrorMessage = "" ))
-            | _ ->
-                Assert.Fail __LINE__
-        | _ ->
-            Assert.Fail __LINE__
+        AddTrap dm ({
+            Event = MediaCtrlReq.U_Format();
+            Action = MediaCtrlReq.U_Delay( 1000 );
+        })
 
         let startTime = Environment.TickCount64
         dm.Format ( itt_me.fromPrim 99u ) defaultCommandSource
@@ -1190,26 +1100,10 @@ type DebugMedia_Test () =
         stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
 
-        let r1 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_AddTrap({
-                        Event = MediaCtrlReq.U_Format();
-                        Action = MediaCtrlReq.U_ACA( "zzzzzz" );
-                    })
-                )
-            )
-            |> Functions.RunTaskSynchronously
-        match r1 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_AddTrapResult( y ) ->
-                Assert.True(( y.Result ))
-                Assert.True(( y.ErrorMessage = "" ))
-            | _ ->
-                Assert.Fail __LINE__
-        | _ ->
-            Assert.Fail __LINE__
+        AddTrap dm ({
+            Event = MediaCtrlReq.U_Format();
+            Action = MediaCtrlReq.U_ACA( "zzzzzz" );
+        })
 
         let r2 = GetAllTraps dm
         Assert.True(( r2.Length = 1 ))
@@ -1227,26 +1121,10 @@ type DebugMedia_Test () =
         stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
 
-        let r1 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_AddTrap({
-                        Event = MediaCtrlReq.U_Format();
-                        Action = MediaCtrlReq.U_LUReset( "yyyyy" );
-                    })
-                )
-            )
-            |> Functions.RunTaskSynchronously
-        match r1 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_AddTrapResult( y ) ->
-                Assert.True(( y.Result ))
-                Assert.True(( y.ErrorMessage = "" ))
-            | _ ->
-                Assert.Fail __LINE__
-        | _ ->
-            Assert.Fail __LINE__
+        AddTrap dm ({
+            Event = MediaCtrlReq.U_Format();
+            Action = MediaCtrlReq.U_LUReset( "yyyyy" );
+        })
 
         let r2 = GetAllTraps dm
         Assert.True(( r2.Length = 1 ))
@@ -1283,26 +1161,10 @@ type DebugMedia_Test () =
         stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
 
-        let r1 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_AddTrap({
-                        Event = MediaCtrlReq.U_Format();
-                        Action = MediaCtrlReq.U_Delay( 99 );
-                    })
-                )
-            )
-            |> Functions.RunTaskSynchronously
-        match r1 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_AddTrapResult( y ) ->
-                Assert.True(( y.Result ))
-                Assert.True(( y.ErrorMessage = "" ))
-            | _ ->
-                Assert.Fail __LINE__
-        | _ ->
-            Assert.Fail __LINE__
+        AddTrap dm ({
+            Event = MediaCtrlReq.U_Format();
+            Action = MediaCtrlReq.U_Delay( 99 );
+        })
 
         let r2 = GetAllTraps dm
         Assert.True(( r2.Length = 1 ))
@@ -1324,24 +1186,16 @@ type DebugMedia_Test () =
             AddCounterAction i ( MediaCtrlReq.U_Format() ) dm
 
         let r1 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_AddTrap({
-                        Event = MediaCtrlReq.U_Format();
-                        Action = MediaCtrlReq.U_Count( 1 );
-                    })
-                )
+            SendMediaCtrl dm (
+                MediaCtrlReq.U_AddTrap({
+                    Event = MediaCtrlReq.U_Format();
+                    Action = MediaCtrlReq.U_Count( 1 );
+                })
             )
-            |> Functions.RunTaskSynchronously
-
         match r1 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_AddTrapResult( y ) ->
-                Assert.False(( y.Result ))
-                Assert.True(( y.ErrorMessage.StartsWith "The number of registered traps has exceeded the limit" ))
-            | _ ->
-                Assert.Fail __LINE__
+        | MediaCtrlRes.U_AddTrapResult( y ) ->
+            Assert.False(( y.Result ))
+            Assert.True(( y.ErrorMessage.StartsWith "The number of registered traps has exceeded the limit" ))
         | _ ->
             Assert.Fail __LINE__
 
@@ -1356,30 +1210,13 @@ type DebugMedia_Test () =
         stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
 
-        let r1 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_AddTrap({
-                        Event = MediaCtrlReq.U_Read({
-                            StartLBA = 1UL;
-                            EndLBA = 2UL;
-                        });
-                        Action = MediaCtrlReq.U_Count( 1 );
-                    })
-                )
-            )
-            |> Functions.RunTaskSynchronously
-
-        match r1 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_AddTrapResult( y ) ->
-                Assert.True(( y.Result ))
-                Assert.True(( y.ErrorMessage = "" ))
-            | _ ->
-                Assert.Fail __LINE__
-        | _ ->
-            Assert.Fail __LINE__
+        AddTrap dm ({
+            Event = MediaCtrlReq.U_Read({
+                StartLBA = 1UL;
+                EndLBA = 2UL;
+            });
+            Action = MediaCtrlReq.U_Count( 1 );
+        })
 
         let r2 = GetAllTraps dm
         Assert.True(( r2.Length = 1 ))
@@ -1406,30 +1243,13 @@ type DebugMedia_Test () =
         stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
 
-        let r1 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_AddTrap({
-                        Event = MediaCtrlReq.U_Read({
-                            StartLBA = 1UL;
-                            EndLBA = 1UL;
-                        });
-                        Action = MediaCtrlReq.U_Count( 1 );
-                    })
-                )
-            )
-            |> Functions.RunTaskSynchronously
-
-        match r1 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_AddTrapResult( y ) ->
-                Assert.True(( y.Result ))
-                Assert.True(( y.ErrorMessage = "" ))
-            | _ ->
-                Assert.Fail __LINE__
-        | _ ->
-            Assert.Fail __LINE__
+        AddTrap dm ({
+            Event = MediaCtrlReq.U_Read({
+                StartLBA = 1UL;
+                EndLBA = 1UL;
+            });
+            Action = MediaCtrlReq.U_Count( 1 );
+        })
 
         let r2 = GetAllTraps dm
         Assert.True(( r2.Length = 1 ))
@@ -1457,27 +1277,19 @@ type DebugMedia_Test () =
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
 
         let r1 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_AddTrap({
-                        Event = MediaCtrlReq.U_Read({
-                            StartLBA = 2UL;
-                            EndLBA = 1UL;
-                        });
-                        Action = MediaCtrlReq.U_Count( 1 );
-                    })
-                )
+            SendMediaCtrl dm (
+                MediaCtrlReq.U_AddTrap({
+                    Event = MediaCtrlReq.U_Read({
+                        StartLBA = 2UL;
+                        EndLBA = 1UL;
+                    });
+                    Action = MediaCtrlReq.U_Count( 1 );
+                })
             )
-            |> Functions.RunTaskSynchronously
-
         match r1 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_AddTrapResult( y ) ->
-                Assert.False(( y.Result ))
-                Assert.True(( y.ErrorMessage.StartsWith "Invalid value" ))
-            | _ ->
-                Assert.Fail __LINE__
+        | MediaCtrlRes.U_AddTrapResult( y ) ->
+            Assert.False(( y.Result ))
+            Assert.True(( y.ErrorMessage.StartsWith "Invalid value" ))
         | _ ->
             Assert.Fail __LINE__
 
@@ -1492,30 +1304,13 @@ type DebugMedia_Test () =
         stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
 
-        let r1 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_AddTrap({
-                        Event = MediaCtrlReq.U_Write({
-                            StartLBA = 1UL;
-                            EndLBA = 2UL;
-                        });
-                        Action = MediaCtrlReq.U_Count( 1 );
-                    })
-                )
-            )
-            |> Functions.RunTaskSynchronously
-
-        match r1 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_AddTrapResult( y ) ->
-                Assert.True(( y.Result ))
-                Assert.True(( y.ErrorMessage = "" ))
-            | _ ->
-                Assert.Fail __LINE__
-        | _ ->
-            Assert.Fail __LINE__
+        AddTrap dm ({
+            Event = MediaCtrlReq.U_Write({
+                StartLBA = 1UL;
+                EndLBA = 2UL;
+            });
+            Action = MediaCtrlReq.U_Count( 1 );
+        })
 
         let r2 = GetAllTraps dm
         Assert.True(( r2.Length = 1 ))
@@ -1542,30 +1337,13 @@ type DebugMedia_Test () =
         stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
 
-        let r1 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_AddTrap({
-                        Event = MediaCtrlReq.U_Write({
-                            StartLBA = 1UL;
-                            EndLBA = 1UL;
-                        });
-                        Action = MediaCtrlReq.U_Count( 1 );
-                    })
-                )
-            )
-            |> Functions.RunTaskSynchronously
-
-        match r1 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_AddTrapResult( y ) ->
-                Assert.True(( y.Result ))
-                Assert.True(( y.ErrorMessage = "" ))
-            | _ ->
-                Assert.Fail __LINE__
-        | _ ->
-            Assert.Fail __LINE__
+        AddTrap dm ({
+            Event = MediaCtrlReq.U_Write({
+                StartLBA = 1UL;
+                EndLBA = 1UL;
+            });
+            Action = MediaCtrlReq.U_Count( 1 );
+        })
 
         let r2 = GetAllTraps dm
         Assert.True(( r2.Length = 1 ))
@@ -1593,27 +1371,19 @@ type DebugMedia_Test () =
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
 
         let r1 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_AddTrap({
-                        Event = MediaCtrlReq.U_Write({
-                            StartLBA = 2UL;
-                            EndLBA = 1UL;
-                        });
-                        Action = MediaCtrlReq.U_Count( 1 );
-                    })
-                )
+            SendMediaCtrl dm (
+                MediaCtrlReq.U_AddTrap({
+                    Event = MediaCtrlReq.U_Write({
+                        StartLBA = 2UL;
+                        EndLBA = 1UL;
+                    });
+                    Action = MediaCtrlReq.U_Count( 1 );
+                })
             )
-            |> Functions.RunTaskSynchronously
-
         match r1 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_AddTrapResult( y ) ->
-                Assert.False(( y.Result ))
-                Assert.True(( y.ErrorMessage.StartsWith "Invalid value" ))
-            | _ ->
-                Assert.Fail __LINE__
+        | MediaCtrlRes.U_AddTrapResult( y ) ->
+            Assert.False(( y.Result ))
+            Assert.True(( y.ErrorMessage.StartsWith "Invalid value" ))
         | _ ->
             Assert.Fail __LINE__
 
@@ -1628,27 +1398,10 @@ type DebugMedia_Test () =
         stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
 
-        let r1 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_AddTrap({
-                        Event = MediaCtrlReq.U_Format();
-                        Action = MediaCtrlReq.U_Count( 1 );
-                    })
-                )
-            )
-            |> Functions.RunTaskSynchronously
-
-        match r1 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_AddTrapResult( y ) ->
-                Assert.True(( y.Result ))
-                Assert.True(( y.ErrorMessage = "" ))
-            | _ ->
-                Assert.Fail __LINE__
-        | _ ->
-            Assert.Fail __LINE__
+        AddTrap dm ({
+            Event = MediaCtrlReq.U_Format();
+            Action = MediaCtrlReq.U_Count( 1 );
+        })
 
         let r2 = GetAllTraps dm
         Assert.True(( r2.Length = 1 ))
@@ -1676,27 +1429,10 @@ type DebugMedia_Test () =
         stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
 
-        let r1 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_AddTrap({
-                        Event = MediaCtrlReq.U_Format();
-                        Action = MediaCtrlReq.U_ACA( "aaa" );
-                    })
-                )
-            )
-            |> Functions.RunTaskSynchronously
-
-        match r1 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_AddTrapResult( y ) ->
-                Assert.True(( y.Result ))
-                Assert.True(( y.ErrorMessage = "" ))
-            | _ ->
-                Assert.Fail __LINE__
-        | _ ->
-            Assert.Fail __LINE__
+        AddTrap dm ({
+            Event = MediaCtrlReq.U_Format();
+            Action = MediaCtrlReq.U_ACA( "aaa" );
+        })
 
         let r2 = GetAllTraps dm
         Assert.True(( r2.Length = 1 ))
@@ -1726,22 +1462,11 @@ type DebugMedia_Test () =
         let r1 = GetAllTraps dm
         Assert.True(( r1.Length = 0 ))
 
-        let r2 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_ClearTraps()
-                )
-            )
-            |> Functions.RunTaskSynchronously
-
+        let r2 = SendMediaCtrl dm ( MediaCtrlReq.U_ClearTraps() )
         match r2 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_ClearTrapsResult( y ) ->
-                Assert.True(( y.Result ))
-                Assert.True(( y.ErrorMessage = "" ))
-            | _ ->
-                Assert.Fail __LINE__
+        | MediaCtrlRes.U_ClearTrapsResult( y ) ->
+            Assert.True(( y.Result ))
+            Assert.True(( y.ErrorMessage = "" ))
         | _ ->
             Assert.Fail __LINE__
 
@@ -1763,22 +1488,11 @@ type DebugMedia_Test () =
 
         Assert.True(( 0 = GetCounterValue 1 dm ))
 
-        let r2 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_ClearTraps()
-                )
-            )
-            |> Functions.RunTaskSynchronously
-
+        let r2 = SendMediaCtrl dm ( MediaCtrlReq.U_ClearTraps() )
         match r2 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_ClearTrapsResult( y ) ->
-                Assert.True(( y.Result ))
-                Assert.True(( y.ErrorMessage = "" ))
-            | _ ->
-                Assert.Fail __LINE__
+        | MediaCtrlRes.U_ClearTrapsResult( y ) ->
+            Assert.True(( y.Result ))
+            Assert.True(( y.ErrorMessage = "" ))
         | _ ->
             Assert.Fail __LINE__
 
@@ -1800,27 +1514,16 @@ type DebugMedia_Test () =
         let r1 = GetAllTraps dm
         Assert.True(( r1.Length = Constants.DEBUG_MEDIA_MAX_TRAP_COUNT ))
 
-        let r2 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_ClearTraps()
-                )
-            )
-            |> Functions.RunTaskSynchronously
-
+        let r2 = SendMediaCtrl dm ( MediaCtrlReq.U_ClearTraps() )
         match r2 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_ClearTrapsResult( y ) ->
-                Assert.True(( y.Result ))
-                Assert.True(( y.ErrorMessage = "" ))
-            | _ ->
-                Assert.Fail __LINE__
+        | MediaCtrlRes.U_ClearTrapsResult( y ) ->
+            Assert.True(( y.Result ))
+            Assert.True(( y.ErrorMessage = "" ))
         | _ ->
             Assert.Fail __LINE__
 
-        let r2 = GetAllTraps dm
-        Assert.True(( r2.Length = 0 ))
+        let r3 = GetAllTraps dm
+        Assert.True(( r3.Length = 0 ))
 
     [<Fact>]
     member _.MediaControl_GetCounterValue_001() =
@@ -1833,21 +1536,10 @@ type DebugMedia_Test () =
         let r1 = GetAllTraps dm
         Assert.True(( r1.Length = 0 ))
 
-        let r2 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_GetCounterValue( 99 )
-                )
-            )
-            |> Functions.RunTaskSynchronously
-
+        let r2 = SendMediaCtrl dm ( MediaCtrlReq.U_GetCounterValue( 99 ) )
         match r2 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_CounterValue( y ) ->
-                Assert.True(( y = -1 ))
-            | _ ->
-                Assert.Fail __LINE__
+        | MediaCtrlRes.U_CounterValue( y ) ->
+            Assert.True(( y = -1 ))
         | _ ->
             Assert.Fail __LINE__
 
@@ -1864,21 +1556,10 @@ type DebugMedia_Test () =
         let r1 = GetAllTraps dm
         Assert.True(( r1.Length = 1 ))
 
-        let r2 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_GetCounterValue( 99 )
-                )
-            )
-            |> Functions.RunTaskSynchronously
-
+        let r2 = SendMediaCtrl dm ( MediaCtrlReq.U_GetCounterValue( 99 ) )
         match r2 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_CounterValue( y ) ->
-                Assert.True(( y = -1 ))
-            | _ ->
-                Assert.Fail __LINE__
+        | MediaCtrlRes.U_CounterValue( y ) ->
+            Assert.True(( y = -1 ))
         | _ ->
             Assert.Fail __LINE__
 
@@ -1895,21 +1576,10 @@ type DebugMedia_Test () =
         let r1 = GetAllTraps dm
         Assert.True(( r1.Length = 1 ))
 
-        let r2 =
-            dm.MediaControl(
-                MediaCtrlReq.U_Debug(
-                    MediaCtrlReq.U_GetCounterValue( 88 )
-                )
-            )
-            |> Functions.RunTaskSynchronously
-
+        let r2 = SendMediaCtrl dm ( MediaCtrlReq.U_GetCounterValue( 88 ) )
         match r2 with
-        | MediaCtrlRes.U_Debug( x ) ->
-            match x with
-            | MediaCtrlRes.U_CounterValue( y ) ->
-                Assert.True(( y = 0 ))
-            | _ ->
-                Assert.Fail __LINE__
+        | MediaCtrlRes.U_CounterValue( y ) ->
+            Assert.True(( y = 0 ))
         | _ ->
             Assert.Fail __LINE__
 
@@ -1925,16 +1595,10 @@ type DebugMedia_Test () =
             cnt <- cnt + 1
         })
 
-        dm.MediaControl(
-            MediaCtrlReq.U_Debug(
-                MediaCtrlReq.U_AddTrap({
-                    Event = MediaCtrlReq.U_Format();
-                    Action = MediaCtrlReq.U_ACA( "abc" );
-                })
-            )
-        )
-        |> Functions.RunTaskSynchronously
-        |> ignore
+        AddTrap dm ({
+            Event = MediaCtrlReq.U_Format();
+            Action = MediaCtrlReq.U_ACA( "abc" );
+        })
 
         let r2 = GetAllTraps dm
         Assert.True(( r2.Length = 1 ))
@@ -1960,16 +1624,10 @@ type DebugMedia_Test () =
             cnt <- cnt + 1
         })
 
-        dm.MediaControl(
-            MediaCtrlReq.U_Debug(
-                MediaCtrlReq.U_AddTrap({
-                    Event = MediaCtrlReq.U_Format();
-                    Action = MediaCtrlReq.U_LUReset( "abc" );
-                })
-            )
-        )
-        |> Functions.RunTaskSynchronously
-        |> ignore
+        AddTrap dm ({
+            Event = MediaCtrlReq.U_Format();
+            Action = MediaCtrlReq.U_LUReset( "abc" );
+        })
 
         let r2 = GetAllTraps dm
         Assert.True(( r2.Length = 1 ))
@@ -1983,4 +1641,275 @@ type DebugMedia_Test () =
         | _ as x ->
             Assert.True(( x.Message = "abc" ))
 
+    [<Fact>]
+    member _.MediaControl_GetTaskWaitStatus_001() =
+        let k1 = new HKiller() :> IKiller
+        let stat_stub = new CStatus_Stub()
+        let stub_media = new CMedia_Stub()
+        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
 
+        let resp = GetTaskWaitStatus dm
+        Assert.True(( resp.Length = 0 ))
+
+    [<Fact>]
+    member _.MediaControl_GetTaskWaitStatus_002() =
+        let k1 = new HKiller() :> IKiller
+        let stat_stub = new CStatus_Stub()
+        let stub_media = new CMedia_Stub()
+        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stub_media.p_Format <- ( fun _ _ -> Task.FromResult () )
+
+        AddTrap dm ({
+            Event = MediaCtrlReq.U_Format();
+            Action = MediaCtrlReq.U_Wait()
+        })
+
+        let resp2 = SendMediaCtrl dm (
+            MediaCtrlReq.U_Resume({
+                TSIH = tsih_me.fromPrim 1us;
+                ITT = itt_me.fromPrim 2u
+            })
+        )
+        match resp2 with
+        | MediaCtrlRes.U_ResumeResult( y ) ->
+            Assert.False(( y.Result ))
+            Assert.True(( y.ErrorMessage = "Specified task with TSIH does not exist." ))
+        | _ ->
+            Assert.Fail __LINE__
+
+        let resp3 = GetTaskWaitStatus dm
+        Assert.True(( resp3.Length = 0 ))
+
+    [<Fact>]
+    member _.MediaControl_GetTaskWaitStatus_003() =
+        let k1 = new HKiller() :> IKiller
+        let stat_stub = new CStatus_Stub()
+        let stub_media = new CMedia_Stub()
+        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stub_media.p_Format <- ( fun _ _ -> Task.FromResult () )
+
+        AddTrap dm ({
+            Event = MediaCtrlReq.U_Format();
+            Action = MediaCtrlReq.U_Wait()
+        })
+
+        [|
+            fun () -> task {
+                do! dm.Format ( itt_me.fromPrim 1u ) defaultCommandSource
+            };
+            fun () -> task {
+                while ( GetTaskWaitStatus dm ).Length <= 0 do
+                    do! Task.Delay 10
+                let resp3 = GetTaskWaitStatus dm
+                Assert.True(( resp3.Length = 1 ))
+                Assert.True(( resp3.[0].TSIH = tsih_me.fromPrim 0us ))
+                Assert.True(( resp3.[0].ITT = itt_me.fromPrim 1u ))
+                Assert.True(( resp3.[0].Description = "Format" ))
+
+                let resp2 = SendMediaCtrl dm (
+                    MediaCtrlReq.U_Resume({
+                        TSIH = tsih_me.fromPrim 1us;    // TSIH missing
+                        ITT = itt_me.fromPrim 1u
+                    })
+                )
+                match resp2 with
+                | MediaCtrlRes.U_ResumeResult( y ) ->
+                    Assert.False(( y.Result ))
+                    Assert.True(( y.ErrorMessage = "Specified task with TSIH does not exist." ))
+                | _ ->
+                    Assert.Fail __LINE__
+
+                let resp3 = SendMediaCtrl dm (
+                    MediaCtrlReq.U_Resume({
+                        TSIH = tsih_me.fromPrim 0us;
+                        ITT = itt_me.fromPrim 1u
+                    })
+                )
+                match resp3 with
+                | MediaCtrlRes.U_ResumeResult( y ) ->
+                    Assert.True(( y.Result ))
+                    Assert.True(( y.ErrorMessage = "" ))
+                | _ ->
+                    Assert.Fail __LINE__
+            };
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+    [<Fact>]
+    member _.MediaControl_GetTaskWaitStatus_004() =
+        let k1 = new HKiller() :> IKiller
+        let stat_stub = new CStatus_Stub()
+        let stub_media = new CMedia_Stub()
+        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stub_media.p_Format <- ( fun _ _ -> Task.FromResult () )
+
+        AddTrap dm ({
+            Event = MediaCtrlReq.U_Format();
+            Action = MediaCtrlReq.U_Wait()
+        })
+
+        [|
+            fun () -> task {
+                do! dm.Format ( itt_me.fromPrim 1u ) defaultCommandSource
+            };
+            fun () -> task {
+                while ( GetTaskWaitStatus dm ).Length <= 0 do
+                    do! Task.Delay 10
+                let resp3 = GetTaskWaitStatus dm
+                Assert.True(( resp3.Length = 1 ))
+                Assert.True(( resp3.[0].TSIH = tsih_me.fromPrim 0us ))
+                Assert.True(( resp3.[0].ITT = itt_me.fromPrim 1u ))
+                Assert.True(( resp3.[0].Description = "Format" ))
+
+                let resp2 = SendMediaCtrl dm (
+                    MediaCtrlReq.U_Resume({
+                        TSIH = tsih_me.fromPrim 0us;
+                        ITT = itt_me.fromPrim 2u    // ITT missing
+                    })
+                )
+                match resp2 with
+                | MediaCtrlRes.U_ResumeResult( y ) ->
+                    Assert.False(( y.Result ))
+                    Assert.True(( y.ErrorMessage = "Specified task with ITT does not exist." ))
+                | _ ->
+                    Assert.Fail __LINE__
+
+                let resp3 = SendMediaCtrl dm (
+                    MediaCtrlReq.U_Resume({
+                        TSIH = tsih_me.fromPrim 0us;
+                        ITT = itt_me.fromPrim 1u
+                    })
+                )
+                match resp3 with
+                | MediaCtrlRes.U_ResumeResult( y ) ->
+                    Assert.True(( y.Result ))
+                    Assert.True(( y.ErrorMessage = "" ))
+                | _ ->
+                    Assert.Fail __LINE__
+
+            };
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+    [<Fact>]
+    member _.MediaControl_GetTaskWaitStatus_005() =
+        let k1 = new HKiller() :> IKiller
+        let stat_stub = new CStatus_Stub()
+        let stub_media = new CMedia_Stub()
+        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stub_media.p_Format <- ( fun _ _ -> Task.FromResult () )
+
+        AddTrap dm ({
+            Event = MediaCtrlReq.U_Format();
+            Action = MediaCtrlReq.U_Wait()
+        })
+
+        [|
+            fun () -> task {
+                do! dm.Format ( itt_me.fromPrim 1u ) defaultCommandSource
+
+                let resp5 = GetTaskWaitStatus dm
+                Assert.True(( resp5.Length = 0 ))
+            };
+            fun () -> task {
+                while ( GetTaskWaitStatus dm ).Length <= 0 do
+                    do! Task.Delay 10
+                let resp3 = GetTaskWaitStatus dm
+                Assert.True(( resp3.Length = 1 ))
+                Assert.True(( resp3.[0].TSIH = tsih_me.fromPrim 0us ))
+                Assert.True(( resp3.[0].ITT = itt_me.fromPrim 1u ))
+                Assert.True(( resp3.[0].Description = "Format" ))
+
+                let resp2 = SendMediaCtrl dm (
+                    MediaCtrlReq.U_Resume({
+                        TSIH = tsih_me.fromPrim 0us;
+                        ITT = itt_me.fromPrim 1u
+                    })
+                )
+                match resp2 with
+                | MediaCtrlRes.U_ResumeResult( y ) ->
+                    Assert.True(( y.Result ))
+                    Assert.True(( y.ErrorMessage = "" ))
+                | _ ->
+                    Assert.Fail __LINE__
+
+                while ( GetTaskWaitStatus dm ).Length > 0 do
+                    do! Task.Delay 10
+
+                let resp4 = GetTaskWaitStatus dm
+                Assert.True(( resp4.Length = 0 ))
+            };
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+    [<Fact>]
+    member _.MediaControl_GetTaskWaitStatus_006() =
+        let k1 = new HKiller() :> IKiller
+        let stat_stub = new CStatus_Stub()
+        let stub_media = new CMedia_Stub()
+        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stub_media.p_Format <- ( fun _ _ -> Task.FromResult () )
+
+        AddTrap dm ({
+            Event = MediaCtrlReq.U_Format();
+            Action = MediaCtrlReq.U_Wait()
+        })
+
+        [|
+            for i = 1 to Constants.DEBUG_MEDIA_MAX_TASK_WAIT_STATUS do
+                fun () -> task {
+                    do! dm.Format ( itt_me.fromPrim ( uint32 i ) ) defaultCommandSource
+                };
+            fun () -> task {
+                while ( GetTaskWaitStatus dm ).Length < Constants.DEBUG_MEDIA_MAX_TASK_WAIT_STATUS do
+                    do! Task.Delay 10
+                let resp3 = GetTaskWaitStatus dm
+                Assert.True(( resp3.Length = Constants.DEBUG_MEDIA_MAX_TASK_WAIT_STATUS ))
+
+                let resp4 = SendMediaCtrl dm ( MediaCtrlReq.U_ClearTraps() )
+                match resp4 with
+                | MediaCtrlRes.U_ClearTrapsResult( y ) ->
+                    Assert.True(( y.Result ))
+                    Assert.True(( y.ErrorMessage = "" ))
+                | _ ->
+                    Assert.Fail __LINE__
+
+                let resp5 = GetTaskWaitStatus dm
+                Assert.True(( resp5.Length = Constants.DEBUG_MEDIA_MAX_TASK_WAIT_STATUS ))
+
+                for i = 1 to Constants.DEBUG_MEDIA_MAX_TASK_WAIT_STATUS do
+                    let resp2 = SendMediaCtrl dm (
+                        MediaCtrlReq.U_Resume({
+                            TSIH = tsih_me.fromPrim 0us;
+                            ITT = itt_me.fromPrim ( uint32 i );
+                        })
+                    )
+                    match resp2 with
+                    | MediaCtrlRes.U_ResumeResult( y ) ->
+                        Assert.True(( y.Result ))
+                        Assert.True(( y.ErrorMessage = "" ))
+                    | _ ->
+                        Assert.Fail __LINE__
+
+                while ( GetTaskWaitStatus dm ).Length > 0 do
+                    do! Task.Delay 10
+
+                let resp4 = GetTaskWaitStatus dm
+                Assert.True(( resp4.Length = 0 ))
+            };
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore

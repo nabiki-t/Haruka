@@ -75,6 +75,8 @@ type CommandVarb =
     | Add_Trap
     | Clear_Trap
     | Traps
+    | Task_List
+    | Task_Resume
 
 //=============================================================================
 // Class implementation
@@ -552,7 +554,7 @@ type CommandReader () =
             ( "/e", CRVM_Regex( Regex( "TestUnitReady|ReadCapacity|Read|Write|Format", RegexOptions.IgnoreCase ) ) );
             ( "/slba", CRV_uint64( 0UL, UInt64.MaxValue ) );
             ( "/elba", CRV_uint64( 0UL, UInt64.MaxValue ) );
-            ( "/a", CRVM_Regex( Regex( "ACA|LUReset|Count|Delay", RegexOptions.IgnoreCase ) ) );
+            ( "/a", CRVM_Regex( Regex( "ACA|LUReset|Count|Delay|Wait", RegexOptions.IgnoreCase ) ) );
             ( "/msg", CRV_String( 256 ) );
             ( "/idx", CRV_int32( Int32.MinValue, Int32.MaxValue ) );
             ( "/ms", CRV_int32( 0, Int32.MaxValue ) );
@@ -577,6 +579,27 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+    }
+
+    /// "task list" command for debug media rule.
+    static member CmdRule_task_list : AcceptableCommand< CommandVarb > = {
+        Command = [| "TASK"; "LIST"; |];
+        Varb = CommandVarb.Task_List;
+        NamedArgs = Array.empty;
+        ValuelessArgs = Array.empty;
+        NamelessArgs = Array.empty;
+    }
+
+    /// "task resume" command for debug media rule.
+    static member CmdRule_task_resume : AcceptableCommand< CommandVarb > = {
+        Command = [| "TASK"; "RESUME"; |];
+        Varb = CommandVarb.Task_Resume;
+        NamedArgs = [|
+            ( "/t", CRVM_uint32( 0u, uint32 UInt16.MaxValue ) );
+            ( "/i", CRVM_uint32( 0u, UInt32.MaxValue ) );
+        |];
+        ValuelessArgs = Array.empty;
+        NamelessArgs = [||];
     }
 
     /// <summary>

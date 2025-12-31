@@ -176,7 +176,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
                     )
                     |> ignore
 
-                m_RegistWaiter.Notify itt edtl
+                m_RegistWaiter.Notify( itt, edtl )
                 return itt
             else
                 let! itt, _ = m_ISCIInitiator.SendSCSICommandPDU m_CID BitI.F BitF.T rFlag wFlag att lun edtl cdb PooledBuffer.Empty 0u
@@ -189,7 +189,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
                 )
                 |> ignore
 
-                m_RegistWaiter.Notify itt edtl
+                m_RegistWaiter.Notify( itt, edtl )
                 return itt
         }
 
@@ -1660,7 +1660,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
 
                     | :? NOPInPDU as x ->
                         if Volatile.Read &m_ExitFlg then
-                            m_ReceiveWaiter.Notify x.InitiatorTaskTag ( TaskResult.NOP )
+                            m_ReceiveWaiter.Notify( x.InitiatorTaskTag, TaskResult.NOP )
                             return false
                         else
                             return true
@@ -1732,7 +1732,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
                         ResidualCount.Underflow( pdu.ResidualCount );
             }
             pdu.DataInBuffer.Return()
-            m_ReceiveWaiter.Notify itt ( TaskResult.SCSI( r ) )
+            m_ReceiveWaiter.Notify( itt, TaskResult.SCSI( r ) )
             return true
         }
 
@@ -1763,7 +1763,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
             m_InBuffer.Update ( fun old -> old.Remove itt )
             |> ignore
 
-            m_ReceiveWaiter.Notify itt ( TaskResult.TMF( pdu.Response ) )
+            m_ReceiveWaiter.Notify( itt, TaskResult.TMF( pdu.Response ) )
             return true
         }
 

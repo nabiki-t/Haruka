@@ -1682,4 +1682,82 @@ type CtrlConnection(
                     raise <| RequestError( y )
         }
 
+    /// <summary>
+    ///  Send GetTaskWaitStatus media control request to specified debug media.
+    /// </summary>
+    /// <param name="tdid">
+    ///  Target device ID that specifies the target device to receive the request.
+    /// </param>
+    /// <param name="lun">
+    ///  Specify the LU to which the debug media belongs.
+    /// </param>
+    /// <param name="mediaid">
+    ///  Specifies who to send the message to. Must be debug media.
+    /// </param>
+    /// <returns>
+    ///  Registared traps.
+    /// </returns>
+    abstract DebugMedia_GetTaskWaitStatus : tdid:TDID_T -> lun:LUN_T -> mediaid:MEDIAIDX_T -> Task< MediaCtrlRes.T_TaskWaitStatus list >
+    default this.DebugMedia_GetTaskWaitStatus tdid lun mediaid =
+        task {
+            let reqData = MediaCtrlReq.U_Debug(
+                MediaCtrlReq.U_GetTaskWaitStatus()
+            )
+            let! resData = this.SendMediaControlRequest tdid lun mediaid reqData
+            return
+                match resData with
+                | MediaCtrlRes.U_Debug( y ) ->
+                    match y with
+                    | MediaCtrlRes.U_AllTaskWaitStatus( z ) ->
+                        z.TaskWaitStatus
+                    | _ ->
+                        raise <| RequestError( m_MessageTable.GetMessage( "ERRMSG_UNEXPECTED_RESPONSE", "DebugMedia_GetTaskWaitStatus" ) )
+                | MediaCtrlRes.U_Unexpected( y ) ->
+                    raise <| RequestError( y )
+        }
+
+    /// <summary>
+    ///  Send Release media control request to specified debug media.
+    /// </summary>
+    /// <param name="tdid">
+    ///  Target device ID that specifies the target device to receive the request.
+    /// </param>
+    /// <param name="lun">
+    ///  Specify the LU to which the debug media belongs.
+    /// </param>
+    /// <param name="mediaid">
+    ///  Specifies who to send the message to. Must be debug media.
+    /// </param>
+    /// <param name="tsih">
+    ///  Specifies the TSIH of the task whose execution should be resumed.
+    /// </param>
+    /// <param name="itt">
+    ///  Specifies the ITT of the task whose execution should be resumed.
+    /// </param>
+    /// <returns>
+    ///  Registared traps.
+    /// </returns>
+    abstract DebugMedia_Resume : tdid:TDID_T -> lun:LUN_T -> mediaid:MEDIAIDX_T -> tsih:TSIH_T -> itt:ITT_T -> Task
+    default this.DebugMedia_Resume tdid lun mediaid tsih itt =
+        task {
+            let reqData = MediaCtrlReq.U_Debug(
+                MediaCtrlReq.U_Resume({
+                    TSIH = tsih;
+                    ITT = itt;
+                })
+            )
+            let! resData = this.SendMediaControlRequest tdid lun mediaid reqData
+            return
+                match resData with
+                | MediaCtrlRes.U_Debug( y ) ->
+                    match y with
+                    | MediaCtrlRes.U_ResumeResult( z ) ->
+                        if not z.Result then
+                            raise <| RequestError( z.ErrorMessage )
+                    | _ ->
+                        raise <| RequestError( m_MessageTable.GetMessage( "ERRMSG_UNEXPECTED_RESPONSE", "DebugMedia_Resume" ) )
+                | MediaCtrlRes.U_Unexpected( y ) ->
+                    raise <| RequestError( y )
+        }
+
 

@@ -44,6 +44,7 @@ type private DebugAction =
     | LUReset of string
     | Count of ( int * int[] )
     | Delay of int  // ignored for TestUnitReady and ReadCapacity event.
+    | Wait          // ignored for TestUnitReady and ReadCapacity event.
 
 [<NoComparison>]
 type private DebugRegist = {
@@ -85,6 +86,9 @@ type DebugMedia
 
     /// Debug actions
     let m_Action = OptimisticLock( Map< int, DebugRegist > [||] )
+
+    /// An object for waiting on tasks.
+    let m_TaskWaiter = OptimisticLock( ImmutableDictionary< TSIH_T, TaskWaiterWithTag<ITT_T,unit,string> >.Empty )
 
     do
         m_Killer.Add this
@@ -198,7 +202,7 @@ type DebugMedia
                         if argLBA > e || ( argLBA + readBlockCount - 1UL ) < s then
                             ()
                         else
-                            do! this.DoAction source itr.Value.action
+                            do! this.DoAction source initiatorTaskTag "Read" itr.Value.action
                     | _ -> ()
 
                 // Call peripheral media interface.
@@ -236,7 +240,7 @@ type DebugMedia
                         if writeStartLBA > e || ( writeStartLBA + writeBlockCount - 1UL ) < s then
                             ()
                         else
-                            do! this.DoAction source itr.Value.action
+                            do! this.DoAction source initiatorTaskTag "Write" itr.Value.action
                     | _ -> ()
 
                 // Call peripheral media interface.
@@ -258,7 +262,7 @@ type DebugMedia
                 for itr in act do
                     match itr.Value.event with
                     | DebugEvent.Format ->
-                        do! this.DoAction source itr.Value.action
+                        do! this.DoAction source initiatorTaskTag "Format" itr.Value.action
                     | _ -> ()
 
                 // Call peripheral media interface.
@@ -293,6 +297,10 @@ type DebugMedia
                             this.MediaControl_ClearTraps()
                         | MediaCtrlReq.U_GetCounterValue( y ) ->
                             this.MediaControl_GetCounterValue y
+                        | MediaCtrlReq.U_GetTaskWaitStatus() ->
+                            this.MediaControl_GetTaskWaitStatus()
+                        | MediaCtrlReq.U_Resume( y ) ->
+                            this.MediaControl_Resume y
                     return MediaCtrlRes.U_Debug result
 //                | _ ->
 //                    return MediaCtrlRes.U_Unexpected( sprintf "Unexpected request. File=%s, Line=%d" __SOURCE_FILE__ __LINE__ )
@@ -347,14 +355,32 @@ type DebugMedia
     /// <param name="source">
     ///  Information about the source of the command.
     /// </param>
+    /// <param name="itt">
+    ///  Initiator task tag.
+    /// </param>
+    /// <param name="methodName">
+    ///  A name that represents the task to be performed.
+    /// </param>
     /// <param name="a">
     ///  Debug action.
     /// </param>
-    member private this.DoAction ( source : CommandSourceInfo ) ( a : DebugAction ) : Task<unit> =
+    member private this.DoAction ( source : CommandSourceInfo ) ( itt : ITT_T ) ( methodName : string ) ( a : DebugAction ) : Task<unit> =
         task {
             match a with
             | DebugAction.Delay( x ) ->
                 do! Task.Delay x
+            | DebugAction.Wait ->
+                let tw =
+                    m_TaskWaiter.Update( fun old ->
+                        let r, v = old.TryGetValue( source.TSIH )
+                        if r then
+                            struct( old, v )
+                        else
+                            let tw = TaskWaiterWithTag<ITT_T,unit,string>()
+                            let next = old.Add( source.TSIH, tw )
+                            struct( next, tw )
+                    )
+                do! tw.WaitAndReset( itt, methodName )
             | _ as y ->
                 this.DoActionSync source y
         }
@@ -378,6 +404,8 @@ type DebugMedia
             Interlocked.Increment( &( x2.[0] ) ) |> ignore
         | DebugAction.Delay( x ) ->
             ()  // ignore DebugAction.Delay action
+        | DebugAction.Wait ->
+            ()  // ignore DebugAction.Wait action
 
     /// <summary>
     ///  GetAllTraps media control request.
@@ -480,6 +508,64 @@ type DebugMedia
         else
             MediaCtrlRes.U_CounterValue( -1 )
 
+    /// <summary>
+    ///  GetTaskWaitStatus media control request.
+    /// </summary>
+    /// <returns>
+    ///  Response data that will be returned to client.
+    ///  If there are too many waiting tasks, the excess will not be returned.
+    /// </returns>
+    member private _.MediaControl_GetTaskWaitStatus () : MediaCtrlRes.T_Debug =
+        MediaCtrlRes.U_AllTaskWaitStatus( {
+            TaskWaitStatus = 
+                m_TaskWaiter.obj
+                |> Seq.map ( fun itr ->
+                    itr.Value.Registered
+                    |> Seq.map ( fun struct( itt, _, method ) ->
+                        {
+                            TSIH = itr.Key;
+                            ITT = itt;
+                            Description = method;
+                        } : MediaCtrlRes.T_TaskWaitStatus
+                    )
+                )
+                |> Seq.concat
+                |> Seq.toList
+                |> List.truncate Constants.DEBUG_MEDIA_MAX_TASK_WAIT_STATUS;
+        })
+
+    /// <summary>
+    ///  Resume media control request.
+    /// </summary>
+    /// <returns>
+    ///  Response data that will be returned to client.
+    ///  In the current implementation, it always returns a successful completion.
+    /// </returns>
+    member private _.MediaControl_Resume ( t : MediaCtrlReq.T_Resume ) : MediaCtrlRes.T_Debug =
+        let itt = t.ITT
+        let r, v = m_TaskWaiter.obj.TryGetValue t.TSIH
+        if not r then
+            MediaCtrlRes.U_ResumeResult( {
+                Result = false;
+                ErrorMessage = "Specified task with TSIH does not exist.";
+            })
+        else
+            let ittExist =
+                v.Registered
+                |> Seq.exists ( fun struct( wi, _, _ ) -> wi = itt )
+            if not ittExist then
+                MediaCtrlRes.U_ResumeResult( {
+                    Result = false;
+                    ErrorMessage = "Specified task with ITT does not exist.";
+                })
+            else
+                // Note that Resume operations are always executed serially and do not conflict.
+                v.Notify( itt, (), "" )
+                MediaCtrlRes.U_ResumeResult( {
+                    Result = true;
+                    ErrorMessage = "";
+                })
+
     //=========================================================================
     // static method
 
@@ -515,6 +601,8 @@ type DebugMedia
                 DebugAction.Count( x, [| 0 |] )
             | MediaCtrlReq.U_Delay( x ) ->
                 DebugAction.Delay( x )
+            | MediaCtrlReq.U_Wait() ->
+                DebugAction.Wait
         {
             event = de;
             action = da;
@@ -558,6 +646,8 @@ type DebugMedia
                 MediaCtrlRes.U_Count( { Index = xi; Value = xv.[0]; } )
             | DebugAction.Delay( x ) ->
                 MediaCtrlRes.U_Delay( x )
+            | DebugAction.Wait ->
+                MediaCtrlRes.U_Wait()
         {
             Event = te;
             Action = ta;

@@ -40,22 +40,44 @@
             <item name='LUReset' constraint='string' />
             <item name='Count' constraint='int' />
             <item name='Delay' constraint='int' />
+            <item name='Wait' constraint='unit' />
           </item>
         </item>
 
         <!--
         summary : Request to clear all registered traps.
         returns : MediaCtrlRes.ClearTrapsResult
+        remarks : It does not affect tasks whose execution has been delayed by a Delay action.
+                  It does not affect tasks that are waiting to be executed by a Wait action.
+                  Resume execution of a waiting task with a release request.
+                  Note that a GetTaskWaitStatus and Release request can still be used after clearing all traps.
         -->
         <item name='ClearTraps' constraint='unit' />
 
         <!--
         summary : Request to get the counter value.
-        returns : MediaCtrlRes.ClearTrapsResult
+        returns : MediaCtrlRes.CounterValue
         -->
         <item name='GetCounterValue' constraint='int' />
+
+        <!--
+        summary : Request to get the task waiting status.
+        returns : MediaCtrlRes.TaskWaitStatus
+        remarks : The maximum number of tasks that can be responded to is Constatns.DEBUG_MEDIA_MAX_TASK_WAIT_STATUS.
+                  If there are too many waiting tasks, the excess will not be returned.
+        -->
+        <item name='GetTaskWaitStatus' constraint='unit' />
+
+        <!--
+        summary : Resume waiting task.
+        returns : MediaCtrlRes.ResumeResult
+        -->
+        <item name='Resume' >
+          <item name='TSIH' constraint='TSIH_T' />
+          <item name='ITT' constraint='ITT_T' />
+        </item>
+
       </item>
-  
     </item>
   </form>
 </root>

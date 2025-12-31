@@ -2009,6 +2009,9 @@ module Constants =
     let DEBUG_MEDIA_MAX_TRAP_COUNT : int =
         16
 
+    let DEBUG_MEDIA_MAX_TASK_WAIT_STATUS : int =
+        256
+
     /// Minimum number of concurrent SCSI tasks within a LU
     let LU_MIN_MULTIPLICITY : uint32 =
         1u

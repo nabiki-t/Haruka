@@ -954,3 +954,394 @@ type CtrlConnection_Test4() =
         |> ignore
 
         GlbFunc.DeleteDir dname
+
+    [<Fact>]
+    member _.DebugMedia_GetTaskWaitStatus_001() =
+        let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetTaskWaitStatus_001"
+        [|
+            fun () -> task {
+                let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
+
+                // receive MediaCtrlReq request
+                let! reqData = CtrlConnection_Test4.ReceiveMediaControlRequest c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) sessID 
+                match reqData with
+                | MediaCtrlReq.U_Debug( x ) ->
+                    match x with
+                    | MediaCtrlReq.U_GetTaskWaitStatus() ->
+                        ()
+                    | _ ->
+                        Assert.Fail __LINE__
+
+                // send response for MediaCtrlReq
+                do! MediaCtrlRes.U_Debug(
+                        MediaCtrlRes.U_AllTaskWaitStatus({
+                            TaskWaitStatus = [
+                                {
+                                    TSIH = tsih_me.fromPrim 0us;
+                                    ITT = itt_me.fromPrim 99u;
+                                    Description = "";
+                                }
+                            ];
+                        })
+                    )
+                    |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                GlbFunc.ClosePorts [| c |]
+                sl.Stop()
+            };
+            fun () -> task {
+                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! v = cc1.DebugMedia_GetTaskWaitStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                Assert.True(( v.Length = 1 ))
+                Assert.True(( v.[0].ITT = itt_me.fromPrim 99u ))
+                k.NoticeTerminate()
+            }
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        GlbFunc.DeleteDir dname
+
+    [<Fact>]
+    member _.DebugMedia_GetTaskWaitStatus_002() =
+        let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetTaskWaitStatus_002"
+        [|
+            fun () -> task {
+                let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
+
+                // receive MediaCtrlReq request
+                let! reqData = CtrlConnection_Test4.ReceiveMediaControlRequest c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) sessID 
+                match reqData with
+                | MediaCtrlReq.U_Debug( x ) ->
+                    match x with
+                    | MediaCtrlReq.U_GetTaskWaitStatus() ->
+                        ()
+                    | _ ->
+                        Assert.Fail __LINE__
+
+                // send response for MediaCtrlReq
+                do! MediaCtrlRes.U_Debug(
+                        MediaCtrlRes.U_AddTrapResult({
+                            Result = false;
+                            ErrorMessage = "4444444444444444444444444";
+                        })
+                    )
+                    |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                GlbFunc.ClosePorts [| c |]
+                sl.Stop()
+            };
+            fun () -> task {
+                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                try
+                    let! v = cc1.DebugMedia_GetTaskWaitStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                    Assert.Fail __LINE__
+                with
+                | :? RequestError as x ->
+                    ()
+                k.NoticeTerminate()
+            }
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        GlbFunc.DeleteDir dname
+
+    [<Fact>]
+    member _.DebugMedia_GetTaskWaitStatus_003() =
+        let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetTaskWaitStatus_003"
+        [|
+            fun () -> task {
+                let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
+
+                // receive MediaCtrlReq request
+                let! reqData = CtrlConnection_Test4.ReceiveMediaControlRequest c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) sessID 
+                match reqData with
+                | MediaCtrlReq.U_Debug( x ) ->
+                    match x with
+                    | MediaCtrlReq.U_GetTaskWaitStatus() ->
+                        ()
+                    | _ ->
+                        Assert.Fail __LINE__
+
+                // send response for MediaCtrlReq
+                do! MediaCtrlRes.U_Unexpected( "aawqqeerrr" )
+                    |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                GlbFunc.ClosePorts [| c |]
+                sl.Stop()
+            };
+            fun () -> task {
+                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                try
+                    let! v = cc1.DebugMedia_GetTaskWaitStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                    Assert.Fail __LINE__
+                with
+                | :? RequestError as x ->
+                    Assert.True(( x.Message.StartsWith "aawqqeerrr" ))
+                k.NoticeTerminate()
+            }
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        GlbFunc.DeleteDir dname
+
+    [<Fact>]
+    member _.DebugMedia_GetTaskWaitStatus_004() =
+        let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetTaskWaitStatus_004"
+        [|
+            fun () -> task {
+                let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
+
+                // receive MediaCtrlReq request
+                let! reqData = CtrlConnection_Test4.ReceiveMediaControlRequest c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) sessID 
+                match reqData with
+                | MediaCtrlReq.U_Debug( x ) ->
+                    match x with
+                    | MediaCtrlReq.U_GetTaskWaitStatus() ->
+                        ()
+                    | _ ->
+                        Assert.Fail __LINE__
+
+                // send response
+                do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "gggthththththt" )
+                    |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                GlbFunc.ClosePorts [| c |]
+                sl.Stop()
+            };
+            fun () -> task {
+                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                try
+                    let! v = cc1.DebugMedia_GetTaskWaitStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                    Assert.Fail __LINE__
+                with
+                | :? RequestError as x ->
+                    Assert.True(( x.Message.StartsWith "gggthththththt" ))
+                k.NoticeTerminate()
+            }
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        GlbFunc.DeleteDir dname
+
+    [<Fact>]
+    member _.DebugMedia_Resume_001() =
+        let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_Resume_001"
+        [|
+            fun () -> task {
+                let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
+
+                // receive MediaCtrlReq request
+                let! reqData = CtrlConnection_Test4.ReceiveMediaControlRequest c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) sessID 
+                match reqData with
+                | MediaCtrlReq.U_Debug( x ) ->
+                    match x with
+                    | MediaCtrlReq.U_Resume( t ) ->
+                        Assert.True(( t.TSIH = tsih_me.fromPrim 88us ))
+                        Assert.True(( t.ITT = itt_me.fromPrim 98u ))
+                    | _ ->
+                        Assert.Fail __LINE__
+
+                // send response for MediaCtrlReq
+                do! MediaCtrlRes.U_Debug(
+                        MediaCtrlRes.U_ResumeResult({
+                            Result = true;
+                            ErrorMessage = "";
+                        })
+                    )
+                    |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                GlbFunc.ClosePorts [| c |]
+                sl.Stop()
+            };
+            fun () -> task {
+                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                do! cc1.DebugMedia_Resume tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) ( tsih_me.fromPrim 88us ) ( itt_me.fromPrim 98u )
+                k.NoticeTerminate()
+            }
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        GlbFunc.DeleteDir dname
+
+    [<Fact>]
+    member _.DebugMedia_Release_002() =
+        let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_Resume_002"
+        [|
+            fun () -> task {
+                let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
+
+                // receive MediaCtrlReq request
+                let! reqData = CtrlConnection_Test4.ReceiveMediaControlRequest c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) sessID 
+                match reqData with
+                | MediaCtrlReq.U_Debug( x ) ->
+                    match x with
+                    | MediaCtrlReq.U_Resume( t ) ->
+                        Assert.True(( t.TSIH = tsih_me.fromPrim 88us ))
+                        Assert.True(( t.ITT = itt_me.fromPrim 98u ))
+                    | _ ->
+                        Assert.Fail __LINE__
+
+                // send response for MediaCtrlReq
+                do! MediaCtrlRes.U_Debug(
+                        MediaCtrlRes.U_ResumeResult({
+                            Result = false;
+                            ErrorMessage = "444444444444444444444444";
+                        })
+                    )
+                    |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                GlbFunc.ClosePorts [| c |]
+                sl.Stop()
+            };
+            fun () -> task {
+                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                try
+                    let itn = ITNexus( "iname", isid_me.zero, "tname", tpgt_me.zero )
+                    do! cc1.DebugMedia_Resume tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) ( tsih_me.fromPrim 88us ) ( itt_me.fromPrim 98u )
+                    Assert.Fail __LINE__
+                with
+                | :? RequestError as x ->
+                    Assert.True(( x.Message.StartsWith "444444444444444444444444" ))
+                k.NoticeTerminate()
+            }
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        GlbFunc.DeleteDir dname
+
+    [<Fact>]
+    member _.DebugMedia_Release_003() =
+        let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_Resume_003"
+        [|
+            fun () -> task {
+                let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
+
+                // receive MediaCtrlReq request
+                let! reqData = CtrlConnection_Test4.ReceiveMediaControlRequest c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) sessID 
+                match reqData with
+                | MediaCtrlReq.U_Debug( x ) ->
+                    match x with
+                    | MediaCtrlReq.U_Resume( t ) ->
+                        Assert.True(( t.TSIH = tsih_me.fromPrim 88us ))
+                        Assert.True(( t.ITT = itt_me.fromPrim 98u ))
+                    | _ ->
+                        Assert.Fail __LINE__
+
+                // send response for MediaCtrlReq
+                do! MediaCtrlRes.U_Debug(
+                        MediaCtrlRes.U_AddTrapResult({
+                            Result = false;
+                            ErrorMessage = "4444444444444444444444444";
+                        })
+                    )
+                    |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                GlbFunc.ClosePorts [| c |]
+                sl.Stop()
+            };
+            fun () -> task {
+                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                try
+                    let itn = ITNexus( "iname", isid_me.zero, "tname", tpgt_me.zero )
+                    do! cc1.DebugMedia_Resume tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) ( tsih_me.fromPrim 88us ) ( itt_me.fromPrim 98u )
+                    Assert.Fail __LINE__
+                with
+                | :? RequestError as x ->
+                    ()
+                k.NoticeTerminate()
+            }
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        GlbFunc.DeleteDir dname
+
+    [<Fact>]
+    member _.DebugMedia_Release_004() =
+        let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_Resume_004"
+        [|
+            fun () -> task {
+                let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
+
+                // receive MediaCtrlReq request
+                let! reqData = CtrlConnection_Test4.ReceiveMediaControlRequest c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) sessID 
+                match reqData with
+                | MediaCtrlReq.U_Debug( x ) ->
+                    match x with
+                    | MediaCtrlReq.U_Resume( t ) ->
+                        Assert.True(( t.TSIH = tsih_me.fromPrim 88us ))
+                        Assert.True(( t.ITT = itt_me.fromPrim 98u ))
+                    | _ ->
+                        Assert.Fail __LINE__
+
+                // send response for MediaCtrlReq
+                do! MediaCtrlRes.U_Unexpected( "aawqqeerrr" )
+                    |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                GlbFunc.ClosePorts [| c |]
+                sl.Stop()
+            };
+            fun () -> task {
+                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                try
+                    let itn = ITNexus( "iname", isid_me.zero, "tname", tpgt_me.zero )
+                    do! cc1.DebugMedia_Resume tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) ( tsih_me.fromPrim 88us ) ( itt_me.fromPrim 98u )
+                    Assert.Fail __LINE__
+                with
+                | :? RequestError as x ->
+                    Assert.True(( x.Message.StartsWith "aawqqeerrr" ))
+                k.NoticeTerminate()
+            }
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        GlbFunc.DeleteDir dname
+
+    [<Fact>]
+    member _.DebugMedia_Release_005() =
+        let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_Resume_005"
+        [|
+            fun () -> task {
+                let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
+
+                // receive MediaCtrlReq request
+                let! reqData = CtrlConnection_Test4.ReceiveMediaControlRequest c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) sessID 
+                match reqData with
+                | MediaCtrlReq.U_Debug( x ) ->
+                    match x with
+                    | MediaCtrlReq.U_Resume( t ) ->
+                        Assert.True(( t.TSIH = tsih_me.fromPrim 88us ))
+                        Assert.True(( t.ITT = itt_me.fromPrim 98u ))
+                    | _ ->
+                        Assert.Fail __LINE__
+
+                // send response
+                do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "gggthththththt" )
+                    |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                GlbFunc.ClosePorts [| c |]
+                sl.Stop()
+            };
+            fun () -> task {
+                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                try
+                    let itn = ITNexus( "iname", isid_me.zero, "tname", tpgt_me.zero )
+                    do! cc1.DebugMedia_Resume tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) ( tsih_me.fromPrim 88us ) ( itt_me.fromPrim 98u )
+                    Assert.Fail __LINE__
+                with
+                | :? RequestError as x ->
+                    Assert.True(( x.Message.StartsWith "gggthththththt" ))
+                k.NoticeTerminate()
+            }
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        GlbFunc.DeleteDir dname

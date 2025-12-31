@@ -34,6 +34,8 @@ and [<NoComparison>]T_Debug =
     | U_AddTrap of T_AddTrap
     | U_ClearTraps of unit
     | U_GetCounterValue of int
+    | U_GetTaskWaitStatus of unit
+    | U_Resume of T_Resume
 
 and [<NoComparison>]T_AddTrap = {
     Event : T_Event;
@@ -62,6 +64,12 @@ and [<NoComparison>]T_Action =
     | U_LUReset of string
     | U_Count of int
     | U_Delay of int
+    | U_Wait of unit
+
+and [<NoComparison>]T_Resume = {
+    TSIH : TSIH_T;
+    ITT : ITT_T;
+}
 
 //=============================================================================
 // Class implementation
@@ -174,6 +182,14 @@ type ReaderWriter() =
                           </xsd:restriction>
                         </xsd:simpleType>
                       </xsd:element>
+                      <xsd:element name='Wait' >
+                        <xsd:simpleType>
+                          <xsd:restriction base='xsd:int'>
+                            <xsd:minInclusive value='0' />
+                            <xsd:maxInclusive value='0' />
+                          </xsd:restriction>
+                        </xsd:simpleType>
+                      </xsd:element>
                     </xsd:choice></xsd:complexType>
                   </xsd:element>
                 </xsd:sequence></xsd:complexType>
@@ -191,6 +207,28 @@ type ReaderWriter() =
                   <xsd:restriction base='xsd:int'>
                   </xsd:restriction>
                 </xsd:simpleType>
+              </xsd:element>
+              <xsd:element name='GetTaskWaitStatus' >
+                <xsd:simpleType>
+                  <xsd:restriction base='xsd:int'>
+                    <xsd:minInclusive value='0' />
+                    <xsd:maxInclusive value='0' />
+                  </xsd:restriction>
+                </xsd:simpleType>
+              </xsd:element>
+              <xsd:element name='Resume' >
+                <xsd:complexType><xsd:sequence>
+                  <xsd:element name='TSIH' >
+                    <xsd:simpleType>
+                      <xsd:restriction base='xsd:unsignedShort' />
+                    </xsd:simpleType>
+                  </xsd:element>
+                  <xsd:element name='ITT' >
+                    <xsd:simpleType>
+                      <xsd:restriction base='xsd:unsignedInt' />
+                    </xsd:simpleType>
+                  </xsd:element>
+                </xsd:sequence></xsd:complexType>
               </xsd:element>
             </xsd:choice></xsd:complexType>
           </xsd:element>
@@ -327,6 +365,10 @@ type ReaderWriter() =
             U_ClearTraps( () )
         | "GetCounterValue" ->
             U_GetCounterValue( Int32.Parse( firstChild.Value ) )
+        | "GetTaskWaitStatus" ->
+            U_GetTaskWaitStatus( () )
+        | "Resume" ->
+            U_Resume( ReaderWriter.Read_T_Resume firstChild )
         | _ -> raise <| ConfRWException( "Unexpected tag name." )
 
     /// <summary>
@@ -426,7 +468,26 @@ type ReaderWriter() =
             U_Count( Int32.Parse( firstChild.Value ) )
         | "Delay" ->
             U_Delay( Int32.Parse( firstChild.Value ) )
+        | "Wait" ->
+            U_Wait( () )
         | _ -> raise <| ConfRWException( "Unexpected tag name." )
+
+    /// <summary>
+    ///  Read T_Resume data from XML document.
+    /// </summary>
+    /// <param name="elem">
+    ///  Loaded XML document.
+    /// </param>
+    /// <returns>
+    ///  parsed T_Resume data structure.
+    /// </returns>
+    static member private Read_T_Resume ( elem : XElement ) : T_Resume = 
+        {
+            TSIH =
+                tsih_me.fromPrim( UInt16.Parse( elem.Element( XName.Get "TSIH" ).Value ) );
+            ITT =
+                itt_me.fromPrim( UInt32.Parse( elem.Element( XName.Get "ITT" ).Value ) );
+        }
 
     /// <summary>
     ///  Write MediaCtrlReq data to specified file.
@@ -545,6 +606,10 @@ type ReaderWriter() =
                 yield sprintf "%s%s<ClearTraps>0</ClearTraps>" singleIndent indentStr
             | U_GetCounterValue( x ) ->
                 yield sprintf "%s%s<GetCounterValue>%d</GetCounterValue>" singleIndent indentStr (x)
+            | U_GetTaskWaitStatus( x ) ->
+                yield sprintf "%s%s<GetTaskWaitStatus>0</GetTaskWaitStatus>" singleIndent indentStr
+            | U_Resume( x ) ->
+                yield! ReaderWriter.T_Resume_toString ( indent + 1 ) indentStep ( x ) "Resume"
             yield sprintf "%s</%s>" indentStr elemName
         }
 
@@ -701,6 +766,36 @@ type ReaderWriter() =
                 yield sprintf "%s%s<Count>%d</Count>" singleIndent indentStr (x)
             | U_Delay( x ) ->
                 yield sprintf "%s%s<Delay>%d</Delay>" singleIndent indentStr (x)
+            | U_Wait( x ) ->
+                yield sprintf "%s%s<Wait>0</Wait>" singleIndent indentStr
+            yield sprintf "%s</%s>" indentStr elemName
+        }
+
+    /// <summary>
+    ///  Write T_Resume data structure to configuration file.
+    /// </summary>
+    /// <param name="indent">
+    ///  Indent space count.
+    /// </param>
+    /// <param name="indentStep">
+    ///  Indent step count.
+    /// </param>
+    /// <param name="elem">
+    ///  Data structure for output.
+    /// </param>
+    /// <param name="elemName">
+    ///  XML tag name for the data.
+    /// </param>
+    /// <returns>
+    ///  Array of the generated string.
+    /// </returns>
+    static member private T_Resume_toString ( indent : int ) ( indentStep : int ) ( elem : T_Resume ) ( elemName : string ) : seq<string> = 
+        let indentStr = String.replicate ( indent * indentStep ) " "
+        let singleIndent = String.replicate ( indentStep ) " "
+        seq {
+            yield sprintf "%s<%s>" indentStr elemName
+            yield sprintf "%s%s<TSIH>%d</TSIH>" singleIndent indentStr ( tsih_me.toPrim (elem.TSIH) )
+            yield sprintf "%s%s<ITT>%d</ITT>" singleIndent indentStr ( itt_me.toPrim (elem.ITT) )
             yield sprintf "%s</%s>" indentStr elemName
         }
 

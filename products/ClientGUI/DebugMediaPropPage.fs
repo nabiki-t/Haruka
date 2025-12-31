@@ -23,6 +23,15 @@ open Haruka.Commons
 open Haruka.Client
 
 //=============================================================================
+// Type definition
+
+type WaitTaskListItem = {
+    Description : string;
+    TSIH : string;
+    ITT : string;
+}
+
+//=============================================================================
 // Class implementation
 
 /// <summary>
@@ -68,6 +77,9 @@ type DebugMediaPropPage(
     let m_AddTrapButton = m_PropPage.FindName( "AddTrapButton" ) :?> Button
     let m_ClearTrapButton = m_PropPage.FindName( "ClearTrapButton" ) :?> Button
     let m_TrapListView = m_PropPage.FindName( "TrapListView" ) :?> ListView
+    let m_WaitTasksExpander = m_PropPage.FindName( "WaitTasksExpander" ) :?> Expander
+    let m_WaitTasksListView = m_PropPage.FindName( "WaitTasksListView" ) :?> ListView
+    let m_TaskResumeButton = m_PropPage.FindName( "TaskResumeButton" ) :?> Button
 
     // timer object
     let m_Timer = new DispatcherTimer()
@@ -88,6 +100,11 @@ type DebugMediaPropPage(
         m_TrapExpander.Collapsed.AddHandler ( fun _ _ -> UserOpeStat.SetExpanded "DebugMediaPropPage" m_TrapExpander.Name false )
         m_AddTrapButton.Click.AddHandler ( fun _ _ -> this.OnClick_AddTrapButton() )
         m_ClearTrapButton.Click.AddHandler ( fun _ _ -> this.OnClick_ClearTrapButton() )
+
+        m_WaitTasksExpander.Expanded.AddHandler ( fun _ _ -> UserOpeStat.SetExpanded "DebugMediaPropPage" m_WaitTasksExpander.Name true )
+        m_WaitTasksExpander.Collapsed.AddHandler ( fun _ _ -> UserOpeStat.SetExpanded "DebugMediaPropPage" m_WaitTasksExpander.Name false )
+        m_TaskResumeButton.Click.AddHandler ( fun _ _ -> this.OnClick_TaskResumeButton() )
+
         m_Timer.Tick.AddHandler ( fun _ _ -> this.OnTimer() )
 
         m_EditButton.IsEnabled <- false
@@ -97,7 +114,9 @@ type DebugMediaPropPage(
         // Set default value
         m_ConfigurationExpander.IsExpanded <- UserOpeStat.GetExpanded "DebugMediaPropPage" m_ConfigurationExpander.Name
         m_TrapExpander.IsExpanded <- UserOpeStat.GetExpanded "DebugMediaPropPage" m_TrapExpander.Name
+        m_WaitTasksExpander.IsExpanded <- UserOpeStat.GetExpanded "DebugMediaPropPage" m_WaitTasksExpander.Name
         m_TrapListView.Items.Clear()
+        m_WaitTasksListView.Items.Clear()
 
         m_Timer.Interval <- new TimeSpan( 0, 0, 3 )
         m_Timer.Start()
@@ -129,12 +148,14 @@ type DebugMediaPropPage(
 
                 if tdActived && tgLoaded then
                     let! traps = m_CtrlConnection.DebugMedia_GetAllTraps tdn.TargetDeviceID lu.LUN dm.IdentNumber
+                    let! waitTasks = m_CtrlConnection.DebugMedia_GetTaskWaitStatus tdn.TargetDeviceID lu.LUN dm.IdentNumber
                     m_PropPage.Dispatcher.InvokeAsync ( fun () ->
                         m_AddTrapButton.IsEnabled <- true
                         m_ClearTrapButton.IsEnabled <- true
                         m_TrapListView.IsEnabled <- true
                         this.ShowConfigValue true false
                         this.ShowAllTraps traps
+                        this.ShowWaitTasks waitTasks
                         m_MainWindow.SetProgress false
                     ) |> ignore
                 else
@@ -144,6 +165,7 @@ type DebugMediaPropPage(
                         m_TrapListView.IsEnabled <- false
                         this.ShowConfigValue false false
                         this.ShowAllTraps []
+                        this.ShowWaitTasks []
                         m_MainWindow.SetProgress false
                     ) |> ignore
             })
@@ -264,6 +286,43 @@ type DebugMediaPropPage(
                 ) |> ignore
         })
 
+    /// <summary>
+    ///  "Resume" button was clicked.
+    /// </summary>
+    member private this.OnClick_TaskResumeButton() : unit = 
+        let dm = m_ServerStatus.GetNode m_NodeID :?> IMediaNode
+        let tgn = ( m_ServerStatus.GetAncestorTargetGroup dm ).Value
+        let tdn = ( m_ServerStatus.GetAncestorTargetDevice dm ).Value
+        let lu = ( m_ServerStatus.GetAncestorLogicalUnit dm ).Value
+        let selected = m_WaitTasksListView.SelectedIndex
+
+        // If no task is selected to resume, do nothing
+        if selected >= 0 then
+
+            // Obtain the ITT and TSIH for the selected task.
+            // If ITT and TSIH are not available, nothing will be done.
+            let item = m_WaitTasksListView.Items.[ selected ] :?> WaitTaskListItem
+            let itt_r, itt_v = UInt32.TryParse item.ITT
+            let tsih_r, tsih_v = UInt16.TryParse item.TSIH
+            if itt_r && tsih_r then
+
+                m_MainWindow.ProcCtrlQuery false ( fun () -> task {
+                    do! m_MainWindow.UpdateRunningStatus()
+                    let struct( tdActived, tgLoaded ) = m_MainWindow.IsTGLoaded tdn.TargetDeviceID tgn.TargetGroupID
+                    if tdActived && tgLoaded then
+                        let itt = itt_me.fromPrim itt_v 
+                        let tsih = tsih_me.fromPrim tsih_v 
+                        do! m_CtrlConnection.DebugMedia_Resume tdn.TargetDeviceID lu.LUN dm.IdentNumber tsih itt
+                        let! waitTasks = m_CtrlConnection.DebugMedia_GetTaskWaitStatus tdn.TargetDeviceID lu.LUN dm.IdentNumber
+                        m_PropPage.Dispatcher.InvokeAsync ( fun () ->
+                            this.ShowWaitTasks waitTasks
+                        ) |> ignore
+                    else
+                        m_PropPage.Dispatcher.InvokeAsync ( fun () ->
+                            this.ShowWaitTasks []
+                        ) |> ignore
+                })
+
 
     /// <summary>
     ///  On timer handler.
@@ -281,13 +340,16 @@ type DebugMediaPropPage(
                 m_MainWindow.IsTGLoaded tdn.TargetDeviceID tgn.TargetGroupID
             if tdActived && tgLoaded then
                 let! traps = m_CtrlConnection.DebugMedia_GetAllTraps tdn.TargetDeviceID lu.LUN dm.IdentNumber
+                let! waitTasks = m_CtrlConnection.DebugMedia_GetTaskWaitStatus tdn.TargetDeviceID lu.LUN dm.IdentNumber
                 m_PropPage.Dispatcher.InvokeAsync ( fun () ->
                     this.ShowAllTraps traps
+                    this.ShowWaitTasks waitTasks
                     m_Timer.Start()
                 ) |> ignore
             else
                 m_PropPage.Dispatcher.InvokeAsync ( fun () ->
                     this.ShowAllTraps []
+                    this.ShowWaitTasks []
                     m_Timer.Start()
                 ) |> ignore
         })
@@ -318,6 +380,12 @@ type DebugMediaPropPage(
         m_MediaNameTextBox.IsEnabled <- editmode && ( not loaded )
         m_MediaNameTextBox.Text <- mn.Name
 
+    /// <summary>
+    ///  Display the list of traps in the list box.
+    /// </summary>
+    /// <param name="argTraps">
+    ///  List of acquired traps
+    /// </param>
     member private _.ShowAllTraps ( argTraps : MediaCtrlRes.T_Trap list ) : unit =
         m_TrapListView.Items.Clear()
         for itr in argTraps do
@@ -343,7 +411,26 @@ type DebugMediaPropPage(
                     sprintf "Count( Index=%d, Value=%d )" x.Index x.Value
                 | MediaCtrlRes.U_Delay( x ) ->
                     sprintf "Delay( milisec=%d )" x
+                | MediaCtrlRes.U_Wait() ->
+                    sprintf "Wait"
 
             m_TrapListView.Items.Add {| Event = eventStr; Action = actionStr; |} |> ignore
+
+    /// <summary>
+    ///  Display the list of traps in the list box.
+    /// </summary>
+    /// <param name="argTraps">
+    ///  List of acquired traps
+    /// </param>
+    member private _.ShowWaitTasks ( argTraps : MediaCtrlRes.T_TaskWaitStatus list ) : unit =
+        m_WaitTasksListView.Items.Clear()
+        for itr in argTraps do
+            let item : WaitTaskListItem = {
+                Description = itr.Description;
+                TSIH = sprintf "%d" itr.TSIH;
+                ITT = sprintf "%d" itr.ITT;
+            }
+            m_WaitTasksListView.Items.Add item |> ignore
+
 
     

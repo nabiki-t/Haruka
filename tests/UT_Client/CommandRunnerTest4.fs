@@ -19,6 +19,7 @@ open System.Text.RegularExpressions
 
 open Xunit
 
+open Haruka.Constants
 open Haruka.Commons
 open Haruka.Client
 open Haruka.IODataTypes
@@ -572,6 +573,45 @@ type CommandRunner_Test4() =
 
     [<Fact>]
     member _.AddTrap_010 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "add trap /e TestUnitReady /a Wait" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+        let medianode = CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia
+        let mutable flg4 = false
+
+        ss.p_GetAncestorTargetDevice <- ( fun argnode ->
+            Assert.True(( argnode = medianode ))
+            Some tdn
+        )
+        ss.p_GetAncestorLogicalUnit <- ( fun argnode ->
+            Assert.True(( argnode = medianode ))
+            Some lunode
+        )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        cc.p_DebugMedia_AddTrap <- ( fun tdid lun mdid event action ->
+            task {
+                Assert.True(( tdid = tdn.TargetDeviceID ))
+                Assert.True(( lun = ( lunode :> ILUNode ).LUN ))
+                Assert.True(( mdid = ( medianode :> IMediaNode ).IdentNumber ))
+                match action with
+                | MediaCtrlReq.U_Wait() ->
+                    ()
+                | _ ->
+                    Assert.Fail __LINE__
+                flg4 <- true
+            }
+        )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, medianode ) )
+
+        Assert.True(( r ))
+        Assert.True(( stat = Some ( ss, cc, medianode ) ))
+        Assert.True(( flg4 ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "Trap added."
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.AddTrap_011 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "add trap /e TestUnitReady /a Delay /ms 45" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let medianode = CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia
@@ -609,7 +649,7 @@ type CommandRunner_Test4() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
 
     [<Fact>]
-    member _.AddTrap_011 () =
+    member _.AddTrap_012 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "add trap /e TestUnitReady /a Delay /ms 45" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
@@ -648,7 +688,7 @@ type CommandRunner_Test4() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
 
     [<Fact>]
-    member _.AddTrap_012 () =
+    member _.AddTrap_013 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "add trap /e TestUnitReady /a Delay /ms 45" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
@@ -984,6 +1024,349 @@ type CommandRunner_Test4() =
     [<Fact>]
     member _.Traps_005 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "traps" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+        let medianode = CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia
+        let mutable flg1 = false
+        let mutable flg2 = false
+        let mutable flg3 = false
+
+        ss.p_GetAncestorTargetDevice <- ( fun argnode ->
+            Assert.True(( argnode = medianode ))
+            flg1 <- true
+            Some tdn
+        )
+        ss.p_GetAncestorLogicalUnit <- ( fun argnode ->
+            Assert.True(( argnode = medianode ))
+            flg2 <- true
+            Some lunode
+        )
+        cc.p_GetTargetDeviceProcs <- ( fun _ ->
+            task {
+                flg3 <- true
+                return []
+            }
+        )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, medianode ) )
+
+        Assert.True(( r ))
+        Assert.True(( stat = Some ( ss, cc, medianode ) ))
+        Assert.True(( flg1 ))
+        Assert.True(( flg2 ))
+        Assert.True(( flg3 ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.TaskList_001 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task list" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+        let medianode = CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia
+        let mutable flg4 = false
+
+        ss.p_GetAncestorTargetDevice <- ( fun argnode ->
+            Assert.True(( argnode = medianode ))
+            Some tdn
+        )
+        ss.p_GetAncestorLogicalUnit <- ( fun argnode ->
+            Assert.True(( argnode = medianode ))
+            Some lunode
+        )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        cc.p_DebugMedia_GetTaskWaitStatus <- ( fun tdid lun mdid ->
+            task {
+                Assert.True(( tdid = tdn.TargetDeviceID ))
+                Assert.True(( lun = ( lunode :> ILUNode ).LUN ))
+                Assert.True(( mdid = ( medianode :> IMediaNode ).IdentNumber ))
+                flg4 <- true
+                return []
+            }
+        )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, medianode ) )
+
+        Assert.True(( r ))
+        Assert.True(( stat = Some ( ss, cc, medianode ) ))
+        Assert.True(( flg4 ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "Task wait status"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.TaskList_002 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task list" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+        let medianode = CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia
+        let mutable flg4 = false
+
+        ss.p_GetAncestorTargetDevice <- ( fun argnode ->
+            Assert.True(( argnode = medianode ))
+            Some tdn
+        )
+        ss.p_GetAncestorLogicalUnit <- ( fun argnode ->
+            Assert.True(( argnode = medianode ))
+            Some lunode
+        )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        cc.p_DebugMedia_GetTaskWaitStatus <- ( fun tdid lun mdid ->
+            task {
+                Assert.True(( tdid = tdn.TargetDeviceID ))
+                Assert.True(( lun = ( lunode :> ILUNode ).LUN ))
+                Assert.True(( mdid = ( medianode :> IMediaNode ).IdentNumber ))
+                flg4 <- true
+                return [
+                    {
+                        TSIH = tsih_me.fromPrim 1us;
+                        ITT = itt_me.fromPrim 2u;
+                        Description = "aaaa";
+                    }
+                ]
+            }
+        )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, medianode ) )
+
+        Assert.True(( r ))
+        Assert.True(( stat = Some ( ss, cc, medianode ) ))
+        Assert.True(( flg4 ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "Task wait status"
+        let outline = ( out_rs.ReadLine() ).TrimStart()
+        Assert.True(( outline.StartsWith "aaaa" ))
+
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.TaskList_003 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task list" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+        let medianode = CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia
+        let mutable flg1 = false
+        let mutable flg2 = false
+        let mutable flg3 = false
+
+        ss.p_GetAncestorTargetDevice <- ( fun argnode ->
+            Assert.True(( argnode = medianode ))
+            flg1 <- true
+            None
+        )
+        ss.p_GetAncestorLogicalUnit <- ( fun argnode ->
+            Assert.True(( argnode = medianode ))
+            flg2 <- true
+            Some lunode
+        )
+        cc.p_GetTargetDeviceProcs <- ( fun _ ->
+            task {
+                flg3 <- true
+                return [ tdn.TargetDeviceID ]
+            }
+        )
+
+        try
+            let _ = CallCommandLoop cr ( Some ( ss, cc, medianode ) )
+            Assert.Fail __LINE__
+        with
+        | :? Xunit.Sdk.FailException -> reraise();
+        | _ as x ->
+            ()
+        Assert.True(( flg1 ))
+        Assert.True(( flg2 ))
+        Assert.True(( flg3 ))
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
+
+    [<Fact>]
+    member _.TaskList_004 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task list" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let medianode = CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia
+        let mutable flg1 = false
+        let mutable flg2 = false
+        let mutable flg3 = false
+
+        ss.p_GetAncestorTargetDevice <- ( fun argnode ->
+            Assert.True(( argnode = medianode ))
+            flg1 <- true
+            Some tdn
+        )
+        ss.p_GetAncestorLogicalUnit <- ( fun argnode ->
+            Assert.True(( argnode = medianode ))
+            flg2 <- true
+            None
+        )
+        cc.p_GetTargetDeviceProcs <- ( fun _ ->
+            task {
+                flg3 <- true
+                return [ tdn.TargetDeviceID ]
+            }
+        )
+
+        try
+            let _ = CallCommandLoop cr ( Some ( ss, cc, medianode ) )
+            Assert.Fail __LINE__
+        with
+        | :? Xunit.Sdk.FailException -> reraise();
+        | _ as x ->
+            ()
+        Assert.True(( flg1 ))
+        Assert.True(( flg2 ))
+        Assert.True(( flg3 ))
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
+
+    [<Fact>]
+    member _.TaskList_005 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task list" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+        let medianode = CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia
+        let mutable flg1 = false
+        let mutable flg2 = false
+        let mutable flg3 = false
+
+        ss.p_GetAncestorTargetDevice <- ( fun argnode ->
+            Assert.True(( argnode = medianode ))
+            flg1 <- true
+            Some tdn
+        )
+        ss.p_GetAncestorLogicalUnit <- ( fun argnode ->
+            Assert.True(( argnode = medianode ))
+            flg2 <- true
+            Some lunode
+        )
+        cc.p_GetTargetDeviceProcs <- ( fun _ ->
+            task {
+                flg3 <- true
+                return []
+            }
+        )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, medianode ) )
+
+        Assert.True(( r ))
+        Assert.True(( stat = Some ( ss, cc, medianode ) ))
+        Assert.True(( flg1 ))
+        Assert.True(( flg2 ))
+        Assert.True(( flg3 ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.TaskResume_001 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume /t 0 /i 1" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+        let medianode = CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia
+        let mutable flg4 = false
+
+        ss.p_GetAncestorTargetDevice <- ( fun argnode ->
+            Assert.True(( argnode = medianode ))
+            Some tdn
+        )
+        ss.p_GetAncestorLogicalUnit <- ( fun argnode ->
+            Assert.True(( argnode = medianode ))
+            Some lunode
+        )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        cc.p_DebugMedia_Resume <- ( fun tdid lun mdid tsih itt ->
+            task {
+                Assert.True(( tdid = tdn.TargetDeviceID ))
+                Assert.True(( lun = ( lunode :> ILUNode ).LUN ))
+                Assert.True(( mdid = ( medianode :> IMediaNode ).IdentNumber ))
+                Assert.True(( tsih = tsih_me.fromPrim 0us ))
+                Assert.True(( itt = itt_me.fromPrim 1u ))
+                flg4 <- true
+            }
+        )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, medianode ) )
+
+        Assert.True(( r ))
+        Assert.True(( stat = Some ( ss, cc, medianode ) ))
+        Assert.True(( flg4 ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "Task( TSIH=0, ITT=1 ) resumed."
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.TaskResume_002 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume /t 0 /i 1" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+        let medianode = CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia
+        let mutable flg1 = false
+        let mutable flg2 = false
+        let mutable flg3 = false
+
+        ss.p_GetAncestorTargetDevice <- ( fun argnode ->
+            Assert.True(( argnode = medianode ))
+            flg1 <- true
+            None
+        )
+        ss.p_GetAncestorLogicalUnit <- ( fun argnode ->
+            Assert.True(( argnode = medianode ))
+            flg2 <- true
+            Some lunode
+        )
+        cc.p_GetTargetDeviceProcs <- ( fun _ ->
+            task {
+                flg3 <- true
+                return [ tdn.TargetDeviceID ]
+            }
+        )
+
+        try
+            let _ = CallCommandLoop cr ( Some ( ss, cc, medianode ) )
+            Assert.Fail __LINE__
+        with
+        | :? Xunit.Sdk.FailException -> reraise();
+        | _ as x ->
+            ()
+        Assert.True(( flg1 ))
+        Assert.True(( flg2 ))
+        Assert.True(( flg3 ))
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
+
+    [<Fact>]
+    member _.TaskResume_003 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume /t 0 /i 1" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let medianode = CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia
+        let mutable flg1 = false
+        let mutable flg2 = false
+        let mutable flg3 = false
+
+        ss.p_GetAncestorTargetDevice <- ( fun argnode ->
+            Assert.True(( argnode = medianode ))
+            flg1 <- true
+            Some tdn
+        )
+        ss.p_GetAncestorLogicalUnit <- ( fun argnode ->
+            Assert.True(( argnode = medianode ))
+            flg2 <- true
+            None
+        )
+        cc.p_GetTargetDeviceProcs <- ( fun _ ->
+            task {
+                flg3 <- true
+                return [ tdn.TargetDeviceID ]
+            }
+        )
+
+        try
+            let _ = CallCommandLoop cr ( Some ( ss, cc, medianode ) )
+            Assert.Fail __LINE__
+        with
+        | :? Xunit.Sdk.FailException -> reraise();
+        | _ as x ->
+            ()
+        Assert.True(( flg1 ))
+        Assert.True(( flg2 ))
+        Assert.True(( flg3 ))
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
+
+    [<Fact>]
+    member _.TaskResume_004 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume /t 0 /i 1" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
         let medianode = CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia

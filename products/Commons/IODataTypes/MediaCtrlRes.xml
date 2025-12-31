@@ -38,6 +38,7 @@
                 <item name='Value' constraint='int' />
               </item >
               <item name='Delay' constraint='int' />
+              <item name='Wait' constraint='unit' />
             </item>
           </item>
         </item>
@@ -69,6 +70,30 @@
                          Otherwise, it always returns -1.
         -->
         <item name='CounterValue' constraint='int' />
+
+        <!--
+        summary : Return data for MediaCtrlReq.GetTaskWaitStatus
+        Return value : A list of tasks waiting to be processed by the Wait action.
+                        If the task is waiting, Waiting value is True.
+                        If a Release request is made before the task arrives, Waiting value will be False.
+        -->
+        <item name='AllTaskWaitStatus' >
+          <item name='TaskWaitStatus' mincount='0' maxcount='DEBUG_MEDIA_MAX_TASK_WAIT_STATUS' >
+            <item name='TSIH' constraint='TSIH_T' />
+            <item name='ITT' constraint='ITT_T' />
+            <item name='Description' constraint='string' />
+          </item>
+        </item>
+
+        <!--
+          summary : Return data for MediaCtrlReq.Resume
+          Result : True if it succeeded to resume waiting task otherwise false.
+          ErrorMessage : If it failed to resume waiting task, return error message.
+        -->
+        <item name='ResumeResult' >
+          <item name='Result' constraint='boolean' />
+          <item name='ErrorMessage' constraint='string' />
+        </item>
 
       </item>
 

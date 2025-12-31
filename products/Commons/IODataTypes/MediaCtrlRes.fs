@@ -35,6 +35,8 @@ and [<NoComparison>]T_Debug =
     | U_AddTrapResult of T_AddTrapResult
     | U_ClearTrapsResult of T_ClearTrapsResult
     | U_CounterValue of int
+    | U_AllTaskWaitStatus of T_AllTaskWaitStatus
+    | U_ResumeResult of T_ResumeResult
 
 and [<NoComparison>]T_AllTraps = {
     Trap : T_Trap list;
@@ -67,6 +69,7 @@ and [<NoComparison>]T_Action =
     | U_LUReset of string
     | U_Count of T_Count
     | U_Delay of int
+    | U_Wait of unit
 
 and [<NoComparison>]T_Count = {
     Index : int;
@@ -79,6 +82,21 @@ and [<NoComparison>]T_AddTrapResult = {
 }
 
 and [<NoComparison>]T_ClearTrapsResult = {
+    Result : bool;
+    ErrorMessage : string;
+}
+
+and [<NoComparison>]T_AllTaskWaitStatus = {
+    TaskWaitStatus : T_TaskWaitStatus list;
+}
+
+and [<NoComparison>]T_TaskWaitStatus = {
+    TSIH : TSIH_T;
+    ITT : ITT_T;
+    Description : string;
+}
+
+and [<NoComparison>]T_ResumeResult = {
     Result : bool;
     ErrorMessage : string;
 }
@@ -198,6 +216,14 @@ type ReaderWriter() =
                               </xsd:restriction>
                             </xsd:simpleType>
                           </xsd:element>
+                          <xsd:element name='Wait' >
+                            <xsd:simpleType>
+                              <xsd:restriction base='xsd:int'>
+                                <xsd:minInclusive value='0' />
+                                <xsd:maxInclusive value='0' />
+                              </xsd:restriction>
+                            </xsd:simpleType>
+                          </xsd:element>
                         </xsd:choice></xsd:complexType>
                       </xsd:element>
                     </xsd:sequence></xsd:complexType>
@@ -235,6 +261,43 @@ type ReaderWriter() =
                   <xsd:restriction base='xsd:int'>
                   </xsd:restriction>
                 </xsd:simpleType>
+              </xsd:element>
+              <xsd:element name='AllTaskWaitStatus' >
+                <xsd:complexType><xsd:sequence>
+                  <xsd:element name='TaskWaitStatus' minOccurs='0' maxOccurs='256' >
+                    <xsd:complexType><xsd:sequence>
+                      <xsd:element name='TSIH' >
+                        <xsd:simpleType>
+                          <xsd:restriction base='xsd:unsignedShort' />
+                        </xsd:simpleType>
+                      </xsd:element>
+                      <xsd:element name='ITT' >
+                        <xsd:simpleType>
+                          <xsd:restriction base='xsd:unsignedInt' />
+                        </xsd:simpleType>
+                      </xsd:element>
+                      <xsd:element name='Description' >
+                        <xsd:simpleType>
+                          <xsd:restriction base='xsd:string'>
+                          </xsd:restriction>
+                        </xsd:simpleType>
+                      </xsd:element>
+                    </xsd:sequence></xsd:complexType>
+                  </xsd:element>
+                </xsd:sequence></xsd:complexType>
+              </xsd:element>
+              <xsd:element name='ResumeResult' >
+                <xsd:complexType><xsd:sequence>
+                  <xsd:element name='Result' >
+                    <xsd:simpleType><xsd:restriction base='xsd:boolean' /></xsd:simpleType>
+                  </xsd:element>
+                  <xsd:element name='ErrorMessage' >
+                    <xsd:simpleType>
+                      <xsd:restriction base='xsd:string'>
+                      </xsd:restriction>
+                    </xsd:simpleType>
+                  </xsd:element>
+                </xsd:sequence></xsd:complexType>
               </xsd:element>
             </xsd:choice></xsd:complexType>
           </xsd:element>
@@ -379,6 +442,10 @@ type ReaderWriter() =
             U_ClearTrapsResult( ReaderWriter.Read_T_ClearTrapsResult firstChild )
         | "CounterValue" ->
             U_CounterValue( Int32.Parse( firstChild.Value ) )
+        | "AllTaskWaitStatus" ->
+            U_AllTaskWaitStatus( ReaderWriter.Read_T_AllTaskWaitStatus firstChild )
+        | "ResumeResult" ->
+            U_ResumeResult( ReaderWriter.Read_T_ResumeResult firstChild )
         | _ -> raise <| ConfRWException( "Unexpected tag name." )
 
     /// <summary>
@@ -496,6 +563,8 @@ type ReaderWriter() =
             U_Count( ReaderWriter.Read_T_Count firstChild )
         | "Delay" ->
             U_Delay( Int32.Parse( firstChild.Value ) )
+        | "Wait" ->
+            U_Wait( () )
         | _ -> raise <| ConfRWException( "Unexpected tag name." )
 
     /// <summary>
@@ -542,6 +611,60 @@ type ReaderWriter() =
     ///  parsed T_ClearTrapsResult data structure.
     /// </returns>
     static member private Read_T_ClearTrapsResult ( elem : XElement ) : T_ClearTrapsResult = 
+        {
+            Result =
+                Boolean.Parse( elem.Element( XName.Get "Result" ).Value );
+            ErrorMessage =
+                elem.Element( XName.Get "ErrorMessage" ).Value;
+        }
+
+    /// <summary>
+    ///  Read T_AllTaskWaitStatus data from XML document.
+    /// </summary>
+    /// <param name="elem">
+    ///  Loaded XML document.
+    /// </param>
+    /// <returns>
+    ///  parsed T_AllTaskWaitStatus data structure.
+    /// </returns>
+    static member private Read_T_AllTaskWaitStatus ( elem : XElement ) : T_AllTaskWaitStatus = 
+        {
+            TaskWaitStatus =
+                elem.Elements()
+                |> Seq.filter ( fun itr -> itr.Name = XName.Get "TaskWaitStatus" )
+                |> Seq.map ( fun itr -> ReaderWriter.Read_T_TaskWaitStatus itr )
+                |> Seq.toList
+        }
+
+    /// <summary>
+    ///  Read T_TaskWaitStatus data from XML document.
+    /// </summary>
+    /// <param name="elem">
+    ///  Loaded XML document.
+    /// </param>
+    /// <returns>
+    ///  parsed T_TaskWaitStatus data structure.
+    /// </returns>
+    static member private Read_T_TaskWaitStatus ( elem : XElement ) : T_TaskWaitStatus = 
+        {
+            TSIH =
+                tsih_me.fromPrim( UInt16.Parse( elem.Element( XName.Get "TSIH" ).Value ) );
+            ITT =
+                itt_me.fromPrim( UInt32.Parse( elem.Element( XName.Get "ITT" ).Value ) );
+            Description =
+                elem.Element( XName.Get "Description" ).Value;
+        }
+
+    /// <summary>
+    ///  Read T_ResumeResult data from XML document.
+    /// </summary>
+    /// <param name="elem">
+    ///  Loaded XML document.
+    /// </param>
+    /// <returns>
+    ///  parsed T_ResumeResult data structure.
+    /// </returns>
+    static member private Read_T_ResumeResult ( elem : XElement ) : T_ResumeResult = 
         {
             Result =
                 Boolean.Parse( elem.Element( XName.Get "Result" ).Value );
@@ -668,6 +791,10 @@ type ReaderWriter() =
                 yield! ReaderWriter.T_ClearTrapsResult_toString ( indent + 1 ) indentStep ( x ) "ClearTrapsResult"
             | U_CounterValue( x ) ->
                 yield sprintf "%s%s<CounterValue>%d</CounterValue>" singleIndent indentStr (x)
+            | U_AllTaskWaitStatus( x ) ->
+                yield! ReaderWriter.T_AllTaskWaitStatus_toString ( indent + 1 ) indentStep ( x ) "AllTaskWaitStatus"
+            | U_ResumeResult( x ) ->
+                yield! ReaderWriter.T_ResumeResult_toString ( indent + 1 ) indentStep ( x ) "ResumeResult"
             yield sprintf "%s</%s>" indentStr elemName
         }
 
@@ -854,6 +981,8 @@ type ReaderWriter() =
                 yield! ReaderWriter.T_Count_toString ( indent + 1 ) indentStep ( x ) "Count"
             | U_Delay( x ) ->
                 yield sprintf "%s%s<Delay>%d</Delay>" singleIndent indentStr (x)
+            | U_Wait( x ) ->
+                yield sprintf "%s%s<Wait>0</Wait>" singleIndent indentStr
             yield sprintf "%s</%s>" indentStr elemName
         }
 
@@ -932,6 +1061,93 @@ type ReaderWriter() =
     ///  Array of the generated string.
     /// </returns>
     static member private T_ClearTrapsResult_toString ( indent : int ) ( indentStep : int ) ( elem : T_ClearTrapsResult ) ( elemName : string ) : seq<string> = 
+        let indentStr = String.replicate ( indent * indentStep ) " "
+        let singleIndent = String.replicate ( indentStep ) " "
+        seq {
+            yield sprintf "%s<%s>" indentStr elemName
+            yield sprintf "%s%s<Result>%b</Result>" singleIndent indentStr (elem.Result)
+            yield sprintf "%s%s<ErrorMessage>%s</ErrorMessage>" singleIndent indentStr ( ReaderWriter.xmlEncode(elem.ErrorMessage) )
+            yield sprintf "%s</%s>" indentStr elemName
+        }
+
+    /// <summary>
+    ///  Write T_AllTaskWaitStatus data structure to configuration file.
+    /// </summary>
+    /// <param name="indent">
+    ///  Indent space count.
+    /// </param>
+    /// <param name="indentStep">
+    ///  Indent step count.
+    /// </param>
+    /// <param name="elem">
+    ///  Data structure for output.
+    /// </param>
+    /// <param name="elemName">
+    ///  XML tag name for the data.
+    /// </param>
+    /// <returns>
+    ///  Array of the generated string.
+    /// </returns>
+    static member private T_AllTaskWaitStatus_toString ( indent : int ) ( indentStep : int ) ( elem : T_AllTaskWaitStatus ) ( elemName : string ) : seq<string> = 
+        let indentStr = String.replicate ( indent * indentStep ) " "
+        let singleIndent = String.replicate ( indentStep ) " "
+        seq {
+            yield sprintf "%s<%s>" indentStr elemName
+            if elem.TaskWaitStatus.Length < 0 || elem.TaskWaitStatus.Length > 256 then 
+                raise <| ConfRWException( "Element count restriction error. TaskWaitStatus" )
+            for itr in elem.TaskWaitStatus do
+                yield! ReaderWriter.T_TaskWaitStatus_toString ( indent + 1 ) indentStep itr "TaskWaitStatus"
+            yield sprintf "%s</%s>" indentStr elemName
+        }
+
+    /// <summary>
+    ///  Write T_TaskWaitStatus data structure to configuration file.
+    /// </summary>
+    /// <param name="indent">
+    ///  Indent space count.
+    /// </param>
+    /// <param name="indentStep">
+    ///  Indent step count.
+    /// </param>
+    /// <param name="elem">
+    ///  Data structure for output.
+    /// </param>
+    /// <param name="elemName">
+    ///  XML tag name for the data.
+    /// </param>
+    /// <returns>
+    ///  Array of the generated string.
+    /// </returns>
+    static member private T_TaskWaitStatus_toString ( indent : int ) ( indentStep : int ) ( elem : T_TaskWaitStatus ) ( elemName : string ) : seq<string> = 
+        let indentStr = String.replicate ( indent * indentStep ) " "
+        let singleIndent = String.replicate ( indentStep ) " "
+        seq {
+            yield sprintf "%s<%s>" indentStr elemName
+            yield sprintf "%s%s<TSIH>%d</TSIH>" singleIndent indentStr ( tsih_me.toPrim (elem.TSIH) )
+            yield sprintf "%s%s<ITT>%d</ITT>" singleIndent indentStr ( itt_me.toPrim (elem.ITT) )
+            yield sprintf "%s%s<Description>%s</Description>" singleIndent indentStr ( ReaderWriter.xmlEncode(elem.Description) )
+            yield sprintf "%s</%s>" indentStr elemName
+        }
+
+    /// <summary>
+    ///  Write T_ResumeResult data structure to configuration file.
+    /// </summary>
+    /// <param name="indent">
+    ///  Indent space count.
+    /// </param>
+    /// <param name="indentStep">
+    ///  Indent step count.
+    /// </param>
+    /// <param name="elem">
+    ///  Data structure for output.
+    /// </param>
+    /// <param name="elemName">
+    ///  XML tag name for the data.
+    /// </param>
+    /// <returns>
+    ///  Array of the generated string.
+    /// </returns>
+    static member private T_ResumeResult_toString ( indent : int ) ( indentStep : int ) ( elem : T_ResumeResult ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {

@@ -73,7 +73,7 @@
     <Name>EditDebugTrapDialog</Name>
     <Message>
       <Name>TITLE</Name>
-      <Value>EditDebugTrapDialog</Value>
+      <Value>Add a trap</Value>
     </Message>
     <Message>
       <Name>EventTextBlock</Name>
@@ -106,6 +106,22 @@
     <Message>
       <Name>CancelButton</Name>
       <Value>Cancel</Value>
+    </Message>
+    <Message>
+      <Name>StartLBADescTextBlock</Name>
+      <Value>uint64 number. Empty is considered zero.</Value>
+    </Message>
+    <Message>
+      <Name>EndLBADescTextBlock</Name>
+      <Value>uint64 number. Empty is considered the maximum value of uint64. Must be equal to or greater than StartLBA.</Value>
+    </Message>
+    <Message>
+      <Name>ActionNoticeTextBlock</Name>
+      <Value>Delay and Wait actions cannot be registered for TestUnitReady and ReadCapacity events.</Value>
+    </Message>
+    <Message>
+      <Name>CountIndexDescTextBlock</Name>
+      <Value>int32 number. Empty is considered zero.</Value>
     </Message>
   </Section>
 
@@ -1181,6 +1197,14 @@
     <Message>
       <Name>TrapExpander</Name>
       <Value>Trap</Value>
+    </Message>
+    <Message>
+      <Name>WaitTasksExpander</Name>
+      <Value>Wait Tasks</Value>
+    </Message>
+    <Message>
+      <Name>TaskResumeButton</Name>
+      <Value>Resume</Value>
     </Message>
   </Section>
 

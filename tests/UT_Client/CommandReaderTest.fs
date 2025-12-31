@@ -1844,7 +1844,7 @@ type CommandReader_Test() =
     [<InlineData( "add trap /e ReadCapacity /a LUReset", "ReadCapacity", "LUReset" )>]
     [<InlineData( "add trap /e Read /a Count", "Read", "Count" )>]
     [<InlineData( "add trap /e Write /a Delay", "Write", "Delay" )>]
-    [<InlineData( "add trap /e Format /a Delay", "Format", "Delay" )>]
+    [<InlineData( "add trap /e Format /a Wait", "Format", "Wait" )>]
     member _.AddTrap_001 ( cmdstr : string ) ( eventResult : string ) ( actionResult : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_add_trap |]
@@ -1973,5 +1973,69 @@ type CommandReader_Test() =
     member _.Traps_002 ( cmdstr : string ) ( msgstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_traps |]
+        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        GlbFunc.AllDispose [ ms; ws; rs; ]
+
+    [<Fact>]
+    member _.TaskList_001() =
+        let ms, ws, rs = GenCommandStream "task list"
+        let accCommands = [| CommandReader.CmdRule_task_list |]
+        let r = RunInputCommandMethod rs accCommands
+        Assert.True(( r.Varb = CommandVarb.Task_List ))
+        Assert.True(( r.NamelessArgs.Length = 0 ))
+        Assert.True(( r.NamedArgs.Count = 0 ))
+        GlbFunc.AllDispose [ ms; ws; rs; ]
+
+    [<Theory>]
+    [<InlineData( "task list 0", "CMDERR_INVALID_ARG_COUNT" )>]
+    [<InlineData( "task list /p", "CMDERR_INVALID_ARG_COUNT" )>]
+    [<InlineData( "task list /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
+    member _.TaskList_002 ( cmdstr : string ) ( msgstr : string ) =
+        let ms, ws, rs = GenCommandStream cmdstr
+        let accCommands = [| CommandReader.CmdRule_task_list |]
+        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        GlbFunc.AllDispose [ ms; ws; rs; ]
+
+    [<Fact>]
+    member _.TaskRelease_001() =
+        let ms, ws, rs = GenCommandStream "task resume /t 0 /i 0"
+        let accCommands = [| CommandReader.CmdRule_task_resume |]
+        let r = RunInputCommandMethod rs accCommands
+        Assert.True(( r.Varb = CommandVarb.Task_Resume ))
+        Assert.True(( r.NamelessArgs.Length = 0 ))
+        Assert.True(( r.NamedArgs.Count = 2 ))
+        Assert.True(( r.NamedArgs.["/t"] = EV_uint32( 0u ) ))
+        Assert.True(( r.NamedArgs.["/i"] = EV_uint32( 0u ) ))
+        GlbFunc.AllDispose [ ms; ws; rs; ]
+
+    [<Fact>]
+    member _.TaskRelease_002() =
+        let ms, ws, rs = GenCommandStream "task resume /t 65535 /i 4294967295"
+        let accCommands = [| CommandReader.CmdRule_task_resume |]
+        let r = RunInputCommandMethod rs accCommands
+        Assert.True(( r.Varb = CommandVarb.Task_Resume ))
+        Assert.True(( r.NamelessArgs.Length = 0 ))
+        Assert.True(( r.NamedArgs.Count = 2 ))
+        Assert.True(( r.NamedArgs.["/t"] = EV_uint32( 65535u ) ))
+        Assert.True(( r.NamedArgs.["/i"] = EV_uint32( 4294967295u ) ))
+        GlbFunc.AllDispose [ ms; ws; rs; ]
+
+    [<Theory>]
+    [<InlineData( "task resume", "CMDERR_MISSING_MANDATORY_ARG" )>]
+    [<InlineData( "task resume 1 2", "CMDERR_INVALID_ARG_COUNT" )>]
+    [<InlineData( "task resume /f", "CMDERR_INVALID_ARG_COUNT" )>]
+    [<InlineData( "task resume /t 0 /i", "CMDERR_LAST_ARG_VAL_MISSING" )>]
+    [<InlineData( "task resume /i 0 /t", "CMDERR_LAST_ARG_VAL_MISSING" )>]
+    [<InlineData( "task resume /t 0", "CMDERR_MISSING_MANDATORY_ARG" )>]
+    [<InlineData( "task resume /i 0", "CMDERR_MISSING_MANDATORY_ARG" )>]
+    [<InlineData( "task resume /t 0 /i -1", "CMDERR_INVALID_ARG_VALUE" )>]
+    [<InlineData( "task resume /t 0 /i 4294967296", "CMDERR_INVALID_ARG_VALUE" )>]
+    [<InlineData( "task resume /t -1 /i 0", "CMDERR_INVALID_ARG_VALUE" )>]
+    [<InlineData( "task resume /t 65536 /i 0", "CMDERR_INVALID_ARG_VALUE" )>]
+    [<InlineData( "task resume /t 0 /i a", "CMDERR_INVALID_ARG_VALUE" )>]
+    [<InlineData( "task resume /t a /i 0", "CMDERR_INVALID_ARG_VALUE" )>]
+    member _.TaskResume_004 ( cmdstr : string ) ( msgstr : string ) =
+        let ms, ws, rs = GenCommandStream cmdstr
+        let accCommands = [| CommandReader.CmdRule_task_resume |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
         GlbFunc.AllDispose [ ms; ws; rs; ]

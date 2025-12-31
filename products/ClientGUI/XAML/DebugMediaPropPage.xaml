@@ -7,7 +7,7 @@
 
     <StackPanel>
         <TextBlock Name="Title" Text="Debug Media" VerticalAlignment="Top" Height="27" FontSize="18" Padding="0,0,0,0"/>
-        
+
         <!-- Configuration -->
         <Expander Name="ConfigurationExpander" Header="Configuration" Margin="10,10,5,2" VerticalAlignment="Top" IsExpanded="True" TabIndex="0">
             <StackPanel>
@@ -26,7 +26,7 @@
                                 <ColumnDefinition Width="6*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Name="IdentNumberTextBlock" Text="Ident Number" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                            <TextBox Grid.Column="1" Name="IdentNumberTextBox" Text="0" Padding="2,2,2,2" />
+                            <TextBox Grid.Column="1" Name="IdentNumberTextBox" Text="0" Padding="2,2,2,2" TabIndex="4" />
                         </Grid>
                         <Grid Margin="10,2,0,2">
                             <Grid.ColumnDefinitions>
@@ -34,23 +34,23 @@
                                 <ColumnDefinition Width="6*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Name="MediaNameTextBlock" Text="Media Name" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                            <TextBox Grid.Column="1" Name="MediaNameTextBox" Text="" Padding="2,2,2,2" />
+                            <TextBox Grid.Column="1" Name="MediaNameTextBox" Text="" Padding="2,2,2,2" TabIndex="5" />
                         </Grid>
                     </StackPanel>
                 </Grid>
             </StackPanel>
         </Expander>
 
-        <!-- Configuration -->
-        <Expander Name="TrapExpander" Header="Traps" Margin="10,10,5,2" VerticalAlignment="Top" IsExpanded="True" TabIndex="0">
+        <!-- Traps -->
+        <Expander Name="TrapExpander" Header="Traps" Margin="10,10,5,2" VerticalAlignment="Top" IsExpanded="True" TabIndex="6">
             <StackPanel>
                 <Grid Margin="10,0,0,0">
                     <StackPanel HorizontalAlignment="Right" Width="20">
-                        <Button Name="AddTrapButton" Content="&#xE710;" FontFamily="Segoe MDL2 Assets" Margin="0,0,0,0" TabIndex="9" />
-                        <Button Name="ClearTrapButton" Content="&#xE74D;" FontFamily="Segoe MDL2 Assets" Margin="0,2,0,0" TabIndex="10" />
+                        <Button Name="AddTrapButton" Content="&#xE710;" FontFamily="Segoe MDL2 Assets" Margin="0,0,0,0" TabIndex="8" />
+                        <Button Name="ClearTrapButton" Content="&#xE74D;" FontFamily="Segoe MDL2 Assets" Margin="0,2,0,0" TabIndex="9" />
                     </StackPanel>
 
-                    <ListView Name="TrapListView" Height="120" Margin="10,0,25,0" ScrollViewer.HorizontalScrollBarVisibility="Visible" TabIndex="8">
+                    <ListView Name="TrapListView" Height="150" Margin="10,0,25,0" ScrollViewer.HorizontalScrollBarVisibility="Visible" TabIndex="7">
                         <ListView.View>
                             <GridView>
                                 <GridView.Columns>
@@ -63,6 +63,28 @@
                 </Grid>
             </StackPanel>
         </Expander>
+
+        <!-- WaitTasks -->
+        <Expander Name="WaitTasksExpander" Header="Wait Tasks" Margin="10,10,5,2" VerticalAlignment="Top" IsExpanded="True" TabIndex="10">
+            <StackPanel>
+                <Grid Margin="10,0,0,0">
+                    <Button Name="TaskResumeButton" Content="Resume" TabIndex="12" HorizontalAlignment="Right" Width="83" Height="20" VerticalAlignment="Bottom" />
+
+                    <ListView Name="WaitTasksListView" Height="150" Margin="10,0,0,25" ScrollViewer.HorizontalScrollBarVisibility="Visible" TabIndex="11">
+                        <ListView.View>
+                            <GridView>
+                                <GridView.Columns>
+                                    <GridViewColumn Header="Description" DisplayMemberBinding="{Binding Description}" Width="150" />
+                                    <GridViewColumn Header="TSIH" DisplayMemberBinding="{Binding TSIH}" Width="50" />
+                                    <GridViewColumn Header="ITT" DisplayMemberBinding="{Binding ITT}" Width="50" />
+                                </GridView.Columns>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </Grid>
+            </StackPanel>
+        </Expander>
+
 
     </StackPanel>
 </Grid>

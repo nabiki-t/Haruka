@@ -3,9 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        Title="Debug media trap"
-        VerticalAlignment="Top" Width="450" Height="315" WindowStartupLocation="Manual" MinWidth="250" MinHeight="315" MaxHeight="315" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" >
-    <Grid>
+        Title="Add a trap"
+        VerticalAlignment="Top" Width="450" Height="370" WindowStartupLocation="Manual" MinWidth="300" MinHeight="370" MaxHeight="370" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" >
+    <Grid Margin="0,0,0,0">
         <Button Name="OKButton" Content="_OK" Margin="0,0,98,10" TabIndex="6" Height="23" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="83"/>
         <Button x:Name="CancelButton" Content="_Cancel" Margin="0,0,10,10" TabIndex="7" Height="23" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="83"/>
         <TextBlock Name="EventTextBlock" Margin="10,5,10,0" TextWrapping="Wrap" VerticalAlignment="Top" Text="Event" />
@@ -25,24 +25,26 @@
             <StackPanel Grid.Column="0">
                 <TextBlock Name="StartLBATextBlock" Margin="0,0,0,5" TextWrapping="Wrap" VerticalAlignment="Top" Text="Start LBA" />
                 <TextBox x:Name="StartLBATextBox" TextWrapping="Wrap" Text="" TabIndex="1" Padding="0,2,0,2" />
-                <TextBlock x:Name="StartLBADescTextBlock" TextWrapping="Wrap" Text="uint64 number. Empty is considered zero." Padding="0,0,0,2" FontSize="10" />
+                <TextBlock x:Name="StartLBADescTextBlock" TextWrapping="Wrap" Text="uint64 number. Empty is considered zero." Padding="0,0,0,2" FontSize="10" Height="45" />
             </StackPanel>
             <StackPanel Grid.Column="2">
                 <TextBlock Name="EndLBATextBlock" Margin="0,0,0,5" TextWrapping="Wrap" VerticalAlignment="Top" Text="End LBA" />
                 <TextBox Name="EndLBATextBox" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" TabIndex="2" Padding="0,2,0,2" />
-                <TextBlock x:Name="EndLBADescTextBlock" TextWrapping="Wrap" Text="uint64 number. Empty is considered the maximum value of uint64. Must be equal to or greater than StartLBA." Padding="0,0,0,2" FontSize="10" />
+                <TextBlock x:Name="EndLBADescTextBlock" TextWrapping="Wrap" Text="uint64 number. Empty is considered the maximum value of uint64. Must be equal to or greater than StartLBA." Padding="0,0,0,2" FontSize="10" Height="45" />
             </StackPanel>
         </Grid>
 
-        <TextBlock Name="ActionTextBlock" Margin="10,132,10,0" TextWrapping="Wrap" VerticalAlignment="Top" Text="Action" />
-        <ComboBox Name="ActionCombo" Margin="10,153,10,0" VerticalAlignment="Top" AutomationProperties.AccessKey="T" TabIndex="3">
+        <TextBlock Name="ActionTextBlock" Margin="10,143,10,0" TextWrapping="Wrap" VerticalAlignment="Top" Text="Action" />
+        <ComboBox Name="ActionCombo" Margin="10,164,10,0" VerticalAlignment="Top" AutomationProperties.AccessKey="T" TabIndex="3">
             <TextBlock>ACA</TextBlock>
             <TextBlock>LUReset</TextBlock>
             <TextBlock>Count</TextBlock>
             <TextBlock>Delay</TextBlock>
+            <TextBlock>Wait</TextBlock>
         </ComboBox>
+        <TextBlock Name="ActionNoticeTextBlock" Margin="10,191,10,0" TextWrapping="Wrap" FontSize="10" Text="Delay and Wait actions cannot be registered for TestUnitReady and ReadCapacity events." Height="36" VerticalAlignment="Top" />
 
-        <Grid Margin="10,180,10,0" VerticalAlignment="Top" >
+        <Grid Margin="10,231,10,0" VerticalAlignment="Top" >
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*"/>
                 <ColumnDefinition Width="10"/>

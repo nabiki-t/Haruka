@@ -220,6 +220,8 @@ type CtrlConnectionStub( st : StringTable ) =
     let mutable m_DebugMedia_AddTrap : ( TDID_T -> LUN_T -> MEDIAIDX_T -> MediaCtrlReq.T_Event -> MediaCtrlReq.T_Action -> Task ) option = None
     let mutable m_DebugMedia_ClearTraps : ( TDID_T -> LUN_T -> MEDIAIDX_T -> Task ) option = None
     let mutable m_DebugMedia_GetCounterValue : ( TDID_T -> LUN_T -> MEDIAIDX_T -> int -> Task< int > ) option = None
+    let mutable m_DebugMedia_GetTaskWaitStatus : ( TDID_T -> LUN_T -> MEDIAIDX_T -> Task< MediaCtrlRes.T_TaskWaitStatus list > ) option = None
+    let mutable m_DebugMedia_Resume : ( TDID_T -> LUN_T -> MEDIAIDX_T -> TSIH_T -> ITT_T -> Task ) option = None
 
     member _.p_Logout with set v = m_Logout <- Some( v )
     member _.p_NoOperation with set v = m_NoOperation <- Some( v )
@@ -269,6 +271,8 @@ type CtrlConnectionStub( st : StringTable ) =
     member _.p_DebugMedia_AddTrap with set v = m_DebugMedia_AddTrap <- Some( v )
     member _.p_DebugMedia_ClearTraps with set v = m_DebugMedia_ClearTraps <- Some( v )
     member _.p_DebugMedia_GetCounterValue with set v = m_DebugMedia_GetCounterValue <- Some( v )
+    member _.p_DebugMedia_GetTaskWaitStatus with set v = m_DebugMedia_GetTaskWaitStatus <- Some( v )
+    member _.p_DebugMedia_Resume with set v = m_DebugMedia_Resume <- Some( v )
 
     override _.Logout () = m_Logout.Value()
     override _.NoOperation () = m_NoOperation.Value()
@@ -318,6 +322,8 @@ type CtrlConnectionStub( st : StringTable ) =
     override _.DebugMedia_AddTrap tdid lun mediaid event action = m_DebugMedia_AddTrap.Value tdid lun mediaid event action
     override _.DebugMedia_ClearTraps tdid lun mediaid = m_DebugMedia_ClearTraps.Value tdid lun mediaid
     override _.DebugMedia_GetCounterValue tdid lun mediaid counterno = m_DebugMedia_GetCounterValue.Value tdid lun mediaid counterno
+    override _.DebugMedia_GetTaskWaitStatus tdid lun mediaid = m_DebugMedia_GetTaskWaitStatus.Value tdid lun mediaid
+    override _.DebugMedia_Resume tdid lun mediaid tsih itt = m_DebugMedia_Resume.Value tdid lun mediaid tsih itt
 
 //=============================================================================
 // Class implementation
@@ -2703,6 +2709,94 @@ type CommandRunner_Test1() =
     [<MemberData( "m_CommandLoop_add_trap_error_data" )>]
     member _.CommandLoop_traps_002  ( node : obj ) ( prompt : obj ) =
         CommandLoop_UnknownCommand "traps" ( node :?> IConfigureNode ) ( prompt :?> string )
+
+    [<Theory>]
+    [<MemberData( "m_CommandLoop_add_trap_data" )>]
+    member _.CommandLoop_task_list_001  ( node : obj ) ( prompt : obj ) =
+        let st = new StringTable( "" )
+        let in_ms, in_ws, in_rs = GenCommandStream( "task list" )
+        let out_ms, out_ws = GenOutputStream()
+        let cr = new CommandRunner( st, in_rs, out_ws )
+        let ss = new ServerStatusStub( st )
+        let cc = new CtrlConnectionStub( st )
+        let cn = node :?> IConfigureNode
+        let tdnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+
+        ss.p_GetAncestorTargetDevice <- ( fun argnode ->
+            Assert.True(( argnode = cn ))
+            Some tdnode
+        )
+        ss.p_GetAncestorLogicalUnit <- ( fun argnode ->
+            Assert.True(( argnode = cn ))
+            Some lunode
+        )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
+        cc.p_DebugMedia_GetTaskWaitStatus <- ( fun tdid lun mdid ->
+            Assert.True(( tdid = tdnode.TargetDeviceID ))
+            Assert.True(( lun = ( lunode :> ILUNode ).LUN ))
+            Assert.True(( mdid = ( cn :?> IMediaNode ).IdentNumber ))
+            Task.FromResult []
+        )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
+        Assert.True(( r ))
+        Assert.True(( stat = Some( ss, cc, cn ) ))
+
+        let out_rs = GenOutputStreamReader out_ms out_ws
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "Task wait status"
+
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Theory>]
+    [<MemberData( "m_CommandLoop_add_trap_error_data" )>]
+    member _.CommandLoop_task_list_002  ( node : obj ) ( prompt : obj ) =
+        CommandLoop_UnknownCommand "task list" ( node :?> IConfigureNode ) ( prompt :?> string )
+
+    [<Theory>]
+    [<MemberData( "m_CommandLoop_add_trap_data" )>]
+    member _.CommandLoop_task_resume_001  ( node : obj ) ( prompt : obj ) =
+        let st = new StringTable( "" )
+        let in_ms, in_ws, in_rs = GenCommandStream( "task resume /t 1 /i 2" )
+        let out_ms, out_ws = GenOutputStream()
+        let cr = new CommandRunner( st, in_rs, out_ws )
+        let ss = new ServerStatusStub( st )
+        let cc = new CtrlConnectionStub( st )
+        let cn = node :?> IConfigureNode
+        let tdnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+
+        ss.p_GetAncestorTargetDevice <- ( fun argnode ->
+            Assert.True(( argnode = cn ))
+            Some tdnode
+        )
+        ss.p_GetAncestorLogicalUnit <- ( fun argnode ->
+            Assert.True(( argnode = cn ))
+            Some lunode
+        )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
+        cc.p_DebugMedia_Resume <- ( fun tdid lun mdid tsih itt ->
+            Assert.True(( tdid = tdnode.TargetDeviceID ))
+            Assert.True(( lun = ( lunode :> ILUNode ).LUN ))
+            Assert.True(( mdid = ( cn :?> IMediaNode ).IdentNumber ))
+            Assert.True(( tsih = ( tsih_me.fromPrim 1us ) ))
+            Assert.True(( itt = ( itt_me.fromPrim 2u ) ))
+            Task.FromResult()
+        )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
+        Assert.True(( r ))
+        Assert.True(( stat = Some( ss, cc, cn ) ))
+
+        let out_rs = GenOutputStreamReader out_ms out_ws
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "Task( TSIH=1, ITT=2 ) resumed"
+
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Theory>]
+    [<MemberData( "m_CommandLoop_add_trap_error_data" )>]
+    member _.CommandLoop_task_resume_002  ( node : obj ) ( prompt : obj ) =
+        CommandLoop_UnknownCommand "task resume /t 1 /i 2" ( node :?> IConfigureNode ) ( prompt :?> string )
 
     [<Theory>]
     [<MemberData( "m_CommandLoop_exit_data" )>]     // same as test data for exit command
