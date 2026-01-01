@@ -1,0 +1,12 @@
+<root namespace='Haruka.Test.UT.ConfRW_002_Blocksize' class='ConfRW_UT002_Blocksize' >
+  <form name='Test'>
+    <item name='D1' constraint='Blocksize' />
+    <item name='D2' constraint='Blocksize' mincount='2' maxcount='3'/>
+    <item name='D3' constraint='Blocksize' mincount='0' maxcount='1'/>
+    <item name='D4' constraint='Blocksize' hidden='true'/>
+    <item name='D5' constraint='Blocksize' hidden='true' default='512'/>
+    <item name='D6' constraint='Blocksize' hidden='true' defaultref='NUM_512'/>
+    <item name='D7' constraint='Blocksize' mincount='0' maxcount='1' default='4096'/>
+    <item name='D8' constraint='Blocksize' mincount='0' maxcount='1' defaultref='NUM_4096'/>
+  </form>
+</root>

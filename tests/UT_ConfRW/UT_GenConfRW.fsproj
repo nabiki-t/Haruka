@@ -28,6 +28,7 @@
     <Compile Include="ConfRW\ConfRWTest_002_BLKCNT16_T.fs" />
     <Compile Include="ConfRW\ConfRWTest_002_BLKCNT32_T.fs" />
     <Compile Include="ConfRW\ConfRWTest_002_BLKCNT64_T.fs" />
+    <Compile Include="ConfRW\ConfRWTest_002_Blocksize.fs" />
     <Compile Include="ConfRW\ConfRWTest_002_boolean.fs" />
     <Compile Include="ConfRW\ConfRWTest_002_CID_T.fs" />
     <Compile Include="ConfRW\ConfRWTest_002_CONCNT_T.fs" />
@@ -80,6 +81,7 @@
     <Content Include="ConfRW\ConfRWTest_002_BLKCNT16_T.xml" />
     <Content Include="ConfRW\ConfRWTest_002_BLKCNT32_T.xml" />
     <Content Include="ConfRW\ConfRWTest_002_BLKCNT64_T.xml" />
+    <Content Include="ConfRW\ConfRWTest_002_Blocksize.xml" />
     <Content Include="ConfRW\ConfRWTest_002_boolean.xml" />
     <Content Include="ConfRW\ConfRWTest_002_CID_T.xml" />
     <Content Include="ConfRW\ConfRWTest_002_CONCNT_T.xml" />

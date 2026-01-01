@@ -305,6 +305,62 @@ type Standpoint =
     | Target
     | Initiator
 
+/// Define possible block sizes
+[<Struct; IsReadOnly>]
+type Blocksize =
+    | BS_512
+    | BS_4096
+
+    /// <summary>
+    /// Get string name value corresponging to Blocksize value.
+    /// </summary>
+    static member toStringName : ( Blocksize -> string ) =
+        function
+        | Blocksize.BS_512 -> "512"
+        | Blocksize.BS_4096 -> "4096"
+
+    /// <summary>
+    /// Get Blocksize value corresponging to specified string value. If argument is unexpected string, 512 bytes is returned.
+    /// </summary>
+    static member fromStringValue : ( string -> Blocksize ) =
+        function
+        | "512" -> Blocksize.BS_512
+        | "4096" -> Blocksize.BS_4096
+        | _ -> Blocksize.BS_512
+
+    /// <summary>
+    /// Get uint16 valuee corresponging to Blocksize value.
+    /// </summary>
+    static member toUInt16 ( v : Blocksize ) : uint16 =
+        match v with
+        | Blocksize.BS_512 -> 512us
+        | Blocksize.BS_4096 -> 4096us
+
+    /// <summary>
+    /// Get uint32 valuee corresponging to Blocksize value.
+    /// </summary>
+    static member toUInt32 ( v : Blocksize ) : uint32 =
+        match v with
+        | Blocksize.BS_512 -> 512u
+        | Blocksize.BS_4096 -> 4096u
+
+    /// <summary>
+    /// Get uint32 valuee corresponging to Blocksize value.
+    /// </summary>
+    static member toUInt64 ( v : Blocksize ) : uint64 =
+        match v with
+        | Blocksize.BS_512 -> 512UL
+        | Blocksize.BS_4096 -> 4096UL
+
+    /// <summary>
+    ///  All of values.
+    /// </summary>
+    static member Values : Blocksize [] = [|
+        Blocksize.BS_512;
+        Blocksize.BS_4096;
+    |]
+
+
 //=============================================================================
 // Measure type definitions.
 

@@ -259,6 +259,7 @@ let GetPrimeTypeName( tName : string ) : string =
     | "BLKCNT16_T" -> "BLKCNT16_T"
     | "BLKCNT32_T" -> "BLKCNT32_T"
     | "BLKCNT64_T" -> "BLKCNT64_T"
+    | "Blocksize" -> "Blocksize"
     | _ -> sprintf "T_%s" tName
 
 /// <summary>
@@ -685,6 +686,19 @@ let OutputOwnNode ( outfile : TextWriter ) ( elem : XElement ) ( indent : int ) 
                 fprintfn outfile "%s  </xsd:simpleType>" indentStr
                 fprintfn outfile "%s</xsd:element>" indentStr
 
+            | "Blocksize" ->
+                let patternStr =
+                    Blocksize.Values
+                    |> Array.map Blocksize.toStringName
+                    |> String.concat "|"
+                fprintfn outfile "%s%s" indentStr ( GenElementTagStr "" elem parentIsSelection )
+                fprintfn outfile "%s  <xsd:simpleType>" indentStr
+                fprintfn outfile "%s    <xsd:restriction base='xsd:string'>" indentStr
+                fprintfn outfile "%s      <xsd:pattern value='^%s$' />" indentStr patternStr
+                fprintfn outfile "%s    </xsd:restriction>" indentStr
+                fprintfn outfile "%s  </xsd:simpleType>" indentStr
+                fprintfn outfile "%s</xsd:element>" indentStr
+
             | _ ->
                 // If the constraint specifies a type name other than the default type,
                 // it is a reference to a type defined separately.
@@ -821,6 +835,8 @@ let callReadFuncStr ( className : string ) ( elemCallName : string ) ( constrain
         sprintf "blkcnt_me.ofUInt32( UInt32.Parse( %s.Value ) )" elemCallName
     | "BLKCNT64_T" ->
         sprintf "blkcnt_me.ofUInt64( UInt64.Parse( %s.Value ) )" elemCallName
+    | "Blocksize" ->
+        sprintf "Blocksize.fromStringValue( %s.Value )" elemCallName
     | _ ->
         sprintf "%s.Read_T_%s( %s )" className constraintStr elemCallName
 
@@ -915,6 +931,8 @@ let genSetDefaultValueStr ( defValue : string ) ( constraintStr : string ) : str
         sprintf "blkcnt_me.ofUInt32( %su )" defValue
     | "BLKCNT64_T" ->
         sprintf "blkcnt_me.ofUInt64( %sUL )" defValue
+    | "Blocksize" ->
+        sprintf "Blocksize.fromStringValue( \"%s\" )" defValue
     | _ ->
         raise <| new System.Exception( "Unknown type name. " + constraintStr )
 
@@ -1018,6 +1036,8 @@ let genSetDefaultValueStr_Default ( constraintStr : string ) : string =
         "blkcnt_me.zero32"
     | "BLKCNT64_T" ->
         "blkcnt_me.zero64"
+    | "Blocksize" ->
+        "Blocksize.BS_512"
     | _ ->
         raise <| new System.Exception( "Unknown type name. " + constraintStr )
 
@@ -1418,6 +1438,9 @@ let callWriteFuncStr ( outfile : TextWriter ) ( indent : int ) ( className : str
 
     | "BLKCNT64_T" ->
         fprintfn outfile "%syield sprintf \"%%s%%s<%s>%%d</%s>\" singleIndent indentStr ( blkcnt_me.toUInt64 (%s) )" indentStr elemName elemName elemCallName
+
+    | "Blocksize" ->
+        fprintfn outfile "%syield sprintf \"%%s%%s<%s>%%s</%s>\" singleIndent indentStr ( Blocksize.toStringName (%s) )" indentStr elemName elemName elemCallName
 
     | _ ->
         fprintfn outfile "%syield! %s.T_%s_toString ( indent + 1 ) indentStep ( %s ) \"%s\"" indentStr className constraintStr elemCallName elemName

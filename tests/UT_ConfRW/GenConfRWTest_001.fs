@@ -3970,3 +3970,103 @@ type GenConfRW_Test_001 () =
         | _->
             ()
 
+    [<Theory>]
+    [<InlineData( "<Test><D1>aaa</D1><D2>512</D2><D2>512</D2><D3>512</D3></Test>" )>]
+    [<InlineData( "<Test><D1>-1</D1><D2>512</D2><D2>512</D2><D3>512</D3></Test>" )>]
+    [<InlineData( "<Test><D1>4096</D1><D2>512</D2><D3>512</D3></Test>" )>]
+    [<InlineData( "<Test><D1>4096</D1><D2>512</D2><D2>512</D2><D2>512</D2><D2>512</D2><D3>512</D3></Test>" )>]
+    [<InlineData( "<Test><D1>4096</D1><D2>512</D2><D2>512</D2><D3>512</D3><D3>512</D3></Test>" )>]
+    [<InlineData( "<Test><D1>4096</D1><D2>512</D2><D2>512</D2><D3>512</D3><D3>512</D3><D3>512</D3></Test>" )>]
+    [<InlineData( "<Test><D1>4096</D1><D2>512</D2><D2>512</D2><D3>512</D3><D4>512</D4></Test>" )>]
+    [<InlineData( "<Test><D1>4096</D1><D2>512</D2><D2>512</D2><D3>512</D3><D5>512</D5></Test>" )>]
+    [<InlineData( "<Test><D1>4096</D1><D2>512</D2><D2>512</D2><D3>512</D3><D6>512</D6></Test>" )>]
+    member _.SingleValue_Blocksize_001 ( s : string ) =
+        try
+            ConfRW_002_Blocksize.ConfRW_UT002_Blocksize.LoadString s |> ignore
+            Assert.Fail __LINE__
+        with
+        | :? Xunit.Sdk.FailException -> reraise();
+        | _->
+            ()
+
+    [<Theory>]
+    [<InlineData( "<Test><D1>512</D1><D2>512</D2><D2>512</D2><D3>512</D3></Test>", "512" )>]
+    [<InlineData( "<Test><D1>4096</D1><D2>512</D2><D2>512</D2><D3>512</D3></Test>", "4096" )>]
+    member _.SingleValue_Blocksize_002 ( s : string ) ( exr : string ) =
+        let r = ConfRW_002_Blocksize.ConfRW_UT002_Blocksize.LoadString s
+        Assert.True( r.D1 = Blocksize.fromStringValue exr )
+
+    static member m_SingleValue_Blocksize_003_data = [|
+        [| "<Test><D1>512</D1><D2>512</D2><D2>4096</D2><D3>512</D3></Test>" :> obj; [ Blocksize.BS_512; Blocksize.BS_4096; ] :> obj |];
+        [| "<Test><D1>512</D1><D2>512</D2><D2>4096</D2><D2>512</D2><D3>512</D3></Test>" :> obj; [ Blocksize.BS_512; Blocksize.BS_4096; Blocksize.BS_512; ] :> obj |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_Blocksize_003_data" )>]
+    member _.SingleValue_Blocksize_003 ( s : String ) ( exr : Blocksize list ) =
+        let r = ConfRW_002_Blocksize.ConfRW_UT002_Blocksize.LoadString s
+        Assert.True( r.D2 = exr )
+
+    static member m_SingleValue_Blocksize_004_data = [|
+        [| "<Test><D1>512</D1><D2>512</D2><D2>512</D2></Test>" :> obj; None :> obj |];
+        [| "<Test><D1>512</D1><D2>512</D2><D2>512</D2><D3>4096</D3></Test>" :> obj; Some( Blocksize.BS_4096 ) :> obj |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_Blocksize_004_data" )>]
+    member _.SingleValue_Blocksize_004 ( s : String ) ( exr : Blocksize option ) =
+        let r = ConfRW_002_Blocksize.ConfRW_UT002_Blocksize.LoadString s
+        Assert.True( r.D3 = exr )
+
+    static member m_SingleValue_Blocksize_005_data = [|
+        [| "<Test><D1>512</D1><D2>512</D2><D2>512</D2></Test>" :> obj; Blocksize.BS_4096 :> obj; Blocksize.BS_4096 :> obj; |];
+        [| "<Test><D1>512</D1><D2>512</D2><D2>512</D2><D7>512</D7><D8>512</D8></Test>" :> obj; Blocksize.BS_512 :> obj; Blocksize.BS_512 :> obj; |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_Blocksize_005_data" )>]
+    member _.SingleValue_Blocksize_005 ( s : string ) ( exr_D7 : Blocksize ) ( exr_D8 : Blocksize ) =
+        let r = ConfRW_002_Blocksize.ConfRW_UT002_Blocksize.LoadString s
+        Assert.True( r.D4 = Blocksize.BS_512 )
+        Assert.True( r.D5 = Blocksize.BS_512 )
+        Assert.True( r.D6 = Blocksize.BS_512 )
+        Assert.True( r.D7 = exr_D7 )
+        Assert.True( r.D8 = exr_D8 )
+
+    static member m_SingleValue_Blocksize_006_data = [|
+        [|
+            ( { D1 = Blocksize.BS_512; D2 = [ Blocksize.BS_512; Blocksize.BS_4096; ]; D3 = None; D4 = Blocksize.BS_512; D5 = Blocksize.BS_512; D6 = Blocksize.BS_4096; D7 = Blocksize.BS_512; D8 = Blocksize.BS_4096; } : ConfRW_002_Blocksize.T_Test ) :> obj;
+            "<Test><D1>512</D1><D2>512</D2><D2>4096</D2><D7>512</D7><D8>4096</D8></Test>" :> obj
+        |];
+        [|
+            ( { D1 = Blocksize.BS_4096; D2 = [ Blocksize.BS_512; Blocksize.BS_4096; Blocksize.BS_512; ]; D3 = None; D4 = Blocksize.BS_512; D5 = Blocksize.BS_512; D6 = Blocksize.BS_512; D7 = Blocksize.BS_4096; D8 = Blocksize.BS_512; } : ConfRW_002_Blocksize.T_Test ) :> obj;
+            "<Test><D1>4096</D1><D2>512</D2><D2>4096</D2><D2>512</D2><D7>4096</D7><D8>512</D8></Test>" :> obj
+        |];
+        [|
+            ( { D1 = Blocksize.BS_512; D2 = [ Blocksize.BS_512; Blocksize.BS_4096; ]; D3 = Some( Blocksize.BS_4096 ); D4 = Blocksize.BS_512; D5 = Blocksize.BS_512; D6 = Blocksize.BS_4096; D7 = Blocksize.BS_512; D8 = Blocksize.BS_4096; } : ConfRW_002_Blocksize.T_Test ) :> obj;
+            "<Test><D1>512</D1><D2>512</D2><D2>4096</D2><D3>4096</D3><D7>512</D7><D8>4096</D8></Test>" :> obj
+        |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_Blocksize_006_data" )>]
+    member _.SingleValue_Blocksize_006 ( s : ConfRW_002_Blocksize.T_Test ) ( exr : string ) =
+        let r = ConfRW_002_Blocksize.ConfRW_UT002_Blocksize.ToString s
+        Assert.True(( r = exr ))
+
+    static member m_SingleValue_Blocksize_007_data = [|
+        [| ( { D1 = Blocksize.BS_512; D2 = [ Blocksize.BS_512; ]; D3 = None; D4 = Blocksize.BS_512; D5 = Blocksize.BS_512; D6 = Blocksize.BS_4096; D7 = Blocksize.BS_512; D8 = Blocksize.BS_4096; } : ConfRW_002_Blocksize.T_Test ) :> obj |];
+        [| ( { D1 = Blocksize.BS_512; D2 = [ Blocksize.BS_512; Blocksize.BS_4096; Blocksize.BS_512; Blocksize.BS_4096; ]; D3 = None; D4 = Blocksize.BS_512; D5 = Blocksize.BS_512; D6 = Blocksize.BS_4096; D7 = Blocksize.BS_512; D8 = Blocksize.BS_4096; } : ConfRW_002_Blocksize.T_Test ) :> obj |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_Blocksize_007_data" )>]
+    member _.SingleValue_Blocksize_007 ( s : ConfRW_002_Blocksize.T_Test ) =
+        try
+            ConfRW_002_Blocksize.ConfRW_UT002_Blocksize.ToString s |> ignore
+            Assert.Fail __LINE__
+        with
+        | :? Xunit.Sdk.FailException -> reraise();
+        | _->
+            ()
+

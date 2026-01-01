@@ -1413,6 +1413,11 @@ module Constants =
     type internal TypeMarker = interface end
     let constants_type_maker = typeof<TypeMarker>.DeclaringType
 
+    // Values ​​used in test cases
+    let NUM_16 : int = 16
+    let NUM_512 : int = 512
+    let NUM_4096 : int = 4096
+
     //=============================================================================
     // Persistently stable constatns.
 
