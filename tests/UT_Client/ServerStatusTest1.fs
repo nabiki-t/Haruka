@@ -766,9 +766,9 @@ type ServerStatus_Test1() =
             LogicalUnit = [
                 {
                     LUN = lun_me.fromPrim 1UL;
-                    LUName = "";
+                    LUName = "a111";
                     WorkPath = "";
-                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
+                    MaxMultiplicity = ( Constants.LU_MIN_MULTIPLICITY + 1u );
                     LUDevice = TargetGroupConf.U_BlockDevice({
                         Peripheral = TargetGroupConf.U_PlainFile({
                             IdentNumber = mediaidx_me.fromPrim 1u;
@@ -778,38 +778,44 @@ type ServerStatus_Test1() =
                             QueueWaitTimeOut = Constants.PLAINFILE_MIN_QUEUEWAITTIMEOUT;
                             WriteProtect = false;
                         });
+                        FallbackBlockSize = Blocksize.BS_512;
+                        OptimalTransferLength = blkcnt_me.ofUInt32 ( Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH + 1u );
                     });
                 };
                 {
                     LUN = lun_me.fromPrim 2UL;
-                    LUName = "";
+                    LUName = "a222";
                     WorkPath = "";
-                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
+                    MaxMultiplicity = ( Constants.LU_MIN_MULTIPLICITY + 2u );
                     LUDevice = TargetGroupConf.U_BlockDevice({
                         Peripheral = TargetGroupConf.U_DummyMedia({
                             IdentNumber = mediaidx_me.fromPrim 2u;
                             MediaName = "";
                         });
+                        FallbackBlockSize = Blocksize.BS_4096;
+                        OptimalTransferLength = blkcnt_me.ofUInt32 ( Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH + 2u );
                     });
                 }
                 {
                     LUN = lun_me.fromPrim 3UL;
-                    LUName = "";
+                    LUName = "a333";
                     WorkPath = "";
-                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
+                    MaxMultiplicity = ( Constants.LU_MIN_MULTIPLICITY + 3u );
                     LUDevice = TargetGroupConf.U_BlockDevice({
                         Peripheral = TargetGroupConf.U_MemBuffer({
                             IdentNumber = mediaidx_me.fromPrim 3u;
                             MediaName = "";
                             BytesCount = Constants.MEDIA_BLOCK_SIZE;
                         });
+                        FallbackBlockSize = Blocksize.BS_512;
+                        OptimalTransferLength = blkcnt_me.ofUInt32 ( Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH + 3u );
                     });
                 }
                 {
                     LUN = lun_me.fromPrim 4UL;
-                    LUName = "";
+                    LUName = "a444";
                     WorkPath = "";
-                    MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
+                    MaxMultiplicity = ( Constants.LU_MIN_MULTIPLICITY + 4u );
                     LUDevice = TargetGroupConf.U_BlockDevice({
                         Peripheral = TargetGroupConf.U_DebugMedia({
                             IdentNumber = mediaidx_me.fromPrim 4u;
@@ -819,6 +825,8 @@ type ServerStatus_Test1() =
                                 MediaName = "";
                             });
                         });
+                        FallbackBlockSize = Blocksize.BS_4096;
+                        OptimalTransferLength = blkcnt_me.ofUInt32 ( Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH + 4u );
                     });
                 }
             ];
@@ -869,9 +877,25 @@ type ServerStatus_Test1() =
                 |> List.sortBy ( fun itr -> itr.LUN )
             Assert.True(( lulist.Length = 4 ))
             Assert.True(( lulist.[0].LUN = lun_me.fromPrim 1UL ))
+            Assert.True(( lulist.[0].LUName = "a111" ))
+            Assert.True(( lulist.[0].MaxMultiplicity = Constants.LU_MIN_MULTIPLICITY + 1u ))
+            Assert.True(( ( lulist.[0] :?> ConfNode_BlockDeviceLU ).FallbackBlockSize = Blocksize.BS_512 ))
+            Assert.True(( ( lulist.[0] :?> ConfNode_BlockDeviceLU ).OptimalTransferLength = blkcnt_me.ofUInt32 ( Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH + 1u ) ))
             Assert.True(( lulist.[1].LUN = lun_me.fromPrim 2UL ))
+            Assert.True(( lulist.[1].LUName = "a222" ))
+            Assert.True(( lulist.[1].MaxMultiplicity = Constants.LU_MIN_MULTIPLICITY + 2u ))
+            Assert.True(( ( lulist.[1] :?> ConfNode_BlockDeviceLU ).FallbackBlockSize = Blocksize.BS_4096 ))
+            Assert.True(( ( lulist.[1] :?> ConfNode_BlockDeviceLU ).OptimalTransferLength = blkcnt_me.ofUInt32 ( Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH + 2u ) ))
             Assert.True(( lulist.[2].LUN = lun_me.fromPrim 3UL ))
+            Assert.True(( lulist.[2].LUName = "a333" ))
+            Assert.True(( lulist.[2].MaxMultiplicity = Constants.LU_MIN_MULTIPLICITY + 3u ))
+            Assert.True(( ( lulist.[2] :?> ConfNode_BlockDeviceLU ).FallbackBlockSize = Blocksize.BS_512 ))
+            Assert.True(( ( lulist.[2] :?> ConfNode_BlockDeviceLU ).OptimalTransferLength = blkcnt_me.ofUInt32 ( Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH + 3u ) ))
             Assert.True(( lulist.[3].LUN = lun_me.fromPrim 4UL ))
+            Assert.True(( lulist.[3].LUName = "a444" ))
+            Assert.True(( lulist.[3].MaxMultiplicity = Constants.LU_MIN_MULTIPLICITY + 4u ))
+            Assert.True(( ( lulist.[3] :?> ConfNode_BlockDeviceLU ).FallbackBlockSize = Blocksize.BS_4096 ))
+            Assert.True(( ( lulist.[3] :?> ConfNode_BlockDeviceLU ).OptimalTransferLength = blkcnt_me.ofUInt32 ( Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH + 4u ) ))
 
             let medialist1 = lulist.[0].GetDescendantNodes<IMediaNode>()
             Assert.True(( medialist1.Length = 1 ))
@@ -952,6 +976,8 @@ type ServerStatus_Test1() =
                             IdentNumber = mediaidx_me.fromPrim 1u;
                             MediaName = "";
                         });
+                        FallbackBlockSize = Blocksize.BS_512;
+                        OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
                     });
                 };
                 {
@@ -964,6 +990,8 @@ type ServerStatus_Test1() =
                             IdentNumber = mediaidx_me.fromPrim 2u;
                             MediaName = "";
                         });
+                        FallbackBlockSize = Blocksize.BS_512;
+                        OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
                     });
                 }
             ];
@@ -992,11 +1020,13 @@ type ServerStatus_Test1() =
                 Assert.True(( tlist.[0].Values.IdentNumber = tnodeidx_me.fromPrim 99u ))
                 Assert.True(( tlist.[0].Values.TargetName = "c001" ))
                 Assert.True(( tlist.[0].Values.LUN = [ lun_me.fromPrim 1UL ] ))
+
                 let lulist =
                     tglist.[0].GetAccessibleLUNodes()
                     |> List.sortBy ( fun itr -> itr.LUN )
                 Assert.True(( lulist.Length = 1 ))
                 Assert.True(( lulist.[0].LUN = lun_me.fromPrim 1UL ))
+
                 let medialist2 = lulist.[0].GetDescendantNodes<IMediaNode>()
                 Assert.True(( medialist2.Length = 1 ))
                 Assert.True(( medialist2.[0].IdentNumber = mediaidx_me.fromPrim 1u ))
@@ -1057,6 +1087,8 @@ type ServerStatus_Test1() =
                             IdentNumber = mediaidx_me.fromPrim 1u;
                             MediaName = "";
                         });
+                        FallbackBlockSize = Blocksize.BS_512;
+                        OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
                     });
                 };
             ];
@@ -1157,6 +1189,8 @@ type ServerStatus_Test1() =
                             IdentNumber = mediaidx_me.fromPrim 1u
                             MediaName = "";
                         });
+                        FallbackBlockSize = Blocksize.BS_512;
+                        OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
                     });
                 };
                 {
@@ -1169,6 +1203,8 @@ type ServerStatus_Test1() =
                             IdentNumber = mediaidx_me.fromPrim 2u
                             MediaName = "";
                         });
+                        FallbackBlockSize = Blocksize.BS_512;
+                        OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
                     });
                 };
             ];
@@ -1215,6 +1251,82 @@ type ServerStatus_Test1() =
                 Assert.True(( tg_childlu.Length = 2 ))
                 Assert.True(( tg_childlu.[0].LUName = "LU1" ))
                 Assert.True(( tg_childlu.[1].LUName = "LU2" ))
+
+            }
+            |> Functions.RunTaskSynchronously
+            |> ignore
+        finally
+            killer.NoticeTerminate()
+        GlbFunc.DeleteDir dname
+
+    [<Fact>]
+    member _.RecogniseTargetGroupConfig_005() =
+        let portNo, dname = ServerStatus_Test1.Init "RecogniseTargetGroupConfig_005"
+        let tdid = GlbFunc.newTargetDeviceID()
+        let tgid = GlbFunc.newTargetGroupID()
+        let tdConfDName = Functions.AppendPathName dname ( tdid_me.toString tdid )
+        let portalPortNo = GlbFunc.nextTcpPortNo()
+        ServerStatus_Test1.WriteCtrlConfig dname portNo
+        ServerStatus_Test1.WriteTargetDeviceConfig dname portalPortNo tdid
+
+        let tgConfFName = Functions.AppendPathName tdConfDName ( tgid_me.toString tgid )
+        let tgConf : TargetGroupConf.T_TargetGroup = {
+            TargetGroupID = tgid;
+            TargetGroupName = "b001";
+            EnabledAtStart = false;
+            Target = [
+                {
+                    IdentNumber = tnodeidx_me.fromPrim 0u;
+                    TargetPortalGroupTag = tpgt_me.fromPrim 0us;
+                    TargetName = "c001";
+                    TargetAlias = "";
+                    LUN = [ lun_me.fromPrim 1UL ];
+                    Auth = TargetGroupConf.U_None();
+                };
+            ];
+            LogicalUnit = [
+                {
+                    LUN = lun_me.fromPrim 1UL;
+                    LUName = "LU1";
+                    WorkPath = "";
+                    MaxMultiplicity = Constants.LU_MIN_MULTIPLICITY + 1u;
+                    LUDevice = TargetGroupConf.U_DummyDevice();
+                };
+            ];
+        }
+        TargetGroupConf.ReaderWriter.WriteFile tgConfFName tgConf
+        let luDName = Functions.AppendPathName tdConfDName ( lun_me.WorkDirName tgConf.LogicalUnit.[0].LUN )
+        GlbFunc.CreateDir luDName |> ignore
+
+        let killer = new HKiller() :> IKiller
+        let ctrl = new Controller( dname, killer, GlbFunc.tdExePath, GlbFunc.imExePath )
+        ctrl.LoadInitialTargetDeviceProcs()
+        ctrl.WaitRequest()
+
+        try
+            task {
+                let st = new StringTable( "" )
+                let ss = new ServerStatus( st )
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                do! ss.LoadConfigure cc1 false
+                let tdlist = ss.GetTargetDeviceNodes()
+                Assert.True(( tdlist.Length = 1 ))
+                let tglist = ( tdlist.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
+                Assert.True(( tglist.Length = 1 ))
+                let tlist = ( tglist.[0] :> IConfigureNode ).GetChildNodes<ConfNode_Target>()
+                Assert.True(( tlist.Length = 1 ))
+
+                let t1lus = ( tlist.[0] :> IConfigureNode ).GetChildNodes<ILUNode>()
+                Assert.True(( t1lus.Length = 1 ))
+                Assert.True(( t1lus.[0].LUName = "LU1" ))
+                Assert.True(( t1lus.[0].MaxMultiplicity = Constants.LU_MIN_MULTIPLICITY + 1u ))
+
+                let tg_alllus = ( tglist.[0] :> IConfigureNode ).GetDescendantNodes<ILUNode>()
+                Assert.True(( tg_alllus.Length = 1 ))
+
+                let tg_childlu = ( tglist.[0] :> IConfigureNode ).GetChildNodes<ILUNode>()
+                Assert.True(( tg_childlu.Length = 1 ))
+                Assert.True(( tg_childlu.[0].LUName = "LU1" ))
 
             }
             |> Functions.RunTaskSynchronously

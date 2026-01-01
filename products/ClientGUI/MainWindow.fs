@@ -1365,7 +1365,10 @@ type MainWindow( m_ExeDir : string ) as this =
             let luname = sprintf "LU_%d" ( lun_me.toPrim lun )
 
             // create new block device LU node
-            let newnode = doc.Stat.AddBlockDeviceLUNode_InTargetGroup confnode lun luname Constants.LU_DEF_MULTIPLICITY
+            let mult = Constants.LU_DEF_MULTIPLICITY
+            let fbs = Blocksize.BS_512
+            let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+            let newnode = doc.Stat.AddBlockDeviceLUNode_InTargetGroup confnode lun luname mult fbs otl
 
             // Add tree view item for newly created target node.
             this.CreateTreeViewItem_LU doc.Stat newnode

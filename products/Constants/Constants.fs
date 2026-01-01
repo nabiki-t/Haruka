@@ -2029,6 +2029,22 @@ module Constants =
     let LU_DEF_MULTIPLICITY : uint32 =
         8u
 
+    /// Default LU Fallback Block Size
+    let LU_DEF_FALLBACK_BLOCK_SIZE : uint32 =
+        512u
+
+    /// Minimum Optimal Transfer Length value
+    let LU_MIN_OPTIMAL_TRANSFER_LENGTH : uint32 =
+        1u
+
+    /// Maximum Optimal Transfer Length value
+    let LU_MAX_OPTIMAL_TRANSFER_LENGTH : uint32 =
+        1024u
+
+    /// Default Optimal Transfer Length value
+    let LU_DEF_OPTIMAL_TRANSFER_LENGTH : uint32 =
+        16u
+
     //=============================================================================
     // Constants convertion functions
 

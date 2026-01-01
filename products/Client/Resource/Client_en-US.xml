@@ -170,6 +170,10 @@
       <Value>LU max multiplicity value {0} is out of range. Must be {1} to {2}.</Value>
     </Message>
     <Message>
+      <Name>CHKMSG_INVALID_OPTIMAL_TRANSFER_LENGTH</Name>
+      <Value>Optimal Transfer Length value {0} is out of range. Must be {1} to {2}.</Value>
+    </Message>
+    <Message>
       <Name>CHKMSG_MISSING_LU</Name>
       <Value>LU is missing. At least one LU node must be specified.</Value>
     </Message>

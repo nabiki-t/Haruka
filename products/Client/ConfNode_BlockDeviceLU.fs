@@ -42,13 +42,21 @@ open Haruka.IODataTypes
 /// <param name="m_MaxMultiplicity">
 ///  Number of concurrent SCSI tasks within a LU.
 /// </param>
+/// <param name="m_FallbackBlockSize">
+///  The block size to use if the block size is not determined by the media configuration.
+/// </param>
+/// <param name="m_OptimalTransferLength">
+///  Optimal transfer length in block count. This value is returned as a block limit VPD page by an Inquiry command.
+/// </param>
 type ConfNode_BlockDeviceLU(
         m_MessageTable : StringTable,
         m_ConfNodes : ConfNodeRelation,
         m_NodeID : CONFNODE_T,
         m_LUN : LUN_T,
         m_LUName : string,
-        m_MaxMultiplicity : uint32
+        m_MaxMultiplicity : uint32,
+        m_FallbackBlockSize : Blocksize,
+        m_OptimalTransferLength : BLKCNT32_T
     ) =
 
     /// <summary>
@@ -77,7 +85,11 @@ type ConfNode_BlockDeviceLU(
         let lun = Functions.SearchAndConvert d "LUN" lun_me.fromStringValue ( lun_me.fromPrim 1UL )
         let name = Functions.SearchAndConvert d "Name" id ""
         let maxMultiplicity : uint32 = Functions.SearchAndConvert d "MaxMultiplicity" UInt32.Parse Constants.LU_DEF_MULTIPLICITY
-        new ConfNode_BlockDeviceLU( argMessageTable, argConfNodes, newNodeID, lun, name, maxMultiplicity )
+        let fallbackBlockSize = Functions.SearchAndConvert d "FallbackBlockSize" Blocksize.fromStringValue Blocksize.BS_512
+        let optimalTransferLength =
+            Functions.SearchAndConvert d "OptimalTransferLength" UInt32.Parse Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+            |> blkcnt_me.ofUInt32
+        new ConfNode_BlockDeviceLU( argMessageTable, argConfNodes, newNodeID, lun, name, maxMultiplicity, fallbackBlockSize, optimalTransferLength )
 
     //=========================================================================
     // Interface method
@@ -119,6 +131,16 @@ type ConfNode_BlockDeviceLU(
                     let mins = sprintf "%d" Constants.LU_MIN_MULTIPLICITY
                     let maxs = sprintf "%d" Constants.LU_MAX_MULTIPLICITY
                     ( m_NodeID, m_MessageTable.GetMessage( "CHKMSG_INVALID_LU_MAXMULTIPLICITY", vs, mins, maxs ) ) :: argmsg
+                else
+                    argmsg
+            )
+            |> ( fun argmsg ->
+                let v = blkcnt_me.toUInt32 m_OptimalTransferLength
+                if v < Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH || v > Constants.LU_MAX_OPTIMAL_TRANSFER_LENGTH then
+                    let vs = sprintf "%d" m_OptimalTransferLength
+                    let mins = sprintf "%d" Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH
+                    let maxs = sprintf "%d" Constants.LU_MAX_OPTIMAL_TRANSFER_LENGTH
+                    ( m_NodeID, m_MessageTable.GetMessage( "CHKMSG_INVALID_OPTIMAL_TRANSFER_LENGTH", vs, mins, maxs ) ) :: argmsg
                 else
                     argmsg
             )
@@ -212,6 +234,8 @@ type ConfNode_BlockDeviceLU(
                 yield sprintf "  LUN  : %s" ( lun_me.toString m_LUN )
                 yield sprintf "  Name(string)  : %s" m_LUName
                 yield sprintf "  MaxMultiplicity(uint32) : %d" m_MaxMultiplicity
+                yield sprintf "  FallbackBlockSize(512or4096) : %s" ( m_FallbackBlockSize |> Blocksize.toStringName )
+                yield sprintf "  OptimalTransferLength(uint32) : %d" m_OptimalTransferLength
             ]
 
         // ------------------------------------------------------------------------
@@ -242,6 +266,14 @@ type ConfNode_BlockDeviceLU(
                     yield {
                         Name = "MaxMultiplicity";
                         Value = sprintf "%d" m_MaxMultiplicity;
+                    }
+                    yield {
+                        Name = "FallbackBlockSize";
+                        Value = m_FallbackBlockSize |> Blocksize.toStringName;
+                    }
+                    yield {
+                        Name = "OptimalTransferLength";
+                        Value = sprintf "%d" m_OptimalTransferLength;
                     }
                 ]
             }
@@ -278,7 +310,11 @@ type ConfNode_BlockDeviceLU(
                 LUName = m_LUName;
                 WorkPath = "";
                 MaxMultiplicity = m_MaxMultiplicity;
-                LUDevice = TargetGroupConf.T_DEVICE.U_BlockDevice( { Peripheral = media; } );
+                LUDevice = TargetGroupConf.T_DEVICE.U_BlockDevice({
+                    Peripheral = media;
+                    FallbackBlockSize = m_FallbackBlockSize;
+                    OptimalTransferLength = m_OptimalTransferLength;
+                });
             }
 
     //=========================================================================
@@ -317,8 +353,22 @@ type ConfNode_BlockDeviceLU(
     /// <returns>
     ///  Created new node that has specified new values and same node ID.
     /// </returns>
+    /// <param name="fallbackBlockSize">
+    ///  The block size to use if the block size is not determined by the media configuration.
+    /// </param>
+    /// <param name="optimalTransferLength">
+    ///  Optimal transfer length in block count. This value is returned as a block limit VPD page by an Inquiry command.
+    /// </param>
     member _.CreateUpdatedNode 
         ( argLUN : LUN_T )
-        ( argLUName : string ) 
-        ( argMaxMultiplicity : uint32 ) : ConfNode_BlockDeviceLU =
-        new ConfNode_BlockDeviceLU( m_MessageTable, m_ConfNodes, m_NodeID, argLUN, argLUName, argMaxMultiplicity )
+        ( argLUName : string )
+        ( argMaxMultiplicity : uint32 )
+        ( fallbackBlockSize : Blocksize )
+        ( optimalTransferLength : BLKCNT32_T ) : ConfNode_BlockDeviceLU =
+        new ConfNode_BlockDeviceLU( m_MessageTable, m_ConfNodes, m_NodeID, argLUN, argLUName, argMaxMultiplicity, fallbackBlockSize, optimalTransferLength )
+
+    /// FallbackBlockSize property
+    member _.FallbackBlockSize = m_FallbackBlockSize
+
+    /// OptimalTransferLength property
+    member _.OptimalTransferLength = m_OptimalTransferLength

@@ -56,8 +56,8 @@ type ServerStatusStub( m_MessageTable : StringTable ) =
     let mutable m_UpdateTargetNode : ( ConfNode_Target -> TargetGroupConf.T_Target -> ConfNode_Target ) option = None
     let mutable m_AddTargetLURelation : ( ConfNode_Target -> ILUNode -> unit ) option = None
     let mutable m_DeleteTargetLURelation : ( ConfNode_Target -> ILUNode -> unit ) option = None
-    let mutable m_AddBlockDeviceLUNode : ( ConfNode_Target -> LUN_T -> string -> uint32 -> ConfNode_BlockDeviceLU ) option = None
-    let mutable m_UpdateBlockDeviceLUNode : ( ConfNode_BlockDeviceLU -> LUN_T -> string -> uint32 -> ConfNode_BlockDeviceLU ) option = None
+    let mutable m_AddBlockDeviceLUNode : ( ConfNode_Target -> LUN_T -> string -> uint32 -> Blocksize -> BLKCNT32_T -> ConfNode_BlockDeviceLU ) option = None
+    let mutable m_UpdateBlockDeviceLUNode : ( ConfNode_BlockDeviceLU -> LUN_T -> string -> uint32 -> Blocksize -> BLKCNT32_T -> ConfNode_BlockDeviceLU ) option = None
     let mutable m_AddDummyDeviceLUNode : ( ConfNode_Target -> LUN_T -> string -> uint32 -> ConfNode_DummyDeviceLU ) option = None
     let mutable m_UpdateDummyDeviceLUNode : ( ConfNode_DummyDeviceLU -> LUN_T -> string -> uint32 -> ConfNode_DummyDeviceLU ) option = None
     let mutable m_AddPlainFileMediaNode : ( IConfigureNode -> TargetGroupConf.T_PlainFile -> ConfNode_PlainFileMedia ) option = None
@@ -146,8 +146,8 @@ type ServerStatusStub( m_MessageTable : StringTable ) =
     override _.UpdateTargetNode tnode argConf = m_UpdateTargetNode.Value tnode argConf
     override _.AddTargetLURelation tNode luNode = m_AddTargetLURelation.Value tNode luNode
     override _.DeleteTargetLURelation tNode luNode = m_DeleteTargetLURelation.Value tNode luNode
-    override _.AddBlockDeviceLUNode tnode argLUN argLUName argMaxMultiplicity = m_AddBlockDeviceLUNode.Value tnode argLUN argLUName argMaxMultiplicity
-    override _.UpdateBlockDeviceLUNode lunode argLUN argLUName argMaxMultiplicity = m_UpdateBlockDeviceLUNode.Value lunode argLUN argLUName argMaxMultiplicity
+    override _.AddBlockDeviceLUNode tnode argLUN argLUName argMaxMultiplicity argFallbackBlockSize argOptimalTransferLength = m_AddBlockDeviceLUNode.Value tnode argLUN argLUName argMaxMultiplicity argFallbackBlockSize argOptimalTransferLength
+    override _.UpdateBlockDeviceLUNode lunode argLUN argLUName argMaxMultiplicity argFallbackBlockSize argOptimalTransferLength = m_UpdateBlockDeviceLUNode.Value lunode argLUN argLUName argMaxMultiplicity argFallbackBlockSize argOptimalTransferLength
     override _.AddDummyDeviceLUNode tnode argLUN argLUName argMaxMultiplicity = m_AddDummyDeviceLUNode.Value tnode argLUN argLUName argMaxMultiplicity
     override _.UpdateDummyDeviceLUNode lunode argLUN argLUName argMaxMultiplicity = m_UpdateDummyDeviceLUNode.Value lunode argLUN argLUName argMaxMultiplicity
     override _.AddPlainFileMediaNode parentNode argValue = m_AddPlainFileMediaNode.Value parentNode argValue
@@ -452,7 +452,10 @@ type CommandRunner_Test1() =
 
     static member m_BlockDeviceLUNode =
         let cnr = new ConfNodeRelation()
-        let n = new ConfNode_BlockDeviceLU( new StringTable( "" ), cnr, confnode_me.fromPrim 0UL, lun_me.zero, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
+        let mult = Constants.LU_DEF_MULTIPLICITY
+        let fbs = Blocksize.BS_512
+        let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+        let n = new ConfNode_BlockDeviceLU( new StringTable( "" ), cnr, confnode_me.fromPrim 0UL, lun_me.zero, "", mult, fbs, otl ) :> IConfigureNode
         cnr.AddNode n
         n
 
@@ -2038,7 +2041,7 @@ type CommandRunner_Test1() =
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
         let mutable flg1 = false
 
-        ss.p_AddBlockDeviceLUNode <- ( fun argtnode lun luname mm ->
+        ss.p_AddBlockDeviceLUNode <- ( fun argtnode lun luname mm fbs otl ->
             flg1 <- true
             Assert.True(( tnode = argtnode ))
             lunode

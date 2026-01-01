@@ -2090,6 +2090,9 @@ type ConfNode_TargetDevice_Test() =
     member _.Validate_054() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
+        let mult = Constants.LU_DEF_MULTIPLICITY
+        let fbs = Blocksize.BS_512
+        let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
         let targetConf1 = {
             defaultTargetConf with
                 IdentNumber = tnodeidx_me.fromPrim 1u;
@@ -2105,11 +2108,11 @@ type ConfNode_TargetDevice_Test() =
         let np = new ConfNode_NetworkPortal( st, rel, rel.NextID, defaultConf.NetworkPortal.[0] ) :> IConfigureNode
         let tg1 = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let tn1 = new ConfNode_Target( st, rel, rel.NextID, targetConf1 ) :> IConfigureNode
-        let dd1 = new ConfNode_BlockDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
+        let dd1 = new ConfNode_BlockDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", mult, fbs, otl ) :> ILUNode
         let dm1 = new ConfNode_DummyMedia( st, rel, rel.NextID, mediaidx_me.fromPrim 1u, "" ) :> IMediaNode
         let tg2 = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "b", true, ModifiedStatus.NotModified ) :> IConfigFileNode
         let tn2 = new ConfNode_Target( st, rel, rel.NextID, targetConf2 ) :> IConfigureNode
-        let dd2 = new ConfNode_BlockDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 2UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
+        let dd2 = new ConfNode_BlockDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 2UL, "", mult, fbs, otl ) :> ILUNode
         let dm2 = new ConfNode_DummyMedia( st, rel, rel.NextID, mediaidx_me.fromPrim 1u, "" ) :> IMediaNode
         rel.AddNode cn
         rel.AddNode n

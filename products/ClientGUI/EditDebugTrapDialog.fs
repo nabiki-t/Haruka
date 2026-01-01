@@ -34,7 +34,7 @@ type EditDebugTrapDialog( m_Config : GUIConfig ) as this =
     let m_Window = m_Config.UIElem.Get( PropertyViewIndex.PVI_EDIT_DEBUG_TRAP ) :?> Window
 
     // Get controll objects in Dialog.
-    let m_EditDebugTrapDialog = m_Window.FindName( "EditDebugTrapDialog" ) :?> ComboBox
+//    let m_EditDebugTrapDialog = m_Window.FindName( "EditDebugTrapDialog" ) :?> ComboBox
     let m_EventCombo = m_Window.FindName( "EventCombo" ) :?> ComboBox
     let m_StartLBATextBox = m_Window.FindName( "StartLBATextBox" ) :?> TextBox
     let m_EndLBATextBox = m_Window.FindName( "EndLBATextBox" ) :?> TextBox

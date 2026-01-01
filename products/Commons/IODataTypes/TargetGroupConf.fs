@@ -72,6 +72,8 @@ and [<NoComparison>]T_DEVICE =
 
 and [<NoComparison>]T_BlockDevice = {
     Peripheral : T_MEDIA;
+    FallbackBlockSize : Blocksize;
+    OptimalTransferLength : BLKCNT32_T;
 }
 
 and [<NoComparison>]T_MEDIA = 
@@ -269,6 +271,21 @@ type ReaderWriter() =
       <xsd:element name='BlockDevice' >
         <xsd:complexType><xsd:sequence>
           <xsd:element name='Peripheral' type='MEDIA' ></xsd:element>
+          <xsd:element name='FallbackBlockSize' minOccurs='0' maxOccurs='1' >
+            <xsd:simpleType>
+              <xsd:restriction base='xsd:string'>
+                <xsd:pattern value='^512|4096$' />
+              </xsd:restriction>
+            </xsd:simpleType>
+          </xsd:element>
+          <xsd:element name='OptimalTransferLength' minOccurs='0' maxOccurs='1' >
+            <xsd:simpleType>
+              <xsd:restriction base='xsd:unsignedInt'>
+                <xsd:minInclusive value='1' />
+                <xsd:maxInclusive value='1024' />
+              </xsd:restriction>
+            </xsd:simpleType>
+          </xsd:element>
         </xsd:sequence></xsd:complexType>
       </xsd:element>
       <xsd:element name='DummyDevice' >
@@ -644,6 +661,18 @@ type ReaderWriter() =
         {
             Peripheral =
                 ReaderWriter.Read_T_MEDIA( elem.Element( XName.Get "Peripheral" ) );
+            FallbackBlockSize = 
+                let subElem = elem.Element( XName.Get "FallbackBlockSize" )
+                if subElem = null then
+                    Blocksize.fromStringValue( "512" );
+                else
+                    Blocksize.fromStringValue( subElem.Value );
+            OptimalTransferLength = 
+                let subElem = elem.Element( XName.Get "OptimalTransferLength" )
+                if subElem = null then
+                    blkcnt_me.ofUInt32( 16u );
+                else
+                    blkcnt_me.ofUInt32( UInt32.Parse( subElem.Value ) );
         }
 
     /// <summary>
@@ -1112,6 +1141,8 @@ type ReaderWriter() =
         seq {
             yield sprintf "%s<%s>" indentStr elemName
             yield! ReaderWriter.T_MEDIA_toString ( indent + 1 ) indentStep ( elem.Peripheral ) "Peripheral"
+            yield sprintf "%s%s<FallbackBlockSize>%s</FallbackBlockSize>" singleIndent indentStr ( Blocksize.toStringName (elem.FallbackBlockSize) )
+            yield sprintf "%s%s<OptimalTransferLength>%d</OptimalTransferLength>" singleIndent indentStr ( blkcnt_me.toUInt32 (elem.OptimalTransferLength) )
             yield sprintf "%s</%s>" indentStr elemName
         }
 

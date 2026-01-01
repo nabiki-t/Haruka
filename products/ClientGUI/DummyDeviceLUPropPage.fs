@@ -175,7 +175,7 @@ type DummyDeviceLUPropPage(
     ///  If this button is enabled, it is considered that the target device is activated and the target group is activated or loaded state.
     /// </remarks>
     member private this.OnClick_LUResetButton() : unit =
-            let bdn = m_ServerStatus.GetNode m_NodeID :?> ConfNode_BlockDeviceLU
+            let bdn = m_ServerStatus.GetNode m_NodeID :?> ConfNode_DummyDeviceLU
             let tdn = ( m_ServerStatus.GetAncestorTargetDevice bdn ).Value
 
             m_MainWindow.ProcCtrlQuery true ( fun () -> task {
@@ -203,7 +203,7 @@ type DummyDeviceLUPropPage(
     /// </summary>
     member private this.OnClick_ApplyButton() : unit = 
         try
-            let bdn = m_ServerStatus.GetNode m_NodeID :?> ConfNode_BlockDeviceLU
+            let bdn = m_ServerStatus.GetNode m_NodeID :?> ConfNode_DummyDeviceLU
 
             let lun =
                 try
@@ -228,7 +228,7 @@ type DummyDeviceLUPropPage(
                     let msg = m_Config.MessagesText.GetMessage( "MSG_INVALID_LU_MAXMULTIPLICITY", mins, maxs )
                     raise <| Exception msg
 
-            let newNode = m_ServerStatus.UpdateBlockDeviceLUNode bdn lun luName maxMultiplicity
+            let newNode = m_ServerStatus.UpdateDummyDeviceLUNode bdn lun luName maxMultiplicity
             this.ShowConfigValue false false
             m_MainWindow.NoticeUpdateConfig newNode
 
@@ -247,7 +247,7 @@ type DummyDeviceLUPropPage(
     /// </summary>
     member private this.OnTimer() : unit = 
         m_Timer.Stop()
-        let bdn = m_ServerStatus.GetNode m_NodeID :?> ConfNode_BlockDeviceLU
+        let bdn = m_ServerStatus.GetNode m_NodeID :?> ConfNode_DummyDeviceLU
         let tgn = ( m_ServerStatus.GetAncestorTargetGroup bdn ).Value
         let tdn = ( m_ServerStatus.GetAncestorTargetDevice bdn ).Value
 

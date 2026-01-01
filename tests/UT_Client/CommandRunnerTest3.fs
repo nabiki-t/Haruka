@@ -329,7 +329,10 @@ type CommandRunner_Test3() =
         let st = StringTable( "" )
         let cnr = new ConfNodeRelation()
         let cn = new ConfNode_Controller( st, cnr, cnr.NextID ) :> IConfigureNode
-        let bdn = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.zero, "", Constants.LU_DEF_MULTIPLICITY )
+        let mult = Constants.LU_DEF_MULTIPLICITY
+        let fbs = Blocksize.BS_512
+        let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+        let bdn = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.zero, "", mult, fbs, otl )
         let mutable flg1 = false
 
         cnr.AddNode cn
@@ -659,7 +662,11 @@ type CommandRunner_Test3() =
         let st = StringTable( "" )
         let cnr = new ConfNodeRelation()
         let cn = new ConfNode_Controller( st, cnr, cnr.NextID ) :> IConfigureNode
-        let bdn = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.zero, "", Constants.LU_DEF_MULTIPLICITY )
+
+        let mult = Constants.LU_DEF_MULTIPLICITY
+        let fbs = Blocksize.BS_512
+        let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+        let bdn = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.zero, "", mult, fbs, otl )
         let mutable flg1 = false
 
         cnr.AddNode cn
@@ -2616,7 +2623,7 @@ type CommandRunner_Test3() =
         let tn = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
         let mutable flg1 = false
 
-        ss.p_AddBlockDeviceLUNode <- ( fun tnode lun luname mm ->
+        ss.p_AddBlockDeviceLUNode <- ( fun tnode lun luname mm fbs otl ->
             flg1 <- true
             Assert.True(( tnode = tn ))
             Assert.True(( lun = lun_me.fromPrim 2UL ))
@@ -2647,7 +2654,7 @@ type CommandRunner_Test3() =
         let tn = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
         let mutable flg1 = false
 
-        ss.p_AddBlockDeviceLUNode <- ( fun tnode lun luname mm ->
+        ss.p_AddBlockDeviceLUNode <- ( fun tnode lun luname mm fbs otl ->
             flg1 <- true
             Assert.True(( tnode = tn ))
             Assert.True(( lun = lun_me.fromPrim 3UL ))
@@ -2697,11 +2704,14 @@ type CommandRunner_Test3() =
         cnr.AddRelation tgn.NodeID tn1.NodeID
 
         for _ = 1 to ClientConst.MAX_CHILD_NODE_COUNT - 1 do
-            let n = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.zero, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
+            let mult = Constants.LU_DEF_MULTIPLICITY
+            let fbs = Blocksize.BS_512
+            let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+            let n = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.zero, "", mult, fbs, otl ) :> IConfigureNode
             cnr.AddNode n
             cnr.AddRelation tn1.NodeID n.NodeID
 
-        ss.p_AddBlockDeviceLUNode <- ( fun tnode lun luname mm ->
+        ss.p_AddBlockDeviceLUNode <- ( fun tnode lun luname mm fbs otl ->
             CommandRunner_Test1.m_BlockDeviceLUNode :?>ConfNode_BlockDeviceLU
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
@@ -2745,7 +2755,10 @@ type CommandRunner_Test3() =
         cnr.AddRelation tgn.NodeID tn1.NodeID
 
         for _ = 1 to ClientConst.MAX_CHILD_NODE_COUNT do
-            let n = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.zero, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
+            let mult = Constants.LU_DEF_MULTIPLICITY
+            let fbs = Blocksize.BS_512
+            let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+            let n = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.zero, "", mult, fbs, otl ) :> IConfigureNode
             cnr.AddNode n
             cnr.AddRelation tn1.NodeID n.NodeID
 
@@ -2827,7 +2840,10 @@ type CommandRunner_Test3() =
                 Auth = TargetGroupConf.T_Auth.U_None();
             }
             new ConfNode_Target( st, cnr, cnr.NextID, conf )
-        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY )
+        let mult = Constants.LU_DEF_MULTIPLICITY
+        let fbs = Blocksize.BS_512
+        let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", mult, fbs, otl )
         let mutable flg1 = false
         let mutable flg2 = false
 
@@ -2873,7 +2889,10 @@ type CommandRunner_Test3() =
                 Auth = TargetGroupConf.T_Auth.U_None();
             }
             new ConfNode_Target( st, cnr, cnr.NextID, conf )
-        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY )
+        let mult = Constants.LU_DEF_MULTIPLICITY
+        let fbs = Blocksize.BS_512
+        let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", mult, fbs, otl )
         let mutable flg1 = false
 
         cnr.AddNode tgn
@@ -2941,13 +2960,19 @@ type CommandRunner_Test3() =
         cnr.AddRelation tgn.NodeID tn2.NodeID
 
         for i = 1 to ClientConst.MAX_CHILD_NODE_COUNT do
-            let n = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim( uint64 i ), "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
+            let mult = Constants.LU_DEF_MULTIPLICITY
+            let fbs = Blocksize.BS_512
+            let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+            let n = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim( uint64 i ), "", mult, fbs, otl ) :> IConfigureNode
             cnr.AddNode n
             cnr.AddRelation tn1.NodeID n.NodeID
 
         for i = 1 to ClientConst.MAX_CHILD_NODE_COUNT - 1 do
             let wlun = lun_me.fromPrim( uint64 i + uint64 ClientConst.MAX_CHILD_NODE_COUNT )
-            let n = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, wlun, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
+            let mult = Constants.LU_DEF_MULTIPLICITY
+            let fbs = Blocksize.BS_512
+            let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+            let n = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, wlun, "", mult, fbs, otl ) :> IConfigureNode
             cnr.AddNode n
             cnr.AddRelation tn2.NodeID n.NodeID
 
@@ -3007,13 +3032,19 @@ type CommandRunner_Test3() =
         cnr.AddRelation tgn.NodeID tn2.NodeID
 
         for i = 1 to ClientConst.MAX_CHILD_NODE_COUNT do
-            let n = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim( uint64 i ), "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
+            let mult = Constants.LU_DEF_MULTIPLICITY
+            let fbs = Blocksize.BS_512
+            let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+            let n = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim( uint64 i ), "", mult, fbs, otl ) :> IConfigureNode
             cnr.AddNode n
             cnr.AddRelation tn1.NodeID n.NodeID
 
         for i = 1 to ClientConst.MAX_CHILD_NODE_COUNT do
             let wlun = lun_me.fromPrim( uint64 i + uint64 ClientConst.MAX_CHILD_NODE_COUNT )
-            let n = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, wlun, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
+            let mult = Constants.LU_DEF_MULTIPLICITY
+            let fbs = Blocksize.BS_512
+            let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+            let n = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, wlun, "", mult, fbs, otl ) :> IConfigureNode
             cnr.AddNode n
             cnr.AddRelation tn2.NodeID n.NodeID
 
@@ -3078,7 +3109,10 @@ type CommandRunner_Test3() =
                 Auth = TargetGroupConf.T_Auth.U_None();
             }
             new ConfNode_Target( st, cnr, cnr.NextID, conf )
-        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY )
+        let mult = Constants.LU_DEF_MULTIPLICITY
+        let fbs = Blocksize.BS_512
+        let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", mult, fbs, otl )
         let mutable flg2 = false
 
         cnr.AddNode tgn
@@ -3117,7 +3151,10 @@ type CommandRunner_Test3() =
                 Auth = TargetGroupConf.T_Auth.U_None();
             }
             new ConfNode_Target( st, cnr, cnr.NextID, conf )
-        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY )
+        let mult = Constants.LU_DEF_MULTIPLICITY
+        let fbs = Blocksize.BS_512
+        let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", mult, fbs, otl )
 
         cnr.AddNode tgn
         cnr.AddNode tn
@@ -3186,7 +3223,11 @@ type CommandRunner_Test3() =
                 Auth = TargetGroupConf.T_Auth.U_None();
             }
             new ConfNode_Target( st, cnr, cnr.NextID, conf ) :> IConfigureNode
-        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
+
+        let mult = Constants.LU_DEF_MULTIPLICITY
+        let fbs = Blocksize.BS_512
+        let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", mult, fbs, otl ) :> IConfigureNode
         let dmn1 = new ConfNode_DummyMedia( st, cnr, cnr.NextID, mediaidx_me.fromPrim 1u, "" ) :> IConfigureNode
         let dmn2 = new ConfNode_DummyMedia( st, cnr, cnr.NextID, mediaidx_me.fromPrim 2u, "" ) :> IConfigureNode
         let mutable flg1 = false
@@ -3262,7 +3303,10 @@ type CommandRunner_Test3() =
         cnr.AddNode tn
         cnr.AddRelation tgn.NodeID tn.NodeID
 
-        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
+        let mult = Constants.LU_DEF_MULTIPLICITY
+        let fbs = Blocksize.BS_512
+        let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", mult, fbs, otl ) :> IConfigureNode
         cnr.AddNode lunode
         cnr.AddRelation tn.NodeID lunode.NodeID
 
@@ -3318,7 +3362,10 @@ type CommandRunner_Test3() =
         cnr.AddNode tn
         cnr.AddRelation tgn.NodeID tn.NodeID
 
-        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
+        let mult = Constants.LU_DEF_MULTIPLICITY
+        let fbs = Blocksize.BS_512
+        let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", mult, fbs, otl ) :> IConfigureNode
         cnr.AddNode lunode
         cnr.AddRelation tn.NodeID lunode.NodeID
 
@@ -3401,7 +3448,10 @@ type CommandRunner_Test3() =
         cnr.AddNode tn
         cnr.AddRelation tgn.NodeID tn.NodeID
 
-        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
+        let mult = Constants.LU_DEF_MULTIPLICITY
+        let fbs = Blocksize.BS_512
+        let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", mult, fbs, otl ) :> IConfigureNode
         cnr.AddNode lunode
         cnr.AddRelation tn.NodeID lunode.NodeID
 
@@ -3457,7 +3507,10 @@ type CommandRunner_Test3() =
         cnr.AddNode tn
         cnr.AddRelation tgn.NodeID tn.NodeID
 
-        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
+        let mult = Constants.LU_DEF_MULTIPLICITY
+        let fbs = Blocksize.BS_512
+        let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", mult, fbs, otl ) :> IConfigureNode
         cnr.AddNode lunode
         cnr.AddRelation tn.NodeID lunode.NodeID
 
@@ -3540,7 +3593,10 @@ type CommandRunner_Test3() =
         cnr.AddNode tn
         cnr.AddRelation tgn.NodeID tn.NodeID
 
-        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
+        let mult = Constants.LU_DEF_MULTIPLICITY
+        let fbs = Blocksize.BS_512
+        let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", mult, fbs, otl ) :> IConfigureNode
         cnr.AddNode lunode
         cnr.AddRelation tn.NodeID lunode.NodeID
 
@@ -3596,7 +3652,10 @@ type CommandRunner_Test3() =
         cnr.AddNode tn
         cnr.AddRelation tgn.NodeID tn.NodeID
 
-        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
+        let mult = Constants.LU_DEF_MULTIPLICITY
+        let fbs = Blocksize.BS_512
+        let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", mult, fbs, otl ) :> IConfigureNode
         cnr.AddNode lunode
         cnr.AddRelation tn.NodeID lunode.NodeID
 

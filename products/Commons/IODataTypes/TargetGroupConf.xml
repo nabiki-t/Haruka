@@ -34,6 +34,8 @@
   <typedef name='DEVICE' selection='true'>
     <item name='BlockDevice' >
       <item name='Peripheral' constraint='MEDIA' />
+      <item name='FallbackBlockSize' constraint='Blocksize' mincount='0' maxcount='1' defaultref='LU_DEF_FALLBACK_BLOCK_SIZE' />
+      <item name='OptimalTransferLength' constraint='BLKCNT32_T' mincount='0' maxcount='1' minvalue='LU_MIN_OPTIMAL_TRANSFER_LENGTH' maxvalue='LU_MAX_OPTIMAL_TRANSFER_LENGTH' defaultref='LU_DEF_OPTIMAL_TRANSFER_LENGTH' />
     </item>
     <item name='DummyDevice' constraint='unit' />
   </typedef>

@@ -91,6 +91,8 @@ type BlockDeviceLUPropPage(
     let m_LUNTextBox = m_PropPage.FindName( "LUNTextBox" ) :?> TextBox
     let m_LUNameTextBox = m_PropPage.FindName( "LUNameTextBox" ) :?> TextBox
     let m_MaxMultiplicityTextBox = m_PropPage.FindName( "MaxMultiplicityTextBox" ) :?> TextBox
+    let m_FallbackBlockSizeCombo = m_PropPage.FindName( "FallbackBlockSizeCombo" ) :?> ComboBox
+    let m_OptimalTransferLengthTextBox = m_PropPage.FindName( "OptimalTransferLengthTextBox" ) :?> TextBox
 
     // Graph Writer object
     let m_ReadBytesGraphWriter = new GraphWriter( m_ReadBytesCanvas, GraphColor.GC_RED, GuiConst.USAGE_GRAPH_PNT_CNT )
@@ -266,17 +268,41 @@ type BlockDeviceLUPropPage(
                 let msg = m_Config.MessagesText.GetMessage( "MSG_INVALID_LU_NAME" )
                 raise <| Exception msg
 
-            let maxMultiplicity = 
-                try
-                    UInt32.Parse m_MaxMultiplicityTextBox.Text
-                with
-                | _ ->
-                    let mins = sprintf "%d" Constants.LU_MIN_MULTIPLICITY
-                    let maxs = sprintf "%d" Constants.LU_MAX_MULTIPLICITY
-                    let msg = m_Config.MessagesText.GetMessage( "MSG_INVALID_LU_MAXMULTIPLICITY", mins, maxs )
+            let maxMultiplicity =
+                let mins = sprintf "%d" Constants.LU_MIN_MULTIPLICITY
+                let maxs = sprintf "%d" Constants.LU_MAX_MULTIPLICITY
+                let msg = m_Config.MessagesText.GetMessage( "MSG_INVALID_LU_MAXMULTIPLICITY", mins, maxs )
+                let v =
+                    try
+                        UInt32.Parse m_MaxMultiplicityTextBox.Text
+                    with
+                    | _ ->
+                        raise <| Exception msg
+                if v < Constants.LU_MIN_MULTIPLICITY || v > Constants.LU_MAX_MULTIPLICITY then
                     raise <| Exception msg
+                v
 
-            let newNode = m_ServerStatus.UpdateBlockDeviceLUNode bdn lun luName maxMultiplicity
+            let fallbackBlockSize =
+                match m_FallbackBlockSizeCombo.SelectedIndex with
+                | 0 -> Blocksize.BS_512
+                | 1 -> Blocksize.BS_4096
+                | _ -> Blocksize.BS_512
+
+            let optimalTransferLength =
+                let mins = sprintf "%d" Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH
+                let maxs = sprintf "%d" Constants.LU_MAX_OPTIMAL_TRANSFER_LENGTH
+                let msg = m_Config.MessagesText.GetMessage( "MSG_INVALID_LU_OPTIMAL_TRANSFER_LENGTH", mins, maxs )
+                let v =
+                    try
+                        UInt32.Parse m_OptimalTransferLengthTextBox.Text
+                    with
+                    | _ ->
+                        raise <| Exception msg
+                if v < Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH || v > Constants.LU_MAX_OPTIMAL_TRANSFER_LENGTH then
+                    raise <| Exception msg
+                blkcnt_me.ofUInt32 v
+
+            let newNode = m_ServerStatus.UpdateBlockDeviceLUNode bdn lun luName maxMultiplicity fallbackBlockSize optimalTransferLength
             this.ShowConfigValue false false
             m_MainWindow.NoticeUpdateConfig newNode
 
@@ -335,17 +361,30 @@ type BlockDeviceLUPropPage(
     ///  If configurations editiong mode is enabled, this value is true.
     /// </param>
     member private _.ShowConfigValue ( loaded : bool ) ( editmode : bool ) : unit =
-        let bdn = m_ServerStatus.GetNode m_NodeID :?> ILUNode
+        let bdn = m_ServerStatus.GetNode m_NodeID :?> ConfNode_BlockDeviceLU
         m_EditButton.IsEnabled <- ( not editmode ) && ( not loaded )
         m_ApplyButton.IsEnabled <- editmode && ( not loaded )
         m_DiscardButton.IsEnabled <- editmode && ( not loaded )
         m_ErrorMessageLabel.Text <- ""
 
         m_LUNTextBox.IsEnabled <- editmode && ( not loaded )
-        m_LUNTextBox.Text <- lun_me.toString bdn.LUN
+        m_LUNTextBox.Text <- lun_me.toString ( bdn :> ILUNode ).LUN
+
         m_LUNameTextBox.IsEnabled <- editmode && ( not loaded )
-        m_LUNameTextBox.Text <- bdn.LUName
-        m_MaxMultiplicityTextBox.Text <- sprintf "%d" bdn.MaxMultiplicity
+        m_LUNameTextBox.Text <- ( bdn :> ILUNode ).LUName
+
+        m_MaxMultiplicityTextBox.IsEnabled <- editmode && ( not loaded )
+        m_MaxMultiplicityTextBox.Text <- sprintf "%d" ( bdn :> ILUNode ).MaxMultiplicity
+
+        m_FallbackBlockSizeCombo.IsEnabled <- editmode && ( not loaded )
+        match bdn.FallbackBlockSize with
+        | Blocksize.BS_512 ->
+            m_FallbackBlockSizeCombo.SelectedIndex <- 0
+        | Blocksize.BS_4096 ->
+            m_FallbackBlockSizeCombo.SelectedIndex <- 1
+
+        m_OptimalTransferLengthTextBox.IsEnabled <- editmode && ( not loaded )
+        m_OptimalTransferLengthTextBox.Text <- sprintf "%d" bdn.OptimalTransferLength
 
     /// <summary>
     ///  Set ACA status value to the controllers

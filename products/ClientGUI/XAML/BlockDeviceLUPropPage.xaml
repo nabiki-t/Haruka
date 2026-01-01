@@ -45,7 +45,7 @@
         </Expander>
 
         <!-- Status -->
-        <Expander Name="StatusExpander" Header="Status" Margin="10,10,5,2" VerticalAlignment="Top" IsExpanded="True" TabIndex="0">
+        <Expander Name="StatusExpander" Header="Status" Margin="10,10,5,2" VerticalAlignment="Top" IsExpanded="True" TabIndex="1">
             <StackPanel>
                 <TextBlock Name="OperationLabelTextBlock" Text="Operation" Margin="0,0,0,0" Padding="0,0,0,0" Foreground="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
                 
@@ -55,7 +55,7 @@
                         <ColumnDefinition Width="6*" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Name="LUResetTextBlock" Text="LU Reset" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                    <Button Name="LUResetButton" Grid.Column="1" Content="Reset" HorizontalAlignment="Right" Width="80"  />
+                    <Button Name="LUResetButton" Grid.Column="1" Content="Reset" HorizontalAlignment="Right" Width="80" TabIndex="2" />
                 </Grid>
 
                 <TextBlock Name="ACAStatusLabelTextBlock" Text="ACA Status" Margin="0,0,0,0" Padding="0,0,0,0" Foreground="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
@@ -65,7 +65,7 @@
                         <ColumnDefinition Width="6*" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Name="ACAStatusTextBlock" Text="ACA Status" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                    <TextBox Grid.Column="1" Name="ACAStatusTextBox" Text="0" Padding="2,2,2,2" VerticalAlignment="Center" IsEnabled="false" />
+                    <TextBox Grid.Column="1" Name="ACAStatusTextBox" Text="0" Padding="2,2,2,2" VerticalAlignment="Center" IsEnabled="false" TabIndex="3" />
                 </Grid>
                 <Grid Margin="10,2,0,2">
                     <Grid.ColumnDefinitions>
@@ -73,7 +73,7 @@
                         <ColumnDefinition Width="6*" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Name="ITNexusTextBlock" Text="I_T Nexus" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                    <TextBox Grid.Column="1" Name="ITNexusTextBox" Text="0" Padding="2,2,2,2" VerticalAlignment="Center" IsEnabled="false" />
+                    <TextBox Grid.Column="1" Name="ITNexusTextBox" Text="0" Padding="2,2,2,2" VerticalAlignment="Center" IsEnabled="false" TabIndex="4" />
                 </Grid>
                 <Grid Margin="10,2,0,2">
                     <Grid.ColumnDefinitions>
@@ -81,7 +81,7 @@
                         <ColumnDefinition Width="6*" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Name="StatusCodeTextBlock" Text="Status" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                    <TextBox Grid.Column="1" Name="StatusCodeTextBox" Text="0" Padding="2,2,2,2" VerticalAlignment="Center" IsEnabled="false" />
+                    <TextBox Grid.Column="1" Name="StatusCodeTextBox" Text="0" Padding="2,2,2,2" VerticalAlignment="Center" IsEnabled="false" TabIndex="5" />
                 </Grid>
                 <Grid Margin="10,2,0,2">
                     <Grid.ColumnDefinitions>
@@ -89,7 +89,7 @@
                         <ColumnDefinition Width="6*" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Name="SenseKeyTextBlock" Text="Sense Key" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                    <TextBox Grid.Column="1" Name="SenseKeyTextBox" Text="0" Padding="2,2,2,2" VerticalAlignment="Center" IsEnabled="false" />
+                    <TextBox Grid.Column="1" Name="SenseKeyTextBox" Text="0" Padding="2,2,2,2" VerticalAlignment="Center" IsEnabled="false" TabIndex="6" />
                 </Grid>
                 <Grid Margin="10,2,0,2">
                     <Grid.ColumnDefinitions>
@@ -97,7 +97,7 @@
                         <ColumnDefinition Width="6*" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Name="AdditionalSenseCodeTextBlock" Text="Additional Sense Code" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                    <TextBox Grid.Column="1" Name="AdditionalSenseCodeTextBox" Text="0" Padding="2,2,2,2" VerticalAlignment="Center" IsEnabled="false" />
+                    <TextBox Grid.Column="1" Name="AdditionalSenseCodeTextBox" Text="0" Padding="2,2,2,2" VerticalAlignment="Center" IsEnabled="false" TabIndex="7" />
                 </Grid>
                 <Grid Margin="10,2,0,2">
                     <Grid.ColumnDefinitions>
@@ -105,18 +105,18 @@
                         <ColumnDefinition Width="6*" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Name="CurrentErrorTextBlock" Text="Current Error" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                    <TextBox Grid.Column="1" Name="CurrentErrorTextBox" Text="0" Padding="2,2,2,2" VerticalAlignment="Center" IsEnabled="false" />
+                    <TextBox Grid.Column="1" Name="CurrentErrorTextBox" Text="0" Padding="2,2,2,2" VerticalAlignment="Center" IsEnabled="false" TabIndex="8" />
                 </Grid>
             </StackPanel>
         </Expander>
         
         <!-- Configuration -->
-        <Expander Name="ConfigurationExpander" Header="Configuration" Margin="10,10,5,2" VerticalAlignment="Top" IsExpanded="True" TabIndex="0">
+        <Expander Name="ConfigurationExpander" Header="Configuration" Margin="10,10,5,2" VerticalAlignment="Top" IsExpanded="True" TabIndex="9">
             <StackPanel>
                 <StackPanel Margin="5,2,0,2" Orientation="Horizontal">
-                    <Button Name="EditButton" Content="Edit" Width="60" Margin="5,2,5,2" TabIndex="1" />
-                    <Button Name="ApplyButton" Content="Apply" Width="60" Margin="5,2,5,2" TabIndex="2" />
-                    <Button Name="DiscardButton" Content="Discard" Width="60" Margin="5,2,5,2" TabIndex="3" />
+                    <Button Name="EditButton" Content="Edit" Width="60" Margin="5,2,5,2" TabIndex="10" />
+                    <Button Name="ApplyButton" Content="Apply" Width="60" Margin="5,2,5,2" TabIndex="11" />
+                    <Button Name="DiscardButton" Content="Discard" Width="60" Margin="5,2,5,2" TabIndex="12" />
                 </StackPanel>
                 <TextBlock Name="ErrorMessageLabel" Text="" Margin="5,2,0,2" TextTrimming="CharacterEllipsis"/>
 
@@ -128,7 +128,7 @@
                                 <ColumnDefinition Width="6*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Name="LUNTextBlock" Text="LUN" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                            <TextBox Grid.Column="1" Name="LUNTextBox" Text="0" Padding="2,2,2,2" />
+                            <TextBox Grid.Column="1" Name="LUNTextBox" Text="0" Padding="2,2,2,2" TabIndex="13" />
                         </Grid>
                         <Grid Margin="10,2,0,2">
                             <Grid.ColumnDefinitions>
@@ -136,7 +136,7 @@
                                 <ColumnDefinition Width="6*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Name="LUNameTextBlock" Text="LU Name" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                            <TextBox Grid.Column="1" Name="LUNameTextBox" Text="0" Padding="2,2,2,2" />
+                            <TextBox Grid.Column="1" Name="LUNameTextBox" Text="0" Padding="2,2,2,2" TabIndex="14" />
                         </Grid>
                         <Grid Margin="10,2,0,2">
                             <Grid.ColumnDefinitions>
@@ -144,7 +144,26 @@
                                 <ColumnDefinition Width="6*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Name="MaxMultiplicityTextBlock" Text="Max Multiplicity" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                            <TextBox Grid.Column="1" Name="MaxMultiplicityTextBox" Text="0" Padding="2,2,2,2" />
+                            <TextBox Grid.Column="1" Name="MaxMultiplicityTextBox" Text="0" Padding="2,2,2,2" TabIndex="15" />
+                        </Grid>
+                        <Grid Margin="10,2,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4*" />
+                                <ColumnDefinition Width="6*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Name="FallbackBlockSizeTextBlock" Text="Fallback Block Size" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            <ComboBox Grid.Column="1" Name="FallbackBlockSizeCombo" Padding="2,2,2,2" VerticalAlignment="Top" TabIndex="16">
+                                <TextBlock>512</TextBlock>
+                                <TextBlock>4096</TextBlock>
+                            </ComboBox>
+                        </Grid>
+                        <Grid Margin="10,2,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4*" />
+                                <ColumnDefinition Width="6*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Name="OptimalTransferLengthTextBlock" Text="Optimal Transfer Length" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            <TextBox Grid.Column="1" Name="OptimalTransferLengthTextBox" Text="0" Padding="2,2,2,2" TabIndex="15" />
                         </Grid>
 
                     </StackPanel>

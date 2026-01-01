@@ -1382,7 +1382,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     try
                         let lun = lun_me.fromStringValue entValue
                         do! ss.CheckTargetGroupUnloaded cc x
-                        let n = ss.UpdateBlockDeviceLUNode x lun ( x :> ILUNode ).LUName ( x :> ILUNode ).MaxMultiplicity
+                        let n = ss.UpdateBlockDeviceLUNode x lun ( x :> ILUNode ).LUName ( x :> ILUNode ).MaxMultiplicity x.FallbackBlockSize x.OptimalTransferLength
                         return Some ( ss, cc, ( n :> IConfigureNode ) )
                     with
                     | :? FormatException
@@ -1393,19 +1393,44 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
                 | "NAME" ->
                     do! ss.CheckTargetGroupUnloaded cc x
-                    let n = ss.UpdateBlockDeviceLUNode x ( x :> ILUNode ).LUN entValue ( x :> ILUNode ).MaxMultiplicity
+                    let n = ss.UpdateBlockDeviceLUNode x ( x :> ILUNode ).LUN entValue ( x :> ILUNode ).MaxMultiplicity x.FallbackBlockSize x.OptimalTransferLength
                     return Some ( ss, cc, ( n :> IConfigureNode ) )
 
                 | "MAXMULTIPLICITY" ->
                     try
                         let mm = UInt32.Parse entValue
                         do! ss.CheckTargetGroupUnloaded cc x
-                        let n = ss.UpdateBlockDeviceLUNode x ( x :> ILUNode ).LUN ( x :> ILUNode ).LUName mm
+                        let n = ss.UpdateBlockDeviceLUNode x ( x :> ILUNode ).LUN ( x :> ILUNode ).LUName mm x.FallbackBlockSize x.OptimalTransferLength
                         return Some ( ss, cc, ( n :> IConfigureNode ) )
                     with
                     | :? FormatException
                     | :? OverflowException ->
                         m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "MaxMultiplicity" )
+                        |> this.Output 0
+                        return Some ( ss, cc, cn )
+
+                | "FALLBACKBLOCKSIZE" ->
+                    let v = Blocksize.Values |> Array.map Blocksize.toStringName
+                    if Array.exists ( (=) entValue ) v |> not then
+                        m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "FallbackBlockSize" )
+                        |> this.Output 0
+                        return Some ( ss, cc, cn )
+                    else
+                        let fbs = Blocksize.fromStringValue entValue
+                        do! ss.CheckTargetGroupUnloaded cc x
+                        let n = ss.UpdateBlockDeviceLUNode x ( x :> ILUNode ).LUN ( x :> ILUNode ).LUName ( x :> ILUNode ).MaxMultiplicity fbs x.OptimalTransferLength
+                        return Some ( ss, cc, ( n :> IConfigureNode ) )
+
+                | "OPTIMALTRANSFERLENGTH" ->
+                    try
+                        let otl = UInt32.Parse entValue |> blkcnt_me.ofUInt32
+                        do! ss.CheckTargetGroupUnloaded cc x
+                        let n = ss.UpdateBlockDeviceLUNode x ( x :> ILUNode ).LUN ( x :> ILUNode ).LUName ( x :> ILUNode ).MaxMultiplicity x.FallbackBlockSize otl
+                        return Some ( ss, cc, ( n :> IConfigureNode ) )
+                    with
+                    | :? FormatException
+                    | :? OverflowException ->
+                        m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "OptimalTransferLength" )
                         |> this.Output 0
                         return Some ( ss, cc, cn )
 
@@ -2794,7 +2819,10 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 else
                     let luname = cmd.DefaultNamedString "/n" ( sprintf "LU_%d" ( lun_me.toPrim lun ) )
                     do! ss.CheckTargetGroupUnloaded cc cn
-                    let newnode = ss.AddBlockDeviceLUNode tnode lun luname Constants.LU_DEF_MULTIPLICITY
+                    let mult = Constants.LU_DEF_MULTIPLICITY
+                    let fbs = Blocksize.BS_512
+                    let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+                    let newnode = ss.AddBlockDeviceLUNode tnode lun luname mult fbs otl
                     this.Output 0 ( sprintf "Created : %s" ( newnode :> IConfigureNode ).ShortDescriptString )
         }
 
