@@ -1077,6 +1077,7 @@ type resvkey_me =
 /// Data types of resvkey_me
 type RESVKEY_T = uint64<resvkey_me>
 
+/// Data type that represents ISID(Initiator Session ID)
 [<Measure>]
 type isid_me =
 
@@ -1212,16 +1213,39 @@ type isid_me =
         ( (   uint64 d          ) &&& 0x000000000000FFFFUL )
         |> isid_me.fromPrim
 
-/// Data types of isid_me
+/// Data types of ISID
 type ISID_T = uint64<isid_me>
 
 
+/// Data type that represents TargetDeviceID
 [<Measure>]
 type tdid_me =
+
+    /// <summary>
+    ///  Convert to a primitive integer type.
+    /// </summary>
+    /// <param name="v">
+    ///  TargetDeviceID by tdid_me
+    /// </param>
+    /// <returns>
+    ///  uint32 integer value.
+    /// </returns>
     static member inline toPrim( v : uint32<tdid_me> ) : uint32 =
         uint32 v
+
+    /// <summary>
+    ///  Convert a primitive integer value to a TargetDeviceID.
+    /// </summary>
+    /// <param name="v">
+    ///  uint32 integer value.
+    /// </param>
+    /// <returns>
+    ///  Converted TargetDeviceID.
+    /// </returns>
     static member inline fromPrim( v : uint32 ) : uint32<tdid_me> =
         v * 1u<tdid_me>
+
+    /// zero value
     static member Zero = 0u<tdid_me>
 
     /// <summary>
@@ -1259,14 +1283,38 @@ type tdid_me =
     static member toString ( v : uint32<tdid_me> ) : string =
         String.Format( "{0}{1:X8}", Constants.TARGET_DEVICE_DIR_PREFIX, tdid_me.toPrim v )
 
+/// Data type that represents TargetDeviceID
 type TDID_T = uint32<tdid_me>
 
+/// Data type that represents TargetGroupID
 [<Measure>]
 type tgid_me =
+
+    /// <summary>
+    ///  Convert to a primitive integer type.
+    /// </summary>
+    /// <param name="v">
+    ///  TargetGroupID by tgid_me.
+    /// </param>
+    /// <returns>
+    ///  uint32 integer value.
+    /// </returns>
     static member inline toPrim( v : uint32<tgid_me> ) : uint32 =
         uint32 v
+
+    /// <summary>
+    ///  Convert a primitive integer value to a TargetGroupID.
+    /// </summary>
+    /// <param name="v">
+    ///  uint32 integer value.
+    /// </param>
+    /// <returns>
+    ///  Converted TargetGroupID.
+    /// </returns>
     static member inline fromPrim( v : uint32 ) : uint32<tgid_me> =
         v * 1u<tgid_me>
+
+    /// zero value
     static member Zero = 0u<tgid_me>
 
     /// <summary>
@@ -1304,7 +1352,132 @@ type tgid_me =
     static member toString ( v : uint32<tgid_me> ) : string =
         String.Format( "{0}{1:X8}", Constants.TARGET_GRP_CONFIG_FILE_PREFIX, tgid_me.toPrim v )
 
+/// Data type that represents TargetGroupID
 type TGID_T = uint32<tgid_me>
+
+/// Data type that represents block count
+[<Measure>]
+type blkcnt_me =
+
+    /// <summary>
+    ///  Convert to a primitive uint64 value.
+    /// </summary>
+    /// <param name="v">
+    ///  Block count value by blkcnt_me.
+    /// </param>
+    /// <returns>
+    ///  Converted uint64 value.
+    /// </returns>
+    static member inline toUInt64( v : uint64<blkcnt_me> ) : uint64 =
+        uint64 v
+
+    /// <summary>
+    ///  Convert a primitive uint64 value to a Block count value by blkcnt_me.
+    /// </summary>
+    /// <param name="v">
+    ///  primitive uint64 value.
+    /// </param>
+    /// <returns>
+    ///  Converted blkcnt_me value.
+    /// </returns>
+    static member inline ofUInt64( v : uint64 ) : uint64<blkcnt_me> =
+        v * 1UL<blkcnt_me>
+
+    /// <summary>
+    ///  Convert to a primitive uint32 value.
+    /// </summary>
+    /// <param name="v">
+    ///  Block count value by blkcnt_me.
+    /// </param>
+    /// <returns>
+    ///  Converted uint32 value.
+    /// </returns>
+    static member inline toUInt32( v : uint32<blkcnt_me> ) : uint32 =
+        uint32 v
+
+    /// <summary>
+    ///  Convert a primitive uint32 value to a Block count value by blkcnt_me.
+    /// </summary>
+    /// <param name="v">
+    ///  primitive uint32 value.
+    /// </param>
+    /// <returns>
+    ///  Converted blkcnt_me value.
+    /// </returns>
+    static member inline ofUInt32( v : uint32 ) : uint32<blkcnt_me> =
+        v * 1u<blkcnt_me>
+
+    /// <summary>
+    ///  Convert to a primitive uint16 value.
+    /// </summary>
+    /// <param name="v">
+    ///  Block count value by blkcnt_me.
+    /// </param>
+    /// <returns>
+    ///  Converted uint16 value.
+    /// </returns>
+    static member inline toUInt16( v : uint16<blkcnt_me> ) : uint16 =
+        uint16 v
+
+    /// <summary>
+    ///  Convert a primitive uint16 value to a Block count value by blkcnt_me.
+    /// </summary>
+    /// <param name="v">
+    ///  primitive uint16 value.
+    /// </param>
+    /// <returns>
+    ///  Converted blkcnt_me value.
+    /// </returns>
+    static member inline ofUInt16( v : uint16 ) : uint16<blkcnt_me> =
+        v * 1us<blkcnt_me>
+
+    /// <summary>
+    ///  Convert to a primitive uint8 value.
+    /// </summary>
+    /// <param name="v">
+    ///  Block count value by blkcnt_me.
+    /// </param>
+    /// <returns>
+    ///  Converted uint16 value.
+    /// </returns>
+    static member inline toUInt8( v : uint8<blkcnt_me> ) : uint8 =
+        uint8 v
+
+    /// <summary>
+    ///  Convert a primitive uint8 value to a Block count value by blkcnt_me.
+    /// </summary>
+    /// <param name="v">
+    ///  primitive uint8 value.
+    /// </param>
+    /// <returns>
+    ///  Converted blkcnt_me value.
+    /// </returns>
+    static member inline ofUInt8( v : uint8 ) : uint8<blkcnt_me> =
+        v * 1uy<blkcnt_me>
+
+    /// zero value by uint8
+    static member zero8 = 0uy<blkcnt_me>
+
+    /// zero value by uint16
+    static member zero16 = 0us<blkcnt_me>
+
+    /// zero value by uint32
+    static member zero32 = 0u<blkcnt_me>
+
+    /// zero value by uint64
+    static member zero64 = 0UL<blkcnt_me>
+
+/// Data type that uses uint8 to represent the number of blocks
+type BLKCNT8_T = uint8<blkcnt_me>
+
+/// Data type that uses uint16 to represent the number of blocks
+type BLKCNT16_T = uint16<blkcnt_me>
+
+/// Data type that uses uint32 to represent the number of blocks
+type BLKCNT32_T = uint32<blkcnt_me>
+
+/// Data type that uses uint64 to represent the number of blocks
+type BLKCNT64_T = uint64<blkcnt_me>
 
 //=============================================================================
 // Record definition

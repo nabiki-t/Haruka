@@ -255,6 +255,10 @@ let GetPrimeTypeName( tName : string ) : string =
     | "unit" -> "unit"
     | "IPCondition" -> "IPCondition"
     | "ITT_T" -> "ITT_T"
+    | "BLKCNT8_T" -> "BLKCNT8_T"
+    | "BLKCNT16_T" -> "BLKCNT16_T"
+    | "BLKCNT32_T" -> "BLKCNT32_T"
+    | "BLKCNT64_T" -> "BLKCNT64_T"
     | _ -> sprintf "T_%s" tName
 
 /// <summary>
@@ -487,7 +491,8 @@ let OutputOwnNode ( outfile : TextWriter ) ( elem : XElement ) ( indent : int ) 
 
             | "NETPORTIDX_T"
             | "TNODEIDX_T"
-            | "MEDIAIDX_T" ->
+            | "MEDIAIDX_T"
+            | "ITT_T" ->
                 fprintfn outfile "%s%s" indentStr ( GenElementTagStr "" elem parentIsSelection )
                 fprintfn outfile "%s  <xsd:simpleType><xsd:restriction base='xsd:unsignedInt' /></xsd:simpleType>" indentStr
                 fprintfn outfile "%s</xsd:element>" indentStr
@@ -656,10 +661,27 @@ let OutputOwnNode ( outfile : TextWriter ) ( elem : XElement ) ( indent : int ) 
                 fprintfn outfile "%s  </xsd:simpleType>" indentStr
                 fprintfn outfile "%s</xsd:element>" indentStr
 
-            | "ITT_T" ->
+            | "BLKCNT8_T"
+            | "BLKCNT16_T"
+            | "BLKCNT32_T"
+            | "BLKCNT64_T" ->
+                let baseTypeName =
+                    match constraintStr with
+                    | "BLKCNT8_T" -> "unsignedByte"
+                    | "BLKCNT16_T" -> "unsignedShort"
+                    | "BLKCNT32_T" -> "unsignedInt"
+                    | "BLKCNT64_T" -> "unsignedLong"
+                    | _ -> ""
                 fprintfn outfile "%s%s" indentStr ( GenElementTagStr "" elem parentIsSelection )
+                let minValue = getMinValueAttbValue elem
+                let maxValue = getMaxValueAttbValue elem
                 fprintfn outfile "%s  <xsd:simpleType>" indentStr
-                fprintfn outfile "%s    <xsd:restriction base='xsd:unsignedInt' />" indentStr
+                fprintfn outfile "%s    <xsd:restriction base='xsd:%s'>" indentStr baseTypeName
+                if minValue.IsSome then
+                    fprintfn outfile "%s      <xsd:minInclusive value='%d' />" indentStr ( minValue.Value )
+                if maxValue.IsSome then
+                    fprintfn outfile "%s      <xsd:maxInclusive value='%d' />" indentStr ( maxValue.Value )
+                fprintfn outfile "%s    </xsd:restriction>" indentStr
                 fprintfn outfile "%s  </xsd:simpleType>" indentStr
                 fprintfn outfile "%s</xsd:element>" indentStr
 
@@ -791,6 +813,14 @@ let callReadFuncStr ( className : string ) ( elemCallName : string ) ( constrain
         sprintf "IPCondition.Parse( %s.Value )" elemCallName
     | "ITT_T" ->
         sprintf "itt_me.fromPrim( UInt32.Parse( %s.Value ) )" elemCallName
+    | "BLKCNT8_T" ->
+        sprintf "blkcnt_me.ofUInt8( Byte.Parse( %s.Value ) )" elemCallName
+    | "BLKCNT16_T" ->
+        sprintf "blkcnt_me.ofUInt16( UInt16.Parse( %s.Value ) )" elemCallName
+    | "BLKCNT32_T" ->
+        sprintf "blkcnt_me.ofUInt32( UInt32.Parse( %s.Value ) )" elemCallName
+    | "BLKCNT64_T" ->
+        sprintf "blkcnt_me.ofUInt64( UInt64.Parse( %s.Value ) )" elemCallName
     | _ ->
         sprintf "%s.Read_T_%s( %s )" className constraintStr elemCallName
 
@@ -877,6 +907,14 @@ let genSetDefaultValueStr ( defValue : string ) ( constraintStr : string ) : str
         sprintf "IPCondition.Parse( \"%s\" )" defValue
     | "ITT_T" ->
         sprintf "itt_me.fromPrim( %su )" defValue
+    | "BLKCNT8_T" ->
+        sprintf "blkcnt_me.ofUInt8( %suy )" defValue
+    | "BLKCNT16_T" ->
+        sprintf "blkcnt_me.ofUInt16( %sus )" defValue
+    | "BLKCNT32_T" ->
+        sprintf "blkcnt_me.ofUInt32( %su )" defValue
+    | "BLKCNT64_T" ->
+        sprintf "blkcnt_me.ofUInt64( %sUL )" defValue
     | _ ->
         raise <| new System.Exception( "Unknown type name. " + constraintStr )
 
@@ -972,8 +1010,14 @@ let genSetDefaultValueStr_Default ( constraintStr : string ) : string =
         "()"
     | "IPCondition" ->
         "IPCondition.Loopback"
-    | "ITT_T" ->
-        "itt_me.fromPrim 0u"
+    | "BLKCNT8_T" ->
+        "blkcnt_me.zero8"
+    | "BLKCNT16_T" ->
+        "blkcnt_me.zero16"
+    | "BLKCNT32_T" ->
+        "blkcnt_me.zero32"
+    | "BLKCNT64_T" ->
+        "blkcnt_me.zero64"
     | _ ->
         raise <| new System.Exception( "Unknown type name. " + constraintStr )
 
@@ -1362,6 +1406,18 @@ let callWriteFuncStr ( outfile : TextWriter ) ( indent : int ) ( className : str
 
     | "ITT_T" ->
         fprintfn outfile "%syield sprintf \"%%s%%s<%s>%%d</%s>\" singleIndent indentStr ( itt_me.toPrim (%s) )" indentStr elemName elemName elemCallName
+
+    | "BLKCNT8_T" ->
+        fprintfn outfile "%syield sprintf \"%%s%%s<%s>%%d</%s>\" singleIndent indentStr ( blkcnt_me.toUInt8 (%s) )" indentStr elemName elemName elemCallName
+
+    | "BLKCNT16_T" ->
+        fprintfn outfile "%syield sprintf \"%%s%%s<%s>%%d</%s>\" singleIndent indentStr ( blkcnt_me.toUInt16 (%s) )" indentStr elemName elemName elemCallName
+
+    | "BLKCNT32_T" ->
+        fprintfn outfile "%syield sprintf \"%%s%%s<%s>%%d</%s>\" singleIndent indentStr ( blkcnt_me.toUInt32 (%s) )" indentStr elemName elemName elemCallName
+
+    | "BLKCNT64_T" ->
+        fprintfn outfile "%syield sprintf \"%%s%%s<%s>%%d</%s>\" singleIndent indentStr ( blkcnt_me.toUInt64 (%s) )" indentStr elemName elemName elemCallName
 
     | _ ->
         fprintfn outfile "%syield! %s.T_%s_toString ( indent + 1 ) indentStep ( %s ) \"%s\"" indentStr className constraintStr elemCallName elemName

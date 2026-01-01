@@ -1,0 +1,12 @@
+<root namespace='Haruka.Test.UT.ConfRW_002_BLKCNT64_T' class='ConfRW_UT002_BLKCNT64_T' >
+  <form name='Test'>
+    <item name='D1' constraint='BLKCNT64_T' />
+    <item name='D2' constraint='BLKCNT64_T' mincount='2' maxcount='3'/>
+    <item name='D3' constraint='BLKCNT64_T' mincount='0' maxcount='1'/>
+    <item name='D4' constraint='BLKCNT64_T' hidden='true'/>
+    <item name='D5' constraint='BLKCNT64_T' hidden='true' default='99'/>
+    <item name='D6' constraint='BLKCNT64_T' hidden='true' defaultref='MAX_TARGET_DEVICE_COUNT'/>
+    <item name='D7' constraint='BLKCNT64_T' mincount='0' maxcount='1' default='98'/>
+    <item name='D8' constraint='BLKCNT64_T' mincount='0' maxcount='1' defaultref='MAX_TARGET_DEVICE_COUNT'/>
+  </form>
+</root>

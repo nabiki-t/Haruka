@@ -3561,3 +3561,412 @@ type GenConfRW_Test_001 () =
         | :? Xunit.Sdk.FailException -> reraise();
         | _->
             ()
+
+    [<Theory>]
+    [<InlineData( "<Test><D1>-1</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>256</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D2>0</D2><D2>0</D2><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D3>0</D3><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D4>0</D4></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D5>0</D5></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D6>0</D6></Test>" )>]
+    member _.SingleValue_BLKCNT8_001 ( s : string ) =
+        try
+            ConfRW_002_BLKCNT8_T.ConfRW_UT002_BLKCNT8_T.LoadString s |> ignore
+            Assert.Fail __LINE__
+        with
+        | :? Xunit.Sdk.FailException -> reraise();
+        | _->
+            ()
+
+    [<Theory>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 2uy )>]
+    [<InlineData( "<Test><D1>3</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 3uy )>]
+    [<InlineData( "<Test><D1>4</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 4uy )>]
+    [<InlineData( "<Test><D1>5</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 5uy )>]
+    member _.SingleValue_BLKCNT8_002 ( s : string ) ( exr : uint8 ) =
+        let r = ConfRW_002_BLKCNT8_T.ConfRW_UT002_BLKCNT8_T.LoadString s
+        Assert.True( r.D1 = blkcnt_me.ofUInt8 exr )
+
+    static member m_SingleValue_BLKCNT8_003_data = [|
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.ofUInt8 0uy; blkcnt_me.ofUInt8 1uy; ] :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D2>2</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.ofUInt8 0uy; blkcnt_me.ofUInt8 1uy; blkcnt_me.ofUInt8 2uy; ] :> obj |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_BLKCNT8_003_data" )>]
+    member _.SingleValue_BLKCNT8_003 ( s : String ) ( exr : BLKCNT8_T list ) =
+        let r = ConfRW_002_BLKCNT8_T.ConfRW_UT002_BLKCNT8_T.LoadString s
+        Assert.True( r.D2 = exr )
+
+    static member m_SingleValue_BLKCNT8_004_data = [|
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2></Test>" :> obj; None :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>1</D3></Test>" :> obj; Some( blkcnt_me.ofUInt8 1uy ) :> obj |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_BLKCNT8_004_data" )>]
+    member _.SingleValue_BLKCNT8_004 ( s : String ) ( exr : BLKCNT8_T option ) =
+        let r = ConfRW_002_BLKCNT8_T.ConfRW_UT002_BLKCNT8_T.LoadString s
+        Assert.True( r.D3 = exr )
+
+    static member m_SingleValue_BLKCNT8_005_data = [|
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2></Test>" :> obj; blkcnt_me.ofUInt8 98uy :> obj; blkcnt_me.ofUInt8 ( uint8 Constants.MAX_TARGET_DEVICE_COUNT ) :> obj; |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D7>4</D7><D8>5</D8></Test>" :> obj; blkcnt_me.ofUInt8 4uy :> obj; blkcnt_me.ofUInt8 5uy :> obj; |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_BLKCNT8_005_data" )>]
+    member _.SingleValue_BLKCNT8_005 ( s : string ) ( exr_D7 : BLKCNT8_T ) ( exr_D8 : BLKCNT8_T ) =
+        let r = ConfRW_002_BLKCNT8_T.ConfRW_UT002_BLKCNT8_T.LoadString s
+        Assert.True( r.D4 = blkcnt_me.ofUInt8 0uy; )
+        Assert.True( r.D5 = blkcnt_me.ofUInt8 99uy; )
+        Assert.True( r.D6 = blkcnt_me.ofUInt8 ( uint8 Constants.MAX_TARGET_DEVICE_COUNT ) )
+        Assert.True( r.D7 = exr_D7 )
+        Assert.True( r.D8 = exr_D8 )
+
+    static member m_SingleValue_BLKCNT8_006_data = [|
+        [|
+            ( { D1 = blkcnt_me.ofUInt8 2uy; D2 = [ blkcnt_me.ofUInt8 0uy; blkcnt_me.ofUInt8 1uy; ]; D3 = None; D4 = blkcnt_me.ofUInt8 0uy; D5 = blkcnt_me.ofUInt8 0uy; D6 = blkcnt_me.ofUInt8 1uy; D7 = blkcnt_me.ofUInt8 2uy; D8 = blkcnt_me.ofUInt8 3uy; } : ConfRW_002_BLKCNT8_T.T_Test ) :> obj;
+            "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D7>2</D7><D8>3</D8></Test>" :> obj
+        |];
+        [|
+            ( { D1 = blkcnt_me.ofUInt8 3uy; D2 = [ blkcnt_me.ofUInt8 0uy; blkcnt_me.ofUInt8 1uy; blkcnt_me.ofUInt8 2uy; ]; D3 = None; D4 = blkcnt_me.ofUInt8 0uy; D5 = blkcnt_me.ofUInt8 0uy; D6 = blkcnt_me.ofUInt8 2uy; D7 = blkcnt_me.ofUInt8 3uy; D8 = blkcnt_me.ofUInt8 4uy; } : ConfRW_002_BLKCNT8_T.T_Test ) :> obj;
+            "<Test><D1>3</D1><D2>0</D2><D2>1</D2><D2>2</D2><D7>3</D7><D8>4</D8></Test>" :> obj
+        |];
+        [|
+            ( { D1 = blkcnt_me.ofUInt8 2uy; D2 = [ blkcnt_me.ofUInt8 0uy; blkcnt_me.ofUInt8 1uy; ]; D3 = Some( blkcnt_me.ofUInt8 5uy ); D4 = blkcnt_me.ofUInt8 0uy; D5 = blkcnt_me.ofUInt8 0uy; D6 = blkcnt_me.ofUInt8 3uy; D7 = blkcnt_me.ofUInt8 4uy; D8 = blkcnt_me.ofUInt8 5uy; } : ConfRW_002_BLKCNT8_T.T_Test ) :> obj;
+            "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>5</D3><D7>4</D7><D8>5</D8></Test>" :> obj
+        |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_BLKCNT8_006_data" )>]
+    member _.SingleValue_BLKCNT8_006 ( s : ConfRW_002_BLKCNT8_T.T_Test ) ( exr : string ) =
+        let r = ConfRW_002_BLKCNT8_T.ConfRW_UT002_BLKCNT8_T.ToString s
+        Assert.True(( r = exr ))
+
+    static member m_SingleValue_BLKCNT8_007_data = [|
+        [| ( { D1 = blkcnt_me.ofUInt8 2uy; D2 = [ blkcnt_me.ofUInt8 0uy; ]; D3 = None; D4 = blkcnt_me.ofUInt8 0uy; D5 = blkcnt_me.ofUInt8 0uy; D6 = blkcnt_me.ofUInt8 1uy; D7 = blkcnt_me.ofUInt8 2uy; D8 = blkcnt_me.ofUInt8 3uy; } : ConfRW_002_BLKCNT8_T.T_Test ) :> obj |];
+        [| ( { D1 = blkcnt_me.ofUInt8 2uy; D2 = [ blkcnt_me.ofUInt8 0uy; blkcnt_me.ofUInt8 1uy; blkcnt_me.ofUInt8 2uy; blkcnt_me.ofUInt8 3uy; ]; D3 = None; D4 = blkcnt_me.ofUInt8 0uy; D5 = blkcnt_me.ofUInt8 0uy; D6 = blkcnt_me.ofUInt8 1uy; D7 = blkcnt_me.ofUInt8 2uy; D8 = blkcnt_me.ofUInt8 3uy; } : ConfRW_002_BLKCNT8_T.T_Test ) :> obj |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_BLKCNT8_007_data" )>]
+    member _.SingleValue_BLKCNT8_007 ( s : ConfRW_002_BLKCNT8_T.T_Test ) =
+        try
+            ConfRW_002_BLKCNT8_T.ConfRW_UT002_BLKCNT8_T.ToString s |> ignore
+            Assert.Fail __LINE__
+        with
+        | :? Xunit.Sdk.FailException -> reraise();
+        | _->
+            ()
+
+    [<Theory>]
+    [<InlineData( "<Test><D1>-1</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>65536</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D2>0</D2><D2>0</D2><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D3>0</D3><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D4>0</D4></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D5>0</D5></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D6>0</D6></Test>" )>]
+    member _.SingleValue_BLKCNT16_001 ( s : string ) =
+        try
+            ConfRW_002_BLKCNT16_T.ConfRW_UT002_BLKCNT16_T.LoadString s |> ignore
+            Assert.Fail __LINE__
+        with
+        | :? Xunit.Sdk.FailException -> reraise();
+        | _->
+            ()
+
+    [<Theory>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 2us )>]
+    [<InlineData( "<Test><D1>3</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 3us )>]
+    [<InlineData( "<Test><D1>4</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 4us )>]
+    [<InlineData( "<Test><D1>5</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 5us )>]
+    member _.SingleValue_BLKCNT16_002 ( s : string ) ( exr : uint16 ) =
+        let r = ConfRW_002_BLKCNT16_T.ConfRW_UT002_BLKCNT16_T.LoadString s
+        Assert.True( r.D1 = blkcnt_me.ofUInt16 exr )
+
+    static member m_SingleValue_BLKCNT16_003_data = [|
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.ofUInt16 0us; blkcnt_me.ofUInt16 1us; ] :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D2>2</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.ofUInt16 0us; blkcnt_me.ofUInt16 1us; blkcnt_me.ofUInt16 2us; ] :> obj |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_BLKCNT16_003_data" )>]
+    member _.SingleValue_BLKCNT16_003 ( s : String ) ( exr : BLKCNT16_T list ) =
+        let r = ConfRW_002_BLKCNT16_T.ConfRW_UT002_BLKCNT16_T.LoadString s
+        Assert.True( r.D2 = exr )
+
+    static member m_SingleValue_BLKCNT16_004_data = [|
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2></Test>" :> obj; None :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>1</D3></Test>" :> obj; Some( blkcnt_me.ofUInt16 1us ) :> obj |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_BLKCNT16_004_data" )>]
+    member _.SingleValue_BLKCNT16_004 ( s : String ) ( exr : BLKCNT16_T option ) =
+        let r = ConfRW_002_BLKCNT16_T.ConfRW_UT002_BLKCNT16_T.LoadString s
+        Assert.True( r.D3 = exr )
+
+    static member m_SingleValue_BLKCNT16_005_data = [|
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2></Test>" :> obj; blkcnt_me.ofUInt16 98us :> obj; blkcnt_me.ofUInt16 ( uint16 Constants.MAX_TARGET_DEVICE_COUNT ) :> obj; |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D7>4</D7><D8>5</D8></Test>" :> obj; blkcnt_me.ofUInt16 4us :> obj; blkcnt_me.ofUInt16 5us :> obj; |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_BLKCNT16_005_data" )>]
+    member _.SingleValue_BLKCNT16_005 ( s : string ) ( exr_D7 : BLKCNT16_T ) ( exr_D8 : BLKCNT16_T ) =
+        let r = ConfRW_002_BLKCNT16_T.ConfRW_UT002_BLKCNT16_T.LoadString s
+        Assert.True( r.D4 = blkcnt_me.ofUInt16 0us; )
+        Assert.True( r.D5 = blkcnt_me.ofUInt16 99us; )
+        Assert.True( r.D6 = blkcnt_me.ofUInt16 ( uint16 Constants.MAX_TARGET_DEVICE_COUNT ) )
+        Assert.True( r.D7 = exr_D7 )
+        Assert.True( r.D8 = exr_D8 )
+
+    static member m_SingleValue_BLKCNT16_006_data = [|
+        [|
+            ( { D1 = blkcnt_me.ofUInt16 2us; D2 = [ blkcnt_me.ofUInt16 0us; blkcnt_me.ofUInt16 1us; ]; D3 = None; D4 = blkcnt_me.ofUInt16 0us; D5 = blkcnt_me.ofUInt16 0us; D6 = blkcnt_me.ofUInt16 1us; D7 = blkcnt_me.ofUInt16 2us; D8 = blkcnt_me.ofUInt16 3us; } : ConfRW_002_BLKCNT16_T.T_Test ) :> obj;
+            "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D7>2</D7><D8>3</D8></Test>" :> obj
+        |];
+        [|
+            ( { D1 = blkcnt_me.ofUInt16 3us; D2 = [ blkcnt_me.ofUInt16 0us; blkcnt_me.ofUInt16 1us; blkcnt_me.ofUInt16 2us; ]; D3 = None; D4 = blkcnt_me.ofUInt16 0us; D5 = blkcnt_me.ofUInt16 0us; D6 = blkcnt_me.ofUInt16 2us; D7 = blkcnt_me.ofUInt16 3us; D8 = blkcnt_me.ofUInt16 4us; } : ConfRW_002_BLKCNT16_T.T_Test ) :> obj;
+            "<Test><D1>3</D1><D2>0</D2><D2>1</D2><D2>2</D2><D7>3</D7><D8>4</D8></Test>" :> obj
+        |];
+        [|
+            ( { D1 = blkcnt_me.ofUInt16 2us; D2 = [ blkcnt_me.ofUInt16 0us; blkcnt_me.ofUInt16 1us; ]; D3 = Some( blkcnt_me.ofUInt16 5us ); D4 = blkcnt_me.ofUInt16 0us; D5 = blkcnt_me.ofUInt16 0us; D6 = blkcnt_me.ofUInt16 3us; D7 = blkcnt_me.ofUInt16 4us; D8 = blkcnt_me.ofUInt16 5us; } : ConfRW_002_BLKCNT16_T.T_Test ) :> obj;
+            "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>5</D3><D7>4</D7><D8>5</D8></Test>" :> obj
+        |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_BLKCNT16_006_data" )>]
+    member _.SingleValue_BLKCNT16_006 ( s : ConfRW_002_BLKCNT16_T.T_Test ) ( exr : string ) =
+        let r = ConfRW_002_BLKCNT16_T.ConfRW_UT002_BLKCNT16_T.ToString s
+        Assert.True(( r = exr ))
+
+    static member m_SingleValue_BLKCNT16_007_data = [|
+        [| ( { D1 = blkcnt_me.ofUInt16 2us; D2 = [ blkcnt_me.ofUInt16 0us; ]; D3 = None; D4 = blkcnt_me.ofUInt16 0us; D5 = blkcnt_me.ofUInt16 0us; D6 = blkcnt_me.ofUInt16 1us; D7 = blkcnt_me.ofUInt16 2us; D8 = blkcnt_me.ofUInt16 3us; } : ConfRW_002_BLKCNT16_T.T_Test ) :> obj |];
+        [| ( { D1 = blkcnt_me.ofUInt16 2us; D2 = [ blkcnt_me.ofUInt16 0us; blkcnt_me.ofUInt16 1us; blkcnt_me.ofUInt16 2us; blkcnt_me.ofUInt16 3us; ]; D3 = None; D4 = blkcnt_me.ofUInt16 0us; D5 = blkcnt_me.ofUInt16 0us; D6 = blkcnt_me.ofUInt16 1us; D7 = blkcnt_me.ofUInt16 2us; D8 = blkcnt_me.ofUInt16 3us; } : ConfRW_002_BLKCNT16_T.T_Test ) :> obj |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_BLKCNT16_007_data" )>]
+    member _.SingleValue_BLKCNT16_007 ( s : ConfRW_002_BLKCNT16_T.T_Test ) =
+        try
+            ConfRW_002_BLKCNT16_T.ConfRW_UT002_BLKCNT16_T.ToString s |> ignore
+            Assert.Fail __LINE__
+        with
+        | :? Xunit.Sdk.FailException -> reraise();
+        | _->
+            ()
+
+    [<Theory>]
+    [<InlineData( "<Test><D1>-1</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>4294967296</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D2>0</D2><D2>0</D2><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D3>0</D3><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D4>0</D4></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D5>0</D5></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D6>0</D6></Test>" )>]
+    member _.SingleValue_BLKCNT32_001 ( s : string ) =
+        try
+            ConfRW_002_BLKCNT32_T.ConfRW_UT002_BLKCNT32_T.LoadString s |> ignore
+            Assert.Fail __LINE__
+        with
+        | :? Xunit.Sdk.FailException -> reraise();
+        | _->
+            ()
+
+    [<Theory>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 2u )>]
+    [<InlineData( "<Test><D1>3</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 3u )>]
+    [<InlineData( "<Test><D1>4</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 4u )>]
+    [<InlineData( "<Test><D1>5</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 5u )>]
+    member _.SingleValue_BLKCNT32_002 ( s : string ) ( exr : uint32 ) =
+        let r = ConfRW_002_BLKCNT32_T.ConfRW_UT002_BLKCNT32_T.LoadString s
+        Assert.True( r.D1 = blkcnt_me.ofUInt32 exr )
+
+    static member m_SingleValue_BLKCNT32_003_data = [|
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.ofUInt32 0u; blkcnt_me.ofUInt32 1u; ] :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D2>2</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.ofUInt32 0u; blkcnt_me.ofUInt32 1u; blkcnt_me.ofUInt32 2u; ] :> obj |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_BLKCNT32_003_data" )>]
+    member _.SingleValue_BLKCNT32_003 ( s : String ) ( exr : BLKCNT32_T list ) =
+        let r = ConfRW_002_BLKCNT32_T.ConfRW_UT002_BLKCNT32_T.LoadString s
+        Assert.True( r.D2 = exr )
+
+    static member m_SingleValue_BLKCNT32_004_data = [|
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2></Test>" :> obj; None :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>1</D3></Test>" :> obj; Some( blkcnt_me.ofUInt32 1u ) :> obj |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_BLKCNT32_004_data" )>]
+    member _.SingleValue_BLKCNT32_004 ( s : String ) ( exr : BLKCNT32_T option ) =
+        let r = ConfRW_002_BLKCNT32_T.ConfRW_UT002_BLKCNT32_T.LoadString s
+        Assert.True( r.D3 = exr )
+
+    static member m_SingleValue_BLKCNT32_005_data = [|
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2></Test>" :> obj; blkcnt_me.ofUInt32 98u :> obj; blkcnt_me.ofUInt32 ( uint32 Constants.MAX_TARGET_DEVICE_COUNT ) :> obj; |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D7>4</D7><D8>5</D8></Test>" :> obj; blkcnt_me.ofUInt32 4u :> obj; blkcnt_me.ofUInt32 5u :> obj; |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_BLKCNT32_005_data" )>]
+    member _.SingleValue_BLKCNT32_005 ( s : string ) ( exr_D7 : BLKCNT32_T ) ( exr_D8 : BLKCNT32_T ) =
+        let r = ConfRW_002_BLKCNT32_T.ConfRW_UT002_BLKCNT32_T.LoadString s
+        Assert.True( r.D4 = blkcnt_me.ofUInt32 0u; )
+        Assert.True( r.D5 = blkcnt_me.ofUInt32 99u; )
+        Assert.True( r.D6 = blkcnt_me.ofUInt32 ( uint32 Constants.MAX_TARGET_DEVICE_COUNT ) )
+        Assert.True( r.D7 = exr_D7 )
+        Assert.True( r.D8 = exr_D8 )
+
+    static member m_SingleValue_BLKCNT32_006_data = [|
+        [|
+            ( { D1 = blkcnt_me.ofUInt32 2u; D2 = [ blkcnt_me.ofUInt32 0u; blkcnt_me.ofUInt32 1u; ]; D3 = None; D4 = blkcnt_me.ofUInt32 0u; D5 = blkcnt_me.ofUInt32 0u; D6 = blkcnt_me.ofUInt32 1u; D7 = blkcnt_me.ofUInt32 2u; D8 = blkcnt_me.ofUInt32 3u; } : ConfRW_002_BLKCNT32_T.T_Test ) :> obj;
+            "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D7>2</D7><D8>3</D8></Test>" :> obj
+        |];
+        [|
+            ( { D1 = blkcnt_me.ofUInt32 3u; D2 = [ blkcnt_me.ofUInt32 0u; blkcnt_me.ofUInt32 1u; blkcnt_me.ofUInt32 2u; ]; D3 = None; D4 = blkcnt_me.ofUInt32 0u; D5 = blkcnt_me.ofUInt32 0u; D6 = blkcnt_me.ofUInt32 2u; D7 = blkcnt_me.ofUInt32 3u; D8 = blkcnt_me.ofUInt32 4u; } : ConfRW_002_BLKCNT32_T.T_Test ) :> obj;
+            "<Test><D1>3</D1><D2>0</D2><D2>1</D2><D2>2</D2><D7>3</D7><D8>4</D8></Test>" :> obj
+        |];
+        [|
+            ( { D1 = blkcnt_me.ofUInt32 2u; D2 = [ blkcnt_me.ofUInt32 0u; blkcnt_me.ofUInt32 1u; ]; D3 = Some( blkcnt_me.ofUInt32 5u ); D4 = blkcnt_me.ofUInt32 0u; D5 = blkcnt_me.ofUInt32 0u; D6 = blkcnt_me.ofUInt32 3u; D7 = blkcnt_me.ofUInt32 4u; D8 = blkcnt_me.ofUInt32 5u; } : ConfRW_002_BLKCNT32_T.T_Test ) :> obj;
+            "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>5</D3><D7>4</D7><D8>5</D8></Test>" :> obj
+        |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_BLKCNT32_006_data" )>]
+    member _.SingleValue_BLKCNT32_006 ( s : ConfRW_002_BLKCNT32_T.T_Test ) ( exr : string ) =
+        let r = ConfRW_002_BLKCNT32_T.ConfRW_UT002_BLKCNT32_T.ToString s
+        Assert.True(( r = exr ))
+
+    static member m_SingleValue_BLKCNT32_007_data = [|
+        [| ( { D1 = blkcnt_me.ofUInt32 2u; D2 = [ blkcnt_me.ofUInt32 0u; ]; D3 = None; D4 = blkcnt_me.ofUInt32 0u; D5 = blkcnt_me.ofUInt32 0u; D6 = blkcnt_me.ofUInt32 1u; D7 = blkcnt_me.ofUInt32 2u; D8 = blkcnt_me.ofUInt32 3u; } : ConfRW_002_BLKCNT32_T.T_Test ) :> obj |];
+        [| ( { D1 = blkcnt_me.ofUInt32 2u; D2 = [ blkcnt_me.ofUInt32 0u; blkcnt_me.ofUInt32 1u; blkcnt_me.ofUInt32 2u; blkcnt_me.ofUInt32 3u; ]; D3 = None; D4 = blkcnt_me.ofUInt32 0u; D5 = blkcnt_me.ofUInt32 0u; D6 = blkcnt_me.ofUInt32 1u; D7 = blkcnt_me.ofUInt32 2u; D8 = blkcnt_me.ofUInt32 3u; } : ConfRW_002_BLKCNT32_T.T_Test ) :> obj |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_BLKCNT32_007_data" )>]
+    member _.SingleValue_BLKCNT32_007 ( s : ConfRW_002_BLKCNT32_T.T_Test ) =
+        try
+            ConfRW_002_BLKCNT32_T.ConfRW_UT002_BLKCNT32_T.ToString s |> ignore
+            Assert.Fail __LINE__
+        with
+        | :? Xunit.Sdk.FailException -> reraise();
+        | _->
+            ()
+
+    [<Theory>]
+    [<InlineData( "<Test><D1>-1</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>18446744073709551616</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D2>0</D2><D2>0</D2><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D3>0</D3><D3>0</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D4>0</D4></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D5>0</D5></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D6>0</D6></Test>" )>]
+    member _.SingleValue_BLKCNT64_001 ( s : string ) =
+        try
+            ConfRW_002_BLKCNT64_T.ConfRW_UT002_BLKCNT64_T.LoadString s |> ignore
+            Assert.Fail __LINE__
+        with
+        | :? Xunit.Sdk.FailException -> reraise();
+        | _->
+            ()
+
+    [<Theory>]
+    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 2UL )>]
+    [<InlineData( "<Test><D1>3</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 3UL )>]
+    [<InlineData( "<Test><D1>4</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 4UL )>]
+    [<InlineData( "<Test><D1>5</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 5UL )>]
+    member _.SingleValue_BLKCNT64_002 ( s : string ) ( exr : uint64 ) =
+        let r = ConfRW_002_BLKCNT64_T.ConfRW_UT002_BLKCNT64_T.LoadString s
+        Assert.True( r.D1 = blkcnt_me.ofUInt64 exr )
+
+    static member m_SingleValue_BLKCNT64_003_data = [|
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.ofUInt64 0UL; blkcnt_me.ofUInt64 1UL; ] :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D2>2</D2><D3>0</D3></Test>" :> obj; [ blkcnt_me.ofUInt64 0UL; blkcnt_me.ofUInt64 1UL; blkcnt_me.ofUInt64 2UL; ] :> obj |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_BLKCNT64_003_data" )>]
+    member _.SingleValue_BLKCNT64_003 ( s : String ) ( exr : BLKCNT64_T list ) =
+        let r = ConfRW_002_BLKCNT64_T.ConfRW_UT002_BLKCNT64_T.LoadString s
+        Assert.True( r.D2 = exr )
+
+    static member m_SingleValue_BLKCNT64_004_data = [|
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2></Test>" :> obj; None :> obj |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>1</D3></Test>" :> obj; Some( blkcnt_me.ofUInt64 1UL ) :> obj |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_BLKCNT64_004_data" )>]
+    member _.SingleValue_BLKCNT64_004 ( s : String ) ( exr : BLKCNT64_T option ) =
+        let r = ConfRW_002_BLKCNT64_T.ConfRW_UT002_BLKCNT64_T.LoadString s
+        Assert.True( r.D3 = exr )
+
+    static member m_SingleValue_BLKCNT64_005_data = [|
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2></Test>" :> obj; blkcnt_me.ofUInt64 98UL :> obj; blkcnt_me.ofUInt64 ( uint64 Constants.MAX_TARGET_DEVICE_COUNT ) :> obj; |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D7>4</D7><D8>5</D8></Test>" :> obj; blkcnt_me.ofUInt64 4UL :> obj; blkcnt_me.ofUInt64 5UL :> obj; |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_BLKCNT64_005_data" )>]
+    member _.SingleValue_BLKCNT64_005 ( s : string ) ( exr_D7 : BLKCNT64_T ) ( exr_D8 : BLKCNT64_T ) =
+        let r = ConfRW_002_BLKCNT64_T.ConfRW_UT002_BLKCNT64_T.LoadString s
+        Assert.True( r.D4 = blkcnt_me.ofUInt64 0UL; )
+        Assert.True( r.D5 = blkcnt_me.ofUInt64 99UL; )
+        Assert.True( r.D6 = blkcnt_me.ofUInt64 ( uint64 Constants.MAX_TARGET_DEVICE_COUNT ) )
+        Assert.True( r.D7 = exr_D7 )
+        Assert.True( r.D8 = exr_D8 )
+
+    static member m_SingleValue_BLKCNT64_006_data = [|
+        [|
+            ( { D1 = blkcnt_me.ofUInt64 2UL; D2 = [ blkcnt_me.ofUInt64 0UL; blkcnt_me.ofUInt64 1UL; ]; D3 = None; D4 = blkcnt_me.ofUInt64 0UL; D5 = blkcnt_me.ofUInt64 0UL; D6 = blkcnt_me.ofUInt64 1UL; D7 = blkcnt_me.ofUInt64 2UL; D8 = blkcnt_me.ofUInt64 3UL; } : ConfRW_002_BLKCNT64_T.T_Test ) :> obj;
+            "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D7>2</D7><D8>3</D8></Test>" :> obj
+        |];
+        [|
+            ( { D1 = blkcnt_me.ofUInt64 3UL; D2 = [ blkcnt_me.ofUInt64 0UL; blkcnt_me.ofUInt64 1UL; blkcnt_me.ofUInt64 2UL; ]; D3 = None; D4 = blkcnt_me.ofUInt64 0UL; D5 = blkcnt_me.ofUInt64 0UL; D6 = blkcnt_me.ofUInt64 2UL; D7 = blkcnt_me.ofUInt64 3UL; D8 = blkcnt_me.ofUInt64 4UL; } : ConfRW_002_BLKCNT64_T.T_Test ) :> obj;
+            "<Test><D1>3</D1><D2>0</D2><D2>1</D2><D2>2</D2><D7>3</D7><D8>4</D8></Test>" :> obj
+        |];
+        [|
+            ( { D1 = blkcnt_me.ofUInt64 2UL; D2 = [ blkcnt_me.ofUInt64 0UL; blkcnt_me.ofUInt64 1UL; ]; D3 = Some( blkcnt_me.ofUInt64 5UL ); D4 = blkcnt_me.ofUInt64 0UL; D5 = blkcnt_me.ofUInt64 0UL; D6 = blkcnt_me.ofUInt64 3UL; D7 = blkcnt_me.ofUInt64 4UL; D8 = blkcnt_me.ofUInt64 5UL; } : ConfRW_002_BLKCNT64_T.T_Test ) :> obj;
+            "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>5</D3><D7>4</D7><D8>5</D8></Test>" :> obj
+        |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_BLKCNT64_006_data" )>]
+    member _.SingleValue_BLKCNT64_006 ( s : ConfRW_002_BLKCNT64_T.T_Test ) ( exr : string ) =
+        let r = ConfRW_002_BLKCNT64_T.ConfRW_UT002_BLKCNT64_T.ToString s
+        Assert.True(( r = exr ))
+
+    static member m_SingleValue_BLKCNT64_007_data = [|
+        [| ( { D1 = blkcnt_me.ofUInt64 2UL; D2 = [ blkcnt_me.ofUInt64 0UL; ]; D3 = None; D4 = blkcnt_me.ofUInt64 0UL; D5 = blkcnt_me.ofUInt64 0UL; D6 = blkcnt_me.ofUInt64 1UL; D7 = blkcnt_me.ofUInt64 2UL; D8 = blkcnt_me.ofUInt64 3UL; } : ConfRW_002_BLKCNT64_T.T_Test ) :> obj |];
+        [| ( { D1 = blkcnt_me.ofUInt64 2UL; D2 = [ blkcnt_me.ofUInt64 0UL; blkcnt_me.ofUInt64 1UL; blkcnt_me.ofUInt64 2UL; blkcnt_me.ofUInt64 3UL; ]; D3 = None; D4 = blkcnt_me.ofUInt64 0UL; D5 = blkcnt_me.ofUInt64 0UL; D6 = blkcnt_me.ofUInt64 1UL; D7 = blkcnt_me.ofUInt64 2UL; D8 = blkcnt_me.ofUInt64 3UL; } : ConfRW_002_BLKCNT64_T.T_Test ) :> obj |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_SingleValue_BLKCNT64_007_data" )>]
+    member _.SingleValue_BLKCNT64_007 ( s : ConfRW_002_BLKCNT64_T.T_Test ) =
+        try
+            ConfRW_002_BLKCNT64_T.ConfRW_UT002_BLKCNT64_T.ToString s |> ignore
+            Assert.Fail __LINE__
+        with
+        | :? Xunit.Sdk.FailException -> reraise();
+        | _->
+            ()
+
