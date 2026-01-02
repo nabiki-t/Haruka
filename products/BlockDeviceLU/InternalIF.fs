@@ -77,6 +77,12 @@ type IInternalLU =
 
     // ------------------------------------------------------------------------
     /// <summary>
+    ///  Get LUN value.
+    /// </summary>
+    abstract OptimalTransferLength : BLKCNT32_T
+
+    // ------------------------------------------------------------------------
+    /// <summary>
     ///  Notify that task is terminated nomaly.
     /// </summary>
     /// <param name="argTask">

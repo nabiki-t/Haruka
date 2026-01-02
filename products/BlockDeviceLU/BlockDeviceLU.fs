@@ -615,6 +615,10 @@ type BlockDeviceLU
         override _.LUN = m_LUN
 
         // ------------------------------------------------------------------------
+        //  Get LUN value.
+        override _.OptimalTransferLength = m_LogicalUnitInfo.OptimalTransferLength
+
+        // ------------------------------------------------------------------------
         //  Notify that task is terminated nomaly.
         override this.NotifyTerminateTask ( argTask : IBlockDeviceTask ) : unit =
             m_TaskSetQueue.Enqueue( fun () ->

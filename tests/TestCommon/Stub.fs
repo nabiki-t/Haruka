@@ -785,6 +785,7 @@ type public CInternalLU_Stub() =
     let mutable f_ClearUnitAttention : ( ITNexus -> unit ) option = None
     let mutable f_EstablishUnitAttention : ( string -> SCSIACAException -> unit ) option = None
     let mutable f_LUN : ( unit -> LUN_T ) option = None
+    let mutable f_OptimalTransferLength : ( unit -> BLKCNT32_T ) option = None
     let mutable f_NotifyTerminateTask : ( IBlockDeviceTask -> unit ) option = None
     let mutable f_NotifyTerminateTaskWithException : ( IBlockDeviceTask -> Exception -> unit ) option = None
     let mutable f_AbortTasksFromSpecifiedITNexus : ( IBlockDeviceTask -> ITNexus[] -> bool -> unit ) option = None
@@ -800,6 +801,7 @@ type public CInternalLU_Stub() =
     member _.p_ClearUnitAttention with set v = f_ClearUnitAttention <- Some( v )
     member _.p_EstablishUnitAttention with set v = f_EstablishUnitAttention <- Some( v )
     member _.p_LUN with set v = f_LUN <- Some( v )
+    member _.p_OptimalTransferLength with set v = f_OptimalTransferLength <- Some( v )
     member _.p_NotifyTerminateTask with set v = f_NotifyTerminateTask <- Some( v )
     member _.p_NotifyTerminateTaskWithException with set v = f_NotifyTerminateTaskWithException <- Some( v )
     member _.p_AbortTasksFromSpecifiedITNexus with set v = f_AbortTasksFromSpecifiedITNexus <- Some( v )
@@ -821,6 +823,8 @@ type public CInternalLU_Stub() =
             f_EstablishUnitAttention.Value iport ex
         override _.LUN =
             f_LUN.Value()
+        override _.OptimalTransferLength =
+            f_OptimalTransferLength.Value()
         override _.NotifyTerminateTask ( argTask : IBlockDeviceTask ) : unit =
             f_NotifyTerminateTask.Value argTask
         override _.NotifyTerminateTaskWithException ( argTask : IBlockDeviceTask ) ( ex : Exception ) : unit =

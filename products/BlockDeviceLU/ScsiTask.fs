@@ -541,10 +541,7 @@ type ScsiTask
                         yield 0x00uy;
                         yield 0x00uy;
                         yield 0x00uy;
-                        yield 0x00uy;   // OPTIMAL TRANSFER LENGTH
-                        yield 0x00uy;
-                        yield 0x00uy;
-                        yield 0x08uy;
+                        yield! Functions.UInt32ToNetworkBytes_NewVec ( blkcnt_me.toUInt32 m_LU.OptimalTransferLength )  // OPTIMAL TRANSFER LENGTH
                     |]
                 | 0xB1uy ->
                     //  Block Device Characteristics VPD page

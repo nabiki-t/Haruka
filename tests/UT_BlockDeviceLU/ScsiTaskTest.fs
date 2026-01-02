@@ -516,6 +516,7 @@ type ScsiTask_Test () =
         }
         let t, ilu = createDefScsiTask defaultSCSICommandPDU s [ defaultSCSIDataOutPDU ] false
         let psStub = t.Source.ProtocolService :?> CProtocolService_Stub
+        ilu.p_OptimalTransferLength <- ( fun () -> blkcnt_me.ofUInt32 0x08u )
         psStub.p_SendSCSIResponse <- ( fun _ _ _ _ resp stat _ indata alloclen _ ->
             Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
             Assert.True(( stat = ScsiCmdStatCd.GOOD ))
