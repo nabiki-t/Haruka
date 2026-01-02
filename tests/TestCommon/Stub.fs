@@ -516,8 +516,8 @@ type public CMedia_Stub() =
     let mutable f_Closing : ( unit -> unit ) option = None
     let mutable f_TestUnitReady : ( ITT_T -> CommandSourceInfo -> ASCCd voption ) option = None
     let mutable f_ReadCapacity : ( ITT_T -> CommandSourceInfo -> uint64 ) option = None
-    let mutable f_Read : ( ITT_T -> CommandSourceInfo -> uint64 -> ArraySegment<byte> -> Task<int> ) option = None
-    let mutable f_Write : ( ITT_T -> CommandSourceInfo -> uint64 -> uint64 -> ArraySegment<byte> -> Task<int> ) option = None
+    let mutable f_Read : ( ITT_T -> CommandSourceInfo -> BLKCNT64_T -> ArraySegment<byte> -> Task<int> ) option = None
+    let mutable f_Write : ( ITT_T -> CommandSourceInfo -> BLKCNT64_T -> uint64 -> ArraySegment<byte> -> Task<int> ) option = None
     let mutable f_Format : ( ITT_T -> CommandSourceInfo -> Task<unit> ) option = None
     let mutable f_Terminate : ( unit -> unit ) option = None
     let mutable f_NotifyLUReset : ( ITT_T voption -> CommandSourceInfo voption -> unit ) option = None
@@ -568,14 +568,14 @@ type public CMedia_Stub() =
         override _.Read
                 ( initiatorTaskTag : ITT_T )
                 ( source : CommandSourceInfo )
-                ( argLBA : uint64 )
+                ( argLBA : BLKCNT64_T )
                 ( buf : ArraySegment<byte> ) :
                 Task<int> =
             f_Read.Value initiatorTaskTag source argLBA buf
         override _.Write
                 ( initiatorTaskTag : ITT_T )
                 ( source : CommandSourceInfo )
-                ( argLBA : uint64 )
+                ( argLBA : BLKCNT64_T )
                 ( offset : uint64 ) 
                 ( data : ArraySegment<byte> ) :
                 Task<int> =

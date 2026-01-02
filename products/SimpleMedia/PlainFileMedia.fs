@@ -193,7 +193,7 @@ type PlainFileMedia
         override _.Read
             ( initiatorTaskTag : ITT_T )
             ( source : CommandSourceInfo )
-            ( argLBA : uint64 )
+            ( argLBA : BLKCNT64_T )
             ( buffer : ArraySegment<byte> )
             : Task<int> =
 
@@ -205,7 +205,7 @@ type PlainFileMedia
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "PlainFileMedia.Read." ) )
 
             let readBytesLength_u64 = uint64 buffer.Count
-            let readpos_u64 : uint64 = argLBA * Constants.MEDIA_BLOCK_SIZE
+            let readpos_u64 : uint64 = ( blkcnt_me.toUInt64 argLBA ) * Constants.MEDIA_BLOCK_SIZE
             let mediaBlockCount = ( ( uint64 m_FileSize ) / Constants.MEDIA_BLOCK_SIZE )
 
             // Check specified range is in media file.
@@ -302,7 +302,7 @@ type PlainFileMedia
         override _.Write
             ( initiatorTaskTag : ITT_T )
             ( source : CommandSourceInfo )
-            ( argLBA : uint64 )
+            ( argLBA : BLKCNT64_T )
             ( offset : uint64 )
             ( data : ArraySegment<byte> )
             : Task<int> =
@@ -316,7 +316,7 @@ type PlainFileMedia
 
             //let ivrand = new Random()
             let writeBytesLength_u64 = uint64 data.Count
-            let writepos_u64 = argLBA * Constants.MEDIA_BLOCK_SIZE + offset
+            let writepos_u64 = ( blkcnt_me.toUInt64 argLBA ) * Constants.MEDIA_BLOCK_SIZE + offset
             let mediaBlockCount = ( ( uint64 m_FileSize ) / Constants.MEDIA_BLOCK_SIZE )
 
             // Check specified range is in media file.

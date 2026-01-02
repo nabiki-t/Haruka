@@ -2388,10 +2388,10 @@ type PreFetchCDB =
         IMMED : bool;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint64;
+        LogicalBlockAddress : BLKCNT64_T;
 
         /// PREFETCH LENGTH
-        PrefetchLength : uint32;
+        PrefetchLength : BLKCNT32_T;
 
         /// GROUP NUMBER
         GroupNumber : byte;
@@ -2472,10 +2472,10 @@ type ReadCDB =
         FUA_NV : bool;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint64;
+        LogicalBlockAddress : BLKCNT64_T;
 
         /// TRANSFER LENGTH
-        TransferLength : uint32;
+        TransferLength : BLKCNT32_T;
 
         /// GROUP NUMBER
         GroupNumber : byte;
@@ -2560,7 +2560,7 @@ type Read32CDB =
         FUA_NV : bool;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint64;
+        LogicalBlockAddress : BLKCNT64_T;
 
         /// EXPECTED INITIAL LOGICAL BLOCK REFERENCE TAG
         ExpectedInitialLogicalBlockReferenceTag : uint32;
@@ -2572,7 +2572,7 @@ type Read32CDB =
         LogicalBlockApplicationTagMask : uint16;
 
         /// TRANSFER LENGTH
-        TransferLength : uint32;
+        TransferLength : BLKCNT32_T;
     }
 
     interface ICDB with
@@ -2640,7 +2640,7 @@ type ReadCapacityCDB =
         ServiceAction : byte;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint64;
+        LogicalBlockAddress : BLKCNT64_T;
 
         /// PMI(partial medium indicator) bit
         PMI : bool
@@ -2784,7 +2784,7 @@ type ReadLongCDB =
         ServiceAction : byte;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint64;
+        LogicalBlockAddress : BLKCNT64_T;
 
         /// BYTE TRANSFER LENGTH
         ByteTransferLength : uint16
@@ -2959,10 +2959,10 @@ type SynchronizeCacheCDB =
         IMMED : bool;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint64;
+        LogicalBlockAddress : BLKCNT64_T;
 
         /// NUMBER OF BLOCKS
-        NumberOfBlocks : uint32;
+        NumberOfBlocks : BLKCNT32_T;
 
         /// GROUP NUMBER
         GroupNumber : byte;
@@ -3038,13 +3038,13 @@ type VerifyCDB =
         BYTCHK : bool;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint64;
+        LogicalBlockAddress : BLKCNT64_T;
 
         /// GROUP NUMBER
         GroupNumber : byte;
 
         /// VERIFICATION LENGTH
-        VerificationLength : uint32;
+        VerificationLength : BLKCNT32_T;
 
         /// CONTROL
         Control : byte;
@@ -3121,7 +3121,7 @@ type Verify32CDB =
         BYTCHK : bool;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint64;
+        LogicalBlockAddress : BLKCNT64_T;
 
         /// EXPECTED INITIAL LOGICAL BLOCK REFERENCE TAG
         ExpectedInitialLogicalBlockReferenceTag : uint32;
@@ -3133,7 +3133,7 @@ type Verify32CDB =
         LogicalBlockApplicationTagMask : uint16;
 
         /// VERIFICATION LENGTH
-        VerificationLength : uint32;
+        VerificationLength : BLKCNT32_T;
     }
     
     interface ICDB with
@@ -3209,13 +3209,13 @@ type WriteCDB =
         FUA_NV : bool;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint64;
+        LogicalBlockAddress : BLKCNT64_T;
 
         /// GROUP NUMBER
         GroupNumber : byte;
 
         /// TRANSFER LENGTH
-        TransferLength : uint32;
+        TransferLength : BLKCNT32_T;
 
         /// CONTROL
         Control : byte;
@@ -3298,7 +3298,7 @@ type Write32CDB =
         FUA_NV : bool;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint64;
+        LogicalBlockAddress : BLKCNT64_T;
 
         /// EXPECTED INITIAL LOGICAL BLOCK REFERENCE TAG
         ExpectedInitialLogicalBlockReferenceTag : uint32;
@@ -3309,8 +3309,8 @@ type Write32CDB =
         /// LOGICAL BLOCK APPLICATION TAG MASK
         LogicalBlockApplicationTagMask : uint16;
 
-        /// VERIFICATION LENGTH
-        VerificationLength : uint32;
+        /// TRANSFER LENGTH
+        TransferLength : BLKCNT32_T;
     }
 
     interface ICDB with
@@ -3339,7 +3339,7 @@ type Write32CDB =
             sprintf 
                 "WRITE(32),NACA=%b,LINK=%b,GroupNumber=%d,AdditionalCDBLength=%d,WRPROTECT=0x%02X,DPO=%b,FUA=%b,FUA_NV=%b,\
                 LogicalBlockAddress=0x%016X,ExpectedInitialLogicalBlockReferenceTag=0x%08X,ExpectedLogicalBlockApplicationTag=0x%04X,\
-                LogicalBlockApplicationTagMask=0x%04X,VerificationLength=%d"
+                LogicalBlockApplicationTagMask=0x%04X,TransferLength=%d"
                 ( this :> ICDB ).NACA
                 ( this :> ICDB ).LINK
                 this.GroupNumber
@@ -3352,7 +3352,7 @@ type Write32CDB =
                 this.ExpectedInitialLogicalBlockReferenceTag
                 this.ExpectedLogicalBlockApplicationTag
                 this.LogicalBlockApplicationTagMask
-                this.VerificationLength
+                this.TransferLength
 
 /// <summary>
 ///   WRITE AND VERIFY command data structure.
@@ -3382,13 +3382,13 @@ type WriteAndVerifyCDB =
         BYTCHK : bool;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint64;
+        LogicalBlockAddress : BLKCNT64_T;
 
         /// GROUP NUMBER
         GroupNumber : byte;
 
         /// TRANSFER LENGTH
-        TransferLength : uint32;
+        TransferLength : BLKCNT32_T;
 
         /// CONTROL
         Control : byte;
@@ -3465,7 +3465,7 @@ type WriteAndVerify32CDB =
         BYTCHK : bool;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint64;
+        LogicalBlockAddress : BLKCNT64_T;
 
         /// EXPECTED INITIAL LOGICAL BLOCK REFERENCE TAG
         ExpectedInitialLogicalBlockReferenceTag : uint32;
@@ -3476,8 +3476,8 @@ type WriteAndVerify32CDB =
         /// LOGICAL BLOCK APPLICATION TAG MASK
         LogicalBlockApplicationTagMask : uint16;
 
-        /// VERIFICATION LENGTH
-        VerificationLength : uint32;
+        /// TRANSFER LENGTH
+        TransferLength : BLKCNT32_T;
     }
 
     interface ICDB with
@@ -3506,7 +3506,7 @@ type WriteAndVerify32CDB =
             sprintf
                 "WRITE AND VERIFY(32),NACA=%b,LINK=%b,GroupNumber=%d,AdditionalCDBLength=%d,WRPROTECT=0x%02X,DPO=%b,BYTCHK=%b,\
                 LogicalBlockAddress=0x%016X,ExpectedInitialLogicalBlockReferenceTag=0x%08X,ExpectedLogicalBlockApplicationTag=0x%04X\
-                LogicalBlockApplicationTagMask=0x%04X,VerificationLength=%d"
+                LogicalBlockApplicationTagMask=0x%04X,TransferLength=%d"
                 ( this :> ICDB ).NACA
                 ( this :> ICDB ).LINK
                 this.GroupNumber
@@ -3518,7 +3518,7 @@ type WriteAndVerify32CDB =
                 this.ExpectedInitialLogicalBlockReferenceTag
                 this.ExpectedLogicalBlockApplicationTag
                 this.LogicalBlockApplicationTagMask
-                this.VerificationLength
+                this.TransferLength
 
 /// <summary>
 ///   WRITE LONG command data structure.
@@ -3540,10 +3540,10 @@ type WriteLongCDB =
         ServiceAction : byte;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint64;
+        LogicalBlockAddress : BLKCNT64_T;
 
-        /// TRANSFER LENGTH
-        TransferLength : uint16;
+        /// BYTE TRANSFER LENGTH
+        ByteTransferLength : uint16;
 
         /// CONTROL
         Control : byte;
@@ -3573,7 +3573,7 @@ type WriteLongCDB =
         // Get description string.
         member this.DescriptString : string =
             sprintf
-                "%s,NACA=%b,LINK=%b,LogicalBlockAddress=0x%016X,TransferLength=%d"
+                "%s,NACA=%b,LINK=%b,LogicalBlockAddress=0x%016X,ByteTransferLength=%d"
                 (
                     match this.OperationCode with
                     | 0x3Fuy -> "WRITE LONG(10)"
@@ -3583,7 +3583,7 @@ type WriteLongCDB =
                 ( this :> ICDB ).NACA
                 ( this :> ICDB ).LINK
                 this.LogicalBlockAddress
-                this.TransferLength
+                this.ByteTransferLength
 
 /// <summary>
 ///   WRITE SAME command data structure.
@@ -3610,13 +3610,13 @@ type WriteSameCDB =
         LBDATA : bool;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint64;
+        LogicalBlockAddress : BLKCNT64_T;
 
         /// GROUP NUMBER
         GroupNumber : byte;
 
         /// NUMBER OF BLOCKS
-        NumberOfBlocks : uint32;
+        NumberOfBlocks : BLKCNT32_T;
 
         /// CONTROL
         Control : byte;
@@ -3692,7 +3692,7 @@ type WriteSame32CDB =
         LBDATA : bool;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint64;
+        LogicalBlockAddress : BLKCNT64_T;
 
         /// EXPECTED INITIAL LOGICAL BLOCK REFERENCE TAG
         ExpectedInitialLogicalBlockReferenceTag : uint32;
@@ -3703,8 +3703,8 @@ type WriteSame32CDB =
         /// LOGICAL BLOCK APPLICATION TAG MASK
         LogicalBlockApplicationTagMask : uint16;
 
-        /// VERIFICATION LENGTH
-        VerificationLength : uint32;
+        /// NUMBER OF BLOCKS
+        NumberOfBlocks : BLKCNT32_T;
     }
 
     interface ICDB with
@@ -3733,7 +3733,7 @@ type WriteSame32CDB =
             sprintf
                 "WRITE SAME(32),NACA=%b,LINK=%b,GroupNumber=%d,AdditionalCDBLength=%d,WRPROTECT=0x%02X,PBDATA=%b,LBDATA=%b,\
                 LogicalBlockAddress=0x%016X,ExpectedInitialLogicalBlockReferenceTag=0x%08X,ExpectedLogicalBlockApplicationTag=0x%04X\
-                LogicalBlockApplicationTagMask=0x%04X,VerificationLength=%d"
+                LogicalBlockApplicationTagMask=0x%04X,NumberOfBlocks=%d"
                 ( this :> ICDB ).NACA
                 ( this :> ICDB ).LINK
                 this.GroupNumber
@@ -3745,7 +3745,7 @@ type WriteSame32CDB =
                 this.ExpectedInitialLogicalBlockReferenceTag
                 this.ExpectedLogicalBlockApplicationTag
                 this.LogicalBlockApplicationTagMask
-                this.VerificationLength
+                this.NumberOfBlocks
 
 /// <summary>
 ///   XDREAD(10) command data structure.
@@ -3759,13 +3759,13 @@ type XDReadCDB =
         XORPINFO : bool;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint32;
+        LogicalBlockAddress : BLKCNT32_T;
 
         /// GROUP NUMBER
         GroupNumber : byte;
 
-        /// NUMBER OF BLOCKS
-        NumberOfBlocks : uint16;
+        /// TRANSFER LENGTH
+        TransferLength : BLKCNT16_T;
 
         /// CONTROL
         Control : byte;
@@ -3795,13 +3795,13 @@ type XDReadCDB =
         // Get description string.
         member this.DescriptString : string =
             sprintf
-                "XDREAD(10),NACA=%b,LINK=%b,XORPINFO=%b,LogicalBlockAddress=0x%08X,GroupNumber=%d,NumberOfBlocks=%d"
+                "XDREAD(10),NACA=%b,LINK=%b,XORPINFO=%b,LogicalBlockAddress=0x%08X,GroupNumber=%d,TransferLength=%d"
                 ( this :> ICDB ).NACA
                 ( this :> ICDB ).LINK
                 this.XORPINFO
                 this.LogicalBlockAddress
                 this.GroupNumber
-                this.NumberOfBlocks
+                this.TransferLength
 
 /// <summary>
 ///   XDREAD(32) command data structure.
@@ -3827,10 +3827,10 @@ type XDRead32CDB =
         XORPINFO : bool;
         
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint64;
+        LogicalBlockAddress : BLKCNT64_T;
 
         /// TRANSFER LENGTH
-        TransferLength : uint32;
+        TransferLength : BLKCNT32_T;
 
     }
 
@@ -3891,13 +3891,13 @@ type XDWriteCDB =
         FUA_NV : bool;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint32;
+        LogicalBlockAddress : BLKCNT32_T;
 
         /// GROUP NUMBER
         GroupNumber : byte;
 
         /// TRANSFER LENGTH
-        TransferLength : uint16;
+        TransferLength : BLKCNT16_T;
 
         /// CONTROL
         Control : byte;
@@ -3975,10 +3975,10 @@ type XDWrite32CDB =
         FUA_NV : bool;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint64;
+        LogicalBlockAddress : BLKCNT64_T;
 
         /// TRANSFER LENGTH
-        TransferLength : uint32;
+        TransferLength : BLKCNT32_T;
 
     }
 
@@ -4047,13 +4047,13 @@ type XDWriteReadCDB =
         XORPINFO : bool;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint32;
+        LogicalBlockAddress : BLKCNT32_T;
 
         /// GROUP NUMBER
         GroupNumber : byte;
 
         /// TRANSFER LENGTH
-        TransferLength : uint16;
+        TransferLength : BLKCNT16_T;
 
         /// CONTROL
         Control : byte;
@@ -4135,10 +4135,10 @@ type XDWriteRead32CDB =
         XORPINFO : bool;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint64;
+        LogicalBlockAddress : BLKCNT64_T;
 
         /// TRANSFER LENGTH
-        TransferLength : uint32;
+        TransferLength : BLKCNT32_T;
 
     }
 
@@ -4202,13 +4202,13 @@ type XPWriteCDB =
         XORPINFO : bool;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint32;
+        LogicalBlockAddress : BLKCNT32_T;
 
         /// GROUP NUMBER
         GroupNumber : byte;
 
         /// TRANSFER LENGTH
-        TransferLength : uint16;
+        TransferLength : BLKCNT16_T;
 
         /// CONTROL
         Control : byte;
@@ -4282,10 +4282,10 @@ type XPWrite32CDB =
         XORPINFO : bool;
 
         /// LOGICAL BLOCK ADDRESS
-        LogicalBlockAddress : uint64;
+        LogicalBlockAddress : BLKCNT64_T;
 
         /// TRANSFER LENGTH
-        TransferLength : uint32;
+        TransferLength : BLKCNT32_T;
 
     }
 

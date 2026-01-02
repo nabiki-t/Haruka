@@ -270,7 +270,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
 
             // Send SCSI Command with same CmdSN as Nop-Out 4
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 0us NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy blkcnt_me.zero16 NACA.F LINK.F
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
             let! pdu4_2 = r1.ReceiveSpecific<RejectPDU> g_CID0
             Assert.True(( pdu4_2.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
@@ -308,7 +308,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let pduCount = ( cmdsn_me.toPrim pdu1_1.MaxCmdSN ) - ( cmdsn_me.toPrim pdu1_1.ExpCmdSN ) + 1u |> int
             let vitt = Array.zeroCreate<ITT_T> pduCount
             for i = 1 to pduCount do
-                let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.F LINK.F
+                let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 1us ) NACA.F LINK.F
                 let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
                 vitt.[ i - 1 ] <- itt
 
@@ -348,12 +348,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let pduCount = ( cmdsn_me.toPrim pdu1_1.MaxCmdSN ) - ( cmdsn_me.toPrim pdu1_1.ExpCmdSN ) + 1u |> int
             let vitt = Array.zeroCreate<ITT_T> pduCount
             for i = 1 to pduCount do
-                let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.F LINK.F
+                let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 1us ) NACA.F LINK.F
                 let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
                 vitt.[ i - 1 ] <- itt
 
             // Send additional SCSI Command PDU with CmdSN overs MaxCmdSN.
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 1us ) NACA.F LINK.F
             let! _, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
             let! _ = r1.ReceiveSpecific<RejectPDU> g_CID0
 
@@ -717,7 +717,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
             // Send SCSI Command PDU at connection 0
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 1us ) NACA.F LINK.F
             let! _, cmdsn_sc = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
             Assert.True(( cmdsn_sc = cmdsn_me.fromPrim 1u ))
 
@@ -748,7 +748,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
             // Send SCSI Command PDU at connection 0
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 1us ) NACA.F LINK.F
             let! _, cmdsn_sc = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB PooledBuffer.Empty 0u
             Assert.True(( cmdsn_sc = cmdsn_me.fromPrim 1u ))
 
@@ -1256,7 +1256,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // SCSI Write command ( failed )
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0xFFFFFFFFu 0uy 1us NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) 0uy ( blkcnt_me.ofUInt16 1us ) NACA.F LINK.F
             let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB sendData 0u
             let! pdu1 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
@@ -1271,7 +1271,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( pdu2.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
 
             // SCSI Write command ( succeed )
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 1us ) NACA.F LINK.F
             let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 m_MediaBlockSize writeCDB sendData 0u
             let! pdu1 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
@@ -1288,7 +1288,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // SCSI Read
-            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 0us NACA.F LINK.F
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 0us ) NACA.F LINK.F
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 0u readCDB PooledBuffer.Empty 0u
 
             // SCSI Response
@@ -1305,10 +1305,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = CreateSession 0uy 16384u 4096u
             let accessLength = 4096u
             let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
-            //let pduCount = 1u
+            let trBlockCnt = accessBlockcount |> uint16 |> blkcnt_me.ofUInt16
 
             // SCSI Read
-            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockcount ) NACA.F LINK.F
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
 
             // SCSI Data-In
@@ -1333,9 +1333,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let pduCount = 2u
             let accessLength = 4096u * pduCount
             let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
+            let trBlockCnt = accessBlockcount |> uint16 |> blkcnt_me.ofUInt16
 
             // SCSI Read
-            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockcount ) NACA.F LINK.F
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
 
             // SCSI Data-In
@@ -1359,6 +1360,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = CreateSession 1uy 3000u 800u
             let accessLength = 16384u
             let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
+            let trBlockCnt = accessBlockcount |> uint16 |> blkcnt_me.ofUInt16
             let expRsult = [|
                 ( 0u, 0u, 800, false );
                 ( 1u, 800u, 800, false );
@@ -1385,7 +1387,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             |]
 
             // SCSI Read
-            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockcount ) NACA.F LINK.F
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
 
             for i = 0 to expRsult.Length - 1 do
@@ -1419,6 +1421,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = CreateSession 0uy 3000u 800u
             let accessLength = 8192u
             let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
+            let trBlockCnt = accessBlockcount |> uint16 |> blkcnt_me.ofUInt16
             let expRsult = [|
                 ( 0u, 0u, 800, false );
                 ( 1u, 800u, 800, false );
@@ -1434,7 +1437,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             |]
 
             // SCSI Read
-            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockcount ) NACA.F LINK.F
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
 
             for i = 0 to expRsult.Length - 1 do
@@ -1463,6 +1466,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = CreateSession 1uy 3000u 1200u
             let accessLength = 8192u
             let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
+            let trBlockCnt = accessBlockcount |> uint16 |> blkcnt_me.ofUInt16
             let expRsult = [|
                 ( 0u, 0u, 1200, false );
                 ( 1u, 1200u, 1200, false );
@@ -1475,7 +1479,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             |]
 
             // SCSI Read
-            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockcount ) NACA.F LINK.F
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
 
             // SCSI Data-In
@@ -1521,6 +1525,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = CreateSession 1uy 3000u 1200u
             let accessLength = 8192u
             let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
+            let trBlockCnt = accessBlockcount |> uint16 |> blkcnt_me.ofUInt16
             let expRsult = [|
                 ( 0u, 0u, 1200, false );
                 ( 1u, 1200u, 1200, false );
@@ -1535,7 +1540,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Send SCSI write
             let writeData = Array.zeroCreate ( int accessLength )
             Random.Shared.NextBytes( writeData.AsSpan() )
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockcount ) NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive R2T 1
@@ -1573,7 +1578,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
 
             // SCSI Read
-            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockcount ) NACA.F LINK.F
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
 
             // SCSI Data-In
@@ -1666,6 +1671,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = CreateSession 1uy 3000u 1200u
             let accessLength = 8192u
             let accessBlockcount = accessLength / m_MediaBlockSize  // block size must be 512 or 4096
+            let trBlockCnt = accessBlockcount |> uint16 |> blkcnt_me.ofUInt16
             let expRsult = [|
                 ( 0u, 0u, 1200, false );
                 ( 1u, 1200u, 1200, false );
@@ -1680,7 +1686,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Send SCSI write
             let writeData = Array.zeroCreate ( int accessLength )
             Random.Shared.NextBytes( writeData.AsSpan() )
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockcount ) NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive R2T 1
@@ -1718,7 +1724,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.Status = ScsiCmdStatCd.GOOD ))
 
             // SCSI Read
-            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockcount ) NACA.F LINK.F
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
 
             // SCSI Data-In
@@ -1806,9 +1812,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = CreateSession 0uy 16384u 16384u
             let accessLength = 4096u
             let accessBlockCount = accessLength / m_MediaBlockSize
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
 
             // read media data
-            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.F LINK.F
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! readITT1, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
             let! readPDU1_1 = r1.ReceiveSpecific<SCSIDataInPDU> g_CID0
             Assert.True(( readPDU1_1.F ))
@@ -1819,7 +1826,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( readPDU1_2.InitiatorTaskTag = readITT1 ))
 
             // Send SCSI write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 0us NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy blkcnt_me.zero16 NACA.F LINK.F
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 0u writeCDB PooledBuffer.Empty 0u
 
             // Receive SCSI Response PDU
@@ -1838,7 +1845,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResponseData.Count = 0 ))
 
             // check no data changed
-            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 trBlockCnt m_MediaBlockSize
             Assert.True(( readPDU1_1.DataSegment.ToArray() = wroteData ))
 
             do! r1.CloseSession g_CID0 BitI.F
@@ -1850,9 +1857,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = CreateSession 0uy 16384u 16384u
             let accessLength = 4096u
             let accessBlockCount = accessLength / m_MediaBlockSize
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
 
             // Send SCSI write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive R2T
@@ -1876,7 +1884,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 trBlockCnt m_MediaBlockSize
             Assert.True(( PooledBuffer.ValueEqualsWithArray writtenData wroteData ))
 
             do! r1.CloseSession g_CID0 BitI.F
@@ -1960,9 +1968,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = CreateSession 0uy 16384u 16384u
             let accessLength = 4096u
             let accessBlockCount = accessLength / m_MediaBlockSize
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
 
             // Send SCSI write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive R2T
@@ -1997,7 +2006,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = expResidualCount ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 trBlockCnt m_MediaBlockSize
             Assert.True(( writtenData = wroteData ))
 
             do! r1.CloseSession g_CID0 BitI.F
@@ -2010,9 +2019,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = CreateSession 0uy 16384u 16384u
             let accessLength = 4096u
             let accessBlockCount = accessLength / m_MediaBlockSize
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
 
             // Send SCSI write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive R2T
@@ -2050,7 +2060,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 trBlockCnt m_MediaBlockSize
             Assert.True(( writtenData = wroteData ))
 
             do! r1.CloseSession g_CID0 BitI.F
@@ -2063,9 +2073,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = CreateSession 0uy 16384u 16384u
             let accessLength = 4096u
             let accessBlockCount = accessLength / m_MediaBlockSize
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
 
             // Send SCSI write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive R2T
@@ -2106,9 +2117,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let sessParam = { m_defaultSessParam with ErrorRecoveryLevel = 1uy }
             let accessLength = 4096u
             let accessBlockCount = accessLength / m_MediaBlockSize
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
 
             // Send SCSI write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive R2T
@@ -2152,7 +2164,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 trBlockCnt m_MediaBlockSize
             Assert.True(( writtenData = wroteData ))
 
             do! r1.CloseSession g_CID0 BitI.F
@@ -2165,9 +2177,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = CreateSession 0uy 4096u 4096u
             let accessLength = 8192u
             let accessBlockCount = accessLength / m_MediaBlockSize
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
 
             // Send SCSI write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive two R2T
@@ -2212,7 +2225,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 trBlockCnt m_MediaBlockSize
             Assert.True(( writtenData = wroteData ))
 
             do! r1.CloseSession g_CID0 BitI.F
@@ -2225,9 +2238,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = CreateSession 0uy 4096u 4096u
             let accessLength = 8192u
             let accessBlockCount = accessLength / m_MediaBlockSize
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
 
             // Send SCSI write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive two R2T
@@ -2292,7 +2306,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 trBlockCnt m_MediaBlockSize
             Assert.True(( writtenData = wroteData ))
 
             do! r1.CloseSession g_CID0 BitI.F
@@ -2305,9 +2319,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = CreateSession 1uy 4096u 4096u
             let accessLength = 8192u
             let accessBlockCount = accessLength / m_MediaBlockSize
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
 
             // Send SCSI write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive two R2T
@@ -2366,7 +2381,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 trBlockCnt m_MediaBlockSize
             Assert.True(( writtenData = wroteData ))
 
             do! r1.CloseSession g_CID0 BitI.F
@@ -2379,9 +2394,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = CreateSession 1uy 4096u 4096u
             let accessLength = 8192u
             let accessBlockCount = accessLength / m_MediaBlockSize
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
 
             // Send SCSI write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive two R2T
@@ -2443,7 +2459,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 trBlockCnt m_MediaBlockSize
             Assert.True(( writtenData = wroteData ))
 
             do! r1.CloseSession g_CID0 BitI.F
@@ -2456,9 +2472,10 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = CreateSession 1uy 4096u 4096u
             let accessLength = 8192u
             let accessBlockCount = accessLength / m_MediaBlockSize
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
 
             // Send SCSI write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Receive two R2T
@@ -2504,7 +2521,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 trBlockCnt m_MediaBlockSize
             Assert.True(( writtenData = wroteData ))
 
             do! r1.CloseSession g_CID0 BitI.F
@@ -2558,11 +2575,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = CreateSession errorRecoveryLevel 4096u 4096u
             let accessLength = 4096u
             let accessBlockCount = accessLength / m_MediaBlockSize
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
             let writtenData = Array.zeroCreate( int accessLength )
             Random.Shared.NextBytes( writtenData )
 
             // Send SCSI write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let writtenData1 = PooledBuffer.Rent( writtenData, 0, range1Count )
             let scsiCommandFFlag = ( range2Count = 0 ) |> BitF.ofBool
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 BitI.F scsiCommandFFlag BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB writtenData1 0u
@@ -2635,7 +2653,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
                 // Verify that the sent data was written correctly.
-                let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
+                let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 trBlockCnt m_MediaBlockSize
                 Assert.True(( writtenData = wroteData ))
 
                 do! r1.CloseSession g_CID0 BitI.F
@@ -2705,11 +2723,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = CreateSession 1uy 4096u 4096u
             let accessLength = 4096u
             let accessBlockCount = accessLength / m_MediaBlockSize
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
             let writtenData = Array.zeroCreate( int accessLength )
             Random.Shared.NextBytes( writtenData )
 
             // Send SCSI write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // Send data-Out PDU
@@ -2730,7 +2749,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = expResidualCount ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 trBlockCnt m_MediaBlockSize
             Assert.True(( writtenData = wroteData ))
 
             do! r1.CloseSession g_CID0 BitI.F
@@ -2742,13 +2761,14 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = CreateSession 1uy 4096u 4096u
             let accessLength = 4096u
             let accessBlockCount = accessLength / m_MediaBlockSize
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
             let writtenData = Array.zeroCreate( int accessLength )
             Random.Shared.NextBytes( writtenData )
 
             let oldITT = r1.ITT
 
             // Send SCSI write ( dropped at target )
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.F LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let writtenData0 = PooledBuffer.Rent( writtenData, 0, 1024 )
             let! writeITT1, writeCmdSN1 =
                 r1.SendSCSICommandPDU_Test id ( ValueSome( 500u, 600u ) ) g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB writtenData0 0u
@@ -2782,7 +2802,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( writeRespPDU.ResidualCount = 0u ))
 
             // Verify that the sent data was written correctly.
-            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 0u accessBlockCount m_MediaBlockSize
+            let! wroteData = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 trBlockCnt m_MediaBlockSize
             Assert.True(( writtenData = wroteData ))
 
             do! r1.CloseSession g_CID0 BitI.F

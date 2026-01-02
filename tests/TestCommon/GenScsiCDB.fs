@@ -12,6 +12,7 @@ namespace Haruka.Test
 // Import declaration
 
 open System
+open Haruka.Constants
 open Haruka.Commons
 
 //=============================================================================
@@ -370,7 +371,7 @@ type GenScsiCDB() =
             0x00uy; 0x00uy;                                                                     // Reserved
             argParameterListLength;                                                             // PARAMETER LIST LENGTH
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTROL
             0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
             0x00uy; 0x00uy; 0x00uy; 0x00uy;
             0x00uy; 0x00uy;
@@ -406,7 +407,7 @@ type GenScsiCDB() =
             0x00uy;                                                                             // Reserved
             yield! Functions.UInt16ToNetworkBytes_NewVec argParameterListLength;                // PARAMETER LIST LENGTH
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTROL
             0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
             0x00uy; 0x00uy;
         |]
@@ -447,7 +448,7 @@ type GenScsiCDB() =
             argSubPageCode;                                                                     // SUB PAGE CODE
             argAllocationLength;                                                                // ALLOCATION LENGTH
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTROL
             0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
             0x00uy; 0x00uy; 0x00uy; 0x00uy;
             0x00uy; 0x00uy;
@@ -494,7 +495,7 @@ type GenScsiCDB() =
             0x00uy; 0x00uy; 0x00uy;                                                             // Reserved
             yield! Functions.UInt16ToNetworkBytes_NewVec argAllocationLength                    // ALLOCATION LENGTH 
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTROL
             0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
             0x00uy; 0x00uy;
         |]
@@ -525,7 +526,7 @@ type GenScsiCDB() =
             0x00uy;                                                                             // Reserved
             yield! Functions.UInt16ToNetworkBytes_NewVec argAllocationLength                    // ALLOCATION LENGTH 
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTROL
             0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
             0x00uy; 0x00uy;
         |]
@@ -563,7 +564,7 @@ type GenScsiCDB() =
             0x00uy; 0x00uy;                                                                     // Reserved
             yield! Functions.UInt32ToNetworkBytes_NewVec argParameterListLength;                // PARAMETER LIST LENGTH 
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTROL
             0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
             0x00uy; 0x00uy;
         |]
@@ -592,16 +593,16 @@ type GenScsiCDB() =
     /// <returns>
     ///  Generated PRE-FETCH(10) CDB with padding to 16 byte.
     /// </returns>
-    static member PreFetch10 ( argIMMED : IMMED ) ( argLBA : uint32 ) ( argGroupNumber : byte ) ( argPreFetchLength : uint16 ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
+    static member PreFetch10 ( argIMMED : IMMED ) ( argLBA : BLKCNT32_T ) ( argGroupNumber : byte ) ( argPreFetchLength : BLKCNT16_T ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
         [|
-            0x34uy;                                                                             // OPERATION CODE
-            ( Functions.SetBitflag ( IMMED.toBool argIMMED ) 0x02uy );                          // IMMED
-            yield! Functions.UInt32ToNetworkBytes_NewVec argLBA;                                // LOGICAL BLOCK ADDRESS
-            ( argGroupNumber &&& 0x1Fuy );                                                      // GROUP NUMBER
-            yield! Functions.UInt16ToNetworkBytes_NewVec argPreFetchLength;                     // PREFETCH LENGTH
+            0x34uy;                                                                                     // OPERATION CODE
+            ( Functions.SetBitflag ( IMMED.toBool argIMMED ) 0x02uy );                                  // IMMED
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( blkcnt_me.toUInt32 argLBA );                 // LOGICAL BLOCK ADDRESS
+            ( argGroupNumber &&& 0x1Fuy );                                                              // GROUP NUMBER
+            yield! Functions.UInt16ToNetworkBytes_NewVec ( blkcnt_me.toUInt16 argPreFetchLength );   // PREFETCH LENGTH
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
-            0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                                 // CONTROL
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                             // padding
             0x00uy; 0x00uy;
         |]
 
@@ -629,15 +630,15 @@ type GenScsiCDB() =
     /// <returns>
     ///  Generated PRE-FETCH(16) CDB.
     /// </returns>
-    static member PreFetch16 ( argIMMED : IMMED ) ( argLBA : uint64 ) ( argGroupNumber : byte ) ( argPreFetchLength : uint32 ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
+    static member PreFetch16 ( argIMMED : IMMED ) ( argLBA : BLKCNT64_T ) ( argGroupNumber : byte ) ( argPreFetchLength : BLKCNT32_T ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
         [|
-            0x90uy;                                                                             // OPERATION CODE
-            Functions.SetBitflag ( IMMED.toBool argIMMED ) 0x02uy;                              // IMMED
-            yield! Functions.UInt64ToNetworkBytes_NewVec argLBA;                                // LOGICAL BLOCK ADDRESS
-            yield! Functions.UInt32ToNetworkBytes_NewVec argPreFetchLength;                     // PREFETCH LENGTH
-            argGroupNumber &&& 0x1Fuy;                                                          // GROUP NUMBER
+            0x90uy;                                                                                     // OPERATION CODE
+            Functions.SetBitflag ( IMMED.toBool argIMMED ) 0x02uy;                                      // IMMED
+            yield! Functions.UInt64ToNetworkBytes_NewVec ( blkcnt_me.toUInt64 argLBA );                 // LOGICAL BLOCK ADDRESS
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( blkcnt_me.toUInt32 argPreFetchLength );      // PREFETCH LENGTH
+            argGroupNumber &&& 0x1Fuy;                                                                  // GROUP NUMBER
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                                 // CONTROL
         |]
 
     /// <summary>
@@ -667,7 +668,7 @@ type GenScsiCDB() =
             yield! Functions.UInt32ToNetworkBytes_NewVec argAllocationLength;                   // ALLOCATION LENGTH
             0x00uy;                                                                             // Reserved
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTROL
             0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
         |]
 
@@ -696,7 +697,7 @@ type GenScsiCDB() =
             0x00uy; 0x00uy;                                                                     // Reserved
             argAllocationLength;                                                                // ALLOCATION LENGTH
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTROL
             0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
             0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
             0x00uy; 0x00uy;                                                                     // padding
@@ -719,7 +720,7 @@ type GenScsiCDB() =
             0x00uy;                                                                             // OPERATION CODE
             0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // Reserved
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTROL
             0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
             0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
             0x00uy; 0x00uy;                                                                     // padding
@@ -767,7 +768,7 @@ type GenScsiCDB() =
             0x00uy;                                                                             // Vendor specific
             0x00uy; 0x00uy;                                                                     // Obsoleted
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTROL
             0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
             0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
             0x00uy; 0x00uy;                                                                     // padding
@@ -791,15 +792,16 @@ type GenScsiCDB() =
     /// <returns>
     ///  Generated READ(6) CDB with padding to 16 byte.
     /// </returns>
-    static member Read6 ( argLBA : uint32 ) ( argTransferLength : byte ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
+    static member Read6 ( argLBA : BLKCNT32_T ) ( argTransferLength : BLKCNT8_T ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
+        let lbau32 = blkcnt_me.toUInt32 argLBA
         [|
             0x08uy;                                                                             // OPERATION CODE
-            byte( ( argLBA &&& 0x001F0000u ) >>> 16 );                                          // LOGICAL BLOCK ADDRESS
-            byte( ( argLBA &&& 0x0000FF00u ) >>> 8 );                                           // LOGICAL BLOCK ADDRESS
-            byte(   argLBA &&& 0x000000FFu );                                                   // LOGICAL BLOCK ADDRESS
-            argTransferLength;                                                                  // TRANSFER LENGTH
+            byte( ( lbau32 &&& 0x001F0000u ) >>> 16 );                                          // LOGICAL BLOCK ADDRESS
+            byte( ( lbau32 &&& 0x0000FF00u ) >>> 8 );                                           // LOGICAL BLOCK ADDRESS
+            byte(   lbau32 &&& 0x000000FFu );                                                   // LOGICAL BLOCK ADDRESS
+            argTransferLength |> blkcnt_me.toUInt8;                                             // TRANSFER LENGTH
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTROL
             0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
             0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
             0x00uy; 0x00uy;                                                                     // padding
@@ -838,20 +840,20 @@ type GenScsiCDB() =
     /// <returns>
     ///  Generated READ(10) CDB with padding to 16 byte.
     /// </returns>
-    static member Read10 ( argRDPROTECT : byte ) ( argDPO : DPO ) ( argFUA : FUA ) ( argFUA_NV : FUA_NV ) ( argLBA : uint32 ) ( argGroupNumber : byte ) ( argTransferLength : uint16 ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
+    static member Read10 ( argRDPROTECT : byte ) ( argDPO : DPO ) ( argFUA : FUA ) ( argFUA_NV : FUA_NV ) ( argLBA : BLKCNT32_T ) ( argGroupNumber : byte ) ( argTransferLength : BLKCNT16_T ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
         [|
-            0x28uy;                                                                             // OPERATION CODE
-            ( ( argRDPROTECT &&& 0x07uy ) <<< 5 ) |||                                           // RDPROTECT
-                ( Functions.SetBitflag ( DPO.toBool argDPO ) 0x10uy ) |||                       // DPO
-                ( Functions.SetBitflag ( FUA.toBool argFUA ) 0x08uy ) |||                       // FUA
-                ( Functions.SetBitflag ( FUA_NV.toBool argFUA_NV ) 0x02uy );                    // FUA_NV
-            yield! Functions.UInt32ToNetworkBytes_NewVec argLBA;                                // LOGICAL BLOCK ADDRESS
-            argGroupNumber &&& 0x1Fuy;                                                          // GROUP NUMBER
-            yield! Functions.UInt16ToNetworkBytes_NewVec argTransferLength;                     // TRANSFER LENGTH
+            0x28uy;                                                                                     // OPERATION CODE
+            ( ( argRDPROTECT &&& 0x07uy ) <<< 5 ) |||                                                   // RDPROTECT
+                ( Functions.SetBitflag ( DPO.toBool argDPO ) 0x10uy ) |||                               // DPO
+                ( Functions.SetBitflag ( FUA.toBool argFUA ) 0x08uy ) |||                               // FUA
+                ( Functions.SetBitflag ( FUA_NV.toBool argFUA_NV ) 0x02uy );                            // FUA_NV
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( blkcnt_me.toUInt32 argLBA );                 // LOGICAL BLOCK ADDRESS
+            argGroupNumber &&& 0x1Fuy;                                                                  // GROUP NUMBER
+            yield! Functions.UInt16ToNetworkBytes_NewVec ( blkcnt_me.toUInt16 argTransferLength );      // TRANSFER LENGTH
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
-            0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
-            0x00uy; 0x00uy;                                                                     // padding
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                                 // CONTROL
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                             // padding
+            0x00uy; 0x00uy;                                                                             // padding
         |]
 
     /// <summary>
@@ -887,19 +889,19 @@ type GenScsiCDB() =
     /// <returns>
     ///  Generated READ(12) CDB with padding to 16 byte.
     /// </returns>
-    static member Read12 ( argRDPROTECT : byte ) ( argDPO : DPO ) ( argFUA : FUA ) ( argFUA_NV : FUA_NV ) ( argLBA : uint32 ) ( argGroupNumber : byte ) ( argTransferLength : uint32 ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
+    static member Read12 ( argRDPROTECT : byte ) ( argDPO : DPO ) ( argFUA : FUA ) ( argFUA_NV : FUA_NV ) ( argLBA : BLKCNT32_T ) ( argGroupNumber : byte ) ( argTransferLength : BLKCNT32_T ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
         [|
-            0xA8uy;                                                                             // OPERATION CODE
-            ( ( argRDPROTECT &&& 0x07uy ) <<< 5 ) |||                                           // RDPROTECT
-                ( Functions.SetBitflag ( DPO.toBool argDPO ) 0x10uy ) |||                       // DPO
-                ( Functions.SetBitflag ( FUA.toBool argFUA ) 0x08uy ) |||                       // FUA
-                ( Functions.SetBitflag ( FUA_NV.toBool argFUA_NV ) 0x02uy );                    // FUA_NV
-            yield! Functions.UInt32ToNetworkBytes_NewVec argLBA;                                // LOGICAL BLOCK ADDRESS
-            yield! Functions.UInt32ToNetworkBytes_NewVec argTransferLength;                     // TRANSFER LENGTH
-            argGroupNumber &&& 0x1Fuy;                                                          // GROUP NUMBER
+            0xA8uy;                                                                                     // OPERATION CODE
+            ( ( argRDPROTECT &&& 0x07uy ) <<< 5 ) |||                                                   // RDPROTECT
+                ( Functions.SetBitflag ( DPO.toBool argDPO ) 0x10uy ) |||                               // DPO
+                ( Functions.SetBitflag ( FUA.toBool argFUA ) 0x08uy ) |||                               // FUA
+                ( Functions.SetBitflag ( FUA_NV.toBool argFUA_NV ) 0x02uy );                            // FUA_NV
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( blkcnt_me.toUInt32 argLBA );                 // LOGICAL BLOCK ADDRESS
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( blkcnt_me.toUInt32 argTransferLength );      // TRANSFER LENGTH
+            argGroupNumber &&& 0x1Fuy;                                                                  // GROUP NUMBER
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
-            0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                                 // CONTROL
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                             // padding
         |]
 
     /// <summary>
@@ -935,18 +937,18 @@ type GenScsiCDB() =
     /// <returns>
     ///  Generated READ(16) CDB.
     /// </returns>
-    static member Read16 ( argRDPROTECT : byte ) ( argDPO : DPO ) ( argFUA : FUA ) ( argFUA_NV : FUA_NV ) ( argLBA : uint64 ) ( argGroupNumber : byte ) ( argTransferLength : uint32 ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
+    static member Read16 ( argRDPROTECT : byte ) ( argDPO : DPO ) ( argFUA : FUA ) ( argFUA_NV : FUA_NV ) ( argLBA : BLKCNT64_T ) ( argGroupNumber : byte ) ( argTransferLength : BLKCNT32_T ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
         [|
-            0x88uy;                                                                             // OPERATION CODE
-            ( ( argRDPROTECT &&& 0x07uy ) <<< 5 ) |||                                           // RDPROTECT
-                ( Functions.SetBitflag ( DPO.toBool argDPO ) 0x10uy ) |||                       // DPO
-                ( Functions.SetBitflag ( FUA.toBool argFUA ) 0x08uy ) |||                       // FUA
-                ( Functions.SetBitflag ( FUA_NV.toBool argFUA_NV ) 0x02uy );                    // FUA_NV
-            yield! Functions.UInt64ToNetworkBytes_NewVec argLBA;                                // LOGICAL BLOCK ADDRESS
-            yield! Functions.UInt32ToNetworkBytes_NewVec argTransferLength;                     // TRANSFER LENGTH
-            argGroupNumber &&& 0x1Fuy;                                                          // GROUP NUMBER
+            0x88uy;                                                                                     // OPERATION CODE
+            ( ( argRDPROTECT &&& 0x07uy ) <<< 5 ) |||                                                   // RDPROTECT
+                ( Functions.SetBitflag ( DPO.toBool argDPO ) 0x10uy ) |||                               // DPO
+                ( Functions.SetBitflag ( FUA.toBool argFUA ) 0x08uy ) |||                               // FUA
+                ( Functions.SetBitflag ( FUA_NV.toBool argFUA_NV ) 0x02uy );                            // FUA_NV
+            yield! Functions.UInt64ToNetworkBytes_NewVec ( blkcnt_me.toUInt64 argLBA );                 // LOGICAL BLOCK ADDRESS
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( blkcnt_me.toUInt32 argTransferLength );      // TRANSFER LENGTH
+            argGroupNumber &&& 0x1Fuy;                                                                  // GROUP NUMBER
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                                 // CONTROL
         |]
 
     /// <summary>
@@ -967,15 +969,15 @@ type GenScsiCDB() =
     /// <returns>
     ///  Generated READ CAPACITY(10) CDB with padding to 16 byte.
     /// </returns>
-    static member ReadCapacity10 ( argLBA : uint32 ) ( argPMI : PMI ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
+    static member ReadCapacity10 ( argLBA : BLKCNT32_T ) ( argPMI : PMI ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
         [|
             0x25uy;                                                                             // OPERATION CODE
             0x00uy;                                                                             // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec argLBA;                                // LOGICAL BLOCK ADDRESS
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( blkcnt_me.toUInt32 argLBA );         // LOGICAL BLOCK ADDRESS
             0x00uy; 0x00uy;                                                                     // Reserved
             Functions.SetBitflag ( PMI.toBool argPMI ) 0x01uy;                                  // PMI
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTROL
             0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
             0x00uy; 0x00uy;                                                                     // padding
         |]
@@ -1001,15 +1003,15 @@ type GenScsiCDB() =
     /// <returns>
     ///  Generated READ CAPACITY(16) CDB.
     /// </returns>
-    static member ReadCapacity16 ( argLBA : uint64 ) ( argAllocationLength : uint32 ) ( argPMI : PMI ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
+    static member ReadCapacity16 ( argLBA : BLKCNT64_T ) ( argAllocationLength : uint32 ) ( argPMI : PMI ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
         [|
             0x9Euy;                                                                             // OPERATION CODE
             0x10uy;                                                                             // SERVICE ACTION
-            yield! Functions.UInt64ToNetworkBytes_NewVec argLBA;                                // LOGICAL BLOCK ADDRESS
+            yield! Functions.UInt64ToNetworkBytes_NewVec ( blkcnt_me.toUInt64 argLBA );         // LOGICAL BLOCK ADDRESS
             yield! Functions.UInt32ToNetworkBytes_NewVec argAllocationLength;                   // ALLOCATION LENGTH
             Functions.SetBitflag ( PMI.toBool argPMI ) 0x01uy;                                  // PMI
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTROL
         |]
 
     /// <summary>
@@ -1039,18 +1041,18 @@ type GenScsiCDB() =
     /// <returns>
     ///  Generated SYNCHRONIZE CACHE(10) CDB with padding to 16 byte.
     /// </returns>
-    static member SynchronizeCache10 ( argSYNC_NV : SYNC_NV ) ( argIMMED : IMMED ) ( argLBA : uint32 ) ( argGroupNumber : byte ) ( argNumberOfBlockes : uint16 ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
+    static member SynchronizeCache10 ( argSYNC_NV : SYNC_NV ) ( argIMMED : IMMED ) ( argLBA : BLKCNT32_T ) ( argGroupNumber : byte ) ( argNumberOfBlockes : BLKCNT16_T ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
         [|
-            0x35uy;                                                                             // OPERATION CODE
-            ( Functions.SetBitflag ( SYNC_NV.toBool argSYNC_NV ) 0x04uy ) |||                   // SYNC_NV
-                ( Functions.SetBitflag ( IMMED.toBool argIMMED ) 0x02uy );                      // IMMED
-            yield! Functions.UInt32ToNetworkBytes_NewVec argLBA;                                // LOGICAL BLOCK ADDRESS
-            argGroupNumber &&& 0x1Fuy;                                                          // GROUP NUMBER
-            yield! Functions.UInt16ToNetworkBytes_NewVec argNumberOfBlockes;                    // NUMBER OF BLOCKS
+            0x35uy;                                                                                     // OPERATION CODE
+            ( Functions.SetBitflag ( SYNC_NV.toBool argSYNC_NV ) 0x04uy ) |||                           // SYNC_NV
+                ( Functions.SetBitflag ( IMMED.toBool argIMMED ) 0x02uy );                              // IMMED
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( blkcnt_me.toUInt32 argLBA );                 // LOGICAL BLOCK ADDRESS
+            argGroupNumber &&& 0x1Fuy;                                                                  // GROUP NUMBER
+            yield! Functions.UInt16ToNetworkBytes_NewVec ( blkcnt_me.toUInt16 argNumberOfBlockes );     // NUMBER OF BLOCKS
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
-            0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
-            0x00uy; 0x00uy;                                                                     // padding
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                                 // CONTROL
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                             // padding
+            0x00uy; 0x00uy;                                                                             // padding
         |]
 
     /// <summary>
@@ -1080,16 +1082,16 @@ type GenScsiCDB() =
     /// <returns>
     ///  Generated SYNCHRONIZE CACHE(16) CDB.
     /// </returns>
-    static member SynchronizeCache16 ( argSYNC_NV : SYNC_NV ) ( argIMMED : IMMED ) ( argLBA : uint64 ) ( argGroupNumber : byte ) ( argNumberOfBlockes : uint32 ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
+    static member SynchronizeCache16 ( argSYNC_NV : SYNC_NV ) ( argIMMED : IMMED ) ( argLBA : BLKCNT64_T ) ( argGroupNumber : byte ) ( argNumberOfBlockes : BLKCNT32_T ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
         [|
-            0x91uy;                                                                             // OPERATION CODE
-            ( Functions.SetBitflag ( SYNC_NV.toBool argSYNC_NV ) 0x04uy ) |||                   // SYNC_NV
-                ( Functions.SetBitflag ( IMMED.toBool argIMMED ) 0x02uy );                      // IMMED
-            yield! Functions.UInt64ToNetworkBytes_NewVec argLBA;                                // LOGICAL BLOCK ADDRESS
-            yield! Functions.UInt32ToNetworkBytes_NewVec argNumberOfBlockes;                    // NUMBER OF BLOCKS
-            argGroupNumber &&& 0x1Fuy;                                                          // GROUP NUMBER
+            0x91uy;                                                                                     // OPERATION CODE
+            ( Functions.SetBitflag ( SYNC_NV.toBool argSYNC_NV ) 0x04uy ) |||                           // SYNC_NV
+                ( Functions.SetBitflag ( IMMED.toBool argIMMED ) 0x02uy );                              // IMMED
+            yield! Functions.UInt64ToNetworkBytes_NewVec ( blkcnt_me.toUInt64 argLBA );                 // LOGICAL BLOCK ADDRESS
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( blkcnt_me.toUInt32 argNumberOfBlockes );     // NUMBER OF BLOCKS
+            argGroupNumber &&& 0x1Fuy;                                                                  // GROUP NUMBER
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                                 // CONTROL
         |]
 
     /// <summary>
@@ -1110,15 +1112,16 @@ type GenScsiCDB() =
     /// <returns>
     ///  Generated WRITE(6) CDB with padding to 16 byte.
     /// </returns>
-    static member Write6 ( argLBA : uint32 ) ( argTransferLength : byte ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
+    static member Write6 ( argLBA : BLKCNT32_T ) ( argTransferLength : BLKCNT8_T ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
+        let lbau32 = blkcnt_me.toUInt32 argLBA
         [|
             0x0Auy;                                                                             // OPERATION CODE
-            byte( ( argLBA &&& 0x001F0000u ) >>> 16 );                                          // LOGICAL BLOCK ADDRESS
-            byte( ( argLBA &&& 0x0000FF00u ) >>> 8 );                                           // LOGICAL BLOCK ADDRESS
-            byte(   argLBA &&& 0x000000FFu );                                                   // LOGICAL BLOCK ADDRESS
-            argTransferLength;                                                                  // TRANSFER LENGTH
+            byte( ( lbau32 &&& 0x001F0000u ) >>> 16 );                                          // LOGICAL BLOCK ADDRESS
+            byte( ( lbau32 &&& 0x0000FF00u ) >>> 8 );                                           // LOGICAL BLOCK ADDRESS
+            byte(   lbau32 &&& 0x000000FFu );                                                   // LOGICAL BLOCK ADDRESS
+            argTransferLength |> blkcnt_me.toUInt8;                                             // TRANSFER LENGTH
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTROL
             0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
             0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
             0x00uy; 0x00uy;                                                                     // padding
@@ -1157,20 +1160,20 @@ type GenScsiCDB() =
     /// <returns>
     ///  Generated WRITE(10) CDB with padding to 16 byte.
     /// </returns>
-    static member Write10 ( argWRPROTECT : byte ) ( argDPO : DPO ) ( argFUA : FUA ) ( argFUA_NV : FUA_NV ) ( argLBA : uint32 ) ( argGroupNumber : byte ) ( argTransferLength : uint16 ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
+    static member Write10 ( argWRPROTECT : byte ) ( argDPO : DPO ) ( argFUA : FUA ) ( argFUA_NV : FUA_NV ) ( argLBA : BLKCNT32_T ) ( argGroupNumber : byte ) ( argTransferLength : BLKCNT16_T ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
         [|
-            0x2Auy;                                                                             // OPERATION CODE
-            ( ( argWRPROTECT &&& 0x07uy ) <<< 5 ) |||                                           // WRPROTECT
-                ( Functions.SetBitflag ( DPO.toBool argDPO ) 0x10uy ) |||                       // DPO
-                ( Functions.SetBitflag ( FUA.toBool argFUA ) 0x08uy ) |||                       // FUA
-                ( Functions.SetBitflag ( FUA_NV.toBool argFUA_NV ) 0x02uy );                    // FUA_NV
-            yield! Functions.UInt32ToNetworkBytes_NewVec argLBA;                                // LOGICAL BLOCK ADDRESS
-            argGroupNumber &&& 0x1Fuy;                                                          // GROUP NUMBER
-            yield! Functions.UInt16ToNetworkBytes_NewVec argTransferLength;                     // TRANSFER LENGTH
+            0x2Auy;                                                                                     // OPERATION CODE
+            ( ( argWRPROTECT &&& 0x07uy ) <<< 5 ) |||                                                   // WRPROTECT
+                ( Functions.SetBitflag ( DPO.toBool argDPO ) 0x10uy ) |||                               // DPO
+                ( Functions.SetBitflag ( FUA.toBool argFUA ) 0x08uy ) |||                               // FUA
+                ( Functions.SetBitflag ( FUA_NV.toBool argFUA_NV ) 0x02uy );                            // FUA_NV
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( blkcnt_me.toUInt32 argLBA );                 // LOGICAL BLOCK ADDRESS
+            argGroupNumber &&& 0x1Fuy;                                                                  // GROUP NUMBER
+            yield! Functions.UInt16ToNetworkBytes_NewVec ( blkcnt_me.toUInt16 argTransferLength );      // TRANSFER LENGTH
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
-            0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
-            0x00uy; 0x00uy;                                                                     // padding
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                                 // CONTROL
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                             // padding
+            0x00uy; 0x00uy;                                                                             // padding
         |]
 
     /// <summary>
@@ -1206,19 +1209,19 @@ type GenScsiCDB() =
     /// <returns>
     ///  Generated WRITE(12) CDB with padding to 16 byte.
     /// </returns>
-    static member Write12 ( argWRPROTECT : byte ) ( argDPO : DPO ) ( argFUA : FUA ) ( argFUA_NV : FUA_NV ) ( argLBA : uint32 ) ( argGroupNumber : byte ) ( argTransferLength : uint32 ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
+    static member Write12 ( argWRPROTECT : byte ) ( argDPO : DPO ) ( argFUA : FUA ) ( argFUA_NV : FUA_NV ) ( argLBA : BLKCNT32_T ) ( argGroupNumber : byte ) ( argTransferLength : BLKCNT32_T ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
         [|
-            0xAAuy;                                                                             // OPERATION CODE
-            ( ( argWRPROTECT &&& 0x07uy ) <<< 5 ) |||                                           // WRPROTECT
-                ( Functions.SetBitflag ( DPO.toBool argDPO ) 0x10uy ) |||                       // DPO
-                ( Functions.SetBitflag ( FUA.toBool argFUA ) 0x08uy ) |||                       // FUA
-                ( Functions.SetBitflag ( FUA_NV.toBool argFUA_NV ) 0x02uy );                    // FUA_NV
-            yield! Functions.UInt32ToNetworkBytes_NewVec argLBA;                                // LOGICAL BLOCK ADDRESS
-            yield! Functions.UInt32ToNetworkBytes_NewVec argTransferLength;                     // TRANSFER LENGTH
-            argGroupNumber &&& 0x1Fuy;                                                          // GROUP NUMBER
+            0xAAuy;                                                                                     // OPERATION CODE
+            ( ( argWRPROTECT &&& 0x07uy ) <<< 5 ) |||                                                   // WRPROTECT
+                ( Functions.SetBitflag ( DPO.toBool argDPO ) 0x10uy ) |||                               // DPO
+                ( Functions.SetBitflag ( FUA.toBool argFUA ) 0x08uy ) |||                               // FUA
+                ( Functions.SetBitflag ( FUA_NV.toBool argFUA_NV ) 0x02uy );                            // FUA_NV
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( blkcnt_me.toUInt32 argLBA );                 // LOGICAL BLOCK ADDRESS
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( blkcnt_me.toUInt32 argTransferLength );      // TRANSFER LENGTH
+            argGroupNumber &&& 0x1Fuy;                                                                  // GROUP NUMBER
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
-            0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                                 // CONTROL
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                             // padding
         |]
 
     /// <summary>
@@ -1254,18 +1257,18 @@ type GenScsiCDB() =
     /// <returns>
     ///  Generated WRITE(16) CDB.
     /// </returns>
-    static member Write16 ( argWRPROTECT : byte ) ( argDPO : DPO ) ( argFUA : FUA ) ( argFUA_NV : FUA_NV ) ( argLBA : uint64 ) ( argGroupNumber : byte ) ( argTransferLength : uint32 ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
+    static member Write16 ( argWRPROTECT : byte ) ( argDPO : DPO ) ( argFUA : FUA ) ( argFUA_NV : FUA_NV ) ( argLBA : BLKCNT64_T ) ( argGroupNumber : byte ) ( argTransferLength : BLKCNT32_T ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
         [|
-            0x8Auy;                                                                             // OPERATION CODE
-            ( ( argWRPROTECT &&& 0x07uy ) <<< 5 ) |||                                           // WRPROTECT
-                ( Functions.SetBitflag ( DPO.toBool argDPO ) 0x10uy ) |||                       // DPO
-                ( Functions.SetBitflag ( FUA.toBool argFUA ) 0x08uy ) |||                       // FUA
-                ( Functions.SetBitflag ( FUA_NV.toBool argFUA_NV ) 0x02uy );                    // FUA_NV
-            yield! Functions.UInt64ToNetworkBytes_NewVec argLBA;                                // LOGICAL BLOCK ADDRESS
-            yield! Functions.UInt32ToNetworkBytes_NewVec argTransferLength;                     // TRANSFER LENGTH
-            argGroupNumber &&& 0x1Fuy;                                                          // GROUP NUMBER
+            0x8Auy;                                                                                     // OPERATION CODE
+            ( ( argWRPROTECT &&& 0x07uy ) <<< 5 ) |||                                                   // WRPROTECT
+                ( Functions.SetBitflag ( DPO.toBool argDPO ) 0x10uy ) |||                               // DPO
+                ( Functions.SetBitflag ( FUA.toBool argFUA ) 0x08uy ) |||                               // FUA
+                ( Functions.SetBitflag ( FUA_NV.toBool argFUA_NV ) 0x02uy );                            // FUA_NV
+            yield! Functions.UInt64ToNetworkBytes_NewVec ( blkcnt_me.toUInt64 argLBA );                 // LOGICAL BLOCK ADDRESS
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( blkcnt_me.toUInt32 argTransferLength );      // TRANSFER LENGTH
+            argGroupNumber &&& 0x1Fuy;                                                                  // GROUP NUMBER
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                                 // CONTROL
         |]
 
     /// <summary>
@@ -1302,7 +1305,7 @@ type GenScsiCDB() =
             yield! Functions.UInt32ToNetworkBytes_NewVec argAllocationLength;                   // ALLOCATION LENGTH
             0x00uy;                                                                             // Reserved
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTROL
             0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
         |]
 
@@ -1329,6 +1332,6 @@ type GenScsiCDB() =
             yield! Functions.UInt32ToNetworkBytes_NewVec argAllocationLength;                   // ALLOCATION LENGTH
             0x00uy;                                                                             // Reserved
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
-                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTRO
+                ( Functions.SetBitflag ( LINK.toBool argLINK ) 0x01uy )                         // CONTROL
             0x00uy; 0x00uy; 0x00uy; 0x00uy;                                                     // padding
         |]

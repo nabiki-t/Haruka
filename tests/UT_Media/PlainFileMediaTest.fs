@@ -382,38 +382,38 @@ type PlainFileMedia_Test () =
 
             try
                 let v = Array.zeroCreate<byte>( 1 * wBlockSize )
-                let! _ = f.Read ( itt_me.fromPrim 0u ) sourcei 8UL ( ArraySegment v )
+                let! _ = f.Read ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 8UL ) ( ArraySegment v )
                 Assert.Fail __LINE__
             with
             | :? SCSIACAException as x ->
                 Assert.True( x.Message.Contains( "Out of media capacity" ) )
 
             let v = Array.zeroCreate<byte>( 1 * wBlockSize )
-            let! r = f.Read ( itt_me.fromPrim 0u ) sourcei 7UL ( ArraySegment v )
+            let! r = f.Read ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 7UL ) ( ArraySegment v )
             Assert.True(( r = v.Length ))
 
             try
                 let v = Array.zeroCreate<byte>( 2 * wBlockSize )
-                let! _ = f.Read ( itt_me.fromPrim 0u ) sourcei 7UL ( ArraySegment v )
+                let! _ = f.Read ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 7UL ) ( ArraySegment v )
                 Assert.Fail __LINE__
             with
             | :? SCSIACAException as x ->
                 Assert.True( x.Message.Contains( "Out of media capacity" ) )
 
             let v = Array.zeroCreate<byte>( 2 * wBlockSize )
-            let! r = f.Read ( itt_me.fromPrim 0u ) sourcei 6UL ( ArraySegment v )
+            let! r = f.Read ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 6UL ) ( ArraySegment v )
             Assert.True(( r = v.Length ))
 
             try
                 let v = Array.zeroCreate<byte>( 3 * wBlockSize )
-                let! _ = f.Read ( itt_me.fromPrim 0u ) sourcei 6UL ( ArraySegment v )
+                let! _ = f.Read ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 6UL ) ( ArraySegment v )
                 Assert.Fail __LINE__
             with
             | :? SCSIACAException as x ->
                 Assert.True( x.Message.Contains( "Out of media capacity" ) )
 
             let v = Array.zeroCreate<byte>( 8 * wBlockSize )
-            let! r = f.Read ( itt_me.fromPrim 0u ) sourcei 0UL ( ArraySegment v )
+            let! r = f.Read ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment v )
             Assert.True(( r = v.Length ))
 
             k1.NoticeTerminate()
@@ -465,22 +465,22 @@ type PlainFileMedia_Test () =
                 }
 
             let buf = Array.zeroCreate<byte>( 1 * wBlockSize )
-            let! r = f.Read ( itt_me.fromPrim 0u ) sourcei 0UL ( ArraySegment buf )
+            let! r = f.Read ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment buf )
             Assert.True( ( buf = wrotedata.[ 0 * wBlockSize .. 1 * wBlockSize - 1 ] ))
             Assert.True(( r = buf.Length ))
 
             let buf = Array.zeroCreate<byte>( 2 * wBlockSize )
-            let! r = f.Read ( itt_me.fromPrim 0u ) sourcei 1UL ( ArraySegment buf )
+            let! r = f.Read ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 1UL ) ( ArraySegment buf )
             Assert.True( ( buf = wrotedata.[ 1 * wBlockSize .. 3 * wBlockSize - 1 ] ))
             Assert.True(( r = buf.Length ))
 
             let buf = Array.zeroCreate<byte>( 3 * wBlockSize )
-            let! r = f.Read ( itt_me.fromPrim 0u ) sourcei 3UL ( ArraySegment buf )
+            let! r = f.Read ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 3UL ) ( ArraySegment buf )
             Assert.True( ( buf = wrotedata.[ 3 * wBlockSize .. 6 * wBlockSize - 1 ] ))
             Assert.True(( r = buf.Length ))
 
             let buf = Array.zeroCreate<byte>( 2 * wBlockSize )
-            let! r = f.Read ( itt_me.fromPrim 0u ) sourcei 6UL ( ArraySegment buf )
+            let! r = f.Read ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 6UL ) ( ArraySegment buf )
             Assert.True( ( buf = wrotedata.[ 6 * wBlockSize .. 8 * wBlockSize - 1 ] ))
             Assert.True(( r = buf.Length ))
 
@@ -542,7 +542,7 @@ type PlainFileMedia_Test () =
 
                 try
                     let buf = Array.zeroCreate<byte>( 512 )
-                    let! _ = f.Read ( itt_me.fromPrim 0u ) sourcei 0UL ( ArraySegment buf )
+                    let! _ = f.Read ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment buf )
                     Assert.Fail __LINE__
                 with
                 | :? AggregateException as x2 ->
@@ -569,7 +569,7 @@ type PlainFileMedia_Test () =
                             ( offset, count )
                     )
                 let buf = Array.zeroCreate<byte>( 512 )
-                let! r = f.Read ( itt_me.fromPrim 0u ) sourcei 0UL ( ArraySegment buf )
+                let! r = f.Read ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment buf )
                 Assert.True(( r = buf.Length ))
             };
         |]
@@ -632,7 +632,7 @@ type PlainFileMedia_Test () =
                         ( offset, count )
                 )
             let buf = Array.zeroCreate<byte>( 512 )
-            let! r = f.Read ( itt_me.fromPrim 0u ) sourcei 0UL ( ArraySegment buf )
+            let! r = f.Read ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment buf )
             Assert.True(( r = buf.Length ))
 
             k1.NoticeTerminate()
@@ -691,7 +691,7 @@ type PlainFileMedia_Test () =
             )
         let buf = Array.zeroCreate<byte>( 512 )
         let r =
-            f.Read ( itt_me.fromPrim 0u ) sourcei 0UL ( ArraySegment buf )
+            f.Read ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment buf )
             |> GlbFunc.RunSync
         Assert.True(( r = buf.Length ))
 
@@ -751,7 +751,7 @@ type PlainFileMedia_Test () =
                 )
             try
                 let buf = Array.zeroCreate<byte>( 512 )
-                let! _ = f.Read ( itt_me.fromPrim 0u ) sourcei 0UL ( ArraySegment buf )
+                let! _ = f.Read ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment buf )
                 Assert.Fail __LINE__
             with
             | :? SCSIACAException as x ->
@@ -832,7 +832,7 @@ type PlainFileMedia_Test () =
             )
         let buf = Array.zeroCreate<byte>( 512 )
         let r =
-            f.Read ( itt_me.fromPrim 0u ) sourcei 0UL ( ArraySegment buf )
+            f.Read ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment buf )
             |> GlbFunc.RunSync
         Assert.True(( buf = wrotedata.[ 0 .. 511 ] ))
         Assert.True(( r = buf.Length ))
@@ -893,7 +893,7 @@ type PlainFileMedia_Test () =
                 )
             try
                 let buf = Array.zeroCreate<byte>( 512 )
-                let! _ = f.Read ( itt_me.fromPrim 0u ) sourcei 0UL ( ArraySegment buf )
+                let! _ = f.Read ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment buf )
                 Assert.Fail __LINE__
             with
             | :? SCSIACAException as x ->
@@ -943,38 +943,38 @@ type PlainFileMedia_Test () =
 
             try
                 let v = Array.zeroCreate<byte>( 1 * wBlockSize )
-                let! _ = f.Write ( itt_me.fromPrim 0u ) sourcei 8UL 0UL ( ArraySegment v )
+                let! _ = f.Write ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 8UL ) 0UL ( ArraySegment v )
                 Assert.Fail __LINE__
             with
             | :? SCSIACAException as x ->
                 Assert.True( x.Message.Contains( "Out of media capacity" ) )
 
             let v = Array.zeroCreate<byte>( 1 * wBlockSize )
-            let! r = f.Write ( itt_me.fromPrim 0u ) sourcei 7UL 0UL ( ArraySegment v )
+            let! r = f.Write ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 7UL ) 0UL ( ArraySegment v )
             Assert.True(( r = v.Length ))
 
             try
                 let v = Array.zeroCreate<byte>( 2 * wBlockSize )
-                let! _ = f.Write ( itt_me.fromPrim 0u ) sourcei 7UL 0UL ( ArraySegment v )
+                let! _ = f.Write ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 7UL ) 0UL ( ArraySegment v )
                 Assert.Fail __LINE__
             with
             | :? SCSIACAException as x ->
                 Assert.True( x.Message.Contains( "Out of media capacity" ) )
 
             let v = Array.zeroCreate<byte>( 2 * wBlockSize )
-            let! r = f.Write ( itt_me.fromPrim 0u ) sourcei 6UL 0UL ( ArraySegment v )
+            let! r = f.Write ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 6UL ) 0UL ( ArraySegment v )
             Assert.True(( r = v.Length ))
 
             try
                 let v = Array.zeroCreate<byte>( 3 * wBlockSize )
-                let! _ = f.Write ( itt_me.fromPrim 0u ) sourcei 6UL 0UL ( ArraySegment v )
+                let! _ = f.Write ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 6UL ) 0UL ( ArraySegment v )
                 Assert.Fail __LINE__
             with
             | :? SCSIACAException as x ->
                 Assert.True( x.Message.Contains( "Out of media capacity" ) )
 
             let v = Array.zeroCreate<byte>( 8 * wBlockSize )
-            let! r = f.Write ( itt_me.fromPrim 0u ) sourcei 0UL 0UL ( ArraySegment v )
+            let! r = f.Write ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment v )
             Assert.True(( r = v.Length ))
 
             k1.NoticeTerminate()
@@ -1023,7 +1023,7 @@ type PlainFileMedia_Test () =
 
             let buf = Array.zeroCreate<byte>( 1 * wBlockSize )
             wrand.NextBytes( buf )
-            let! r = f.Write ( itt_me.fromPrim 0u ) sourcei 0UL 0UL ( ArraySegment buf )
+            let! r = f.Write ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment buf )
             Assert.True(( r = buf.Length ))
 
             do
@@ -1042,7 +1042,7 @@ type PlainFileMedia_Test () =
 
             let buf = Array.zeroCreate<byte>( 2 * wBlockSize )
             wrand.NextBytes( buf )
-            let! r = f.Write ( itt_me.fromPrim 0u ) sourcei 1UL 0UL ( ArraySegment buf )
+            let! r = f.Write ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 1UL ) 0UL ( ArraySegment buf )
             Assert.True(( r = buf.Length ))
 
             do
@@ -1061,7 +1061,7 @@ type PlainFileMedia_Test () =
 
             let buf = Array.zeroCreate<byte>( 3 * wBlockSize )
             wrand.NextBytes( buf )
-            let! r = f.Write ( itt_me.fromPrim 0u ) sourcei 3UL 0UL ( ArraySegment buf )
+            let! r = f.Write ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 3UL ) 0UL ( ArraySegment buf )
             Assert.True(( r = buf.Length ))
 
             do
@@ -1080,7 +1080,7 @@ type PlainFileMedia_Test () =
 
             let buf = Array.zeroCreate<byte>( 2 * wBlockSize )
             wrand.NextBytes( buf )
-            let! r = f.Write ( itt_me.fromPrim 0u ) sourcei 6UL 0UL ( ArraySegment buf )
+            let! r = f.Write ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 6UL ) 0UL ( ArraySegment buf )
             Assert.True(( r = buf.Length ))
 
             do
@@ -1155,7 +1155,7 @@ type PlainFileMedia_Test () =
                     )
                 let buf = Array.zeroCreate<byte>( 512 )
                 let r =
-                    f.Write ( itt_me.fromPrim 0u ) sourcei 0UL 0UL ( ArraySegment buf )
+                    f.Write ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment buf )
                     |> Functions.RunTaskSynchronously
                 Assert.True(( r = buf.Length ))
             };
@@ -1167,7 +1167,7 @@ type PlainFileMedia_Test () =
 
                 try
                     let buf = Array.zeroCreate<byte>( 512 )
-                    f.Write ( itt_me.fromPrim 0u ) sourcei 0UL 0UL ( ArraySegment buf )
+                    f.Write ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment buf )
                     |> Functions.RunTaskSynchronously
                     |> ignore
                     Assert.Fail __LINE__
@@ -1245,7 +1245,7 @@ type PlainFileMedia_Test () =
             )
         let buf = Array.zeroCreate<byte>( 512 )
         let r =
-            f.Write ( itt_me.fromPrim 0u ) sourcei 0UL 0UL ( ArraySegment buf )
+            f.Write ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment buf )
             |> GlbFunc.RunSync
         Assert.True(( r = buf.Length ))
 
@@ -1305,7 +1305,7 @@ type PlainFileMedia_Test () =
             )
         let buf = Array.zeroCreate<byte>( 512 )
         let r =
-            f.Write ( itt_me.fromPrim 0u ) sourcei 0UL 0UL ( ArraySegment buf )
+            f.Write ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment buf )
             |> GlbFunc.RunSync
         Assert.True(( r = buf.Length ))
 
@@ -1365,7 +1365,7 @@ type PlainFileMedia_Test () =
                 )
             try
                 let buf = Array.zeroCreate<byte>( 512 )
-                let! _ = f.Write ( itt_me.fromPrim 0u ) sourcei 0UL 0UL ( ArraySegment buf )
+                let! _ = f.Write ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment buf )
                 Assert.Fail __LINE__
             with
             | :? SCSIACAException as x ->
@@ -1431,7 +1431,7 @@ type PlainFileMedia_Test () =
                 )
             try
                 let buf = Array.zeroCreate<byte>( 512 )
-                let! _ = f.Write ( itt_me.fromPrim 0u ) sourcei 0UL 0UL ( ArraySegment buf )
+                let! _ = f.Write ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment buf )
                 Assert.Fail __LINE__
             with
             | :? SCSIACAException as x ->
@@ -1481,7 +1481,7 @@ type PlainFileMedia_Test () =
         task {
             try
                 let v = Array.zeroCreate<byte>( 1 * wBlockSize )
-                let! _ = f.Write ( itt_me.fromPrim 0u ) sourcei 0UL 0UL ( ArraySegment v )
+                let! _ = f.Write ( itt_me.fromPrim 0u ) sourcei ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment v )
                 Assert.Fail __LINE__
             with
             | :? SCSIACAException as x ->

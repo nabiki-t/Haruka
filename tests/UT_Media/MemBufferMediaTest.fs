@@ -262,7 +262,7 @@ type MemBufferMedia_Test () =
 
         let wbuf = Array.zeroCreate< byte > 16
         let wr =
-            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL ( ArraySegment wbuf )
+            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
         Assert.True(( wr = 16 ))
 
@@ -280,7 +280,7 @@ type MemBufferMedia_Test () =
 
         let wbuf = Array.zeroCreate< byte > 17
         try
-            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL ( ArraySegment wbuf )
+            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
             |> ignore
             Assert.Fail __LINE__
@@ -302,7 +302,7 @@ type MemBufferMedia_Test () =
 
         let wbuf = Array.zeroCreate< byte >( 0 )
         let wr =
-            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 10UL ( ArraySegment wbuf )
+            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 10UL ) ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
         Assert.True(( wr = 0 ))
 
@@ -320,7 +320,7 @@ type MemBufferMedia_Test () =
 
         let wbuf = Array.zeroCreate< byte >( 1 )
         try
-            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 10UL ( ArraySegment wbuf )
+            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 10UL ) ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
             |> ignore
             Assert.Fail __LINE__
@@ -342,7 +342,7 @@ type MemBufferMedia_Test () =
 
         let wbuf = Array.zeroCreate< byte >( 0 )
         try
-            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 11UL ( ArraySegment wbuf )
+            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 11UL ) ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
             |> ignore
             Assert.Fail __LINE__
@@ -364,7 +364,7 @@ type MemBufferMedia_Test () =
 
         let wbuf = Array.zeroCreate< byte > 160
         let wr =
-            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL ( ArraySegment wbuf )
+            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
         Assert.True(( wr = 160 ))
 
@@ -382,7 +382,7 @@ type MemBufferMedia_Test () =
 
         let wbuf = Array.zeroCreate< byte >( 16 * 10 + 1 )
         try
-            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL ( ArraySegment wbuf )
+            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
             |> ignore
             Assert.Fail __LINE__
@@ -403,13 +403,13 @@ type MemBufferMedia_Test () =
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 16 * 2 ) |> fillBuffer
-        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 0UL ( ArraySegment wbuf )
+        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
         let rbuf = Array.zeroCreate< byte >( 4 * 16 - 1 )
         let rr =
-            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL ( ArraySegment rbuf )
+            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment rbuf )
             |> Functions.RunTaskSynchronously
         Assert.True(( rr = rbuf.Length ))
         Assert.True(( GlbFunc.Compare wbuf 0 rbuf 0 rbuf.Length ))
@@ -427,13 +427,13 @@ type MemBufferMedia_Test () =
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 16 * 2 ) |> fillBuffer
-        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 0UL ( ArraySegment wbuf )
+        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
         let rbuf = Array.zeroCreate< byte >( 4 * 16 )
         let rr =
-            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL ( ArraySegment rbuf )
+            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment rbuf )
             |> Functions.RunTaskSynchronously
         Assert.True(( rr = rbuf.Length ))
         Assert.True(( GlbFunc.Compare wbuf 0 rbuf 0 rbuf.Length ))
@@ -451,13 +451,13 @@ type MemBufferMedia_Test () =
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 16 * 2 ) |> fillBuffer
-        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 0UL ( ArraySegment wbuf )
+        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
         let rbuf = Array.zeroCreate< byte >( 4 * 16 + 1 )
         let rr =
-            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL ( ArraySegment rbuf )
+            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment rbuf )
             |> Functions.RunTaskSynchronously
         Assert.True(( rr = rbuf.Length ))
         Assert.True(( GlbFunc.Compare wbuf 0 rbuf 0 rbuf.Length ))
@@ -475,13 +475,13 @@ type MemBufferMedia_Test () =
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 16 * 3 ) |> fillBuffer
-        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 0UL ( ArraySegment wbuf )
+        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
         let rbuf = Array.zeroCreate< byte >( 4 * 16 * 2 - 1 )
         let rr =
-            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL ( ArraySegment rbuf )
+            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment rbuf )
             |> Functions.RunTaskSynchronously
         Assert.True(( rr = rbuf.Length ))
         Assert.True(( GlbFunc.Compare wbuf 0 rbuf 0 rbuf.Length ))
@@ -499,13 +499,13 @@ type MemBufferMedia_Test () =
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 16 * 3 ) |> fillBuffer
-        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 0UL ( ArraySegment wbuf )
+        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
         let rbuf = Array.zeroCreate< byte >( 4 * 16 * 2 )
         let rr =
-            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL ( ArraySegment rbuf )
+            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment rbuf )
             |> Functions.RunTaskSynchronously
         Assert.True(( rr = rbuf.Length ))
         Assert.True(( GlbFunc.Compare wbuf 0 rbuf 0 rbuf.Length ))
@@ -523,13 +523,13 @@ type MemBufferMedia_Test () =
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 16 * 3 ) |> fillBuffer
-        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 0UL ( ArraySegment wbuf )
+        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
         let rbuf = Array.zeroCreate< byte >( 4 * 16 * 2 + 1 )
         let rr =
-            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL ( ArraySegment rbuf )
+            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment rbuf )
             |> Functions.RunTaskSynchronously
         Assert.True(( rr = rbuf.Length ))
         Assert.True(( GlbFunc.Compare wbuf 0 rbuf 0 rbuf.Length ))
@@ -547,13 +547,13 @@ type MemBufferMedia_Test () =
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 16 * 3 ) |> fillBuffer
-        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 0UL ( ArraySegment wbuf )
+        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
         let rbuf = Array.zeroCreate< byte >( 4 * 16 * 2 )
         let rr =
-            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 1UL ( ArraySegment rbuf )
+            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 1UL ) ( ArraySegment rbuf )
             |> Functions.RunTaskSynchronously
         Assert.True(( rr = rbuf.Length ))
         Assert.True(( GlbFunc.Compare wbuf 16 rbuf 0 rbuf.Length ))
@@ -571,13 +571,13 @@ type MemBufferMedia_Test () =
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 16 * 3 ) |> fillBuffer
-        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 0UL ( ArraySegment wbuf )
+        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
         let rbuf = Array.zeroCreate< byte >( 4 * 16 * 2 )
         let rr =
-            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 4UL ( ArraySegment rbuf )
+            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 4UL ) ( ArraySegment rbuf )
             |> Functions.RunTaskSynchronously
         Assert.True(( rr = rbuf.Length ))
         Assert.True(( GlbFunc.Compare wbuf ( 4 * 16 ) rbuf 0 rbuf.Length ))
@@ -595,13 +595,13 @@ type MemBufferMedia_Test () =
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 16 * 3 ) |> fillBuffer
-        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 0UL ( ArraySegment wbuf )
+        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
         let rbuf = Array.zeroCreate< byte >( 4 * 16 * 2 )
         let rr =
-            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 1UL ( ArraySegment( rbuf, 10, rbuf.Length - 10 ) )
+            ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 1UL ) ( ArraySegment( rbuf, 10, rbuf.Length - 10 ) )
             |> Functions.RunTaskSynchronously
         Assert.True(( rr = rbuf.Length - 10 ))
         Assert.True(( GlbFunc.Compare wbuf 16 rbuf 10 ( rbuf.Length - 10 ) ))
@@ -620,7 +620,7 @@ type MemBufferMedia_Test () =
 
         let wbuf = Array.zeroCreate< byte > 16
         let wr =
-            ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 0UL ( ArraySegment wbuf )
+            ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
         Assert.True(( wr = 16 ))
 
@@ -638,7 +638,7 @@ type MemBufferMedia_Test () =
 
         let wbuf = Array.zeroCreate< byte > 17
         try
-            ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 0UL ( ArraySegment wbuf )
+            ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
             |> ignore
             Assert.Fail __LINE__
@@ -660,7 +660,7 @@ type MemBufferMedia_Test () =
 
         let wbuf = Array.zeroCreate< byte > 16
         try
-            ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 1UL ( ArraySegment wbuf )
+            ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 1UL ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
             |> ignore
             Assert.Fail __LINE__
@@ -682,7 +682,7 @@ type MemBufferMedia_Test () =
 
         let wbuf = Array.zeroCreate< byte >( 0 )
         let wr =
-            ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 10UL 0UL ( ArraySegment wbuf )
+            ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 10UL ) 0UL ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
         Assert.True(( wr = 0 ))
 
@@ -700,7 +700,7 @@ type MemBufferMedia_Test () =
 
         let wbuf = Array.zeroCreate< byte >( 1 )
         try
-            ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 10UL 0UL ( ArraySegment wbuf )
+            ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 10UL ) 0UL ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
             |> ignore
             Assert.Fail __LINE__
@@ -722,7 +722,7 @@ type MemBufferMedia_Test () =
 
         let wbuf = Array.zeroCreate< byte >( 0 )
         try
-            ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 11UL 0UL ( ArraySegment wbuf )
+            ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 11UL ) 0UL ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
             |> ignore
             Assert.Fail __LINE__
@@ -744,7 +744,7 @@ type MemBufferMedia_Test () =
 
         let wbuf = Array.zeroCreate< byte > 160
         let wr =
-            ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 0UL ( ArraySegment wbuf )
+            ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
         Assert.True(( wr = 160 ))
 
@@ -762,7 +762,7 @@ type MemBufferMedia_Test () =
 
         let wbuf = Array.zeroCreate< byte >( 16 * 10 + 1 )
         try
-            ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 0UL ( ArraySegment wbuf )
+            ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL )0UL ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
             |> ignore
             Assert.Fail __LINE__
@@ -783,7 +783,7 @@ type MemBufferMedia_Test () =
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 16 - 1 ) |> fillBuffer
-        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 0UL ( ArraySegment wbuf )
+        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
@@ -806,7 +806,7 @@ type MemBufferMedia_Test () =
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 16 ) |> fillBuffer
-        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 0UL ( ArraySegment wbuf )
+        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
@@ -829,7 +829,7 @@ type MemBufferMedia_Test () =
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 16 + 1 ) |> fillBuffer
-        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 0UL ( ArraySegment wbuf )
+        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
@@ -853,7 +853,7 @@ type MemBufferMedia_Test () =
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 16 * 2 - 1 ) |> fillBuffer
-        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 0UL ( ArraySegment wbuf )
+        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
@@ -877,7 +877,7 @@ type MemBufferMedia_Test () =
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 16 * 2 ) |> fillBuffer
-        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 0UL ( ArraySegment wbuf )
+        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
@@ -901,7 +901,7 @@ type MemBufferMedia_Test () =
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 16 * 2 + 1 ) |> fillBuffer
-        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 0UL ( ArraySegment wbuf )
+        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
@@ -926,7 +926,7 @@ type MemBufferMedia_Test () =
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 16 * 2 ) |> fillBuffer
-        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 1UL 0UL ( ArraySegment wbuf )
+        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 1UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
@@ -951,7 +951,7 @@ type MemBufferMedia_Test () =
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 16 * 2 ) |> fillBuffer
-        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 7UL ( ArraySegment wbuf )
+        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 7UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
@@ -976,7 +976,7 @@ type MemBufferMedia_Test () =
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 16 * 2 ) |> fillBuffer
-        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 4UL 0UL ( ArraySegment wbuf )
+        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 4UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
@@ -1000,7 +1000,7 @@ type MemBufferMedia_Test () =
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 16 * 2 ) |> fillBuffer
-        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 1UL 1UL ( ArraySegment( wbuf, 10, wbuf.Length - 10 ) )
+        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 1UL ) 1UL ( ArraySegment( wbuf, 10, wbuf.Length - 10 ) )
         |> Functions.RunTaskSynchronously
         |> ignore
 
@@ -1025,7 +1025,7 @@ type MemBufferMedia_Test () =
         ( mb :> IMedia ).Initialize()
 
         let wbuf1 = Array.zeroCreate< byte >( 4 * 16 * 3 ) |> fillBuffer
-        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 0UL 0UL ( ArraySegment wbuf1 )
+        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf1 )
         |> Functions.RunTaskSynchronously
         |> ignore
 
@@ -1038,7 +1038,7 @@ type MemBufferMedia_Test () =
         Assert.True(( GlbFunc.Compare wbuf1 ( 4 * 16 * 2 ) m_Buffer.[2] 0 ( 4 * 16 ) ))
 
         let wbuf2 = Array.zeroCreate< byte >( 4 * 16 ) |> fillBuffer
-        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) 2UL 0UL ( ArraySegment wbuf2 )
+        ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 2UL ) 0UL ( ArraySegment wbuf2 )
         |> Functions.RunTaskSynchronously
         |> ignore
 

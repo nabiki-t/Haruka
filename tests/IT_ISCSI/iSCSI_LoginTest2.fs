@@ -827,7 +827,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.False(( r1.Params.InitialR2T ))
 
             // SCSI Write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.T LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 1us ) NACA.T LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 blockSize writeCDB PooledBuffer.Empty 0u
 
             // SCSI Data-Out
@@ -855,7 +855,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.True(( r1.Params.InitialR2T ))
 
             // SCSI Write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.T LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 1us ) NACA.T LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 blockSize writeCDB PooledBuffer.Empty 0u
 
             // R2T
@@ -891,7 +891,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.True(( r1.Params.ImmediateData ))
 
             // SCSI Write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.T LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 1us ) NACA.T LINK.F
             let sendData = PooledBuffer.RentAndInit ( int blockSize )
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 blockSize writeCDB sendData 0u
             sendData.Return()
@@ -917,7 +917,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.True(( r1.Params.ImmediateData ))
 
             // SCSI Write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.T LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 1us ) NACA.T LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 blockSize writeCDB PooledBuffer.Empty 0u
 
             // SCSI Data-Out
@@ -946,7 +946,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.False(( r1.Params.ImmediateData ))
 
             // SCSI Write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.T LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 1us ) NACA.T LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 blockSize writeCDB PooledBuffer.Empty 0u
 
             // SCSI Data-Out
@@ -975,7 +975,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.False(( r1.Params.ImmediateData ))
 
             // SCSI Write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 1us NACA.T LINK.F
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 1us ) NACA.T LINK.F
             let sendData = PooledBuffer.RentAndInit ( int blockSize )
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 blockSize writeCDB sendData 0u
             sendData.Return()
@@ -1002,7 +1002,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.True(( r1.Params.ImmediateData ))
 
             // SCSI Write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 2us NACA.T LINK.F   // 2block
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 2us ) NACA.T LINK.F   // 2block
             let sendData = PooledBuffer.RentAndInit ( int blockSize )
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( blockSize * 2u ) writeCDB sendData 0u
             sendData.Return()
@@ -1040,7 +1040,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.True(( r1.Params.ImmediateData ))
 
             // SCSI Write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 2us NACA.T LINK.F   // 2block
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 2us ) NACA.T LINK.F   // 2block
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( blockSize * 2u ) writeCDB PooledBuffer.Empty 0u
 
             // R2T
@@ -1076,7 +1076,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.False(( r1.Params.ImmediateData ))
 
             // SCSI Write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 2us NACA.T LINK.F   // 2block
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 2us ) NACA.T LINK.F   // 2block
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( blockSize * 2u ) writeCDB PooledBuffer.Empty 0u
 
             // R2T
@@ -1111,7 +1111,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.False(( r1.Params.ImmediateData ))
 
             // SCSI Write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy 2us NACA.T LINK.F   // 2block
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 2us ) NACA.T LINK.F   // 2block
             let sendData = PooledBuffer.RentAndInit ( int m_MediaBlockSize )
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( m_MediaBlockSize * 2u ) writeCDB sendData 0u
             sendData.Return()
@@ -1149,7 +1149,8 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let r2tCount = accessLength / mbl
 
             // SCSI Write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.T LINK.F
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.T LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             for i = 0u to r2tCount - 1u do
@@ -1193,7 +1194,8 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let accessBlockCount = 1u
 
             // SCSI Write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.T LINK.F
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.T LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             // R2T
@@ -1242,7 +1244,8 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
                     w
 
             // SCSI Write
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.T LINK.F
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.T LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
 
             for i = 0u to r2tCount - 1u do
@@ -1306,7 +1309,8 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let dataPDUCount = 4096u / 512u
 
             // SCSI Read
-            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.T LINK.F
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.T LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
 
             // SCSI Data-In
@@ -1351,7 +1355,8 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
                     w
 
             // SCSI Read
-            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.T LINK.F
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.T LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength readCDB PooledBuffer.Empty 0u
 
             // SCSI Data-In
@@ -1414,7 +1419,8 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // SCSI Write
             let sendData = PooledBuffer.RentAndInit 512
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.T LINK.F
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.T LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB sendData 0u
             sendData.Return()
 
@@ -1459,7 +1465,8 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // SCSI Write
             let sendData = PooledBuffer.Empty
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.T LINK.F
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.T LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB sendData 0u
 
             // SCSI Data-Out PDU
@@ -1509,7 +1516,8 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // SCSI Write
             let sendData = PooledBuffer.Empty
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.T LINK.F
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.T LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB sendData 0u
 
             // SCSI Data-Out PDU
@@ -1547,7 +1555,8 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // SCSI Write
             let sendData = PooledBuffer.Empty
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.T LINK.F
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.T LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB sendData 0u
 
             // R2T
@@ -1592,7 +1601,8 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // SCSI Write
             let sendData = PooledBuffer.RentAndInit 512
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.T LINK.F
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.T LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB sendData 0u
 
             // SCSI Data-Out PDU
@@ -1633,7 +1643,8 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // SCSI Write
             let sendData = PooledBuffer.Empty
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.T LINK.F
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.T LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB sendData 0u
 
             // SCSI Data-Out PDU
@@ -1771,7 +1782,8 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // SCSI Write
             let sendData = PooledBuffer.Empty
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.T LINK.F
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.T LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB sendData 0u
 
             // Receive R2T
@@ -1807,7 +1819,8 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // SCSI Write
             let sendData = PooledBuffer.Empty
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.T LINK.F
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.T LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB sendData 0u
 
             // Receive R2T
@@ -1868,7 +1881,8 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // SCSI Write
             let sendData = PooledBuffer.Empty
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.T LINK.F
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.T LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB sendData 0u
 
             for i= 0 to 15 do
@@ -1921,7 +1935,8 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // SCSI Write
             let sendData = PooledBuffer.Empty
-            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F 0u 0uy ( uint16 accessBlockCount ) NACA.T LINK.F
+            let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
+            let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.T LINK.F
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB sendData 0u
 
             // Receive first R2T PDU

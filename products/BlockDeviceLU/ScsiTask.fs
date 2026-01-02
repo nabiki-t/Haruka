@@ -863,11 +863,13 @@ type ScsiTask
         assert( match m_CDB with | :? PreFetchCDB -> true | _ -> false )
         let cdb = m_CDB :?> PreFetchCDB
         let wMediaBlockCount = m_Media.BlockCount
+        let lba = blkcnt_me.toUInt64 cdb.LogicalBlockAddress
+        let prefetchLen = blkcnt_me.toUInt32 cdb.PrefetchLength |> uint64
 
-        if cdb.LogicalBlockAddress > wMediaBlockCount ||
-            cdb.LogicalBlockAddress + ( uint64 cdb.PrefetchLength ) > wMediaBlockCount || 
-            cdb.LogicalBlockAddress + ( uint64 cdb.PrefetchLength ) < cdb.LogicalBlockAddress then
-            let errmsg = sprintf "Invalid LBA(0x%16X) in PRE-FETCH command CDB" cdb.LogicalBlockAddress
+        if lba > wMediaBlockCount ||
+            lba + prefetchLen > wMediaBlockCount || 
+            lba + prefetchLen < lba then
+            let errmsg = sprintf "Invalid LBA(0x%16X) in PRE-FETCH command CDB" lba
             HLogger.ACAException( m_LogInfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE, errmsg )
             raise <| SCSIACAException ( m_Source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE, errmsg )
 
@@ -1468,11 +1470,13 @@ type ScsiTask
         assert( match m_CDB with | :? SynchronizeCacheCDB -> true | _ -> false )
         let cdb = m_CDB :?> SynchronizeCacheCDB
         let wMediaBlockCount = m_Media.BlockCount
+        let lba = blkcnt_me.toUInt64 cdb.LogicalBlockAddress
+        let numBlks = cdb.NumberOfBlocks |> blkcnt_me.toUInt32 |> uint64
 
-        if cdb.LogicalBlockAddress > wMediaBlockCount ||
-            cdb.LogicalBlockAddress + ( uint64 cdb.NumberOfBlocks ) > wMediaBlockCount || 
-            cdb.LogicalBlockAddress + ( uint64 cdb.NumberOfBlocks ) < cdb.LogicalBlockAddress then
-            let errmsg = sprintf "Invalid LBA(0x%16X) and NumberOfBlocks(%d), in SYNCHRONIZE CACHE command CDB" cdb.LogicalBlockAddress cdb.NumberOfBlocks
+        if lba > wMediaBlockCount ||
+            lba + numBlks > wMediaBlockCount || 
+            lba + numBlks < lba then
+            let errmsg = sprintf "Invalid LBA(0x%16X) and NumberOfBlocks(%d), in SYNCHRONIZE CACHE command CDB" lba numBlks
             HLogger.ACAException( m_LogInfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE, errmsg )
             raise <| SCSIACAException ( m_Source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE, errmsg )
 
@@ -1573,7 +1577,8 @@ type ScsiTask
                         // Write to media
                         let! writtenCount =
                             let struct( lbaOffset, remainder ) = UInt64.DivRem( wBufferOffset, wBlkSize )
-                            m_Media.Write m_ITT m_Source ( cdb.LogicalBlockAddress + lbaOffset ) remainder ( wDataSegment.GetArraySegment 0 ( int wCount ) )
+                            let writePosAdr = cdb.LogicalBlockAddress + ( blkcnt_me.ofUInt64 lbaOffset )
+                            m_Media.Write m_ITT m_Source writePosAdr remainder ( wDataSegment.GetArraySegment 0 ( int wCount ) )
 
                         // Notify written bytes count to LU for usage counter
                         m_LU.NotifyWrittenBytesCount DateTime.UtcNow ( int64 writtenCount )

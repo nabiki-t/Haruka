@@ -368,9 +368,9 @@ type ConvertToCDB() =
         let r : PreFetchCDB = {
             OperationCode = command.ScsiCDB.[0];
             IMMED = Functions.CheckBitflag command.ScsiCDB.[1] 0x02uy;
-            LogicalBlockAddress = uint64( Functions.NetworkBytesToUInt32 command.ScsiCDB 2 );
+            LogicalBlockAddress = Functions.NetworkBytesToUInt32 command.ScsiCDB 2 |> uint64 |> blkcnt_me.ofUInt64;
             GroupNumber = command.ScsiCDB.[6] &&& 0x1Fuy;
-            PrefetchLength = uint32( Functions.NetworkBytesToUInt16 command.ScsiCDB 7 );
+            PrefetchLength = Functions.NetworkBytesToUInt16 command.ScsiCDB 7 |> uint32 |> blkcnt_me.ofUInt32;
             Control = command.ScsiCDB.[9];
         }
 
@@ -409,8 +409,8 @@ type ConvertToCDB() =
         let r : PreFetchCDB = {
             OperationCode = command.ScsiCDB.[0];
             IMMED = Functions.CheckBitflag command.ScsiCDB.[1] 0x02uy;
-            LogicalBlockAddress = Functions.NetworkBytesToUInt64 command.ScsiCDB 2;
-            PrefetchLength = Functions.NetworkBytesToUInt32 command.ScsiCDB 10;
+            LogicalBlockAddress = Functions.NetworkBytesToUInt64 command.ScsiCDB 2 |> blkcnt_me.ofUInt64;
+            PrefetchLength = Functions.NetworkBytesToUInt32 command.ScsiCDB 10 |> blkcnt_me.ofUInt32;
             GroupNumber = command.ScsiCDB.[14] &&& 0x1Fuy;
             Control = command.ScsiCDB.[15];
         }
@@ -584,8 +584,14 @@ type ConvertToCDB() =
             DPO = false;
             FUA = false;
             FUA_NV = false;
-            LogicalBlockAddress = ( uint64( command.ScsiCDB.[1] &&& 0x1Fuy ) <<< 16 ) ||| ( uint64( command.ScsiCDB.[2] ) <<< 8 ) ||| uint64 command.ScsiCDB.[3];
-            TransferLength = if command.ScsiCDB.[4] = 0uy then 256u else uint32 command.ScsiCDB.[4];
+            LogicalBlockAddress =
+                ( uint64( command.ScsiCDB.[1] &&& 0x1Fuy ) <<< 16 ) ||| ( uint64( command.ScsiCDB.[2] ) <<< 8 ) ||| uint64 command.ScsiCDB.[3]
+                |> blkcnt_me.ofUInt64;
+            TransferLength =
+                if command.ScsiCDB.[4] = 0uy then
+                    blkcnt_me.ofUInt32 256u
+                else
+                    command.ScsiCDB.[4] |> uint32 |> blkcnt_me.ofUInt32;
             GroupNumber = 0uy;
             Control = command.ScsiCDB.[5];
         }
@@ -626,9 +632,9 @@ type ConvertToCDB() =
             DPO = Functions.CheckBitflag command.ScsiCDB.[1] 0x10uy;
             FUA = Functions.CheckBitflag command.ScsiCDB.[1] 0x08uy;
             FUA_NV = Functions.CheckBitflag command.ScsiCDB.[1] 0x02uy;
-            LogicalBlockAddress = uint64 ( Functions.NetworkBytesToUInt32 command.ScsiCDB 2 );
+            LogicalBlockAddress = Functions.NetworkBytesToUInt32 command.ScsiCDB 2 |> uint64 |> blkcnt_me.ofUInt64;
             GroupNumber = command.ScsiCDB.[6] &&& 0x1Fuy;
-            TransferLength = uint32( Functions.NetworkBytesToUInt16 command.ScsiCDB 7 ) ;
+            TransferLength = Functions.NetworkBytesToUInt16 command.ScsiCDB 7 |> uint32 |> blkcnt_me.ofUInt32;
             Control = command.ScsiCDB.[9];
         }
         if r.RdProtect > 5uy then
@@ -678,8 +684,8 @@ type ConvertToCDB() =
             DPO = Functions.CheckBitflag command.ScsiCDB.[1] 0x10uy;
             FUA = Functions.CheckBitflag command.ScsiCDB.[1] 0x08uy;
             FUA_NV = Functions.CheckBitflag command.ScsiCDB.[1] 0x02uy;
-            LogicalBlockAddress = uint64( Functions.NetworkBytesToUInt32 command.ScsiCDB 2 );
-            TransferLength = Functions.NetworkBytesToUInt32 command.ScsiCDB 6;
+            LogicalBlockAddress = Functions.NetworkBytesToUInt32 command.ScsiCDB 2 |> uint64 |> blkcnt_me.ofUInt64;
+            TransferLength = Functions.NetworkBytesToUInt32 command.ScsiCDB 6 |> blkcnt_me.ofUInt32;
             GroupNumber = command.ScsiCDB.[10] &&& 0x1Fuy;
             Control = command.ScsiCDB.[11];
         }
@@ -729,8 +735,8 @@ type ConvertToCDB() =
             DPO = Functions.CheckBitflag command.ScsiCDB.[1] 0x10uy;
             FUA = Functions.CheckBitflag command.ScsiCDB.[1] 0x08uy;
             FUA_NV = Functions.CheckBitflag command.ScsiCDB.[1] 0x02uy;
-            LogicalBlockAddress = Functions.NetworkBytesToUInt64 command.ScsiCDB 2;
-            TransferLength = Functions.NetworkBytesToUInt32 command.ScsiCDB 10
+            LogicalBlockAddress = Functions.NetworkBytesToUInt64 command.ScsiCDB 2 |> blkcnt_me.ofUInt64;
+            TransferLength = Functions.NetworkBytesToUInt32 command.ScsiCDB 10 |> blkcnt_me.ofUInt32;
             GroupNumber = command.ScsiCDB.[14] &&& 0x1Fuy;
             Control = command.ScsiCDB.[15];
         }
@@ -777,7 +783,7 @@ type ConvertToCDB() =
         let r : ReadCapacityCDB = {
             OperationCode = command.ScsiCDB.[0];
             ServiceAction = 0uy;
-            LogicalBlockAddress = uint64( Functions.NetworkBytesToUInt32 command.ScsiCDB 2 );
+            LogicalBlockAddress = Functions.NetworkBytesToUInt32 command.ScsiCDB 2 |> uint64 |> blkcnt_me.ofUInt64;
             PMI = Functions.CheckBitflag command.ScsiCDB.[8] 0x01uy;
             AllocationLength = 8u;
             Control = command.ScsiCDB.[9];
@@ -817,8 +823,8 @@ type ConvertToCDB() =
             OperationCode = command.ScsiCDB.[0];
             SyncNV = Functions.CheckBitflag command.ScsiCDB.[1] 0x04uy;
             IMMED = Functions.CheckBitflag command.ScsiCDB.[1] 0x02uy;
-            LogicalBlockAddress = uint64( Functions.NetworkBytesToUInt32 command.ScsiCDB 2 );
-            NumberOfBlocks = uint32( Functions.NetworkBytesToUInt16 command.ScsiCDB 7 );
+            LogicalBlockAddress = Functions.NetworkBytesToUInt32 command.ScsiCDB 2 |> uint64 |> blkcnt_me.ofUInt64;
+            NumberOfBlocks = Functions.NetworkBytesToUInt16 command.ScsiCDB 7 |> uint32 |> blkcnt_me.ofUInt32;
             GroupNumber = command.ScsiCDB.[6] &&& 0x1Fuy;
             Control = command.ScsiCDB.[9];
         }
@@ -857,8 +863,8 @@ type ConvertToCDB() =
             OperationCode = command.ScsiCDB.[0];
             SyncNV = Functions.CheckBitflag command.ScsiCDB.[1] 0x04uy;
             IMMED = Functions.CheckBitflag command.ScsiCDB.[1] 0x02uy;
-            LogicalBlockAddress = uint64( Functions.NetworkBytesToUInt64 command.ScsiCDB 2 );
-            NumberOfBlocks = uint32( Functions.NetworkBytesToUInt32 command.ScsiCDB 10 );
+            LogicalBlockAddress = Functions.NetworkBytesToUInt64 command.ScsiCDB 2 |> uint64 |> blkcnt_me.ofUInt64;
+            NumberOfBlocks = Functions.NetworkBytesToUInt32 command.ScsiCDB 10 |> uint32 |> blkcnt_me.ofUInt32;
             GroupNumber = command.ScsiCDB.[14] &&& 0x1Fuy;
             Control = command.ScsiCDB.[15];
         }
@@ -890,9 +896,15 @@ type ConvertToCDB() =
             DPO = false;
             FUA = false;
             FUA_NV = false;
-            LogicalBlockAddress = uint64( command.ScsiCDB.[1] &&& 0x1Fuy ) <<< 16 ||| ( uint64( command.ScsiCDB.[2] ) <<< 8 ) ||| uint64( command.ScsiCDB.[3] );
+            LogicalBlockAddress =
+                uint64( command.ScsiCDB.[1] &&& 0x1Fuy ) <<< 16 ||| ( uint64( command.ScsiCDB.[2] ) <<< 8 ) ||| uint64( command.ScsiCDB.[3] )
+                |> blkcnt_me.ofUInt64;
             GroupNumber = 0uy;
-            TransferLength = if command.ScsiCDB.[4] = 0uy then 256u else uint32 command.ScsiCDB.[4];
+            TransferLength =
+                if command.ScsiCDB.[4] = 0uy then
+                    blkcnt_me.ofUInt32 256u
+                else
+                    command.ScsiCDB.[4] |> uint32 |> blkcnt_me.ofUInt32;
             Control = command.ScsiCDB.[5];
         }
         r :> ICDB
@@ -932,9 +944,9 @@ type ConvertToCDB() =
             DPO = Functions.CheckBitflag command.ScsiCDB.[1] 0x10uy;
             FUA = Functions.CheckBitflag command.ScsiCDB.[1] 0x08uy;
             FUA_NV = Functions.CheckBitflag command.ScsiCDB.[1] 0x02uy;
-            LogicalBlockAddress = uint64( Functions.NetworkBytesToUInt32 command.ScsiCDB 2 );
+            LogicalBlockAddress = Functions.NetworkBytesToUInt32 command.ScsiCDB 2 |> uint64 |> blkcnt_me.ofUInt64;
             GroupNumber = command.ScsiCDB.[6] &&& 0x1Fuy;
-            TransferLength = uint32( Functions.NetworkBytesToUInt16 command.ScsiCDB 7 );
+            TransferLength = Functions.NetworkBytesToUInt16 command.ScsiCDB 7 |> uint32 |> blkcnt_me.ofUInt32;
             Control = command.ScsiCDB.[9];
         }
         if r.WRPROTECT >= 5uy then
@@ -983,8 +995,8 @@ type ConvertToCDB() =
             DPO = Functions.CheckBitflag command.ScsiCDB.[1] 0x10uy;
             FUA = Functions.CheckBitflag command.ScsiCDB.[1] 0x08uy;
             FUA_NV = Functions.CheckBitflag command.ScsiCDB.[1] 0x02uy;
-            LogicalBlockAddress = uint64( Functions.NetworkBytesToUInt32 command.ScsiCDB 2 );
-            TransferLength = Functions.NetworkBytesToUInt32 command.ScsiCDB 6;
+            LogicalBlockAddress = Functions.NetworkBytesToUInt32 command.ScsiCDB 2 |> uint64 |> blkcnt_me.ofUInt64;
+            TransferLength = Functions.NetworkBytesToUInt32 command.ScsiCDB 6 |> blkcnt_me.ofUInt32;
             GroupNumber = command.ScsiCDB.[10] &&& 0x1Fuy;
             Control = command.ScsiCDB.[11];
         }
@@ -1035,8 +1047,8 @@ type ConvertToCDB() =
             DPO = Functions.CheckBitflag command.ScsiCDB.[1] 0x10uy;
             FUA = Functions.CheckBitflag command.ScsiCDB.[1] 0x08uy;
             FUA_NV = Functions.CheckBitflag command.ScsiCDB.[1] 0x02uy;
-            LogicalBlockAddress = Functions.NetworkBytesToUInt64 command.ScsiCDB 2;
-            TransferLength = Functions.NetworkBytesToUInt32 command.ScsiCDB 10;
+            LogicalBlockAddress = Functions.NetworkBytesToUInt64 command.ScsiCDB 2 |> blkcnt_me.ofUInt64;
+            TransferLength = Functions.NetworkBytesToUInt32 command.ScsiCDB 10 |> blkcnt_me.ofUInt32;
             GroupNumber = command.ScsiCDB.[14] &&& 0x1Fuy;
             Control = command.ScsiCDB.[15];
         }
@@ -1183,7 +1195,7 @@ type ConvertToCDB() =
         let r : ReadCapacityCDB = {
             OperationCode = command.ScsiCDB.[0];
             ServiceAction = command.ScsiCDB.[1] &&& 0x1Fuy;
-            LogicalBlockAddress = Functions.NetworkBytesToUInt64 command.ScsiCDB 2;
+            LogicalBlockAddress = Functions.NetworkBytesToUInt64 command.ScsiCDB 2 |> blkcnt_me.ofUInt64;
             PMI = Functions.CheckBitflag command.ScsiCDB.[15] 0x01uy; 
             AllocationLength = Functions.NetworkBytesToUInt32 command.ScsiCDB 10;
             Control = command.ScsiCDB.[15];

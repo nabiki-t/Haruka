@@ -2531,8 +2531,8 @@ type ScsiTask_Test () =
         let cdb : PreFetchCDB = {
             OperationCode = 0x34uy;
             IMMED = false;
-            LogicalBlockAddress = 5UL;
-            PrefetchLength = 3u;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 5UL;
+            PrefetchLength = blkcnt_me.ofUInt32 3u;
             GroupNumber = 0uy;
             Control = 0uy;
         }
@@ -2566,8 +2566,8 @@ type ScsiTask_Test () =
         let cdb : PreFetchCDB = {
             OperationCode = 0x34uy;
             IMMED = false;
-            LogicalBlockAddress = 5UL;
-            PrefetchLength = 3u;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 5UL;
+            PrefetchLength = blkcnt_me.ofUInt32 3u;
             GroupNumber = 0uy;
             Control = 0uy;
         }
@@ -2596,8 +2596,8 @@ type ScsiTask_Test () =
         let cdb : PreFetchCDB = {
             OperationCode = 0x34uy;
             IMMED = false;
-            LogicalBlockAddress = 5UL;
-            PrefetchLength = 4u;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 5UL;
+            PrefetchLength = blkcnt_me.ofUInt32 4u;
             GroupNumber = 0uy;
             Control = 0uy;
         }
@@ -2625,8 +2625,8 @@ type ScsiTask_Test () =
         let cdb : PreFetchCDB = {
             OperationCode = 0x34uy;
             IMMED = false;
-            LogicalBlockAddress = 5UL;
-            PrefetchLength = 0u;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 5UL;
+            PrefetchLength = blkcnt_me.ofUInt32 0u;
             GroupNumber = 0uy;
             Control = 0uy;
         }
@@ -2653,8 +2653,8 @@ type ScsiTask_Test () =
         let cdb : PreFetchCDB = {
             OperationCode = 0x34uy;
             IMMED = false;
-            LogicalBlockAddress = 6UL;
-            PrefetchLength = 1u;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 6UL;
+            PrefetchLength = blkcnt_me.ofUInt32 1u;
             GroupNumber = 0uy;
             Control = 0uy;
         }
@@ -2681,8 +2681,8 @@ type ScsiTask_Test () =
         let cdb : PreFetchCDB = {
             OperationCode = 0x34uy;
             IMMED = false;
-            LogicalBlockAddress = 0xFFFFFFFFFFFFFFFFUL;
-            PrefetchLength = 1u;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0xFFFFFFFFFFFFFFFFUL;
+            PrefetchLength = blkcnt_me.ofUInt32 1u;
             GroupNumber = 0uy;
             Control = 0uy;
         }
@@ -2714,8 +2714,8 @@ type ScsiTask_Test () =
             DPO = false;
             FUA = false;
             FUA_NV = false;
-            LogicalBlockAddress = 0xAABBUL;
-            TransferLength = 3u;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0xAABBUL;
+            TransferLength = blkcnt_me.ofUInt32 3u;
             GroupNumber = 0uy;
             Control = 0uy;
         }
@@ -2735,7 +2735,7 @@ type ScsiTask_Test () =
         )
         mediaStub.p_Read <- ( fun itt source lba buf ->
             Assert.True(( itt = itt_me.fromPrim 0u ))
-            Assert.True(( lba = 0xAABBUL ))
+            Assert.True(( lba = blkcnt_me.ofUInt64 0xAABBUL ))
             Assert.True(( buf.Count = ( int Constants.MEDIA_BLOCK_SIZE ) * 3 ))
             Task.FromResult( buf.Count )
         )
@@ -2762,8 +2762,8 @@ type ScsiTask_Test () =
             DPO = false;
             FUA = false;
             FUA_NV = false;
-            LogicalBlockAddress = 0xAABBUL;
-            TransferLength = 3u;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0xAABBUL;
+            TransferLength = blkcnt_me.ofUInt32 3u;
             GroupNumber = 0uy;
             Control = 0uy;
         }
@@ -2777,7 +2777,7 @@ type ScsiTask_Test () =
         )
         mediaStub.p_Read <- ( fun itt source lba buf ->
             Assert.True(( itt = itt_me.fromPrim 0u ))
-            Assert.True(( lba = 0xAABBUL ))
+            Assert.True(( lba = blkcnt_me.ofUInt64 0xAABBUL ))
             Assert.True(( buf.Count = int wDataLen ))
             Task.FromResult( buf.Count )
         )
@@ -2804,8 +2804,8 @@ type ScsiTask_Test () =
             DPO = false;
             FUA = false;
             FUA_NV = false;
-            LogicalBlockAddress = 0xAABBUL;
-            TransferLength = 3u;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0xAABBUL;
+            TransferLength = blkcnt_me.ofUInt32 3u;
             GroupNumber = 0uy;
             Control = 0uy;
         }
@@ -2828,7 +2828,7 @@ type ScsiTask_Test () =
         )
         mediaStub.p_Read <- ( fun itt source lba buf ->
             Assert.True(( itt = itt_me.fromPrim 0u ))
-            Assert.True(( lba = 0xAABBUL ))
+            Assert.True(( lba = blkcnt_me.ofUInt64 0xAABBUL ))
             Assert.True(( buf.Count = int wDataLen ))
             Task.FromResult( buf.Count )
         )
@@ -2862,8 +2862,8 @@ type ScsiTask_Test () =
             DPO = false;
             FUA = false;
             FUA_NV = false;
-            LogicalBlockAddress = 512UL;
-            TransferLength = 0u;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 512UL;
+            TransferLength = blkcnt_me.ofUInt32 0u;
             GroupNumber = 0uy;
             Control = 0uy;
         }
@@ -2899,8 +2899,8 @@ type ScsiTask_Test () =
             DPO = false;
             FUA = false;
             FUA_NV = false;
-            LogicalBlockAddress = 512UL;
-            TransferLength = 1u;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 512UL;
+            TransferLength = blkcnt_me.ofUInt32 1u;
             GroupNumber = 0uy;
             Control = 0uy;
         }
@@ -2931,8 +2931,8 @@ type ScsiTask_Test () =
             DPO = false;
             FUA = false;
             FUA_NV = false;
-            LogicalBlockAddress = 0xFFFFFFFFFFFFFFFFUL;
-            TransferLength = 1u;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0xFFFFFFFFFFFFFFFFUL;
+            TransferLength = blkcnt_me.ofUInt32 1u;
             GroupNumber = 0uy;
             Control = 0uy;
         }
@@ -2963,8 +2963,8 @@ type ScsiTask_Test () =
             DPO = false;
             FUA = false;
             FUA_NV = false;
-            LogicalBlockAddress = 513UL;
-            TransferLength = 0u;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 513UL;
+            TransferLength = blkcnt_me.ofUInt32 0u;
             GroupNumber = 0uy;
             Control = 0uy;
         }
@@ -2995,8 +2995,8 @@ type ScsiTask_Test () =
             DPO = true; // not supported
             FUA = false;
             FUA_NV = false;
-            LogicalBlockAddress = 0UL;
-            TransferLength = 1u;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0UL;
+            TransferLength = blkcnt_me.ofUInt32 1u;
             GroupNumber = 0uy;
             Control = 0uy;
         }
@@ -3027,8 +3027,8 @@ type ScsiTask_Test () =
             DPO = false;
             FUA = true; // not supported
             FUA_NV = false;
-            LogicalBlockAddress = 0UL;
-            TransferLength = 1u;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0UL;
+            TransferLength = blkcnt_me.ofUInt32 1u;
             GroupNumber = 0uy;
             Control = 0uy;
         }
@@ -3059,8 +3059,8 @@ type ScsiTask_Test () =
             DPO = false;
             FUA = false;
             FUA_NV = true; // not supported
-            LogicalBlockAddress = 0UL;
-            TransferLength = 1u;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0UL;
+            TransferLength = blkcnt_me.ofUInt32 1u;
             GroupNumber = 0uy;
             Control = 0uy;
         }
@@ -3091,8 +3091,8 @@ type ScsiTask_Test () =
             DPO = false;
             FUA = false;
             FUA_NV = false;
-            LogicalBlockAddress = 0UL;
-            TransferLength = 1u;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0UL;
+            TransferLength = blkcnt_me.ofUInt32 1u;
             GroupNumber = 0uy;
             Control = 0uy;
         }
@@ -3121,7 +3121,7 @@ type ScsiTask_Test () =
         let cdb : ReadCapacityCDB = {
             OperationCode = 0x25uy;
             ServiceAction = 0x00uy;
-            LogicalBlockAddress = 0UL;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0UL;
             PMI = false;
             AllocationLength = 0x10u;
             Control = 0uy;
@@ -3163,7 +3163,7 @@ type ScsiTask_Test () =
         let cdb : ReadCapacityCDB = {
             OperationCode = 0x25uy;
             ServiceAction = 0x00uy;
-            LogicalBlockAddress = 0UL;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0UL;
             PMI = false;
             AllocationLength = 0x10u;
             Control = 0uy;
@@ -3202,7 +3202,7 @@ type ScsiTask_Test () =
         let cdb : ReadCapacityCDB = {
             OperationCode = 0x9Euy;
             ServiceAction = 0x10uy;
-            LogicalBlockAddress = 0UL;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0UL;
             PMI = false;
             AllocationLength = 0x10u;
             Control = 0uy;
@@ -3248,7 +3248,7 @@ type ScsiTask_Test () =
         let cdb : ReadCapacityCDB = {
             OperationCode = 0x25uy;
             ServiceAction = 0x00uy;
-            LogicalBlockAddress = 0UL;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0UL;
             PMI = false;
             AllocationLength = 0x10u;
             Control = 0uy;
@@ -3280,7 +3280,7 @@ type ScsiTask_Test () =
         let cdb : ReadCapacityCDB = {
             OperationCode = 0x25uy;
             ServiceAction = 0x00uy;
-            LogicalBlockAddress = 0UL;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0UL;
             PMI = false;
             AllocationLength = 0x10u;
             Control = 0uy;
@@ -3330,8 +3330,8 @@ type ScsiTask_Test () =
             OperationCode = 0x35uy;
             SyncNV = true;
             IMMED = true;
-            LogicalBlockAddress = lba;
-            NumberOfBlocks = nob;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 lba;
+            NumberOfBlocks = blkcnt_me.ofUInt32 nob;
             GroupNumber = 0uy;
             Control = 0uy;
         }
@@ -3368,8 +3368,8 @@ type ScsiTask_Test () =
             OperationCode = 0x35uy;
             SyncNV = true;
             IMMED = true;
-            LogicalBlockAddress = lba;
-            NumberOfBlocks = nob;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 lba;
+            NumberOfBlocks = blkcnt_me.ofUInt32 nob;
             GroupNumber = 0uy;
             Control = 0uy;
         }
@@ -3406,9 +3406,9 @@ type ScsiTask_Test () =
             DPO = false;
             FUA = false;
             FUA_NV = false;
-            LogicalBlockAddress = 0x00UL;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0x00UL;
             GroupNumber = 0x00uy;
-            TransferLength = 40960u / ( uint32 Constants.MEDIA_BLOCK_SIZE );
+            TransferLength = 40960u / ( uint32 Constants.MEDIA_BLOCK_SIZE ) |> blkcnt_me.ofUInt32;
             Control = 0uy;
         }
         let cmd = {
@@ -3461,23 +3461,23 @@ type ScsiTask_Test () =
             Assert.True(( itt = itt_me.fromPrim 0u ))
             match cnt1 with
             | 1 ->
-                Assert.True(( lba = 0UL ))
+                Assert.True(( lba = blkcnt_me.ofUInt64 0UL ))
                 Assert.True(( offset = 0UL ))
                 Assert.True(( buf.Count = 16 ))
             | 2 ->
-                Assert.True(( lba = 2UL / Constants.MEDIA_BLOCK_SIZE ))
+                Assert.True(( lba = blkcnt_me.ofUInt64 ( 2UL / Constants.MEDIA_BLOCK_SIZE ) ))
                 Assert.True(( offset = 2UL ))
                 Assert.True(( buf.Count = 2560 ))
             | 3 ->
-                Assert.True(( lba = 20480UL / Constants.MEDIA_BLOCK_SIZE ))
+                Assert.True(( lba = blkcnt_me.ofUInt64( 20480UL / Constants.MEDIA_BLOCK_SIZE ) ))
                 Assert.True(( offset = 0UL ))
                 Assert.True(( buf.Count = 10240 ))
             | 4 ->
-                Assert.True(( lba = 30976UL / Constants.MEDIA_BLOCK_SIZE ))
+                Assert.True(( lba = blkcnt_me.ofUInt64( 30976UL / Constants.MEDIA_BLOCK_SIZE ) ))
                 Assert.True(( offset = 30976UL % Constants.MEDIA_BLOCK_SIZE ))
                 Assert.True(( buf.Count = 640 ))
             | 5 ->
-                Assert.True(( lba = 35968UL / Constants.MEDIA_BLOCK_SIZE ))
+                Assert.True(( lba = blkcnt_me.ofUInt64( 35968UL / Constants.MEDIA_BLOCK_SIZE ) ))
                 Assert.True(( offset = 35968UL % Constants.MEDIA_BLOCK_SIZE ))
                 Assert.True(( buf.Count = 4992 ))
             | _ ->
@@ -3523,9 +3523,9 @@ type ScsiTask_Test () =
             DPO = false;
             FUA = false;
             FUA_NV = false;
-            LogicalBlockAddress = 0x00UL;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0x00UL;
             GroupNumber = 0x00uy;
-            TransferLength = 1u;
+            TransferLength = blkcnt_me.ofUInt32 1u;
             Control = 0uy;
         }
         let data = [
@@ -3545,7 +3545,7 @@ type ScsiTask_Test () =
         mediaStub.p_Write <- ( fun itt source lba offset buf ->
             cnt1 <- cnt1 + 1
             Assert.True(( itt = itt_me.fromPrim 0u ))
-            Assert.True(( lba = 0x00UL ))
+            Assert.True(( lba = blkcnt_me.ofUInt64 0x00UL ))
             Assert.True(( offset = 0UL ))
             Assert.True(( buf.Count = 512 ))
             Task.FromResult( buf.Count )
@@ -3575,9 +3575,9 @@ type ScsiTask_Test () =
             DPO = false;
             FUA = false;
             FUA_NV = false;
-            LogicalBlockAddress = 0x00UL;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0x00UL;
             GroupNumber = 0x00uy;
-            TransferLength = 1u;
+            TransferLength = blkcnt_me.ofUInt32 1u;
             Control = 0uy;
         }
         let data = [
@@ -3637,9 +3637,9 @@ type ScsiTask_Test () =
             DPO = false;
             FUA = false;
             FUA_NV = false;
-            LogicalBlockAddress = 512UL;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 512UL;
             GroupNumber = 0x00uy;
-            TransferLength = 0u;
+            TransferLength = blkcnt_me.ofUInt32 0u;
             Control = 0uy;
         }
         let data = []
@@ -3677,9 +3677,9 @@ type ScsiTask_Test () =
             DPO = false;
             FUA = false;
             FUA_NV = false;
-            LogicalBlockAddress = 512UL;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 512UL;
             GroupNumber = 0x00uy;
-            TransferLength = 1u;
+            TransferLength = blkcnt_me.ofUInt32 1u;
             Control = 0uy;
         }
         let data = []
@@ -3710,9 +3710,9 @@ type ScsiTask_Test () =
             DPO = false;
             FUA = false;
             FUA_NV = false;
-            LogicalBlockAddress = 0xFFFFFFFFFFFFFFFFUL;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0xFFFFFFFFFFFFFFFFUL;
             GroupNumber = 0x00uy;
-            TransferLength = 1u;
+            TransferLength = blkcnt_me.ofUInt32 1u;
             Control = 0uy;
         }
         let data = []
@@ -3743,9 +3743,9 @@ type ScsiTask_Test () =
             DPO = false;
             FUA = false;
             FUA_NV = false;
-            LogicalBlockAddress = 513UL;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 513UL;
             GroupNumber = 0x00uy;
-            TransferLength = 0u;
+            TransferLength = blkcnt_me.ofUInt32 0u;
             Control = 0uy;
         }
         let data = []
@@ -3776,9 +3776,9 @@ type ScsiTask_Test () =
             DPO = true; // not supported
             FUA = false;
             FUA_NV = false;
-            LogicalBlockAddress = 0UL;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0UL;
             GroupNumber = 0x00uy;
-            TransferLength = 1u;
+            TransferLength = blkcnt_me.ofUInt32 1u;
             Control = 0uy;
         }
         let data = []
@@ -3809,9 +3809,9 @@ type ScsiTask_Test () =
             DPO = false;
             FUA = true; // not supported
             FUA_NV = false;
-            LogicalBlockAddress = 0UL;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0UL;
             GroupNumber = 0x00uy;
-            TransferLength = 1u;
+            TransferLength = blkcnt_me.ofUInt32 1u;
             Control = 0uy;
         }
         let data = []
@@ -3842,9 +3842,9 @@ type ScsiTask_Test () =
             DPO = false;
             FUA = false;
             FUA_NV = true; // not supported
-            LogicalBlockAddress = 0UL;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0UL;
             GroupNumber = 0x00uy;
-            TransferLength = 1u;
+            TransferLength = blkcnt_me.ofUInt32 1u;
             Control = 0uy;
         }
         let data = []
@@ -3875,9 +3875,9 @@ type ScsiTask_Test () =
             DPO = false;
             FUA = false;
             FUA_NV = false;
-            LogicalBlockAddress = 0UL;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0UL;
             GroupNumber = 0x00uy;
-            TransferLength = 1u;
+            TransferLength = blkcnt_me.ofUInt32 1u;
             Control = 0uy;
         }
         let data = []
@@ -3908,9 +3908,9 @@ type ScsiTask_Test () =
             DPO = false;
             FUA = false;
             FUA_NV = false;
-            LogicalBlockAddress = 0UL;
+            LogicalBlockAddress = blkcnt_me.ofUInt64 0UL;
             GroupNumber = 0x00uy;
-            TransferLength = 1u;
+            TransferLength = blkcnt_me.ofUInt32 1u;
             Control = 0uy;
         }
         let data = []

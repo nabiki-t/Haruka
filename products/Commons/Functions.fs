@@ -1735,11 +1735,12 @@ type Functions() =
     /// <returns>
     ///  If all of access range is in the media, it returns true, otherwise false.
     /// </returns>
-    static member CheckAccessRange ( sBlkPos : uint64 ) ( trBytes : uint64 ) ( mediaBlks : uint64 ) ( blkSize : uint64 ) : bool =
+    static member CheckAccessRange ( sBlkPos : BLKCNT64_T ) ( trBytes : uint64 ) ( mediaBlks : uint64 ) ( blkSize : uint64 ) : bool =
         let struct ( d, r ) = Math.DivRem( trBytes, blkSize )
         let trBlks = if r > 0UL then d + 1UL else d
-        let eBlkPos = sBlkPos + trBlks
-        ( sBlkPos <= mediaBlks && trBlks <= mediaBlks && eBlkPos <= mediaBlks && eBlkPos >= sBlkPos && eBlkPos >= trBlks )
+        let sBlkPos_u64 = blkcnt_me.toUInt64 sBlkPos
+        let eBlkPos = sBlkPos_u64 + trBlks
+        ( sBlkPos_u64 <= mediaBlks && trBlks <= mediaBlks && eBlkPos <= mediaBlks && eBlkPos >= sBlkPos_u64 && eBlkPos >= trBlks )
 
 
     /// <summary>

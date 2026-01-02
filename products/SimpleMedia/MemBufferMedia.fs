@@ -163,7 +163,7 @@ type MemBufferMedia
         override this.Read
             ( initiatorTaskTag : ITT_T )
             ( source : CommandSourceInfo )
-            ( argLBA : uint64 )
+            ( argLBA : BLKCNT64_T )
             ( buffer : ArraySegment<byte> )
             : Task<int> =
 
@@ -175,7 +175,7 @@ type MemBufferMedia
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "MemBufferMedia.Read." ) )
 
             let readBytesLength_u64 = uint64 buffer.Count
-            let readpos_u64 = argLBA * m_BlockSize
+            let readpos_u64 = ( blkcnt_me.toUInt64 argLBA ) * m_BlockSize
             //let mediaSize = m_BlockCount * m_BlockSize
 
             // Check specified range is in media file.
@@ -227,7 +227,7 @@ type MemBufferMedia
         override this.Write
             ( initiatorTaskTag : ITT_T )
             ( source : CommandSourceInfo )
-            ( argLBA : uint64 )
+            ( argLBA : BLKCNT64_T )
             ( offset : uint64 )
             ( data : ArraySegment<byte> )
             : Task<int> =
@@ -241,7 +241,7 @@ type MemBufferMedia
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "MemBufferMedia.Write." ) )
 
             let writeBytesLength_u64 = uint64 data.Count
-            let writepos_u64 = argLBA * m_BlockSize + offset
+            let writepos_u64 = ( blkcnt_me.toUInt64 argLBA ) * m_BlockSize + offset
             let mediaSize = m_BlockCount * m_BlockSize
 
             // Check specified range is in media file.

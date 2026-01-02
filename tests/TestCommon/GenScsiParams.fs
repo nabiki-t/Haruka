@@ -21,7 +21,7 @@ open Haruka.Constants
 
 /// Parameter data format that is returned for READ CAPACITY(16) command.
 type ReadCapacity16Param = {
-    ReturnedLogicalUnitAddress : uint64;
+    ReturnedLogicalBlockAddress : uint64;
     BlockLengthInBytes : uint32;
     ReferenceTagOwnEnable : bool;
     ProtectionEnable : bool;
@@ -141,9 +141,9 @@ type BlockLimitVPD = {
     PeripheralDeviceType : byte;
     PageCode : byte;
     PageLength : byte;
-    OptimalTransferLengthGramularity : uint16;
-    MaximumTransferLength : uint32;
-    OptimalTransferLength : uint32;
+    OptimalTransferLengthGramularity : BLKCNT16_T;
+    MaximumTransferLength : BLKCNT32_T;
+    OptimalTransferLength : BLKCNT32_T;
 }
 
 /// Block Device Characteristics VPD page data format that is returned for INQUIRY.
@@ -172,7 +172,7 @@ type SupportedVPD = {
 
 /// Block descriptor format in mode parameter.
 type BlockDescriptor = {
-    BlockCount : uint64;                    // In LONGLBA=0, only the lower 32 bits are used.
+    BlockCount : BLKCNT64_T;                    // In LONGLBA=0, only the lower 32 bits are used.
     BlockLength : uint32;
 }
 
@@ -211,16 +211,16 @@ type CacheModePage = {
     ReadCacheDisable : bool;
     DemandReadRetentionPriority : byte;
     WriteRetentionPriority : byte;
-    DisablePreFetchTransferLength : uint16;
-    MinimumPreFetch : uint16;
-    MaximumPreFetch : uint16;
-    MaximumPreFetchCeiling : uint16;
+    DisablePreFetchTransferLength : BLKCNT16_T;
+    MinimumPreFetch : BLKCNT16_T;
+    MaximumPreFetch : BLKCNT16_T;
+    MaximumPreFetchCeiling : BLKCNT16_T;
     ForceSequentialWrite : bool;
     LogicalBlockCacheSegmentSize : bool;
     DisableReadAhead : bool;
     NonVolatileDisabled : bool;
     NumberOfCacheSegments : byte;
-    CacheSegmentSize : uint16;
+    CacheSegmentSize : uint16;  // If LogicalBlockCacheSegmentSize is true, CacheSegmentSize is block count. Otherwise, CacheSegmentSize is byte count.
 }
 
 /// Informational Exceptions Control mode page data format that is used for MODE SELECT/MODE SENSE command.
@@ -687,18 +687,21 @@ type GenScsiParams() =
             OptimalTransferLengthGramularity =
                 if pv.Length >= 8 then
                     Functions.NetworkBytesToUInt16_InPooledBuffer pv 6
+                    |> blkcnt_me.ofUInt16
                 else
-                    0us;
+                    blkcnt_me.zero16;
             MaximumTransferLength =
                 if pv.Length >= 12 then
                     Functions.NetworkBytesToUInt32_InPooledBuffer pv 8
+                    |> blkcnt_me.ofUInt32
                 else
-                    0u;
+                    blkcnt_me.zero32;
             OptimalTransferLength =
                 if pv.Length >= 16 then
                     Functions.NetworkBytesToUInt32_InPooledBuffer pv 12
+                    |> blkcnt_me.ofUInt32
                 else
-                    0u;
+                    blkcnt_me.zero32;
         }
 
     /// <summary>
@@ -869,7 +872,7 @@ type GenScsiParams() =
                     |]
                 else
                     [|
-                        yield! Functions.UInt64ToNetworkBytes_NewVec m.Block.Value.BlockCount;
+                        yield! Functions.UInt64ToNetworkBytes_NewVec ( blkcnt_me.toUInt64 m.Block.Value.BlockCount );
                         yield 0x00uy;
                         yield 0x00uy;
                         yield 0x00uy;
@@ -960,10 +963,10 @@ type GenScsiParams() =
                     ( Functions.SetBitflag c.ReadCacheDisable 0x01uy );
             yield ( ( c.DemandReadRetentionPriority &&& 0x0Fuy ) <<< 4 ) |||
                     ( c.WriteRetentionPriority &&& 0x0Fuy );
-            yield! Functions.UInt16ToNetworkBytes_NewVec c.DisablePreFetchTransferLength;
-            yield! Functions.UInt16ToNetworkBytes_NewVec c.MinimumPreFetch;
-            yield! Functions.UInt16ToNetworkBytes_NewVec c.MaximumPreFetch;
-            yield! Functions.UInt16ToNetworkBytes_NewVec c.MaximumPreFetchCeiling;
+            yield! Functions.UInt16ToNetworkBytes_NewVec ( blkcnt_me.toUInt16 c.DisablePreFetchTransferLength );
+            yield! Functions.UInt16ToNetworkBytes_NewVec ( blkcnt_me.toUInt16 c.MinimumPreFetch );
+            yield! Functions.UInt16ToNetworkBytes_NewVec ( blkcnt_me.toUInt16 c.MaximumPreFetch );
+            yield! Functions.UInt16ToNetworkBytes_NewVec ( blkcnt_me.toUInt16 c.MaximumPreFetchCeiling );
             yield ( Functions.SetBitflag c.ForceSequentialWrite 0x80uy ) |||
                     ( Functions.SetBitflag c.LogicalBlockCacheSegmentSize 0x40uy ) |||
                     ( Functions.SetBitflag c.DisableReadAhead 0x20uy ) |||
@@ -1036,8 +1039,12 @@ type GenScsiParams() =
             Block = 
                 if pv.Length >= 12 && blockDescLength >= 8uy then
                     Some {
-                        BlockCount = Functions.NetworkBytesToUInt32_InPooledBuffer pv 4 |> uint64;
-                        BlockLength = ( Functions.NetworkBytesToUInt32_InPooledBuffer pv 8 ) &&& 0x00FFFFFFu;
+                        BlockCount =
+                            Functions.NetworkBytesToUInt32_InPooledBuffer pv 4
+                            |> uint64
+                            |> blkcnt_me.ofUInt64
+                        BlockLength =
+                            ( Functions.NetworkBytesToUInt32_InPooledBuffer pv 8 ) &&& 0x00FFFFFFu;
                     }
                 else
                     None;
@@ -1093,16 +1100,23 @@ type GenScsiParams() =
                 if longlba then
                     if pv.Length >= 24 && blockDescLength >= 16us then
                         Some {
-                            BlockCount = Functions.NetworkBytesToUInt64_InPooledBuffer pv 8;
-                            BlockLength = Functions.NetworkBytesToUInt32_InPooledBuffer pv 20;
+                            BlockCount =
+                                Functions.NetworkBytesToUInt64_InPooledBuffer pv 8
+                                |> blkcnt_me.ofUInt64;
+                            BlockLength =
+                                Functions.NetworkBytesToUInt32_InPooledBuffer pv 20;
                         }
                     else
                         None;
                 else
                     if pv.Length >= 16 && blockDescLength >= 8us then
                         Some {
-                            BlockCount = Functions.NetworkBytesToUInt32_InPooledBuffer pv 8 |> uint64;
-                            BlockLength = ( Functions.NetworkBytesToUInt32_InPooledBuffer pv 12 ) &&& 0x00FFFFFFu;
+                            BlockCount =
+                                Functions.NetworkBytesToUInt32_InPooledBuffer pv 8
+                                |> uint64
+                                |> blkcnt_me.ofUInt64;
+                            BlockLength =
+                                ( Functions.NetworkBytesToUInt32_InPooledBuffer pv 12 ) &&& 0x00FFFFFFu;
                         }
                     else
                         None;
@@ -1186,10 +1200,10 @@ type GenScsiParams() =
                     ReadCacheDisable = Functions.CheckBitflag pv.Array.[ p + 2 ] 0x01uy;
                     DemandReadRetentionPriority = ( pv.Array.[ p + 3 ] >>> 4 ) &&& 0x0Fuy;
                     WriteRetentionPriority = pv.Array.[ p + 3 ] &&& 0x0Fuy;
-                    DisablePreFetchTransferLength = Functions.NetworkBytesToUInt16_InPooledBuffer pv ( p + 4 );
-                    MinimumPreFetch = Functions.NetworkBytesToUInt16_InPooledBuffer pv ( p + 6 );
-                    MaximumPreFetch = Functions.NetworkBytesToUInt16_InPooledBuffer pv ( p + 8 );
-                    MaximumPreFetchCeiling = Functions.NetworkBytesToUInt16_InPooledBuffer pv ( p + 10 );
+                    DisablePreFetchTransferLength = Functions.NetworkBytesToUInt16_InPooledBuffer pv ( p + 4 ) |> blkcnt_me.ofUInt16;
+                    MinimumPreFetch = Functions.NetworkBytesToUInt16_InPooledBuffer pv ( p + 6 ) |> blkcnt_me.ofUInt16;
+                    MaximumPreFetch = Functions.NetworkBytesToUInt16_InPooledBuffer pv ( p + 8 ) |> blkcnt_me.ofUInt16;
+                    MaximumPreFetchCeiling = Functions.NetworkBytesToUInt16_InPooledBuffer pv ( p + 10 ) |> blkcnt_me.ofUInt16;
                     ForceSequentialWrite = Functions.CheckBitflag pv.Array.[ p + 12 ] 0x80uy;
                     LogicalBlockCacheSegmentSize = Functions.CheckBitflag pv.Array.[ p + 12 ] 0x40uy;
                     DisableReadAhead = Functions.CheckBitflag pv.Array.[ p + 12 ] 0x20uy;
@@ -1635,7 +1649,7 @@ type GenScsiParams() =
     /// </returns>
     static member ReadCapacity16 ( pv : PooledBuffer ) : ReadCapacity16Param =
         {
-            ReturnedLogicalUnitAddress =
+            ReturnedLogicalBlockAddress =
                 if pv.Length >= 8 then
                     Functions.NetworkBytesToUInt64_InPooledBuffer pv 0
                 else

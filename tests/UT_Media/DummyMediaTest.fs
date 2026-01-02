@@ -92,7 +92,7 @@ type DummyMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let m = new DummyMedia( k1, lun_me.fromPrim 1UL ) :> IMedia
         try
-            m.Read ( itt_me.fromPrim 0u ) defaultCommandSource 0UL ArraySegment.Empty
+            m.Read ( itt_me.fromPrim 0u ) defaultCommandSource ( blkcnt_me.ofUInt64 0UL ) ArraySegment.Empty
             |> Functions.RunTaskSynchronously
             |> ignore
             Assert.Fail __LINE__
@@ -106,7 +106,7 @@ type DummyMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let m = new DummyMedia( k1, lun_me.fromPrim 1UL ) :> IMedia
         try
-            m.Write ( itt_me.fromPrim 0u ) defaultCommandSource 0UL 0UL ArraySegment.Empty
+            m.Write ( itt_me.fromPrim 0u ) defaultCommandSource ( blkcnt_me.ofUInt64 0UL ) 0UL ArraySegment.Empty
             |> Functions.RunTaskSynchronously
             |> ignore
             Assert.Fail __LINE__

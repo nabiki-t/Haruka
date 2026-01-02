@@ -592,8 +592,8 @@ type ConvertToCDB_Test () =
         Assert.True( ( CDBTypes.Read = cdb.Type ) )
         let w = cdb :?> ReadCDB
         Assert.True( w.OperationCode = 0x08uy )
-        Assert.True( w.LogicalBlockAddress = 0x001ABBCCUL )
-        Assert.True( w.TransferLength = 0xDDu )
+        Assert.True( w.LogicalBlockAddress = blkcnt_me.ofUInt64 0x001ABBCCUL )
+        Assert.True( w.TransferLength = blkcnt_me.ofUInt32 0xDDu )
         Assert.True( w.Control = 0xEEuy )
 
     [<Fact>]
@@ -606,8 +606,8 @@ type ConvertToCDB_Test () =
         Assert.True( ( CDBTypes.Read = cdb.Type ) )
         let w = cdb :?> ReadCDB
         Assert.True( w.OperationCode = 0x08uy )
-        Assert.True( w.LogicalBlockAddress = 0x001ABBCCUL )
-        Assert.True( w.TransferLength = 256u )
+        Assert.True( w.LogicalBlockAddress = blkcnt_me.ofUInt64 0x001ABBCCUL )
+        Assert.True( w.TransferLength = blkcnt_me.ofUInt32 256u )
         Assert.True( w.Control = 0xEEuy )
 
     [<Fact>]
@@ -660,9 +660,9 @@ type ConvertToCDB_Test () =
         Assert.False( w.DPO )
         Assert.True( w.FUA )
         Assert.True( w.FUA_NV )
-        Assert.True( w.LogicalBlockAddress = 0xAABBCCDDUL )
+        Assert.True( w.LogicalBlockAddress = blkcnt_me.ofUInt64 0xAABBCCDDUL )
         Assert.True( w.GroupNumber = 0x1Fuy )
-        Assert.True( w.TransferLength = 0xEEFFu )
+        Assert.True( w.TransferLength = blkcnt_me.ofUInt32 0xEEFFu )
         Assert.True( w.Control = 0xABuy )
 
     [<Fact>]
@@ -715,9 +715,9 @@ type ConvertToCDB_Test () =
         Assert.True( w.DPO )
         Assert.False( w.FUA )
         Assert.True( w.FUA_NV )
-        Assert.True( w.LogicalBlockAddress = 0xAABBCCDDUL )
+        Assert.True( w.LogicalBlockAddress = blkcnt_me.ofUInt64 0xAABBCCDDUL )
         Assert.True( w.GroupNumber = 0x1Fuy )
-        Assert.True( w.TransferLength = 0xEEFFAABBu )
+        Assert.True( w.TransferLength = blkcnt_me.ofUInt32 0xEEFFAABBu )
         Assert.True( w.Control = 0xABuy )
 
     [<Fact>]
@@ -770,9 +770,9 @@ type ConvertToCDB_Test () =
         Assert.True( w.DPO )
         Assert.True( w.FUA )
         Assert.False( w.FUA_NV )
-        Assert.True( w.LogicalBlockAddress = 0xAABBCCDDAABBCCDDUL )
+        Assert.True( w.LogicalBlockAddress = blkcnt_me.ofUInt64 0xAABBCCDDAABBCCDDUL )
         Assert.True( w.GroupNumber = 0x18uy )
-        Assert.True( w.TransferLength = 0xDEADBEEFu )
+        Assert.True( w.TransferLength = blkcnt_me.ofUInt32 0xDEADBEEFu )
         Assert.True( w.Control = 0xAAuy )
 
     [<Fact>]
@@ -803,7 +803,7 @@ type ConvertToCDB_Test () =
         Assert.True( ( CDBTypes.ReadCapacity = cdb.Type ) )
         let w = cdb :?> ReadCapacityCDB
         Assert.True( w.OperationCode = 0x25uy )
-        Assert.True( w.LogicalBlockAddress = 0xAABBCCDDUL )
+        Assert.True( w.LogicalBlockAddress = blkcnt_me.ofUInt64 0xAABBCCDDUL )
         Assert.True( w.PMI )
         Assert.True( w.Control = 0xAAuy )
 
@@ -817,8 +817,8 @@ type ConvertToCDB_Test () =
         Assert.True( ( CDBTypes.Write = cdb.Type ) )
         let w = cdb :?> WriteCDB
         Assert.True( w.OperationCode = 0x0Auy )
-        Assert.True( w.LogicalBlockAddress = 0x001ABBCCUL )
-        Assert.True( w.TransferLength = 0xDDu )
+        Assert.True( w.LogicalBlockAddress = blkcnt_me.ofUInt64 0x001ABBCCUL )
+        Assert.True( w.TransferLength = blkcnt_me.ofUInt32 0xDDu )
         Assert.True( w.Control = 0xEEuy )
 
     [<Fact>]
@@ -831,8 +831,8 @@ type ConvertToCDB_Test () =
         Assert.True( ( CDBTypes.Write = cdb.Type ) )
         let w = cdb :?> WriteCDB
         Assert.True( w.OperationCode = 0x0Auy )
-        Assert.True( w.LogicalBlockAddress = 0x001ABBCCUL )
-        Assert.True( w.TransferLength = 256u )
+        Assert.True( w.LogicalBlockAddress = blkcnt_me.ofUInt64 0x001ABBCCUL )
+        Assert.True( w.TransferLength = blkcnt_me.ofUInt32 256u )
         Assert.True( w.Control = 0xEEuy )
 
     [<Fact>]
@@ -885,9 +885,9 @@ type ConvertToCDB_Test () =
         Assert.False( w.DPO )
         Assert.True( w.FUA )
         Assert.True( w.FUA_NV )
-        Assert.True( w.LogicalBlockAddress = 0xAABBCCDDUL )
+        Assert.True( w.LogicalBlockAddress = blkcnt_me.ofUInt64 0xAABBCCDDUL )
         Assert.True( w.GroupNumber = 0x1Fuy )
-        Assert.True( w.TransferLength = 0xEEFFu )
+        Assert.True( w.TransferLength = blkcnt_me.ofUInt32 0xEEFFu )
         Assert.True( w.Control = 0xABuy )
 
     [<Fact>]
@@ -941,9 +941,9 @@ type ConvertToCDB_Test () =
         Assert.True( w.DPO )
         Assert.False( w.FUA )
         Assert.True( w.FUA_NV )
-        Assert.True( w.LogicalBlockAddress = 0xAABBCCDDUL )
+        Assert.True( w.LogicalBlockAddress = blkcnt_me.ofUInt64 0xAABBCCDDUL )
         Assert.True( w.GroupNumber = 0x1Fuy )
-        Assert.True( w.TransferLength = 0xEEFFAABBu )
+        Assert.True( w.TransferLength = blkcnt_me.ofUInt32 0xEEFFAABBu )
         Assert.True( w.Control = 0xABuy )
 
     [<Fact>]
@@ -996,9 +996,9 @@ type ConvertToCDB_Test () =
         Assert.True( w.DPO )
         Assert.True( w.FUA )
         Assert.False( w.FUA_NV )
-        Assert.True( w.LogicalBlockAddress = 0xAABBCCDDAABBCCDDUL )
+        Assert.True( w.LogicalBlockAddress = blkcnt_me.ofUInt64 0xAABBCCDDAABBCCDDUL )
         Assert.True( w.GroupNumber = 0x18uy )
-        Assert.True( w.TransferLength = 0xDEADBEEFu )
+        Assert.True( w.TransferLength = blkcnt_me.ofUInt32 0xDEADBEEFu )
         Assert.True( w.Control = 0xAAuy )
 
     [<Fact>]
@@ -1133,7 +1133,7 @@ type ConvertToCDB_Test () =
         let w = cdb :?> ReadCapacityCDB
         Assert.True( w.OperationCode = 0x9Euy )
         Assert.True( w.ServiceAction = 0x10uy )
-        Assert.True( w.LogicalBlockAddress = 0xAABBCCDDAABBCCDDUL )
+        Assert.True( w.LogicalBlockAddress = blkcnt_me.ofUInt64 0xAABBCCDDAABBCCDDUL )
         Assert.True( w.AllocationLength = 0xABCDEFABu )
         Assert.True( w.Control = 0xBBuy )
 
@@ -1167,8 +1167,8 @@ type ConvertToCDB_Test () =
         Assert.True( w.OperationCode = 0x35uy )
         Assert.True( w.SyncNV = true )
         Assert.True( w.IMMED = true )
-        Assert.True( w.LogicalBlockAddress = 0x00000000AABBCCDDUL )
-        Assert.True( w.NumberOfBlocks = 0x00001122u )
+        Assert.True( w.LogicalBlockAddress = blkcnt_me.ofUInt64 0x00000000AABBCCDDUL )
+        Assert.True( w.NumberOfBlocks = blkcnt_me.ofUInt32 0x00001122u )
         Assert.True( w.GroupNumber = 0x1Fuy )
         Assert.True( w.Control = 0x55uy )
 
@@ -1202,8 +1202,8 @@ type ConvertToCDB_Test () =
         Assert.True( w.OperationCode = 0x91uy )
         Assert.True( w.SyncNV = true )
         Assert.True( w.IMMED = true )
-        Assert.True( w.LogicalBlockAddress = 0xAABBCCDDEEFF0001UL )
-        Assert.True( w.NumberOfBlocks = 0x01020304u )
+        Assert.True( w.LogicalBlockAddress = blkcnt_me.ofUInt64 0xAABBCCDDEEFF0001UL )
+        Assert.True( w.NumberOfBlocks = blkcnt_me.ofUInt32 0x01020304u )
         Assert.True( w.GroupNumber = 0x1Fuy )
         Assert.True( w.Control = 0x22uy )
 
@@ -1236,9 +1236,9 @@ type ConvertToCDB_Test () =
         let w = cdb :?> PreFetchCDB
         Assert.True( w.OperationCode = 0x34uy )
         Assert.True( w.IMMED = true )
-        Assert.True( w.LogicalBlockAddress = 0x00000000AABBCCDDUL )
+        Assert.True( w.LogicalBlockAddress = blkcnt_me.ofUInt64 0x00000000AABBCCDDUL )
         Assert.True( w.GroupNumber = 0x1Fuy )
-        Assert.True( w.PrefetchLength = 0x00001122u )
+        Assert.True( w.PrefetchLength = blkcnt_me.ofUInt32 0x00001122u )
         Assert.True( w.Control = 0xBBuy )
 
     [<Fact>]
@@ -1270,7 +1270,7 @@ type ConvertToCDB_Test () =
         let w = cdb :?> PreFetchCDB
         Assert.True( w.OperationCode = 0x90uy )
         Assert.True( w.IMMED = true )
-        Assert.True( w.LogicalBlockAddress = 0xAABBCCDDAABBCCDDUL )
+        Assert.True( w.LogicalBlockAddress = blkcnt_me.ofUInt64 0xAABBCCDDAABBCCDDUL )
         Assert.True( w.GroupNumber = 0x1Fuy )
-        Assert.True( w.PrefetchLength = 0x11223344u )
+        Assert.True( w.PrefetchLength = blkcnt_me.ofUInt32 0x11223344u )
         Assert.True( w.Control = 0x33uy )

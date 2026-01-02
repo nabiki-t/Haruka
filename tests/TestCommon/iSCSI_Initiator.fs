@@ -1025,11 +1025,11 @@ type iSCSI_Initiator(
     /// <returns>
     ///  Return the loaded data.
     /// </returns>
-    member this.ReadMediaData ( cid : CID_T ) ( lun : LUN_T ) ( lba : uint32 ) ( blockCount : uint32 ) ( blockLength : uint32 ) : Task<byte[]> =
+    member this.ReadMediaData ( cid : CID_T ) ( lun : LUN_T ) ( lba : BLKCNT32_T ) ( blockCount : BLKCNT16_T ) ( blockLength : uint32 ) : Task<byte[]> =
         task {
-            let accessLength = blockCount * blockLength
+            let accessLength = ( blockCount |> blkcnt_me.toUInt16 |> uint32 ) * blockLength
             let rBuffer = Array.zeroCreate<byte>( int accessLength )
-            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F lba 0uy ( uint16 blockCount ) NACA.F LINK.F
+            let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F lba 0uy blockCount NACA.F LINK.F
             let! itt, _ = this.SendSCSICommandPDU cid BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK lun accessLength readCDB PooledBuffer.Empty 0u
 
             do! Functions.loopAsync ( fun () ->
@@ -1075,9 +1075,9 @@ type iSCSI_Initiator(
     /// <param name="bytesData">
     ///  Data to be written.
     /// </param>
-    member this.WriteMediaData ( cid : CID_T ) ( lun : LUN_T ) ( lba : uint32 ) ( blockLength : uint32 ) ( bytesData : byte[] ) : Task<unit> =
+    member this.WriteMediaData ( cid : CID_T ) ( lun : LUN_T ) ( lba : BLKCNT32_T ) ( blockLength : uint32 ) ( bytesData : byte[] ) : Task<unit> =
         task {
-            let blockCount = uint16 ( bytesData.Length / int blockLength )
+            let blockCount = uint16 ( bytesData.Length / int blockLength ) |> blkcnt_me.ofUInt16
             let mbl = m_SessParams.MaxBurstLength
             let mrdsl = m_Connections.[cid].Params.MaxRecvDataSegmentLength_T
             let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F lba 0uy blockCount NACA.F LINK.F

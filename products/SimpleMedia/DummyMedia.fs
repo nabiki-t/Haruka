@@ -93,7 +93,7 @@ type DummyMedia
         override _.Read
             ( initiatorTaskTag : ITT_T )
             ( source : CommandSourceInfo )
-            ( _ : uint64 )
+            ( _ : BLKCNT64_T )
             ( _ : ArraySegment<byte> )
             : Task<int> =
 
@@ -112,7 +112,7 @@ type DummyMedia
         override _.Write
             ( initiatorTaskTag : ITT_T )
             ( source : CommandSourceInfo )
-            ( _ : uint64 )
+            ( _ : BLKCNT64_T )
             ( _ : uint64 )
             ( _ : ArraySegment<byte> )
             : Task<int> =

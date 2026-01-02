@@ -178,11 +178,12 @@ type DebugMedia
         override this.Read
             ( initiatorTaskTag : ITT_T )
             ( source : CommandSourceInfo )
-            ( argLBA : uint64 )
+            ( argLBA : BLKCNT64_T )
             ( buffer : ArraySegment<byte> )
             : Task<int> =
 
             task {
+                let lbau64 = blkcnt_me.toUInt64 argLBA
                 let loginfo = struct ( m_ObjID, ValueSome( source ), ValueSome( initiatorTaskTag ), ValueSome( m_LUN ) )
                 if HLogger.IsVerbose then
                     HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "DebugMedia.Read." ) )
@@ -199,7 +200,7 @@ type DebugMedia
                 for itr in act do
                     match itr.Value.event with
                     | DebugEvent.Read( s, e ) ->
-                        if argLBA > e || ( argLBA + readBlockCount - 1UL ) < s then
+                        if lbau64 > e || ( lbau64 + readBlockCount - 1UL ) < s then
                             ()
                         else
                             do! this.DoAction source initiatorTaskTag "Read" itr.Value.action
@@ -214,7 +215,7 @@ type DebugMedia
         override this.Write
             ( initiatorTaskTag : ITT_T )
             ( source : CommandSourceInfo )
-            ( argLBA : uint64 )
+            ( argLBA : BLKCNT64_T )
             ( offset : uint64 )
             ( data : ArraySegment<byte> )
             : Task<int> =
@@ -224,7 +225,7 @@ type DebugMedia
                 if HLogger.IsVerbose then
                     HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "DebugMedia.Write." ) )
 
-                let writeStartLBA = argLBA + ( offset / Constants.MEDIA_BLOCK_SIZE )
+                let writeStartLBA = ( blkcnt_me.toUInt64 argLBA ) + ( offset / Constants.MEDIA_BLOCK_SIZE )
                 let writeBlockCount = 
                     let struct( d, r ) = Math.DivRem( uint64 data.Count, Constants.MEDIA_BLOCK_SIZE )
                     if r > 0UL then

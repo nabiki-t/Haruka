@@ -1942,34 +1942,44 @@ type Functions_Test () =
         Assert.True(( r = 0uy ))
 
     [<Fact>]
-    member _.CheckAccessRange_001() = Assert.True(( Functions.CheckAccessRange 0UL 0UL 0UL 1UL ))
+    member _.CheckAccessRange_001() =
+        Assert.True(( Functions.CheckAccessRange ( blkcnt_me.ofUInt64 0UL ) 0UL 0UL 1UL ))
 
     [<Fact>]
-    member _.CheckAccessRange_002() = Assert.True(( Functions.CheckAccessRange 0UL 0UL 10UL 10UL ))
+    member _.CheckAccessRange_002() =
+        Assert.True(( Functions.CheckAccessRange ( blkcnt_me.ofUInt64 0UL ) 0UL 10UL 10UL ))
 
     [<Fact>]
-    member _.CheckAccessRange_003() = Assert.True(( Functions.CheckAccessRange 0UL 100UL 10UL 10UL ))
+    member _.CheckAccessRange_003() =
+        Assert.True(( Functions.CheckAccessRange ( blkcnt_me.ofUInt64 0UL ) 100UL 10UL 10UL ))
 
     [<Fact>]
-    member _.CheckAccessRange_004() = Assert.False(( Functions.CheckAccessRange 0UL 101UL 10UL 10UL ))
+    member _.CheckAccessRange_004() =
+        Assert.False(( Functions.CheckAccessRange ( blkcnt_me.ofUInt64 0UL ) 101UL 10UL 10UL ))
 
     [<Fact>]
-    member _.CheckAccessRange_005() = Assert.True(( Functions.CheckAccessRange 9UL 10UL 10UL 10UL ))
+    member _.CheckAccessRange_005() =
+        Assert.True(( Functions.CheckAccessRange ( blkcnt_me.ofUInt64 9UL ) 10UL 10UL 10UL ))
 
     [<Fact>]
-    member _.CheckAccessRange_006() = Assert.False(( Functions.CheckAccessRange 9UL 11UL 10UL 10UL ))
+    member _.CheckAccessRange_006() =
+        Assert.False(( Functions.CheckAccessRange ( blkcnt_me.ofUInt64 9UL ) 11UL 10UL 10UL ))
 
     [<Fact>]
-    member _.CheckAccessRange_007() = Assert.True(( Functions.CheckAccessRange 10UL 0UL 10UL 10UL ))
+    member _.CheckAccessRange_007() =
+        Assert.True(( Functions.CheckAccessRange ( blkcnt_me.ofUInt64 10UL ) 0UL 10UL 10UL ))
 
     [<Fact>]
-    member _.CheckAccessRange_008() = Assert.False(( Functions.CheckAccessRange 10UL 1UL 10UL 10UL ))
+    member _.CheckAccessRange_008() =
+        Assert.False(( Functions.CheckAccessRange ( blkcnt_me.ofUInt64 10UL ) 1UL 10UL 10UL ))
 
     [<Fact>]
-    member _.CheckAccessRange_009() = Assert.True(( Functions.CheckAccessRange 0xFFFFFFFFFFFFFFFEUL 10UL 0xFFFFFFFFFFFFFFFFUL 10UL ))
+    member _.CheckAccessRange_009() =
+        Assert.True(( Functions.CheckAccessRange ( blkcnt_me.ofUInt64 0xFFFFFFFFFFFFFFFEUL ) 10UL 0xFFFFFFFFFFFFFFFFUL 10UL ))
 
     [<Fact>]
-    member _.CheckAccessRange_010() = Assert.False(( Functions.CheckAccessRange 0xFFFFFFFFFFFFFFFEUL 11UL 0xFFFFFFFFFFFFFFFFUL 10UL ))
+    member _.CheckAccessRange_010() =
+        Assert.False(( Functions.CheckAccessRange ( blkcnt_me.ofUInt64 0xFFFFFFFFFFFFFFFEUL ) 11UL 0xFFFFFFFFFFFFFFFFUL 10UL ))
 
     [<Fact>]
     member _.CompareMultiLevelKey_001() =
