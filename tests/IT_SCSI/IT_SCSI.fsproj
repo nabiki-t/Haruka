@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="TaskQueue.fs" />
+    <Compile Include="ACA.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
 
