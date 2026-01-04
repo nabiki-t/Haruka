@@ -194,6 +194,44 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
         }
 
     /// <summary>
+    ///  Send TMF request.
+    /// </summary>
+    /// <param name="argI">
+    ///  TaskManagementFunctionRequestPDU I field value.
+    /// </param>
+    /// <param name="argFunction">
+    ///  TaskManagementFunctionRequestPDU Function field value.
+    /// </param>
+    /// <param name="argLUN">
+    ///  TaskManagementFunctionRequestPDU LUN field value.
+    /// </param>
+    /// <param name="argReferencedTaskTag">
+    ///  TaskManagementFunctionRequestPDU ReferencedTaskTag field value.
+    /// </param>
+    /// <param name="argRefCmdSN">
+    ///  TaskManagementFunctionRequestPDU RefCmdSN field value.
+    ///  If ValueNone is specified, RefCmdSN is set to CmdSN value of this TMF command.
+    /// </param>
+    /// <param name="argExpDataSN">
+    ///  TaskManagementFunctionRequestPDU ExpDataSN field value.
+    /// </param>
+    /// <returns>
+    ///  Initiator task tag.
+    /// </returns>
+    member _.SendTaskManagementFunctionRequest
+            ( argI : BitI )
+            ( argFunction : TaskMgrReqCd )
+            ( argLUN : LUN_T )
+            ( argReferencedTaskTag : ITT_T )
+            ( argRefCmdSN : CMDSN_T voption )
+            ( argExpDataSN : DATASN_T ) : Task<ITT_T> =
+        task {
+            let! itt, _ = m_ISCIInitiator.SendTaskManagementFunctionRequestPDU m_CID argI argFunction argLUN argReferencedTaskTag argRefCmdSN argExpDataSN
+            m_RegistWaiter.Notify( itt, 0u )
+            return itt
+        }
+
+    /// <summary>
     ///  Send INQUIRY SCSI Command.
     /// </summary>
     /// <param name="att">
