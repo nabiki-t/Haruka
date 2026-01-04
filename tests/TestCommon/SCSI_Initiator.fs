@@ -768,20 +768,19 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
             ( att : TaskATTRCd )
             ( lun : LUN_T )
             ( argLBA : BLKCNT32_T )
-            ( argBlockSize : uint32 )
+            ( argBlockSize : Blocksize )
             ( argTransferLength : BLKCNT8_T )
             ( argNACA : NACA ) : Task<ITT_T> =
         task {
-            if argBlockSize <> 512u && argBlockSize <> 4096u then
-                raise <| TestException( "argBlockSize must be 512 or 4096." )
-            if ( uint64 argBlockSize ) * ( uint64 argTransferLength ) >= 0x100000000UL then
+            let wBlockSizse = Blocksize.toUInt32 argBlockSize
+            if ( uint64 wBlockSizse ) * ( uint64 argTransferLength ) >= 0x100000000UL then
                 raise <| TestException( "argBlockSize or argTransferLength is too large." )
             let cdb = GenScsiCDB.Read6 argLBA argTransferLength argNACA LINK.F
             let edtl =
                 if argTransferLength = blkcnt_me.zero8 then
-                    argBlockSize * 256u
+                    wBlockSizse * 256u
                 else
-                    ( argBlockSize * uint32 argTransferLength )
+                    ( wBlockSizse * uint32 argTransferLength )
             return! this.SendSCSICommand att lun cdb PooledBuffer.Empty edtl
         }
 
@@ -813,16 +812,15 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
             ( att : TaskATTRCd )
             ( lun : LUN_T )
             ( argLBA : BLKCNT32_T )
-            ( argBlockSize : uint32 )
+            ( argBlockSize : Blocksize )
             ( argTransferLength : BLKCNT16_T )
             ( argNACA : NACA ) : Task<ITT_T> =
         task {
-            if argBlockSize <> 512u && argBlockSize <> 4096u then
-                raise <| TestException( "argBlockSize must be 512 or 4096." )
-            if ( uint64 argBlockSize ) * ( uint64 argTransferLength ) >= 0x100000000UL then
+            let wBlockSizse = Blocksize.toUInt32 argBlockSize
+            if ( uint64 wBlockSizse ) * ( uint64 argTransferLength ) >= 0x100000000UL then
                 raise <| TestException( "argBlockSize or argTransferLength is too large." )
             let cdb = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F argLBA 0uy argTransferLength argNACA LINK.F
-            return! this.SendSCSICommand att lun cdb PooledBuffer.Empty ( argBlockSize * uint32 argTransferLength )
+            return! this.SendSCSICommand att lun cdb PooledBuffer.Empty ( wBlockSizse * uint32 argTransferLength )
         }
 
     /// <summary>
@@ -853,16 +851,15 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
             ( att : TaskATTRCd )
             ( lun : LUN_T )
             ( argLBA : BLKCNT32_T )
-            ( argBlockSize : uint32 )
+            ( argBlockSize : Blocksize )
             ( argTransferLength : BLKCNT32_T )
             ( argNACA : NACA ) : Task<ITT_T> =
         task {
-            if argBlockSize <> 512u && argBlockSize <> 4096u then
-                raise <| TestException( "argBlockSize must be 512 or 4096." )
-            if ( uint64 argBlockSize ) * ( uint64 argTransferLength ) >= 0x100000000UL then
+            let wBlockSizse = Blocksize.toUInt32 argBlockSize
+            if ( uint64 wBlockSizse ) * ( uint64 argTransferLength ) >= 0x100000000UL then
                 raise <| TestException( "argBlockSize or argTransferLength is too large." )
             let cdb = GenScsiCDB.Read12 0uy DPO.F FUA.F FUA_NV.F argLBA 0uy argTransferLength argNACA LINK.F
-            let edlt = argBlockSize * ( argTransferLength |> blkcnt_me.toUInt32 )
+            let edlt = wBlockSizse * ( argTransferLength |> blkcnt_me.toUInt32 )
             return! this.SendSCSICommand att lun cdb PooledBuffer.Empty edlt
         }
 
@@ -894,16 +891,15 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
             ( att : TaskATTRCd )
             ( lun : LUN_T )
             ( argLBA : BLKCNT64_T )
-            ( argBlockSize : uint32 )
+            ( argBlockSize : Blocksize )
             ( argTransferLength : BLKCNT32_T )
             ( argNACA : NACA ) : Task<ITT_T> =
         task {
-            if argBlockSize <> 512u && argBlockSize <> 4096u then
-                raise <| TestException( "argBlockSize must be 512 or 4096." )
-            if ( uint64 argBlockSize ) * ( uint64 argTransferLength ) >= 0x100000000UL then
+            let wBlockSizse = Blocksize.toUInt32 argBlockSize
+            if ( uint64 wBlockSizse ) * ( uint64 argTransferLength ) >= 0x100000000UL then
                 raise <| TestException( "argBlockSize or argTransferLength is too large." )
             let cdb = GenScsiCDB.Read16 0uy DPO.F FUA.F FUA_NV.F argLBA 0uy argTransferLength argNACA LINK.F
-            let edlt = argBlockSize * ( argTransferLength |> blkcnt_me.toUInt32 )
+            let edlt = wBlockSizse * ( argTransferLength |> blkcnt_me.toUInt32 )
             return! this.SendSCSICommand att lun cdb PooledBuffer.Empty edlt
         }
 
@@ -1051,20 +1047,19 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
             ( att : TaskATTRCd )
             ( lun : LUN_T )
             ( argLBA : BLKCNT32_T )
-            ( argBlockSize : uint32 )
+            ( argBlockSize : Blocksize )
             ( argOutputData : PooledBuffer )
             ( argNACA : NACA ) : Task<ITT_T> =
         task {
-            if argBlockSize <> 512u && argBlockSize <> 4096u then
-                raise <| TestException( "argBlockSize must be 512 or 4096." )
+            let wBlockSizse = Blocksize.toUInt32 argBlockSize
             if argOutputData.Length = 0 then
                 raise <| TestException( "The Write(6) command cannot transfer 0 bytes of data." )
-            let transferLength = argOutputData.uLength / argBlockSize
-            if transferLength * argBlockSize <> argOutputData.uLength then
+            let transferLength = argOutputData.uLength / wBlockSizse
+            if transferLength * wBlockSizse <> argOutputData.uLength then
                 raise <| TestException( "Data length is not a multiple of block length." )
             if transferLength > 256u then
                 raise <| TestException( "Output data length is too long" )
-            if ( uint64 argBlockSize ) * ( uint64 transferLength ) >= 0x100000000UL then
+            if ( uint64 wBlockSizse ) * ( uint64 transferLength ) >= 0x100000000UL then
                 raise <| TestException( "argBlockSize or output data is too large." )
             let btl =
                 if transferLength = 256u then
@@ -1105,18 +1100,17 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
             ( att : TaskATTRCd )
             ( lun : LUN_T )
             ( argLBA : BLKCNT32_T )
-            ( argBlockSize : uint32 )
+            ( argBlockSize : Blocksize )
             ( argOutputData : PooledBuffer )
             ( argNACA : NACA ) : Task<ITT_T> =
         task {
-            if argBlockSize <> 512u && argBlockSize <> 4096u then
-                raise <| TestException( "argBlockSize must be 512 or 4096." )
-            let transferLength = argOutputData.uLength / argBlockSize
-            if transferLength * argBlockSize <> argOutputData.uLength then
+            let wBlockSizse = Blocksize.toUInt32 argBlockSize
+            let transferLength = argOutputData.uLength / wBlockSizse
+            if transferLength * wBlockSizse <> argOutputData.uLength then
                 raise <| TestException( "Data length is not a multiple of block length." )
             if transferLength > 0xFFFFu then
                 raise <| TestException( "Output data length is too long" )
-            if ( uint64 argBlockSize ) * ( uint64 transferLength ) >= 0x100000000UL then
+            if ( uint64 wBlockSizse ) * ( uint64 transferLength ) >= 0x100000000UL then
                 raise <| TestException( "argBlockSize or output data is too large." )
             let trBlockCnt =
                 transferLength
@@ -1154,16 +1148,15 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
             ( att : TaskATTRCd )
             ( lun : LUN_T )
             ( argLBA : BLKCNT32_T )
-            ( argBlockSize : uint32 )
+            ( argBlockSize : Blocksize )
             ( argOutputData : PooledBuffer )
             ( argNACA : NACA ) : Task<ITT_T> =
         task {
-            if argBlockSize <> 512u && argBlockSize <> 4096u then
-                raise <| TestException( "argBlockSize must be 512 or 4096." )
-            let transferLength = argOutputData.uLength / argBlockSize
-            if transferLength * argBlockSize <> argOutputData.uLength then
+            let wBlockSizse = Blocksize.toUInt32 argBlockSize
+            let transferLength = argOutputData.uLength / wBlockSizse
+            if transferLength * wBlockSizse <> argOutputData.uLength then
                 raise <| TestException( "Data length is not a multiple of block length." )
-            if ( uint64 argBlockSize ) * ( uint64 transferLength ) >= 0x100000000UL then
+            if ( uint64 wBlockSizse ) * ( uint64 transferLength ) >= 0x100000000UL then
                 raise <| TestException( "argBlockSize or output data is too large." )
             let trBlockCnt =
                 transferLength
@@ -1200,16 +1193,15 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
             ( att : TaskATTRCd )
             ( lun : LUN_T )
             ( argLBA : BLKCNT64_T )
-            ( argBlockSize : uint32 )
+            ( argBlockSize : Blocksize )
             ( argOutputData : PooledBuffer )
             ( argNACA : NACA ) : Task<ITT_T> =
         task {
-            if argBlockSize <> 512u && argBlockSize <> 4096u then
-                raise <| TestException( "argBlockSize must be 512 or 4096." )
-            let transferLength = argOutputData.uLength / argBlockSize
-            if transferLength * argBlockSize <> argOutputData.uLength then
+            let wBlockSizse = Blocksize.toUInt32 argBlockSize
+            let transferLength = argOutputData.uLength / wBlockSizse
+            if transferLength * wBlockSizse <> argOutputData.uLength then
                 raise <| TestException( "Data length is not a multiple of block length." )
-            if ( uint64 argBlockSize ) * ( uint64 transferLength ) >= 0x100000000UL then
+            if ( uint64 wBlockSizse ) * ( uint64 transferLength ) >= 0x100000000UL then
                 raise <| TestException( "argBlockSize or output data is too large." )
             let trBlockCnt =
                 transferLength
