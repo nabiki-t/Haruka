@@ -261,7 +261,7 @@ type IscsiTaskOnePDUCommand
         let pdu = m_Request :?> TaskManagementFunctionRequestPDU
 
         // Abort iSCSI tasks that match Referenced Task Tag
-        m_Session.AbortTask ( fun itrTask ->
+        m_Session.Abort_iSCSITask ( fun itrTask ->
             ( Functions.IsSame itrTask this |> not ) &&
             ( ValueOption.contains pdu.ReferencedTaskTag itrTask.InitiatorTaskTag )
         )
@@ -279,7 +279,7 @@ type IscsiTaskOnePDUCommand
         let pdu = m_Request :?> TaskManagementFunctionRequestPDU
 
         // Aborts all tasks sent to the specified LU.
-        m_Session.AbortTask ( fun itrTask ->
+        m_Session.Abort_iSCSITask ( fun itrTask ->
             ( Functions.IsSame itrTask this |> not ) &&
             ( ValueOption.contains pdu.LUN itrTask.LUN )
         )
@@ -296,7 +296,7 @@ type IscsiTaskOnePDUCommand
         let pdu = m_Request :?> TaskManagementFunctionRequestPDU
 
         // Aborts all SCSI tasks with the ACA attribute sent to the specified LU.
-        m_Session.AbortTask (
+        m_Session.Abort_iSCSITask (
             function
             | :? IscsiTaskScsiCommand as scsiTask ->
                 scsiTask.SCSICommandPDU
@@ -317,7 +317,7 @@ type IscsiTaskOnePDUCommand
         let pdu = m_Request :?> TaskManagementFunctionRequestPDU
 
         // Aborts all tasks sent to the specified LU.
-        m_Session.AbortTask ( fun itrTask ->
+        m_Session.Abort_iSCSITask ( fun itrTask ->
             ( Functions.IsSame itrTask this |> not ) &&
             ( ValueOption.contains pdu.LUN itrTask.LUN )
         )
@@ -334,7 +334,7 @@ type IscsiTaskOnePDUCommand
         let pdu = m_Request :?> TaskManagementFunctionRequestPDU
 
         // Aborts all tasks sent to the specified LU.
-        m_Session.AbortTask ( fun itrTask ->
+        m_Session.Abort_iSCSITask ( fun itrTask ->
             ( Functions.IsSame itrTask this |> not ) &&
             ( ValueOption.contains pdu.LUN itrTask.LUN )
         )
@@ -354,7 +354,7 @@ type IscsiTaskOnePDUCommand
         let pdu = m_Request :?> TaskManagementFunctionRequestPDU
 
         // Aborts all tasks sent to the all LU.
-        m_Session.AbortTask ( fun itrTask ->
+        m_Session.Abort_iSCSITask ( fun itrTask ->
             ( Functions.IsSame itrTask this |> not )
         )
         |> ignore

@@ -524,7 +524,7 @@ type IscsiTaskOnePDUCommand_Test () =
                 false
             ) :> IIscsiTask
 
-        sessStub.p_AbortTask <- ( fun f ->
+        sessStub.p_Abort_iSCSITask <- ( fun f ->
             cnt3 <- cnt3 + 1
             Assert.False(( f iscsitask ))
 
@@ -580,7 +580,7 @@ type IscsiTaskOnePDUCommand_Test () =
                 false
             ) :> IIscsiTask
 
-        sessStub.p_AbortTask <- ( fun f ->
+        sessStub.p_Abort_iSCSITask <- ( fun f ->
             cnt3 <- cnt3 + 1
             Assert.False(( f iscsitask ))
 
@@ -635,7 +635,7 @@ type IscsiTaskOnePDUCommand_Test () =
                 false
             ) :> IIscsiTask
 
-        sessStub.p_AbortTask <- ( fun f ->
+        sessStub.p_Abort_iSCSITask <- ( fun f ->
             cnt3 <- cnt3 + 1
             Assert.False(( f iscsitask ))
 
@@ -739,7 +739,7 @@ type IscsiTaskOnePDUCommand_Test () =
                 false
             ) :> IIscsiTask
 
-        sessStub.p_AbortTask <- ( fun f ->
+        sessStub.p_Abort_iSCSITask <- ( fun f ->
             cnt3 <- cnt3 + 1
             Assert.False(( f iscsitask ))
 
@@ -794,7 +794,7 @@ type IscsiTaskOnePDUCommand_Test () =
                 false
             ) :> IIscsiTask
 
-        sessStub.p_AbortTask <- ( fun f ->
+        sessStub.p_Abort_iSCSITask <- ( fun f ->
             cnt3 <- cnt3 + 1
             Assert.False(( f iscsitask ))
 
@@ -849,7 +849,7 @@ type IscsiTaskOnePDUCommand_Test () =
                 false
             ) :> IIscsiTask
 
-        sessStub.p_AbortTask <- ( fun f ->
+        sessStub.p_Abort_iSCSITask <- ( fun f ->
             cnt3 <- cnt3 + 1
             Assert.False(( f iscsitask ))
 
@@ -904,7 +904,7 @@ type IscsiTaskOnePDUCommand_Test () =
                 false
             ) :> IIscsiTask
 
-        sessStub.p_AbortTask <- ( fun f ->
+        sessStub.p_Abort_iSCSITask <- ( fun f ->
             cnt3 <- cnt3 + 1
             Assert.False(( f iscsitask ))
 

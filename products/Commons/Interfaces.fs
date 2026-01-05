@@ -1517,7 +1517,7 @@ type ISession =
     /// <returns>
     ///   True if any task was aborted; otherwise, false.
     /// </returns>
-    abstract AbortTask :
+    abstract Abort_iSCSITask :
             f:( IIscsiTask -> bool ) ->
             bool
 

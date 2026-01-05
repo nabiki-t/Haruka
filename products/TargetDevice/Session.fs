@@ -699,8 +699,8 @@ type Session
 
         // ------------------------------------------------------------------------
         // Abort iSCSI tasks that match the specified criteria.
-        override this.AbortTask ( f : ( IIscsiTask -> bool ) ) : bool =
-            HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( m_ObjID, "Session.AbortTask" ) )
+        override this.Abort_iSCSITask ( f : ( IIscsiTask -> bool ) ) : bool =
+            HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( m_ObjID, "Session.Abort_iSCSITask" ) )
 
             let updater ( oldQ : ProcessWaitQueue ) : struct( ProcessWaitQueue * bool ) =
                 let q, r = 

@@ -247,7 +247,7 @@ type public CSession_Stub() =
     let mutable f_ResendPDUForRSnack : ( CID_T -> CONCNT_T -> ILogicalPDU -> unit ) option = None
     let mutable f_NoticeUpdateSessionParameter : ( IscsiNegoParamSW -> unit ) option = None
     let mutable f_NoticeUnlockResponseFence : ( ResponseFenceNeedsFlag -> unit ) option = None
-    let mutable f_AbortTask : ( ( IIscsiTask -> bool ) -> bool ) option = None
+    let mutable f_Abort_iSCSITask : ( ( IIscsiTask -> bool ) -> bool ) option = None
 
     member val dummy : obj = box () with get, set
     member _.p_Terminate with set v = f_Terminate <- Some( v )
@@ -275,7 +275,7 @@ type public CSession_Stub() =
     member _.p_ResendPDUForRSnack with set v = f_ResendPDUForRSnack <- Some( v )
     member _.p_NoticeUpdateSessionParameter with set v = f_NoticeUpdateSessionParameter <- Some( v )
     member _.p_NoticeUnlockResponseFence with set v = f_NoticeUnlockResponseFence <- Some( v )
-    member _.p_AbortTask with set v = f_AbortTask <- Some( v )
+    member _.p_Abort_iSCSITask with set v = f_Abort_iSCSITask <- Some( v )
 
     interface ISession with
         override _.Terminate () =
@@ -353,8 +353,8 @@ type public CSession_Stub() =
             f_NoticeUpdateSessionParameter.Value argSWParams
         override _.NoticeUnlockResponseFence ( mode : ResponseFenceNeedsFlag ) : unit =
             f_NoticeUnlockResponseFence.Value mode
-        override _.AbortTask ( f : ( IIscsiTask -> bool ) ) : bool =
-            f_AbortTask.Value f
+        override _.Abort_iSCSITask ( f : ( IIscsiTask -> bool ) ) : bool =
+            f_Abort_iSCSITask.Value f
 
 /// <summary>
 ///  Default stub class for IProtocolService.

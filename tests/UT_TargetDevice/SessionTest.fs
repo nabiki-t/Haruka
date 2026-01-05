@@ -6687,7 +6687,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         GlbFunc.ClosePorts [| sp; cp; |]
 
     [<Fact>]
-    member _.AbortTask_001() =
+    member _.Abort_iSCSITask_001() =
         let sess, pc, killer, smStub, luStub, sp, cp =
             Session_Test.CreateDefaultSessionObject
                 Session_Test.defaultSessionParam
@@ -6696,7 +6696,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
                 cmdsn_me.zero
                 ( itt_me.fromPrim 0u )
                 false
-        let r = sess.AbortTask ( fun _ ->
+        let r = sess.Abort_iSCSITask ( fun _ ->
             Assert.Fail __LINE__
             false
         )
@@ -6706,7 +6706,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         GlbFunc.ClosePorts [| sp; cp; |]
 
     [<Fact>]
-    member _.AbortTask_002() =
+    member _.Abort_iSCSITask_002() =
         let sess, pc, killer, smStub, luStub, sp, cp =
             Session_Test.CreateDefaultSessionObject
                 Session_Test.defaultSessionParam
@@ -6734,7 +6734,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let cnt1 = ( Session_Test.GetWaitingQueue pc ).Count
         Assert.True(( 1 = cnt1 ))
 
-        let r = sess.AbortTask ( fun t ->
+        let r = sess.Abort_iSCSITask ( fun t ->
             Assert.True(( t.InitiatorTaskTag = ValueSome( itt_me.fromPrim 1u ) ))
             Assert.True(( t.TaskType = iSCSITaskType.SCSICommand ))
             false
@@ -6748,7 +6748,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         GlbFunc.ClosePorts [| sp; cp; |]
 
     [<Fact>]
-    member _.AbortTask_003() =
+    member _.Abort_iSCSITask_003() =
         let sess, pc, killer, smStub, luStub, sp, cp =
             Session_Test.CreateDefaultSessionObject
                 Session_Test.defaultSessionParam
@@ -6784,7 +6784,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let cnt1 = ( Session_Test.GetWaitingQueue pc ).Count
         Assert.True(( 2 = cnt1 ))
 
-        let r = sess.AbortTask ( fun t ->
+        let r = sess.Abort_iSCSITask ( fun t ->
             cnt <- cnt + 1
             if cnt = 1 then
                 Assert.True(( t.InitiatorTaskTag = ValueSome( itt_me.fromPrim 1u ) ))
@@ -6813,7 +6813,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         GlbFunc.ClosePorts [| sp; cp; |]
 
     [<Fact>]
-    member _.AbortTask_004() =
+    member _.Abort_iSCSITask_004() =
         let sess, pc, killer, smStub, luStub, sp, cp =
             Session_Test.CreateDefaultSessionObject
                 Session_Test.defaultSessionParam
@@ -6849,7 +6849,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let cnt1 = ( Session_Test.GetWaitingQueue pc ).Count
         Assert.True(( 2 = cnt1 ))
 
-        let r = sess.AbortTask ( fun t ->
+        let r = sess.Abort_iSCSITask ( fun t ->
             cnt <- cnt + 1
             if cnt = 1 then
                 Assert.True(( t.InitiatorTaskTag = ValueSome( itt_me.fromPrim 1u ) ))
@@ -6868,7 +6868,4 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
 
         sess.DestroySession()
         GlbFunc.ClosePorts [| sp; cp; |]
-
-
-
 
