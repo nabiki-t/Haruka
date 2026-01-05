@@ -142,7 +142,7 @@ type TaskRouter
             let cmdSource = this.GetCommandSourceObject cid counter
             let itt = iScsiTask.InitiatorTaskTag
             if HLogger.IsVerbose then
-                HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( m_ObjID, ValueSome cmdSource, itt, ValueSome lun, "TaskRouter.AbortTaskSet." ) )
+                HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( m_ObjID, ValueSome cmdSource, itt, ValueSome lun, "TaskRouter.ClearACA." ) )
 
             let lu = this.GetLU lun cmdSource itt
             lu.ClearACA cmdSource itt.Value
