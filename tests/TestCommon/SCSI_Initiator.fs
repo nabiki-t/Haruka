@@ -91,10 +91,29 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// A collection object for accumulating input data received until the command is completed.
     let m_InBuffer = OptimisticLock( ImmutableDictionary< ITT_T, SCSIDataInPDU list >.Empty )
 
+    /// Set to True if a request to stop PDU reception processing is made.
     let mutable m_ExitFlg = false
 
     do
         Functions.StartTask this.Receiver
+
+    //=========================================================================
+    // property
+
+    /// CID of the connection.
+    member _.CID = m_CID
+
+    /// TSIH value.
+    member _.TSIH = m_TSIH
+
+    /// Other Session Parameters 
+    member _.SessionParams = m_ISCIInitiator.Params
+
+    /// Other Connection Parameters
+    member _.ConnectionParams = ( m_ISCIInitiator.Connection m_CID ).Params
+
+    //=========================================================================
+    // Static method
 
     /// <summary>
     ///  Connect to the target.
@@ -114,6 +133,9 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
             return SCSI_Initiator( iit )
         }
 
+    //=========================================================================
+    // Public method
+
     /// <summary>
     ///  Stop PDU reception processing.
     /// </summary>
@@ -121,9 +143,10 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
         task {
             if not( Volatile.Read &m_ExitFlg ) then
                 Volatile.Write( &m_ExitFlg, true )
-                let! itt, _ = m_ISCIInitiator.SendNOPOutPDU m_CID BitI.T lun_me.zero ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty
+                let sendData = PooledBuffer.Rent [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]
+                let! itt, _ = m_ISCIInitiator.SendNOPOutPDU m_CID BitI.T lun_me.zero ( ttt_me.fromPrim 0xFFFFFFFFu ) sendData
                 let! _ = m_ReceiveWaiter.WaitAndReset itt
-                ()
+                sendData.Return()
         }
 
     /// <summary>
@@ -1279,6 +1302,15 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
         }
 
     /// <summary>
+    ///  Send Nop-Out PDU.
+    /// </summary>
+    member _.Send_NotOut() : Task =
+        task {
+            let! _ = m_ISCIInitiator.SendNOPOutPDU m_CID BitI.T lun_me.zero ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty
+            ()
+        }
+
+    /// <summary>
     ///  Waits for a response.
     /// </summary>
     /// <param name="itt">
@@ -1685,10 +1717,13 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
             do! m_ISCIInitiator.CloseSession m_CID BitI.T
         }
 
+    //=========================================================================
+    // Private method
+
     /// <summary>
     ///  Perform PDU reception processing.
     /// </summary>
-    member this.Receiver() : Task =
+    member private this.Receiver() : Task =
         let loop() =
             task {
                 try
@@ -1707,7 +1742,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
                         return! this.Receive_R2TPDU x
 
                     | :? NOPInPDU as x ->
-                        if Volatile.Read &m_ExitFlg then
+                        if Volatile.Read &m_ExitFlg && ( PooledBuffer.ValueEqualsWithArray x.PingData [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy;|] ) then
                             m_ReceiveWaiter.Notify( x.InitiatorTaskTag, TaskResult.NOP )
                             return false
                         else

@@ -13,6 +13,10 @@ namespace Haruka.Test.IT.SCSI
 
 open System
 open System.IO
+open System.Text
+open System.Text.RegularExpressions
+open System.Threading
+open System.Threading.Tasks
 
 open Xunit
 
@@ -41,6 +45,7 @@ type SCSI_ACACases_Fixture() =
         // Target device, Target group
         client.RunCommand "create" "Created" "CR> "
         client.RunCommand "select 0" "" "TD> "
+        client.RunCommand "set loglevel VERBOSE" "" "TD> "
         client.RunCommand "create targetgroup" "Created" "TD> "
         client.RunCommand ( sprintf "create networkportal /a ::1 /p %d" m_iSCSIPortNo ) "Created" "TD> "
         client.RunCommand "select 0" "" "TG> "
@@ -132,6 +137,22 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
         MaxRecvDataSegmentLength_I = Constants.NEGOPARAM_DEF_MaxRecvDataSegmentLength;
         MaxRecvDataSegmentLength_T = Constants.NEGOPARAM_DEF_MaxRecvDataSegmentLength;
     }
+
+    // Get a list of tasks that are stalled by the debug media wait action.
+    let GetStuckTasks() : ( string * TSIH_T * ITT_T ) array =
+        let rx = Regex( "^ *([^ ]*) *\( *TSIH *= *([0-9]*) *, *ITT *= *([0-9]*) *\) *$" )
+        m_ClientProc.RunCommandGetResp "task list" "MD> "
+        |> Array.choose( fun itr ->
+            let m = rx.Match itr
+            if not m.Success then
+                None
+            else
+                let method = m.Groups.[1].Value |> _.ToUpperInvariant()
+                let tsih = m.Groups.[2].Value |> UInt16.Parse |> tsih_me.fromPrim
+                let itt = m.Groups.[3].Value |> UInt32.Parse |> itt_me.fromPrim
+                Some( method, tsih, itt )
+        )
+
 
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
@@ -232,4 +253,115 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             Assert.True(( result2 = TaskMgrResCd.FUNCTION_COMPLETE ))
 
             do! r.Close()
+        }
+        
+    /// When an ACA occurs, running tasks from all initiator ports will continue to run to completion 
+    /// (Haruka does not support the function to make them blocking tasks).
+    /// When an ACA occurs, dormant tasks from all initiator ports will remain dormant state.
+    /// See SAM-2 5.9.1.2 and 7.7.2
+    [<Fact>]
+    member _.ModeParameter_Qerr_TST_Behavior_001() =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
+            let writeData2 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
+            let writeData3 =
+                let v = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
+                Random.Shared.NextBytes( v.ArraySegment.AsSpan() )
+                v
+            let writeData4 =
+                let v = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
+                Random.Shared.NextBytes( v.ArraySegment.AsSpan() )
+                v
+
+            // Check mode parameter value
+            let! itt_msense = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK g_LUN1 LLBAA.T DBD.F 0uy 0x0Auy 0x00uy 256us NACA.T
+            let! res_msense = r1.Wait_ModeSense10 itt_msense
+            Assert.True(( res_msense.Control.IsSome ))
+            Assert.True(( res_msense.Control.Value.QueueErrorManagement = 0uy ))
+            Assert.True(( res_msense.Control.Value.TaskSetType = 0uy ))
+
+            // Add debug media trap
+            m_ClientProc.RunCommand "add trap /e Write /a Wait" "Trap added" "MD> "
+            m_ClientProc.RunCommand "add trap /e Write /slba 3 /elba 3 /a ACA" "Trap added" "MD> "
+
+            // Write request 1 at session 1 ( it raise ACA )
+            let! itt_s1_w1 = r1.Send_Write10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 ( blkcnt_me.ofUInt32 3u ) m_MediaBlockSize writeData1 NACA.T
+
+            // Confirm that above task is stuck.
+            do! Task.Delay 10
+            while ( ( GetStuckTasks() ).Length < 1 ) do
+                do! Task.Delay 10
+
+            // Read request 1 at session 1 ( Enters a dormant task state )
+            let! itt_s1_r1 = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+
+            // Read request 2 at session 2 ( Enters a dormant task state )
+            let! itt_s2_r2 = r2.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 1u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+
+            // Just in case, wait until the simple task is queued
+            do! Task.Delay 100
+
+            // Write request 3 at session 1 ( Overtake SIMPLE tasks )
+            let! itt_s1_w3 = r1.Send_Write10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize writeData3 NACA.T
+
+            // Write request 4 at session 2 ( Overtake SIMPLE tasks )
+            let! itt_s2_w4 = r2.Send_Write10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 ( blkcnt_me.ofUInt32 1u ) m_MediaBlockSize writeData4 NACA.T
+
+            // Confirm that 3 tasks are stuck
+            do! Task.Delay 10
+            while ( ( GetStuckTasks() ).Length < 3 ) do
+                do! Task.Delay 10
+            let tasklist1 = GetStuckTasks()
+            Assert.True(( tasklist1.Length = 3 ))
+            Assert.True(( Array.exists( (=) ( "WRITE", r1.TSIH, itt_s1_w1 ) ) tasklist1 ))
+            Assert.True(( Array.exists( (=) ( "WRITE", r1.TSIH, itt_s1_w3 ) ) tasklist1 ))
+            Assert.True(( Array.exists( (=) ( "WRITE", r2.TSIH, itt_s2_w4 ) ) tasklist1 ))
+
+            // Resume write request 1, which should have failed.
+            // Read requests 1 and 2 should be able to be executed once the previously submitted Head of Queue task ( write request 1 ) is completed, 
+            // but because that task failed, they cannot be resumed.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_s1_w1 ) "Task(" "MD> "
+
+            // Check result the write request 1.
+            let! res_s1_w1 = r1.WaitSCSIResponse itt_s1_w1
+            Assert.True(( res_s1_w1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // Send acknowledgement.
+            do! r1.Send_NotOut()
+
+            // Resume write requests 3 and 4. They should complete successfully.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_s1_w3 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r2.TSIH itt_s2_w4 ) "Task(" "MD> "
+
+            // Check result the write request 3 and 4.
+            let! _ = r1.WaitSCSIResponseGoogStatus itt_s1_w3
+            let! _ = r2.WaitSCSIResponseGoogStatus itt_s2_w4
+
+            // There should be no stuck tasks.
+            Assert.True(( ( GetStuckTasks() ).Length = 0 ))
+
+            // Clear ACA. This resumes Read requests 1 and 2, which were in a paused state.
+            let! itt2 = r1.SendTaskManagementFunctionRequest BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 ( itt_me.fromPrim 0xFFFFFFFFu ) ( ValueSome cmdsn_me.zero ) datasn_me.zero
+            let! result2 = r1.WaitTMFResponse itt2
+            Assert.True(( result2 = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            do! r1.Send_NotOut()
+
+            // Receive the results of read requests 1 and 2.
+            let! res_s1_r1 = r1.WaitSCSIResponseGoogStatus itt_s1_r1
+            let! res_s2_r2 = r2.WaitSCSIResponseGoogStatus itt_s2_r2
+
+            // Verify that the write data has been read by Write requests 3 and 4, which were executed earlier.
+            Assert.True(( PooledBuffer.ValueEquals res_s1_r1 writeData3 ))
+            Assert.True(( PooledBuffer.ValueEquals res_s2_r2 writeData4 ))
+
+            // Clear debug media traps
+            m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
+
+            do! r1.Close()
+            do! r2.Close()
+            writeData1.Return()
+            writeData2.Return()
         }

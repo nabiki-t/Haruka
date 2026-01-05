@@ -210,10 +210,12 @@ type BlockDeviceLU
                                 builder.Add itr
 
                         // Replace the contents of the task queue
-                        m_TaskSet <- {
-                            oldTaskSet with
-                                Queue = builder.DrainToImmutable()
-                        }
+                        m_TaskSet <-
+                            {
+                                oldTaskSet with
+                                    Queue = builder.DrainToImmutable()
+                            }
+                            |> this.StartExecutableSCSITasks
 
                         // return response
                         source.ProtocolService.SendOtherResponse source.CID source.ConCounter {
@@ -260,10 +262,12 @@ type BlockDeviceLU
                                 builder.Add itr
 
                         // Replace the contents of the task queue
-                        m_TaskSet <- {
-                            oldTaskSet with
-                                Queue = builder.DrainToImmutable()
-                        }
+                        m_TaskSet <-
+                            {
+                                oldTaskSet with
+                                    Queue = builder.DrainToImmutable()
+                            }
+                            |> this.StartExecutableSCSITasks
 
                         // return response
                         source.ProtocolService.SendOtherResponse source.CID source.ConCounter {
@@ -309,16 +313,18 @@ type BlockDeviceLU
                                 builder.Add itr
 
                         // Replace the contents of the task queue
-                        m_TaskSet <- {
-                            Queue = builder.DrainToImmutable()
-                            ACA =
-                                // Clear ACA status
-                                match oldTaskSet.ACA with
-                                | ValueSome( itn, _ ) when ITNexus.Equals( itn, source.I_TNexus ) ->
-                                    ValueNone
-                                | _ ->
-                                    oldTaskSet.ACA
-                        }
+                        m_TaskSet <-
+                            {
+                                Queue = builder.DrainToImmutable()
+                                ACA =
+                                    // Clear ACA status
+                                    match oldTaskSet.ACA with
+                                    | ValueSome( itn, _ ) when ITNexus.Equals( itn, source.I_TNexus ) ->
+                                        ValueNone
+                                    | _ ->
+                                        oldTaskSet.ACA
+                            }
+                            |> this.StartExecutableSCSITasks
 
                         // return response
                         source.ProtocolService.SendOtherResponse source.CID source.ConCounter {
@@ -711,6 +717,11 @@ type BlockDeviceLU
                 oldTaskSet with
                     Queue = builder.DrainToImmutable()
             }
+
+            // At the end of the task that called this method, the "StartExecutableSCSITasks" method is executed
+            // in the "NotifyTerminateTask" or "NotifyTerminateTaskWithException" method.
+            // Therefore, there is no need to call the StartExecutableSCSITasks method within this function.
+
 
         // ------------------------------------------------------------------------
         //  Notification of number of bytes read to calculate usage statistics.

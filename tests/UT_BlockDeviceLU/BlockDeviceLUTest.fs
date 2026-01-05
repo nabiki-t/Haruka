@@ -466,6 +466,67 @@ type BlockDeviceLU_Test () =
         Assert.True(( m_TaskSet.Queue.Length = 0 ))
 
     [<Fact>]
+    member this.AbortTask_007() =
+        let mutable cnt1 = 0
+        let mutable cnt2 = 0
+        let media, sm, lu = this.createBlockDevice()
+        let source = BlockDeviceLU_Test.cmdSource()
+        let pc = new PrivateCaller( lu )
+        let sema1 = new SemaphoreSlim( 0 )
+        let sema2 = new SemaphoreSlim( 0 )
+
+        ( source.ProtocolService :?> CProtocolService_Stub ).p_SendOtherResponse <- ( fun source cnd pdu lun ->
+            Assert.True(( pdu.Opcode = OpcodeCd.SCSI_TASK_MGR_RES ))
+            let tmpdu = pdu :?> TaskManagementFunctionResponsePDU
+            Assert.True(( source = cid_me.fromPrim 0us ))
+            Assert.True(( cnd = concnt_me.fromPrim 0 ))
+            Assert.True(( tmpdu.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
+            Assert.True(( tmpdu.InitiatorTaskTag = itt_me.fromPrim 0u ))
+            Assert.True(( lun = lun_me.zero ))
+            cnt1 <- cnt1 + 1
+            sema1.Release() |> ignore
+        )
+
+        let testTasks1 = [|
+            TaskStatus.TASK_STAT_Dormant(
+                new CBlockDeviceTask_Stub(
+                    p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
+                    p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 5u ),
+                    p_GetSource = ( fun () -> source ),
+                    p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK ),
+                    p_Execute = ( fun () () ->
+                        task {
+                            cnt2 <- cnt2 + 1
+                            sema2.Release() |> ignore
+                        }
+                    ),
+                    p_GetCDB = ( fun () ->
+                        let c : InquiryCDB = {
+                            OperationCode = 0x12uy;
+                            EVPD = false;
+                            PageCode = 0uy;
+                            AllocationLength = 0us;
+                            Control = 0uy;
+                        }
+                        ValueSome( c )
+                    )
+                )
+            )
+        |]
+        let queue1 = {
+            Queue = testTasks1.ToImmutableArray();
+            ACA = ValueNone;
+        }
+        pc.SetField( "m_TaskSet", queue1 )
+
+        ( lu :> ILU ).AbortTask source ( itt_me.fromPrim 0u ) ( itt_me.fromPrim 99u )
+
+        Assert.True(( sema1.Wait 100000 ))
+        Assert.True(( sema2.Wait 100000 ))
+        Assert.True(( cnt1 = 1 ))
+        Assert.True(( cnt2 = 1 ))
+
+    [<Fact>]
     member this.AbortTaskSet_001() =
         let mutable cnt = 0
         let media, sm, lu = this.createBlockDevice()
@@ -804,6 +865,76 @@ type BlockDeviceLU_Test () =
         Assert.True(( m_TaskSet.Queue.Length = 0 ))
 
     [<Fact>]
+    member this.AbortTaskSet_007() =
+        let mutable cnt1 = 0
+        let mutable cnt2 = 0
+        let media, sm, lu = this.createBlockDevice()
+        let source = BlockDeviceLU_Test.cmdSource()
+        let pc = new PrivateCaller( lu )
+        let sema1 = new SemaphoreSlim( 0 )
+        let sema2 = new SemaphoreSlim( 0 )
+
+        ( source.ProtocolService :?> CProtocolService_Stub ).p_SendOtherResponse <- ( fun source cnd pdu lun ->
+            Assert.True(( pdu.Opcode = OpcodeCd.SCSI_TASK_MGR_RES ))
+            let tmpdu = pdu :?> TaskManagementFunctionResponsePDU
+            Assert.True(( source = cid_me.fromPrim 0us ))
+            Assert.True(( cnd = concnt_me.fromPrim 0 ))
+            Assert.True(( tmpdu.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
+            Assert.True(( tmpdu.InitiatorTaskTag = itt_me.fromPrim 0u ))
+            Assert.True(( lun = lun_me.zero ))
+            cnt1 <- cnt1 + 1
+            sema1.Release() |> ignore
+        )
+
+        let testTasks1 = [|
+            TaskStatus.TASK_STAT_Dormant(
+                new CBlockDeviceTask_Stub(
+                    p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
+                    p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
+                    p_GetSource = ( fun () -> 
+                        {
+                            I_TNexus = new ITNexus( "INIT_2", isid_me.zero, "TARG", tpgt_me.fromPrim 0us );
+                            CID = cid_me.fromPrim 1us;
+                            ConCounter = concnt_me.fromPrim 1;
+                            TSIH = tsih_me.fromPrim 0us;
+                            ProtocolService = new CProtocolService_Stub();
+                            SessionKiller = new HKiller()
+                        }
+                    ),
+                    p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK ),
+                    p_Execute = ( fun () () ->
+                        task {
+                            cnt2 <- cnt2 + 1
+                            sema2.Release() |> ignore
+                        }
+                    ),
+                    p_GetCDB = ( fun () ->
+                        let c : InquiryCDB = {
+                            OperationCode = 0x12uy;
+                            EVPD = false;
+                            PageCode = 0uy;
+                            AllocationLength = 0us;
+                            Control = 0uy;
+                        }
+                        ValueSome( c )
+                    )
+                )
+            )
+        |]
+        let queue1 = {
+            Queue = testTasks1.ToImmutableArray();
+            ACA = ValueNone;
+        }
+        pc.SetField( "m_TaskSet", queue1 )
+
+        ( lu :> ILU ).AbortTaskSet source ( itt_me.fromPrim 0u )
+
+        Assert.True(( sema1.Wait 100000 ))
+        Assert.True(( sema2.Wait 100000 ))
+        Assert.True(( cnt1 = 1 ))
+        Assert.True(( cnt2 = 1 ))
+
+    [<Fact>]
     member this.ClearACA_001() =
         let mutable cnt = 0
         let media, sm, lu = this.createBlockDevice()
@@ -1124,6 +1255,70 @@ type BlockDeviceLU_Test () =
 
         let m_TaskSet = pc.GetField( "m_TaskSet" ) :?> TaskSet
         Assert.True(( m_TaskSet.Queue.Length = 0 ))
+
+    [<Fact>]
+    member this.ClearACA_007() =
+        let mutable cnt1 = 0
+        let mutable cnt2 = 0
+        let media, sm, lu = this.createBlockDevice()
+        let source = BlockDeviceLU_Test.cmdSource()
+        let pc = new PrivateCaller( lu )
+        let sema1 = new SemaphoreSlim( 0 )
+        let sema2 = new SemaphoreSlim( 0 )
+
+        ( source.ProtocolService :?> CProtocolService_Stub ).p_SendOtherResponse <- ( fun source cnd pdu lun ->
+            Assert.True(( pdu.Opcode = OpcodeCd.SCSI_TASK_MGR_RES ))
+            let tmpdu = pdu :?> TaskManagementFunctionResponsePDU
+            Assert.True(( source = cid_me.fromPrim 0us ))
+            Assert.True(( cnd = concnt_me.fromPrim 0 ))
+            Assert.True(( tmpdu.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
+            Assert.True(( tmpdu.InitiatorTaskTag = itt_me.fromPrim 0u ))
+            Assert.True(( lun = lun_me.zero ))
+            cnt1 <- cnt1 + 1
+            sema1.Release() |> ignore
+        )
+
+        let testTasks1 = [|
+            TaskStatus.TASK_STAT_Dormant(
+                new CBlockDeviceTask_Stub(
+                    p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
+                    p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
+                    p_GetSource = ( fun () -> source ),
+                    p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK ),
+                    p_Execute = ( fun () () ->
+                        task {
+                            cnt2 <- cnt2 + 1
+                            sema2.Release() |> ignore
+                        }
+                    ),
+                    p_GetCDB = ( fun () ->
+                        let c : InquiryCDB = {
+                            OperationCode = 0x12uy;
+                            EVPD = false;
+                            PageCode = 0uy;
+                            AllocationLength = 0us;
+                            Control = 0uy;
+                        }
+                        ValueSome( c )
+                    )
+                )
+            )
+        |]
+        let queue1 = {
+            Queue = testTasks1.ToImmutableArray();
+            ACA = ValueSome( 
+                source.I_TNexus,
+                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+            );
+        }
+        pc.SetField( "m_TaskSet", queue1 )
+
+        ( lu :> ILU ).ClearACA source ( itt_me.fromPrim 0u )
+
+        Assert.True(( sema1.Wait 100000 ))
+        Assert.True(( sema2.Wait 100000 ))
+        Assert.True(( cnt1 = 1 ))
+        Assert.True(( cnt2 = 1 ))
 
     [<Fact>]
     member this.ClearTaskSet_001() =
