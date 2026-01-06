@@ -23,6 +23,7 @@ open Xunit
 open Haruka.Constants
 open Haruka.Commons
 open Haruka.TargetDevice
+open Haruka.BlockDeviceLU
 open Haruka.Client
 open Haruka.Test
 
@@ -364,4 +365,40 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             do! r2.Close()
             writeData1.Return()
             writeData2.Return()
+        }
+
+    [<Theory>]
+    [<InlineData( false, TaskATTRCd.HEAD_OF_QUEUE_TASK, true )>]
+    [<InlineData( false, TaskATTRCd.HEAD_OF_QUEUE_TASK, false )>]
+    [<InlineData( false, TaskATTRCd.ORDERED_TASK, true )>]
+    [<InlineData( false, TaskATTRCd.ORDERED_TASK, false )>]
+    [<InlineData( false, TaskATTRCd.SIMPLE_TASK, true )>]
+    [<InlineData( false, TaskATTRCd.SIMPLE_TASK, false )>]
+    [<InlineData( false, TaskATTRCd.TAGLESS_TASK, false )>]
+    [<InlineData( false, TaskATTRCd.TAGLESS_TASK, true )>]
+    [<InlineData( true, TaskATTRCd.HEAD_OF_QUEUE_TASK, true )>]
+    [<InlineData( true, TaskATTRCd.HEAD_OF_QUEUE_TASK, false )>]
+    [<InlineData( true, TaskATTRCd.ORDERED_TASK, true )>]
+    [<InlineData( true, TaskATTRCd.ORDERED_TASK, false )>]
+    [<InlineData( true, TaskATTRCd.SIMPLE_TASK, true )>]
+    [<InlineData( true, TaskATTRCd.SIMPLE_TASK, false )>]
+    [<InlineData( true, TaskATTRCd.TAGLESS_TASK, false )>]
+    [<InlineData( true, TaskATTRCd.TAGLESS_TASK, true )>]
+    member _.NonACA_NormalTask_Success_001 ( argca : bool, taskCode : TaskATTRCd, argNACA : bool ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
+
+            if argca then
+                // it raise CA
+                let! itt_w1_ca = r1.Send_Write10 taskCode g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.F
+                let! res_w1_ca = r1.WaitSCSIResponse itt_w1_ca
+                Assert.True(( res_w1_ca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            let naca = NACA.ofBool argNACA
+            let! itt_w1 = r1.Send_Write10 taskCode g_LUN1 ( blkcnt_me.ofUInt32 3u ) m_MediaBlockSize writeData1 naca
+            let! res_r1 = r1.WaitSCSIResponseGoogStatus itt_w1
+            res_r1.Return()
+
+            do! r1.Close()
         }
