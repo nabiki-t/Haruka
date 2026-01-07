@@ -1581,13 +1581,13 @@ type PRManager_Test1 () =
             // Obsoleted
             0x00uy; 0x00uy; 0x00uy; 0x00uy;
             // SPEC_I_PT, ALL_TG_PT, APTPL
-            0x08uy;
+            0x00uy;
             // Reserved
             0x00uy;
             // Obsoleted
             0x00uy; 0x00uy;
             // Additional parameter data
-            0x00uy; 0x00uy; 0x00uy;
+            0x00uy; 0x00uy; 0x00uy; 0x01uy;
         |]
         try
             PrivateCaller.Invoke< PRManager >(
@@ -1620,7 +1620,7 @@ type PRManager_Test1 () =
             // Obsoleted
             0x00uy; 0x00uy;
             // Additional parameter data
-            0x00uy; 0x00uy; 0x00uy; 0x01uy;
+            0x00uy; 0x00uy; 0x00uy;
         |]
         try
             PrivateCaller.Invoke< PRManager >(
@@ -1639,6 +1639,39 @@ type PRManager_Test1 () =
 
     [<Fact>]
     member _.paramDataToBasicParameterList_007() =
+        let paramData = [|
+            // RESERVATION KEY
+            0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy;
+            // SERVICE ACTION RESERVATION KEY
+            0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy;
+            // Obsoleted
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;
+            // SPEC_I_PT, ALL_TG_PT, APTPL
+            0x08uy;
+            // Reserved
+            0x00uy;
+            // Obsoleted
+            0x00uy; 0x00uy;
+            // Additional parameter data
+            0x00uy; 0x00uy; 0x00uy; 0x01uy;
+        |]
+        try
+            PrivateCaller.Invoke< PRManager >(
+                "paramDataToBasicParameterList",
+                PRManager_Test1.defaultSource,
+                objidx_me.NewID(),
+                lun_me.zero,
+                itt_me.fromPrim 0u,
+                uint32 paramData.Length,
+                ( PooledBuffer.Rent paramData )
+            ) |> ignore
+            Assert.Fail __LINE__
+        with
+        | :? SCSIACAException ->
+            ()
+
+    [<Fact>]
+    member _.paramDataToBasicParameterList_008() =
         let paramData = [|
             // RESERVATION KEY
             0x01uy; 0x02uy; 0x03uy; 0x04uy; 0x05uy; 0x06uy; 0x07uy; 0x08uy;
@@ -1671,7 +1704,7 @@ type PRManager_Test1 () =
         Assert.True(( r.TransportID.Length = 0 ))
 
     [<Fact>]
-    member _.paramDataToBasicParameterList_008() =
+    member _.paramDataToBasicParameterList_009() =
         let paramData = [|
             // RESERVATION KEY
             0x01uy; 0x02uy; 0x03uy; 0x04uy; 0x05uy; 0x06uy; 0x07uy; 0x08uy;
@@ -1706,7 +1739,42 @@ type PRManager_Test1 () =
         Assert.True(( r.TransportID.Length = 0 ))
 
     [<Fact>]
-    member _.paramDataToBasicParameterList_009() =
+    member _.paramDataToBasicParameterList_010() =
+        let paramData = [|
+            // RESERVATION KEY
+            0x01uy; 0x02uy; 0x03uy; 0x04uy; 0x05uy; 0x06uy; 0x07uy; 0x08uy;
+            // SERVICE ACTION RESERVATION KEY
+            0x11uy; 0x12uy; 0x13uy; 0x14uy; 0x15uy; 0x16uy; 0x17uy; 0x18uy;
+            // Obsoleted
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;
+            // SPEC_I_PT, ALL_TG_PT, APTPL
+            0x05uy;
+            // Reserved
+            0x00uy;
+            // Obsoleted
+            0x00uy; 0x00uy;
+            // Additional parameter data
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;
+        |]
+        let r = 
+            PrivateCaller.Invoke< PRManager >(
+                "paramDataToBasicParameterList",
+                PRManager_Test1.defaultSource,
+                objidx_me.NewID(),
+                lun_me.zero,
+                itt_me.fromPrim 0u,
+                uint32 paramData.Length,
+                ( PooledBuffer.Rent paramData )
+            ) :?> BasicParameterList
+        Assert.True(( r.ReservationKey = resvkey_me.fromPrim 0x0102030405060708UL ))
+        Assert.True(( r.ServiceActionReservationKey = resvkey_me.fromPrim 0x1112131415161718UL ))
+        Assert.False(( r.SPEC_I_PT ))
+        Assert.True(( r.ALL_TG_PT ))
+        Assert.True(( r.APTPL ))
+        Assert.True(( r.TransportID.Length = 0 ))
+
+    [<Fact>]
+    member _.paramDataToBasicParameterList_011() =
         let paramData = [|
             0x01uy; 0x02uy; 0x03uy; 0x04uy; // RESERVATION KEY
             0x05uy; 0x06uy; 0x07uy; 0x08uy;
@@ -1734,7 +1802,7 @@ type PRManager_Test1 () =
             Assert.True(( Functions.CompareStringHeader x.Message "Invalid FORMAT CODE value" = 0 ))
 
     [<Fact>]
-    member _.paramDataToBasicParameterList_010() =
+    member _.paramDataToBasicParameterList_012() =
         let paramData = [|
             0x01uy; 0x02uy; 0x03uy; 0x04uy; // RESERVATION KEY
             0x05uy; 0x06uy; 0x07uy; 0x08uy;
@@ -1762,7 +1830,7 @@ type PRManager_Test1 () =
             Assert.True(( Functions.CompareStringHeader x.Message "Invalid PROTOCOL IDENTIFIER value" = 0 ))
 
     [<Fact>]
-    member _.paramDataToBasicParameterList_011() =
+    member _.paramDataToBasicParameterList_013() =
         let paramData = [|
             0x01uy; 0x02uy; 0x03uy; 0x04uy; // RESERVATION KEY
             0x05uy; 0x06uy; 0x07uy; 0x08uy;
@@ -1796,7 +1864,7 @@ type PRManager_Test1 () =
             Assert.True(( Functions.CompareStringHeader x.Message "Invalid TransportID length" = 0 ))
 
     [<Fact>]
-    member _.paramDataToBasicParameterList_012() =
+    member _.paramDataToBasicParameterList_014() =
         let paramData = [|
             0x01uy; 0x02uy; 0x03uy; 0x04uy; // RESERVATION KEY
             0x05uy; 0x06uy; 0x07uy; 0x08uy;
@@ -1831,7 +1899,7 @@ type PRManager_Test1 () =
             Assert.True(( Functions.CompareStringHeader x.Message "Invalid  ADDITIONAL LENGTH value" = 0 ))
 
     [<Fact>]
-    member _.paramDataToBasicParameterList_013() =
+    member _.paramDataToBasicParameterList_015() =
         let paramData = [|
             0x01uy; 0x02uy; 0x03uy; 0x04uy; // RESERVATION KEY
             0x05uy; 0x06uy; 0x07uy; 0x08uy;
@@ -1866,7 +1934,7 @@ type PRManager_Test1 () =
             Assert.True(( Functions.CompareStringHeader x.Message "Invalid  ADDITIONAL LENGTH value" = 0 ))
 
     [<Fact>]
-    member _.paramDataToBasicParameterList_014() =
+    member _.paramDataToBasicParameterList_016() =
         let paramData = [|
             0x01uy; 0x02uy; 0x03uy; 0x04uy; // RESERVATION KEY
             0x05uy; 0x06uy; 0x07uy; 0x08uy;
@@ -1902,7 +1970,7 @@ type PRManager_Test1 () =
             Assert.True(( Functions.CompareStringHeader x.Message "Invalid  ADDITIONAL LENGTH value" = 0 ))
 
     [<Fact>]
-    member _.paramDataToBasicParameterList_015() =
+    member _.paramDataToBasicParameterList_017() =
         let paramData = [|
             0x01uy; 0x02uy; 0x03uy; 0x04uy; // RESERVATION KEY
             0x05uy; 0x06uy; 0x07uy; 0x08uy;
@@ -1937,7 +2005,7 @@ type PRManager_Test1 () =
             Assert.True(( Functions.CompareStringHeader x.Message "Invalid TransportID format" = 0 ))
 
     [<Fact>]
-    member _.paramDataToBasicParameterList_016() =
+    member _.paramDataToBasicParameterList_018() =
         let paramData = [|
             0x01uy; 0x02uy; 0x03uy; 0x04uy; // RESERVATION KEY
             0x05uy; 0x06uy; 0x07uy; 0x08uy;
@@ -1972,7 +2040,7 @@ type PRManager_Test1 () =
             Assert.True(( Functions.CompareStringHeader x.Message "Invalid TransportID format" = 0 ))
 
     [<Fact>]
-    member _.paramDataToBasicParameterList_017() =
+    member _.paramDataToBasicParameterList_019() =
         let paramData = [|
             0x01uy; 0x02uy; 0x03uy; 0x04uy; // RESERVATION KEY
             0x05uy; 0x06uy; 0x07uy; 0x08uy;
@@ -2021,7 +2089,7 @@ type PRManager_Test1 () =
             Assert.Fail __LINE__
 
     [<Fact>]
-    member _.paramDataToBasicParameterList_018() =
+    member _.paramDataToBasicParameterList_020() =
         let paramData = [|
             0x01uy; 0x02uy; 0x03uy; 0x04uy; // RESERVATION KEY
             0x05uy; 0x06uy; 0x07uy; 0x08uy;
@@ -2065,7 +2133,7 @@ type PRManager_Test1 () =
             Assert.Fail __LINE__
 
     [<Fact>]
-    member _.paramDataToBasicParameterList_019() =
+    member _.paramDataToBasicParameterList_021() =
         let paramData = [|
             0x01uy; 0x02uy; 0x03uy; 0x04uy; // RESERVATION KEY
             0x05uy; 0x06uy; 0x07uy; 0x08uy;
@@ -2126,7 +2194,7 @@ type PRManager_Test1 () =
             Assert.True(( Functions.CompareStringHeader x.Message "TransportID is too long. " = 0 ))
 
     [<Fact>]
-    member _.paramDataToBasicParameterList_020() =
+    member _.paramDataToBasicParameterList_022() =
         let paramData = [|
             0x01uy; 0x02uy; 0x03uy; 0x04uy; // RESERVATION KEY
             0x05uy; 0x06uy; 0x07uy; 0x08uy;
@@ -2185,7 +2253,7 @@ type PRManager_Test1 () =
             Assert.True(( x.Message.Contains "TransportID is too long. " ))
 
     [<Fact>]
-    member _.paramDataToBasicParameterList_021() =
+    member _.paramDataToBasicParameterList_023() =
         let paramData = [|
             0x01uy; 0x02uy; 0x03uy; 0x04uy; // RESERVATION KEY
             0x05uy; 0x06uy; 0x07uy; 0x08uy;
@@ -2295,7 +2363,7 @@ type PRManager_Test1 () =
             Assert.Fail __LINE__
 
     [<Fact>]
-    member _.paramDataToBasicParameterList_022() =
+    member _.paramDataToBasicParameterList_024() =
         let paramData = [|
             0x01uy; 0x02uy; 0x03uy; 0x04uy; // RESERVATION KEY
             0x05uy; 0x06uy; 0x07uy; 0x08uy;
