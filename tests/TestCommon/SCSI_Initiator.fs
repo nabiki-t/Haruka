@@ -255,6 +255,129 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
         }
 
     /// <summary>
+    ///  To abort an immidiate task, send an ABORT TASK TMF request.
+    /// </summary>
+    /// <param name="argI">
+    ///  TaskManagementFunctionRequestPDU I field value.
+    /// </param>
+    /// <param name="argLUN">
+    ///  TaskManagementFunctionRequestPDU LUN field value.
+    /// </param>
+    /// <param name="argReferencedTaskTag">
+    ///  TaskManagementFunctionRequestPDU ReferencedTaskTag field value.
+    /// </param>
+    /// <returns>
+    ///  Initiator task tag.
+    /// </returns>
+    member this.SendTMFRequest_AbortImmidiateTask ( argI : BitI ) ( argLUN : LUN_T ) ( argReferencedTaskTag : ITT_T )  : Task<ITT_T> =
+        this.SendTaskManagementFunctionRequest argI TaskMgrReqCd.ABORT_TASK argLUN argReferencedTaskTag ValueNone datasn_me.zero
+
+    /// <summary>
+    ///  To abort a non-immidiate task, send an ABORT TASK TMF request.
+    /// </summary>
+    /// <param name="argI">
+    ///  TaskManagementFunctionRequestPDU I field value.
+    /// </param>
+    /// <param name="argLUN">
+    ///  TaskManagementFunctionRequestPDU LUN field value.
+    /// </param>
+    /// <param name="argReferencedTaskTag">
+    ///  TaskManagementFunctionRequestPDU ReferencedTaskTag field value.
+    /// </param>
+    /// <param name="argRefCmdSN">
+    ///  TaskManagementFunctionRequestPDU RefCmdSN field value.
+    /// </param>
+    /// <returns>
+    ///  Initiator task tag.
+    /// </returns>
+    member this.SendTMFRequest_AbortNonImmidiateTask ( argI : BitI ) ( argLUN : LUN_T ) ( argReferencedTaskTag : ITT_T ) ( argRefCmdSN : CMDSN_T ) : Task<ITT_T> =
+        this.SendTaskManagementFunctionRequest argI TaskMgrReqCd.ABORT_TASK argLUN argReferencedTaskTag ( ValueSome argRefCmdSN ) datasn_me.zero
+
+    /// <summary>
+    ///  Send an ABORT TASK SET TMF request.
+    /// </summary>
+    /// <param name="argI">
+    ///  TaskManagementFunctionRequestPDU I field value.
+    /// </param>
+    /// <param name="argLUN">
+    ///  TaskManagementFunctionRequestPDU LUN field value.
+    /// </param>
+    /// <returns>
+    ///  Initiator task tag.
+    /// </returns>
+    member this.SendTMFRequest_AbortTaskSet ( argI : BitI ) ( argLUN : LUN_T ) : Task<ITT_T> =
+        this.SendTaskManagementFunctionRequest argI TaskMgrReqCd.ABORT_TASK_SET argLUN ( itt_me.fromPrim 0xFFFFFFFFu ) ( ValueSome cmdsn_me.zero ) datasn_me.zero
+
+    /// <summary>
+    ///  Send an CLEAR ACA TMF request.
+    /// </summary>
+    /// <param name="argI">
+    ///  TaskManagementFunctionRequestPDU I field value.
+    /// </param>
+    /// <param name="argLUN">
+    ///  TaskManagementFunctionRequestPDU LUN field value.
+    /// </param>
+    /// <returns>
+    ///  Initiator task tag.
+    /// </returns>
+    member this.SendTMFRequest_ClearACA ( argI : BitI ) ( argLUN : LUN_T ) : Task<ITT_T> =
+        this.SendTaskManagementFunctionRequest argI TaskMgrReqCd.CLEAR_ACA argLUN ( itt_me.fromPrim 0xFFFFFFFFu ) ( ValueSome cmdsn_me.zero ) datasn_me.zero
+
+    /// <summary>
+    ///  Send an CLEAR TASK SET TMF request.
+    /// </summary>
+    /// <param name="argI">
+    ///  TaskManagementFunctionRequestPDU I field value.
+    /// </param>
+    /// <param name="argLUN">
+    ///  TaskManagementFunctionRequestPDU LUN field value.
+    /// </param>
+    /// <returns>
+    ///  Initiator task tag.
+    /// </returns>
+    member this.SendTMFRequest_ClearTaskSet ( argI : BitI ) ( argLUN : LUN_T ) : Task<ITT_T> =
+        this.SendTaskManagementFunctionRequest argI TaskMgrReqCd.CLEAR_TASK_SET argLUN ( itt_me.fromPrim 0xFFFFFFFFu ) ( ValueSome cmdsn_me.zero ) datasn_me.zero
+
+    /// <summary>
+    ///  Send an LOGICAL UNIT RESET TMF request.
+    /// </summary>
+    /// <param name="argI">
+    ///  TaskManagementFunctionRequestPDU I field value.
+    /// </param>
+    /// <param name="argLUN">
+    ///  TaskManagementFunctionRequestPDU LUN field value.
+    /// </param>
+    /// <returns>
+    ///  Initiator task tag.
+    /// </returns>
+    member this.SendTMFRequest_LogicalUnitReset ( argI : BitI ) ( argLUN : LUN_T ) : Task<ITT_T> =
+        this.SendTaskManagementFunctionRequest argI TaskMgrReqCd.LOGICAL_UNIT_RESET argLUN ( itt_me.fromPrim 0xFFFFFFFFu ) ( ValueSome cmdsn_me.zero ) datasn_me.zero
+
+    /// <summary>
+    ///  Send an TARGET WARM RESET TMF request.
+    /// </summary>
+    /// <param name="argI">
+    ///  TaskManagementFunctionRequestPDU I field value.
+    /// </param>
+    /// <returns>
+    ///  Initiator task tag.
+    /// </returns>
+    member this.SendTMFRequest_TargetWarmReset ( argI : BitI ) : Task<ITT_T> =
+        this.SendTaskManagementFunctionRequest argI TaskMgrReqCd.TARGET_WARM_RESET lun_me.zero ( itt_me.fromPrim 0xFFFFFFFFu ) ( ValueSome cmdsn_me.zero ) datasn_me.zero
+
+    /// <summary>
+    ///  Send an TARGET COLD RESET TMF request.
+    /// </summary>
+    /// <param name="argI">
+    ///  TaskManagementFunctionRequestPDU I field value.
+    /// </param>
+    /// <returns>
+    ///  Initiator task tag.
+    /// </returns>
+    member this.SendTMFRequest_TargetColdReset ( argI : BitI ) : Task<ITT_T> =
+        this.SendTaskManagementFunctionRequest argI TaskMgrReqCd.TARGET_COLD_RESET lun_me.zero ( itt_me.fromPrim 0xFFFFFFFFu ) ( ValueSome cmdsn_me.zero ) datasn_me.zero
+
+    /// <summary>
     ///  Send INQUIRY SCSI Command.
     /// </summary>
     /// <param name="att">
