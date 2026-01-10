@@ -205,7 +205,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             Assert.True(( result.Sense.Value.VendorSpecific.IsSome ))   // message
 
             // Clear ACA
-            let! itt2 = r.SendTaskManagementFunctionRequest BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 ( itt_me.fromPrim 0xFFFFFFFFu ) ( ValueSome cmdsn_me.zero ) datasn_me.zero
+            let! itt2 = r.SendTMFRequest_ClearACA BitI.F g_LUN1
             let! result2 = r.WaitTMFResponse itt2
             Assert.True(( result2 = TaskMgrResCd.FUNCTION_COMPLETE ))
 
@@ -249,7 +249,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             Assert.True(( result.Sense.Value.VendorSpecific.IsSome ))   // message
 
             // Clear ACA
-            let! itt2 = r.SendTaskManagementFunctionRequest BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 ( itt_me.fromPrim 0xFFFFFFFFu ) ( ValueSome cmdsn_me.zero ) datasn_me.zero
+            let! itt2 = r.SendTMFRequest_ClearACA BitI.F g_LUN1
             let! result2 = r.WaitTMFResponse itt2
             Assert.True(( result2 = TaskMgrResCd.FUNCTION_COMPLETE ))
 
@@ -344,7 +344,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             Assert.True(( ( GetStuckTasks() ).Length = 0 ))
 
             // Clear ACA. This resumes Read requests 1 and 2, which were in a paused state.
-            let! itt2 = r1.SendTaskManagementFunctionRequest BitI.F TaskMgrReqCd.CLEAR_ACA g_LUN1 ( itt_me.fromPrim 0xFFFFFFFFu ) ( ValueSome cmdsn_me.zero ) datasn_me.zero
+            let! itt2 = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
             let! result2 = r1.WaitTMFResponse itt2
             Assert.True(( result2 = TaskMgrResCd.FUNCTION_COMPLETE ))
 
@@ -404,15 +404,23 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
         }
 
     [<Theory>]
-    [<InlineData( false, TaskATTRCd.HEAD_OF_QUEUE_TASK )>]
-    [<InlineData( false, TaskATTRCd.ORDERED_TASK )>]
-    [<InlineData( false, TaskATTRCd.SIMPLE_TASK )>]
-    [<InlineData( false, TaskATTRCd.TAGLESS_TASK )>]
-    [<InlineData( true, TaskATTRCd.HEAD_OF_QUEUE_TASK )>]
-    [<InlineData( true, TaskATTRCd.ORDERED_TASK )>]
-    [<InlineData( true, TaskATTRCd.SIMPLE_TASK )>]
-    [<InlineData( true, TaskATTRCd.TAGLESS_TASK )>]
-    member _.NonACA_NormalTask_Failed_CA_001 ( argca : bool, taskCode : TaskATTRCd ) =
+    [<InlineData( false, TaskATTRCd.HEAD_OF_QUEUE_TASK, true )>]
+    [<InlineData( false, TaskATTRCd.HEAD_OF_QUEUE_TASK, false )>]
+    [<InlineData( false, TaskATTRCd.ORDERED_TASK, true )>]
+    [<InlineData( false, TaskATTRCd.ORDERED_TASK, false )>]
+    [<InlineData( false, TaskATTRCd.SIMPLE_TASK, true )>]
+    [<InlineData( false, TaskATTRCd.SIMPLE_TASK, false )>]
+    [<InlineData( false, TaskATTRCd.TAGLESS_TASK, true )>]
+    [<InlineData( false, TaskATTRCd.TAGLESS_TASK, false )>]
+    [<InlineData( true, TaskATTRCd.HEAD_OF_QUEUE_TASK, true )>]
+    [<InlineData( true, TaskATTRCd.HEAD_OF_QUEUE_TASK, false )>]
+    [<InlineData( true, TaskATTRCd.ORDERED_TASK, true )>]
+    [<InlineData( true, TaskATTRCd.ORDERED_TASK, false )>]
+    [<InlineData( true, TaskATTRCd.SIMPLE_TASK, true )>]
+    [<InlineData( true, TaskATTRCd.SIMPLE_TASK, false )>]
+    [<InlineData( true, TaskATTRCd.TAGLESS_TASK, true )>]
+    [<InlineData( true, TaskATTRCd.TAGLESS_TASK, false )>]
+    member _.NonACA_NormalTask_Failed_CA_001 ( argca : bool, taskCode : TaskATTRCd, raiseaca : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
@@ -435,10 +443,26 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let! itt_pr_out1 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 0uy 0uy param NACA.T
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
 
-            // raise CA
-            let! itt_w2_ca = r1.Send_Write10 taskCode g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.F
-            let! res_w2_ca = r1.WaitSCSIResponse itt_w2_ca
-            Assert.True(( res_w2_ca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            if raiseaca then
+                // send task with NACA=1
+                let! itt_w2_aca = r1.Send_Write10 taskCode g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.T
+                let! res_w2_aca = r1.WaitSCSIResponse itt_w2_aca
+                Assert.True(( res_w2_aca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            
+                // Check that ACA is established
+                let! itt_w3 = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
+                let! res_w3 = r1.WaitSCSIResponse itt_w3
+                Assert.True(( res_w3.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+
+                // clear ACA
+                let! itt_tmf1 = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
+                let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
+                Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+            else
+                // send task with NACA=0
+                let! itt_w4_ca = r1.Send_Write10 taskCode g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.F
+                let! res_w4_ca = r1.WaitSCSIResponse itt_w4_ca
+                Assert.True(( res_w4_ca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
             
             // Get reservarion key. Make sure the reservation remains intact.
             let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
@@ -461,5 +485,297 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
             let! itt_pr_in2 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in2
             Assert.True(( itt_pr_in2.ReservationKey.Length = 0 ))
+
+            writeData1.Return()
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( false, true )>]
+    [<InlineData( false, false )>]
+    [<InlineData( true, true )>]
+    [<InlineData( true, false )>]
+    member _.NonACA_ACATask_CA_001 ( argca : bool, raiseaca : bool ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
+
+            if argca then
+                // it raise CA
+                let! itt_w1_ca = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.F
+                let! res_w1_ca = r1.WaitSCSIResponse itt_w1_ca
+                Assert.True(( res_w1_ca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // register reservation key
+            let param : BasicParameterList = {
+                ReservationKey = resvkey_me.fromPrim 0UL;
+                ServiceActionReservationKey = resvkey_me.fromPrim 111UL;
+                SPEC_I_PT = false;
+                ALL_TG_PT = false;
+                APTPL = false;
+                TransportID = [||];
+            }
+            let! itt_pr_out1 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 0uy 0uy param NACA.T
+            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
+
+            if raiseaca then
+                // send task with NACA=1
+                let! itt_w2_aca = r1.Send_Write10 TaskATTRCd.ACA_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
+                let! res_w2_aca = r1.WaitSCSIResponse itt_w2_aca
+                Assert.True(( res_w2_aca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+                Assert.True(( res_w2_aca.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+                Assert.True(( res_w2_aca.Sense.Value.ASC = ASCCd.INVALID_MESSAGE_ERROR ))
+            
+                // Check that ACA is established
+                let! itt_w3 = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
+                let! res_w3 = r1.WaitSCSIResponse itt_w3
+                Assert.True(( res_w3.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+
+                // clear ACA
+                let! itt_tmf1 = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
+                let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
+                Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+            else
+                // send ACA task with NACA=0
+                let! itt_w4_ca = r1.Send_Write10 TaskATTRCd.ACA_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.F
+                let! res_w4_ca = r1.WaitSCSIResponse itt_w4_ca
+                Assert.True(( res_w4_ca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+                Assert.True(( res_w4_ca.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+                Assert.True(( res_w4_ca.Sense.Value.ASC = ASCCd.INVALID_MESSAGE_ERROR ))
+            
+            // Get reservarion key. Make sure the reservation remains intact.
+            let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
+            let! res_pr_in1 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in1
+            Assert.True(( res_pr_in1.ReservationKey.Length = 1 ))
+            Assert.True(( res_pr_in1.ReservationKey.[0] = resvkey_me.fromPrim 111UL ))
+
+            // clear reservation key
+            let param : BasicParameterList = {
+                ReservationKey = resvkey_me.fromPrim 111UL;
+                ServiceActionReservationKey = resvkey_me.fromPrim 0UL;
+                SPEC_I_PT = false;
+                ALL_TG_PT = false;
+                APTPL = false;
+                TransportID = [||];
+            }
+            let! itt_pr_out2 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 3uy 0uy 0uy param NACA.T
+            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
+
+            let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
+            let! itt_pr_in2 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in2
+            Assert.True(( itt_pr_in2.ReservationKey.Length = 0 ))
+
+            writeData1.Return()
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( TaskATTRCd.HEAD_OF_QUEUE_TASK, true )>]
+    [<InlineData( TaskATTRCd.HEAD_OF_QUEUE_TASK, false )>]
+    [<InlineData( TaskATTRCd.ORDERED_TASK, true )>]
+    [<InlineData( TaskATTRCd.ORDERED_TASK, false )>]
+    [<InlineData( TaskATTRCd.SIMPLE_TASK, true )>]
+    [<InlineData( TaskATTRCd.SIMPLE_TASK, false )>]
+    [<InlineData( TaskATTRCd.TAGLESS_TASK, true )>]
+    [<InlineData( TaskATTRCd.TAGLESS_TASK, false )>]
+    member _.ACAActive_NormalTask_001 ( taskCode : TaskATTRCd, argNaca : bool ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
+
+            // register reservation key
+            let param : BasicParameterList = {
+                ReservationKey = resvkey_me.fromPrim 0UL;
+                ServiceActionReservationKey = resvkey_me.fromPrim 222UL;
+                SPEC_I_PT = false;
+                ALL_TG_PT = false;
+                APTPL = false;
+                TransportID = [||];
+            }
+            let! itt_pr_out1 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 0uy 0uy param NACA.T
+            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
+
+            // raise ACA
+            let! itt_w1_aca = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.T
+            let! res_w1_aca = r1.WaitSCSIResponse itt_w1_aca
+            Assert.True(( res_w1_aca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // send task
+            let naca = NACA.ofBool argNaca
+            let! itt_w2 = r1.Send_Write10 taskCode g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 naca
+            let! res_w2 = r1.WaitSCSIResponse itt_w2
+            Assert.True(( res_w2.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+
+            // clear ACA
+            let! itt_tmf1 = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
+            let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
+            Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+            
+            // Get reservarion key. Make sure the reservation remains intact.
+            let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
+            let! res_pr_in1 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in1
+            Assert.True(( res_pr_in1.ReservationKey.Length = 1 ))
+            Assert.True(( res_pr_in1.ReservationKey.[0] = resvkey_me.fromPrim 222UL ))
+
+            // clear reservation key
+            let param : BasicParameterList = {
+                ReservationKey = resvkey_me.fromPrim 222UL;
+                ServiceActionReservationKey = resvkey_me.fromPrim 0UL;
+                SPEC_I_PT = false;
+                ALL_TG_PT = false;
+                APTPL = false;
+                TransportID = [||];
+            }
+            let! itt_pr_out2 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 3uy 0uy 0uy param NACA.T
+            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
+
+            let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
+            let! itt_pr_in2 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in2
+            Assert.True(( itt_pr_in2.ReservationKey.Length = 0 ))
+
+            writeData1.Return()
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( true )>]
+    [<InlineData( false )>]
+    member _.ACAActive_ACATask__ACATaskExists_001 ( argNaca : bool ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
+
+            // register reservation key
+            let param : BasicParameterList = {
+                ReservationKey = resvkey_me.fromPrim 0UL;
+                ServiceActionReservationKey = resvkey_me.fromPrim 222UL;
+                SPEC_I_PT = false;
+                ALL_TG_PT = false;
+                APTPL = false;
+                TransportID = [||];
+            }
+            let! itt_pr_out1 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 0uy 0uy param NACA.T
+            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
+
+            // raise ACA
+            let! itt_w1_aca = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.T
+            let! res_w1_aca = r1.WaitSCSIResponse itt_w1_aca
+            Assert.True(( res_w1_aca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // Add debug media trap
+            m_ClientProc.RunCommand "add trap /e Write /a Wait" "Trap added" "MD> "
+
+            // Sending a task with ACA attributes and intentionally leaving it stuck
+            let! itt_w2_stuck = r1.Send_Write10 TaskATTRCd.ACA_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
+
+            // Confirm that above task is stuck.
+            do! Task.Delay 10
+            while ( ( GetStuckTasks() ).Length < 1 ) do
+                do! Task.Delay 10
+
+            // send ACA task
+            let naca = NACA.ofBool argNaca
+            let! itt_w3_aca = r1.Send_Write10 TaskATTRCd.ACA_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 naca
+            let! res_w3_aca = r1.WaitSCSIResponse itt_w3_aca
+            Assert.True(( res_w3_aca.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+            do! r1.Send_NotOut()
+
+            // Resume stucked task.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_w2_stuck ) "Task(" "MD> "
+            let! _ = r1.WaitSCSIResponseGoogStatus itt_w2_stuck
+
+            // clear ACA
+            let! itt_tmf1 = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
+            let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
+            Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+            
+            // Get reservarion key. Make sure the reservation remains intact.
+            let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
+            let! res_pr_in1 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in1
+            Assert.True(( res_pr_in1.ReservationKey.Length = 1 ))
+            Assert.True(( res_pr_in1.ReservationKey.[0] = resvkey_me.fromPrim 222UL ))
+
+            // clear reservation key
+            let param : BasicParameterList = {
+                ReservationKey = resvkey_me.fromPrim 222UL;
+                ServiceActionReservationKey = resvkey_me.fromPrim 0UL;
+                SPEC_I_PT = false;
+                ALL_TG_PT = false;
+                APTPL = false;
+                TransportID = [||];
+            }
+            let! itt_pr_out2 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 3uy 0uy 0uy param NACA.T
+            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
+
+            let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
+            let! itt_pr_in2 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in2
+            Assert.True(( itt_pr_in2.ReservationKey.Length = 0 ))
+
+            // Clear debug media traps
+            m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
+
+            writeData1.Return()
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( true )>]
+    [<InlineData( false )>]
+    member _.ACAActive_ACATask__ACATaskNotExists_001 ( argNaca : bool ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
+
+            // register reservation key
+            let param : BasicParameterList = {
+                ReservationKey = resvkey_me.fromPrim 0UL;
+                ServiceActionReservationKey = resvkey_me.fromPrim 222UL;
+                SPEC_I_PT = false;
+                ALL_TG_PT = false;
+                APTPL = false;
+                TransportID = [||];
+            }
+            let! itt_pr_out1 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 0uy 0uy param NACA.T
+            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
+
+            // raise ACA
+            let! itt_w1_aca = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.T
+            let! res_w1_aca = r1.WaitSCSIResponse itt_w1_aca
+            Assert.True(( res_w1_aca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // send ACA task
+            let naca = NACA.ofBool argNaca
+            let! itt_w3_aca = r1.Send_Write10 TaskATTRCd.ACA_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 naca
+            let! _ = r1.WaitSCSIResponseGoogStatus itt_w3_aca
+
+            // clear ACA
+            let! itt_tmf1 = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
+            let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
+            Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+            
+            // Get reservarion key. Make sure the reservation remains intact.
+            let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
+            let! res_pr_in1 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in1
+            Assert.True(( res_pr_in1.ReservationKey.Length = 1 ))
+            Assert.True(( res_pr_in1.ReservationKey.[0] = resvkey_me.fromPrim 222UL ))
+
+            // clear reservation key
+            let param : BasicParameterList = {
+                ReservationKey = resvkey_me.fromPrim 222UL;
+                ServiceActionReservationKey = resvkey_me.fromPrim 0UL;
+                SPEC_I_PT = false;
+                ALL_TG_PT = false;
+                APTPL = false;
+                TransportID = [||];
+            }
+            let! itt_pr_out2 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 3uy 0uy 0uy param NACA.T
+            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
+
+            let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
+            let! itt_pr_in2 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in2
+            Assert.True(( itt_pr_in2.ReservationKey.Length = 0 ))
+
+            writeData1.Return()
+            do! r1.Close()
         }
 
