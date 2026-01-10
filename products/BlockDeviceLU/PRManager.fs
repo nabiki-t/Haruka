@@ -1862,7 +1862,7 @@ type PRManager(
             ( param : PooledBuffer ) : BasicParameterList =
         let loginfo = struct ( objID, ValueSome( source ), ValueSome( itt ), ValueSome( lun ) )
 
-        if ( paramLen <> 24u && paramLen < 28u ) || param.Count < (int)paramLen || (int)paramLen < 0 then
+        if paramLen <  24u || param.Count < (int)paramLen || (int)paramLen < 0 then
             let msg = "Parameter length in PERSISTENT RESERVE OUT is too short."
             HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.PARAMETER_LIST_LENGTH_ERROR, msg )
             raise <| SCSIACAException (
@@ -1871,25 +1871,21 @@ type PRManager(
                 msg
             )
 
+        // get SPEC_I_PT value
         let specI_PT = Functions.CheckBitflag param.[20] 0x08uy
-        let reservationKey = resvkey_me.fromPrim( Functions.NetworkBytesToUInt64_InPooledBuffer param 0 )
-        let serviceActionReservationKey = resvkey_me.fromPrim( Functions.NetworkBytesToUInt64_InPooledBuffer param 8 )
-        let allTG_PT = Functions.CheckBitflag param.[20] 0x04uy
-        let aptpl = Functions.CheckBitflag param.[20] 0x01uy
-        let transportParameterDataLength = 
-            if paramLen >= 28u then
-                Functions.NetworkBytesToUInt32_InPooledBuffer param 24
-            else
-                0u
-
-        if not specI_PT && transportParameterDataLength > 0u then
-            let msg = "SPEC_I_PT bit = 0, but one or more TransportID are specified in the PERSISTENT RESERVE OUT parameter data."
+        if not specI_PT && paramLen <> 24u then
+            let msg = "SPEC_I_PT bit = 0, but parameter length in PERSISTENT RESERVE OUT is not 24 bytes."
             HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.PARAMETER_LIST_LENGTH_ERROR, msg )
             raise <| SCSIACAException (
                 source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.PARAMETER_LIST_LENGTH_ERROR,
                 { CommandData = true; BPV = true; BitPointer = 7uy; FieldPointer = 5us },
                 msg
             )
+
+        let reservationKey = resvkey_me.fromPrim( Functions.NetworkBytesToUInt64_InPooledBuffer param 0 )
+        let serviceActionReservationKey = resvkey_me.fromPrim( Functions.NetworkBytesToUInt64_InPooledBuffer param 8 )
+        let allTG_PT = Functions.CheckBitflag param.[20] 0x04uy
+        let aptpl = Functions.CheckBitflag param.[20] 0x01uy
 
         let transportID =
             if specI_PT && paramLen > 24u then    // If exist addisional params
@@ -1902,7 +1898,7 @@ type PRManager(
                         msg
                     )
 
-                
+                let transportParameterDataLength = Functions.NetworkBytesToUInt32_InPooledBuffer param 24
                 if transportParameterDataLength + 28u > paramLen then
                     let msg = "Invalid TRANSPORTID PARAMETER DATA LENGTH in PERSISTENT RESERVE OUT."
                     HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.PARAMETER_LIST_LENGTH_ERROR, msg )
