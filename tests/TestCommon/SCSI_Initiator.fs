@@ -597,13 +597,13 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     ///  SCSICommandPDU LUN field value.
     /// </param>
     /// <param name="argServiceAction">
-    ///   SERVICE ACTION field
+    ///   SERVICE ACTION field value in the PERSISTENT RESERVE IN CDB.
     /// </param>
     /// <param name="argAllocationLength">
-    ///  ALLOCATION LENGTH field
+    ///  ALLOCATION LENGTH field value in the PERSISTENT RESERVE IN CDB.
     /// </param>
     /// <param name="argNACA">
-    ///  NACA bit in CONTROL field
+    ///  NACA bit value in CONTROL field in the PERSISTENT RESERVE IN CDB.
     /// </param>
     /// <returns>
     ///  Initiator task tag.
@@ -629,19 +629,19 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     ///  SCSICommandPDU LUN field value.
     /// </param>
     /// <param name="argServiceAction">
-    ///   SERVICE ACTION field, must be other than REGISTER AND MOVE.
+    ///   SERVICE ACTION field value in the PERSISTENT RESERVE OUT CDB. Must be other than REGISTER AND MOVE.
     /// </param>
     /// <param name="argScope">
-    ///   SCOPE field
+    ///   SCOPE field value in the PERSISTENT RESERVE OUT CDB.
     /// </param>
     /// <param name="argType">
-    ///   TYPE field
+    ///   TYPE field value in the PERSISTENT RESERVE OUT CDB.
     /// </param>
     /// <param name="param">
     ///   Parameter data.
     /// </param>
     /// <param name="argNACA">
-    ///  NACA bit in CONTROL field
+    ///  NACA bit value in CONTROL field in the PERSISTENT RESERVE OUT CDB.
     /// </param>
     /// <returns>
     ///  Initiator task tag.
@@ -651,7 +651,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
             ( lun : LUN_T )
             ( argServiceAction : byte )
             ( argScope : byte )
-            ( argType : byte )
+            ( argType : PR_TYPE )
             ( param : Haruka.BlockDeviceLU.BasicParameterList )
             ( argNACA : NACA ) : Task<ITT_T> =
         task {
@@ -663,6 +663,297 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
         }
 
     /// <summary>
+    ///  Send PERSISTENT RESERVE OUT SCSI Command with REGISTER service action.
+    /// </summary>
+    /// <param name="att">
+    ///  SCSICommandPDU ATTR field value.
+    /// </param>
+    /// <param name="lun">
+    ///  SCSICommandPDU LUN field value.
+    /// </param>
+    /// <param name="argNACA">
+    ///  NACA bit value in CONTROL field in the PERSISTENT RESERVE OUT CDB.
+    /// </param>
+    /// <param name="argReservationKey">
+    ///   ReservationKey field in the parameter list.
+    /// </param>
+    /// <param name="argServiceActionReservationKey">
+    ///   ServiceActionReservationKey field in the parameter list.
+    /// </param>
+    /// <param name="argSPEC_I_PT">
+    ///   SPEC_I_PT field in the parameter list.
+    /// </param>
+    /// <param name="argALL_TG_PT">
+    ///   ALL_TG_PT field in the parameter list.
+    /// </param>
+    /// <param name="argAPTPL">
+    ///   APTPL field in the parameter list.
+    /// </param>
+    /// <param name="argTransportID">
+    ///   TransportIDs in the parameter list.
+    /// </param>
+    /// <returns>
+    ///  Initiator task tag.
+    /// </returns>
+    member this.Send_PROut_REGISTER
+            ( att : TaskATTRCd )
+            ( lun : LUN_T )
+            ( argNACA : NACA )
+            ( argReservationKey : RESVKEY_T )
+            ( argServiceActionReservationKey : RESVKEY_T )
+            ( argSPEC_I_PT : bool )
+            ( argALL_TG_PT : bool )
+            ( argAPTPL : bool ) 
+            ( argTransportID : ( string * ISID_T option )[] ) : Task<ITT_T> =
+        let param : Haruka.BlockDeviceLU.BasicParameterList = {
+            ReservationKey = argReservationKey;
+            ServiceActionReservationKey = argServiceActionReservationKey;
+            SPEC_I_PT = argSPEC_I_PT;
+            ALL_TG_PT = argALL_TG_PT;
+            APTPL = argAPTPL;
+            TransportID = argTransportID;
+        }
+        this.Send_PersistentReserveOut_BasicParam att lun 0uy 0uy PR_TYPE.NO_RESERVATION param argNACA
+
+    /// <summary>
+    ///  Send PERSISTENT RESERVE OUT SCSI Command with RESERVE service action.
+    /// </summary>
+    /// <param name="att">
+    ///  SCSICommandPDU ATTR field value.
+    /// </param>
+    /// <param name="lun">
+    ///  SCSICommandPDU LUN field value.
+    /// </param>
+    /// <param name="argNACA">
+    ///  NACA bit value in CONTROL field in the PERSISTENT RESERVE OUT CDB.
+    /// </param>
+    /// <param name="argType">
+    ///   Type field value in the PERSISTENT RESERVE OUT CDB.
+    /// </param>
+    /// <param name="argReservationKey">
+    ///   ReservationKey field in the parameter list.
+    /// </param>
+    /// <returns>
+    ///  Initiator task tag.
+    /// </returns>
+    member this.Send_PROut_RESERVE
+            ( att : TaskATTRCd )
+            ( lun : LUN_T )
+            ( argNACA : NACA )
+            ( argType : PR_TYPE )
+            ( argReservationKey : RESVKEY_T ) : Task<ITT_T> =
+        let param : Haruka.BlockDeviceLU.BasicParameterList = {
+            ReservationKey = argReservationKey;
+            ServiceActionReservationKey = resvkey_me.zero;
+            SPEC_I_PT = false;
+            ALL_TG_PT = false;
+            APTPL = false;
+            TransportID = [||];
+        }
+        this.Send_PersistentReserveOut_BasicParam att lun 1uy 0uy argType param argNACA
+
+    /// <summary>
+    ///  Send PERSISTENT RESERVE OUT SCSI Command with RELEASE service action.
+    /// </summary>
+    /// <param name="att">
+    ///  SCSICommandPDU ATTR field value.
+    /// </param>
+    /// <param name="lun">
+    ///  SCSICommandPDU LUN field value.
+    /// </param>
+    /// <param name="argNACA">
+    ///  NACA bit value in CONTROL field in the PERSISTENT RESERVE OUT CDB.
+    /// </param>
+    /// <param name="argType">
+    ///   Type field value in the PERSISTENT RESERVE OUT CDB.
+    /// </param>
+    /// <param name="argReservationKey">
+    ///   ReservationKey field in the parameter list.
+    /// </param>
+    /// <returns>
+    ///  Initiator task tag.
+    /// </returns>
+    member this.Send_PROut_RELEASE
+            ( att : TaskATTRCd )
+            ( lun : LUN_T )
+            ( argNACA : NACA )
+            ( argType : PR_TYPE )
+            ( argReservationKey : RESVKEY_T ) : Task<ITT_T> =
+        let param : Haruka.BlockDeviceLU.BasicParameterList = {
+            ReservationKey = argReservationKey;
+            ServiceActionReservationKey = resvkey_me.zero;
+            SPEC_I_PT = false;
+            ALL_TG_PT = false;
+            APTPL = false;
+            TransportID = [||];
+        }
+        this.Send_PersistentReserveOut_BasicParam att lun 2uy 0uy argType param argNACA
+
+    /// <summary>
+    ///  Send PERSISTENT RESERVE OUT SCSI Command with CLEAR service action.
+    /// </summary>
+    /// <param name="att">
+    ///  SCSICommandPDU ATTR field value.
+    /// </param>
+    /// <param name="lun">
+    ///  SCSICommandPDU LUN field value.
+    /// </param>
+    /// <param name="argNACA">
+    ///  NACA bit value in CONTROL field in the PERSISTENT RESERVE OUT CDB.
+    /// </param>
+    /// <param name="argReservationKey">
+    ///   ReservationKey field in the parameter list.
+    /// </param>
+    /// <returns>
+    ///  Initiator task tag.
+    /// </returns>
+    member this.Send_PROut_CLEAR
+            ( att : TaskATTRCd )
+            ( lun : LUN_T )
+            ( argNACA : NACA )
+            ( argReservationKey : RESVKEY_T ) : Task<ITT_T> =
+        let param : Haruka.BlockDeviceLU.BasicParameterList = {
+            ReservationKey = argReservationKey;
+            ServiceActionReservationKey = resvkey_me.zero;
+            SPEC_I_PT = false;
+            ALL_TG_PT = false;
+            APTPL = false;
+            TransportID = [||];
+        }
+        this.Send_PersistentReserveOut_BasicParam att lun 3uy 0uy PR_TYPE.NO_RESERVATION param argNACA
+
+    /// <summary>
+    ///  Send PERSISTENT RESERVE OUT SCSI Command with PREEMPT service action.
+    /// </summary>
+    /// <param name="att">
+    ///  SCSICommandPDU ATTR field value.
+    /// </param>
+    /// <param name="lun">
+    ///  SCSICommandPDU LUN field value.
+    /// </param>
+    /// <param name="argNACA">
+    ///  NACA bit value in CONTROL field in the PERSISTENT RESERVE OUT CDB.
+    /// </param>
+    /// <param name="argType">
+    ///  Type field value in the PERSISTENT RESERVE OUT CDB.
+    /// </param>
+    /// <param name="argReservationKey">
+    ///   ReservationKey field in the parameter list.
+    /// </param>
+    /// <param name="argServiceActionReservationKey">
+    ///   ServiceActionReservationKey field in the parameter list.
+    /// </param>
+    /// <returns>
+    ///  Initiator task tag.
+    /// </returns>
+    member this.Send_PROut_PREEMPT
+            ( att : TaskATTRCd )
+            ( lun : LUN_T )
+            ( argNACA : NACA )
+            ( argType : PR_TYPE )
+            ( argReservationKey : RESVKEY_T )
+            ( argServiceActionReservationKey : RESVKEY_T ) : Task<ITT_T> =
+        let param : Haruka.BlockDeviceLU.BasicParameterList = {
+            ReservationKey = argReservationKey;
+            ServiceActionReservationKey = argServiceActionReservationKey;
+            SPEC_I_PT = false;
+            ALL_TG_PT = false;
+            APTPL = false;
+            TransportID = [||];
+        }
+        this.Send_PersistentReserveOut_BasicParam att lun 4uy 0uy argType param argNACA
+                
+    /// <summary>
+    ///  Send PERSISTENT RESERVE OUT SCSI Command with PREEMPT AND ABORT service action.
+    /// </summary>
+    /// <param name="att">
+    ///  SCSICommandPDU ATTR field value.
+    /// </param>
+    /// <param name="lun">
+    ///  SCSICommandPDU LUN field value.
+    /// </param>
+    /// <param name="argNACA">
+    ///  NACA bit value in CONTROL field in the PERSISTENT RESERVE OUT CDB.
+    /// </param>
+    /// <param name="argType">
+    ///  Type field value in the PERSISTENT RESERVE OUT CDB.
+    /// </param>
+    /// <param name="argReservationKey">
+    ///   ReservationKey field in the parameter list.
+    /// </param>
+    /// <param name="argServiceActionReservationKey">
+    ///   ServiceActionReservationKey field in the parameter list.
+    /// </param>
+    /// <returns>
+    ///  Initiator task tag.
+    /// </returns>
+    member this.Send_PROut_PREEMPT_AND_ABORT
+            ( att : TaskATTRCd )
+            ( lun : LUN_T )
+            ( argNACA : NACA )
+            ( argType : PR_TYPE )
+            ( argReservationKey : RESVKEY_T )
+            ( argServiceActionReservationKey : RESVKEY_T ) : Task<ITT_T> =
+        let param : Haruka.BlockDeviceLU.BasicParameterList = {
+            ReservationKey = argReservationKey;
+            ServiceActionReservationKey = argServiceActionReservationKey;
+            SPEC_I_PT = false;
+            ALL_TG_PT = false;
+            APTPL = false;
+            TransportID = [||];
+        }
+        this.Send_PersistentReserveOut_BasicParam att lun 5uy 0uy argType param argNACA
+
+    /// <summary>
+    ///  Send PERSISTENT RESERVE OUT SCSI Command with REGISTER AND IGNORE EXISTING KEY service action.
+    /// </summary>
+    /// <param name="att">
+    ///  SCSICommandPDU ATTR field value.
+    /// </param>
+    /// <param name="lun">
+    ///  SCSICommandPDU LUN field value.
+    /// </param>
+    /// <param name="argNACA">
+    ///  NACA bit in CONTROL field in the PERSISTENT RESERVE OUT CDB.
+    /// </param>
+    /// <param name="argServiceActionReservationKey">
+    ///   ServiceActionReservationKey field in the parameter list.
+    /// </param>
+    /// <param name="argSPEC_I_PT">
+    ///   SPEC_I_PT field in the parameter list.
+    /// </param>
+    /// <param name="argALL_TG_PT">
+    ///   ALL_TG_PT field in the parameter list.
+    /// </param>
+    /// <param name="argAPTPL">
+    ///   APTPL field in the parameter list.
+    /// </param>
+    /// <param name="argTransportID">
+    ///   TransportIDs in the parameter list.
+    /// </param>
+    /// <returns>
+    ///  Initiator task tag.
+    /// </returns>
+    member this.Send_PROut_REGISTER_AND_IGNORE_EXISTING_KEY
+            ( att : TaskATTRCd )
+            ( lun : LUN_T )
+            ( argNACA : NACA )
+            ( argServiceActionReservationKey : RESVKEY_T )
+            ( argSPEC_I_PT : bool )
+            ( argALL_TG_PT : bool )
+            ( argAPTPL : bool ) 
+            ( argTransportID : ( string * ISID_T option )[] ): Task<ITT_T> =
+        let param : Haruka.BlockDeviceLU.BasicParameterList = {
+            ReservationKey = resvkey_me.zero;
+            ServiceActionReservationKey = argServiceActionReservationKey;
+            SPEC_I_PT = argSPEC_I_PT;
+            ALL_TG_PT = argALL_TG_PT;
+            APTPL = argAPTPL;
+            TransportID = argTransportID;
+        }
+        this.Send_PersistentReserveOut_BasicParam att lun 6uy 0uy PR_TYPE.NO_RESERVATION param argNACA
+
+    /// <summary>
     ///  Send PERSISTENT RESERVE OUT SCSI Command with REGISTER AND MOVE service action.
     /// </summary>
     /// <param name="att">
@@ -671,31 +962,55 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// <param name="lun">
     ///  SCSICommandPDU LUN field value.
     /// </param>
-    /// <param name="argScope">
-    ///   SCOPE field
+    /// <param name="argNACA">
+    ///  NACA bit in CONTROL field
     /// </param>
     /// <param name="argType">
     ///   TYPE field
     /// </param>
-    /// <param name="param">
-    ///   Parameter data.
+    /// <param name="argReservationKey">
+    ///   ReservationKey field in the parameter list.
     /// </param>
-    /// <param name="argNACA">
-    ///  NACA bit in CONTROL field
+    /// <param name="argServiceActionReservationKey">
+    ///   ServiceActionReservationKey field in the parameter list.
+    /// </param>
+    /// <param name="argUNREG">
+    ///   UNREG field in the parameter list.
+    /// </param>
+    /// <param name="argAPTPL">
+    ///   APTPL field in the parameter list.
+    /// </param>
+    /// <param name="argRelativeTargetPortIdentifier">
+    ///   RelativeTargetPortIdentifier field in the parameter list.
+    /// </param>
+    /// <param name="argTransportID">
+    ///   TransportID field in the parameter list.
     /// </param>
     /// <returns>
     ///  Initiator task tag.
     /// </returns>
-    member this.Send_PersistentReserveOut_MoveParam
+    member this.Send_PersistentReserveOut_REGISTER_AND_MOVE
             ( att : TaskATTRCd )
             ( lun : LUN_T )
-            ( argScope : byte )
-            ( argType : byte )
-            ( param : Haruka.BlockDeviceLU.MoveParameterList )
-            ( argNACA : NACA ) : Task<ITT_T> =
+            ( argNACA : NACA )
+            ( argType : PR_TYPE )
+            ( argReservationKey : RESVKEY_T )
+            ( argServiceActionReservationKey : RESVKEY_T )
+            ( argUNREG : bool )
+            ( argAPTPL : bool ) 
+            ( argRelativeTargetPortIdentifier : uint16 )
+            ( argTransportID : string * ISID_T option ): Task<ITT_T> =
         task {
+            let param : Haruka.BlockDeviceLU.MoveParameterList = {
+                ReservationKey = argReservationKey;
+                ServiceActionReservationKey = argServiceActionReservationKey;
+                UNREG = argUNREG;
+                APTPL = argAPTPL;
+                RelativeTargetPortIdentifier = argRelativeTargetPortIdentifier;
+                TransportID = argTransportID;
+            }
             let paramBytes = GenScsiParams.PersistentReserveOut_MoveParameterList param
-            let cdb = GenScsiCDB.PersistentReserveOut 0x07uy argScope argType paramBytes.uLength argNACA LINK.F
+            let cdb = GenScsiCDB.PersistentReserveOut 0x07uy 0uy argType paramBytes.uLength argNACA LINK.F
             let! r = this.SendSCSICommand att lun cdb paramBytes paramBytes.uLength
             paramBytes.Return()
             return r

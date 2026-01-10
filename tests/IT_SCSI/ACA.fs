@@ -432,15 +432,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                 Assert.True(( res_w1_ca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
             // register reservation key
-            let param : BasicParameterList = {
-                ReservationKey = resvkey_me.fromPrim 0UL;
-                ServiceActionReservationKey = resvkey_me.fromPrim 111UL;
-                SPEC_I_PT = false;
-                ALL_TG_PT = false;
-                APTPL = false;
-                TransportID = [||];
-            }
-            let! itt_pr_out1 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 0uy 0uy param NACA.T
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 111UL ) false false false [||]
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
 
             if raiseaca then
@@ -471,15 +463,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             Assert.True(( res_pr_in1.ReservationKey.[0] = resvkey_me.fromPrim 111UL ))
 
             // clear reservation key
-            let param : BasicParameterList = {
-                ReservationKey = resvkey_me.fromPrim 111UL;
-                ServiceActionReservationKey = resvkey_me.fromPrim 0UL;
-                SPEC_I_PT = false;
-                ALL_TG_PT = false;
-                APTPL = false;
-                TransportID = [||];
-            }
-            let! itt_pr_out2 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 3uy 0uy 0uy param NACA.T
+            let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 111UL )
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
 
             let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
@@ -507,15 +491,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                 Assert.True(( res_w1_ca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
             // register reservation key
-            let param : BasicParameterList = {
-                ReservationKey = resvkey_me.fromPrim 0UL;
-                ServiceActionReservationKey = resvkey_me.fromPrim 111UL;
-                SPEC_I_PT = false;
-                ALL_TG_PT = false;
-                APTPL = false;
-                TransportID = [||];
-            }
-            let! itt_pr_out1 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 0uy 0uy param NACA.T
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 111UL ) false false false [||]
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
 
             if raiseaca then
@@ -550,15 +526,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             Assert.True(( res_pr_in1.ReservationKey.[0] = resvkey_me.fromPrim 111UL ))
 
             // clear reservation key
-            let param : BasicParameterList = {
-                ReservationKey = resvkey_me.fromPrim 111UL;
-                ServiceActionReservationKey = resvkey_me.fromPrim 0UL;
-                SPEC_I_PT = false;
-                ALL_TG_PT = false;
-                APTPL = false;
-                TransportID = [||];
-            }
-            let! itt_pr_out2 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 3uy 0uy 0uy param NACA.T
+            let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 111UL )
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
 
             let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
@@ -584,15 +552,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
 
             // register reservation key
-            let param : BasicParameterList = {
-                ReservationKey = resvkey_me.fromPrim 0UL;
-                ServiceActionReservationKey = resvkey_me.fromPrim 222UL;
-                SPEC_I_PT = false;
-                ALL_TG_PT = false;
-                APTPL = false;
-                TransportID = [||];
-            }
-            let! itt_pr_out1 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 0uy 0uy param NACA.T
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) false false false [||]
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
 
             // raise ACA
@@ -618,15 +578,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             Assert.True(( res_pr_in1.ReservationKey.[0] = resvkey_me.fromPrim 222UL ))
 
             // clear reservation key
-            let param : BasicParameterList = {
-                ReservationKey = resvkey_me.fromPrim 222UL;
-                ServiceActionReservationKey = resvkey_me.fromPrim 0UL;
-                SPEC_I_PT = false;
-                ALL_TG_PT = false;
-                APTPL = false;
-                TransportID = [||];
-            }
-            let! itt_pr_out2 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 3uy 0uy 0uy param NACA.T
+            let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 222UL )
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
 
             let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
@@ -646,15 +598,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
 
             // register reservation key
-            let param : BasicParameterList = {
-                ReservationKey = resvkey_me.fromPrim 0UL;
-                ServiceActionReservationKey = resvkey_me.fromPrim 222UL;
-                SPEC_I_PT = false;
-                ALL_TG_PT = false;
-                APTPL = false;
-                TransportID = [||];
-            }
-            let! itt_pr_out1 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 0uy 0uy param NACA.T
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) false false false [||]
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
 
             // raise ACA
@@ -696,15 +640,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             Assert.True(( res_pr_in1.ReservationKey.[0] = resvkey_me.fromPrim 222UL ))
 
             // clear reservation key
-            let param : BasicParameterList = {
-                ReservationKey = resvkey_me.fromPrim 222UL;
-                ServiceActionReservationKey = resvkey_me.fromPrim 0UL;
-                SPEC_I_PT = false;
-                ALL_TG_PT = false;
-                APTPL = false;
-                TransportID = [||];
-            }
-            let! itt_pr_out2 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 3uy 0uy 0uy param NACA.T
+            let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 222UL )
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
 
             let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
@@ -727,15 +663,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
 
             // register reservation key
-            let param : BasicParameterList = {
-                ReservationKey = resvkey_me.fromPrim 0UL;
-                ServiceActionReservationKey = resvkey_me.fromPrim 222UL;
-                SPEC_I_PT = false;
-                ALL_TG_PT = false;
-                APTPL = false;
-                TransportID = [||];
-            }
-            let! itt_pr_out1 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 0uy 0uy param NACA.T
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) false false false [||]
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
 
             // raise ACA
@@ -760,15 +688,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             Assert.True(( res_pr_in1.ReservationKey.[0] = resvkey_me.fromPrim 222UL ))
 
             // clear reservation key
-            let param : BasicParameterList = {
-                ReservationKey = resvkey_me.fromPrim 222UL;
-                ServiceActionReservationKey = resvkey_me.fromPrim 0UL;
-                SPEC_I_PT = false;
-                ALL_TG_PT = false;
-                APTPL = false;
-                TransportID = [||];
-            }
-            let! itt_pr_out2 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 3uy 0uy 0uy param NACA.T
+            let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 222UL )
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
 
             let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T

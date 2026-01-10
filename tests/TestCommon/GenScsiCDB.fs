@@ -555,12 +555,12 @@ type GenScsiCDB() =
     /// <returns>
     ///  Generated PERSISTENT RESERVE OUT CDB with padding to 16 byte.
     /// </returns>
-    static member PersistentReserveOut ( argServiceAction : byte ) ( argScope : byte ) ( argType : byte ) ( argParameterListLength : uint32 ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
+    static member PersistentReserveOut ( argServiceAction : byte ) ( argScope : byte ) ( argType : PR_TYPE ) ( argParameterListLength : uint32 ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
         [|
             0x5Fuy;                                                                             // OPERATION CODE
             argServiceAction &&& 0x1Fuy;                                                        // SERVICE ACTION
             ( ( argScope &&& 0x0Fuy ) <<< 4 ) |||                                               // SCOPE
-                ( argType &&& 0x0Fuy );                                                         // TYPE
+                ( ( argType |> PR_TYPE.toNumericValue ) &&& 0x0Fuy );                           // TYPE
             0x00uy; 0x00uy;                                                                     // Reserved
             yield! Functions.UInt32ToNetworkBytes_NewVec argParameterListLength;                // PARAMETER LIST LENGTH 
             ( Functions.SetBitflag ( NACA.toBool argNACA ) 0x04uy ) |||
