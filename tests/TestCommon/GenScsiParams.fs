@@ -1540,8 +1540,9 @@ type GenScsiParams() =
             yield 0x00uy;
             yield 0x00uy;
             yield 0x00uy;
-            yield! Functions.Int32ToNetworkBytes_NewVec transportIDList.Length;
-            yield! transportIDList;
+            if transportIDList.Length > 0 then
+                yield! Functions.Int32ToNetworkBytes_NewVec transportIDList.Length;
+                yield! transportIDList;
         |]
         |> PooledBuffer.Rent
 
