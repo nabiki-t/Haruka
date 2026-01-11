@@ -638,6 +638,10 @@ type Session
                 )
                 m_RespFense.Lock resp.NeedResponseFence ( fun () -> conInfo.Connection.SendPDU resp )
 
+                HLogger.Trace( LogID.V_TRACE, fun g ->
+                    g.Gen1( loginfo, sprintf "LockStatus=%d, Count=%d" m_RespFense.LockStatus m_RespFense.Count )
+                )
+
             | _ ->
                 // Silentry ignore
                 ()
@@ -1510,6 +1514,11 @@ type Session
             conn.SendPDU rejectPDU
         )
 
+        HLogger.Trace( LogID.V_TRACE, fun g ->
+            let loginfo = struct ( m_ObjID, ValueSome conn.CID, ValueSome conn.ConCounter, ValueSome m_TSIH, ValueNone, ValueNone )
+            g.Gen1( loginfo, sprintf "LockStatus=%d, Count=%d" m_RespFense.LockStatus m_RespFense.Count )
+        )
+
     // ------------------------------------------------------------------------
     /// <summary>
     ///   Resend PDU with response fence.
@@ -1549,5 +1558,5 @@ type Session
 
         HLogger.Trace( LogID.V_TRACE, fun g ->
             let loginfo = struct ( m_ObjID, ValueSome cid, ValueSome counter, ValueSome m_TSIH, ValueSome pdu.InitiatorTaskTag, ValueNone )
-            g.Gen1( loginfo, sprintf "AAAAAAAAAA.  LockStatus=%d, Count=%d" m_RespFense.LockStatus m_RespFense.Count )
+            g.Gen1( loginfo, sprintf "LockStatus=%d, Count=%d" m_RespFense.LockStatus m_RespFense.Count )
         )
