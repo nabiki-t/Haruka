@@ -309,7 +309,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             // Nop-Out
             for i = 0 to wv.Length - 1 do
                 let lun = ( i % int m_TargetCount ) + 1 |> uint64 |> lun_me.fromPrim
-                let! _ = wv.[i].SendNOPOutPDU g_CID0 BitI.F lun g_DefTTT PooledBuffer.Empty
+                let! _ = wv.[i].SendNOPOut_PingRequest g_CID0 BitI.F lun g_DefTTT PooledBuffer.Empty
                 let! rpdu3 = wv.[i].ReceiveSpecific<NOPInPDU> g_CID0
                 rpdu3.PingData.Return()
 
@@ -342,7 +342,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             // Nop-Out
             for i = 0 to wconcnt - 1 do
                 let cid = cid_me.fromPrim ( uint16 i )
-                let! _ = r1.SendNOPOutPDU cid BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest cid BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! rpdu3 = r1.ReceiveSpecific<NOPInPDU> cid
                 rpdu3.PingData.Return()
 
@@ -379,7 +379,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
                     // Nop-Out
                     let cid = cid_me.zero
-                    let! _ = r1.SendNOPOutPDU cid BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+                    let! _ = r1.SendNOPOut_PingRequest cid BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
                     let! rpdu3 = r1.ReceiveSpecific<NOPInPDU> cid
                     rpdu3.PingData.Return()
 
@@ -559,7 +559,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // Nop-Out
             let buf = PooledBuffer.Rent [| 0uy .. 255uy |]
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT buf
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf
             let! rpdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( PooledBuffer.ValueEquals rpdu3.PingData buf ))
             buf.Return()
@@ -585,7 +585,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // Nop-Out
             let buf = PooledBuffer.Rent [| 0uy .. 255uy |]
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT buf
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf
             let! rpdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( PooledBuffer.ValueEquals rpdu3.PingData buf ))
             buf.Return()
@@ -613,7 +613,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             // Nop-Out ( Negociated MaxRecvDataSegmentLength )
             let buf1 = PooledBuffer.Rent( int mrdsl_i )
             rand.NextBytes( buf1.ArraySegment.AsSpan() )
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT buf1
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf1
             let! rpdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( PooledBuffer.ValueEquals rpdu3.PingData buf1 ))
             buf1.Return()
@@ -622,7 +622,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             // Nop-Out ( Negociated MaxRecvDataSegmentLength + 1 )
             let buf2 = PooledBuffer.Rent( int mrdsl_i + 1 )
             rand.NextBytes( buf2.ArraySegment.AsSpan() )
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT buf2
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf2
             let! rpdu4 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             let buf2_2 = PooledBuffer.Rent( buf2, int mrdsl_i )
             Assert.True(( PooledBuffer.ValueEquals rpdu4.PingData buf2_2 ))
@@ -651,7 +651,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             // Nop-Out ( Negociated MaxRecvDataSegmentLength - 1 )
             let buf1 = PooledBuffer.Rent( int mrdsl_i - 1 )
             rand.NextBytes( buf1.ArraySegment.AsSpan() )
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT buf1
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf1
             let! rpdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( PooledBuffer.ValueEquals rpdu3.PingData buf1 ))
             buf1.Return()
@@ -660,7 +660,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             // Nop-Out ( Negociated MaxRecvDataSegmentLength )
             let buf2 = PooledBuffer.Rent( int mrdsl_i )
             rand.NextBytes( buf2.ArraySegment.AsSpan() )
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT buf2
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf2
             let! rpdu4 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( PooledBuffer.ValueEquals rpdu4.PingData buf2 ))
             buf2.Return()
@@ -669,7 +669,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             // Nop-Out ( Negociated MaxRecvDataSegmentLength + 1 )
             let buf3 = PooledBuffer.Rent( int mrdsl_i + 1 )
             rand.NextBytes( buf3.ArraySegment.AsSpan() )
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT buf3
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf3
             let! rpdu5 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             let buf3_2 = PooledBuffer.Rent( buf3, int mrdsl_i )
             Assert.True(( PooledBuffer.ValueEquals rpdu5.PingData buf3_2 ))
@@ -698,7 +698,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             // Nop-Out ( Negociated MaxRecvDataSegmentLength - 1 )
             let buf1 = PooledBuffer.Rent( int mrdsl_i - 1 )
             rand.NextBytes( buf1.ArraySegment.AsSpan() )
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT buf1
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf1
             let! rpdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( PooledBuffer.ValueEquals rpdu3.PingData buf1 ))
             buf1.Return()
@@ -707,7 +707,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             // Nop-Out ( Negociated MaxRecvDataSegmentLength )
             let buf2 = PooledBuffer.Rent( int mrdsl_i )
             rand.NextBytes( buf2.ArraySegment.AsSpan() )
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT buf2
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf2
             let! rpdu4 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( PooledBuffer.ValueEquals rpdu4.PingData buf2 ))
             buf2.Return()
@@ -740,7 +740,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             // Nop-Out ( Negociated NEGOPARAM_MIN_MaxRecvDataSegmentLength - 1 )
             let buf1 = PooledBuffer.Rent( int Constants.NEGOPARAM_MIN_MaxRecvDataSegmentLength - 1 )
             rand.NextBytes( buf1.ArraySegment.AsSpan() )
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT buf1
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf1
             let! rpdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( PooledBuffer.ValueEquals rpdu3.PingData buf1 ))
             buf1.Return()
@@ -749,7 +749,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             // Nop-Out ( Negociated NEGOPARAM_MIN_MaxRecvDataSegmentLength )
             let buf2 = PooledBuffer.Rent( int Constants.NEGOPARAM_MIN_MaxRecvDataSegmentLength )
             rand.NextBytes( buf2.ArraySegment.AsSpan() )
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT buf2
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf2
             let! rpdu4 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( PooledBuffer.ValueEquals rpdu4.PingData buf2 ))
             buf2.Return()
@@ -782,7 +782,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             // Nop-Out ( Negociated NEGOPARAM_MIN_MaxRecvDataSegmentLength - 1 )
             let buf1 = PooledBuffer.Rent( int Constants.NEGOPARAM_MIN_MaxRecvDataSegmentLength - 1 )
             rand.NextBytes( buf1.ArraySegment.AsSpan() )
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT buf1
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf1
             let! rpdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( PooledBuffer.ValueEquals rpdu3.PingData buf1 ))
             buf1.Return()
@@ -791,7 +791,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             // Nop-Out ( Negociated NEGOPARAM_MIN_MaxRecvDataSegmentLength )
             let buf2 = PooledBuffer.Rent( int Constants.NEGOPARAM_MIN_MaxRecvDataSegmentLength )
             rand.NextBytes( buf2.ArraySegment.AsSpan() )
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT buf2
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf2
             let! rpdu4 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( PooledBuffer.ValueEquals rpdu4.PingData buf2 ))
             buf2.Return()
@@ -805,7 +805,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let buf3 = PooledBuffer.Rent( int Constants.NEGOPARAM_MIN_MaxRecvDataSegmentLength + 1 )
             rand.NextBytes( buf3.ArraySegment.AsSpan() )
             try
-                let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT buf3
+                let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf3
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
             with
@@ -1894,7 +1894,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
                 Assert.True(( rpdu2.DesiredDataTransferLength = 512u ))
 
                 // Immidiate NOP-Out
-                let! _ = r1.SendNOPOutPDU g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
 
                 // SCSI Data-Out PDU
@@ -1949,7 +1949,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.True(( rpdu2.DesiredDataTransferLength = 512u ))
 
             // Immidiate NOP-Out
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // receive following R2T PDUs
             for i= 1 to 15 do

@@ -188,7 +188,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             Assert.True(( r.Params.TargetAlias = "target001" ))
 
             // Nop-Out
-            let! _ = r.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
@@ -383,7 +383,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             Assert.True(( r.Params.TargetAlias = "target002" ))
 
             // Nop-Out
-            let! _ = r.SendNOPOutPDU g_CID0 BitI.F ( lun_me.fromPrim 2UL ) g_DefTTT PooledBuffer.Empty
+            let! _ = r.SendNOPOut_PingRequest g_CID0 BitI.F ( lun_me.fromPrim 2UL ) g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
@@ -659,7 +659,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             Assert.True(( r.Params.TargetAlias = "target003" ))
 
             // Nop-Out
-            let! _ = r.SendNOPOutPDU g_CID0 BitI.F ( lun_me.fromPrim 3UL ) g_DefTTT PooledBuffer.Empty
+            let! _ = r.SendNOPOut_PingRequest g_CID0 BitI.F ( lun_me.fromPrim 3UL ) g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
@@ -825,7 +825,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r2 = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam1 { m_defaultConnParam with CID = g_CID1 } cmdsn_me.zero
 
             // Nop-Out
-            let! _ = r2.SendNOPOutPDU g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r2.SendNOPOut_PingRequest g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r2.ReceiveSpecific<NOPInPDU> g_CID1
             rpdu1.PingData.Return()
 
@@ -883,7 +883,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
             with
@@ -894,7 +894,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID1 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID1 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
                 Assert.Fail __LINE__
             with
@@ -908,7 +908,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r3 = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam1 connParam2 cmdsn_me.zero
 
             // Nop-Out
-            let! _ = r3.SendNOPOutPDU g_CID2 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r3.SendNOPOut_PingRequest g_CID2 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu4 = r3.ReceiveSpecific<NOPInPDU> g_CID2
             rpdu4.PingData.Return()
 
@@ -933,7 +933,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
             with
@@ -944,7 +944,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID1 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID1 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
                 Assert.Fail __LINE__
             with
@@ -988,7 +988,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
             with
@@ -999,7 +999,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID1 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID1 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
                 Assert.Fail __LINE__
             with
@@ -1013,7 +1013,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r3 = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam1 connParam2 cmdsn_me.zero
 
             // Nop-Out
-            let! _ = r3.SendNOPOutPDU g_CID2 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r3.SendNOPOut_PingRequest g_CID2 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu3 = r3.ReceiveSpecific<NOPInPDU> g_CID2
             rpdu3.PingData.Return()
 
@@ -1038,7 +1038,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
             with
@@ -1049,7 +1049,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID1 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID1 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
                 Assert.Fail __LINE__
             with
@@ -1084,7 +1084,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
             with
@@ -1124,7 +1124,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID1 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID1 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
                 Assert.Fail __LINE__
             with
@@ -1165,7 +1165,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
             with
@@ -1175,7 +1175,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             r1.CloseConnection g_CID0
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID1
             rpdu1.PingData.Return()
 
@@ -1187,7 +1187,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection connParam1_3
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID2 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID2 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID2
             rpdu1.PingData.Return()
 
@@ -1220,7 +1220,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
             with
@@ -1230,7 +1230,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             r1.CloseConnection g_CID0
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID1
             rpdu1.PingData.Return()
 
@@ -1242,12 +1242,12 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection connParam1_3
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID1
             rpdu1.PingData.Return()
 
@@ -1280,7 +1280,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID1 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID1 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
                 Assert.Fail __LINE__
             with
@@ -1290,7 +1290,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             r1.CloseConnection g_CID1
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
@@ -1302,7 +1302,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection connParam1_3
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID2 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID2 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID2
             rpdu1.PingData.Return()
 
@@ -1335,7 +1335,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // Nop-out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID1 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID1 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
                 Assert.Fail __LINE__
             with
@@ -1345,7 +1345,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             r1.CloseConnection g_CID1
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
@@ -1354,12 +1354,12 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection connParam1_3
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID1
             rpdu1.PingData.Return()
 
@@ -1420,7 +1420,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam1 connParam1 cmdsn_me.zero
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
@@ -1453,7 +1453,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
@@ -1461,7 +1461,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r2 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out
-            let! _ = r2.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r2.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu2 = r2.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu2.PingData.Return()
 
@@ -1490,7 +1490,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam1 connParam1 cmdsn_me.zero
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
@@ -1500,7 +1500,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
 
             // Nop-Out(failed)
             try
-                let! _ = r1.SendNOPOutPDU g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
             with
@@ -1509,7 +1509,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
                 ()
 
             // Nop-Out
-            let! _ = r2.SendNOPOutPDU g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r2.SendNOPOut_PingRequest g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu2 = r2.ReceiveSpecific<NOPInPDU> g_CID1
             rpdu2.PingData.Return()
 
@@ -1532,7 +1532,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam1 m_defaultConnParam cmdsn_me.zero
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
@@ -1545,7 +1545,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r2 = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam1 m_defaultConnParam cmdsn_me.zero
 
             // Nop-Out
-            let! _ = r2.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r2.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu3 = r2.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu3.PingData.Return()
 
@@ -1563,7 +1563,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
@@ -1572,7 +1572,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection connParam2
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID1
             rpdu2.PingData.Return()
 
@@ -1596,7 +1596,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
@@ -1626,12 +1626,12 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
 
             // Nop-Out ( conn0 )
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
             // Nop-Out ( conn1 )
-            let! _ = r1.SendNOPOutPDU g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID1
             rpdu2.PingData.Return()
 
@@ -1640,12 +1640,12 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
 
             // Nop-Out ( conn0 )
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu3.PingData.Return()
 
             // Nop-Out ( conn1 )
-            let! _ = r1.SendNOPOutPDU g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu4 = r1.ReceiveSpecific<NOPInPDU> g_CID1
             rpdu4.PingData.Return()
 
@@ -1678,7 +1678,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out ( conn0 )
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu1.PingData.Return()
 
@@ -1687,7 +1687,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
             do! r1.AddConnection m_defaultConnParam
 
             // Nop-Out ( conn0 )
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! rpdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             rpdu3.PingData.Return()
 

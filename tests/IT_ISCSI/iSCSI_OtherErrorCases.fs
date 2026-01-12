@@ -361,7 +361,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 4096u writeCDB PooledBuffer.Empty 0u
 
             // Send Nop-Out with immidiate flag
-            let! itt2, _ = r1.SendNOPOutPDU g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! itt2, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive Nop-In PDU
             let! nopinPDU = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -423,7 +423,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 4096u / m_MediaBlockSize |> uint16 |> blkcnt_me.ofUInt16
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP, cmdsnNOP = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP, cmdsnNOP = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU.InitiatorTaskTag = ittNOP ))
 
@@ -505,7 +505,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP, cmdsnNOP = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP, cmdsnNOP = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU.InitiatorTaskTag = ittNOP ))
             Assert.True(( nopinPDU.StatSN = sendExpStatSN1 ))
@@ -551,7 +551,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( r1.Connection( g_CID0 ).Params.HeaderDigest = DigestType.DST_CRC32C ))
 
             // Send Nop-Out PDU with header digest error
-            let! _ = r1.SendNOPOutPDU_Test id ( ValueSome( 8u, 40u ) ) g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest_Test id ( ValueSome( 8u, 40u ) ) g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // session recovery
             try
@@ -572,13 +572,13 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam m_defaultConnParam
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
 
             // Send Nop-Out PDU with data digest error
             let sendData = PooledBuffer.RentAndInit 1024
-            let! _ = r1.SendNOPOutPDU_Test id ( ValueSome( 100u, 100u ) ) g_CID0 BitI.F g_LUN1 g_DefTTT sendData
+            let! _ = r1.SendNOPOut_PingRequest_Test id ( ValueSome( 100u, 100u ) ) g_CID0 BitI.F g_LUN1 g_DefTTT sendData
             sendData.Return()
 
             // Receive Reject PDU
@@ -589,7 +589,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP_2, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_2, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_2.InitiatorTaskTag = ittNOP_2 ))
 
@@ -605,7 +605,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam m_defaultConnParam
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
 
@@ -623,7 +623,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP_2, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_2, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_2.InitiatorTaskTag = ittNOP_2 ))
 
@@ -640,7 +640,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let blockCount = 4096u / m_MediaBlockSize |> uint16 |> blkcnt_me.ofUInt16
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
 
@@ -668,7 +668,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( respPDU.Status = ScsiCmdStatCd.GOOD ))
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP_2, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_2, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_2.InitiatorTaskTag = ittNOP_2 ))
 
@@ -684,7 +684,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam m_defaultConnParam
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
 
@@ -700,7 +700,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP_2, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_2, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_2.InitiatorTaskTag = ittNOP_2 ))
 
@@ -748,7 +748,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
 
@@ -878,7 +878,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
                     TargetName = "";
             }
             let! r1 = iSCSI_Initiator.LoginForDiscoverySession sessParam m_defaultConnParam
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             try
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
@@ -1121,7 +1121,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Send Nop-Out 1
-            let! ittNopOut1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive Nop-In PDU for Nop-Out 1
             let! nopIn1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -1147,14 +1147,14 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             r1.Connection( g_CID0 ).SkipExtStatSN ( statsn_me.fromPrim 1u )
 
             // Send Nop-Out 2 ( Sends acknowledgement to Nop-Out 1 )
-            let! ittNopOut2, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut2, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive SCSI Response PDU for SCSI write command
             let! scsiRespPDU = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
             Assert.True(( scsiRespPDU.InitiatorTaskTag = ittScsiCmd ))
 
             // Send Nop-Out 3 ( Sends acknowledgement to SCSI Response )
-            let! ittNopOut3, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut3, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive Nop-In PDU for Nop-Out 2
             let! nopIn2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -1189,7 +1189,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( scsiRespPDU.InitiatorTaskTag = ittScsiCmd ))
 
             // Send Nop-Out 1
-            let! ittNopOut1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive Nop-In PDU for Nop-Out 1
             let! nopIn1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -1211,7 +1211,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             r1.Connection( g_CID0 ).SkipExtStatSN ( statsn_me.fromPrim 1u )
 
             // Send Nop-Out 2 ( Sends acknowledgement to Nop-Out 1 )
-            let! ittNopOut2, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut2, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive TMF response PDU for CLEAR_ACA TMF request.
             let! tmdRespPDU = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
@@ -1219,7 +1219,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( tmdRespPDU.InitiatorTaskTag = ittTMF ))
 
             // Send Nop-Out 3 ( Sends acknowledgement to TMF Response )
-            let! ittNopOut3, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut3, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive Nop-In PDU for Nop-Out 2
             let! nopIn2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -1250,7 +1250,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( scsiRespPDU1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
             // Send Nop-Out 1
-            let! ittNopOut1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive Nop-In PDU for Nop-Out 1
             let! nopIn1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -1272,7 +1272,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             r1.Connection( g_CID0 ).SkipExtStatSN ( statsn_me.fromPrim 1u )
 
             // Send Nop-Out 2 ( Sends acknowledgement to Nop-Out 1 )
-            let! ittNopOut2, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut2, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive SCSI response for SCSI write command request.
             let! scsiRespPDU2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
@@ -1280,7 +1280,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( scsiRespPDU2.Status = ScsiCmdStatCd.ACA_ACTIVE ))
 
             // Send Nop-Out 3 ( Sends acknowledgement to SCSI response )
-            let! ittNopOut3, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut3, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive Nop-In PDU for Nop-Out 2
             let! nopIn2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -1431,7 +1431,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( rpdu.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
 
             // Send Nop-Out to acknowledge SCSI Response
-            let! ittNopOut, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopInPDU = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopInPDU.InitiatorTaskTag = ittNopOut ))
 
@@ -1519,7 +1519,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( rejPDU.Reason = RejectReasonCd.PROTOCOL_ERR ))
 
             // Send Nop-Out to acknowledge SCSI Response
-            let! ittNopOut, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopInPDU = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopInPDU.InitiatorTaskTag = ittNopOut ))
 
@@ -1567,7 +1567,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( rejPDU.Reason = RejectReasonCd.PROTOCOL_ERR ))
 
             // Send Nop-Out to acknowledge SCSI Response
-            let! ittNopOut, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopInPDU = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopInPDU.InitiatorTaskTag = ittNopOut ))
 
@@ -1584,7 +1584,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
                 oldpdu with
                     InitiatorTaskTag = itt_me.fromPrim 0x11111111u
             }
-            let! _ = r1.SendNOPOutPDU_Test updater ValueNone g_CID0 BitI.F g_LUN1 ( ttt_me.fromPrim 0x22222222u ) PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest_Test updater ValueNone g_CID0 BitI.F g_LUN1 ( ttt_me.fromPrim 0x22222222u ) PooledBuffer.Empty
 
             // Format errors cause session recovery
             try
@@ -1627,7 +1627,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( scsiRespPDU.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
 
             // raise session recovery on session 1
-            let! _ = r1.SendNOPOutPDU_Test id ( ValueSome( 8u, 40u ) ) g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest_Test id ( ValueSome( 8u, 40u ) ) g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             try
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
@@ -1691,12 +1691,12 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             Assert.True(( tmdRespPDU.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
 
             // Nop-Out on session 1
-            let! ittNopOut1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopInPDU1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopInPDU1.InitiatorTaskTag = ittNopOut1 ))
 
             // Nop-Out on session 2
-            let! ittNopOut2, _ = r2.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNopOut2, _ = r2.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopInPDU2 = r2.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopInPDU2.InitiatorTaskTag = ittNopOut2 ))
 
@@ -1754,7 +1754,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let errorLUN = lun_me.fromPrim 0xFFFFUL
 
             // NOP does not use the LUN value
-            let! ittNopOut1, _ = r1.SendNOPOutPDU g_CID0 BitI.F errorLUN g_DefTTT PooledBuffer.Empty
+            let! ittNopOut1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F errorLUN g_DefTTT PooledBuffer.Empty
             let! nopInPDU1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopInPDU1.InitiatorTaskTag = ittNopOut1 ))
 
@@ -1785,7 +1785,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
             let errorLUN = lun_me.fromPrim 0xFFFFUL
 
             // Send Nop-Out and receive Nop-In
-            let! ittNOP1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU.InitiatorTaskTag = ittNOP1 ))
             Assert.True(( nopinPDU.StatSN = sendExpStatSN1 ))

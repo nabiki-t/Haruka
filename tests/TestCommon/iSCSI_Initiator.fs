@@ -837,7 +837,10 @@ type iSCSI_Initiator(
     /// <returns>
     ///  The pair of ITT and CmdSN in sent PDU.
     /// </returns>
-    member this.SendNOPOutPDU_Test
+    /// <remarks>
+    ///  This method sends a Ping request to the target to request a response by NOP-In.
+    /// </remarks>
+    member this.SendNOPOut_PingRequest_Test
         ( updater : NOPOutPDU -> NOPOutPDU )
         ( fuz : ( uint * uint ) voption )
         ( cid : CID_T )
@@ -877,7 +880,10 @@ type iSCSI_Initiator(
     /// <summary>
     ///  Send NOP out PDU to the target without test function.
     /// </summary>
-    member this.SendNOPOutPDU = this.SendNOPOutPDU_Test id ValueNone
+    /// <remarks>
+    ///  This method sends a Ping request to the target to request a response by NOP-In.
+    /// </remarks>
+    member this.SendNOPOut_PingRequest = this.SendNOPOut_PingRequest_Test id ValueNone
 
     /// <summary>
     ///  Receive response PDU.

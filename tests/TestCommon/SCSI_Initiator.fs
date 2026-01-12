@@ -144,7 +144,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
             if not( Volatile.Read &m_ExitFlg ) then
                 Volatile.Write( &m_ExitFlg, true )
                 let sendData = PooledBuffer.Rent [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]
-                let! itt, _ = m_ISCIInitiator.SendNOPOutPDU m_CID BitI.T lun_me.zero ( ttt_me.fromPrim 0xFFFFFFFFu ) sendData
+                let! itt, _ = m_ISCIInitiator.SendNOPOut_PingRequest m_CID BitI.T lun_me.zero ( ttt_me.fromPrim 0xFFFFFFFFu ) sendData
                 let! _ = m_ReceiveWaiter.WaitAndReset itt
                 sendData.Return()
         }
@@ -1744,7 +1744,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// </summary>
     member _.Send_NopOut() : Task =
         task {
-            let! _ = m_ISCIInitiator.SendNOPOutPDU m_CID BitI.T lun_me.zero ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty
+            let! _ = m_ISCIInitiator.SendNOPOut_PingRequest m_CID BitI.T lun_me.zero ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty
             ()
         }
 

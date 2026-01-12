@@ -171,7 +171,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Not-Out
             for i = 0 to 9 do
-                let! _, cmdsn = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _, cmdsn = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
                 Assert.True(( cmdsn = cmdsn_me.fromPrim( uint i ) ))
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 ()
@@ -186,7 +186,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out 1
-            let! _, cmdsn_0 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn_0 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             Assert.True(( cmdsn_0 = cmdsn_me.zero ))
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
 
@@ -194,7 +194,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let sendData = PooledBuffer.RentAndInit 4096
             Random.Shared.NextBytes( sendData.ArraySegment.AsSpan() )
             // Destroys the value of the data segment
-            let! _, cmdsn_1 = r1.SendNOPOutPDU_Test id ( ValueSome( 1024u, 2048u ) ) g_CID0 BitI.F g_LUN1 g_DefTTT sendData
+            let! _, cmdsn_1 = r1.SendNOPOut_PingRequest_Test id ( ValueSome( 1024u, 2048u ) ) g_CID0 BitI.F g_LUN1 g_DefTTT sendData
             Assert.True(( cmdsn_1 = cmdsn_me.fromPrim 1u ))
             let! pdu1 = r1.ReceiveSpecific<RejectPDU> g_CID0
             Assert.True(( pdu1.Reason = RejectReasonCd.DATA_DIGEST_ERR ))
@@ -205,7 +205,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Re-send Nop-Out 2
             let sendData = PooledBuffer.RentAndInit 4096
-            let! _, cmdsn_1_2 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT sendData
+            let! _, cmdsn_1_2 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT sendData
             Assert.True(( cmdsn_1_2 = cmdsn_me.fromPrim 1u ))
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
             sendData.Return()
@@ -220,7 +220,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out 1
-            let! _, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu1_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu1_1.ExpCmdSN = cmdsn_me.fromPrim 1u ))
 
@@ -228,13 +228,13 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
 
             // Re-send Nop-Out 1
-            let! _, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu1_2 = r1.ReceiveSpecific<RejectPDU> g_CID0
             Assert.True(( pdu1_2.Reason = RejectReasonCd.INVALID_PDU_FIELD ))
             Assert.True(( pdu1_2.ExpCmdSN = cmdsn_me.fromPrim 1u ))
 
             // Nop-Out 2
-            let! _, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu2_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu2_1.ExpCmdSN = cmdsn_me.fromPrim 2u ))
 
@@ -248,7 +248,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( pdu2_2.ExpCmdSN = cmdsn_me.fromPrim 2u ))
 
             // Nop-Out 3
-            let! _, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu3_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu3_1.ExpCmdSN = cmdsn_me.fromPrim 3u ))
 
@@ -262,7 +262,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( pdu3_2.ExpCmdSN = cmdsn_me.fromPrim 3u ))
 
             // Nop-Out 4
-            let! _, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu4_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu4_1.ExpCmdSN = cmdsn_me.fromPrim 4u ))
 
@@ -277,7 +277,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( pdu4_2.ExpCmdSN = cmdsn_me.fromPrim 4u ))
 
             // Nop-Out 5
-            let! _, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu5_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu5_1.ExpCmdSN = cmdsn_me.fromPrim 5u ))
 
@@ -300,7 +300,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out 1
-            let! _, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu1_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu1_1.ExpCmdSN = cmdsn_me.fromPrim 1u ))
 
@@ -313,7 +313,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 vitt.[ i - 1 ] <- itt
 
                 // Send immidiate Nop-Out PDU
-                let! _, _ = r1.SendNOPOutPDU g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.True(( pdu2.ExpCmdSN = cmdsn_me.incr ( uint i ) pdu1_1.ExpCmdSN ))
                 Assert.True(( pdu2.MaxCmdSN = pdu1_1.MaxCmdSN ))
@@ -326,7 +326,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 ()
 
             // Send Nop-Out PDU
-            let! _, wcmdsn = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, wcmdsn = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu2.MaxCmdSN = cmdsn_me.incr ( Constants.BDLU_MAX_TASKSET_SIZE + 1u ) wcmdsn ))
 
@@ -340,7 +340,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out 1
-            let! _, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu1_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu1_1.ExpCmdSN = cmdsn_me.fromPrim 1u ))
 
@@ -368,7 +368,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 ()
 
             // Send Nop-Out PDU
-            let! _, wcmdsn = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, wcmdsn = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu2.MaxCmdSN = cmdsn_me.incr ( Constants.BDLU_MAX_TASKSET_SIZE + 1u ) wcmdsn ))
 
@@ -385,27 +385,27 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN sessParam1 m_defaultConnParam ( cmdsn_me.fromPrim 0xFFFFFFFDu )
 
             // Send some of Nop-Out PDU
-            let! _, cmdsn1 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1 = cmdsn_me.fromPrim 0xFFFFFFFDu ))
             Assert.True(( pdu1.ExpCmdSN = cmdsn_me.fromPrim 0xFFFFFFFEu ))
 
-            let! _, cmdsn2 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn2 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn2 = cmdsn_me.fromPrim 0xFFFFFFFEu ))
             Assert.True(( pdu2.ExpCmdSN = cmdsn_me.fromPrim 0xFFFFFFFFu ))
 
-            let! _, cmdsn3 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn3 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn3 = cmdsn_me.fromPrim 0xFFFFFFFFu ))
             Assert.True(( pdu3.ExpCmdSN = cmdsn_me.zero ))
 
-            let! _, cmdsn4 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn4 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu4 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn4 = cmdsn_me.zero ))
             Assert.True(( pdu4.ExpCmdSN = cmdsn_me.fromPrim 1u ))
 
-            let! _, cmdsn5 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn5 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu5 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn5 = cmdsn_me.fromPrim 1u ))
             Assert.True(( pdu5.ExpCmdSN = cmdsn_me.fromPrim 2u ))
@@ -420,7 +420,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out 1
-            let! _, cmdsn1 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1 = cmdsn_me.zero ))
 
@@ -430,7 +430,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Nop-Out 3
             let sendData3 = PooledBuffer.RentAndInit 4096
             sendData3.Array.[0] <- 3uy
-            let! _, cmdsn3 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT sendData3
+            let! _, cmdsn3 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT sendData3
             sendData3.Return()
             Assert.True(( cmdsn3 = cmdsn_me.fromPrim 2u ))
 
@@ -440,7 +440,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Nop-Out 2
             let sendData2 = PooledBuffer.RentAndInit 4096
             sendData2.Array.[0] <- 2uy
-            let! _, cmdsn2 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT sendData2
+            let! _, cmdsn2 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT sendData2
             sendData2.Return()
             Assert.True(( cmdsn2 = cmdsn_me.fromPrim 1u ))
 
@@ -468,32 +468,32 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r2 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Nop-Out 1 at session 1
-            let! _, cmdsn1_1 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1_1 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
             // Nop-Out 1 at session 2
-            let! _, cmdsn2_1 = r2.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn2_1 = r2.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r2.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn2_1 = cmdsn_me.zero ))
 
             // Nop-Out 2 at session 1
-            let! _, cmdsn1_2 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1_2 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_2 = cmdsn_me.fromPrim 1u ))
 
             // Nop-Out 2 at session 2
-            let! _, cmdsn2_2 = r2.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn2_2 = r2.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r2.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn2_2 = cmdsn_me.fromPrim 1u ))
 
             // Nop-Out 3 at session 1
-            let! _, cmdsn1_3 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1_3 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_3 = cmdsn_me.fromPrim 2u ))
 
             // Nop-Out 3 at session 2
-            let! _, cmdsn2_2 = r2.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn2_2 = r2.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r2.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn2_2 = cmdsn_me.fromPrim 2u ))
 
@@ -509,32 +509,32 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
 
             // Nop-Out 1 at connection 0
-            let! _, cmdsn1_1 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1_1 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
             // Nop-Out 1 at connection 1
-            let! _, cmdsn2_1 = r1.SendNOPOutPDU g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn2_1 = r1.SendNOPOut_PingRequest g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( cmdsn2_1 = cmdsn_me.fromPrim 1u ))
 
             // Nop-Out 2 at connection 0
-            let! _, cmdsn1_2 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1_2 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_2 = cmdsn_me.fromPrim 2u ))
 
             // Nop-Out 2 at connection 1
-            let! _, cmdsn2_2 = r1.SendNOPOutPDU g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn2_2 = r1.SendNOPOut_PingRequest g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( cmdsn2_2 = cmdsn_me.fromPrim 3u ))
 
             // Nop-Out 3 at connection 0
-            let! _, cmdsn1_3 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1_3 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_3 = cmdsn_me.fromPrim 4u ))
 
             // Nop-Out 3 at connection 1
-            let! _, cmdsn2_2 = r1.SendNOPOutPDU g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn2_2 = r1.SendNOPOut_PingRequest g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( cmdsn2_2 = cmdsn_me.fromPrim 5u ))
 
@@ -549,12 +549,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
 
             // Nop-Out 1 at connection 0
-            let! _, cmdsn1_1 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1_1 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
             // Nop-Out 1 at connection 1
-            let! _, cmdsn2_1 = r1.SendNOPOutPDU g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn2_1 = r1.SendNOPOut_PingRequest g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( cmdsn2_1 = cmdsn_me.fromPrim 1u ))
 
@@ -568,12 +568,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             do! r1.AddConnection m_defaultConnParam
 
             // Nop-Out 2 at connection 0
-            let! _, cmdsn1_2 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1_2 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_2 = cmdsn_me.fromPrim 3u ))
 
             // Nop-Out 2 at connection 1
-            let! _, cmdsn2_2 = r1.SendNOPOutPDU g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn2_2 = r1.SendNOPOut_PingRequest g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( cmdsn2_2 = cmdsn_me.fromPrim 4u ))
 
@@ -588,12 +588,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
 
             // Nop-Out 1 at connection 0
-            let! _, cmdsn1_1 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1_1 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
             // Nop-Out 1 at connection 1
-            let! _, cmdsn2_1 = r1.SendNOPOutPDU g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn2_1 = r1.SendNOPOut_PingRequest g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( cmdsn2_1 = cmdsn_me.fromPrim 1u ))
 
@@ -604,12 +604,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             do! r1.AddConnection m_defaultConnParam
 
             // Nop-Out 2 at connection 0
-            let! _, cmdsn1_2 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1_2 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_2 = cmdsn_me.fromPrim 2u ))
 
             // Nop-Out 2 at connection 1
-            let! _, cmdsn2_2 = r1.SendNOPOutPDU g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn2_2 = r1.SendNOPOut_PingRequest g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( cmdsn2_2 = cmdsn_me.fromPrim 3u ))
 
@@ -624,12 +624,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
 
             // Nop-Out 1 at connection 0
-            let! _, cmdsn1_1 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1_1 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
             // Nop-Out 1 at connection 1
-            let! _, cmdsn2_1 = r1.SendNOPOutPDU g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn2_1 = r1.SendNOPOut_PingRequest g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( cmdsn2_1 = cmdsn_me.fromPrim 1u ))
 
@@ -638,12 +638,12 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             do! r1.AddConnection m_defaultConnParam
 
             // Nop-Out 2 at connection 0
-            let! _, cmdsn1_2 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1_2 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_2 = cmdsn_me.fromPrim 2u ))
 
             // Nop-Out 2 at connection 1
-            let! _, cmdsn2_2 = r1.SendNOPOutPDU g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn2_2 = r1.SendNOPOut_PingRequest g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( cmdsn2_2 = cmdsn_me.fromPrim 3u ))
 
@@ -658,7 +658,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
 
             // Nop-Out 1
-            let! _, cmdsn1_1 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1_1 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
@@ -671,7 +671,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r2 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
 
             // Nop-Out 2
-            let! _, cmdsn1_2 = r2.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1_2 = r2.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r2.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_2 = cmdsn_me.zero ))
 
@@ -686,7 +686,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
 
             // Nop-Out 1
-            let! _, cmdsn1_1 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1_1 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
@@ -697,7 +697,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let! r2 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
 
             // Nop-Out 2
-            let! _, cmdsn1_2 = r2.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1_2 = r2.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r2.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_2 = cmdsn_me.zero ))
 
@@ -712,7 +712,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
 
             // Nop-Out 1 at connection 0
-            let! _, cmdsn1_1 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1_1 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
@@ -728,7 +728,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             do! r1.AddConnection m_defaultConnParam
 
             // Nop-Out 2 at connection 0
-            let! _, cmdsn1_2 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1_2 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! wpdu = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_2 = cmdsn_me.fromPrim 2u ))
 
@@ -743,7 +743,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             do! r1.AddConnection { m_defaultConnParam with CID = g_CID1 }
 
             // Nop-Out 1 at connection 0
-            let! _, cmdsn1_1 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1_1 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_1 = cmdsn_me.zero ))
 
@@ -757,7 +757,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             do! r1.AddConnection m_defaultConnParam
 
             // Nop-Out 2 at connection 0
-            let! _, cmdsn1_2 = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, cmdsn1_2 = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! wpdu = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( cmdsn1_2 = cmdsn_me.fromPrim 2u ))
 
@@ -773,7 +773,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Not-Out
             for i = 0 to 9 do
                 let sendExpStatSN = r1.Connection( g_CID0 ).ExpStatSN
-                let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! pdu = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.True(( pdu.StatSN = sendExpStatSN ))
 
@@ -791,7 +791,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
             let sendData1 = PooledBuffer.RentAndInit 4096
             sendData1.Array.[0] <- 1uy
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT sendData1
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT sendData1
             sendData1.Return()
 
             // Receive Nop-In 1
@@ -806,7 +806,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let sendExpStatSN2 = r1.Connection( g_CID0 ).ExpStatSN  // same as sendExpStatSN1
             let sendData2 = PooledBuffer.RentAndInit 4096
             sendData2.Array.[0] <- 2uy
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT sendData2
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT sendData2
             sendData2.Return()
 
             // Receive Nop-In 2
@@ -837,7 +837,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Send Nop-Out 1
             let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
-            let! itt1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! itt1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive Nop-In 1
             let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -849,7 +849,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Send Nop-Out 2
             let sendExpStatSN2 = r1.Connection( g_CID0 ).ExpStatSN  // sendExpStatSN2 = sendExpStatSN1 + 2
-            let! itt2, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! itt2, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Receive Nop-In 2
             let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -868,14 +868,14 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Send Nop-Out 1
             let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
-            let! itt1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! itt1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
             Assert.True(( pdu1.InitiatorTaskTag = itt1 ))
 
             // Send Nop-Out 2
             let sendExpStatSN2 = r1.Connection( g_CID0 ).ExpStatSN
-            let! itt2, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! itt2, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu2.StatSN = sendExpStatSN2 ))
             Assert.True(( pdu2.InitiatorTaskTag = itt2 ))
@@ -885,7 +885,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Send Nop-Out 3
             let sendExpStatSN3 = r1.Connection( g_CID0 ).ExpStatSN  // sendExpStatSN3 = sendExpStatSN1
-            let! itt3, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! itt3, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu3.StatSN = statsn_me.next sendExpStatSN2 ))
             Assert.True(( pdu3.InitiatorTaskTag = itt3 ))
@@ -919,28 +919,28 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Not-Out 1 (non-immidiate)
             let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
-            let! _, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
 
             // Not-Out 2 (immidiate)
             let sendExpStatSN2 = r1.Connection( g_CID0 ).ExpStatSN
             Assert.True(( sendExpStatSN2 = statsn_me.next sendExpStatSN1 ))
-            let! _, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu2.StatSN = sendExpStatSN2 ))
 
             // Not-Out 3 (non-immidiate)
             let sendExpStatSN3 = r1.Connection( g_CID0 ).ExpStatSN
             Assert.True(( sendExpStatSN3 = statsn_me.next sendExpStatSN2 ))
-            let! _, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu3.StatSN = sendExpStatSN3 ))
 
             // Not-Out 4 (immidiate)
             let sendExpStatSN4 = r1.Connection( g_CID0 ).ExpStatSN
             Assert.True(( sendExpStatSN4 = statsn_me.next sendExpStatSN3 ))
-            let! _, _ = r1.SendNOPOutPDU g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu4 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu4.StatSN = sendExpStatSN4 ))
 
@@ -956,41 +956,41 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Nop-Out 1 at connection 0
             let sendExpStatSN0_1 = r1.Connection( g_CID0 ).ExpStatSN
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu0_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu0_1.StatSN = sendExpStatSN0_1 ))
 
             // Nop-Out 1 at connection 1
             let sendExpStatSN1_1 = r1.Connection( g_CID1 ).ExpStatSN
-            let! _ = r1.SendNOPOutPDU g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu1_1 = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( pdu1_1.StatSN = sendExpStatSN1_1 ))
 
             // Nop-Out 2 at connection 0
             let sendExpStatSN0_2 = r1.Connection( g_CID0 ).ExpStatSN
             Assert.True(( sendExpStatSN0_2 = statsn_me.next sendExpStatSN0_1 ))
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu0_2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu0_2.StatSN = sendExpStatSN0_2 ))
 
             // Nop-Out 2 at connection 1
             let sendExpStatSN1_2 = r1.Connection( g_CID1 ).ExpStatSN
             Assert.True(( sendExpStatSN1_2 = statsn_me.next sendExpStatSN1_1 ))
-            let! _ = r1.SendNOPOutPDU g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu1_2 = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( pdu1_2.StatSN = sendExpStatSN1_2 ))
 
             // Nop-Out 3 at connection 0
             let sendExpStatSN0_3 = r1.Connection( g_CID0 ).ExpStatSN
             Assert.True(( sendExpStatSN0_3 = statsn_me.next sendExpStatSN0_2 ))
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu0_3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu0_3.StatSN = sendExpStatSN0_3 ))
 
             // Nop-Out 3 at connection 1
             let sendExpStatSN1_3 = r1.Connection( g_CID1 ).ExpStatSN
             Assert.True(( sendExpStatSN1_3 = statsn_me.next sendExpStatSN1_2 ))
-            let! _ = r1.SendNOPOutPDU g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID1 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu1_3 = r1.ReceiveSpecific<NOPInPDU> g_CID1
             Assert.True(( pdu1_3.StatSN = sendExpStatSN1_3 ))
 
@@ -1006,7 +1006,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Nop-Out 1
             let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
 
@@ -1014,7 +1014,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let tobeNextStatSN2 = statsn_me.next pdu1.StatSN
             let sendExpStatSN2 = statsn_me.decr Constants.MAX_STATSN_DIFF tobeNextStatSN2
             r1.Connection( g_CID0 ).SetNextExtStatSN sendExpStatSN2
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu2.StatSN = statsn_me.next sendExpStatSN1 ))
 
@@ -1022,7 +1022,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let tobeNextStatSN3 = statsn_me.next pdu2.StatSN
             let sendExpStatSN3 = statsn_me.decr ( Constants.MAX_STATSN_DIFF + 1u ) tobeNextStatSN3
             r1.Connection( g_CID0 ).SetNextExtStatSN sendExpStatSN3
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             try
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
@@ -1041,7 +1041,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Nop-Out 1
             let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
 
@@ -1049,7 +1049,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let tobeNextStatSN2 = statsn_me.next pdu1.StatSN
             let sendExpStatSN2 = statsn_me.incr Constants.MAX_STATSN_DIFF tobeNextStatSN2
             r1.Connection( g_CID0 ).SetNextExtStatSN sendExpStatSN2
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu2.StatSN = statsn_me.next sendExpStatSN1 ))
 
@@ -1057,7 +1057,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let tobeNextStatSN3 = statsn_me.next pdu2.StatSN
             let sendExpStatSN3 = statsn_me.incr ( Constants.MAX_STATSN_DIFF + 1u ) tobeNextStatSN3
             r1.Connection( g_CID0 ).SetNextExtStatSN sendExpStatSN3
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             try
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 Assert.Fail __LINE__
@@ -1076,13 +1076,13 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Some of Nop-Out
             for i = 0 to 10 do
-                let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 ()
 
             // Nop-Out 1
             let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
 
@@ -1096,7 +1096,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Nop-Out 2
             let sendExpStatSN2 = r1.Connection( g_CID0 ).ExpStatSN
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu2.StatSN = sendExpStatSN2 ))
 
@@ -1115,13 +1115,13 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Some of Nop-Out
             for i = 0 to 10 do
-                let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 ()
 
             // Nop-Out 1
             let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
 
@@ -1133,7 +1133,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Nop-Out 2
             let sendExpStatSN2 = r1.Connection( g_CID0 ).ExpStatSN
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu2.StatSN = sendExpStatSN2 ))
 
@@ -1152,13 +1152,13 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Some of Nop-Out
             for i = 0 to 10 do
-                let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 ()
 
             // Nop-Out 1
             let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
 
@@ -1172,7 +1172,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Nop-Out 2
             let sendExpStatSN2 = r1.Connection( g_CID0 ).ExpStatSN
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu2.StatSN = sendExpStatSN2 ))
 
@@ -1191,13 +1191,13 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Some of Nop-Out
             for i = 0 to 10 do
-                let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 ()
 
             // Nop-Out 1
             let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
 
@@ -1206,7 +1206,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Nop-Out 2
             let sendExpStatSN2 = r1.Connection( g_CID0 ).ExpStatSN
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu2.StatSN = sendExpStatSN2 ))
 
@@ -1225,13 +1225,13 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
             // Some of Nop-Out
             for i = 0 to 10 do
-                let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+                let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 ()
 
             // Nop-Out 1
             let sendExpStatSN1 = r1.Connection( g_CID0 ).ExpStatSN
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! pdu1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( pdu1.StatSN = sendExpStatSN1 ))
 

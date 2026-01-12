@@ -174,7 +174,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
                 match pdu with
                 | :? TaskManagementFunctionResponsePDU as tmdRespPDU ->
                     // After receiving a TMF response, send Nop-Output at least once.
-                    let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+                    let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
                     return struct( true, ( ValueSome tmdRespPDU, scnt + 1, rcnt ) )
 
                 | :? NOPInPDU ->
@@ -183,7 +183,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
                         return struct( ( scnt > rcnt + 1 ), ( tmf, scnt, rcnt + 1 ) )
                     else
                         // Continue sending NOP-Out until a TMF response is received
-                        let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+                        let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
                         return struct( true, ( tmf, scnt + 1, rcnt + 1 ) )
                 | _ ->
                     return struct( false, ( ValueNone, 0, 0 ) )
@@ -205,7 +205,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             let! ittWrite, cmdSNWrite = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
 
             // Nop-Out 1
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Send Abort Task TMF request for SCSI write command
             let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.ABORT_TASK g_LUN1 ittWrite ( ValueSome cmdSNWrite ) datasn_me.zero
@@ -233,7 +233,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             let! ittWrite, _ = r1.SendSCSICommandPDU g_CID0 BitI.T BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
 
             // Nop-Out 1
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Send Abort Task TMF request for SCSI write command
             let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.ABORT_TASK g_LUN1 ittWrite ValueNone datasn_me.zero
@@ -382,7 +382,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB_lu1 PooledBuffer.Empty 0u
 
             // Send Nop-Out 1 to LU 1
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Send SCSI write command to LU 2
             let writeCDB_lu2 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy m_BlkCnt1 NACA.T LINK.F
@@ -448,7 +448,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             Assert.True(( tmfPDU.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
 
             // Send Nop-Out and receive Nop-In ( Send acknowledge for receiving TMF response )
-            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
 
@@ -595,7 +595,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             Assert.True(( tmfRespPdu_lu1.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
 
             // Send Nop-Out and receive Nop-In ( Send acknowledge for receiving TMF response )
-            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
 
@@ -636,7 +636,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB_lu1 PooledBuffer.Empty 0u
 
             // Send Nop-Out 1 to LU 1
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Send SCSI write command to LU 2
             let writeCDB_lu2 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy m_BlkCnt1 NACA.T LINK.F
@@ -701,7 +701,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             Assert.True(( tmfPDU.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
 
             // Send Nop-Out and receive Nop-In ( Send acknowledge for receiving TMF response )
-            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
 
@@ -744,7 +744,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB_lu1 PooledBuffer.Empty 0u
 
             // Send Nop-Out 1 to LU 1
-            let! _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Send SCSI write command to LU 2
             let writeCDB_lu2 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy m_BlkCnt1 NACA.T LINK.F
@@ -815,7 +815,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             Assert.True(( tmfPDU.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
 
             // Send Nop-Out and receive Nop-In ( Send acknowledge for receiving TMF response )
-            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
 
@@ -1031,7 +1031,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             Assert.True(( scsiRespPdu_s2_2.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
 
             // Send Nop-Out and receive Nop-In ( Send acknowledge for receiving TMF response )
-            let! ittNOP_1, _ = r1.SendNOPOutPDU g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+            let! ittNOP_1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
             let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
             Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
 
