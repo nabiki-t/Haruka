@@ -1740,11 +1740,11 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
         }
 
     /// <summary>
-    ///  Send Nop-Out PDU.
+    ///  Send Nop-Out PDU as a status acknowledgement.
     /// </summary>
-    member _.Send_NopOut() : Task =
+    member _.Send_StatusACK() : Task =
         task {
-            let! _ = m_ISCIInitiator.SendNOPOut_PingRequest m_CID BitI.T lun_me.zero ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty
+            let! _ = m_ISCIInitiator.SendNOPOut_PingResponse m_CID lun_me.zero ( ttt_me.fromPrim 0xFFFFFFFFu )
             ()
         }
 

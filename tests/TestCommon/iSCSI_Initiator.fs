@@ -886,6 +886,74 @@ type iSCSI_Initiator(
     member this.SendNOPOut_PingRequest = this.SendNOPOut_PingRequest_Test id ValueNone
 
     /// <summary>
+    ///  Send NOP out PDU to the target with test function.
+    /// </summary>
+    /// <param name="updater">
+    ///  Function to modify the PDU before sending.
+    /// </param>
+    /// <param name="fuz">
+    ///  The offset and length of the range to be destroyed.
+    ///  If this value is ValueNone, the PDU is sent without modification.
+    /// </param>
+    /// <param name="cid">
+    ///  CID of the connection that is used to send the PDU.
+    /// </param>
+    /// <param name="argLUN">
+    ///  NOPOutPDU LUN field value. 
+    ///  When sending as a response to a Ping request from the target, the value of the LUN field of the NOP-In PDU is set.
+    /// </param>
+    /// <param name="argTargetTransferTag">
+    ///  NOPOutPDU TargetTransferTag field value.
+    ///  When sending as a response to a Ping request from the target, the value of the TargetTransferTag field of the NOP-In PDU is set.
+    ///  If sent as a unilateral notification with no response expected, it must be set to 0xFFFFFFFF.
+    /// </param>
+    /// <returns>
+    ///  CmdSN in sent PDU.
+    /// </returns>
+    /// <remarks>
+    ///  This method sends a NOP-Out PDU as a response to a Ping request from the target, or as a unilateral notification to the target that does not require a NOP-In response.
+    /// </remarks>
+    member this.SendNOPOut_PingResponse_Test
+        ( updater : NOPOutPDU -> NOPOutPDU )
+        ( fuz : ( uint * uint ) voption )
+        ( cid : CID_T )
+        ( argLUN : LUN_T )
+        ( argTargetTransferTag : TTT_T )
+        : Task< CMDSN_T > =
+        task {
+            let con = m_Connections.[cid]
+            do! con.WaitSend()
+            try
+                let cmdsn = cmdsn_me.fromPrim m_CmdSN
+                let pdu = {
+                    I = true;
+                    LUN = argLUN;
+                    InitiatorTaskTag = itt_me.fromPrim 0xFFFFFFFFu;
+                    TargetTransferTag = argTargetTransferTag;
+                    CmdSN = cmdsn;
+                    ExpStatSN = con.ExpStatSN;
+                    PingData = PooledBuffer.Empty;
+                    ByteCount = 0u;
+                }
+                let mrdslt = con.Params.MaxRecvDataSegmentLength_T
+                let headerDigest = con.Params.HeaderDigest
+                let dataDigest = con.Params.DataDigest
+                let pdu2 = updater pdu
+                let! _ = this.SendPDUWithFazzer mrdslt headerDigest dataDigest con.Connection pdu2 fuz
+                return cmdsn;
+            finally
+                con.ReleaseSend()
+        }
+
+    /// <summary>
+    ///  Send NOP out PDU to the target without test function.
+    /// </summary>
+    /// <remarks>
+    ///  This method sends a Ping request to the target to request a response by NOP-In.
+    /// </remarks>
+    member this.SendNOPOut_PingResponse = this.SendNOPOut_PingResponse_Test id ValueNone
+
+    /// <summary>
     ///  Receive response PDU.
     /// </summary>
     /// <param name="cid">

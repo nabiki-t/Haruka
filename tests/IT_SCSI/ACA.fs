@@ -330,7 +330,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             Assert.True(( res_s1_w1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
             // Send acknowledgement.
-            do! r1.Send_NopOut()
+            do! r1.Send_StatusACK()
 
             // Resume write requests 3 and 4. They should complete successfully.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_s1_w3 ) "Task(" "MD> "
@@ -348,7 +348,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let! result2 = r1.WaitTMFResponse itt2
             Assert.True(( result2 = TaskMgrResCd.FUNCTION_COMPLETE ))
 
-            do! r1.Send_NopOut()
+            do! r1.Send_StatusACK()
 
             // Receive the results of read requests 1 and 2.
             let! res_s1_r1 = r1.WaitSCSIResponseGoogStatus itt_s1_r1
@@ -625,7 +625,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let! itt_w3_aca = r1.Send_Write10 TaskATTRCd.ACA_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 naca
             let! res_w3_aca = r1.WaitSCSIResponse itt_w3_aca
             Assert.True(( res_w3_aca.Status = ScsiCmdStatCd.ACA_ACTIVE ))
-            do! r1.Send_NopOut()
+            do! r1.Send_StatusACK()
 
             // Resume stucked task.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_w2_stuck ) "Task(" "MD> "
