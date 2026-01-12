@@ -16,6 +16,7 @@ namespace Haruka.TargetDevice
 open System
 open System.IO
 open System.Threading
+open System.Threading.Tasks
 open System.Collections.Generic
 open System.Collections.Immutable
 
@@ -639,7 +640,7 @@ type Session
                 m_RespFense.Lock resp.NeedResponseFence ( fun () -> conInfo.Connection.SendPDU resp )
 
                 HLogger.Trace( LogID.V_TRACE, fun g ->
-                    g.Gen1( loginfo, sprintf "LockStatus=%d, Count=%d" m_RespFense.LockStatus m_RespFense.Count )
+                    g.Gen1( loginfo, sprintf "LockStatus=%d, Count=%d" m_RespFense.LockCounter m_RespFense.TaskCount )
                 )
 
             | _ ->
@@ -696,7 +697,7 @@ type Session
         override _.NoticeUnlockResponseFence ( mode : ResponseFenceNeedsFlag ) : unit =
             HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g ->
                 let smode = ResponseFenceNeedsFlag.toString mode
-                let msg = sprintf "Session.NoticeUnlockResponseFence. mode=%s, Current LockStatus=%d, Current Count=%d" smode m_RespFense.LockStatus m_RespFense.Count
+                let msg = sprintf "Session.NoticeUnlockResponseFence. mode=%s, Current LockStatus=%d, Current Count=%d" smode m_RespFense.LockCounter m_RespFense.TaskCount
                 g.Gen1( m_ObjID, msg )
             )
             m_RespFense.Free()
@@ -1516,7 +1517,7 @@ type Session
 
         HLogger.Trace( LogID.V_TRACE, fun g ->
             let loginfo = struct ( m_ObjID, ValueSome conn.CID, ValueSome conn.ConCounter, ValueSome m_TSIH, ValueNone, ValueNone )
-            g.Gen1( loginfo, sprintf "LockStatus=%d, Count=%d" m_RespFense.LockStatus m_RespFense.Count )
+            g.Gen1( loginfo, sprintf "LockStatus=%d, Count=%d" m_RespFense.LockCounter m_RespFense.TaskCount )
         )
 
     // ------------------------------------------------------------------------
@@ -1558,5 +1559,5 @@ type Session
 
         HLogger.Trace( LogID.V_TRACE, fun g ->
             let loginfo = struct ( m_ObjID, ValueSome cid, ValueSome counter, ValueSome m_TSIH, ValueSome pdu.InitiatorTaskTag, ValueNone )
-            g.Gen1( loginfo, sprintf "LockStatus=%d, Count=%d" m_RespFense.LockStatus m_RespFense.Count )
+            g.Gen1( loginfo, sprintf "LockStatus=%d, Count=%d" m_RespFense.LockCounter m_RespFense.TaskCount )
         )

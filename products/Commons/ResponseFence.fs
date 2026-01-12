@@ -44,17 +44,20 @@ type ResponseFenceNeedsFlag =
 /// Internal record type of ResponseFenceLock class.
 [<NoComparison>]
 type ResponseFenceRec = {
+    /// The tick count the lock was last acquired or released.
+    m_Tick : int64
+
     /// acquired count counter.
     /// -1 : Response fence lock was aquired.
     /// 0  : freed
     /// >0 : Normal lock were aquired.
     m_LockCounter : int64;
 
-    /// waiting cueue
+    /// waiting queue
     m_Tasks : ImmutableQueue< struct( bool * ( unit -> unit ) ) >;
 
     /// waiting tasks count.( It must equal ( Seq.length m_Tasks ) )
-    m_QueueedTaskCount : int;
+    m_QueuedTaskCount : int;
 }
 
 //=============================================================================
@@ -64,9 +67,10 @@ type ResponseFenceRec = {
 type ResponseFence() =
 
     let m_Stat = OptimisticLock< ResponseFenceRec > ({
+        m_Tick = Environment.TickCount64;
         m_LockCounter = 0L;
         m_Tasks = ImmutableQueue< struct( bool * ( unit -> unit ) ) >.Empty;
-        m_QueueedTaskCount = 0;
+        m_QueuedTaskCount = 0;
     })
 
     /// <summary>
@@ -88,17 +92,19 @@ type ResponseFence() =
                 if oldStat.m_LockCounter = 0L then
                     // Succeed lock acquisition
                     let newStat = {
+                        m_Tick = Environment.TickCount64;
                         m_LockCounter = -1L;
                         m_Tasks = oldStat.m_Tasks;
-                        m_QueueedTaskCount = oldStat.m_QueueedTaskCount;
+                        m_QueuedTaskCount = oldStat.m_QueuedTaskCount;
                     }
                     struct( newStat, ValueSome argTask )
                 else
                     // Wait required
                     let newStat = {
+                        m_Tick = oldStat.m_Tick;
                         m_LockCounter = oldStat.m_LockCounter;
                         m_Tasks = oldStat.m_Tasks.Enqueue( struct( true, argTask ) )
-                        m_QueueedTaskCount = oldStat.m_QueueedTaskCount + 1;
+                        m_QueuedTaskCount = oldStat.m_QueuedTaskCount + 1;
                     }
                     struct( newStat, ValueNone )
             )
@@ -124,17 +130,23 @@ type ResponseFence() =
                 if oldStat.m_LockCounter >= 0L && oldStat.m_Tasks.IsEmpty then
                     // Succeed lock acquisition
                     let newStat = {
+                        m_Tick =
+                            if oldStat.m_LockCounter = 0L then
+                                Environment.TickCount64 // When a new lock is acquired, the tick count is updated.
+                            else
+                                oldStat.m_Tick;         // If only the number of unlocked R locks is added, the tick count is not updated.
                         m_LockCounter = oldStat.m_LockCounter + 1L;
                         m_Tasks = oldStat.m_Tasks;
-                        m_QueueedTaskCount = oldStat.m_QueueedTaskCount;
+                        m_QueuedTaskCount = oldStat.m_QueuedTaskCount;
                     }
                     struct( newStat, ValueSome argTask )
                 else
                     // Wait required
                     let newStat = {
+                        m_Tick = oldStat.m_Tick;
                         m_LockCounter = oldStat.m_LockCounter;
                         m_Tasks = oldStat.m_Tasks.Enqueue( struct( false, argTask ) )
-                        m_QueueedTaskCount = oldStat.m_QueueedTaskCount + 1;
+                        m_QueuedTaskCount = oldStat.m_QueuedTaskCount + 1;
                     }
                     struct( newStat, ValueNone )
             )
@@ -189,9 +201,10 @@ type ResponseFence() =
                 if oldStat.m_Tasks.IsEmpty then
                     // There are no new tasks to be executed.
                     let wns = {
+                        m_Tick = Environment.TickCount64;
                         m_LockCounter = wnextCount;
                         m_Tasks = oldStat.m_Tasks;
-                        m_QueueedTaskCount = oldStat.m_QueueedTaskCount;
+                        m_QueuedTaskCount = oldStat.m_QueuedTaskCount;
                     }
                     struct( wns, Array.empty )
                 else
@@ -201,17 +214,19 @@ type ResponseFence() =
                         if wnextCount = 0L then
                             // If the response fence lock can be acquired, acquire the lock and execute the next task.
                             let wns = {
+                                m_Tick = Environment.TickCount64;
                                 m_LockCounter = -1L;
                                 m_Tasks = oldStat.m_Tasks.Dequeue();
-                                m_QueueedTaskCount = oldStat.m_QueueedTaskCount - 1;
+                                m_QueuedTaskCount = oldStat.m_QueuedTaskCount - 1;
                             }
                             struct( wns, [| t |] )
                         else
                             // If the response fence lock can not be acquired, there are no tasks to be executed.
                             let wns = {
+                                m_Tick = Environment.TickCount64;
                                 m_LockCounter = wnextCount;
                                 m_Tasks = oldStat.m_Tasks;
-                                m_QueueedTaskCount = oldStat.m_QueueedTaskCount;
+                                m_QueuedTaskCount = oldStat.m_QueuedTaskCount;
                             }
                             struct( wns, Array.empty )
                     else
@@ -233,9 +248,10 @@ type ResponseFence() =
                                     loop ( q.Dequeue() )
                         let nextq = loop ( oldStat.m_Tasks.Dequeue() )
                         let wns = {
+                            m_Tick = Environment.TickCount64;
                             m_LockCounter = wnextCount + ( int64 builder.Count );
                             m_Tasks = nextq;
-                            m_QueueedTaskCount = oldStat.m_QueueedTaskCount - builder.Count;
+                            m_QueuedTaskCount = oldStat.m_QueuedTaskCount - builder.Count;
                         }
                         struct( wns, builder.ToArray() )
             )
@@ -243,9 +259,15 @@ type ResponseFence() =
         |> Array.iter ( fun itr -> itr() )
 
     /// Get queued task count.
-    member _.Count : int =
-        m_Stat.obj.m_QueueedTaskCount
+    member _.TaskCount : int =
+        m_Stat.obj.m_QueuedTaskCount
+
+    /// Get lock counter
+    member _.LockCounter : int64 =
+        m_Stat.obj.m_LockCounter
 
     /// Get lock status
-    member _.LockStatus : int64 =
-        m_Stat.obj.m_LockCounter
+    /// It returns conbination of tick ​​count, lock counter, queued task count.
+    member _.LockStatus : struct( int64 * int64 * int ) =
+        let r = m_Stat.obj
+        struct( r.m_Tick, r.m_LockCounter, r.m_QueuedTaskCount )

@@ -6460,7 +6460,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
 
         Assert.True(( m_SentRespPDUs.Length = 1 ))
 
-        Assert.True(( rfl.LockStatus = 0L ))
+        Assert.True(( rfl.LockCounter = 0L ))
 
         // Send TMF PDU ( require R_Mode )
         sess.ResendPDU
@@ -6480,7 +6480,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( ( pdu3.StatSN = statsn_me.fromPrim 0xEFEFEFEFu ) )
 
         Assert.True(( m_SentRespPDUs.Length = 1 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        Assert.True(( rfl.LockCounter = 1L ))
 
         sess.DestroySession()
         GlbFunc.ClosePorts [| sp; cp; |]
@@ -6510,7 +6510,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
 
         Assert.True(( m_SentRespPDUs.Length = 1 ))
 
-        Assert.True(( rfl.LockStatus = 0 ))
+        Assert.True(( rfl.LockCounter = 0 ))
 
         // Send TMF PDU ( require W_Mode )
         sess.ResendPDU
@@ -6530,7 +6530,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         Assert.True( ( pdu3.StatSN = statsn_me.fromPrim 0xABABABABu ) )
 
         Assert.True(( m_SentRespPDUs.Length = 1 ))
-        Assert.True(( rfl.LockStatus = -1 ))
+        Assert.True(( rfl.LockCounter = -1 ))
 
         sess.DestroySession()
         GlbFunc.ClosePorts [| sp; cp; |]
@@ -6630,7 +6630,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let m_ResendStat2 = conpc.GetField( "m_ResendStat" ) :?> OptimisticLock< ResendStatusRec >
         let m_SentRespPDUs2 = m_ResendStat2.obj.m_SentRespPDUs
         Assert.True(( m_SentRespPDUs2.Length = 2 ))
-        Assert.True(( rfl.LockStatus = 1 ))
+        Assert.True(( rfl.LockCounter = 1 ))
 
         sess.DestroySession()
         GlbFunc.ClosePorts [| sp; cp; |]
@@ -6681,7 +6681,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let m_ResendStat2 = conpc.GetField( "m_ResendStat" ) :?> OptimisticLock< ResendStatusRec >
         let m_SentRespPDUs2 = m_ResendStat2.obj.m_SentRespPDUs
         Assert.True(( m_SentRespPDUs2.Length = 2 ))
-        Assert.True(( rfl.LockStatus = -1 ))
+        Assert.True(( rfl.LockCounter = -1 ))
 
         sess.DestroySession()
         GlbFunc.ClosePorts [| sp; cp; |]

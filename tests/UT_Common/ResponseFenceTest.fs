@@ -12,6 +12,7 @@ namespace Haruka.Test.UT.Commons
 // Import declaration
 
 open System
+open System.Threading
 open System.Collections.Generic
 
 open Xunit
@@ -32,15 +33,26 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while tick0 = Environment.TickCount64 do
+            Thread.Sleep 5
+
         rfl.RFLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while tick1 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 2
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 > tick1 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -49,25 +61,46 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while tick0 = Environment.TickCount64 do
+            Thread.Sleep 5
+
         rfl.RFLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while tick1 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 3 )
         wli.Add 2
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 = tick2 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = -1L ))
+
+        while tick2 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 4
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 > tick2 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick3 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 5
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 > tick3 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -76,35 +109,66 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while tick0 = Environment.TickCount64 do
+            Thread.Sleep 5
+
         rfl.RFLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while tick1 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 4 )
         wli.Add 2
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 = tick1 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = -1L ))
+
+        while tick2 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 5 )
         wli.Add 3
-        Assert.True(( rfl.Count = 2 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 = tick1 ))
+        Assert.True(( tcnt = 2 ))
+        Assert.True(( lcnt = -1L ))
+
+        while tick3 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 6
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 2L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 > tick3 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 2L ))
+
+        while tick4 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 7
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick5, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick5 > tick4 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick5 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 8
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick6, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick6 > tick5 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -113,35 +177,66 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while tick0 = Environment.TickCount64 do
+            Thread.Sleep 5
+
         rfl.RFLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while tick1 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 4 )
         wli.Add 2
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 = tick2 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = -1L ))
+
+        while tick2 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 6 )
         wli.Add 3
-        Assert.True(( rfl.Count = 2 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 = tick3 ))
+        Assert.True(( tcnt = 2 ))
+        Assert.True(( lcnt = -1L ))
+
+        while tick3 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 5
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 > tick3 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick4 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 7
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick5, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick5 > tick4 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while tick5 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 8
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick6, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick6 > tick5 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -150,25 +245,46 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while tick0 = Environment.TickCount64 do
+            Thread.Sleep 5
+
         rfl.RFLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick1 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 3 )
         wli.Add 2
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 = tick1 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick2 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 4
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 > tick2 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick3 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 5
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 > tick3 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -177,73 +293,137 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while tick0 = Environment.TickCount64 do
+            Thread.Sleep 5
+
         rfl.RFLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick1 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 4 )
         wli.Add 2
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 = tick1 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick2 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 6 )
         wli.Add 3
-        Assert.True(( rfl.Count = 2 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 = tick1 ))
+        Assert.True(( tcnt = 2 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick3 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 5
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 > tick3 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick4 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 7
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick5, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick5 > tick4 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while ( tick5 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 8
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick6, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick6 > tick5 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
-        Assert.True(( rfl.Count = 0 ))
+        Assert.True(( rfl.TaskCount = 0 ))
 
     [<Fact>]
     member _.Test_WWWFFF() =  // W->W->W->F->F->F
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while tick0 = Environment.TickCount64 do
+            Thread.Sleep 5
+
         rfl.RFLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick1 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 4 )
         wli.Add 2
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 = tick1 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick2 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 6 )
         wli.Add 3
-        Assert.True(( rfl.Count = 2 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 = tick1 ))
+        Assert.True(( tcnt = 2 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick3 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 5
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 <> tick1 ))
+        Assert.True(( tick4 > 0L ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick4 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 7
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick5, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick5 > tick4 ))
+        Assert.True(( tick5 > 0L ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick5 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 8
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick6, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick6 > tick5 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -252,15 +432,26 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while tick0 = Environment.TickCount64 do
+            Thread.Sleep 5
+
         rfl.NormalLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick1 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 2
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 > tick1 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -269,25 +460,46 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while tick0 = Environment.TickCount64 do
+            Thread.Sleep 5
+
         rfl.NormalLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick1 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 2 )
         wli.Add 3
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 2L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 = tick1 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 2L ))
+
+        while tick2 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 4
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 > tick2 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick3 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 5
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 > tick3 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -296,73 +508,135 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while tick0 = Environment.TickCount64 do
+            Thread.Sleep 5
+
         rfl.NormalLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick1 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 2 )
         wli.Add 3
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 2L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 = tick1 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 2L ))
+
+        while tick2 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 4 )
         wli.Add 5
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 3L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 = tick2 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 3L ))
+
+        while tick3 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 6
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 2L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 > tick3 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 2L ))
+
+        while tick4 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 7
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick5, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick5 > tick4 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick5 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 8
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick6, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick6 > tick5 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
-        Assert.True(( rfl.Count = 0 ))
+        Assert.True(( rfl.TaskCount = 0 ))
 
     [<Fact>]
     member _.Test_RRWFFF() =  // R->R->W->F->F->F
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while tick0 = Environment.TickCount64 do
+            Thread.Sleep 5
+
         rfl.NormalLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick1 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 2 )
         wli.Add 3
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 2L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 = tick1 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 2L ))
+
+        while tick2 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 6 )
         wli.Add 4
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = 2L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 = tick2 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = 2L ))
+
+        while tick3 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 5
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 > tick3 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick4 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 7
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick5, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick5 > tick4 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while tick5 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 8
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick6, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick6 > tick5 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -371,25 +645,46 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while tick0 = Environment.TickCount64 do
+            Thread.Sleep 5
+
         rfl.NormalLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick1 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 3 )
         wli.Add 2
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 = tick1 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick2 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 4
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 > tick2 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while tick3 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 5
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 > tick3 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -398,35 +693,66 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while tick0 = Environment.TickCount64 do
+            Thread.Sleep 5
+
         rfl.NormalLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick1 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 4 )
         wli.Add 2
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 = tick1 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick2 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 6 )
         wli.Add 3
-        Assert.True(( rfl.Count = 2 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 = tick2 ))
+        Assert.True(( tcnt = 2 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick3 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 5
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 > tick3 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = -1L ))
+
+        while tick4 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 7
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick5, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick5 > tick4 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick5 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 8
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick6, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick6 > tick5 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -435,35 +761,66 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while tick0 = Environment.TickCount64 do
+            Thread.Sleep 5
+
         rfl.NormalLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick1 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 4 )
         wli.Add 2
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 = tick1 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick2 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 6 )
         wli.Add 3
-        Assert.True(( rfl.Count = 2 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 = tick2 ))
+        Assert.True(( tcnt = 2 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick3 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 5
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 > tick3 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick4 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 7
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick5, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick5 > tick4 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick5 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 8
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick6, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick6 > tick5 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -472,25 +829,46 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while tick0 = Environment.TickCount64 do
+            Thread.Sleep 5
+
         rfl.RFLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while tick1 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 2
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 > tick1 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
+
+        while tick2 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 3 )
         wli.Add 4
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 > tick2 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while tick3 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 5
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 > tick3 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -499,25 +877,46 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while tick0 = Environment.TickCount64 do
+            Thread.Sleep 5
+
         rfl.RFLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while tick1 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 2
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 > tick1 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
+
+        while tick2 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 3 )
         wli.Add 4
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 > tick2 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick3 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 5
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 > tick3 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -526,25 +925,46 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while tick0 = Environment.TickCount64 do
+            Thread.Sleep 5
+
         rfl.NormalLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick1 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 2
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 > tick1 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
+
+        while tick2 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 3 )
         wli.Add 4
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 > tick2 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while tick3 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 5
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 > tick3 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -553,25 +973,46 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while tick0 = Environment.TickCount64 do
+            Thread.Sleep 5
+
         rfl.NormalLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick1 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 2
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 > tick1 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
+
+        while tick2 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 3 )
         wli.Add 4
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 > tick2 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while tick3 = Environment.TickCount64 do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 5
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 > tick3 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -580,35 +1021,66 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while tick0 = Environment.TickCount64 do
+            Thread.Sleep 5
+
         rfl.RFLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick1 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 3 )
         wli.Add 2
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 = tick1 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick2 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 4
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 > tick2 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick3 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 6 )
         wli.Add 5
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 = tick3 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick4 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 7
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick5, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick5 > tick4 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick5 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 8
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick6, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick6 > tick5 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -617,35 +1089,66 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while tick0 = Environment.TickCount64 do
+            Thread.Sleep 5
+
         rfl.RFLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick1 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 3 )
         wli.Add 2
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 = tick1 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick2 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 4
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 > tick2 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick3 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 6 )
         wli.Add 5
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 = tick3 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick4 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 7
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick5, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick5 > tick4 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while ( tick5 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 8
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick6, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick6 > tick5 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -654,35 +1157,66 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while ( tick0 = Environment.TickCount64 ) do
+            Thread.Sleep 5
+
         rfl.RFLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick1 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 3 )
         wli.Add 2
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 = tick1 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick2 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 4
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 > tick2 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while ( tick3 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 6 )
         wli.Add 5
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 = tick3 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = 1L ))
+
+        while ( tick4 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 7
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick5, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick5 > tick4 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick5 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 8
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick6, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick6 > tick5 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -691,35 +1225,66 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while ( tick0 = Environment.TickCount64 ) do
+            Thread.Sleep 5
+
         rfl.RFLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick1 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 3 )
         wli.Add 2
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 = tick1 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick2 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 4
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 > tick2 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while ( tick3 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 5 )
         wli.Add 6
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 2L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 = tick3 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 2L ))
+
+        while ( tick4 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 7
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick5, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick5 > tick4 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while ( tick5 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 8
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick6, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick6 > tick5 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -728,35 +1293,66 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while ( tick0 = Environment.TickCount64 ) do
+            Thread.Sleep 5
+
         rfl.NormalLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while ( tick1 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 3 )
         wli.Add 2
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 = tick1 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = 1L ))
+
+        while ( tick2 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 4
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 > tick2 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick3 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 6 )
         wli.Add 5
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 = tick3 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick4 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 7
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick5, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick5 > tick4 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick5 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 8
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick6, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick6 > tick5 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -765,35 +1361,66 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while ( tick0 = Environment.TickCount64 ) do
+            Thread.Sleep 5
+
         rfl.NormalLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while ( tick1 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 3 )
         wli.Add 2
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 = tick1 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = 1L ))
+
+        while ( tick2 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 4
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 > tick2 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick3 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 6 )
         wli.Add 5
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 = tick3 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick4 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 7
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick5, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick5 > tick4 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while ( tick5 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 8
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick6, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick6 > tick5 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -802,35 +1429,66 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while ( tick0 = Environment.TickCount64 ) do
+            Thread.Sleep 5
+
         rfl.NormalLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while ( tick1 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 2 )
         wli.Add 3
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 2L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 = tick1 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 2L ))
+
+        while ( tick2 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 4
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 > tick2 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while ( tick3 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 6 )
         wli.Add 5
-        Assert.True(( rfl.Count = 1 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 = tick3 ))
+        Assert.True(( tcnt = 1 ))
+        Assert.True(( lcnt = 1L ))
+
+        while ( tick4 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 7
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick5, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick5 > tick4 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick5 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 8
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick6, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick6 > tick5 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -839,35 +1497,66 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while ( tick0 = Environment.TickCount64 ) do
+            Thread.Sleep 5
+
         rfl.NormalLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while ( tick1 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 2 )
         wli.Add 3
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 2L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 = tick1 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 2L ))
+
+        while ( tick2 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 4
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 > tick2 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while ( tick3 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 5 )
         wli.Add 6
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 2L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 = tick3 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 2L ))
+
+        while ( tick4 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 7
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick5, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick5 > tick4 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while ( tick5 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 8
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick6, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick6 > tick5 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -876,30 +1565,56 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while ( tick0 = Environment.TickCount64 ) do
+            Thread.Sleep 5
+
         rfl.RFLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick1 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 2
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 > tick1 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
+
+        while ( tick2 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 3
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 > tick2 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
+
+        while ( tick3 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 4 )
         wli.Add 5
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 > tick3 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick4 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 6
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick5, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick5 > tick4 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -908,30 +1623,56 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while ( tick0 = Environment.TickCount64 ) do
+            Thread.Sleep 5
+
         rfl.RFLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick1 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 2
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 > tick1 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
+
+        while ( tick2 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 3
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 > tick2 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
+
+        while ( tick3 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 4 )
         wli.Add 5
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 > tick3 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while ( tick4 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 6
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick5, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick5 > tick4 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -940,30 +1681,56 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while ( tick0 = Environment.TickCount64 ) do
+            Thread.Sleep 5
+
         rfl.NormalLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while ( tick1 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 2
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 > tick1 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
+
+        while ( tick2 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 3
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 > tick2 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
+
+        while ( tick3 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.RFLock ( fun () -> wli.Add 4 )
         wli.Add 5
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 > tick3 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = -1L ))
+
+        while ( tick4 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 6
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick5, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick5 > tick4 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -972,30 +1739,56 @@ type ResponseFence_Test1() =
         let wli = List<int>()
         let rfl = ResponseFence()
 
+        let struct( tick0, _, _ ) = rfl.LockStatus
+        while ( tick0 = Environment.TickCount64 ) do
+            Thread.Sleep 5
+
         rfl.NormalLock ( fun () -> wli.Add 0 )
         wli.Add 1
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick1, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick1 > tick0 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while ( tick1 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 2
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick2, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick2 > tick1 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
+
+        while ( tick2 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 3
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick3, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick3 > tick2 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
+
+        while ( tick3 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.NormalLock ( fun () -> wli.Add 4 )
         wli.Add 5
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        let struct( tick4, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick4 > tick3 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 1L ))
+
+        while ( tick4 = Environment.TickCount64 ) do
+            Thread.Sleep 5
 
         rfl.Free()
         wli.Add 6
-        Assert.True(( rfl.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        let struct( tick5, lcnt, tcnt ) = rfl.LockStatus
+        Assert.True(( tick5 > tick4 ))
+        Assert.True(( tcnt = 0 ))
+        Assert.True(( lcnt = 0L ))
 
         Assert.True(( wli.ToArray() = [| 0 .. wli.Count - 1 |] ))
 
@@ -1005,7 +1798,7 @@ type ResponseFence_Test1() =
         let rfl = ResponseFence()
         rfl.Lock ResponseFenceNeedsFlag.Irrelevant ( fun () -> wli.Add 0 )
         Assert.True(( wli.Count = 0 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        Assert.True(( rfl.LockCounter = 0L ))
 
     [<Fact>]
     member _.Lock_Immediately_001() =
@@ -1013,7 +1806,7 @@ type ResponseFence_Test1() =
         let rfl = ResponseFence()
         rfl.Lock ResponseFenceNeedsFlag.Immediately ( fun () -> wli.Add 0 )
         Assert.True(( wli.Count = 1 ))
-        Assert.True(( rfl.LockStatus = 0L ))
+        Assert.True(( rfl.LockCounter = 0L ))
 
     [<Fact>]
     member _.Lock_R_Mode_001() =
@@ -1021,7 +1814,7 @@ type ResponseFence_Test1() =
         let rfl = ResponseFence()
         rfl.Lock ResponseFenceNeedsFlag.R_Mode ( fun () -> wli.Add 0 )
         Assert.True(( wli.Count = 1 ))
-        Assert.True(( rfl.LockStatus = 1L ))
+        Assert.True(( rfl.LockCounter = 1L ))
 
     [<Fact>]
     member _.Lock_W_Mode_001() =
@@ -1029,4 +1822,4 @@ type ResponseFence_Test1() =
         let rfl = ResponseFence()
         rfl.Lock ResponseFenceNeedsFlag.W_Mode ( fun () -> wli.Add 0 )
         Assert.True(( wli.Count = 1 ))
-        Assert.True(( rfl.LockStatus = -1L ))
+        Assert.True(( rfl.LockCounter = -1L ))
