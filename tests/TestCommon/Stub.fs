@@ -674,6 +674,7 @@ type public CConnection_Stub() =
     let mutable f_R_SNACKRequest : ( ITT_T -> ( unit -> unit ) -> unit ) option = None
     let mutable f_GetReceiveBytesCount : ( unit -> ResCountResult array ) option = None
     let mutable f_GetSentBytesCount : ( unit -> ResCountResult array ) option = None
+    let mutable f_GetUnACKStatCount : ( unit -> uint32 ) option = None
 
     member val dummy : obj = box () with get, set
     member _.p_ConnectedDate with set v = f_ConnectedDate <- Some( v )
@@ -699,6 +700,7 @@ type public CConnection_Stub() =
     member _.p_R_SNACKRequest with set v = f_R_SNACKRequest <- Some( v )
     member _.p_GetReceiveBytesCount with set v = f_GetReceiveBytesCount <- Some( v )
     member _.p_GetSentBytesCount with set v = f_GetSentBytesCount <- Some( v )
+    member _.p_GetUnACKStatCount with set v = f_GetUnACKStatCount <- Some( v )
 
     interface IConnection with
         override _.ConnectedDate with get() : DateTime =
@@ -747,6 +749,8 @@ type public CConnection_Stub() =
             f_GetReceiveBytesCount.Value()
         override _.GetSentBytesCount() =
             f_GetSentBytesCount.Value()
+        override _.GetUnACKStatCount() =
+            f_GetUnACKStatCount.Value()
 
 /// <summary>
 ///  Default stub class for IKiller.

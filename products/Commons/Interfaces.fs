@@ -1101,6 +1101,13 @@ type IConnection =
     /// </returns>
     abstract GetSentBytesCount : unit -> ResCountResult array
 
+    // ------------------------------------------------------------------------
+    /// <summary>
+    ///   Obtain unacknowledged status count.
+    /// </summary>
+    abstract GetUnACKStatCount : unit -> uint32
+
+
 
 /// <summary>
 ///   Interface of Session component.

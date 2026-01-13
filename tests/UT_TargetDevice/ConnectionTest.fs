@@ -460,8 +460,7 @@ type Connection_Test () =
         Assert.True(( rpdu2.ExpCmdSN = cmdsn_me.fromPrim 1u ))
         Assert.True(( rpdu2.MaxCmdSN = cmdsn_me.fromPrim 2u ))
 
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 0 ))
 
@@ -517,9 +516,9 @@ type Connection_Test () =
         Assert.True(( rpdu2.StatSN = statsn_me.fromPrim 5u ))
         Assert.True(( rpdu2.ExpCmdSN = cmdsn_me.fromPrim 1u ))
         Assert.True(( rpdu2.MaxCmdSN = cmdsn_me.fromPrim 2u ))
+        Assert.True(( con.GetUnACKStatCount() = 1u ))
 
         let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 1 ))
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 0 ))
 
@@ -554,9 +553,8 @@ type Connection_Test () =
         Assert.True(( rpdu2.LUN = lun_me.fromPrim 0x0001020304050607UL ))
         Assert.True(( rpdu2.InitiatorTaskTag = itt_me.fromPrim 13u ))
 
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
         Assert.True(( m_SentDataInPDUs.Length = 1 ))
 
         let struct( rITT , rDataSN, savedPDU ) = m_SentDataInPDUs.[0]
@@ -1434,11 +1432,9 @@ type Connection_Test () =
         Assert.True(( datain.[1].InitiatorTaskTag = itt_me.fromPrim 1u ))
         Assert.True(( resp.InitiatorTaskTag = itt_me.fromPrim 1u ))
 
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 1 ))
-
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 1 ))
+        Assert.True(( con.GetUnACKStatCount() = 1u ))
 
         GlbFunc.ClosePorts [| sp; cp; |]
 
@@ -1511,11 +1507,9 @@ type Connection_Test () =
         Assert.True(( datain.Length = 0 ))
         Assert.True(( resp.InitiatorTaskTag = itt_me.fromPrim 1u ))
 
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 1 ))
-
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 3 ))
+        Assert.True(( con.GetUnACKStatCount() = 1u ))
 
         GlbFunc.ClosePorts [| sp; cp; |]
 
@@ -1591,11 +1585,9 @@ type Connection_Test () =
         | :? SessionRecoveryException as _ ->
             ()
 
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 2 ))
-
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 1 ))
+        Assert.True(( con.GetUnACKStatCount() = 2u ))
 
         GlbFunc.ClosePorts [| sp; cp; |]
 
@@ -1640,11 +1632,9 @@ type Connection_Test () =
         Assert.True(( datain.Length = 0 ))
         Assert.True(( resp.InitiatorTaskTag = itt_me.fromPrim 1u ))
 
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 1 ))
-
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 0 ))
+        Assert.True(( con.GetUnACKStatCount() = 1u ))
         GlbFunc.ClosePorts [| sp; cp; |]
 
     [<Fact>]
@@ -1699,11 +1689,9 @@ type Connection_Test () =
         | :? SessionRecoveryException as _ ->
             ()
 
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
-
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 1 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
 
         GlbFunc.ClosePorts [| sp; cp; |]
 
@@ -1778,11 +1766,9 @@ type Connection_Test () =
         Assert.True(( datain.[1].InitiatorTaskTag = itt_me.fromPrim 1u ))
         Assert.True(( resp.InitiatorTaskTag = itt_me.fromPrim 1u ))
 
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
-
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 2 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
 
         GlbFunc.ClosePorts [| sp; cp; |]
 
@@ -1855,11 +1841,9 @@ type Connection_Test () =
         Assert.True(( datain.Length = 0 ))
         Assert.True(( resp.InitiatorTaskTag = itt_me.fromPrim 1u ))
 
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
-
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 4 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
 
         GlbFunc.ClosePorts [| sp; cp; |]
 
@@ -2086,9 +2070,7 @@ type Connection_Test () =
         Assert.True(( a = itt_me.fromPrim 1u ))
         Assert.True(( b = datasn_me.zero ))
         Assert.True(( ( c :?> SCSIDataInPDU ).Status = ScsiCmdStatCd.GOOD ))
-
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
 
         let rpdu =
             PDU.Receive( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, cp, Standpoint.Initiator )
@@ -2130,9 +2112,7 @@ type Connection_Test () =
         Assert.True(( a = itt_me.fromPrim 1u ))
         Assert.True(( b = datasn_me.zero ))
         Assert.True(( ( c :?> SCSIDataInPDU ).Status = ScsiCmdStatCd.GOOD ))
-
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
 
         let rpdu =
             PDU.Receive( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, cp, Standpoint.Initiator )
@@ -2191,9 +2171,7 @@ type Connection_Test () =
         Assert.True(( a = itt_me.fromPrim 1u ))
         Assert.True(( b = datasn_me.zero ))
         Assert.True(( ( c :?> SCSIDataInPDU ).Status = ScsiCmdStatCd.GOOD ))
-
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
 
         let m_R_SNACK_Request = Connection_Test.getR_SNACK_Request con
         Assert.True(( m_R_SNACK_Request.Length = 1 ))
@@ -2416,8 +2394,7 @@ type Connection_Test () =
         Assert.True(( b = datasn_me.zero ))
         Assert.True(( ( c :?> R2TPDU ).BufferOffset = 0xAAu ))
 
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
 
         let rpdu =
             PDU.Receive( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, cp, Standpoint.Initiator )
@@ -2461,8 +2438,7 @@ type Connection_Test () =
         Assert.True(( b = datasn_me.zero ))
         Assert.True(( ( c :?> R2TPDU ).BufferOffset = 0xAAu ))
 
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
 
         let rpdu =
             PDU.Receive( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, cp, Standpoint.Initiator )
@@ -2604,8 +2580,7 @@ type Connection_Test () =
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 0 ))
 
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
 
         let rpdu =
             PDU.Receive( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, cp, Standpoint.Initiator )
@@ -2638,8 +2613,7 @@ type Connection_Test () =
 
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 0 ))
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
 
     [<Fact>]
     member _.ReceivePDUInFullFeaturePhase_002() =
@@ -2675,8 +2649,7 @@ type Connection_Test () =
 
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 0 ))
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
         Assert.True(( cnt = 1 ))
         GlbFunc.ClosePorts [| sp; cp; |]
 
@@ -2724,8 +2697,7 @@ type Connection_Test () =
 
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 0 ))
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
         Assert.True(( cnt = 1 ))
         GlbFunc.ClosePorts [| sp; cp; |]
 
@@ -2763,8 +2735,7 @@ type Connection_Test () =
 
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 0 ))
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
         Assert.True(( cnt = 1 ))
         GlbFunc.ClosePorts [| sp; cp; |]
 
@@ -2812,8 +2783,7 @@ type Connection_Test () =
 
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 0 ))
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
         Assert.True(( cnt = 1 ))
         GlbFunc.ClosePorts [| sp; cp; |]
 
@@ -2862,8 +2832,7 @@ type Connection_Test () =
 
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 0 ))
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
         Assert.True(( cnt = 1 ))
         GlbFunc.ClosePorts [| sp; cp; |]
 
@@ -2926,8 +2895,7 @@ type Connection_Test () =
 
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 0 ))
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
         Assert.True(( cnt = 2 ))
         GlbFunc.ClosePorts [| sp; cp; |]
 
@@ -2973,8 +2941,7 @@ type Connection_Test () =
 
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 0 ))
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
         Assert.True(( cnt = 1 ))
         GlbFunc.ClosePorts [| sp; cp; |]
 
@@ -3003,8 +2970,7 @@ type Connection_Test () =
 
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 0 ))
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
 
     [<Fact>]
     member _.DeleteAcknowledgedPDU_001() =
@@ -3181,11 +3147,9 @@ type Connection_Test () =
 
         pc.Invoke( "DeleteAcknowledgedPDU", 3u ) |> ignore
 
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
-
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 3 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
         GlbFunc.ClosePorts [| sp; cp; |]
 
     [<Fact>]
@@ -3229,10 +3193,9 @@ type Connection_Test () =
 
         pc.Invoke( "DeleteAcknowledgedPDU", 3u ) |> ignore
 
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 0 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
         Assert.True(( cnt = 1 ))
         GlbFunc.ClosePorts [| sp; cp; |]
 
@@ -3275,10 +3238,9 @@ type Connection_Test () =
 
         pc.Invoke( "DeleteAcknowledgedPDU", 3u ) |> ignore
 
-        let m_SentRespPDUs = Connection_Test.getSentRespPDUs con
-        Assert.True(( m_SentRespPDUs.Length = 0 ))
         let m_SentDataInPDUs = Connection_Test.getSentDataInPDUs con
         Assert.True(( m_SentDataInPDUs.Length = 0 ))
+        Assert.True(( con.GetUnACKStatCount() = 0u ))
         GlbFunc.ClosePorts [| sp; cp; |]
 
     [<Fact>]

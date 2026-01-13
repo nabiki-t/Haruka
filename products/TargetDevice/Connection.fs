@@ -627,6 +627,15 @@ type Connection
         override _.GetSentBytesCount() : ResCountResult[] =
             m_SentBytesCounter.Get DateTime.UtcNow
 
+        // ------------------------------------------------------------------------
+        /// <summary>
+        ///   Obtain unacknowledged status count.
+        /// </summary>
+        override _.GetUnACKStatCount() : uint32 =
+            let r = m_ResendStat.obj
+            r.m_SentRespPDUs.Length |> uint32
+
+
     //=========================================================================
     // static method
 
