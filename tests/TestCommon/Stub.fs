@@ -248,6 +248,7 @@ type public CSession_Stub() =
     let mutable f_NoticeUpdateSessionParameter : ( IscsiNegoParamSW -> unit ) option = None
     let mutable f_NoticeUnlockResponseFence : ( ResponseFenceNeedsFlag -> unit ) option = None
     let mutable f_Abort_iSCSITask : ( ( IIscsiTask -> bool ) -> bool ) option = None
+    let mutable f_StartAcknowledgeChecker : ( unit -> unit ) option = None
 
     member val dummy : obj = box () with get, set
     member _.p_Terminate with set v = f_Terminate <- Some( v )
@@ -276,6 +277,7 @@ type public CSession_Stub() =
     member _.p_NoticeUpdateSessionParameter with set v = f_NoticeUpdateSessionParameter <- Some( v )
     member _.p_NoticeUnlockResponseFence with set v = f_NoticeUnlockResponseFence <- Some( v )
     member _.p_Abort_iSCSITask with set v = f_Abort_iSCSITask <- Some( v )
+    member _.p_StartAcknowledgeChecker with set v = f_StartAcknowledgeChecker <- Some( v )
 
     interface ISession with
         override _.Terminate () =
@@ -355,6 +357,8 @@ type public CSession_Stub() =
             f_NoticeUnlockResponseFence.Value mode
         override _.Abort_iSCSITask ( f : ( IIscsiTask -> bool ) ) : bool =
             f_Abort_iSCSITask.Value f
+        override _.StartAcknowledgeChecker() : unit =
+            f_StartAcknowledgeChecker.Value ()
 
 /// <summary>
 ///  Default stub class for IProtocolService.

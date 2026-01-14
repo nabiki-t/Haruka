@@ -733,6 +733,11 @@ type Session
             else
                 false
 
+        // ------------------------------------------------------------------------
+        //  Starts the process of requesting an acknowledgement of StatSN.
+        override _.StartAcknowledgeChecker() : unit =
+            ( fun () -> Session.StatSNAckChecker m_RespFense m_CIDs this ( fun () -> Environment.TickCount64 ) 50 )
+            |> Functions.StartTask
 
     //=========================================================================
     // private method
@@ -1561,3 +1566,98 @@ type Session
             let loginfo = struct ( m_ObjID, ValueSome cid, ValueSome counter, ValueSome m_TSIH, ValueSome pdu.InitiatorTaskTag, ValueNone )
             g.Gen1( loginfo, sprintf "LockStatus=%d, Count=%d" m_RespFense.LockCounter m_RespFense.TaskCount )
         )
+
+    /// <summary>
+    ///  Periodically request a status response
+    /// </summary>
+    /// <param name="rFense">
+    ///  Response fence lock object
+    /// </param>
+    /// <param name="conns">
+    ///  Connection objects.
+    /// </param>
+    /// <param name="sess">
+    ///  Session object.
+    /// </param>
+    /// <param name="tick">
+    ///  Tick count getter function.
+    /// </param>
+    /// <param name="interval">
+    ///  intervalcheck interval time.
+    /// </param>
+    static member private StatSNAckChecker
+        ( rFense : ResponseFence )
+        ( conns : OptimisticLock< ImmutableDictionary< CID_T, CIDInfo > > )
+        ( sess : ISession )
+        ( tick : ( unit -> int64 ) )
+        ( interval : int ) : Task<unit> =
+
+        // Continue sending ping requests on connections that have an unacknowledged status.
+        let loop ( nextIdx : int64 ) : Task< struct( bool * int64 ) > =
+            task {
+                do! Task.Delay interval
+                if sess.IsAlive |> not then
+                    return struct( false, nextIdx )
+                else
+                    let struct( starttick, _, qcount ) = rFense.LockStatus
+
+                    if qcount = 0 then
+                        return struct( true, 0L )
+                    elif tick() >= starttick + ( Session.StatSNAckSchedule nextIdx ) then
+                        conns.obj
+                        |> Seq.choose ( fun itr ->
+                            let c = itr.Value.Connection
+                            if c.GetUnACKStatCount() > 0u then
+                                Some c
+                            else
+                                None
+                        )
+                        |> Session.SendNopIn_PingRequest sess
+                        return struct( true, nextIdx + 1L )
+                    else
+                        return struct( true, nextIdx )
+            }
+        Functions.loopAsyncWithState loop 0L
+        |> Functions.TaskIgnore
+
+    /// <summary>
+    ///  Determine the time interval between ping requests
+    /// </summary>
+    /// <param name="idx">
+    ///  Number of pings sent after the condition is met
+    /// </param>
+    /// <returns>
+    ///  The time to wait after the condition is met.
+    /// </returns>
+    static member private StatSNAckSchedule ( idx : int64 ) : int64 =
+        let i = 100L
+        let m = 10000L
+        let d = 4L
+        let s = 5000L
+        if idx <= d then
+            ( m - i ) * idx / d + i
+        else
+            ( idx - d + 2L ) * s
+
+    /// <summary>
+    ///  Sends a Nop-In PDU as a ping request on the specified connection.
+    /// </summary>
+    /// <param name="sess">
+    ///  Sesion object
+    /// </param>
+    /// <param name="cons">
+    ///  Connections
+    /// </param>
+    static member private SendNopIn_PingRequest ( sess : ISession ) ( cons : IConnection seq ) : unit =
+        for itr in cons do
+            let pdu : NOPInPDU = {
+                LUN = lun_me.zero;
+                InitiatorTaskTag = itt_me.fromPrim 0xFFFFFFFFu;
+                TargetTransferTag = sess.NextTTT;
+                StatSN = statsn_me.zero;
+                ExpCmdSN = cmdsn_me.zero;
+                MaxCmdSN = cmdsn_me.zero;
+                PingData = PooledBuffer.Empty;
+            }
+            sess.SendOtherResponsePDU itr.CID itr.ConCounter pdu
+

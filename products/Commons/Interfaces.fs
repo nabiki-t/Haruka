@@ -1528,6 +1528,12 @@ type ISession =
             f:( IIscsiTask -> bool ) ->
             bool
 
+    // ------------------------------------------------------------------------
+    /// <summary>
+    ///  Starts the process of requesting an acknowledgement of StatSN.
+    /// </summary>
+    abstract StartAcknowledgeChecker : unit -> unit
+
 
 /// <summary>
 ///   Interface of iSCSI Network Portal component.

@@ -16,6 +16,8 @@ open System.IO
 open System.Text
 open System.Threading
 open System.Threading.Tasks
+open System.Collections.Generic
+open System.Collections.Immutable
 
 open Xunit
 open Xunit.Abstractions
@@ -6869,3 +6871,251 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         sess.DestroySession()
         GlbFunc.ClosePorts [| sp; cp; |]
 
+    [<Fact>]
+    member _.SendNopIn_PingRequest_001() =
+        let sess = CSession_Stub()
+        let conns : IConnection[] = [||]
+        PrivateCaller.Invoke< Session >( "SendNopIn_PingRequest", sess, conns ) |> ignore
+
+    [<Fact>]
+    member _.SendNopIn_PingRequest_002() =
+        let conn = CConnection_Stub(
+            p_CID = ( fun () -> cid_me.fromPrim 1us ),
+            p_ConCounter = ( fun () -> concnt_me.fromPrim 2 )
+        )
+        let sess = CSession_Stub()
+        sess.p_GetNextTTT <- ( fun () -> ttt_me.fromPrim 3u )
+        sess.p_SendOtherResponsePDU <- ( fun cid cnt pdu ->
+            let npdu = pdu :?> NOPInPDU
+            Assert.True(( cid = cid_me.fromPrim 1us ))
+            Assert.True(( cnt = concnt_me.fromPrim 2 ))
+            Assert.True(( npdu.InitiatorTaskTag = itt_me.fromPrim 0xFFFFFFFFu ))
+            Assert.True(( npdu.TargetTransferTag = ttt_me.fromPrim 3u ))
+        )
+        PrivateCaller.Invoke< Session >( "SendNopIn_PingRequest", sess, [| conn |] ) |> ignore
+
+    [<Fact>]
+    member _.SendNopIn_PingRequest_003() =
+        let conn1 = CConnection_Stub(
+            p_CID = ( fun () -> cid_me.fromPrim 1us ),
+            p_ConCounter = ( fun () -> concnt_me.fromPrim 2 )
+        )
+        let conn2 = CConnection_Stub(
+            p_CID = ( fun () -> cid_me.fromPrim 3us ),
+            p_ConCounter = ( fun () -> concnt_me.fromPrim 4 )
+        )
+        let mutable cnt1 = 0
+        let mutable cnt2 = 0
+        let sess = CSession_Stub()
+        sess.p_GetNextTTT <- ( fun () ->
+            cnt1 <- cnt1 + 1
+            if cnt1 = 1 then
+                ttt_me.fromPrim 5u
+            else
+                ttt_me.fromPrim 6u
+        )
+        sess.p_SendOtherResponsePDU <- ( fun cid cnt pdu ->
+            cnt2 <- cnt2 + 1
+            let npdu = pdu :?> NOPInPDU
+            if cnt2 = 1 then
+                Assert.True(( cid = cid_me.fromPrim 1us ))
+                Assert.True(( cnt = concnt_me.fromPrim 2 ))
+                Assert.True(( npdu.InitiatorTaskTag = itt_me.fromPrim 0xFFFFFFFFu ))
+                Assert.True(( npdu.TargetTransferTag = ttt_me.fromPrim 5u ))
+            else
+                Assert.True(( cid = cid_me.fromPrim 3us ))
+                Assert.True(( cnt = concnt_me.fromPrim 4 ))
+                Assert.True(( npdu.InitiatorTaskTag = itt_me.fromPrim 0xFFFFFFFFu ))
+                Assert.True(( npdu.TargetTransferTag = ttt_me.fromPrim 6u ))
+        )
+        PrivateCaller.Invoke< Session >( "SendNopIn_PingRequest", sess, [| conn1; conn2 |] ) |> ignore
+        Assert.True(( cnt1 = 2 ))
+        Assert.True(( cnt2 = 2 ))
+
+    [<Fact>]
+    member _.StatSNAckChecker_001() =
+        let fense = ResponseFence()
+        let conns = OptimisticLock< ImmutableDictionary< CID_T, CIDInfo > >( ImmutableDictionary.Empty )
+        let sess = CSession_Stub(
+            p_IsAlive = ( fun () -> false )
+        )
+        let tick = ( fun () -> 0L )
+        PrivateCaller.Invoke< Session >( "StatSNAckChecker", fense, conns, sess, tick, 0 ) :?> Task<unit>
+        |> Functions.RunTaskSynchronously
+
+    [<Fact>]
+    member _.StatSNAckChecker_002() =
+        let mutable cnt1 = 0
+        let fense = ResponseFence()
+        let conns = OptimisticLock< ImmutableDictionary< CID_T, CIDInfo > >( ImmutableDictionary.Empty )
+        let sess = CSession_Stub(
+            p_IsAlive = ( fun () ->
+                cnt1 <- cnt1 + 1
+                ( cnt1 <= 1 )
+            )
+        )
+        let tick = ( fun () -> 0L )
+        PrivateCaller.Invoke< Session >( "StatSNAckChecker", fense, conns, sess, tick, 0 ) :?> Task<unit>
+        |> Functions.RunTaskSynchronously
+        Assert.True(( cnt1 = 2 ))
+
+    [<Fact>]
+    member _.StatSNAckChecker_003() =
+        let mutable cnt1 = 0
+        let fense = ResponseFence()
+        let conns = OptimisticLock< ImmutableDictionary< CID_T, CIDInfo > >( ImmutableDictionary.Empty )
+        let sess = CSession_Stub(
+            p_IsAlive = ( fun () ->
+                cnt1 <- cnt1 + 1
+                ( cnt1 <= 1 )
+            )
+        )
+        let tick = ( fun () -> 0L )
+
+        fense.Lock ResponseFenceNeedsFlag.W_Mode id
+        fense.Lock ResponseFenceNeedsFlag.W_Mode id
+        let struct( starttick, _, qcount ) = fense.LockStatus
+        Assert.True(( starttick > 0 ))
+        Assert.True(( qcount > 0 ))
+
+        PrivateCaller.Invoke< Session >( "StatSNAckChecker", fense, conns, sess, tick, 0 ) :?> Task<unit>
+        |> Functions.RunTaskSynchronously
+        Assert.True(( cnt1 = 2 ))
+
+    [<Fact>]
+    member _.StatSNAckChecker_004() =
+        let mutable cnt1 = 0
+        let fense = ResponseFence()
+        let conns = OptimisticLock< ImmutableDictionary< CID_T, CIDInfo > >( ImmutableDictionary.Empty )
+        let sess = CSession_Stub(
+            p_IsAlive = ( fun () ->
+                cnt1 <- cnt1 + 1
+                ( cnt1 <= 1 )
+            )
+        )
+
+        fense.Lock ResponseFenceNeedsFlag.W_Mode id
+        fense.Lock ResponseFenceNeedsFlag.W_Mode id
+        let struct( starttick, _, qcount ) = fense.LockStatus
+        Assert.True(( starttick > 0 ))
+        Assert.True(( qcount > 0 ))
+        let tick = ( fun () -> starttick + 101L )
+
+        PrivateCaller.Invoke< Session >( "StatSNAckChecker", fense, conns, sess, tick, 0 ) :?> Task<unit>
+        |> Functions.RunTaskSynchronously
+        Assert.True(( cnt1 = 2 ))
+
+    [<Fact>]
+    member _.StatSNAckChecker_005() =
+        let mutable cnt1 = 0
+        let mutable cnt2 = 0
+        let sche = [| 0L; 50L; 101L; 150L; 2576L; 3000L; |]
+        let fense = ResponseFence()
+        let conns =
+            [|
+                (
+                    cid_me.fromPrim 1us,
+                    {
+                        Connection = CConnection_Stub(
+                            p_GetUnACKStatCount = ( fun () ->
+                                cnt2 <- cnt2 + 1
+                                0u
+                            )
+                        );
+                        CID = cid_me.fromPrim 1us;
+                        Counter = concnt_me.fromPrim 0;
+                    }
+                )
+            |]
+            |> Array.map KeyValuePair
+            |> _.ToImmutableDictionary()
+            |> OptimisticLock< ImmutableDictionary< CID_T, CIDInfo > >
+        let sess = CSession_Stub(
+            p_IsAlive = ( fun () ->
+                cnt1 <- cnt1 + 1
+                ( cnt1 <= 5 )
+            )
+        )
+
+        fense.Lock ResponseFenceNeedsFlag.W_Mode id
+        fense.Lock ResponseFenceNeedsFlag.W_Mode id
+        let struct( starttick, _, qcount ) = fense.LockStatus
+        Assert.True(( starttick > 0 ))
+        Assert.True(( qcount > 0 ))
+        let tick = ( fun () -> starttick + sche.[ cnt1 ] )
+
+        PrivateCaller.Invoke< Session >( "StatSNAckChecker", fense, conns, sess, tick, 0 ) :?> Task<unit>
+        |> Functions.RunTaskSynchronously
+        Assert.True(( cnt2 = 2 ))
+
+    [<Fact>]
+    member _.StatSNAckSchedule_001() =
+        let v = [|
+            for i = 0 to 10 do
+                PrivateCaller.Invoke< Session >( "StatSNAckSchedule", ( int64 i ) ) :?> int64
+        |]
+        Assert.True(( v = [| 100L; 2575L; 5050L; 7525L; 10000L; 15000L; 20000L; 25000L; 30000L; 35000L; 40000L |] ))
+
+
+    [<Fact>]
+    member _.StartAcknowledgeChecker_001() =
+        let sess, pc, killer, smStub, luStub, sp, cp =
+            Session_Test.CreateDefaultSessionObject
+                Session_Test.defaultSessionParam
+                Session_Test.defaultConnectionParam
+                cid_me.zero
+                cmdsn_me.zero
+                ( itt_me.fromPrim 0u )
+                false
+        let conn1 = sess.GetConnection cid_me.zero ( concnt_me.fromPrim 1 )
+        sess.StartAcknowledgeChecker()
+
+        // Send Nop-In PDU( R-Mode Lock )
+        sess.SendOtherResponsePDU 
+            cid_me.zero
+            ( concnt_me.fromPrim 1 )
+            {
+                Session_Test.defaultNopInPDUValues with
+                    LUN = lun_me.zero;
+                    InitiatorTaskTag = itt_me.fromPrim 1u;
+            }
+
+        // Receive Nop-In PDU in the initiator
+        let pdu1 =
+            PDU.Receive( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, cp, Standpoint.Initiator )
+            |> Functions.RunTaskSynchronously
+        Assert.True( ( pdu1.Opcode = OpcodeCd.NOP_IN ) )
+
+        let checkTick = Environment.TickCount64
+
+        // Send SCSI Response and Data-In PDUs ( W-Mode lock )
+        sess.SendSCSIResponse {
+                Session_Test.defaultScsiCommandPDUValues with
+                    I = false;
+                    R = true;
+                    W = false;
+                    InitiatorTaskTag = itt_me.fromPrim 2u;
+                    ExpectedDataTransferLength = 0u;
+            }
+            cid_me.zero
+            ( concnt_me.fromPrim 1 )
+            0u
+            iScsiSvcRespCd.COMMAND_COMPLETE
+            ScsiCmdStatCd.GOOD
+            PooledBuffer.Empty
+            PooledBuffer.Empty
+            0u
+            ResponseFenceNeedsFlag.W_Mode
+
+        Assert.True(( conn1.Value.GetUnACKStatCount() = 2u ))
+
+        // Receive Nop-In PDU in the initiator
+        let pdu3 =
+            PDU.Receive( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, cp, Standpoint.Initiator )
+            |> Functions.RunTaskSynchronously
+        Assert.True( ( pdu3.Opcode = OpcodeCd.NOP_IN ) )
+
+        Assert.True(( checkTick + 100L <= Environment.TickCount64 ))
+
+        sess.DestroySession()
+        GlbFunc.ClosePorts [| sp; cp; |]
