@@ -2184,7 +2184,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
                             m_ReceiveWaiter.Notify( x.InitiatorTaskTag, TaskResult.NOP )
                             return false
                         else
-                            return true
+                            return! this.Receive_NopInPDU x
 
                     | _ ->
                         m_ReceiveWaiter.SetExceptionForAll ( SessionRecoveryException( "Unexpected PDU was received.", m_TSIH ) )
@@ -2207,7 +2207,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// <returns>
     ///  Whether it ended normally or not.
     /// </returns>
-    member private _.Receive_SCSIResponsePDU ( pdu : SCSIResponsePDU ) : Task<bool> =
+    member private this.Receive_SCSIResponsePDU ( pdu : SCSIResponsePDU ) : Task<bool> =
         task {
             let itt = pdu.InitiatorTaskTag
 
@@ -2254,6 +2254,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
             }
             pdu.DataInBuffer.Return()
             m_ReceiveWaiter.Notify( itt, TaskResult.SCSI( r ) )
+            do! this.Send_StatusACK()
             return true
         }
 
@@ -2266,7 +2267,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// <returns>
     ///  Whether it ended normally or not.
     /// </returns>
-    member private _.Receive_TaskManagementFunctionResponsePDU ( pdu : TaskManagementFunctionResponsePDU ) : Task<bool> =
+    member private this.Receive_TaskManagementFunctionResponsePDU ( pdu : TaskManagementFunctionResponsePDU ) : Task<bool> =
         task {
             let itt = pdu.InitiatorTaskTag
 
@@ -2285,6 +2286,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
             |> ignore
 
             m_ReceiveWaiter.Notify( itt, TaskResult.TMF( pdu.Response ) )
+            do! this.Send_StatusACK()
             return true
         }
 
@@ -2356,3 +2358,21 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
 
         }
 
+    /// <summary>
+    ///  A NopIn PDU was received.
+    /// </summary>
+    /// <param name="pdu">
+    ///  Received PDU.
+    /// </param>
+    /// <returns>
+    ///  Whether it ended normally or not.
+    /// </returns>
+    member private this.Receive_NopInPDU ( pdu : NOPInPDU ) : Task<bool> =
+        task {
+            // If TTT is 0xFFFFFFFF, it must be silent.
+            if pdu.TargetTransferTag <> ttt_me.fromPrim 0xFFFFFFFFu then
+                let! _ = m_ISCIInitiator.SendNOPOut_PingResponse m_CID pdu.LUN pdu.TargetTransferTag
+                ()
+                
+            return true
+        }
