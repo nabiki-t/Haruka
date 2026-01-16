@@ -54,6 +54,7 @@ type ConfNode_Controller_Test() =
         NegotiableParameters = None;
         LogParameters = None;
         DeviceName = "abc";
+        EnableStatSNAckChecker = false;
     }
 
     let defaultTargetConf : TargetGroupConf.T_Target = {

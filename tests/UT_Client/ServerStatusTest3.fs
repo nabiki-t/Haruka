@@ -427,6 +427,7 @@ type ServerStatus_Test3() =
                         NegotiableParameters = None;
                         LogParameters = None;
                         DeviceName = ( sprintf "targetdevice_aaa_%03d" i );
+                        EnableStatSNAckChecker = false;
                     }
                     let rb3 =
                         HarukaCtrlerCtrlRes.ReaderWriter.ToString {

@@ -42,9 +42,9 @@ type ServerStatusStub( m_MessageTable : StringTable ) =
     let mutable m_ControllerNode : ConfNode_Controller option = None
     let mutable m_UpdateControllerNode : ( HarukaCtrlConf.T_HarukaCtrl -> ConfNode_Controller ) option = None
     let mutable m_GetTargetDeviceNodes : ( unit -> ConfNode_TargetDevice list ) option = None
-    let mutable m_AddTargetDeviceNode : ( TDID_T -> string -> TargetDeviceConf.T_NegotiableParameters -> TargetDeviceConf.T_LogParameters -> ConfNode_TargetDevice ) option = None
+    let mutable m_AddTargetDeviceNode : ( TDID_T -> string -> bool -> TargetDeviceConf.T_NegotiableParameters -> TargetDeviceConf.T_LogParameters -> ConfNode_TargetDevice ) option = None
     let mutable m_DeleteTargetDeviceNode : ( ConfNode_TargetDevice -> unit ) option = None
-    let mutable m_UpdateTargetDeviceNode : ( ConfNode_TargetDevice -> TDID_T -> string -> TargetDeviceConf.T_NegotiableParameters -> TargetDeviceConf.T_LogParameters -> ConfNode_TargetDevice ) option = None
+    let mutable m_UpdateTargetDeviceNode : ( ConfNode_TargetDevice -> TDID_T -> string -> bool -> TargetDeviceConf.T_NegotiableParameters -> TargetDeviceConf.T_LogParameters -> ConfNode_TargetDevice ) option = None
     let mutable m_AddNetworkPortalNode : ( ConfNode_TargetDevice -> TargetDeviceConf.T_NetworkPortal -> ConfNode_NetworkPortal ) option = None
     let mutable m_DeleteNetworkPortalNode : ( ConfNode_NetworkPortal -> unit ) option = None
     let mutable m_UpdateNetworkPortalNode : ( ConfNode_NetworkPortal -> TargetDeviceConf.T_NetworkPortal -> ConfNode_NetworkPortal ) option = None
@@ -132,9 +132,9 @@ type ServerStatusStub( m_MessageTable : StringTable ) =
     override _.ControllerNode = m_ControllerNode.Value
     override _.UpdateControllerNode conf = m_UpdateControllerNode.Value conf
     override _.GetTargetDeviceNodes() = m_GetTargetDeviceNodes.Value()
-    override _.AddTargetDeviceNode argTargetDeviceID argTargetDeviceName argNegotiableParameters argLogParameters = m_AddTargetDeviceNode.Value argTargetDeviceID argTargetDeviceName argNegotiableParameters argLogParameters
+    override _.AddTargetDeviceNode argTargetDeviceID argTargetDeviceName argEnableStatSNAckChecker argNegotiableParameters argLogParameters = m_AddTargetDeviceNode.Value argTargetDeviceID argTargetDeviceName argEnableStatSNAckChecker argNegotiableParameters argLogParameters
     override _.DeleteTargetDeviceNode tdnode = m_DeleteTargetDeviceNode.Value tdnode
-    override _.UpdateTargetDeviceNode tdnode argTargetDeviceID argTargetDeviceName argNegotiableParameters argLogParameters = m_UpdateTargetDeviceNode.Value tdnode argTargetDeviceID argTargetDeviceName argNegotiableParameters argLogParameters
+    override _.UpdateTargetDeviceNode tdnode argTargetDeviceID argTargetDeviceName argEnableStatSNAckChecker argNegotiableParameters argLogParameters = m_UpdateTargetDeviceNode.Value tdnode argTargetDeviceID argTargetDeviceName argEnableStatSNAckChecker argNegotiableParameters argLogParameters
     override _.AddNetworkPortalNode tdnode argNetworkPortal = m_AddNetworkPortalNode.Value tdnode argNetworkPortal
     override _.DeleteNetworkPortalNode npnode = m_DeleteNetworkPortalNode.Value npnode
     override _.UpdateNetworkPortalNode npnode argNetworkPortal = m_UpdateNetworkPortalNode.Value npnode argNetworkPortal
@@ -408,6 +408,7 @@ type CommandRunner_Test1() =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         let cnr = new ConfNodeRelation()
         let n = new ConfNode_TargetDevice( new StringTable( "" ), cnr, confnode_me.fromPrim 0UL, GlbFunc.newTargetDeviceID(), conf ) :> IConfigureNode
@@ -1332,7 +1333,7 @@ type CommandRunner_Test1() =
         let tnode = CommandRunner_Test1.m_ControllerNode
 
         ss.p_GetTargetDeviceNodes <- ( fun () -> flg1 <- true; [] )
-        ss.p_AddTargetDeviceNode <- ( fun argTDID argTDN argNP argLP ->
+        ss.p_AddTargetDeviceNode <- ( fun argTDID argTDN argESAC argNP argLP ->
             flg2 <- true
             CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         )

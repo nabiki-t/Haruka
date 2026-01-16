@@ -849,7 +849,7 @@ type MainWindow( m_ExeDir : string ) as this =
                 HardLimit = Constants.LOGPARAM_DEF_HARDLIMIT;
                 LogLevel = LogLevel.LOGLEVEL_INFO;
             }
-            let newnode = doc.Stat.AddTargetDeviceNode newTdid tdName newNegParam newLogParam
+            let newnode = doc.Stat.AddTargetDeviceNode newTdid tdName true newNegParam newLogParam
 
             // Add tree view item for newly created target device.
             let loadedTG = new Dictionary< TDID_T, TGID_T[] >()
@@ -875,7 +875,7 @@ type MainWindow( m_ExeDir : string ) as this =
                 let newTdid = ConfNode_TargetDevice.GenNewTargetDeviceID oldtds
 
                 // Renumber TargetDeviceID to make it unique.
-                let newtdnode2 = ss.UpdateTargetDeviceNode newtdnode newTdid newtdnode.TargetDeviceName newtdnode.NegotiableParameters newtdnode.LogParameters
+                let newtdnode2 = ss.UpdateTargetDeviceNode newtdnode newTdid newtdnode.TargetDeviceName newtdnode.EnableStatSNAckChecker newtdnode.NegotiableParameters newtdnode.LogParameters
 
                 let dummy = Dictionary< TDID_T, TGID_T[] >()
                 let tvi = this.CreateTreeViewItem_TargetDevice ss Array.empty dummy dummy newtdnode2

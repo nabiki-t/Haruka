@@ -1171,7 +1171,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     try
                         let tdid = tdid_me.fromString entValue
                         do! ss.CheckTargetDeviceUnloaded cc x
-                        let n = ss.UpdateTargetDeviceNode x tdid x.TargetDeviceName x.NegotiableParameters x.LogParameters
+                        let n = ss.UpdateTargetDeviceNode x tdid x.TargetDeviceName x.EnableStatSNAckChecker x.NegotiableParameters x.LogParameters
                         return Some ( ss, cc, ( n :> IConfigureNode ) )
                     with
                     | :? FormatException ->
@@ -1181,8 +1181,19 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
                 | "NAME" ->
                     do! ss.CheckTargetDeviceUnloaded cc x
-                    let n = ss.UpdateTargetDeviceNode x x.TargetDeviceID entValue x.NegotiableParameters x.LogParameters
+                    let n = ss.UpdateTargetDeviceNode x x.TargetDeviceID entValue x.EnableStatSNAckChecker x.NegotiableParameters x.LogParameters
                     return Some ( ss, cc, ( n :> IConfigureNode ) )
+
+                | "ENABLESTATSNACKCHECKER" ->
+                    let r, esac = Boolean.TryParse entValue
+                    if not r then
+                        m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "EnableStatSNAckChecker" )
+                        |> this.Output 0
+                        return Some ( ss, cc, cn )
+                    else
+                        do! ss.CheckTargetDeviceUnloaded cc x
+                        let n = ss.UpdateTargetDeviceNode x x.TargetDeviceID x.TargetDeviceName esac x.NegotiableParameters x.LogParameters
+                        return Some ( ss, cc, ( n :> IConfigureNode ) )
 
                 | "NEGOTIABLEPARAMETERS.MAXRECVDATASEGMENTLENGTH"
                 | "MAXRECVDATASEGMENTLENGTH" ->
@@ -1197,7 +1208,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                                 MaxRecvDataSegmentLength = v;
                         }
                         do! ss.CheckTargetDeviceUnloaded cc x
-                        let n = ss.UpdateTargetDeviceNode x x.TargetDeviceID x.TargetDeviceName newVal x.LogParameters
+                        let n = ss.UpdateTargetDeviceNode x x.TargetDeviceID x.TargetDeviceName x.EnableStatSNAckChecker newVal x.LogParameters
                         return Some ( ss, cc, ( n :> IConfigureNode ) )
 
                 | "NEGOTIABLEPARAMETERS.MAXBURSTLENGTH"
@@ -1213,7 +1224,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                                 MaxBurstLength = v;
                         }
                         do! ss.CheckTargetDeviceUnloaded cc x
-                        let n = ss.UpdateTargetDeviceNode x x.TargetDeviceID x.TargetDeviceName newVal x.LogParameters
+                        let n = ss.UpdateTargetDeviceNode x x.TargetDeviceID x.TargetDeviceName x.EnableStatSNAckChecker newVal x.LogParameters
                         return Some ( ss, cc, ( n :> IConfigureNode ) )
 
                 | "NEGOTIABLEPARAMETERS.FIRSTBURSTLENGTH"
@@ -1229,7 +1240,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                                 FirstBurstLength = v;
                         }
                         do! ss.CheckTargetDeviceUnloaded cc x
-                        let n = ss.UpdateTargetDeviceNode x x.TargetDeviceID x.TargetDeviceName newVal x.LogParameters
+                        let n = ss.UpdateTargetDeviceNode x x.TargetDeviceID x.TargetDeviceName x.EnableStatSNAckChecker newVal x.LogParameters
                         return Some ( ss, cc, ( n :> IConfigureNode ) )
 
                 | "NEGOTIABLEPARAMETERS.DEFAULTTIME2WAIT"
@@ -1245,7 +1256,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                                 DefaultTime2Wait = v;
                         }
                         do! ss.CheckTargetDeviceUnloaded cc x
-                        let n = ss.UpdateTargetDeviceNode x x.TargetDeviceID x.TargetDeviceName newVal x.LogParameters
+                        let n = ss.UpdateTargetDeviceNode x x.TargetDeviceID x.TargetDeviceName x.EnableStatSNAckChecker newVal x.LogParameters
                         return Some ( ss, cc, ( n :> IConfigureNode ) )
 
                 | "NEGOTIABLEPARAMETERS.DEFAULTTIME2RETAIN"
@@ -1261,7 +1272,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                                 DefaultTime2Retain = v;
                         }
                         do! ss.CheckTargetDeviceUnloaded cc x
-                        let n = ss.UpdateTargetDeviceNode x x.TargetDeviceID x.TargetDeviceName newVal x.LogParameters
+                        let n = ss.UpdateTargetDeviceNode x x.TargetDeviceID x.TargetDeviceName x.EnableStatSNAckChecker newVal x.LogParameters
                         return Some ( ss, cc, ( n :> IConfigureNode ) )
 
                 | "NEGOTIABLEPARAMETERS.MAXOUTSTANDINGR2T"
@@ -1277,7 +1288,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                                 MaxOutstandingR2T = v;
                         }
                         do! ss.CheckTargetDeviceUnloaded cc x
-                        let n = ss.UpdateTargetDeviceNode x x.TargetDeviceID x.TargetDeviceName newVal x.LogParameters
+                        let n = ss.UpdateTargetDeviceNode x x.TargetDeviceID x.TargetDeviceName x.EnableStatSNAckChecker newVal x.LogParameters
                         return Some ( ss, cc, ( n :> IConfigureNode ) )
 
                 | "LOGPARAMETERS.SOFTLIMIT"
@@ -1293,7 +1304,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                                 SoftLimit = v;
                         }
                         do! ss.CheckTargetDeviceUnloaded cc x
-                        let n = ss.UpdateTargetDeviceNode x x.TargetDeviceID x.TargetDeviceName x.NegotiableParameters newVal
+                        let n = ss.UpdateTargetDeviceNode x x.TargetDeviceID x.TargetDeviceName x.EnableStatSNAckChecker x.NegotiableParameters newVal
                         return Some ( ss, cc, ( n :> IConfigureNode ) )
 
                 | "LOGPARAMETERS.HARDLIMIT"
@@ -1309,7 +1320,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                                 HardLimit = v;
                         }
                         do! ss.CheckTargetDeviceUnloaded cc x
-                        let n = ss.UpdateTargetDeviceNode x x.TargetDeviceID x.TargetDeviceName x.NegotiableParameters newVal
+                        let n = ss.UpdateTargetDeviceNode x x.TargetDeviceID x.TargetDeviceName x.EnableStatSNAckChecker x.NegotiableParameters newVal
                         return Some ( ss, cc, ( n :> IConfigureNode ) )
 
                 | "LOGPARAMETERS.LOGLEVEL"
@@ -1329,7 +1340,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                                 LogLevel = v;
                         }
                         do! ss.CheckTargetDeviceUnloaded cc x
-                        let n = ss.UpdateTargetDeviceNode x x.TargetDeviceID x.TargetDeviceName x.NegotiableParameters newVal
+                        let n = ss.UpdateTargetDeviceNode x x.TargetDeviceID x.TargetDeviceName x.EnableStatSNAckChecker x.NegotiableParameters newVal
                         return Some ( ss, cc, ( n :> IConfigureNode ) )
 
                 | _ ->
@@ -1968,7 +1979,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     HardLimit = Constants.LOGPARAM_DEF_HARDLIMIT;
                     LogLevel = LogLevel.LOGLEVEL_INFO;
                 }
-                let newnode = ss.AddTargetDeviceNode newTdid tdName newNegParam newLogParam
+                let newnode = ss.AddTargetDeviceNode newTdid tdName true newNegParam newLogParam
                 this.Output 0 ( sprintf "Created : %s" ( newnode :> IConfigureNode ).ShortDescriptString )
         }
 

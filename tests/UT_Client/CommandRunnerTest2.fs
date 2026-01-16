@@ -1135,10 +1135,10 @@ type CommandRunner_Test2() =
 
     [<Theory>]
     [<InlineData( "set ID TD_11223344" )>]
-    member _.set_TargetDevice_001 ( cmdstr : string ) =
+    member _.set_TargetDevice_ID_001 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let worknode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
-        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" defTDNegoParam defTDLogParam
+        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" false defTDNegoParam defTDLogParam
         let mutable flg1 = false
 
         ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argnego arglog ->
@@ -1157,6 +1157,7 @@ type CommandRunner_Test2() =
         Assert.True(( cc :> CtrlConnection = r_cc ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceID = tdid_me.fromString( "TD_11223344" ) ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceName = "" ))
+        Assert.False(( ( r_cn :?> ConfNode_TargetDevice ).EnableStatSNAckChecker ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).NegotiableParameters = defTDNegoParam ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).LogParameters = defTDLogParam ))
         Assert.True(( flg1 ))
@@ -1165,7 +1166,7 @@ type CommandRunner_Test2() =
 
     [<Theory>]
     [<InlineData( "set ID TD_XXX" )>]
-    member _.set_TargetDevice_002 ( cmdstr : string ) =
+    member _.set_TargetDevice_ID_002 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
@@ -1175,17 +1176,17 @@ type CommandRunner_Test2() =
 
     [<Theory>]
     [<InlineData( "set NAME aaaa" )>]
-    member _.set_TargetDevice_003 ( cmdstr : string ) =
+    member _.set_TargetDevice_NAME_001 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let worknode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
-        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" defTDNegoParam defTDLogParam
+        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" false defTDNegoParam defTDLogParam
         let mutable flg1 = false
 
-        ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argnego arglog ->
+        ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argesac argnego arglog ->
             flg1 <- true
             Assert.True(( argnode = initnode ))
             Assert.True(( argname = "aaaa" ))
-            initnode.CreateUpdatedNode argtdid argname argnego arglog
+            initnode.CreateUpdatedNode argtdid argname argesac argnego arglog
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
@@ -1197,6 +1198,7 @@ type CommandRunner_Test2() =
         Assert.True(( cc :> CtrlConnection = r_cc ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceID = tdid_me.Zero ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceName = "aaaa" ))
+        Assert.False(( ( r_cn :?> ConfNode_TargetDevice ).EnableStatSNAckChecker ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).NegotiableParameters = defTDNegoParam ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).LogParameters = defTDLogParam ))
         Assert.True(( flg1 ))
@@ -1204,18 +1206,19 @@ type CommandRunner_Test2() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
-    [<InlineData( "set NEGOTIABLEPARAMETERS.MAXRECVDATASEGMENTLENGTH 111" )>]
-    [<InlineData( "set MAXRECVDATASEGMENTLENGTH 111" )>]
-    member _.set_TargetDevice_004 ( cmdstr : string ) =
+    [<InlineData( "set ENABLESTATSNACKCHECKER false", false )>]
+    [<InlineData( "set ENABLESTATSNACKCHECKER true", true )>]
+    member _.set_TargetDevice_ENABLESTATSNACKCHECKER_001 ( cmdstr : string, resultesac : bool ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let worknode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
-        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" defTDNegoParam defTDLogParam
+        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" ( not resultesac ) defTDNegoParam defTDLogParam
         let mutable flg1 = false
 
-        ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argnego arglog ->
+        ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argesac argnego arglog ->
             flg1 <- true
-            Assert.True(( argnego.MaxRecvDataSegmentLength = 111u ))
-            initnode.CreateUpdatedNode argtdid argname argnego arglog
+            Assert.True(( argnode = initnode ))
+            Assert.True(( argesac = resultesac ))
+            initnode.CreateUpdatedNode argtdid argname argesac argnego arglog
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
@@ -1227,6 +1230,48 @@ type CommandRunner_Test2() =
         Assert.True(( cc :> CtrlConnection = r_cc ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceID = tdid_me.Zero ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceName = "" ))
+        Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).EnableStatSNAckChecker = resultesac ))
+        Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).NegotiableParameters = defTDNegoParam ))
+        Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).LogParameters = defTDLogParam ))
+        Assert.True(( flg1 ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" ""
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Theory>]
+    [<InlineData( "set ENABLESTATSNACKCHECKER aaaa" )>]
+    member _.set_TargetDevice_ENABLESTATSNACKCHECKER_002 ( cmdstr : string ) =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
+        let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
+        Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Theory>]
+    [<InlineData( "set NEGOTIABLEPARAMETERS.MAXRECVDATASEGMENTLENGTH 111" )>]
+    [<InlineData( "set MAXRECVDATASEGMENTLENGTH 111" )>]
+    member _.set_TargetDevice_MAXRECVDATASEGMENTLENGTH_001 ( cmdstr : string ) =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
+        let worknode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" false defTDNegoParam defTDLogParam
+        let mutable flg1 = false
+
+        ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argesac argnego arglog ->
+            flg1 <- true
+            Assert.True(( argnego.MaxRecvDataSegmentLength = 111u ))
+            initnode.CreateUpdatedNode argtdid argname argesac argnego arglog
+        )
+        ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
+        Assert.True(( r ))
+        Assert.True(( stat.IsSome ))
+        let r_ss, r_cc, r_cn = stat.Value
+        Assert.True(( ss :> ServerStatus = r_ss ))
+        Assert.True(( cc :> CtrlConnection = r_cc ))
+        Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceID = tdid_me.Zero ))
+        Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceName = "" ))
+        Assert.False(( ( r_cn :?> ConfNode_TargetDevice ).EnableStatSNAckChecker ))
         let expparam = {
             defTDNegoParam with
                 MaxRecvDataSegmentLength = 111u;
@@ -1241,7 +1286,7 @@ type CommandRunner_Test2() =
     [<InlineData( "set MAXRECVDATASEGMENTLENGTH -1" )>]
     [<InlineData( "set MAXRECVDATASEGMENTLENGTH 4294967296" )>]
     [<InlineData( "set MAXRECVDATASEGMENTLENGTH aaa" )>]
-    member _.set_TargetDevice_005 ( cmdstr : string ) =
+    member _.set_TargetDevice_MAXRECVDATASEGMENTLENGTH_002 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
@@ -1252,16 +1297,16 @@ type CommandRunner_Test2() =
     [<Theory>]
     [<InlineData( "set NEGOTIABLEPARAMETERS.MAXBURSTLENGTH 112" )>]
     [<InlineData( "set MAXBURSTLENGTH 112" )>]
-    member _.set_TargetDevice_006 ( cmdstr : string ) =
+    member _.set_TargetDevice_MAXBURSTLENGTH_001 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let worknode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
-        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" defTDNegoParam defTDLogParam
+        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" false defTDNegoParam defTDLogParam
         let mutable flg1 = false
 
-        ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argnego arglog ->
+        ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argesac argnego arglog ->
             flg1 <- true
             Assert.True(( argnego.MaxBurstLength = 112u ))
-            initnode.CreateUpdatedNode argtdid argname argnego arglog
+            initnode.CreateUpdatedNode argtdid argname argesac argnego arglog
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
@@ -1273,6 +1318,7 @@ type CommandRunner_Test2() =
         Assert.True(( cc :> CtrlConnection = r_cc ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceID = tdid_me.Zero ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceName = "" ))
+        Assert.False(( ( r_cn :?> ConfNode_TargetDevice ).EnableStatSNAckChecker ))
         let expparam = {
             defTDNegoParam with
                 MaxBurstLength = 112u;
@@ -1287,7 +1333,7 @@ type CommandRunner_Test2() =
     [<InlineData( "set MAXBURSTLENGTH -1" )>]
     [<InlineData( "set MAXBURSTLENGTH 4294967296" )>]
     [<InlineData( "set MAXBURSTLENGTH aaa" )>]
-    member _.set_TargetDevice_007 ( cmdstr : string ) =
+    member _.set_TargetDevice_MAXBURSTLENGTH_002 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
@@ -1298,16 +1344,16 @@ type CommandRunner_Test2() =
     [<Theory>]
     [<InlineData( "set NEGOTIABLEPARAMETERS.FIRSTBURSTLENGTH 113" )>]
     [<InlineData( "set FIRSTBURSTLENGTH 113" )>]
-    member _.set_TargetDevice_008 ( cmdstr : string ) =
+    member _.set_TargetDevice_FIRSTBURSTLENGTH_001 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let worknode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
-        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" defTDNegoParam defTDLogParam
+        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" false defTDNegoParam defTDLogParam
         let mutable flg1 = false
 
-        ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argnego arglog ->
+        ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argesac argnego arglog ->
             flg1 <- true
             Assert.True(( argnego.FirstBurstLength = 113u ))
-            initnode.CreateUpdatedNode argtdid argname argnego arglog
+            initnode.CreateUpdatedNode argtdid argname argesac argnego arglog
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
@@ -1319,6 +1365,7 @@ type CommandRunner_Test2() =
         Assert.True(( cc :> CtrlConnection = r_cc ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceID = tdid_me.Zero ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceName = "" ))
+        Assert.False(( ( r_cn :?> ConfNode_TargetDevice ).EnableStatSNAckChecker ))
         let expparam = {
             defTDNegoParam with
                 FirstBurstLength = 113u;
@@ -1333,7 +1380,7 @@ type CommandRunner_Test2() =
     [<InlineData( "set FIRSTBURSTLENGTH -1" )>]
     [<InlineData( "set FIRSTBURSTLENGTH 4294967296" )>]
     [<InlineData( "set FIRSTBURSTLENGTH aaa" )>]
-    member _.set_TargetDevice_009 ( cmdstr : string ) =
+    member _.set_TargetDevice_FIRSTBURSTLENGTH_002 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
@@ -1344,16 +1391,16 @@ type CommandRunner_Test2() =
     [<Theory>]
     [<InlineData( "set NEGOTIABLEPARAMETERS.DEFAULTTIME2WAIT 114" )>]
     [<InlineData( "set DEFAULTTIME2WAIT 114" )>]
-    member _.set_TargetDevice_010 ( cmdstr : string ) =
+    member _.set_TargetDevice_DEFAULTTIME2WAIT_001 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let worknode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
-        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" defTDNegoParam defTDLogParam
+        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" false defTDNegoParam defTDLogParam
         let mutable flg1 = false
 
-        ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argnego arglog ->
+        ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argesac argnego arglog ->
             flg1 <- true
             Assert.True(( argnego.DefaultTime2Wait = 114us ))
-            initnode.CreateUpdatedNode argtdid argname argnego arglog
+            initnode.CreateUpdatedNode argtdid argname argesac argnego arglog
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
@@ -1365,6 +1412,7 @@ type CommandRunner_Test2() =
         Assert.True(( cc :> CtrlConnection = r_cc ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceID = tdid_me.Zero ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceName = "" ))
+        Assert.False(( ( r_cn :?> ConfNode_TargetDevice ).EnableStatSNAckChecker ))
         let expparam = {
             defTDNegoParam with
                 DefaultTime2Wait = 114us;
@@ -1379,7 +1427,7 @@ type CommandRunner_Test2() =
     [<InlineData( "set DEFAULTTIME2WAIT -1" )>]
     [<InlineData( "set DEFAULTTIME2WAIT 65536" )>]
     [<InlineData( "set DEFAULTTIME2WAIT aaa" )>]
-    member _.set_TargetDevice_011 ( cmdstr : string ) =
+    member _.set_TargetDevice_DEFAULTTIME2WAIT_002 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
@@ -1390,16 +1438,16 @@ type CommandRunner_Test2() =
     [<Theory>]
     [<InlineData( "set NEGOTIABLEPARAMETERS.DEFAULTTIME2RETAIN 115" )>]
     [<InlineData( "set DEFAULTTIME2RETAIN 115" )>]
-    member _.set_TargetDevice_012 ( cmdstr : string ) =
+    member _.set_TargetDevice_DEFAULTTIME2RETAIN_001 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let worknode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
-        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" defTDNegoParam defTDLogParam
+        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" false defTDNegoParam defTDLogParam
         let mutable flg1 = false
 
-        ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argnego arglog ->
+        ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argesac argnego arglog ->
             flg1 <- true
             Assert.True(( argnego.DefaultTime2Retain = 115us ))
-            initnode.CreateUpdatedNode argtdid argname argnego arglog
+            initnode.CreateUpdatedNode argtdid argname argesac argnego arglog
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
@@ -1411,6 +1459,7 @@ type CommandRunner_Test2() =
         Assert.True(( cc :> CtrlConnection = r_cc ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceID = tdid_me.Zero ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceName = "" ))
+        Assert.False(( ( r_cn :?> ConfNode_TargetDevice ).EnableStatSNAckChecker ))
         let expparam = {
             defTDNegoParam with
                 DefaultTime2Retain = 115us;
@@ -1425,7 +1474,7 @@ type CommandRunner_Test2() =
     [<InlineData( "set DEFAULTTIME2RETAIN -1" )>]
     [<InlineData( "set DEFAULTTIME2RETAIN 65536" )>]
     [<InlineData( "set DEFAULTTIME2RETAIN aaa" )>]
-    member _.set_TargetDevice_013 ( cmdstr : string ) =
+    member _.set_TargetDevice_DEFAULTTIME2RETAIN_002 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
@@ -1436,16 +1485,16 @@ type CommandRunner_Test2() =
     [<Theory>]
     [<InlineData( "set NEGOTIABLEPARAMETERS.MAXOUTSTANDINGR2T 116" )>]
     [<InlineData( "set MAXOUTSTANDINGR2T 116" )>]
-    member _.set_TargetDevice_014 ( cmdstr : string ) =
+    member _.set_TargetDevice_MAXOUTSTANDINGR2T_001 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let worknode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
-        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" defTDNegoParam defTDLogParam
+        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" false defTDNegoParam defTDLogParam
         let mutable flg1 = false
 
-        ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argnego arglog ->
+        ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argesac argnego arglog ->
             flg1 <- true
             Assert.True(( argnego.MaxOutstandingR2T = 116us ))
-            initnode.CreateUpdatedNode argtdid argname argnego arglog
+            initnode.CreateUpdatedNode argtdid argname argesac argnego arglog
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
@@ -1457,6 +1506,7 @@ type CommandRunner_Test2() =
         Assert.True(( cc :> CtrlConnection = r_cc ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceID = tdid_me.Zero ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceName = "" ))
+        Assert.False(( ( r_cn :?> ConfNode_TargetDevice ).EnableStatSNAckChecker ))
         let expparam = {
             defTDNegoParam with
                 MaxOutstandingR2T = 116us;
@@ -1471,7 +1521,7 @@ type CommandRunner_Test2() =
     [<InlineData( "set MAXOUTSTANDINGR2T -1" )>]
     [<InlineData( "set MAXOUTSTANDINGR2T 65536" )>]
     [<InlineData( "set MAXOUTSTANDINGR2T aaa" )>]
-    member _.set_TargetDevice_015 ( cmdstr : string ) =
+    member _.set_TargetDevice_MAXOUTSTANDINGR2T_002 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
@@ -1482,16 +1532,16 @@ type CommandRunner_Test2() =
     [<Theory>]
     [<InlineData( "set LOGPARAMETERS.SOFTLIMIT 117" )>]
     [<InlineData( "set SOFTLIMIT 117" )>]
-    member _.set_TargetDevice_016 ( cmdstr : string ) =
+    member _.set_TargetDevice_SOFTLIMIT_001 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let worknode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
-        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" defTDNegoParam defTDLogParam
+        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" false defTDNegoParam defTDLogParam
         let mutable flg1 = false
 
-        ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argnego arglog ->
+        ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argesac argnego arglog ->
             flg1 <- true
             Assert.True(( arglog.SoftLimit = 117u ))
-            initnode.CreateUpdatedNode argtdid argname argnego arglog
+            initnode.CreateUpdatedNode argtdid argname argesac argnego arglog
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
@@ -1503,6 +1553,7 @@ type CommandRunner_Test2() =
         Assert.True(( cc :> CtrlConnection = r_cc ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceID = tdid_me.Zero ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceName = "" ))
+        Assert.False(( ( r_cn :?> ConfNode_TargetDevice ).EnableStatSNAckChecker ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).NegotiableParameters = defTDNegoParam ))
         let expparam = {
             defTDLogParam with
@@ -1517,7 +1568,7 @@ type CommandRunner_Test2() =
     [<InlineData( "set SOFTLIMIT -1" )>]
     [<InlineData( "set SOFTLIMIT 4294967296" )>]
     [<InlineData( "set SOFTLIMIT aaa" )>]
-    member _.set_TargetDevice_017 ( cmdstr : string ) =
+    member _.set_TargetDevice_SOFTLIMIT_002 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
@@ -1528,16 +1579,16 @@ type CommandRunner_Test2() =
     [<Theory>]
     [<InlineData( "set LOGPARAMETERS.HARDLIMIT 118" )>]
     [<InlineData( "set HARDLIMIT 118" )>]
-    member _.set_TargetDevice_018 ( cmdstr : string ) =
+    member _.set_TargetDevice_HARDLIMIT_001 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let worknode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
-        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" defTDNegoParam defTDLogParam
+        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" false defTDNegoParam defTDLogParam
         let mutable flg1 = false
 
-        ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argnego arglog ->
+        ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argesac argnego arglog ->
             flg1 <- true
             Assert.True(( arglog.HardLimit = 118u ))
-            initnode.CreateUpdatedNode argtdid argname argnego arglog
+            initnode.CreateUpdatedNode argtdid argname argesac argnego arglog
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
@@ -1549,6 +1600,7 @@ type CommandRunner_Test2() =
         Assert.True(( cc :> CtrlConnection = r_cc ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceID = tdid_me.Zero ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceName = "" ))
+        Assert.False(( ( r_cn :?> ConfNode_TargetDevice ).EnableStatSNAckChecker ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).NegotiableParameters = defTDNegoParam ))
         let expparam = {
             defTDLogParam with
@@ -1563,7 +1615,7 @@ type CommandRunner_Test2() =
     [<InlineData( "set HARDLIMIT -1" )>]
     [<InlineData( "set HARDLIMIT 4294967296" )>]
     [<InlineData( "set HARDLIMIT aaa" )>]
-    member _.set_TargetDevice_019 ( cmdstr : string ) =
+    member _.set_TargetDevice_HARDLIMIT_002 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
@@ -1574,16 +1626,16 @@ type CommandRunner_Test2() =
     [<Theory>]
     [<InlineData( "set LOGPARAMETERS.LOGLEVEL WARNING" )>]
     [<InlineData( "set LOGLEVEL WARNING" )>]
-    member _.set_TargetDevice_020 ( cmdstr : string ) =
+    member _.set_TargetDevice_LOGLEVEL_001 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let worknode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
-        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" defTDNegoParam defTDLogParam
+        let initnode = worknode.CreateUpdatedNode ( tdid_me.Zero ) "" false defTDNegoParam defTDLogParam
         let mutable flg1 = false
 
-        ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argnego arglog ->
+        ss.p_UpdateTargetDeviceNode <- ( fun argnode argtdid argname argesac argnego arglog ->
             flg1 <- true
             Assert.True(( arglog.LogLevel = LogLevel.LOGLEVEL_WARNING ))
-            initnode.CreateUpdatedNode argtdid argname argnego arglog
+            initnode.CreateUpdatedNode argtdid argname argesac argnego arglog
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
@@ -1595,6 +1647,7 @@ type CommandRunner_Test2() =
         Assert.True(( cc :> CtrlConnection = r_cc ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceID = tdid_me.Zero ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).TargetDeviceName = "" ))
+        Assert.False(( ( r_cn :?> ConfNode_TargetDevice ).EnableStatSNAckChecker ))
         Assert.True(( ( r_cn :?> ConfNode_TargetDevice ).NegotiableParameters = defTDNegoParam ))
         let expparam = {
             defTDLogParam with
@@ -1608,7 +1661,7 @@ type CommandRunner_Test2() =
     [<Theory>]
     [<InlineData( "set LOGLEVEL -1" )>]
     [<InlineData( "set LOGLEVEL aaaa" )>]
-    member _.set_TargetDevice_021 ( cmdstr : string ) =
+    member _.set_TargetDevice_LOGLEVEL_002 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
@@ -1618,7 +1671,7 @@ type CommandRunner_Test2() =
 
     [<Theory>]
     [<InlineData( "set AAA -1" )>]
-    member _.set_TargetDevice_022 ( cmdstr : string ) =
+    member _.set_TargetDevice_UnknownName_001 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let initnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
@@ -3332,7 +3385,7 @@ type CommandRunner_Test2() =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "statusall" )
         let cn = CommandRunner_Test1.m_ControllerNode :?> ConfNode_Controller
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
-        let tdn2 = tdn.CreateUpdatedNode tdn.TargetDeviceID tdn.TargetDeviceName tdn.NegotiableParameters tdn.LogParameters
+        let tdn2 = tdn.CreateUpdatedNode tdn.TargetDeviceID tdn.TargetDeviceName tdn.EnableStatSNAckChecker tdn.NegotiableParameters tdn.LogParameters
 
         ss.p_ControllerNode <- cn
         ss.p_GetTargetDeviceNodes <- ( fun () -> [ tdn2 ] )
@@ -3393,6 +3446,7 @@ type CommandRunner_Test2() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf ) :> IConfigureNode
         let tgn =
@@ -3441,6 +3495,7 @@ type CommandRunner_Test2() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf ) :> IConfigureNode
         let tgn =
@@ -3489,6 +3544,7 @@ type CommandRunner_Test2() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf ) :> IConfigureNode
         let tgn =
@@ -3538,6 +3594,7 @@ type CommandRunner_Test2() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf ) :> IConfigureNode
         let tgn =
@@ -3587,6 +3644,7 @@ type CommandRunner_Test2() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf ) :> IConfigureNode
         let tgn =
@@ -3635,8 +3693,9 @@ type CommandRunner_Test2() =
             flg1 <- true
             []
         )
-        ss.p_AddTargetDeviceNode <- ( fun newTdid tdName newNegParam newLogParam ->
+        ss.p_AddTargetDeviceNode <- ( fun newTdid tdName argesac newNegParam newLogParam ->
             flg2 <- true
+            Assert.True(( argesac ))
             CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         )
 
@@ -3664,7 +3723,7 @@ type CommandRunner_Test2() =
             flg1 <- true
             tdnodes
         )
-        ss.p_AddTargetDeviceNode <- ( fun newTdid tdName newNegParam newLogParam ->
+        ss.p_AddTargetDeviceNode <- ( fun newTdid tdName argesac newNegParam newLogParam ->
             flg2 <- true
             let oldtdids =
                 tdnodes |> Seq.map ( fun itr -> itr.TargetDeviceID )
@@ -3699,7 +3758,7 @@ type CommandRunner_Test2() =
             flg1 <- true
             tdnodes
         )
-        ss.p_AddTargetDeviceNode <- ( fun newTdid tdName newNegParam newLogParam ->
+        ss.p_AddTargetDeviceNode <- ( fun newTdid tdName argesac newNegParam newLogParam ->
             flg2 <- true
             Assert.True(( tdName = "aaa" ))
             CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
@@ -3722,7 +3781,7 @@ type CommandRunner_Test2() =
                 yield CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         ]
         ss.p_GetTargetDeviceNodes <- ( fun () -> tdnodes )
-        ss.p_AddTargetDeviceNode <- ( fun newTdid tdName newNegParam newLogParam ->
+        ss.p_AddTargetDeviceNode <- ( fun newTdid tdName argesac newNegParam newLogParam ->
             CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         )
 
@@ -3741,7 +3800,7 @@ type CommandRunner_Test2() =
                 yield CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         ]
         ss.p_GetTargetDeviceNodes <- ( fun () -> tdnodes )
-        ss.p_AddTargetDeviceNode <- ( fun newTdid tdName newNegParam newLogParam ->
+        ss.p_AddTargetDeviceNode <- ( fun newTdid tdName argesac newNegParam newLogParam ->
             CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         )
 
@@ -3830,7 +3889,7 @@ type CommandRunner_Test2() =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "status" )
         let cn = CommandRunner_Test1.m_ControllerNode
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
-        let tdn2 = tdn.CreateUpdatedNode tdn.TargetDeviceID tdn.TargetDeviceName tdn.NegotiableParameters tdn.LogParameters
+        let tdn2 = tdn.CreateUpdatedNode tdn.TargetDeviceID tdn.TargetDeviceName tdn.EnableStatSNAckChecker tdn.NegotiableParameters tdn.LogParameters
 
         ss.p_ControllerNode <- ( cn :?> ConfNode_Controller )
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->

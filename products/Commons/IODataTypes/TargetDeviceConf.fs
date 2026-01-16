@@ -27,6 +27,7 @@ type [<NoComparison>]T_TargetDevice = {
     NegotiableParameters : T_NegotiableParameters option;
     LogParameters : T_LogParameters option;
     DeviceName : string;
+    EnableStatSNAckChecker : bool;
 }
 
 and [<NoComparison>]T_NetworkPortal = {
@@ -213,6 +214,9 @@ type ReaderWriter() =
           </xsd:restriction>
         </xsd:simpleType>
       </xsd:element>
+      <xsd:element name='EnableStatSNAckChecker' minOccurs='0' maxOccurs='1' >
+        <xsd:simpleType><xsd:restriction base='xsd:boolean' /></xsd:simpleType>
+      </xsd:element>
     </xsd:sequence></xsd:complexType>
   </xsd:element>
 </xsd:schema>"
@@ -325,6 +329,12 @@ type ReaderWriter() =
                     "";
                 else
                     subElem.Value;
+            EnableStatSNAckChecker = 
+                let subElem = elem.Element( XName.Get "EnableStatSNAckChecker" )
+                if subElem = null then
+                    false;
+                else
+                    Boolean.Parse( subElem.Value );
         }
 
     /// <summary>
@@ -468,6 +478,7 @@ type ReaderWriter() =
             if (elem.DeviceName).Length > 512 then
                 raise <| ConfRWException( "Max value(string) restriction error. DeviceName" )
             yield sprintf "%s%s<DeviceName>%s</DeviceName>" singleIndent indentStr ( ReaderWriter.xmlEncode(elem.DeviceName) )
+            yield sprintf "%s%s<EnableStatSNAckChecker>%b</EnableStatSNAckChecker>" singleIndent indentStr (elem.EnableStatSNAckChecker)
             yield sprintf "%s</%s>" indentStr elemName
         }
 

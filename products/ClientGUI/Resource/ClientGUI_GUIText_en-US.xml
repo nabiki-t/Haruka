@@ -454,6 +454,10 @@
       <Value>Target Device Name</Value>
     </Message>
     <Message>
+      <Name>EnableStatSNAckCheckerTextBlock</Name>
+      <Value>Enable StatSN Ack Checker</Value>
+    </Message>
+    <Message>
       <Name>NegotiableParametersTextBlock</Name>
       <Value>Negotiable Parameters</Value>
     </Message>

@@ -43,6 +43,7 @@ type ConfNode_TargetGroup_Test() =
         NegotiableParameters = None;
         LogParameters = None;
         DeviceName = "abc";
+        EnableStatSNAckChecker = false;
     }
 
     ///////////////////////////////////////////////////////////////////////////

@@ -88,13 +88,13 @@
                         </GridView>
                     </ListView.View>
                 </ListView>
-                <TextBlock Name="UsageTextBlock" Text="Usage" Margin="0,0,0,0" Padding="0,0,0,0" Foreground="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" TextTrimming="CharacterEllipsis" />
-                <Grid Margin="10,0,0,0">
+                <TextBlock Name="UsageTextBlock" Text="Usage" Margin="0,0,0,0" Padding="0,5,0,0" Foreground="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" TextTrimming="CharacterEllipsis" />
+                <Grid Margin="10,5,0,0">
                     <TextBlock Name="ReceiveBytesTextBlock" Text="Receive Bytes" Margin="0,0,105,0" Padding="0,0,0,0" TextTrimming="CharacterEllipsis" />
                     <TextBlock Name="ReceiveBytesHeightTextBlock" Text="0K Bytes/s" Padding="0,0,0,0" HorizontalAlignment="Right" Width="150" TextAlignment="Right" TextTrimming="CharacterEllipsis" />
                 </Grid>
                 <Canvas Name="ReceiveBytesCanvas" Height="150" Margin="10,0,0,0" Background="White"/>
-                <Grid Margin="10,0,0,0">
+                <Grid Margin="10,5,0,0">
                     <TextBlock Name="SendBytesTextBlock" Text="Send Bytes" Margin="0,0,105,0" Padding="0,0,0,0" TextTrimming="CharacterEllipsis" />
                     <TextBlock Name="SendBytesHeightTextBlock" Text="0K Bytes/s" Padding="0,0,0,0" TextAlignment="Right" HorizontalAlignment="Right" Width="150" TextTrimming="CharacterEllipsis" />
                 </Grid>
@@ -132,6 +132,17 @@
                             <TextBlock Grid.Column="0" Name="TargetDeviceNameTextBlock" Text="Target Device Name" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                             <TextBox Grid.Column="1" Name="TargetDeviceNameTextBox" Text="0" TabIndex="17" Padding="2,2,2,2"/>
                         </Grid>
+                        <Grid Margin="10,2,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4*" />
+                                <ColumnDefinition Width="6*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Name="EnableStatSNAckCheckerTextBlock" Text="Enable StatSN Ack Checker" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            <ComboBox Grid.Column="1" Name="EnableStatSNAckCheckerCombo" SelectedIndex="0" TabIndex="18">
+                                <TextBlock>True</TextBlock>
+                                <TextBlock>False</TextBlock>
+                            </ComboBox>
+                        </Grid>
                     </StackPanel>
                 </Grid>
                 <!-- Negotiable Parameters -->
@@ -144,7 +155,7 @@
                                 <ColumnDefinition Width="6*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Name="MaxRecvDataSegmentLengthTextBlock" Text="MaxRecvDataSegmentLength" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                            <TextBox Grid.Column="1" Name="MaxRecvDataSegmentLengthTextBox" Text="0" TabIndex="18" Padding="2,2,2,2"/>
+                            <TextBox Grid.Column="1" Name="MaxRecvDataSegmentLengthTextBox" Text="0" TabIndex="19" Padding="2,2,2,2"/>
                         </Grid>
                         <Grid Margin="10,2,0,2">
                             <Grid.ColumnDefinitions>
@@ -152,7 +163,7 @@
                                 <ColumnDefinition Width="6*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Name="MaxBurstLengthTextBlock" Text="MaxBurstLength" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                            <TextBox Grid.Column="1" Name="MaxBurstLengthTextBox" Text="0" TabIndex="19" Padding="2,2,2,2"/>
+                            <TextBox Grid.Column="1" Name="MaxBurstLengthTextBox" Text="0" TabIndex="20" Padding="2,2,2,2"/>
                         </Grid>
                         <Grid Margin="10,2,0,2">
                             <Grid.ColumnDefinitions>
@@ -160,7 +171,7 @@
                                 <ColumnDefinition Width="6*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Name="FirstBurstLengthTextBlock" Text="FirstBurstLength" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                            <TextBox Grid.Column="1" Name="FirstBurstLengthTextBox" Text="0" TabIndex="20" Padding="2,2,2,2"/>
+                            <TextBox Grid.Column="1" Name="FirstBurstLengthTextBox" Text="0" TabIndex="21" Padding="2,2,2,2"/>
                         </Grid>
                         <Grid Margin="10,2,0,2">
                             <Grid.ColumnDefinitions>
@@ -168,7 +179,7 @@
                                 <ColumnDefinition Width="6*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Name="DefaultTime2WaitTextBlock" Text="DefaultTime2Wait" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                            <TextBox Grid.Column="1" Name="DefaultTime2WaitTextBox" Text="0" TabIndex="21" Padding="2,2,2,2"/>
+                            <TextBox Grid.Column="1" Name="DefaultTime2WaitTextBox" Text="0" TabIndex="22" Padding="2,2,2,2"/>
                         </Grid>
                         <Grid Margin="10,2,0,2">
                             <Grid.ColumnDefinitions>
@@ -176,7 +187,7 @@
                                 <ColumnDefinition Width="6*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Name="DefaultTime2RetainTextBlock" Text="DefaultTime2Retain" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                            <TextBox Grid.Column="1" Name="DefaultTime2RetainTextBox" Text="0" TabIndex="22" Padding="2,2,2,2"/>
+                            <TextBox Grid.Column="1" Name="DefaultTime2RetainTextBox" Text="0" TabIndex="23" Padding="2,2,2,2"/>
                         </Grid>
                         <Grid Margin="10,2,0,2">
                             <Grid.ColumnDefinitions>
@@ -184,7 +195,7 @@
                                 <ColumnDefinition Width="6*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Name="MaxOutstandingR2TTextBlock" Text="MaxOutstandingR2T" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                            <TextBox Grid.Column="1" Name="MaxOutstandingR2TTextBox" Text="0" TabIndex="23" Padding="2,2,2,2"/>
+                            <TextBox Grid.Column="1" Name="MaxOutstandingR2TTextBox" Text="0" TabIndex="24" Padding="2,2,2,2"/>
                         </Grid>
                     </StackPanel>
                 </Grid>
@@ -199,7 +210,7 @@
                                 <ColumnDefinition Width="6*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Name="SoftLimitTextBlock" Text="Soft Limit" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                            <TextBox Grid.Column="1" Name="SoftLimitTextBox" Text="2000" TabIndex="24" Padding="2,2,2,2"/>
+                            <TextBox Grid.Column="1" Name="SoftLimitTextBox" Text="2000" TabIndex="25" Padding="2,2,2,2"/>
                         </Grid>
                         <Grid Margin="10,2,0,2">
                             <Grid.ColumnDefinitions>
@@ -207,7 +218,7 @@
                                 <ColumnDefinition Width="6*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Name="HardLimitTextBlock" Text="Hard Limit" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                            <TextBox Grid.Column="1" Name="HardLimitTextBox" Text="5000" TabIndex="25" Padding="2,2,2,2" />
+                            <TextBox Grid.Column="1" Name="HardLimitTextBox" Text="5000" TabIndex="26" Padding="2,2,2,2" />
                         </Grid>
                         <Grid Margin="10,2,0,2">
                             <Grid.ColumnDefinitions>
@@ -215,7 +226,7 @@
                                 <ColumnDefinition Width="6*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Name="LogLevelTextBlock" Text="Log Level" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                            <ComboBox Grid.Column="1" Name="LogLevelCombo" SelectedIndex="0" TabIndex="26">
+                            <ComboBox Grid.Column="1" Name="LogLevelCombo" SelectedIndex="0" TabIndex="27">
                                 <TextBlock>VERBOSE</TextBlock>
                                 <TextBlock>INFO</TextBlock>
                                 <TextBlock>WARNING</TextBlock>

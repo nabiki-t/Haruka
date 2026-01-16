@@ -93,6 +93,7 @@ type public CConfiguration_Stub() =
     let mutable f_GetISCSINegoParamCO : ( unit -> IscsiNegoParamCO ) option = None
     let mutable f_GetISCSINegoParamSW : ( unit -> IscsiNegoParamSW ) option = None
     let mutable f_GetDeviceName : ( unit -> string ) option = None
+    let mutable f_EnableStatSNAckChecker : ( unit -> bool ) option = None
 
     member val dummy : obj = box () with get, set
     member _.p_Terminate with set v = f_Terminate <- Some( v )
@@ -106,6 +107,7 @@ type public CConfiguration_Stub() =
     member _.p_GetISCSINegoParamCO with set v = f_GetISCSINegoParamCO <- Some( v )
     member _.p_GetISCSINegoParamSW with set v = f_GetISCSINegoParamSW <- Some( v )
     member _.p_GetDeviceName with set v = f_GetDeviceName <- Some( v )
+    member _.p_EnableStatSNAckChecker with set v = f_EnableStatSNAckChecker <- Some( v )
 
     interface IConfiguration with
         override _.Terminate () =
@@ -130,6 +132,8 @@ type public CConfiguration_Stub() =
             f_GetISCSINegoParamSW.Value ()
         override _.DeviceName with get() =
             f_GetDeviceName.Value ()
+        override _.EnableStatSNAckChecker with get() =
+            f_EnableStatSNAckChecker.Value ()
 
 /// <summary>
 ///  Default stub class for IStatus.

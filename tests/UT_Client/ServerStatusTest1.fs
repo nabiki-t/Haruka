@@ -168,6 +168,7 @@ type ServerStatus_Test1() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "targetdevice000";
+                EnableStatSNAckChecker = false;
             }
             let rb3 =
                 HarukaCtrlerCtrlRes.ReaderWriter.ToString {
@@ -298,6 +299,7 @@ type ServerStatus_Test1() =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "a001";
+            EnableStatSNAckChecker = false;
         }
         GlbFunc.CreateDir tdConfDName |> ignore
         TargetDeviceConf.ReaderWriter.WriteFile tdConfFName tdConf
@@ -514,6 +516,7 @@ type ServerStatus_Test1() =
                     NegotiableParameters = None;
                     LogParameters = None;
                     DeviceName = "abc";
+                    EnableStatSNAckChecker = false;
                 }
                 let rb3 =
                     HarukaCtrlerCtrlRes.ReaderWriter.ToString {
@@ -1375,7 +1378,7 @@ type ServerStatus_Test1() =
                 let ss = new ServerStatus( st )
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 do! ss.LoadConfigure cc1 true
-                let n = ss.AddTargetDeviceNode ( GlbFunc.newTargetDeviceID() ) "a" ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP :> IConfigureNode
+                let n = ss.AddTargetDeviceNode ( GlbFunc.newTargetDeviceID() ) "a" false ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP :> IConfigureNode
                 let r = ss.Validate()
                 Assert.True(( r.Length > 0 ))
                 Assert.True(( ( fst r.[0] ) = n.NodeID ))
@@ -1413,7 +1416,7 @@ type ServerStatus_Test1() =
 
                 Assert.True(( ss.GetTargetDeviceNodes().Length = 0 ))
 
-                let tdNode1 = ss.AddTargetDeviceNode ( GlbFunc.newTargetDeviceID() ) "a" ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP :> IConfigureNode
+                let tdNode1 = ss.AddTargetDeviceNode ( GlbFunc.newTargetDeviceID() ) "a" false ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP :> IConfigureNode
                 Assert.True(( ss.GetNode( tdNode1.NodeID ) = tdNode1 ))
 
                 let tdList1 = ss.GetTargetDeviceNodes()
@@ -1474,7 +1477,7 @@ type ServerStatus_Test1() =
         let cc = new ConfNode_Controller( st, rel, ss.ControllerNodeID )
         rel.NextID |> ignore
         rel.AddNode cc
-        let tdnode = ss.AddTargetDeviceNode ( GlbFunc.newTargetDeviceID() ) "" ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP
+        let tdnode = ss.AddTargetDeviceNode ( GlbFunc.newTargetDeviceID() ) "" false ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP
         let npnode = ss.AddNetworkPortalNode tdnode ServerStatus_Test1.defaultNP
 
         let te = ss.ExportTemporaryDump ( tdnode :> IConfigureNode ).NodeID true
@@ -1518,7 +1521,7 @@ type ServerStatus_Test1() =
         let cc = new ConfNode_Controller( st, rel, ss.ControllerNodeID )
         rel.NextID |> ignore
         rel.AddNode cc
-        let tdnode = ss.AddTargetDeviceNode ( GlbFunc.newTargetDeviceID() ) "" ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP
+        let tdnode = ss.AddTargetDeviceNode ( GlbFunc.newTargetDeviceID() ) "" false ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP
         let _ = ss.AddNetworkPortalNode tdnode ServerStatus_Test1.defaultNP
         
         let te = ss.ExportTemporaryDump ( cc :> IConfigureNode ).NodeID false

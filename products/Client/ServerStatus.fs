@@ -572,6 +572,9 @@ type ServerStatus(
     /// <param name="argTargetDeviceName">
     ///  Target device name.
     /// </param>
+    /// <param name="argEnableStatSNAckChecker">
+    ///  Whether to request an acknowledgement by sending a Ping request to a StatSN that has not yet received an acknowledgement.
+    /// </param>
     /// <param name="argNegotiableParameters">
     ///  Configuration values.
     /// </param>
@@ -588,10 +591,11 @@ type ServerStatus(
     abstract AddTargetDeviceNode :
         argTargetDeviceID:TDID_T ->
         argTargetDeviceName:string ->
+        argEnableStatSNAckChecker:bool ->
         argNegotiableParameters:TargetDeviceConf.T_NegotiableParameters ->
         argLogParameters:TargetDeviceConf.T_LogParameters ->
         ConfNode_TargetDevice
-    default _.AddTargetDeviceNode argTargetDeviceID argTargetDeviceName argNegotiableParameters argLogParameters =
+    default _.AddTargetDeviceNode argTargetDeviceID argTargetDeviceName argEnableStatSNAckChecker argNegotiableParameters argLogParameters =
         let nid = m_ConfNodes.NextID
         let n = 
             new ConfNode_TargetDevice(
@@ -600,6 +604,7 @@ type ServerStatus(
                 nid,
                 argTargetDeviceID,
                 argTargetDeviceName,
+                argEnableStatSNAckChecker,
                 argNegotiableParameters,
                 argLogParameters,
                 ModifiedStatus.Modified 
@@ -633,6 +638,9 @@ type ServerStatus(
     /// <param name="argTargetDeviceName">
     ///  Target device name.
     /// </param>
+    /// <param name="argEnableStatSNAckChecker">
+    ///  Whether to request an acknowledgement by sending a Ping request to a StatSN that has not yet received an acknowledgement.
+    /// </param>
     /// <param name="argNegotiableParameters">
     ///  Configuration values.
     /// </param>
@@ -651,11 +659,12 @@ type ServerStatus(
         tdnode:ConfNode_TargetDevice ->
         argTargetDeviceID:TDID_T ->
         argTargetDeviceName:string ->
+        argEnableStatSNAckChecker:bool ->
         argNegotiableParameters:TargetDeviceConf.T_NegotiableParameters ->
         argLogParameters:TargetDeviceConf.T_LogParameters ->
         ConfNode_TargetDevice
-    default _.UpdateTargetDeviceNode tdnode argTargetDeviceID argTargetDeviceName argNegotiableParameters argLogParameters =
-        let nn = tdnode.CreateUpdatedNode argTargetDeviceID argTargetDeviceName argNegotiableParameters argLogParameters
+    default _.UpdateTargetDeviceNode tdnode argTargetDeviceID argTargetDeviceName argEnableStatSNAckChecker argNegotiableParameters argLogParameters =
+        let nn = tdnode.CreateUpdatedNode argTargetDeviceID argTargetDeviceName argEnableStatSNAckChecker argNegotiableParameters argLogParameters
         m_ConfNodes.Update nn
         nn
 

@@ -136,6 +136,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf ) :> IConfigureNode
 
@@ -193,6 +194,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf )
         let mutable flg1 = false
@@ -226,6 +228,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf )
         let npn =
@@ -537,6 +540,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf )
         let mutable flg1 = false
@@ -1149,6 +1153,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf )
         cnr.AddNode tdn
@@ -1181,6 +1186,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf )
         let npn =
@@ -1228,6 +1234,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf )
         cnr.AddNode tdn
@@ -1260,6 +1267,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf )
         cnr.AddNode tdn
@@ -1292,6 +1300,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf )
         cnr.AddNode tdn
@@ -1340,6 +1349,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf )
         cnr.AddNode tdn
@@ -1384,6 +1394,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf )
         cnr.AddNode tdn
@@ -1413,6 +1424,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf )
         let tgn = new ConfNode_TargetGroup( st, cnr, cnr.NextID, GlbFunc.newTargetGroupID(), "aaa", true, ModifiedStatus.NotModified )
@@ -1447,6 +1459,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf )
         cnr.AddNode tdn
@@ -1477,6 +1490,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf )
         cnr.AddNode tdn
@@ -1524,6 +1538,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf )
         cnr.AddNode tdn
@@ -2334,6 +2349,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf )
         let tgn1 = new ConfNode_TargetGroup( st, cnr, cnr.NextID, GlbFunc.newTargetGroupID(), "", true, ModifiedStatus.NotModified )
@@ -2435,6 +2451,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf )
         cnr.AddNode tdn
@@ -2480,6 +2497,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf )
         cnr.AddNode tdn
@@ -2682,6 +2700,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf )
         cnr.AddNode tdn
@@ -2733,6 +2752,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf )
         cnr.AddNode tdn
@@ -2925,6 +2945,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf )
         cnr.AddNode tdn
@@ -2997,6 +3018,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf )
         cnr.AddNode tdn
@@ -3210,6 +3232,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf ) :> IConfigureNode
         let tgn = new ConfNode_TargetGroup( st, cnr, cnr.NextID, GlbFunc.newTargetGroupID(), "", true, ModifiedStatus.NotModified ) :> IConfigureNode
@@ -3282,6 +3305,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf ) :> IConfigureNode
         cnr.AddNode tdn
@@ -3341,6 +3365,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf ) :> IConfigureNode
         cnr.AddNode tdn
@@ -3427,6 +3452,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf ) :> IConfigureNode
         cnr.AddNode tdn
@@ -3486,6 +3512,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf ) :> IConfigureNode
         cnr.AddNode tdn
@@ -3572,6 +3599,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf ) :> IConfigureNode
         cnr.AddNode tdn
@@ -3631,6 +3659,7 @@ type CommandRunner_Test3() =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "";
+                EnableStatSNAckChecker = false;
             }
             new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf ) :> IConfigureNode
         cnr.AddNode tdn

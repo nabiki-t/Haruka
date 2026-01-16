@@ -83,6 +83,7 @@ type TargetDevicePropPage(
     let m_ErrorMessageLabel = m_PropPage.FindName( "ErrorMessageLabel" ) :?> TextBlock
     let m_TargetDeviceIDTextBox = m_PropPage.FindName( "TargetDeviceIDTextBox" ) :?> TextBox
     let m_TargetDeviceNameTextBox = m_PropPage.FindName( "TargetDeviceNameTextBox" ) :?> TextBox
+    let m_EnableStatSNAckCheckerCombo = m_PropPage.FindName( "EnableStatSNAckCheckerCombo" ) :?> ComboBox
     let m_MaxRecvDataSegmentLengthTextBox = m_PropPage.FindName( "MaxRecvDataSegmentLengthTextBox" ) :?> TextBox
     let m_MaxBurstLengthTextBox = m_PropPage.FindName( "MaxBurstLengthTextBox" ) :?> TextBox
     let m_FirstBurstLengthTextBox = m_PropPage.FindName( "FirstBurstLengthTextBox" ) :?> TextBox
@@ -473,6 +474,8 @@ type TargetDevicePropPage(
                     )
                 raise <| Exception msg
 
+            let enableStatSNAckChecker = ( m_EnableStatSNAckCheckerCombo.SelectedIndex = 0 )
+
             let maxRecvDataSegmentLength =
                 let r, w = UInt32.TryParse m_MaxRecvDataSegmentLengthTextBox.Text
                 if not r || w < Constants.NEGOPARAM_MIN_MaxRecvDataSegmentLength || w > Constants.NEGOPARAM_MAX_MaxRecvDataSegmentLength then
@@ -601,7 +604,7 @@ type TargetDevicePropPage(
                 LogLevel = logLevel;
             }
 
-            let newNode = m_ServerStatus.UpdateTargetDeviceNode tdn targetDeviceID targetDeviceName negoParam logParam
+            let newNode = m_ServerStatus.UpdateTargetDeviceNode tdn targetDeviceID targetDeviceName enableStatSNAckChecker negoParam logParam
             this.ShowConfigValue false false
             this.ShowCurrentLogParam false true None
             m_StartButton.IsEnabled <- false
@@ -697,6 +700,8 @@ type TargetDevicePropPage(
         m_TargetDeviceIDTextBox.IsEnabled <- editmode && ( not runningmode )
         m_TargetDeviceNameTextBox.Text <- tdn.TargetDeviceName
         m_TargetDeviceNameTextBox.IsEnabled <- editmode && ( not runningmode )
+        m_EnableStatSNAckCheckerCombo.SelectedIndex <- if tdn.EnableStatSNAckChecker then 0 else 1
+        m_EnableStatSNAckCheckerCombo.IsEnabled <- editmode && ( not runningmode )
         m_MaxRecvDataSegmentLengthTextBox.Text <- sprintf "%d" tdn.NegotiableParameters.MaxRecvDataSegmentLength
         m_MaxRecvDataSegmentLengthTextBox.IsEnabled <- editmode && ( not runningmode )
         m_MaxBurstLengthTextBox.Text <- sprintf "%d" tdn.NegotiableParameters.MaxBurstLength

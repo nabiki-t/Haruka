@@ -119,6 +119,7 @@ type StatusMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         fn
 
@@ -190,6 +191,7 @@ type StatusMaster_Test () =
                 LogLevel = LogLevel.LOGLEVEL_FAILED;
             };
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
@@ -227,6 +229,7 @@ type StatusMaster_Test () =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "A";
+                EnableStatSNAckChecker = false;
             } : TargetDeviceConf.T_TargetDevice )
             |> TargetDeviceConf.ReaderWriter.ToString
         File.WriteAllText( targetDeviceConfName, tdConf )
@@ -260,6 +263,7 @@ type StatusMaster_Test () =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "A";
+                EnableStatSNAckChecker = false;
             } : TargetDeviceConf.T_TargetDevice )
             |> TargetDeviceConf.ReaderWriter.ToString
         File.WriteAllText( targetDeviceConfName, tdConf )
@@ -304,6 +308,7 @@ type StatusMaster_Test () =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "A";
+                EnableStatSNAckChecker = false;
             } : TargetDeviceConf.T_TargetDevice )
             |> TargetDeviceConf.ReaderWriter.ToString
         File.WriteAllText( targetDeviceConfName, tdConf )
@@ -329,6 +334,7 @@ type StatusMaster_Test () =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "A";
+                EnableStatSNAckChecker = false;
             } : TargetDeviceConf.T_TargetDevice )
             |> TargetDeviceConf.ReaderWriter.ToString
         File.WriteAllText( targetDeviceConfName, tdConf )
@@ -354,6 +360,7 @@ type StatusMaster_Test () =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "A";
+                EnableStatSNAckChecker = false;
             } : TargetDeviceConf.T_TargetDevice )
             |> TargetDeviceConf.ReaderWriter.ToString
         File.WriteAllText( targetDeviceConfName, tdConf )
@@ -380,6 +387,7 @@ type StatusMaster_Test () =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "A";
+                EnableStatSNAckChecker = false;
             } : TargetDeviceConf.T_TargetDevice )
             |> TargetDeviceConf.ReaderWriter.ToString
         File.WriteAllText( targetDeviceConfName, tdConf )
@@ -409,6 +417,7 @@ type StatusMaster_Test () =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "A";
+                EnableStatSNAckChecker = false;
             } : TargetDeviceConf.T_TargetDevice )
             |> TargetDeviceConf.ReaderWriter.ToString
         File.WriteAllText( targetDeviceConfName, tdConf )
@@ -434,6 +443,7 @@ type StatusMaster_Test () =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "A";
+                EnableStatSNAckChecker = false;
             } : TargetDeviceConf.T_TargetDevice )
             |> TargetDeviceConf.ReaderWriter.ToString
         File.WriteAllText( targetDeviceConfName, tdConf )
@@ -460,6 +470,7 @@ type StatusMaster_Test () =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "A";
+                EnableStatSNAckChecker = false;
             } : TargetDeviceConf.T_TargetDevice )
             |> TargetDeviceConf.ReaderWriter.ToString
         File.WriteAllText( targetDeviceConfName, tdConf )
@@ -489,6 +500,7 @@ type StatusMaster_Test () =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "A";
+                EnableStatSNAckChecker = false;
             } : TargetDeviceConf.T_TargetDevice )
             |> TargetDeviceConf.ReaderWriter.ToString
         File.WriteAllText( targetDeviceConfName, tdConf )
@@ -515,6 +527,7 @@ type StatusMaster_Test () =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "A";
+                EnableStatSNAckChecker = false;
             } : TargetDeviceConf.T_TargetDevice )
             |> TargetDeviceConf.ReaderWriter.ToString
         File.WriteAllText( targetDeviceConfName, tdConf )
@@ -540,6 +553,7 @@ type StatusMaster_Test () =
                 NegotiableParameters = None;
                 LogParameters = None;
                 DeviceName = "A";
+                EnableStatSNAckChecker = false;
             } : TargetDeviceConf.T_TargetDevice )
             |> TargetDeviceConf.ReaderWriter.ToString
         File.WriteAllText( targetDeviceConfName, tdConf )
@@ -2705,6 +2719,7 @@ type StatusMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "abcdefg";
+            EnableStatSNAckChecker = false;
         }
         let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 true )

@@ -56,6 +56,7 @@ type ConfNode_TargetDevice_Test() =
             LogLevel = LogLevel.LOGLEVEL_INFO;
         });
         DeviceName = "abc";
+        EnableStatSNAckChecker = false;
     }
 
     let defaultTargetConf : TargetGroupConf.T_Target = {
@@ -82,12 +83,13 @@ type ConfNode_TargetDevice_Test() =
         let rel = new ConfNodeRelation()
         let cid = rel.NextID
         let tdid = GlbFunc.newTargetDeviceID()
-        let n = new ConfNode_TargetDevice( st, rel, cid, tdid, "a", defaultConf.NegotiableParameters.Value, defaultConf.LogParameters.Value, ModifiedStatus.NotModified ) :> IConfigFileNode
+        let n = new ConfNode_TargetDevice( st, rel, cid, tdid, "a", false, defaultConf.NegotiableParameters.Value, defaultConf.LogParameters.Value, ModifiedStatus.NotModified ) :> IConfigFileNode
         Assert.True(( n.NodeID = cid ))
         Assert.True(( n.NodeTypeName = "Target Device" ))
         Assert.True(( n.Modified = ModifiedStatus.NotModified ))
         Assert.True(( ( n :?> ConfNode_TargetDevice ).TargetDeviceID = tdid ))
         Assert.True(( ( n :?> ConfNode_TargetDevice ).TargetDeviceName = "a" ))
+        Assert.True(( ( n :?> ConfNode_TargetDevice ).EnableStatSNAckChecker = false ))
         Assert.True(( ( n :?> ConfNode_TargetDevice ).NegotiableParameters = defaultConf.NegotiableParameters.Value ))
         Assert.True(( ( n :?> ConfNode_TargetDevice ).LogParameters = defaultConf.LogParameters.Value ))
 
@@ -103,6 +105,7 @@ type ConfNode_TargetDevice_Test() =
         Assert.True(( n.Modified = ModifiedStatus.NotModified ))
         Assert.True(( ( n :?> ConfNode_TargetDevice ).TargetDeviceID = tdid ))
         Assert.True(( ( n :?> ConfNode_TargetDevice ).TargetDeviceName = defaultConf.DeviceName ))
+        Assert.True(( ( n :?> ConfNode_TargetDevice ).EnableStatSNAckChecker = false ))
         Assert.True(( ( n :?> ConfNode_TargetDevice ).NegotiableParameters = defaultConf.NegotiableParameters.Value ))
         Assert.True(( ( n :?> ConfNode_TargetDevice ).LogParameters = defaultConf.LogParameters.Value ))
 
@@ -122,6 +125,7 @@ type ConfNode_TargetDevice_Test() =
         Assert.True(( n.Modified = ModifiedStatus.NotModified ))
         Assert.True(( ( n :?> ConfNode_TargetDevice ).TargetDeviceID = tdid ))
         Assert.True(( ( n :?> ConfNode_TargetDevice ).TargetDeviceName = defaultConf.DeviceName ))
+        Assert.True(( ( n :?> ConfNode_TargetDevice ).EnableStatSNAckChecker = false ))
         Assert.True(( ( n :?> ConfNode_TargetDevice ).NegotiableParameters.MaxRecvDataSegmentLength = Constants.NEGOPARAM_DEF_MaxRecvDataSegmentLength ))
         Assert.True(( ( n :?> ConfNode_TargetDevice ).NegotiableParameters.MaxBurstLength = Constants.NEGOPARAM_DEF_MaxBurstLength ))
         Assert.True(( ( n :?> ConfNode_TargetDevice ).NegotiableParameters.FirstBurstLength = Constants.NEGOPARAM_DEF_FirstBurstLength ))
@@ -146,6 +150,7 @@ type ConfNode_TargetDevice_Test() =
         Assert.True(( n.Modified = ModifiedStatus.NotModified ))
         Assert.True(( ( n :?> ConfNode_TargetDevice ).TargetDeviceID = tdid ))
         Assert.True(( ( n :?> ConfNode_TargetDevice ).TargetDeviceName = defaultConf.DeviceName ))
+        Assert.True(( ( n :?> ConfNode_TargetDevice ).EnableStatSNAckChecker = false ))
         Assert.True(( ( n :?> ConfNode_TargetDevice ).NegotiableParameters = defaultConf.NegotiableParameters.Value ))
         Assert.True(( ( n :?> ConfNode_TargetDevice ).LogParameters.SoftLimit = Constants.LOGPARAM_DEF_SOFTLIMIT ))
         Assert.True(( ( n :?> ConfNode_TargetDevice ).LogParameters.HardLimit = Constants.LOGPARAM_DEF_HARDLIMIT ))
@@ -171,6 +176,7 @@ type ConfNode_TargetDevice_Test() =
         Assert.True(( ( n :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
         Assert.True(( n.TargetDeviceID = tdid_me.Zero ))
         Assert.True(( n.TargetDeviceName = "" ))
+        Assert.True(( n.EnableStatSNAckChecker = false ))
         Assert.True(( n.NegotiableParameters.MaxRecvDataSegmentLength = Constants.NEGOPARAM_DEF_MaxRecvDataSegmentLength ))
         Assert.True(( n.NegotiableParameters.MaxBurstLength = Constants.NEGOPARAM_DEF_MaxBurstLength ))
         Assert.True(( n.NegotiableParameters.FirstBurstLength = Constants.NEGOPARAM_DEF_FirstBurstLength ))
@@ -198,6 +204,10 @@ type ConfNode_TargetDevice_Test() =
                 {
                     Name = "Name";
                     Value = "a56";
+                }
+                {
+                    Name = "EnableStatSNAckChecker";
+                    Value = "true";
                 }
                 {
                     Name = "NegotiableParameters.MaxRecvDataSegmentLength";
@@ -242,6 +252,7 @@ type ConfNode_TargetDevice_Test() =
         Assert.True(( ( n :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
         Assert.True(( n.TargetDeviceID = tdid ))
         Assert.True(( n.TargetDeviceName = "a56" ))
+        Assert.True(( n.EnableStatSNAckChecker = true ))
         Assert.True(( n.NegotiableParameters.MaxRecvDataSegmentLength = 9u ))
         Assert.True(( n.NegotiableParameters.MaxBurstLength = 8u ))
         Assert.True(( n.NegotiableParameters.FirstBurstLength = 7u ))
@@ -2608,9 +2619,10 @@ type ConfNode_TargetDevice_Test() =
             defaultConf.LogParameters.Value with
                 SoftLimit = Constants.LOGPARAM_DEF_SOFTLIMIT + 1u;
         }
-        let n2 = ( n1 :?> ConfNode_TargetDevice ).CreateUpdatedNode tdid2 "XXX" p1 p2
+        let n2 = ( n1 :?> ConfNode_TargetDevice ).CreateUpdatedNode tdid2 "XXX" true p1 p2
         Assert.True(( n2.TargetDeviceID = tdid2 ))
         Assert.True(( n2.TargetDeviceName = "XXX" ))
+        Assert.True(( n2.EnableStatSNAckChecker = true ))
         Assert.True(( n2.NegotiableParameters.MaxRecvDataSegmentLength = Constants.NEGOPARAM_DEF_MaxRecvDataSegmentLength + 1u ))
         Assert.True(( n2.LogParameters.SoftLimit = Constants.LOGPARAM_DEF_SOFTLIMIT + 1u ))
         Assert.True(( ( n2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
@@ -2971,6 +2983,7 @@ type ConfNode_TargetDevice_Test() =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "abcrrtt";
+            EnableStatSNAckChecker = false;
         }
         let cid = confnode_me.fromPrim 14567UL
         let tdid = GlbFunc.newTargetDeviceID()
@@ -3001,13 +3014,14 @@ type ConfNode_TargetDevice_Test() =
             HardLimit = 8u;
             LogLevel = LogLevel.LOGLEVEL_INFO;
         }
-        let n = new ConfNode_TargetDevice( st, rel, cid, tdid, "aabbcc", negoParam, logParam, ModifiedStatus.Modified ) :> IConfigureNode
+        let n = new ConfNode_TargetDevice( st, rel, cid, tdid, "aabbcc", true, negoParam, logParam, ModifiedStatus.Modified ) :> IConfigureNode
         let v = n.TempExportData
         Assert.True(( v.TypeName = ClientConst.TEMPEXP_NN_TargetDevice ))
         Assert.True(( v.NodeID = 14567UL ))
-        Assert.True(( v.Values.Length = 11 ))
+        Assert.True(( v.Values.Length = 12 ))
         Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "ID" ) |> _.Value = ( tdid_me.toString tdid ) ))
         Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "Name" ) |> _.Value = "aabbcc" ))
+        Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "EnableStatSNAckChecker" ) |> _.Value = "true" ))
         Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "NegotiableParameters.MaxRecvDataSegmentLength" ) |> _.Value = "1" ))
         Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "NegotiableParameters.MaxBurstLength" ) |> _.Value = "2" ))
         Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "NegotiableParameters.FirstBurstLength" ) |> _.Value = "3" ))

@@ -36,6 +36,9 @@ open Haruka.IODataTypes
 /// <param name="m_TargetDeviceName">
 ///  Target device name.
 /// </param>
+/// <param name="m_EnableStatSNAckChecker">
+///  Whether to request an acknowledgement by sending a Ping request to a StatSN that has not yet received an acknowledgement.
+/// </param>
 /// <param name="m_NodeID">
 ///  Node ID of this node.
 /// </param>
@@ -54,6 +57,7 @@ type ConfNode_TargetDevice(
         m_NodeID : CONFNODE_T,
         m_TargetDeviceID : TDID_T,
         m_TargetDeviceName : string,
+        m_EnableStatSNAckChecker : bool,
         m_NegotiableParameters : TargetDeviceConf.T_NegotiableParameters,
         m_LogParameters : TargetDeviceConf.T_LogParameters,
         m_Modified : ModifiedStatus
@@ -107,7 +111,17 @@ type ConfNode_TargetDevice(
                 }
                 argValue.LogParameters
 
-        new ConfNode_TargetDevice( argMessageTable, argConfNodes, argNodeID, argTargetDeviceID, argValue.DeviceName, np, lp, ModifiedStatus.NotModified )
+        new ConfNode_TargetDevice(
+                argMessageTable,
+                argConfNodes,
+                argNodeID,
+                argTargetDeviceID,
+                argValue.DeviceName,
+                argValue.EnableStatSNAckChecker,
+                np,
+                lp,
+                ModifiedStatus.NotModified
+        )
 
     /// <summary>
     ///  Constructor for temp export format data.
@@ -134,6 +148,7 @@ type ConfNode_TargetDevice(
             |> Dictionary
         let tdid = Functions.SearchAndConvert d "ID" tdid_me.fromString tdid_me.Zero;
         let tdname = Functions.SearchAndConvert d "Name" id "";
+        let esac = Functions.SearchAndConvert d "EnableStatSNAckChecker" Boolean.Parse false;
         let np : TargetDeviceConf.T_NegotiableParameters = {
             MaxRecvDataSegmentLength = Functions.SearchAndConvert d "NegotiableParameters.MaxRecvDataSegmentLength" UInt32.Parse Constants.NEGOPARAM_DEF_MaxRecvDataSegmentLength;
             MaxBurstLength = Functions.SearchAndConvert d "NegotiableParameters.MaxBurstLength" UInt32.Parse Constants.NEGOPARAM_DEF_MaxBurstLength;
@@ -147,7 +162,7 @@ type ConfNode_TargetDevice(
             HardLimit = Functions.SearchAndConvert d "LogParameters.HardLimit" UInt32.Parse Constants.LOGPARAM_DEF_HARDLIMIT;
             LogLevel = Functions.SearchAndConvert d "LogParameters.LogLevel" LogLevel.fromString LogLevel.LOGLEVEL_INFO;
         }
-        new ConfNode_TargetDevice( argMessageTable, argConfNodes, newNodeID, tdid, tdname, np, lp, ModifiedStatus.Modified )
+        new ConfNode_TargetDevice( argMessageTable, argConfNodes, newNodeID, tdid, tdname, esac, np, lp, ModifiedStatus.Modified )
 
     //=========================================================================
     // Interface method
@@ -481,6 +496,7 @@ type ConfNode_TargetDevice(
                 yield         "Values :"
                 yield sprintf "  ID(TargetDeviceID) : %s" ( tdid_me.toString m_TargetDeviceID )
                 yield sprintf "  Name(string) : %s" m_TargetDeviceName
+                yield sprintf "  EnableStatSNAckChecker(bool) : %b" m_EnableStatSNAckChecker
                 yield sprintf "  NegotiableParameters :"
                 yield sprintf "    MaxRecvDataSegmentLength(uint32) : %d" m_NegotiableParameters.MaxRecvDataSegmentLength
                 yield sprintf "    MaxBurstLength(uint32) : %d" m_NegotiableParameters.MaxBurstLength
@@ -519,6 +535,10 @@ type ConfNode_TargetDevice(
                     yield {
                         Name = "Name";
                         Value = m_TargetDeviceName;
+                    };
+                    yield {
+                        Name = "EnableStatSNAckChecker";
+                        Value = sprintf "%b" m_EnableStatSNAckChecker;
                     };
                     yield {
                         Name = "NegotiableParameters.MaxRecvDataSegmentLength";
@@ -573,6 +593,7 @@ type ConfNode_TargetDevice(
                 m_NodeID,
                 m_TargetDeviceID,
                 m_TargetDeviceName,
+                m_EnableStatSNAckChecker,
                 m_NegotiableParameters,
                 m_LogParameters,
                 ModifiedStatus.NotModified
@@ -627,6 +648,10 @@ type ConfNode_TargetDevice(
     member _.TargetDeviceName : string =
         m_TargetDeviceName
 
+    /// EnableStatSNAckChecker value property
+    member _.EnableStatSNAckChecker : bool =
+        m_EnableStatSNAckChecker
+
     /// NegotiableParameters value property
     member _.NegotiableParameters : TargetDeviceConf.T_NegotiableParameters =
         m_NegotiableParameters
@@ -651,6 +676,9 @@ type ConfNode_TargetDevice(
     /// <param name="argTargetDeviceName">
     ///  Target device name.
     /// </param>
+    /// <param name="argEnableStatSNAckChecker">
+    ///  Whether to request an acknowledgement by sending a Ping request to a StatSN that has not yet received an acknowledgement.
+    /// </param>
     /// <param name="argNegotiableParameters">
     ///  Configuration values.
     /// </param>
@@ -663,10 +691,19 @@ type ConfNode_TargetDevice(
     member _.CreateUpdatedNode 
         ( argTargetDeviceID : TDID_T )
         ( argTargetDeviceName : string )
+        ( argEnableStatSNAckChecker : bool )
         ( argNegotiableParameters : TargetDeviceConf.T_NegotiableParameters )
         ( argLogParameters : TargetDeviceConf.T_LogParameters ) : ConfNode_TargetDevice = 
         new ConfNode_TargetDevice(
-            m_MessageTable, m_ConfNodes, m_NodeID, argTargetDeviceID, argTargetDeviceName, argNegotiableParameters, argLogParameters, ModifiedStatus.Modified
+            m_MessageTable,
+            m_ConfNodes,
+            m_NodeID,
+            argTargetDeviceID,
+            argTargetDeviceName,
+            argEnableStatSNAckChecker,
+            argNegotiableParameters,
+            argLogParameters,
+            ModifiedStatus.Modified
         )
 
     /// <summary>
@@ -676,7 +713,7 @@ type ConfNode_TargetDevice(
     ///  Created new object.
     /// </returns>
     member this.SetModified() : ConfNode_TargetDevice =
-        this.CreateUpdatedNode m_TargetDeviceID m_TargetDeviceName m_NegotiableParameters m_LogParameters
+        this.CreateUpdatedNode m_TargetDeviceID m_TargetDeviceName m_EnableStatSNAckChecker m_NegotiableParameters m_LogParameters
 
     /// <summary>
     /// Get configuration data.
@@ -694,5 +731,6 @@ type ConfNode_TargetDevice(
             NegotiableParameters = Some m_NegotiableParameters;
             LogParameters = Some m_LogParameters;
             DeviceName = m_TargetDeviceName;
+            EnableStatSNAckChecker = m_EnableStatSNAckChecker;
         }
 

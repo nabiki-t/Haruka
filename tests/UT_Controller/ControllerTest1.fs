@@ -73,6 +73,7 @@ type Controller_Test1 () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "abc";
+            EnableStatSNAckChecker = false;
         }
         let tdConfName = Functions.AppendPathName dname Constants.TARGET_DEVICE_CONF_FILE_NAME
         TargetDeviceConf.ReaderWriter.WriteFile tdConfName tdConf

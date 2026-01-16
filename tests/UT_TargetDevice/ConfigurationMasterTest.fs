@@ -172,7 +172,8 @@ type ConfigurationMaster_Test () =
             NetworkPortal = [];
             NegotiableParameters = None;
             LogParameters = None;
-            DeviceName = "";
+            DeviceName = "aassddff";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -180,6 +181,8 @@ type ConfigurationMaster_Test () =
         File.WriteAllText( targetGroupConfName, defaultTargetGroupConfStr )
 
         let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        Assert.True(( cm.DeviceName = "aassddff" ))
+        Assert.True(( cm.EnableStatSNAckChecker = false ))
         Assert.True(( cm.GetNetworkPortal().Length = 1 ))
         Assert.True(( cm.GetNetworkPortal().[0].PortNumber = 3260us ))
         Assert.True(( cm.GetAllTargetGroupConf().Length = 1 ))
@@ -229,7 +232,8 @@ type ConfigurationMaster_Test () =
             ];
             NegotiableParameters = None;
             LogParameters = None;
-            DeviceName = "";
+            DeviceName = "rrffgghh";
+            EnableStatSNAckChecker = true;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -237,6 +241,8 @@ type ConfigurationMaster_Test () =
         File.WriteAllText( targetGroupConfName, defaultTargetGroupConfStr )
 
         let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        Assert.True(( cm.DeviceName = "rrffgghh" ))
+        Assert.True(( cm.EnableStatSNAckChecker = true ))
         Assert.True(( cm.GetNetworkPortal().Length = 3 ))
         Assert.True(( cm.GetNetworkPortal().[0].PortNumber = 2360us ))
         Assert.True(( cm.GetNetworkPortal().[0].WhiteList = [] ))
@@ -269,6 +275,7 @@ type ConfigurationMaster_Test () =
             };
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -300,6 +307,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -396,6 +404,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -475,6 +484,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -500,6 +510,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -544,6 +555,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -584,6 +596,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -608,6 +621,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -638,6 +652,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -670,6 +685,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -739,6 +755,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -822,6 +839,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -874,6 +892,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -931,6 +950,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -986,6 +1006,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -1066,6 +1087,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -1151,6 +1173,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
         
@@ -1245,6 +1268,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -1308,6 +1332,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -1367,6 +1392,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -1426,6 +1452,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -1481,6 +1508,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -1556,6 +1584,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -1612,6 +1641,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -1688,6 +1718,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -1742,6 +1773,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -1816,6 +1848,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -1872,6 +1905,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -2038,6 +2072,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -2089,6 +2124,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -2140,6 +2176,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -2261,6 +2298,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -2293,6 +2331,7 @@ type ConfigurationMaster_Test () =
             };
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -2318,6 +2357,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -2354,6 +2394,7 @@ type ConfigurationMaster_Test () =
             };
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -2383,6 +2424,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -2415,6 +2457,7 @@ type ConfigurationMaster_Test () =
                 LogLevel = LogLevel.LOGLEVEL_WARNING;
             };
             DeviceName = "aaaabbbb";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -2443,6 +2486,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -2467,6 +2511,7 @@ type ConfigurationMaster_Test () =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "aaaabbbb";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
 
@@ -2475,6 +2520,56 @@ type ConfigurationMaster_Test () =
 
         let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
         Assert.True(( cm.DeviceName = "aaaabbbb" ))
+
+        GlbFunc.DeleteFile targetDeviceConfName
+        GlbFunc.DeleteFile targetGroupConfName1
+        GlbFunc.DeleteDir pDirName
+
+    [<Fact>]
+    member this.EnableStatSNAckChecker_001() =
+        let pDirName = this.GetTestDirName "EnableStatSNAckChecker_001"
+        GlbFunc.CreateDir pDirName |> ignore
+
+        let targetDeviceConfName = Functions.AppendPathName pDirName Constants.TARGET_DEVICE_CONF_FILE_NAME
+        let targetDeviceConf : TargetDeviceConf.T_TargetDevice = {
+            NetworkPortal = [];
+            NegotiableParameters = None;
+            LogParameters = None;
+            DeviceName = "";
+            EnableStatSNAckChecker = true;
+        }
+        TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
+
+        let targetGroupConfName1 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
+        File.WriteAllText( targetGroupConfName1, defaultTargetGroupConfStr )
+
+        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        Assert.True(( cm.EnableStatSNAckChecker = true ))
+
+        GlbFunc.DeleteFile targetDeviceConfName
+        GlbFunc.DeleteFile targetGroupConfName1
+        GlbFunc.DeleteDir pDirName
+
+    [<Fact>]
+    member this.EnableStatSNAckChecker_002() =
+        let pDirName = this.GetTestDirName "EnableStatSNAckChecker_002"
+        GlbFunc.CreateDir pDirName |> ignore
+
+        let targetDeviceConfName = Functions.AppendPathName pDirName Constants.TARGET_DEVICE_CONF_FILE_NAME
+        let targetDeviceConf : TargetDeviceConf.T_TargetDevice = {
+            NetworkPortal = [];
+            NegotiableParameters = None;
+            LogParameters = None;
+            DeviceName = "";
+            EnableStatSNAckChecker = false;
+        }
+        TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
+
+        let targetGroupConfName1 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
+        File.WriteAllText( targetGroupConfName1, defaultTargetGroupConfStr )
+
+        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        Assert.True(( cm.EnableStatSNAckChecker = false ))
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1

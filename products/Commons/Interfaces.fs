@@ -1674,6 +1674,14 @@ type IConfiguration =
     /// </summary>
     abstract DeviceName : string
 
+    // ------------------------------------------------------------------------
+    /// <summary>
+    ///   Whether to request an acknowledgement by sending a Ping request to a StatSN that has not yet received an acknowledgement.
+    /// </summary>
+    abstract EnableStatSNAckChecker : bool
+
+
+
 /// <summary>
 ///   Interface of Status Master object.
 ///   Status Master manages all of the other object and dynamically changed

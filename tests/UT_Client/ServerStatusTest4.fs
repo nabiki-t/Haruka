@@ -92,7 +92,7 @@ type ServerStatus_Test4() =
                 do! ss.LoadConfigure cc1 true
 
                 let tdid = GlbFunc.newTargetDeviceID()
-                let tdNode = ss.AddTargetDeviceNode tdid "a" ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP :> IConfigFileNode
+                let tdNode = ss.AddTargetDeviceNode tdid "a" true ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP :> IConfigFileNode
 
                 let plist = tdNode.GetParentNodes<IConfigureNode>()
                 Assert.True(( plist.Length = 1 ))
@@ -108,6 +108,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tdlist.[0].NegotiableParameters = ServerStatus_Test1.defaultNego ))
                 Assert.True(( tdlist.[0].LogParameters = ServerStatus_Test1.defaultLP ))
                 Assert.True(( tdlist.[0].TargetDeviceName = "a" ))
+                Assert.True(( tdlist.[0].EnableStatSNAckChecker = true ))
                 Assert.True(( tdlist.[0].TargetDeviceID = tdid ))
                 Assert.True(( tdNode.Modified = ModifiedStatus.Modified ))
             }
@@ -136,7 +137,7 @@ type ServerStatus_Test4() =
                 for i = 0 to Constants.MAX_TARGET_DEVICE_COUNT + 1 do
                     let tdid = GlbFunc.newTargetDeviceID()
                     let tdname = sprintf "a%03d" i
-                    let tdNode = ss.AddTargetDeviceNode tdid tdname ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP :> IConfigFileNode
+                    let tdNode = ss.AddTargetDeviceNode tdid tdname ( i % 2 = 0 ) ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP :> IConfigFileNode
 
                     let plist = tdNode.GetParentNodes<IConfigureNode>()
                     Assert.True(( plist.Length = 1 ))
@@ -153,6 +154,7 @@ type ServerStatus_Test4() =
                 for i = 0 to Constants.MAX_TARGET_DEVICE_COUNT + 1 do
                     let wstr = sprintf "a%03d" i
                     Assert.True(( tdlist.[i].TargetDeviceName = wstr ))
+                    Assert.True(( tdlist.[i].EnableStatSNAckChecker = ( i % 2 = 0 ) ))
                     Assert.True(( ( tdlist.[i] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
             }
         |]
@@ -180,7 +182,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tdlist1.Length = 0 ))
 
                 let tdid = GlbFunc.newTargetDeviceID()
-                let _ = ss.AddTargetDeviceNode tdid "a" ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP :> IConfigFileNode
+                let _ = ss.AddTargetDeviceNode tdid "a" false ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP :> IConfigFileNode
 
                 let tdlist2 = ss.GetTargetDeviceNodes()
                 Assert.True(( tdlist2.Length = 1 ))
@@ -217,7 +219,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tdlist1.Length = 0 ))
 
                 let tdid = GlbFunc.newTargetDeviceID()
-                let _ = ss.AddTargetDeviceNode tdid "a" ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP :> IConfigFileNode
+                let _ = ss.AddTargetDeviceNode tdid "a" false ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP :> IConfigFileNode
 
                 let tdlist2 = ss.GetTargetDeviceNodes()
                 Assert.True(( tdlist2.Length = 1 ))
@@ -260,7 +262,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tdlist1.Length = 0 ))
 
                 let tdid = GlbFunc.newTargetDeviceID()
-                let tdNode = ss.AddTargetDeviceNode tdid "a" ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP :> IConfigFileNode
+                let tdNode = ss.AddTargetDeviceNode tdid "a" false ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP :> IConfigFileNode
 
                 let tdlist2 = ss.GetTargetDeviceNodes()
                 Assert.True(( tdlist2.Length = 1 ))
@@ -268,9 +270,10 @@ type ServerStatus_Test4() =
                 Assert.True(( tdNode.Modified = ModifiedStatus.Modified ) )
 
                 let newTdid = GlbFunc.newTargetDeviceID()
-                let r = ss.UpdateTargetDeviceNode tdlist2.[0] newTdid "new" tdlist2.[0].NegotiableParameters tdlist2.[0].LogParameters
+                let r = ss.UpdateTargetDeviceNode tdlist2.[0] newTdid "new" true tdlist2.[0].NegotiableParameters tdlist2.[0].LogParameters
                 Assert.True(( r.TargetDeviceID = newTdid ))
                 Assert.True(( r.TargetDeviceName = "new" ))
+                Assert.True(( r.EnableStatSNAckChecker = true ))
                 Assert.True(( r.NegotiableParameters = tdlist2.[0].NegotiableParameters ))
                 Assert.True(( r.LogParameters = tdlist2.[0].LogParameters ))
 
@@ -303,7 +306,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tdlist1.Length = 0 ))
 
                 let tdid = GlbFunc.newTargetDeviceID()
-                let tdNode = ss.AddTargetDeviceNode tdid "a" ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP :> IConfigFileNode
+                let tdNode = ss.AddTargetDeviceNode tdid "a" false ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP :> IConfigFileNode
 
                 let tdlist2 = ss.GetTargetDeviceNodes()
                 Assert.True(( tdlist2.Length = 1 ))
@@ -385,7 +388,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tdlist1.Length = 0 ))
 
                 let tdid = GlbFunc.newTargetDeviceID()
-                let tdNode = ss.AddTargetDeviceNode tdid "a" ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP
+                let tdNode = ss.AddTargetDeviceNode tdid "a" false ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP
                 let npnode = ss.AddNetworkPortalNode tdNode ServerStatus_Test1.defaultNP
                 Assert.True(( ( tdNode :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
 
@@ -463,7 +466,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tdlist1.Length = 0 ))
 
                 let tdid = GlbFunc.newTargetDeviceID()
-                let tdNode = ss.AddTargetDeviceNode tdid "a" ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP
+                let tdNode = ss.AddTargetDeviceNode tdid "a" false ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP
                 let npnode = ss.AddNetworkPortalNode tdNode ServerStatus_Test1.defaultNP
 
                 Assert.True(( ( tdNode :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
@@ -3187,7 +3190,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tdNodes1.Length = 0 ))
 
                 let tdid = GlbFunc.newTargetDeviceID()
-                let _ = ss.AddTargetDeviceNode tdid "a" ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP :> IConfigFileNode
+                let _ = ss.AddTargetDeviceNode tdid "a" false ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP :> IConfigFileNode
 
                 let tdNodes2 = ss.GetTargetDeviceNodes()
                 Assert.True(( tdNodes2.Length = 1 ))
@@ -3315,7 +3318,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tdNodes1.Length = 0 ))
 
                 let tdid = GlbFunc.newTargetDeviceID()
-                let _ = ss.AddTargetDeviceNode tdid "a" ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP :> IConfigFileNode
+                let _ = ss.AddTargetDeviceNode tdid "a" false ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP :> IConfigFileNode
 
                 let tdNodes2 = ss.GetTargetDeviceNodes()
                 Assert.True(( tdNodes2.Length = 1 ))

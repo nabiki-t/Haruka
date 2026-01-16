@@ -2209,6 +2209,7 @@ type CtrlConnection_Test1() =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "aaa";
+            EnableStatSNAckChecker = false;
         }
         TargetDeviceConf.ReaderWriter.WriteFile confName tdConf
 
@@ -2253,6 +2254,7 @@ type CtrlConnection_Test1() =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "aaa";
+            EnableStatSNAckChecker = false;
         }
         let tdConfStr = TargetDeviceConf.ReaderWriter.ToString tdConf
 
@@ -2321,6 +2323,7 @@ type CtrlConnection_Test1() =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "aaa";
+            EnableStatSNAckChecker = false;
         }
         let tdConfStr = TargetDeviceConf.ReaderWriter.ToString tdConf
 
@@ -2389,6 +2392,7 @@ type CtrlConnection_Test1() =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "aaa";
+            EnableStatSNAckChecker = false;
         }
         let tdConfStr = TargetDeviceConf.ReaderWriter.ToString tdConf
 
@@ -2453,6 +2457,7 @@ type CtrlConnection_Test1() =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "aaa";
+            EnableStatSNAckChecker = false;
         }
         let tdConfStr = TargetDeviceConf.ReaderWriter.ToString tdConf
 
@@ -2522,6 +2527,7 @@ type CtrlConnection_Test1() =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "*****";
+            EnableStatSNAckChecker = false;
         }
 
         [|
@@ -2570,6 +2576,7 @@ type CtrlConnection_Test1() =
             NegotiableParameters = None;
             LogParameters = None;
             DeviceName = "aaa";
+            EnableStatSNAckChecker = false;
         }
         let tdConfStr = TargetDeviceConf.ReaderWriter.ToString tdConf
 

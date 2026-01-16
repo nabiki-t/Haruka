@@ -46,7 +46,7 @@ type ServerStatus_Test2() =
                 let ss = new ServerStatus( st )
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 do! ss.LoadConfigure cc1 true
-                let _ = ss.AddTargetDeviceNode ( GlbFunc.newTargetDeviceID() ) "a" ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP
+                let _ = ss.AddTargetDeviceNode ( GlbFunc.newTargetDeviceID() ) "a" false ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP
 
                 try
                     do! ss.Publish cc1
@@ -160,7 +160,7 @@ type ServerStatus_Test2() =
                 Assert.True(( tdNodes1.Length = 0 ))
 
                 let tdid = GlbFunc.newTargetDeviceID()
-                let tdNode = ss.AddTargetDeviceNode tdid "aassddd" ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP
+                let tdNode = ss.AddTargetDeviceNode tdid "aassddd" false ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP
                 Assert.True(( ( tdNode :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
 
                 let _ = ss.AddNetworkPortalNode tdNode ServerStatus_Test1.defaultNP 
@@ -224,7 +224,7 @@ type ServerStatus_Test2() =
                 Assert.True(( ( tdNodes1.[0] :> IConfigFileNode ).Modified = ModifiedStatus.NotModified ))
 
                 let tdid2 = GlbFunc.newTargetDeviceID()
-                let tdNode2 = ss.AddTargetDeviceNode tdid2 "aassddd" ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP
+                let tdNode2 = ss.AddTargetDeviceNode tdid2 "aassddd" false ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP
                 Assert.True(( ( tdNode2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
 
                 let tdNodes2 = ss.GetTargetDeviceNodes()
@@ -300,7 +300,7 @@ type ServerStatus_Test2() =
 
                 do! cc1.KillTargetDeviceProc tdid
 
-                let tdNode2 = ss.UpdateTargetDeviceNode tdNodes1.[0] tdid "a002" tdNodes1.[0].NegotiableParameters tdNodes1.[0].LogParameters
+                let tdNode2 = ss.UpdateTargetDeviceNode tdNodes1.[0] tdid "a002" false tdNodes1.[0].NegotiableParameters tdNodes1.[0].LogParameters
                 Assert.True(( ( tdNode2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
                 let v = ss.Validate()
                 Assert.True(( v.Length = 0 ))

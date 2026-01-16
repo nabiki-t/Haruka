@@ -1,28 +1,82 @@
+<!--
+==============================================================================
+== Haruka Software Storage.
+== Definition of the Target Device configuration file format
+-->
+
 <root namespace='Haruka.IODataTypes.TargetDeviceConf' class='ReaderWriter' >
   <form name='TargetDevice'>
+
+    <!-- Specifies the TCP port configuration for receiving iSCSI traffic. -->
     <item name='NetworkPortal' mincount='0' maxcount='MAX_NETWORK_PORTAL_COUNT'>
+
+      <!-- A serial number for each port. A unique value must be specified. -->
       <item name='IdentNumber' constraint='NETPORTIDX_T' />
+
+      <!-- Target Portal Group Tag. Haruka does not support TGPT. It must be 0. -->
       <item name='TargetPortalGroupTag' constraint='TPGT_T' minvalue='0' maxvalue='0' />
+
+      <!-- Specifies the address on which to listen for incoming TCP connections. -->
       <item name='TargetAddress' constraint='string' minvalue='0' maxvalue='MAX_TARGET_ADDRESS_STR_LENGTH' />
+
+      <!-- TCP port number. -->
       <item name='PortNumber' constraint='unsignedShort' minvalue='1' maxvalue='65535' />
+
+      <!-- Specifies whether the Nagle algorithm is required. -->
       <item name='DisableNagle' constraint='boolean' />
+
+      <!-- Receive Buffer Size in TCP connection -->
       <item name='ReceiveBufferSize' constraint='int' minvalue='0' />
+
+      <!-- Send Buffer Size in TCP connection -->
       <item name='SendBufferSize' constraint='int' minvalue='0' />
+
+      <!-- Specifies the source IP address from which incoming TCP connections are allowed. 
+           If not specified, all connections will be accepted. -->
       <item name='WhiteList' constraint='IPCondition' mincount='0' maxcount='MAX_IP_WHITELIST_COUNT' />
     </item>
+
+    <!-- iSCSI parameters -->
     <item name='NegotiableParameters' mincount='0' maxcount='1' >
+      
+      <!-- See RFC3720 12.12 -->
       <item name='MaxRecvDataSegmentLength' constraint='unsignedInt' minvalue='NEGOPARAM_MIN_MaxRecvDataSegmentLength' maxvalue='NEGOPARAM_MAX_MaxRecvDataSegmentLength' />
+
+      <!-- See RFC3720 12.13 -->
       <item name='MaxBurstLength' constraint='unsignedInt' minvalue='NEGOPARAM_MIN_MaxBurstLength' maxvalue='NEGOPARAM_MAX_MaxBurstLength' />
+
+      <!-- See RFC3720 12.14 -->
       <item name='FirstBurstLength' constraint='unsignedInt' minvalue='NEGOPARAM_MIN_FirstBurstLength' maxvalue='NEGOPARAM_MAX_FirstBurstLength' />
+
+      <!-- See RFC3720 12.15 -->
       <item name='DefaultTime2Wait' constraint='unsignedShort' minvalue='NEGOPARAM_MIN_DefaultTime2Wait' maxvalue='NEGOPARAM_MAX_DefaultTime2Wait' />
+
+      <!-- See RFC3720 12.16 -->
       <item name='DefaultTime2Retain' constraint='unsignedShort' minvalue='NEGOPARAM_MIN_DefaultTime2Retain' maxvalue='NEGOPARAM_MAX_DefaultTime2Retain' />
+
+      <!-- See RFC3720 12.17 -->
       <item name='MaxOutstandingR2T' constraint='unsignedShort' minvalue='NEGOPARAM_MIN_MaxOutstandingR2T' maxvalue='NEGOPARAM_MAX_MaxOutstandingR2T' />
     </item>
+
+    <!-- Controls the logs output by TargetDevice. -->
     <item name='LogParameters' mincount='0' maxcount='1' >
+      
+      <!-- The maximum number of lines of log data, including VERBOSE level log data, that can be output per second. 
+           If the number of log output lines in a given second exceeds SoftLimit, the output of VERBOSE level log messages will be suppressed until the next second. -->
       <item name='SoftLimit' constraint='unsignedInt' minvalue='LOGPARAM_MIN_SOFTLIMIT' maxvalue='LOGPARAM_MAX_SOFTLIMIT' />
+      
+      <!-- The maximum number of lines of log that can be output per second, excluding VERBOSE level logs. 
+           If the number of log output lines in a given second exceeds HardLimit, the output of all log messages will be suppressed until the next second. -->
       <item name='HardLimit' constraint='unsignedInt' minvalue='LOGPARAM_MIN_HARDLIMIT' maxvalue='LOGPARAM_MAX_HARDLIMIT' />
+      
+      <!-- Specify the level of log messages to be output from VERBOSE, INFO, WARNING, ERROR, or FAILED. -->
       <item name='LogLevel' constraint='LogLevel' />
     </item>
+    
+    <!-- Target Device name. Specify any name to identify the configuration. -->
     <item name='DeviceName' constraint='string' mincount='0' maxcount='1' minvalue='0' maxvalue='MAX_DEVICE_NAME_STR_LENGTH' default='' />
+
+    <!-- Whether to request an acknowledgement by sending a Ping request to a StatSN that has not yet received an acknowledgement. -->
+    <item name='EnableStatSNAckChecker' constraint='boolean' mincount='0' maxcount='1' default='false' />
   </form>
 </root>

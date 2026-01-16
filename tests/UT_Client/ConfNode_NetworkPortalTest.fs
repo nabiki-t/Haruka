@@ -45,6 +45,7 @@ type ConfNode_NetworkPortal_Test() =
         NegotiableParameters = None;
         LogParameters = None;
         DeviceName = "abc";
+        EnableStatSNAckChecker = false;
     }
 
     ///////////////////////////////////////////////////////////////////////////

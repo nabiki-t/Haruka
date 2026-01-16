@@ -232,6 +232,10 @@ type ConfigurationMaster( m_WorkDirPath : string, killer : IKiller ) as this =
         override _.DeviceName : string =
             m_TargetDevice.DeviceName
 
+        // Imprementation of IConfiguration.EnableStatSNAckChecker
+        override _.EnableStatSNAckChecker : bool =
+            m_TargetDevice.EnableStatSNAckChecker
+
     //=========================================================================
     // static method
 
