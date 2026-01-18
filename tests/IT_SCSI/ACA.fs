@@ -777,3 +777,82 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             do! r1.Close()
         }
 
+    // ACA is established.
+    // There are no ACA tasks in the task set.
+    // The ACA task(NACA=1) failed.
+    // In this case, the existing ACA is cleared, sense data is returned, and a new ACA is established.
+    [<Fact>]
+    member _.ACAActive_ACATask_ACATaskNotExists_Failed_002 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
+
+            // Add debug media trap
+            m_ClientProc.RunCommand "add trap /e Write /a Wait" "Trap added" "MD> "
+            m_ClientProc.RunCommand "add trap /e Write /slba 3 /elba 3 /a ACA" "Trap added" "MD> "
+
+            // register reservation key
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) false false false [||]
+            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
+
+            // Send HOQ task(T1), and stucked at debug media
+            let! itt_t1 = r1.Send_Write10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 ( blkcnt_me.ofUInt32 3u ) m_MediaBlockSize writeData1 NACA.T
+
+            // Check that the T1 HOQ task is stuck.
+            do! Task.Delay 10
+            while ( ( GetStuckTasks() ).Length < 1 ) do
+                do! Task.Delay 10
+
+            // Send a Simple task(T2), which goes into the Dormant Task state.
+            let! itt_t2 = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+
+            // Resume T1 HOQ task, and it raise ACA
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_t1 ) "Task(" "MD> "
+
+            // Check result the T1.
+            let! res_t1 = r1.WaitSCSIResponse itt_t1
+            Assert.True(( res_t1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // Send ACA task with NACA=1(T3), and stucked at debug media
+            let! itt_t3 = r1.Send_Write10 TaskATTRCd.ACA_TASK g_LUN1 ( blkcnt_me.ofUInt32 3u ) m_MediaBlockSize writeData1 NACA.T
+
+            // Resume T3 ACA task with NACA=1
+            do! Task.Delay 10
+            while ( ( GetStuckTasks() ).Length < 1 ) do
+                do! Task.Delay 10
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_t3 ) "Task(" "MD> "
+
+            let! res_t3 = r1.WaitSCSIResponse itt_t3
+            Assert.True(( res_t3.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // Send a new Simple task and verify that the ACA is established. 
+            let! itt_t4 = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! res_t4 = r1.WaitSCSIResponse itt_t4
+            Assert.True(( res_t4.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+
+            // clear ACA, and T2 Simple task will be resumed.
+            let! itt_tmf = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
+            let! res_tmf = r1.WaitTMFResponse itt_tmf
+            Assert.True(( res_tmf = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            // Receive the results of T2 Simple task
+            let! res_t2 = r1.WaitSCSIResponseGoogStatus itt_t2
+            res_t2.Return()
+
+            // Get reservarion key. Make sure the reservation remains intact.
+            let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
+            let! res_pr_in1 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in1
+            Assert.True(( res_pr_in1.ReservationKey.Length = 1 ))
+            Assert.True(( res_pr_in1.ReservationKey.[0] = resvkey_me.fromPrim 222UL ))
+
+            // clear reservation key
+            let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 222UL )
+            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
+
+            // Clear debug media traps
+            m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
+
+            writeData1.Return()
+            do! r1.Close()
+        }
+
