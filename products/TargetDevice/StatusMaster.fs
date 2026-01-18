@@ -301,6 +301,10 @@ type StatusMaster(
                     let session =
                         new Session( this :> IStatus, DateTime.UtcNow, argI_TNexus, argTSIH, sessionParameter, newCmdSN, k ) :> ISession
 
+                    if m_config.EnableStatSNAckChecker then
+                        HLogger.Trace( LogID.I_ACKNOWLEDGE_CHECKER_STARTED, fun g -> g.Gen0 m_ObjID )
+                        session.StartAcknowledgeChecker()
+
                     let newSess = oldSess.Add( argTSIH, session )
                     HLogger.Trace(
                         LogID.I_CREATE_NEW_SESSION,

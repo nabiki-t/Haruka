@@ -47,6 +47,7 @@ type iSCSI_TMF_Fixture() =
         client.RunCommand "set MAXBURSTLENGTH 16384" "" "TD> "
         client.RunCommand "set FIRSTBURSTLENGTH 16384" "" "TD> "
         client.RunCommand "set LOGLEVEL VERBOSE" "" "TD> "
+        client.RunCommand "set EnableStatSNAckChecker false" "" "TD> "
         client.RunCommand "create targetgroup" "Created" "TD> "
         client.RunCommand ( sprintf "create networkportal /a ::1 /p %d" m_iSCSIPortNo ) "Created" "TD> "
         client.RunCommand "select 0" "" "TG> "

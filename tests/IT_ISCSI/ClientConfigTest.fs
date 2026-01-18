@@ -123,6 +123,7 @@ type ClientConfigTest() =
             client.RunCommand ( sprintf "create networkportal /a ::1 /p %d" iscsiPortNo ) "Created" "TD> "
             client.RunCommand "create targetgroup" "Created" "TD> "
             client.RunCommand "set LogParameters.LogLevel VERBOSE" "" "TD> "
+            client.RunCommand "set EnableStatSNAckChecker false" "" "TD> "
             client.RunCommand "select 1" "" "TG> "
         
             client.RunCommand "create /n 2020-05.example.com:target1" "Created" "TG> "      // target1, LU=1, No auth required, 64KB

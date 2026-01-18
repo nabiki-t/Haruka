@@ -13,8 +13,7 @@ namespace Haruka.Test.IT.ISCSI
 
 open System
 open System.IO
-open System.Text
-open System.Net
+open System.Threading.Tasks
 
 open Xunit
 
@@ -63,6 +62,7 @@ type iSCSI_LoginTest2_Fixture() =
         client.RunCommand ( sprintf "set MAXRECVDATASEGMENTLENGTH %d" Constants.NEGOPARAM_MAX_MaxRecvDataSegmentLength ) "" "TD> "
         client.RunCommand ( sprintf "set MAXBURSTLENGTH %d" Constants.NEGOPARAM_MAX_MaxBurstLength ) "" "TD> "
         client.RunCommand ( sprintf "set FIRSTBURSTLENGTH %d" Constants.NEGOPARAM_MAX_FirstBurstLength ) "" "TD> "
+        client.RunCommand "set EnableStatSNAckChecker false" "" "TD> "
         client.RunCommand "create targetgroup" "Created" "TD> "
         for pn in m_TD0_iSCSIPortNo do
             client.RunCommand ( sprintf "create networkportal /a ::1 /p %d" pn ) "Created" "TD> "
@@ -90,6 +90,7 @@ type iSCSI_LoginTest2_Fixture() =
             client.RunCommand ( sprintf "set MAXBURSTLENGTH %d" Constants.NEGOPARAM_MIN_MaxBurstLength ) "" "TD> "
             client.RunCommand ( sprintf "set FIRSTBURSTLENGTH %d" Constants.NEGOPARAM_MIN_FirstBurstLength ) "" "TD> "
             client.RunCommand ( sprintf "set MAXOUTSTANDINGR2T %d" 16 ) "" "TD> "
+            client.RunCommand ( sprintf "set EnableStatSNAckChecker %b" ( i = Constants.MAX_TARGET_DEVICE_COUNT - 2 ) ) "" "TD> "
             client.RunCommand "create targetgroup" "Created" "TD> "
             client.RunCommand ( sprintf "create networkportal /a ::1 /p %d" m_TDx_iSCSIPortNo.[i] ) "Created" "TD> "
             client.RunCommand "select 0" "" "TG> "
@@ -1976,4 +1977,59 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // logout
             do! r1.CloseSession g_CID0 BitI.F
+        }
+
+    [<Fact>]
+    member _.StatSNAckChecker_001() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    TargetName = "iqn.2020-05.example.com:target2-1";
+            }
+            let connParam1 = {
+                m_defaultConnParam with
+                    PortNo = m_TDx_iSCSIPortNo.[ Constants.MAX_TARGET_DEVICE_COUNT - 2 ]; // connect to TargetDevice 15
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 connParam1
+
+            // send NOP-Out
+            let! itt_nop1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 ( ttt_me.fromPrim 0xFFFFFFFFu ) PooledBuffer.Empty
+            let! res_nop1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( res_nop1.InitiatorTaskTag = itt_nop1 ))
+
+            // rewind StatSN
+            ( r1.Connection g_CID0 ).RewindExtStatSN ( statsn_me.fromPrim 1u )
+
+            // send TMF
+            let! itt_tmf, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.F TaskMgrReqCd.CLEAR_TASK_SET g_LUN1 ( itt_me.fromPrim 0xFFFFFFFFu ) ( ValueSome cmdsn_me.zero ) datasn_me.zero
+
+            // receive Ping request from target
+            let! req_nop2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( req_nop2.TargetTransferTag <> ttt_me.fromPrim 0xFFFFFFFu ))
+
+            // Reset StatSN value
+            ( r1.Connection g_CID0 ).SkipExtStatSN ( statsn_me.fromPrim 1u )
+
+            // send ping response
+            let! _ = r1.SendNOPOut_PingResponse g_CID0 req_nop2.LUN req_nop2.TargetTransferTag 
+
+            // receive TMF response
+            let mutable flg = true
+            while flg do
+                let! resp = r1.Receive g_CID0
+                match resp with
+                | :? TaskManagementFunctionResponsePDU as x ->
+                    Assert.True(( x.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
+                    Assert.True(( x.InitiatorTaskTag = itt_tmf ))
+                    flg <- false
+                | :? NOPInPDU as x ->
+                    // send ping response
+                    let! _ = r1.SendNOPOut_PingResponse g_CID0 x.LUN x.TargetTransferTag
+                    ()
+                | _ ->
+                    Assert.Fail __LINE__
+
+            // logout
+            do! r1.CloseSession g_CID0 BitI.F
+
         }

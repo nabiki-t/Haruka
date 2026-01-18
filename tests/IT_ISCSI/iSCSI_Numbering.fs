@@ -44,6 +44,7 @@ type iSCSI_Numbering_Fixture() =
         client.RunCommand ( sprintf "set MAXRECVDATASEGMENTLENGTH %d" 4096 ) "" "TD> "
         client.RunCommand ( sprintf "set MAXBURSTLENGTH %d" 16384 ) "" "TD> "
         client.RunCommand ( sprintf "set FIRSTBURSTLENGTH %d" 16384 ) "" "TD> "
+        client.RunCommand "set EnableStatSNAckChecker false" "" "TD> "
         client.RunCommand "create targetgroup" "Created" "TD> "
         client.RunCommand ( sprintf "create networkportal /a ::1 /p %d" m_iSCSIPortNo ) "Created" "TD> "
         client.RunCommand "select 0" "" "TG> "
