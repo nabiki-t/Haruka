@@ -692,7 +692,7 @@ type GenScsiCDB() =
     /// </returns>
     static member RequestSense ( argDESC : DESC ) ( argAllocationLength : byte ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
         [|
-            0xA0uy;                                                                             // OPERATION CODE
+            0x03uy;                                                                             // OPERATION CODE
             Functions.SetBitflag ( DESC.toBool argDESC ) 0x01uy;                                // DESC
             0x00uy; 0x00uy;                                                                     // Reserved
             argAllocationLength;                                                                // ALLOCATION LENGTH
