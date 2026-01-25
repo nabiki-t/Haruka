@@ -34,7 +34,8 @@ open Haruka.Test
 [<CollectionDefinition( "SCSI_ACACases" )>]
 type SCSI_ACACases_Fixture() =
 
-    let m_iSCSIPortNo = GlbFunc.nextTcpPortNo()
+    let m_iSCSIPortNo1 = GlbFunc.nextTcpPortNo()
+    let m_iSCSIPortNo2 = GlbFunc.nextTcpPortNo()
     let m_MediaSize = 65536u
 
     // Add default configurations
@@ -43,15 +44,15 @@ type SCSI_ACACases_Fixture() =
         ///////////////////////////////
         // Target Device 0
 
-        // Target device, Target group
+        // Target device1, Target group1
         client.RunCommand "create" "Created" "CR> "
         client.RunCommand "select 0" "" "TD> "
         client.RunCommand "set loglevel VERBOSE" "" "TD> "
         client.RunCommand "create targetgroup" "Created" "TD> "
-        client.RunCommand ( sprintf "create networkportal /a ::1 /p %d" m_iSCSIPortNo ) "Created" "TD> "
+        client.RunCommand ( sprintf "create networkportal /a ::1 /p %d" m_iSCSIPortNo1 ) "Created" "TD> "
         client.RunCommand "select 0" "" "TG> "
 
-        // Target, LU1
+        // Target1, LU1, LU2
         client.RunCommand "create /n iqn.2020-05.example.com:target1" "Created" "TG> "
         client.RunCommand "select 0" "" "T > "
         client.RunCommand "create /l 1" "Created" "T > "
@@ -65,12 +66,57 @@ type SCSI_ACACases_Fixture() =
         client.RunCommand "select 1" "" "LU> "
         client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
         client.RunCommand "unselect" "" "T > "
+        client.RunCommand "unselect" "" "TG> "
+        client.RunCommand "unselect" "" "TD> "
+
+        // Target3, LU3
+        client.RunCommand "create targetgroup" "Created" "TD> "
+        client.RunCommand "select 2" "" "TG> "
+        client.RunCommand "create /n iqn.2020-05.example.com:target3" "Created" "TG> "
+        client.RunCommand "select 0" "" "T > "
+        client.RunCommand "create /l 3" "Created" "T > "
+        client.RunCommand "select 0" "" "LU> "
+        client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
+        client.RunCommand "unselect" "" "T > "
+        client.RunCommand "unselect" "" "TG> "
+        client.RunCommand "unselect" "" "TD> "
+        client.RunCommand "unselect" "" "CR> "
+
+        // Target device2, Target group1
+        client.RunCommand "create" "Created" "CR> "
+        client.RunCommand "select 1" "" "TD> "
+        client.RunCommand "set loglevel VERBOSE" "" "TD> "
+        client.RunCommand "create targetgroup" "Created" "TD> "
+        client.RunCommand ( sprintf "create networkportal /a ::1 /p %d" m_iSCSIPortNo2 ) "Created" "TD> "
+        client.RunCommand "select 0" "" "TG> "
+
+        // Target4, LU4
+        client.RunCommand "create /n iqn.2020-05.example.com:target4" "Created" "TG> "
+        client.RunCommand "select 0" "" "T > "
+        client.RunCommand "create /l 4" "Created" "T > "
+        client.RunCommand "select 0" "" "LU> "
+        client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
+        client.RunCommand "unselect" "" "T > "
+        client.RunCommand "unselect" "" "TG> "
+        client.RunCommand "unselect" "" "TD> "
+        client.RunCommand "unselect" "" "CR> "
+
+        // publish and start TD
+        client.RunCommand "validate" "All configurations are vlidated" "CR> "
+        client.RunCommand "publish" "All configurations are uploaded to the controller" "CR> "
+        client.RunCommand "select 0" "" "TD> "
+        client.RunCommand "start" "Started" "TD> "
+        client.RunCommand "unselect" "" "CR> "
+        client.RunCommand "select 1" "" "TD> "
+        client.RunCommand "start" "Started" "TD> "
+        client.RunCommand "unselect" "" "CR> "
+
+        // select Debug media at Target device1, Target1, LU1
+        client.RunCommand "select 0" "" "TD> "
+        client.RunCommand "select 0" "" "TG> "
+        client.RunCommand "select 0" "" "T > "
         client.RunCommand "select 0" "" "LU> "
         client.RunCommand "select 0" "" "MD> "
-
-        client.RunCommand "validate" "All configurations are vlidated" "MD> "
-        client.RunCommand "publish" "All configurations are uploaded to the controller" "MD> "
-        client.RunCommand "start" "Started" "MD> "
 
     // Start controller and client
     let m_Controller, m_Client =
@@ -90,7 +136,8 @@ type SCSI_ACACases_Fixture() =
 
     member _.controllerProc = m_Controller
     member _.clientProc = m_Client
-    member _.iSCSIPortNo = m_iSCSIPortNo
+    member _.iSCSIPortNo1 = m_iSCSIPortNo1
+    member _.iSCSIPortNo2 = m_iSCSIPortNo2
     member _.MediaSize = m_MediaSize
     member _.MediaBlockSize = 
         if Constants.MEDIA_BLOCK_SIZE = 512UL then     // 4096 or 512 bytes
@@ -108,7 +155,10 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
     let g_LUN0 = lun_me.fromPrim 0UL
     let g_LUN1 = lun_me.fromPrim 1UL
     let g_LUN2 = lun_me.fromPrim 2UL
-    let iSCSIPortNo = fx.iSCSIPortNo
+    let g_LUN3 = lun_me.fromPrim 3UL
+    let g_LUN4 = lun_me.fromPrim 4UL
+    let iSCSIPortNo1 = fx.iSCSIPortNo1
+    let iSCSIPortNo2 = fx.iSCSIPortNo2
     let m_MediaSize = fx.MediaSize
     let m_MediaBlockSize = fx.MediaBlockSize
     let m_ClientProc = fx.clientProc
@@ -136,7 +186,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
 
     // default connection parameters
     let m_defaultConnParam = {
-        PortNo = iSCSIPortNo;
+        PortNo = iSCSIPortNo1;
         CID = g_CID0;
         Initiator_UserName = "";
         Initiator_Password = "";
@@ -163,6 +213,38 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                 Some( method, tsih, itt )
         )
 
+    let raiseACA ( s : SCSI_Initiator ) ( lun : LUN_T ) =
+        task {
+            let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
+            let! itt = s.Send_Write10 TaskATTRCd.SIMPLE_TASK lun ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.T
+            let! res = s.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            writeData1.Return()
+        }
+
+    let checkACA ( s : SCSI_Initiator ) ( lun : LUN_T ) =
+        task {
+            let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
+            let! itt = s.Send_Write10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
+            let! res = s.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+            writeData1.Return()
+        }
+
+    let checkACACleared ( s : SCSI_Initiator ) ( lun : LUN_T ) =
+        task {
+            let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
+            let! itt = s.Send_Write10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
+            let! _ = s.WaitSCSIResponseGoogStatus itt
+            writeData1.Return()
+        }
+
+    let clearACA ( s : SCSI_Initiator ) ( lun : LUN_T ) =
+        task {
+            let! itt = s.SendTMFRequest_ClearACA BitI.F lun
+            let! res = s.WaitTMFResponse itt
+            Assert.True(( res = TaskMgrResCd.FUNCTION_COMPLETE ))
+        }
 
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
@@ -353,9 +435,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             Assert.True(( ( GetStuckTasks() ).Length = 0 ))
 
             // Clear ACA. This resumes Read requests 1 and 2, which were in a paused state.
-            let! itt2 = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
-            let! result2 = r1.WaitTMFResponse itt2
-            Assert.True(( result2 = TaskMgrResCd.FUNCTION_COMPLETE ))
+            do! clearACA r1 g_LUN1
 
             do! r1.Send_StatusACK()
 
@@ -451,14 +531,10 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                 Assert.True(( res_w2_aca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
             
                 // Check that ACA is established
-                let! itt_w3 = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
-                let! res_w3 = r1.WaitSCSIResponse itt_w3
-                Assert.True(( res_w3.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+                do! checkACA r1 g_LUN1
 
                 // clear ACA
-                let! itt_tmf1 = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
-                let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
-                Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+                do! clearACA r1 g_LUN1
             else
                 // send task with NACA=0
                 let! itt_w4_ca = r1.Send_Write10 taskCode g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.F
@@ -512,14 +588,10 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                 Assert.True(( res_w2_aca.Sense.Value.ASC = ASCCd.INVALID_MESSAGE_ERROR ))
             
                 // Check that ACA is established
-                let! itt_w3 = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
-                let! res_w3 = r1.WaitSCSIResponse itt_w3
-                Assert.True(( res_w3.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+                do! checkACA r1 g_LUN1
 
                 // clear ACA
-                let! itt_tmf1 = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
-                let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
-                Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+                do! clearACA r1 g_LUN1
             else
                 // send ACA task with NACA=0
                 let! itt_w4_ca = r1.Send_Write10 TaskATTRCd.ACA_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.F
@@ -565,9 +637,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
 
             // raise ACA
-            let! itt_w1_aca = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.T
-            let! res_w1_aca = r1.WaitSCSIResponse itt_w1_aca
-            Assert.True(( res_w1_aca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            do! raiseACA r1 g_LUN1
 
             // send task
             let naca = NACA.ofBool argNaca
@@ -576,9 +646,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             Assert.True(( res_w2.Status = ScsiCmdStatCd.ACA_ACTIVE ))
 
             // clear ACA
-            let! itt_tmf1 = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
-            let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
-            Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+            do! clearACA r1 g_LUN1
             
             // Get reservarion key. Make sure the reservation remains intact.
             let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
@@ -614,9 +682,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
 
             // raise ACA
-            let! itt_w1_aca = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.T
-            let! res_w1_aca = r1.WaitSCSIResponse itt_w1_aca
-            Assert.True(( res_w1_aca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            do! raiseACA r1 g_LUN1
 
             // Add debug media trap
             m_ClientProc.RunCommand "add trap /e Write /a Wait" "Trap added" "MD> "
@@ -641,9 +707,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let! _ = r1.WaitSCSIResponseGoogStatus itt_w2_stuck
 
             // clear ACA
-            let! itt_tmf1 = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
-            let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
-            Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+            do! clearACA r1 g_LUN1
             
             // Get reservarion key. Make sure the reservation remains intact.
             let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
@@ -682,9 +746,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
 
             // raise ACA
-            let! itt_w1_aca = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.T
-            let! res_w1_aca = r1.WaitSCSIResponse itt_w1_aca
-            Assert.True(( res_w1_aca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            do! raiseACA r1 g_LUN1
 
             // send ACA task
             let naca = NACA.ofBool argNaca
@@ -692,9 +754,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let! _ = r1.WaitSCSIResponseGoogStatus itt_w3_aca
 
             // clear ACA
-            let! itt_tmf1 = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
-            let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
-            Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+            do! clearACA r1 g_LUN1
             
             // Get reservarion key. Make sure the reservation remains intact.
             let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
@@ -779,9 +839,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                 Assert.True(( res_t4.Status = ScsiCmdStatCd.ACA_ACTIVE ))
 
                 // clear ACA, and T2 Simple task will be resumed.
-                let! itt_tmf = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
-                let! res_tmf = r1.WaitTMFResponse itt_tmf
-                Assert.True(( res_tmf = TaskMgrResCd.FUNCTION_COMPLETE ))
+                do! clearACA r1 g_LUN1
 
             // Receive the results of T2 Simple task
             let! res_t2 = r1.WaitSCSIResponseGoogStatus itt_t2
@@ -827,9 +885,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
 
             // establish ACA
-            let! itt_t1 = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.T
-            let! res_t1 = r1.WaitSCSIResponse itt_t1
-            Assert.True(( res_t1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            do! raiseACA r1 g_LUN1
 
             // send task
             let naca = NACA.ofBool argNaca
@@ -842,13 +898,8 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                 Assert.True(( res_t2.Status = ScsiCmdStatCd.BUSY ))
 
             // clear ACA
-            let! itt_tmf1 = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
-            let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
-            Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
-
-            let! itt_tmf2 = r2.SendTMFRequest_ClearACA BitI.F g_LUN1
-            let! res_tmf2 = r2.WaitTMFResponse itt_tmf2
-            Assert.True(( res_tmf2 = TaskMgrResCd.FUNCTION_COMPLETE ))
+            do! clearACA r1 g_LUN1
+            do! clearACA r2 g_LUN1
 
             // Get reservarion key. Make sure the reservation remains intact.
             let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
@@ -868,37 +919,24 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
     [<Fact>]
     member _.ClearACA_LUReset_001 () =
         task {
-            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-            let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam   // Target Device1, Target1, LU1, LU2
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam   // Target Device1, Target1, LU1, LU2
+            let! r3 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target3" } m_defaultConnParam   // Target Device1, Target3, LU3
+            let! r4 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target4" } { m_defaultConnParam with PortNo = iSCSIPortNo2 }   // Target Device2, Target4, LU4
 
-            // establish ACA at LU1
-            let! itt_s1_t1 = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.T
-            let! res_s1_t1 = r1.WaitSCSIResponse itt_s1_t1
-            Assert.True(( res_s1_t1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            // establish ACA at LU1, LU2, LU3, LU4
+            do! raiseACA r1 g_LUN1
+            do! raiseACA r2 g_LUN2
+            do! raiseACA r3 g_LUN3
+            do! raiseACA r4 g_LUN4
 
-            // establish ACA at LU2
-            let! itt_s2_t1 = r2.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN2 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.T
-            let! res_s2_t1 = r2.WaitSCSIResponse itt_s2_t1
-            Assert.True(( res_s2_t1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-
-            // check the ACA is established at LU1
-            let! itt_s1_t2 = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
-            let! res_s1_t2 = r1.WaitSCSIResponse itt_s1_t2
-            Assert.True(( res_s1_t2.Status = ScsiCmdStatCd.ACA_ACTIVE ))
-
-            let! itt_s2_t2 = r2.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
-            let! res_s2_t2 = r2.WaitSCSIResponse itt_s2_t2
-            Assert.True(( res_s2_t2.Status = ScsiCmdStatCd.ACA_ACTIVE ))
-
-            // check the ACA is established at LU2
-            let! itt_s1_t3 = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN2 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
-            let! res_s1_t3 = r1.WaitSCSIResponse itt_s1_t3
-            Assert.True(( res_s1_t3.Status = ScsiCmdStatCd.ACA_ACTIVE ))
-
-            let! itt_s2_t3 = r2.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN2 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
-            let! res_s2_t3 = r2.WaitSCSIResponse itt_s2_t3
-            Assert.True(( res_s2_t3.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+            // check the ACA is established at LU1, LU2, LU3, LU4
+            do! checkACA r1 g_LUN1
+            do! checkACA r2 g_LUN1
+            do! checkACA r1 g_LUN2
+            do! checkACA r2 g_LUN2
+            do! checkACA r3 g_LUN3
+            do! checkACA r4 g_LUN4
 
             // LU Reset at LU1
             let! itt_tmf1 = r1.SendTMFRequest_LogicalUnitReset BitI.F g_LUN1
@@ -906,43 +944,86 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
 
             // check the ACA is cleared at LU1
-            let! itt_s1_t4 = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
-            let! _ = r1.WaitSCSIResponseGoogStatus itt_s1_t4
+            do! checkACACleared r1 g_LUN1
+            do! checkACACleared r2 g_LUN1
 
-            let! itt_s2_t4 = r2.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
-            let! _ = r2.WaitSCSIResponseGoogStatus itt_s2_t4
-
-            // check the ACA is established at LU2
-            let! itt_s1_t5 = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN2 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
-            let! res_s1_t5 = r1.WaitSCSIResponse itt_s1_t5
-            Assert.True(( res_s1_t5.Status = ScsiCmdStatCd.ACA_ACTIVE ))
-
-            let! itt_s2_t5 = r2.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN2 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
-            let! res_s2_t5 = r2.WaitSCSIResponse itt_s2_t5
-            Assert.True(( res_s2_t5.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+            // check the ACA is established at LU2, LU3, LU4
+            do! checkACA r1 g_LUN2
+            do! checkACA r2 g_LUN2
+            do! checkACA r3 g_LUN3
+            do! checkACA r4 g_LUN4
 
             // LU Reset at LU2
             let! itt_tmf2 = r2.SendTMFRequest_LogicalUnitReset BitI.F g_LUN2
             let! res_tmf2 = r2.WaitTMFResponse itt_tmf2
             Assert.True(( res_tmf2 = TaskMgrResCd.FUNCTION_COMPLETE ))
 
-            // check the ACA is cleared at LU1
-            let! itt_s1_t6 = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
-            let! _ = r1.WaitSCSIResponseGoogStatus itt_s1_t6
+            // check the ACA is cleared at LU1, LU2
+            do! checkACACleared r1 g_LUN1
+            do! checkACACleared r2 g_LUN1
+            do! checkACACleared r1 g_LUN2
+            do! checkACACleared r2 g_LUN2
 
-            let! itt_s2_t6 = r2.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
-            let! _ = r2.WaitSCSIResponseGoogStatus itt_s2_t6
+            // check the ACA is established at LU3, LU4
+            do! checkACA r3 g_LUN3
+            do! checkACA r4 g_LUN4
 
-            // check the ACA is cleared at LU2
-            let! itt_s1_t7 = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN2 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
-            let! _ = r1.WaitSCSIResponseGoogStatus itt_s1_t7
-
-            let! itt_s2_t7 = r2.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN2 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
-            let! _ = r2.WaitSCSIResponseGoogStatus itt_s2_t7
-
-
-            writeData1.Return()
+            do! clearACA r3 g_LUN3
+            do! clearACA r4 g_LUN4
             do! r1.Close()
             do! r2.Close()
+            do! r3.Close()
+            do! r4.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( true )>]
+    [<InlineData( false )>]
+    member _.ClearACA_TargetReset_001 ( tc : bool ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam   // Target Device1, Target1, LU1, LU2
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam   // Target Device1, Target1, LU1, LU2
+            let! r3 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target3" } m_defaultConnParam   // Target Device1, Target3, LU3
+            let! r4 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target4" } { m_defaultConnParam with PortNo = iSCSIPortNo2 }   // Target Device2, Target4, LU4
+
+            // establish ACA at LU1, LU2, LU3, LU4
+            do! raiseACA r1 g_LUN1
+            do! raiseACA r2 g_LUN2
+            do! raiseACA r3 g_LUN3
+            do! raiseACA r4 g_LUN4
+
+            // check the ACA is established at LU1, LU2, LU3, LU4
+            do! checkACA r1 g_LUN1
+            do! checkACA r2 g_LUN1
+            do! checkACA r1 g_LUN2
+            do! checkACA r2 g_LUN2
+            do! checkACA r3 g_LUN3
+            do! checkACA r4 g_LUN4
+
+            // Targtet reset
+            let! itt_tmf1 = 
+                if tc then
+                    r1.SendTMFRequest_TargetWarmReset BitI.F g_LUN1
+                else
+                    r1.SendTMFRequest_TargetColdReset BitI.F g_LUN1
+            let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
+            Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            // check the ACA is cleared at LU1, LU2
+            do! checkACACleared r1 g_LUN1
+            do! checkACACleared r2 g_LUN1
+            do! checkACACleared r1 g_LUN2
+            do! checkACACleared r2 g_LUN2
+
+            // check the ACA is established at LU3, LU4
+            do! checkACA r3 g_LUN3
+            do! checkACA r4 g_LUN4
+
+            do! clearACA r3 g_LUN3
+            do! clearACA r4 g_LUN4
+            do! r1.Close()
+            do! r2.Close()
+            do! r3.Close()
+            do! r4.Close()
         }
 

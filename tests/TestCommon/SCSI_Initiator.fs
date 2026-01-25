@@ -359,11 +359,14 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// <param name="argI">
     ///  TaskManagementFunctionRequestPDU I field value.
     /// </param>
+    /// <param name="lun">
+    ///  TaskManagementFunctionRequestPDU LUN field value.
+    /// </param>
     /// <returns>
     ///  Initiator task tag.
     /// </returns>
-    member this.SendTMFRequest_TargetWarmReset ( argI : BitI ) : Task<ITT_T> =
-        this.SendTaskManagementFunctionRequest argI TaskMgrReqCd.TARGET_WARM_RESET lun_me.zero ( itt_me.fromPrim 0xFFFFFFFFu ) ( ValueSome cmdsn_me.zero ) datasn_me.zero
+    member this.SendTMFRequest_TargetWarmReset ( argI : BitI ) ( lun : LUN_T ) : Task<ITT_T> =
+        this.SendTaskManagementFunctionRequest argI TaskMgrReqCd.TARGET_WARM_RESET lun ( itt_me.fromPrim 0xFFFFFFFFu ) ( ValueSome cmdsn_me.zero ) datasn_me.zero
 
     /// <summary>
     ///  Send an TARGET COLD RESET TMF request.
@@ -371,11 +374,14 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// <param name="argI">
     ///  TaskManagementFunctionRequestPDU I field value.
     /// </param>
+    /// <param name="lun">
+    ///  TaskManagementFunctionRequestPDU LUN field value.
+    /// </param>
     /// <returns>
     ///  Initiator task tag.
     /// </returns>
-    member this.SendTMFRequest_TargetColdReset ( argI : BitI ) : Task<ITT_T> =
-        this.SendTaskManagementFunctionRequest argI TaskMgrReqCd.TARGET_COLD_RESET lun_me.zero ( itt_me.fromPrim 0xFFFFFFFFu ) ( ValueSome cmdsn_me.zero ) datasn_me.zero
+    member this.SendTMFRequest_TargetColdReset ( argI : BitI ) ( lun : LUN_T ) : Task<ITT_T> =
+        this.SendTaskManagementFunctionRequest argI TaskMgrReqCd.TARGET_COLD_RESET lun ( itt_me.fromPrim 0xFFFFFFFFu ) ( ValueSome cmdsn_me.zero ) datasn_me.zero
 
     /// <summary>
     ///  Send INQUIRY SCSI Command.
