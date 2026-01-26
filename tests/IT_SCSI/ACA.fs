@@ -1027,3 +1027,77 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             do! r4.Close()
         }
 
+    [<Theory>]
+    [<InlineData( true )>]
+    [<InlineData( false )>]
+    member _.ClearACA_TargetReset_LU0_001 ( tc : bool ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam   // Target Device1, Target1, LU1, LU2
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam   // Target Device1, Target1, LU1, LU2
+            let! r3 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target3" } m_defaultConnParam   // Target Device1, Target3, LU3
+            let! r4 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target4" } { m_defaultConnParam with PortNo = iSCSIPortNo2 }   // Target Device2, Target4, LU4
+
+            // establish ACA at LU1, LU2, LU3, LU4
+            do! raiseACA r1 g_LUN1
+            do! raiseACA r2 g_LUN2
+            do! raiseACA r3 g_LUN3
+            do! raiseACA r4 g_LUN4
+
+            // check the ACA is established at LU1, LU2, LU3, LU4
+            do! checkACA r1 g_LUN1
+            do! checkACA r2 g_LUN1
+            do! checkACA r1 g_LUN2
+            do! checkACA r2 g_LUN2
+            do! checkACA r3 g_LUN3
+            do! checkACA r4 g_LUN4
+
+            // Targtet reset
+            let! itt_tmf1 = 
+                if tc then
+                    r1.SendTMFRequest_TargetWarmReset BitI.F g_LUN0
+                else
+                    r1.SendTMFRequest_TargetColdReset BitI.F g_LUN0
+
+            // Check that the session connecting to Target Device 1 has been disconnected. 
+            let checkfunc ( s : SCSI_Initiator ) : Task =
+                task {
+                    try
+                        while true do
+                            let! itt = s.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+                            let! _ = s.WaitSCSIResponse itt
+                            ()
+                    with
+                    | :? SessionRecoveryException
+                    | :? ConnectionErrorException ->
+                        ()
+                }
+            do! checkfunc r1
+            do! checkfunc r2
+            do! checkfunc r3
+
+            // check the ACA is established at LU3, LU4
+            do! checkACA r4 g_LUN4
+
+            // wait for restart target device 1
+            let n = GlbFunc.ConnectToServer iSCSIPortNo1
+            n.Close()
+
+            // Reconnect sessions
+            let! r1_2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam   // Target Device1, Target1, LU1, LU2
+            let! r2_2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam   // Target Device1, Target1, LU1, LU2
+            let! r3_2 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target3" } m_defaultConnParam   // Target Device1, Target3, LU3
+
+            // check the ACA is cleared at LU1, LU2, LU3
+            do! checkACACleared r1_2 g_LUN1
+            do! checkACACleared r2_2 g_LUN1
+            do! checkACACleared r1_2 g_LUN2
+            do! checkACACleared r2_2 g_LUN2
+            do! checkACACleared r3_2 g_LUN3
+
+            do! clearACA r4 g_LUN4
+            do! r1_2.Close()
+            do! r2_2.Close()
+            do! r3_2.Close()
+            do! r4.Close()
+        }
+
