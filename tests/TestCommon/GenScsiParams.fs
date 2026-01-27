@@ -1612,14 +1612,16 @@ type GenScsiParams() =
     static member ReportLUNs ( pv : PooledBuffer ) : struct( uint32 * LUN_T[] ) =
         if pv.Length < 4 then
             struct( 0u, [||] )
+        elif pv.Length < 8 then
+            let luncount = Functions.NetworkBytesToUInt32_InPooledBuffer pv 0
+            struct( luncount, [||] )
         else
             let luncount = Functions.NetworkBytesToUInt32_InPooledBuffer pv 0
-            let cnt = ( pv.Length - 4 ) / 8
+            let cnt = ( pv.Length - 8 ) / 8
             let rv = Array.zeroCreate<LUN_T> cnt
             for i = 0 to cnt - 1 do
                 rv.[i] <-
-                    Functions.NetworkBytesToUInt64_InPooledBuffer pv ( i * 8 + 4 )
-                    |> lun_me.fromPrim
+                    lun_me.fromBytes pv.Array ( i * 8 + 8 )
             struct( luncount, rv )
 
     /// <summary>

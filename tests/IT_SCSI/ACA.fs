@@ -41,9 +41,6 @@ type SCSI_ACACases_Fixture() =
     // Add default configurations
     let AddDefaultConf( client : ClientProc ): unit =
 
-        ///////////////////////////////
-        // Target Device 0
-
         // Target device1, Target group1
         client.RunCommand "create" "Created" "CR> "
         client.RunCommand "select 0" "" "TD> "
