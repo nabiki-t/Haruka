@@ -36,6 +36,8 @@ type SCSI_Configuration_Fixture() =
 
     let m_iSCSIPortNo1 = GlbFunc.nextTcpPortNo()
     let m_iSCSIPortNo2 = GlbFunc.nextTcpPortNo()
+    let m_iSCSIPortNo3 = GlbFunc.nextTcpPortNo()
+    let m_iSCSIPortNo4 = GlbFunc.nextTcpPortNo()
     let m_MediaSize = 65536u
 
     // Add default configurations
@@ -70,10 +72,43 @@ type SCSI_Configuration_Fixture() =
             client.RunCommand "unselect" "" "T > "
         client.RunCommand "unselect" "" "TG> "
         client.RunCommand "unselect" "" "TD> "
+        client.RunCommand "unselect" "" "CR> "
+
+        // Target device 2, Target group 1
+        client.RunCommand "create" "Created" "CR> "
+        client.RunCommand "select 1" "" "TD> "
+        client.RunCommand "set loglevel VERBOSE" "" "TD> "
+        client.RunCommand "create targetgroup" "Created" "TD> "
+        client.RunCommand ( sprintf "create networkportal /a ::1 /p %d" m_iSCSIPortNo3 ) "Created" "TD> "
+        client.RunCommand ( sprintf "create networkportal /a ::1 /p %d" m_iSCSIPortNo4 ) "Created" "TD> "
+        client.RunCommand "select 0" "" "TG> "
+
+        // Target1, LU1 to LU16
+        client.RunCommand "create /n iqn.2020-05.example.com:target1" "Created" "TG> "
+        client.RunCommand "select 0" "" "T > "
+        for i = 1 to 16 do
+            client.RunCommand ( sprintf "create /l %d" i ) "Created" "T > "
+            client.RunCommand ( sprintf "select %d" ( i - 1 ) ) "" "LU> "
+            client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
+            client.RunCommand "unselect" "" "T > "
+        client.RunCommand "unselect" "" "TG> "
+
+        // Target2, LU1 to LU16
+        client.RunCommand "create /n iqn.2020-05.example.com:target2" "Created" "TG> "
+        client.RunCommand "select 1" "" "T > "
+        for i = 1 to 16 do
+            client.RunCommand ( sprintf "attach /l %d" i ) "Attach LU" "T > "
+        client.RunCommand "unselect" "" "TG> "
+        client.RunCommand "unselect" "" "TD> "
+        client.RunCommand "unselect" "" "CR> "
 
         // publish and start TD
-        client.RunCommand "validate" "All configurations are vlidated" "TD> "
-        client.RunCommand "publish" "All configurations are uploaded to the controller" "TD> "
+        client.RunCommand "validate" "All configurations are vlidated" "CR> "
+        client.RunCommand "publish" "All configurations are uploaded to the controller" "CR> "
+        client.RunCommand "select 0" "" "TD> "
+        client.RunCommand "start" "Started" "TD> "
+        client.RunCommand "unselect" "" "CR> "
+        client.RunCommand "select 1" "" "TD> "
         client.RunCommand "start" "Started" "TD> "
 
     // Start controller and client
@@ -96,6 +131,8 @@ type SCSI_Configuration_Fixture() =
     member _.clientProc = m_Client
     member _.iSCSIPortNo1 = m_iSCSIPortNo1
     member _.iSCSIPortNo2 = m_iSCSIPortNo2
+    member _.iSCSIPortNo3 = m_iSCSIPortNo3
+    member _.iSCSIPortNo4 = m_iSCSIPortNo4
     member _.MediaSize = m_MediaSize
     member _.MediaBlockSize = 
         if Constants.MEDIA_BLOCK_SIZE = 512UL then     // 4096 or 512 bytes
@@ -115,6 +152,8 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
     let g_LUN17 = lun_me.fromPrim 17UL
     let iSCSIPortNo1 = fx.iSCSIPortNo1
     let iSCSIPortNo2 = fx.iSCSIPortNo2
+    let iSCSIPortNo3 = fx.iSCSIPortNo3
+    let iSCSIPortNo4 = fx.iSCSIPortNo4
     let m_MediaSize = fx.MediaSize
     let m_MediaBlockSize = fx.MediaBlockSize
     let m_ClientProc = fx.clientProc
@@ -171,12 +210,18 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
     // Test cases
 
     [<Theory>]
-    [<InlineData( "iqn.2020-05.example.com:target1", 0UL )>]    // Target 1
-    [<InlineData( "iqn.2020-05.example.com:target2", 16UL )>]   // Target 2
-    member _.ReportLUNs_001 ( target : string ) ( lub : uint64 ) =
+    [<InlineData( "iqn.2020-05.example.com:target1", 0UL, 0, 1 )>]    // Target Device 1, Target 1
+    [<InlineData( "iqn.2020-05.example.com:target2", 16UL, 0, 1 )>]   // Target Device 1, Target 2
+    [<InlineData( "iqn.2020-05.example.com:target1", 0UL, 2, 3 )>]    // Target Device 2, Target 1
+    [<InlineData( "iqn.2020-05.example.com:target2", 0UL, 2, 3 )>]    // Target Device 2, Target 2
+    member _.ReportLUNs_001 ( target : string ) ( lub : uint64 ) ( port1 : int ) ( port2 : int ) =
         task {
-            let! r1_1 = SCSI_Initiator.Create { m_defaultSessParam1 with TargetName = target } m_defaultConnParam1   // network portal 1
-            let! r1_2 = SCSI_Initiator.Create { m_defaultSessParam1 with TargetName = target } m_defaultConnParam2   // network portal 2
+            let nport = [| iSCSIPortNo1; iSCSIPortNo2; iSCSIPortNo3; iSCSIPortNo4 |]
+            let sessconf = { m_defaultSessParam1 with TargetName = target }
+            let conconf1 = { m_defaultConnParam1 with PortNo = nport.[ port1 ] }
+            let conconf2 = { m_defaultConnParam1 with PortNo = nport.[ port2 ] }
+            let! r1_1 = SCSI_Initiator.Create sessconf conconf1   // network portal 2
+            let! r1_2 = SCSI_Initiator.Create sessconf conconf2   // network portal 2
 
             let expLUNs1 = [|
                 yield lun_me.fromPrim 0UL;
@@ -225,4 +270,49 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
 
             do! r1_1.Close()
             do! r1_2.Close()
+        }
+
+    // Verify that the same LU can be accessed through different network portals and targets.
+    [<Theory>]
+    [<InlineData( "iqn.2020-05.example.com:target1", "iqn.2020-05.example.com:target1", 0, 1, 1UL, 16UL )>]
+    [<InlineData( "iqn.2020-05.example.com:target2", "iqn.2020-05.example.com:target2", 0, 1, 17UL, 32UL )>]
+    [<InlineData( "iqn.2020-05.example.com:target1", "iqn.2020-05.example.com:target2", 2, 3, 1UL, 16UL )>]
+    member _.LUAccess_001 ( target1 : string ) ( target2 : string ) ( port1 : int ) ( port2 : int ) ( vlun1 : uint64 ) ( vlun2 : uint64 ) =
+        task {
+            let nport = [| iSCSIPortNo1; iSCSIPortNo2; iSCSIPortNo3; iSCSIPortNo4 |]
+            let sessconf1 = { m_defaultSessParam1 with TargetName = target1 }
+            let sessconf2 = { m_defaultSessParam1 with TargetName = target2 }
+            let conconf1 = { m_defaultConnParam1 with PortNo = nport.[ port1 ] }
+            let conconf2 = { m_defaultConnParam1 with PortNo = nport.[ port2 ] }
+            let! r1 = SCSI_Initiator.Create sessconf1 conconf1
+            let! r2 = SCSI_Initiator.Create sessconf2 conconf2
+            let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
+
+            for itr = vlun1 to vlun2 do
+                let lun = lun_me.fromPrim itr
+                Random.Shared.NextBytes( writeData1.ArraySegment.AsSpan() )
+
+                // write
+                let! itt_w1 = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
+                let! _ = r1.WaitSCSIResponseGoogStatus itt_w1
+
+                // read
+                let! itt_r1 = r2.Send_Read10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+                let! res_r1 = r2.WaitSCSIResponseGoogStatus itt_r1
+                Assert.True(( PooledBuffer.ValueEquals writeData1 res_r1 ))
+
+                Random.Shared.NextBytes( writeData1.ArraySegment.AsSpan() )
+
+                // write
+                let! itt_w2 = r2.Send_Write10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
+                let! _ = r2.WaitSCSIResponseGoogStatus itt_w2
+
+                // read
+                let! itt_r2 = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+                let! res_r2 = r1.WaitSCSIResponseGoogStatus itt_r2
+                Assert.True(( PooledBuffer.ValueEquals writeData1 res_r2 ))
+
+            writeData1.Return()
+            do! r1.Close()
+            do! r2.Close()
         }
