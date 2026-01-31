@@ -236,7 +236,15 @@ type ScsiTaskForDummyDevice
 
             | ReportSupportedOperationCodes             // SPC-3 6.23 REPORT SUPPORTED OPERATION CODES command
                 ->
-                    ( m_ScsiTask :> IBlockDeviceTask ).Execute()
+                    fun () -> task {
+                        try
+                            this.Execute_ReportSupportedOperationCodes()
+                            m_LU.NotifyTerminateTask this
+                        with
+                        | _ as x ->
+                            m_LU.NotifyTerminateTaskWithException this x
+                    }
+
             | ReportSupportedTaskManagementFunctions    // SPC-3 6.24 REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS command
                 ->
                     ( m_ScsiTask :> IBlockDeviceTask ).Execute()
@@ -464,4 +472,135 @@ type ScsiTaskForDummyDevice
                 PooledBuffer.Empty
                 ( PooledBuffer.Rent inData )
                 ( uint32 cdb.AllocationLength )
+                ResponseFenceNeedsFlag.R_Mode
+
+    /// <summary>
+    ///  Execute REPORT SUPPORTED OPERATION CODES SCSI command.
+    /// </summary>
+    /// <remarks>
+    ///  m_CDB muast be ReportSupportedOperationCodesCDB.
+    /// </remarks>
+    member private this.Execute_ReportSupportedOperationCodes() : unit =
+        assert( m_CDB.Type = ReportSupportedOperationCodes )
+        assert( match m_CDB with | :? ReportSupportedOperationCodesCDB -> true | _ -> false )
+        let cdb = m_CDB :?> ReportSupportedOperationCodesCDB
+
+        let result =
+            match cdb.ReportingOptions with
+            | 0x00uy -> SupportedOperationCodeConst.SupportedOperationCommandsDummyDevice
+            | 0x01uy ->
+                match cdb.RequestedOperationCode with
+                | 0x12uy -> SupportedOperationCodeConst.CdbUsageData_INQUIRY
+                | 0x15uy -> SupportedOperationCodeConst.CdbUsageData_MODE_SELECT_6
+                | 0x55uy -> SupportedOperationCodeConst.CdbUsageData_MODE_SELECT_10
+                | 0x1Auy -> SupportedOperationCodeConst.CdbUsageData_MODE_SENSE_6
+                | 0x5Auy -> SupportedOperationCodeConst.CdbUsageData_MODE_SENSE_10
+                | 0xA0uy -> SupportedOperationCodeConst.CdbUsageData_REPORT_LUNS
+                | 0x03uy -> SupportedOperationCodeConst.CdbUsageData_REQUEST_SENSE
+                | 0x00uy -> SupportedOperationCodeConst.CdbUsageData_TEST_UNIT_READY
+                | 0x25uy -> SupportedOperationCodeConst.CdbUsageData_READ_CAPACITY_10
+                | 0x35uy -> SupportedOperationCodeConst.CdbUsageData_SYNCHRONIZE_CACHE_10
+                | 0x91uy -> SupportedOperationCodeConst.CdbUsageData_SYNCHRONIZE_CACHE_16
+                | 0x5Euy    // PERSISTENT RESERVE IN
+                | 0x5Fuy    // PERSISTENT RESERVE OUT
+                | 0x9Euy    // READ CAPACITY(16)
+                | 0xA3uy -> // REPORT SUPPORTED OPERATION CODES / REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS
+                    let errmsg = sprintf "REQUESTED OPERATION CODE 0x%02X has a SERVICE ACTION field." cdb.RequestedOperationCode
+                    HLogger.ACAException( m_LogInfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
+                    raise <| SCSIACAException (
+                        m_Source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
+                        { CommandData = true; BPV = true; BitPointer = 7uy; FieldPointer = 3us },
+                        errmsg
+                    )
+
+                | _ ->
+                    // unknown operation code.
+                    HLogger.Trace( LogID.W_INVALID_CDB_VALUE, fun g ->
+                        let errmsg =
+                            sprintf "In REPORT SUPPORTED OPERATION CODES CDB, REQUESTED OPERATION CODE 0x%02X is not supported." cdb.RequestedOperationCode
+                        g.Gen1( m_LogInfo, errmsg )
+                    )
+                    [| 0x00uy; 0x01uy; 0x00uy; 0x00uy; |]
+
+            | 0x02uy ->
+                let sa_errmsg =
+                    sprintf "In REPORT SUPPORTED OPERATION CODES CDB, REQUESTED SERVICE ACTION CODE 0x%02X is not supported." cdb.RequestedServiceAction
+                match cdb.RequestedOperationCode with
+                | 0x5Euy -> // PERSISTENT RESERVE IN
+                    if 0us <= cdb.RequestedServiceAction && cdb.RequestedServiceAction <= 3us then
+                        SupportedOperationCodeConst.CdbUsageData_PERSISTENT_RESERVE_IN ( byte cdb.RequestedServiceAction )
+                    else
+                        HLogger.Trace( LogID.W_INVALID_CDB_VALUE, fun g -> g.Gen1( m_LogInfo, sa_errmsg ) )
+                        [| 0x00uy; 0x01uy; 0x00uy; 0x00uy; |]
+                | 0x5Fuy -> // PERSISTENT RESERVE OUT
+                    if 0us <= cdb.RequestedServiceAction && cdb.RequestedServiceAction <= 7us then
+                        SupportedOperationCodeConst.CdbUsageData_PERSISTENT_RESERVE_OUT ( byte cdb.RequestedServiceAction )
+                    else
+                        HLogger.Trace( LogID.W_INVALID_CDB_VALUE, fun g -> g.Gen1( m_LogInfo, sa_errmsg ) )
+                        [| 0x00uy; 0x01uy; 0x00uy; 0x00uy; |]
+                | 0x9Euy -> // READ CAPACITY(16)
+                    if 0x10us = cdb.RequestedServiceAction then
+                        SupportedOperationCodeConst.CdbUsageData_READ_CAPACITY_16
+                    else
+                        HLogger.Trace( LogID.W_INVALID_CDB_VALUE, fun g -> g.Gen1( m_LogInfo, sa_errmsg ) )
+                        [| 0x00uy; 0x01uy; 0x00uy; 0x00uy; |]
+                | 0xA3uy -> // REPORT SUPPORTED OPERATION CODES / REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS
+                    if cdb.RequestedServiceAction = 0x0Cus then
+                        SupportedOperationCodeConst.CdbUsageData_REPORT_SUPPORTED_OPERATION_CODES
+                    elif cdb.RequestedServiceAction = 0x0Dus then
+                        SupportedOperationCodeConst.CdbUsageData_REPORT_SUPPORTED_TASK_MANAGEMENT_FUNCTIONS
+                    else
+                        HLogger.Trace( LogID.W_INVALID_CDB_VALUE, fun g -> g.Gen1( m_LogInfo, sa_errmsg ) )
+                        [| 0x00uy; 0x01uy; 0x00uy; 0x00uy; |]
+                | 0x12uy    // INQUIRY
+                | 0x15uy    // MODE SELECT(6)
+                | 0x55uy    // MODE SELECT(10)
+                | 0x1Auy    // MODE SENSE(6)
+                | 0x5Auy    // MODE SENSE(10)
+                | 0xA0uy    // REPORT LUNS
+                | 0x03uy    // REQUEST SENSE
+                | 0x00uy    // TEST UNIT READY
+                | 0x25uy    // READ CAPACITY(10)
+                | 0x35uy    // SYNCHRONIZE CACHE(10)
+                | 0x91uy -> // SYNCHRONIZE CACHE(16)
+                    let errmsg = sprintf "REQUESTED OPERATION CODE 0x%02X has not a SERVICE ACTION field." cdb.RequestedOperationCode
+                    HLogger.ACAException( m_LogInfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
+                    raise <| SCSIACAException (
+                        m_Source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
+                        { CommandData = true; BPV = true; BitPointer = 7uy; FieldPointer = 3us },
+                        errmsg
+                    )
+
+                | _ ->
+                    // unknown operation code.
+                    HLogger.Trace( LogID.W_INVALID_CDB_VALUE, fun g ->
+                        let errmsg =
+                            sprintf "In REPORT SUPPORTED OPERATION CODES CDB, REQUESTED OPERATION CODE 0x%02X is not supported." cdb.RequestedOperationCode
+                        g.Gen1( m_LogInfo, errmsg )
+                    )
+                    [| 0x00uy; 0x01uy; 0x00uy; 0x00uy; |]
+
+            | _ ->
+                let errmsg = sprintf "Invalie REPORTING OPTIONS field value(%d), in REPORT SUPPORTED OPERATION CODES command CDB" cdb.ReportingOptions
+                HLogger.ACAException( m_LogInfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
+                raise <| SCSIACAException (
+                    m_Source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
+                    { CommandData = true; BPV = true; BitPointer = 7uy; FieldPointer = 2us },
+                    errmsg
+                )
+
+        let init, current = m_ScsiTask.SetTerminateFlag 1
+        if init = 0 && current = 1 then
+            // Send response data to the initiator
+            let recvDataLength = ( this :> IBlockDeviceTask ).ReceivedDataLength
+            m_Source.ProtocolService.SendSCSIResponse
+                m_Command
+                m_Source.CID
+                m_Source.ConCounter
+                recvDataLength
+                iScsiSvcRespCd.COMMAND_COMPLETE
+                ScsiCmdStatCd.GOOD
+                PooledBuffer.Empty
+                ( PooledBuffer.Rent result )
+                cdb.AllocationLength
                 ResponseFenceNeedsFlag.R_Mode

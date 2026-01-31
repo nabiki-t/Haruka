@@ -20,284 +20,434 @@ open Haruka.Commons
 /// SupportedOperationCodeConst class has constatnt values used in REPORT SUPPORTED OPERATION CODES command.
 type SupportedOperationCodeConst() =
 
+    static let SupportedOperationCommands_INQUIRY =
+        [|
+            0x12uy;         // INQUIRY
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x06uy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_MODE_SELECT_6 =
+        [|
+            0x15uy;         // MODE SELECT(6)
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x06uy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_MODE_SELECT_10 =
+        [|
+            0x55uy;         // MODE SELECT(10)
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x0Auy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_MODE_SENSE_6 =
+        [|
+            0x1Auy;         // MODE SENSE(6)
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x06uy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_MODE_SENSE_10 =
+        [|
+            0x5Auy;         // MODE SENSE(10)
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x0Auy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_PERSISTENT_RESERVE_IN_READ_KEYS =
+        [|
+            0x5Euy;         // PERSISTENT RESERVE IN
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action(READ KEYS)
+            0x00uy; 0x01uy; // Reserved, SERVACTV
+            0x00uy; 0x0Auy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_PERSISTENT_RESERVE_IN_READ_RESERVATION =
+        [|
+            0x5Euy;         // PERSISTENT RESERVE IN
+            0x00uy;         // Reserved
+            0x00uy; 0x01uy; // Service Action(READ RESERVATION)
+            0x00uy; 0x01uy; // Reserved, SERVACTV
+            0x00uy; 0x0Auy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_PERSISTENT_RESERVE_IN_READ_CAPABILITIES =
+        [|
+            0x5Euy;         // PERSISTENT RESERVE IN
+            0x00uy;         // Reserved
+            0x00uy; 0x02uy; // Service Action(REPORT CAPABILITIES)
+            0x00uy; 0x01uy; // Reserved, SERVACTV
+            0x00uy; 0x0Auy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_PERSISTENT_RESERVE_IN_READ_FULL_STATUS =
+        [|
+            0x5Euy;         // PERSISTENT RESERVE IN
+            0x00uy;         // Reserved
+            0x00uy; 0x03uy; // Service Action(READ FULL STATUS)
+            0x00uy; 0x01uy; // Reserved, SERVACTV
+            0x00uy; 0x0Auy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_PERSISTENT_RESERVE_OUT_REGISTER =
+        [|
+            0x5Fuy;         // PERSISTENT RESERVE OUT
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action(REGISTER)
+            0x00uy; 0x01uy; // Reserved, SERVACTV
+            0x00uy; 0x0Auy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_PERSISTENT_RESERVE_OUT_RESERVE =
+        [|
+            0x5Fuy;         // PERSISTENT RESERVE OUT
+            0x00uy;         // Reserved
+            0x00uy; 0x01uy; // Service Action(RESERVE)
+            0x00uy; 0x01uy; // Reserved, SERVACTV
+            0x00uy; 0x0Auy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_PERSISTENT_RESERVE_OUT_RELEASE =
+        [|
+            0x5Fuy;         // PERSISTENT RESERVE OUT
+            0x00uy;         // Reserved
+            0x00uy; 0x02uy; // Service Action(RELEASE)
+            0x00uy; 0x01uy; // Reserved, SERVACTV
+            0x00uy; 0x0Auy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_PERSISTENT_RESERVE_OUT_CLEAR =
+        [|
+            0x5Fuy;         // PERSISTENT RESERVE OUT
+            0x00uy;         // Reserved
+            0x00uy; 0x03uy; // Service Action(CLEAR)
+            0x00uy; 0x01uy; // Reserved, SERVACTV
+            0x00uy; 0x0Auy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_PERSISTENT_RESERVE_OUT_PREEMPT =
+        [|
+            0x5Fuy;         // PERSISTENT RESERVE OUT
+            0x00uy;         // Reserved
+            0x00uy; 0x04uy; // Service Action(PREEMPT)
+            0x00uy; 0x01uy; // Reserved, SERVACTV
+            0x00uy; 0x0Auy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_PERSISTENT_RESERVE_OUT_PREEMPT_AND_ABORT =
+        [|
+            0x5Fuy;         // PERSISTENT RESERVE OUT
+            0x00uy;         // Reserved
+            0x00uy; 0x05uy; // Service Action(PREEMPT AND ABORT)
+            0x00uy; 0x01uy; // Reserved, SERVACTV
+            0x00uy; 0x0Auy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_PERSISTENT_RESERVE_OUT_REGISTER_AND_IGNORE_EXISTING_KEY =
+        [|
+            0x5Fuy;         // PERSISTENT RESERVE OUT
+            0x00uy;         // Reserved
+            0x00uy; 0x06uy; // Service Action(REGISTER AND IGNORE EXISTING KEY)
+            0x00uy; 0x01uy; // Reserved, SERVACTV
+            0x00uy; 0x0Auy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_PERSISTENT_RESERVE_OUT_REGISTER_AND_MOVE =
+        [|
+            0x5Fuy;         // PERSISTENT RESERVE OUT
+            0x00uy;         // Reserved
+            0x00uy; 0x07uy; // Service Action(REGISTER AND MOVE)
+            0x00uy; 0x01uy; // Reserved, SERVACTV
+            0x00uy; 0x0Auy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_PRE_FETCH_10 =
+        [|
+            0x34uy;         // PRE-FETCH(10)
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x0Auy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_PRE_FETCH_16 =
+        [|
+            0x90uy;         // PRE-FETCH(16)
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x10uy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_REPORT_LUNS =
+        [|
+            0xA0uy;         // REPORT LUNS
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x0Cuy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_REPORT_SUPPORTED_OPERATION_CODES =
+        [|
+            0xA3uy;         // REPORT SUPPORTED OPERATION CODES
+            0x00uy;         // Reserved
+            0x00uy; 0x0Cuy; // Service Action(0C)
+            0x00uy; 0x01uy; // Reserved, SERVACTV
+            0x00uy; 0x0Cuy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_REPORT_SUPPORTED_TASK_MANAGEMENT_FUNCTIONS =
+        [|
+            0xA3uy;         // REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS
+            0x00uy;         // Reserved
+            0x00uy; 0x0Duy; // Service Action(0C)
+            0x00uy; 0x01uy; // Reserved, SERVACTV
+            0x00uy; 0x0Cuy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_REQUEST_SENSE =
+        [|
+            0x03uy;         // REQUEST SENSE
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x06uy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_TEST_UNIT_READY =
+        [|
+            0x00uy;         // TEST UNIT READY
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x06uy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_FORMAT_UNIT =
+        [|
+            0x04uy;         // FORMAT UNIT
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x06uy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_READ_6 =
+        [|
+            0x08uy;         // READ(6)
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x06uy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_READ_10 =
+        [|
+            0x28uy;         // READ(10)
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x0Auy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_READ_12 =
+        [|
+            0xA8uy;         // READ(12)
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x0Cuy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_READ_16 =
+        [|
+            0x88uy;         // READ(16)
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x10uy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_READ_32 =
+        [|
+            0x7Fuy;         // READ(32)
+            0x00uy;         // Reserved
+            0x00uy; 0x09uy; // Service Action(0009h)
+            0x00uy; 0x01uy; // Reserved, SERVACTV
+            0x00uy; 0x20uy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_READ_CAPACITY_10 =
+        [|
+            0x25uy;         // READ CAPACITY(10)
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x0Auy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_READ_CAPACITY_16 =
+        [|
+            0x9Euy;         // READ CAPACITY(16)
+            0x00uy;         // Reserved
+            0x00uy; 0x10uy; // Service Action(10h)
+            0x00uy; 0x01uy; // Reserved, SERVACTV
+            0x00uy; 0x10uy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_SYNCHRONIZE_CACHE_10 =
+        [|
+            0x35uy;         // SYNCHRONIZE CACHE(10)
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x0Auy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_SYNCHRONIZE_CACHE_16 =
+        [|
+            0x91uy;         // SYNCHRONIZE CACHE(16)
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action(00h)
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x10uy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_WRITE_6 =
+        [|
+            0x0Auy;         // WRITE(6)
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x06uy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_WRITE_10 =
+        [|
+            0x2Auy;         // WRITE(10)
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x0Auy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_WRITE_12 =
+        [|
+            0xAAuy;         // WRITE(12)
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x0Cuy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_WRITE_16 =
+        [|
+            0x8Auy;         // WRITE(16)
+            0x00uy;         // Reserved
+            0x00uy; 0x00uy; // Service Action
+            0x00uy; 0x00uy; // Reserved, SERVACTV
+            0x00uy; 0x10uy; // CDB LENGTH
+        |]
+
+    static let SupportedOperationCommands_WRITE_32 =
+        [|
+            0x7Fuy;         // WRITE(32)
+            0x00uy;         // Reserved
+            0x00uy; 0x0Buy; // Service Action(000Bh)
+            0x00uy; 0x01uy; // Reserved, SERVACTV
+            0x00uy; 0x20uy; // CDB LENGTH
+        |]
+
     /// Supported OPERATION CODE and SERVICE ACTION list value,
     /// that is used when REPORTING OPTIONS value is 000b.
     static member SupportedAllOperationCommands : byte[] =
         [|
-            yield! Functions.Int32ToNetworkBytes_NewVec 312;
-            yield! [|
-                0x12uy;         // INQUIRY
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x06uy; // CDB LENGTH
-            |]
-            yield! [|
-                0x15uy;         // MODE SELECT(6)
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x06uy; // CDB LENGTH
-            |]
-            yield! [|
-                0x55uy;         // MODE SELECT(10)
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x0Auy; // CDB LENGTH
-            |]
-            yield! [|
-                0x1Auy;         // MODE SENSE(6)
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x06uy; // CDB LENGTH
-            |]
-            yield! [|
-                0x5Auy;         // MODE SENSE(10)
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x0Auy; // CDB LENGTH
-            |]
-            yield! [|
-                0x5Euy;         // PERSISTENT RESERVE IN
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action(READ KEYS)
-                0x00uy; 0x01uy; // Reserved, SERVACTV
-                0x00uy; 0x0Auy; // CDB LENGTH
-            |]
-            yield! [|
-                0x5Euy;         // PERSISTENT RESERVE IN
-                0x00uy;         // Reserved
-                0x00uy; 0x01uy; // Service Action(READ KEYS)
-                0x00uy; 0x01uy; // Reserved, SERVACTV
-                0x00uy; 0x0Auy; // CDB LENGTH
-            |]
-            yield! [|
-                0x5Euy;         // PERSISTENT RESERVE IN
-                0x00uy;         // Reserved
-                0x00uy; 0x02uy; // Service Action(REPORT CAPABILITIES)
-                0x00uy; 0x01uy; // Reserved, SERVACTV
-                0x00uy; 0x0Auy; // CDB LENGTH
-            |]
-            yield! [|
-                0x5Euy;         // PERSISTENT RESERVE IN
-                0x00uy;         // Reserved
-                0x00uy; 0x03uy; // Service Action(READ FULL STATUS)
-                0x00uy; 0x01uy; // Reserved, SERVACTV
-                0x00uy; 0x0Auy; // CDB LENGTH
-            |]
-            yield! [|
-                0x5Fuy;         // PERSISTENT RESERVE OUT
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action(REGISTER)
-                0x00uy; 0x01uy; // Reserved, SERVACTV
-                0x00uy; 0x0Auy; // CDB LENGTH
-            |]
-            yield! [|
-                0x5Fuy;         // PERSISTENT RESERVE OUT
-                0x00uy;         // Reserved
-                0x00uy; 0x01uy; // Service Action(RESERVE)
-                0x00uy; 0x01uy; // Reserved, SERVACTV
-                0x00uy; 0x0Auy; // CDB LENGTH
-            |]
-            yield! [|
-                0x5Fuy;         // PERSISTENT RESERVE OUT
-                0x00uy;         // Reserved
-                0x00uy; 0x02uy; // Service Action(RELEASE)
-                0x00uy; 0x01uy; // Reserved, SERVACTV
-                0x00uy; 0x0Auy; // CDB LENGTH
-            |]
-            yield! [|
-                0x5Fuy;         // PERSISTENT RESERVE OUT
-                0x00uy;         // Reserved
-                0x00uy; 0x03uy; // Service Action(CLEAR)
-                0x00uy; 0x01uy; // Reserved, SERVACTV
-                0x00uy; 0x0Auy; // CDB LENGTH
-            |]
-            yield! [|
-                0x5Fuy;         // PERSISTENT RESERVE OUT
-                0x00uy;         // Reserved
-                0x00uy; 0x04uy; // Service Action(PREEMPT)
-                0x00uy; 0x01uy; // Reserved, SERVACTV
-                0x00uy; 0x0Auy; // CDB LENGTH
-            |]
-            yield! [|
-                0x5Fuy;         // PERSISTENT RESERVE OUT
-                0x00uy;         // Reserved
-                0x00uy; 0x05uy; // Service Action(PREEMPT AND ABORT)
-                0x00uy; 0x01uy; // Reserved, SERVACTV
-                0x00uy; 0x0Auy; // CDB LENGTH
-            |]
-            yield! [|
-                0x5Fuy;         // PERSISTENT RESERVE OUT
-                0x00uy;         // Reserved
-                0x00uy; 0x06uy; // Service Action(REGISTER AND IGNORE EXISTING KEY)
-                0x00uy; 0x01uy; // Reserved, SERVACTV
-                0x00uy; 0x0Auy; // CDB LENGTH
-            |]
-            yield! [|
-                0x5Fuy;         // PERSISTENT RESERVE OUT
-                0x00uy;         // Reserved
-                0x00uy; 0x07uy; // Service Action(REGISTER AND MOVE)
-                0x00uy; 0x01uy; // Reserved, SERVACTV
-                0x00uy; 0x0Auy; // CDB LENGTH
-            |]
-            yield! [|
-                0x34uy;         // PRE-FETCH(10)
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x0Auy; // CDB LENGTH
-            |]
-            yield! [|
-                0x90uy;         // PRE-FETCH(16)
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x10uy; // CDB LENGTH
-            |]
-            yield! [|
-                0xA0uy;         // REPORT LUNS
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x0Cuy; // CDB LENGTH
-            |]
-            yield! [|
-                0xA3uy;         // REPORT SUPPORTED OPERATION CODES
-                0x00uy;         // Reserved
-                0x00uy; 0x0Cuy; // Service Action(0C)
-                0x00uy; 0x01uy; // Reserved, SERVACTV
-                0x00uy; 0x0Cuy; // CDB LENGTH
-            |]
-            yield! [|
-                0xA3uy;         // REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS
-                0x00uy;         // Reserved
-                0x00uy; 0x0Duy; // Service Action(0C)
-                0x00uy; 0x01uy; // Reserved, SERVACTV
-                0x00uy; 0x0Cuy; // CDB LENGTH
-            |]
-            yield! [|
-                0x03uy;         // REQUEST SENSE
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x06uy; // CDB LENGTH
-            |]
-            yield! [|
-                0x00uy;         // TEST UNIT READY
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x06uy; // CDB LENGTH
-            |]
-            yield! [|
-                0x04uy;         // FORMAT UNIT
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x06uy; // CDB LENGTH
-            |]
-            yield! [|
-                0x08uy;         // READ(6)
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x06uy; // CDB LENGTH
-            |]
-            yield! [|
-                0x28uy;         // READ(10)
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x0Auy; // CDB LENGTH
-            |]
-            yield! [|
-                0xA8uy;         // READ(12)
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x0Cuy; // CDB LENGTH
-            |]
-            yield! [|
-                0x88uy;         // READ(16)
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x10uy; // CDB LENGTH
-            |]
-            yield! [|
-                0x7Fuy;         // READ(32)
-                0x00uy;         // Reserved
-                0x00uy; 0x09uy; // Service Action(0009h)
-                0x00uy; 0x01uy; // Reserved, SERVACTV
-                0x00uy; 0x20uy; // CDB LENGTH
-            |]
-            yield! [|
-                0x25uy;         // READ CAPACITY(10)
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x0Auy; // CDB LENGTH
-            |]
-            yield! [|
-                0x9Euy;         // READ CAPACITY(16)
-                0x00uy;         // Reserved
-                0x00uy; 0x10uy; // Service Action(10h)
-                0x00uy; 0x01uy; // Reserved, SERVACTV
-                0x00uy; 0x10uy; // CDB LENGTH
-            |]
-            yield! [|
-                0x35uy;         // SYNCHRONIZE CACHE(10)
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x0Auy; // CDB LENGTH
-            |]
-            yield! [|
-                0x91uy;         // SYNCHRONIZE CACHE(16)
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action(00h)
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x10uy; // CDB LENGTH
-            |]
-            yield! [|
-                0x0Auy;         // WRITE(6)
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x06uy; // CDB LENGTH
-            |]
-            yield! [|
-                0x2Auy;         // WRITE(10)
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x0Auy; // CDB LENGTH
-            |]
-            yield! [|
-                0xAAuy;         // WRITE(12)
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x0Cuy; // CDB LENGTH
-            |]
-            yield! [|
-                0x8Auy;         // WRITE(16)
-                0x00uy;         // Reserved
-                0x00uy; 0x00uy; // Service Action
-                0x00uy; 0x00uy; // Reserved, SERVACTV
-                0x00uy; 0x10uy; // CDB LENGTH
-            |]
-            yield! [|
-                0x7Fuy;         // WRITE(32)
-                0x00uy;         // Reserved
-                0x00uy; 0x0Buy; // Service Action(000Bh)
-                0x00uy; 0x01uy; // Reserved, SERVACTV
-                0x00uy; 0x20uy; // CDB LENGTH
-            |]
+            yield! Functions.Int32ToNetworkBytes_NewVec 312;    // 39 * 8
+            yield! SupportedOperationCommands_INQUIRY
+            yield! SupportedOperationCommands_MODE_SELECT_6
+            yield! SupportedOperationCommands_MODE_SELECT_10
+            yield! SupportedOperationCommands_MODE_SENSE_6
+            yield! SupportedOperationCommands_MODE_SENSE_10
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_IN_READ_KEYS
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_IN_READ_RESERVATION
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_IN_READ_CAPABILITIES
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_IN_READ_FULL_STATUS
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_OUT_REGISTER
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_OUT_RESERVE
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_OUT_RELEASE
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_OUT_CLEAR
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_OUT_PREEMPT
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_OUT_PREEMPT_AND_ABORT
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_OUT_REGISTER_AND_IGNORE_EXISTING_KEY
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_OUT_REGISTER_AND_MOVE
+            yield! SupportedOperationCommands_PRE_FETCH_10
+            yield! SupportedOperationCommands_PRE_FETCH_16
+            yield! SupportedOperationCommands_REPORT_LUNS
+            yield! SupportedOperationCommands_REPORT_SUPPORTED_OPERATION_CODES
+            yield! SupportedOperationCommands_REPORT_SUPPORTED_TASK_MANAGEMENT_FUNCTIONS
+            yield! SupportedOperationCommands_REQUEST_SENSE
+            yield! SupportedOperationCommands_TEST_UNIT_READY
+            yield! SupportedOperationCommands_FORMAT_UNIT
+            yield! SupportedOperationCommands_READ_6
+            yield! SupportedOperationCommands_READ_10
+            yield! SupportedOperationCommands_READ_12
+            yield! SupportedOperationCommands_READ_16
+            yield! SupportedOperationCommands_READ_32
+            yield! SupportedOperationCommands_READ_CAPACITY_10
+            yield! SupportedOperationCommands_READ_CAPACITY_16
+            yield! SupportedOperationCommands_SYNCHRONIZE_CACHE_10
+            yield! SupportedOperationCommands_SYNCHRONIZE_CACHE_16
+            yield! SupportedOperationCommands_WRITE_6
+            yield! SupportedOperationCommands_WRITE_10
+            yield! SupportedOperationCommands_WRITE_12
+            yield! SupportedOperationCommands_WRITE_16
+            yield! SupportedOperationCommands_WRITE_32
+        |]
+
+    /// Supported OPERATION CODE and SERVICE ACTION list value,
+    /// that is used when REPORTING OPTIONS value is 000b.
+    static member SupportedOperationCommandsDummyDevice : byte[] =
+        [|
+            yield! Functions.Int32ToNetworkBytes_NewVec 208;    // 26 * 8
+            yield! SupportedOperationCommands_INQUIRY
+            yield! SupportedOperationCommands_MODE_SELECT_6
+            yield! SupportedOperationCommands_MODE_SELECT_10
+            yield! SupportedOperationCommands_MODE_SENSE_6
+            yield! SupportedOperationCommands_MODE_SENSE_10
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_IN_READ_KEYS
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_IN_READ_RESERVATION
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_IN_READ_CAPABILITIES
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_IN_READ_FULL_STATUS
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_OUT_REGISTER
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_OUT_RESERVE
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_OUT_RELEASE
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_OUT_CLEAR
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_OUT_PREEMPT
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_OUT_PREEMPT_AND_ABORT
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_OUT_REGISTER_AND_IGNORE_EXISTING_KEY
+            yield! SupportedOperationCommands_PERSISTENT_RESERVE_OUT_REGISTER_AND_MOVE
+            yield! SupportedOperationCommands_REPORT_LUNS
+            yield! SupportedOperationCommands_REQUEST_SENSE
+            yield! SupportedOperationCommands_READ_CAPACITY_10
+            yield! SupportedOperationCommands_READ_CAPACITY_16
+            yield! SupportedOperationCommands_TEST_UNIT_READY
+            yield! SupportedOperationCommands_SYNCHRONIZE_CACHE_10
+            yield! SupportedOperationCommands_SYNCHRONIZE_CACHE_16
+            yield! SupportedOperationCommands_REPORT_SUPPORTED_OPERATION_CODES
+            yield! SupportedOperationCommands_REPORT_SUPPORTED_TASK_MANAGEMENT_FUNCTIONS
         |]
 
     /// one_command parameter data for INQUIRY CDB.

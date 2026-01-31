@@ -783,16 +783,121 @@ type ScsiTaskForDummyDeviceTest_Test () =
         |> Functions.RunTaskSynchronously
         Assert.True(( cnt1 = 1 ))
 
-    [<Fact>]
-    member _.ReportSupportedOperationCodes_001() =
+
+    static member m_ReportSupportedOperationCodes_001_data = [|
+        [|
+            0x00uy :> obj;  0x00uy :> obj; 0x00us :> obj;
+            SupportedOperationCodeConst.SupportedOperationCommandsDummyDevice :> obj;
+        |]
+        [|
+            0x01uy :> obj;  0x12uy :> obj; 0x00us :> obj;
+            SupportedOperationCodeConst.CdbUsageData_INQUIRY :> obj;
+        |]
+        [|
+            0x01uy :> obj;  0x15uy :> obj; 0x00us :> obj;
+            SupportedOperationCodeConst.CdbUsageData_MODE_SELECT_6 :> obj;
+        |]
+        [|
+            0x01uy :> obj;  0x55uy :> obj; 0x00us :> obj;
+            SupportedOperationCodeConst.CdbUsageData_MODE_SELECT_10 :> obj;
+        |]
+        [|
+            0x01uy :> obj;  0x1Auy :> obj; 0x00us :> obj;
+            SupportedOperationCodeConst.CdbUsageData_MODE_SENSE_6 :> obj;
+        |]
+        [|
+            0x01uy :> obj;  0x5Auy :> obj; 0x00us :> obj;
+            SupportedOperationCodeConst.CdbUsageData_MODE_SENSE_10 :> obj;
+        |]
+        [|
+            0x01uy :> obj;  0xA0uy :> obj; 0x00us :> obj;
+            SupportedOperationCodeConst.CdbUsageData_REPORT_LUNS :> obj;
+        |]
+        [|
+            0x01uy :> obj;  0x03uy :> obj; 0x00us :> obj;
+            SupportedOperationCodeConst.CdbUsageData_REQUEST_SENSE :> obj;
+        |]
+        [|
+            0x01uy :> obj;  0x00uy :> obj; 0x00us :> obj;
+            SupportedOperationCodeConst.CdbUsageData_TEST_UNIT_READY :> obj;
+        |]
+        [|
+            0x01uy :> obj;  0x25uy :> obj; 0x00us :> obj;
+            SupportedOperationCodeConst.CdbUsageData_READ_CAPACITY_10 :> obj;
+        |]
+        [|
+            0x01uy :> obj;  0x35uy :> obj; 0x00us :> obj;
+            SupportedOperationCodeConst.CdbUsageData_SYNCHRONIZE_CACHE_10 :> obj;
+        |]
+        [|
+            0x01uy :> obj;  0x91uy :> obj; 0x00us :> obj;
+            SupportedOperationCodeConst.CdbUsageData_SYNCHRONIZE_CACHE_16 :> obj;
+        |]
+        [|
+            0x01uy :> obj;  0xFFuy :> obj; 0x00us :> obj;   // unknown operation code.
+            [| 0x00uy; 0x01uy; 0x00uy; 0x00uy; |] :> obj;
+        |]
+        [|
+            0x02uy :> obj;  0x5Euy :> obj; 0x00us :> obj;   // PERSISTENT RESERVE IN
+            ( SupportedOperationCodeConst.CdbUsageData_PERSISTENT_RESERVE_IN 0x00uy ) :> obj;
+        |]
+        [|
+            0x02uy :> obj;  0x5Euy :> obj; 0x03us :> obj;   // PERSISTENT RESERVE IN
+            ( SupportedOperationCodeConst.CdbUsageData_PERSISTENT_RESERVE_IN 0x03uy ) :> obj;
+        |]
+        [|
+            0x02uy :> obj;  0x5Euy :> obj; 0x04us :> obj;   // PERSISTENT RESERVE IN, unknown service action
+            [| 0x00uy; 0x01uy; 0x00uy; 0x00uy; |] :> obj;
+        |]
+        [|
+            0x02uy :> obj;  0x5Fuy :> obj; 0x00us :> obj;   // PERSISTENT RESERVE OUT
+            ( SupportedOperationCodeConst.CdbUsageData_PERSISTENT_RESERVE_OUT 0x00uy ) :> obj;
+        |]
+        [|
+            0x02uy :> obj;  0x5Fuy :> obj; 0x07us :> obj;   // PERSISTENT RESERVE OUT
+            ( SupportedOperationCodeConst.CdbUsageData_PERSISTENT_RESERVE_OUT 0x07uy ) :> obj;
+        |]
+        [|
+            0x02uy :> obj;  0x5Fuy :> obj; 0x08us :> obj;   // PERSISTENT RESERVE OUT, unknown service action
+            [| 0x00uy; 0x01uy; 0x00uy; 0x00uy; |] :> obj;
+        |]
+        [|
+            0x02uy :> obj;  0x9Euy :> obj; 0x10us :> obj;   // READ CAPACITY(16)
+            SupportedOperationCodeConst.CdbUsageData_READ_CAPACITY_16 :> obj;
+        |]
+        [|
+            0x02uy :> obj;  0x9Euy :> obj; 0x00us :> obj;   // READ CAPACITY(16), unknown service action
+            [| 0x00uy; 0x01uy; 0x00uy; 0x00uy; |] :> obj;
+        |]
+        [|
+            0x02uy :> obj;  0xA3uy :> obj; 0x0Cus :> obj;   // REPORT SUPPORTED OPERATION CODES
+            SupportedOperationCodeConst.CdbUsageData_REPORT_SUPPORTED_OPERATION_CODES :> obj;
+        |]
+        [|
+            0x02uy :> obj;  0xA3uy :> obj; 0x0Dus :> obj;   // REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS
+            SupportedOperationCodeConst.CdbUsageData_REPORT_SUPPORTED_TASK_MANAGEMENT_FUNCTIONS :> obj;
+        |]
+        [|
+            0x02uy :> obj;  0xA3uy :> obj; 0x00us :> obj;   // REPORT SUPPORTED OPERATION CODES / REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS, unknown service action
+            [| 0x00uy; 0x01uy; 0x00uy; 0x00uy; |] :> obj;
+        |]
+        [|
+            0x02uy :> obj;  0xFFuy :> obj; 0x00us :> obj;   // unknown operation code.
+            [| 0x00uy; 0x01uy; 0x00uy; 0x00uy; |] :> obj;
+        |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_ReportSupportedOperationCodes_001_data" )>]
+    member _.ReportSupportedOperationCodes_001 ( argRO : byte ) ( argROC : byte ) ( argRSA : uint16 ) ( rxpResult : byte[] ) =
         let mutable cnt1 = 0
         let mutable cnt2 = 0
         let cdb = {
             OperationCode = 0xA3uy;
             ServiceAction = 0x00uy;
-            ReportingOptions = 0x00uy;
-            RequestedOperationCode = 0x00uy;
-            RequestedServiceAction = 0x00us;
+            ReportingOptions = argRO;
+            RequestedOperationCode = argROC;
+            RequestedServiceAction = argRSA;
             AllocationLength = 16u;
             Control = 0x00uy;
         }
@@ -802,7 +907,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
             cnt2 <- cnt2 + 1
             Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
             Assert.True(( stat = ScsiCmdStatCd.GOOD ))
-            Assert.True(( PooledBuffer.ValueEqualsWithArray indata SupportedOperationCodeConst.SupportedAllOperationCommands ))
+            Assert.True(( PooledBuffer.ValueEqualsWithArray indata rxpResult ))
             Assert.True(( alloclen = 0x10u ))
         )
         ilu.p_NotifyTerminateTask <- ( fun _ -> cnt1 <- cnt1 + 1 )
@@ -811,6 +916,51 @@ type ScsiTaskForDummyDeviceTest_Test () =
         |> Functions.RunTaskSynchronously
         Assert.True(( cnt1 = 1 ))
         Assert.True(( cnt2 = 1 ))
+
+    [<Theory>]
+    [<InlineData( 0x01uy, 0x5Euy, "REQUESTED OPERATION CODE 0x5E" )>]    // PERSISTENT RESERVE IN
+    [<InlineData( 0x01uy, 0x5Fuy, "REQUESTED OPERATION CODE 0x5F" )>]    // PERSISTENT RESERVE OUT
+    [<InlineData( 0x01uy, 0x9Euy, "REQUESTED OPERATION CODE 0x9E" )>]    // READ CAPACITY(16)
+    [<InlineData( 0x01uy, 0xA3uy, "REQUESTED OPERATION CODE 0xA3" )>]    // REPORT SUPPORTED OPERATION CODES / REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS
+    [<InlineData( 0x02uy, 0x12uy, "REQUESTED OPERATION CODE 0x12" )>]    // INQUIRY
+    [<InlineData( 0x02uy, 0x15uy, "REQUESTED OPERATION CODE 0x15" )>]    // MODE SELECT(6)
+    [<InlineData( 0x02uy, 0x55uy, "REQUESTED OPERATION CODE 0x55" )>]    // MODE SELECT(10)
+    [<InlineData( 0x02uy, 0x1Auy, "REQUESTED OPERATION CODE 0x1A" )>]    // MODE SENSE(6)
+    [<InlineData( 0x02uy, 0x5Auy, "REQUESTED OPERATION CODE 0x5A" )>]    // MODE SENSE(10)
+    [<InlineData( 0x02uy, 0xA0uy, "REQUESTED OPERATION CODE 0xA0" )>]    // REPORT LUNS
+    [<InlineData( 0x02uy, 0x03uy, "REQUESTED OPERATION CODE 0x03" )>]    // REQUEST SENSE
+    [<InlineData( 0x02uy, 0x00uy, "REQUESTED OPERATION CODE 0x00" )>]    // TEST UNIT READY
+    [<InlineData( 0x02uy, 0x25uy, "REQUESTED OPERATION CODE 0x25" )>]    // READ CAPACITY(10)
+    [<InlineData( 0x02uy, 0x35uy, "REQUESTED OPERATION CODE 0x35" )>]    // SYNCHRONIZE CACHE(10)
+    [<InlineData( 0x02uy, 0x91uy, "REQUESTED OPERATION CODE 0x91" )>]    // SYNCHRONIZE CACHE(16)
+    [<InlineData( 0x03uy, 0x00uy, "Invalie REPORTING OPTIONS field value" )>]    // unknown REPORTING OPTIONS
+    member _.ReportSupportedOperationCodes_002 ( argRO : byte ) ( argROC : byte ) ( expResult : string ) =
+        let mutable cnt1 = 0
+        let cdb = {
+            OperationCode = 0xA3uy;
+            ServiceAction = 0x00uy;
+            ReportingOptions = argRO;
+            RequestedOperationCode = argROC;
+            RequestedServiceAction = 0x00us;
+            AllocationLength = 16u;
+            Control = 0x00uy;
+        }
+        let sense_task, ilu = createDefScsiTaskForDummyDevice defaultSCSICommandPDU cdb [] false
+        ilu.p_NotifyTerminateTaskWithException <- ( fun argTask argEx ->
+            cnt1 <- cnt1 + 1
+            match argEx with
+            | :? SCSIACAException as x ->
+                Assert.True(( x.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+                Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+                Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+                Assert.True(( x.Message.StartsWith expResult ))
+            | _ ->
+                Assert.Fail __LINE__
+        )
+
+        sense_task.Execute()()
+        |> Functions.RunTaskSynchronously
+        Assert.True(( cnt1 = 1 ))
 
     [<Fact>]
     member _.ReportSupportedTaskManagementFunctions_001() =

@@ -1430,40 +1430,37 @@ type ScsiTask_Test () =
         Assert.True(( cnt1 = 1 ))
         Assert.True(( cnt2 = 1 ))
 
-    [<Fact>]
-    member _.ReportSupportedOperationCodes_003() =
+    [<Theory>]
+    [<InlineData( 0x5Euy )>]    // PERSISTENT RESERVE IN
+    [<InlineData( 0x5Fuy )>]    // PERSISTENT RESERVE OUT
+    [<InlineData( 0xA3uy )>]    // REPORT SUPPORTED OPERATION CODES / REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS
+    [<InlineData( 0x7Fuy )>]    // READ(32) / WRITE(32)
+    member _.ReportSupportedOperationCodes_003 ( opCode : byte ) =
         let mutable cnt1 = 0
-        let vOPCode = [|
-            0x5Euy; // PERSISTENT RESERVE IN
-            0x5Fuy; // PERSISTENT RESERVE OUT
-            0xA3uy; // REPORT SUPPORTED OPERATION CODES / REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS
-            0x7Fuy; // READ(32) / WRITE(32)
-        |]
-        for i = 0 to vOPCode.Length - 1 do
-            let cdb = {
-                OperationCode = 0xA3uy;
-                ServiceAction = 0x00uy;
-                ReportingOptions = 0x01uy;
-                RequestedOperationCode = vOPCode.[i];
-                RequestedServiceAction = 0x00us;
-                AllocationLength = 16u;
-                Control = 0x00uy;
-            }
-            let stask, ilu = createDefScsiTask defaultSCSICommandPDU cdb [] false
-            ilu.p_NotifyTerminateTaskWithException <- ( fun argTask argEx ->
-                cnt1 <- cnt1 + 1
-                match argEx with
-                | :? SCSIACAException as x ->
-                    Assert.True(( x.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-                    Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-                    Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
-                | _ ->
-                    Assert.Fail __LINE__
-            )
+        let cdb = {
+            OperationCode = 0xA3uy;
+            ServiceAction = 0x00uy;
+            ReportingOptions = 0x01uy;
+            RequestedOperationCode = opCode;
+            RequestedServiceAction = 0x00us;
+            AllocationLength = 16u;
+            Control = 0x00uy;
+        }
+        let stask, ilu = createDefScsiTask defaultSCSICommandPDU cdb [] false
+        ilu.p_NotifyTerminateTaskWithException <- ( fun argTask argEx ->
+            cnt1 <- cnt1 + 1
+            match argEx with
+            | :? SCSIACAException as x ->
+                Assert.True(( x.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+                Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+                Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+            | _ ->
+                Assert.Fail __LINE__
+        )
 
-            stask.Execute()()
-            |> Functions.RunTaskSynchronously
-            Assert.True(( cnt1 = i + 1 ))
+        stask.Execute()()
+        |> Functions.RunTaskSynchronously
+        Assert.True(( cnt1 = 1 ))
 
     [<Fact>]
     member _.ReportSupportedOperationCodes_004() =
@@ -1496,44 +1493,41 @@ type ScsiTask_Test () =
         Assert.True(( cnt1 = 1 ))
         Assert.True(( cnt2 = 1 ))
 
-    [<Fact>]
-    member _.ReportSupportedOperationCodes_005() =
+    [<Theory>]
+    [<InlineData( 0x00us )>]
+    [<InlineData( 0x01us )>]
+    [<InlineData( 0x02us )>]
+    [<InlineData( 0x03us )>]
+    member _.ReportSupportedOperationCodes_005 ( argSA : uint16 ) =
         let mutable cnt1 = 0
         let mutable cnt2 = 0
-        let vSA = [|
-            0x00us;
-            0x01us;
-            0x02us;
-            0x03us;
-        |]
-        for i = 0 to vSA.Length - 1 do
-            let cdb = {
-                OperationCode = 0xA3uy;
-                ServiceAction = 0x00uy;
-                ReportingOptions = 0x02uy;
-                RequestedOperationCode = 0x5Euy;    // PERSISTENT RESERVE IN
-                RequestedServiceAction = vSA.[i];
-                AllocationLength = 16u;
-                Control = 0x00uy;
-            }
-            let stask, ilu = createDefScsiTask defaultSCSICommandPDU cdb [] false
-            let psStub = stask.Source.ProtocolService :?> CProtocolService_Stub
-            psStub.p_SendSCSIResponse <- ( fun _ _ _ _ resp stat _ indata alloclen _ ->
-                cnt2 <- cnt2 + 1
-                Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
-                Assert.True(( stat = ScsiCmdStatCd.GOOD ))
-                let v = SupportedOperationCodeConst.CdbUsageData_PERSISTENT_RESERVE_IN( byte vSA.[i] )
-                Assert.True(( PooledBuffer.ValueEqualsWithArray indata v ))
-                Assert.True(( alloclen = 0x10u ))
-            )
-            ilu.p_NotifyTerminateTask <- ( fun argTask ->
-                cnt1 <- cnt1 + 1
-            )
+        let cdb = {
+            OperationCode = 0xA3uy;
+            ServiceAction = 0x00uy;
+            ReportingOptions = 0x02uy;
+            RequestedOperationCode = 0x5Euy;    // PERSISTENT RESERVE IN
+            RequestedServiceAction = argSA;
+            AllocationLength = 16u;
+            Control = 0x00uy;
+        }
+        let stask, ilu = createDefScsiTask defaultSCSICommandPDU cdb [] false
+        let psStub = stask.Source.ProtocolService :?> CProtocolService_Stub
+        psStub.p_SendSCSIResponse <- ( fun _ _ _ _ resp stat _ indata alloclen _ ->
+            cnt2 <- cnt2 + 1
+            Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
+            Assert.True(( stat = ScsiCmdStatCd.GOOD ))
+            let v = SupportedOperationCodeConst.CdbUsageData_PERSISTENT_RESERVE_IN( byte argSA )
+            Assert.True(( PooledBuffer.ValueEqualsWithArray indata v ))
+            Assert.True(( alloclen = 0x10u ))
+        )
+        ilu.p_NotifyTerminateTask <- ( fun argTask ->
+            cnt1 <- cnt1 + 1
+        )
 
-            stask.Execute()()
-            |> Functions.RunTaskSynchronously
-            Assert.True(( cnt1 = i + 1 ))
-            Assert.True(( cnt2 = i + 1 ))
+        stask.Execute()()
+        |> Functions.RunTaskSynchronously
+        Assert.True(( cnt1 = 1 ))
+        Assert.True(( cnt2 = 1 ))
 
     [<Fact>]
     member _.ReportSupportedOperationCodes_006() =
@@ -1566,44 +1560,45 @@ type ScsiTask_Test () =
         Assert.True(( cnt1 = 1 ))
         Assert.True(( cnt2 = 1 ))
 
-    [<Fact>]
-    member _.ReportSupportedOperationCodes_007() =
+    [<Theory>]
+    [<InlineData( 0x00us )>]
+    [<InlineData( 0x01us )>]
+    [<InlineData( 0x02us )>]
+    [<InlineData( 0x03us )>]
+    [<InlineData( 0x04us )>]
+    [<InlineData( 0x05us )>]
+    [<InlineData( 0x06us )>]
+    [<InlineData( 0x07us )>]
+    member _.ReportSupportedOperationCodes_007 ( argSA : uint16 ) =
         let mutable cnt1 = 0
         let mutable cnt2 = 0
-        let vSA = [|
-            0x00us; 0x01us;
-            0x02us; 0x03us;
-            0x04us; 0x05us;
-            0x06us; 0x07us;
-        |]
-        for i = 0 to vSA.Length - 1 do
-            let cdb = {
-                OperationCode = 0xA3uy;
-                ServiceAction = 0x00uy;
-                ReportingOptions = 0x02uy;
-                RequestedOperationCode = 0x5Fuy;    // PERSISTENT RESERVE OUT
-                RequestedServiceAction = vSA.[i];
-                AllocationLength = 16u;
-                Control = 0x00uy;
-            }
-            let stask, ilu = createDefScsiTask defaultSCSICommandPDU cdb [] false
-            let psStub = stask.Source.ProtocolService :?> CProtocolService_Stub
-            psStub.p_SendSCSIResponse <- ( fun _ _ _ _ resp stat _ indata alloclen _ ->
-                cnt2 <- cnt2 + 1
-                Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
-                Assert.True(( stat = ScsiCmdStatCd.GOOD ))
-                let v = SupportedOperationCodeConst.CdbUsageData_PERSISTENT_RESERVE_OUT ( byte vSA.[i] )
-                Assert.True(( PooledBuffer.ValueEqualsWithArray indata v ))
-                Assert.True(( alloclen = 0x10u ))
-            )
-            ilu.p_NotifyTerminateTask <- ( fun argTask ->
-                cnt1 <- cnt1 + 1
-            )
+        let cdb = {
+            OperationCode = 0xA3uy;
+            ServiceAction = 0x00uy;
+            ReportingOptions = 0x02uy;
+            RequestedOperationCode = 0x5Fuy;    // PERSISTENT RESERVE OUT
+            RequestedServiceAction = argSA;
+            AllocationLength = 16u;
+            Control = 0x00uy;
+        }
+        let stask, ilu = createDefScsiTask defaultSCSICommandPDU cdb [] false
+        let psStub = stask.Source.ProtocolService :?> CProtocolService_Stub
+        psStub.p_SendSCSIResponse <- ( fun _ _ _ _ resp stat _ indata alloclen _ ->
+            cnt2 <- cnt2 + 1
+            Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
+            Assert.True(( stat = ScsiCmdStatCd.GOOD ))
+            let v = SupportedOperationCodeConst.CdbUsageData_PERSISTENT_RESERVE_OUT ( byte argSA )
+            Assert.True(( PooledBuffer.ValueEqualsWithArray indata v ))
+            Assert.True(( alloclen = 0x10u ))
+        )
+        ilu.p_NotifyTerminateTask <- ( fun argTask ->
+            cnt1 <- cnt1 + 1
+        )
 
-            stask.Execute()()
-            |> Functions.RunTaskSynchronously
-            Assert.True(( cnt1 = i + 1 ))
-            Assert.True(( cnt2 = i + 1 ))
+        stask.Execute()()
+        |> Functions.RunTaskSynchronously
+        Assert.True(( cnt1 = 1 ))
+        Assert.True(( cnt2 = 1 ))
 
     [<Fact>]
     member _.ReportSupportedOperationCodes_008() =
