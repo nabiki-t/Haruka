@@ -13,6 +13,7 @@ namespace Haruka.Test.IT.SCSI
 
 open System
 open System.IO
+open System.Collections.Generic
 open System.Text
 open System.Text.RegularExpressions
 open System.Threading
@@ -315,4 +316,68 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
             writeData1.Return()
             do! r1.Close()
             do! r2.Close()
+        }
+
+    // Verify that the same LU can be accessed through different network portals and targets.
+    [<Theory>]
+    [<InlineData( "iqn.2020-05.example.com:target1", "iqn.2020-05.example.com:target1", 0, 1, 1UL, 16UL )>]
+    [<InlineData( "iqn.2020-05.example.com:target2", "iqn.2020-05.example.com:target2", 0, 1, 17UL, 32UL )>]
+    [<InlineData( "iqn.2020-05.example.com:target1", "iqn.2020-05.example.com:target2", 2, 3, 1UL, 16UL )>]
+    member _.LUAccess_002 ( target1 : string ) ( target2 : string ) ( port1 : int ) ( port2 : int ) ( vlun1 : uint64 ) ( vlun2 : uint64 ) =
+        task {
+            let nport = [| iSCSIPortNo1; iSCSIPortNo2; iSCSIPortNo3; iSCSIPortNo4 |]
+            let sessconf1 = { m_defaultSessParam1 with TargetName = target1 }
+            let sessconf2 = { m_defaultSessParam1 with TargetName = target2 }
+            let conconf1 = { m_defaultConnParam1 with PortNo = nport.[ port1 ] }
+            let conconf2 = { m_defaultConnParam1 with PortNo = nport.[ port2 ] }
+            let! r1 = SCSI_Initiator.Create sessconf1 conconf1
+            let! r2 = SCSI_Initiator.Create sessconf2 conconf2
+            let vResKey =
+                [|
+                    for itr = vlun1 to vlun2 do
+                        yield ( lun_me.fromPrim itr, resvkey_me.fromPrim ( itr * 97UL ) )
+                |]
+                |> Array.map KeyValuePair
+                |> Dictionary
+
+            // register reservation key
+            for itr in vResKey do
+                let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK itr.Key NACA.T resvkey_me.zero itr.Value false false false [||]
+                let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
+                ()
+
+            // Get reservarion key
+            for itr in vResKey do
+                let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK itr.Key 0uy 256us NACA.T
+                let! res_pr_in1 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in1
+                Assert.True(( res_pr_in1.ReservationKey.Length = 1 ))
+                Assert.True(( res_pr_in1.ReservationKey.[0] = itr.Value ))
+
+                let! itt_pr_in2 = r2.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK itr.Key 0uy 256us NACA.T
+                let! res_pr_in2 = r2.Wait_PersistentReserveIn_ReadKey itt_pr_in2
+                Assert.True(( res_pr_in2.ReservationKey.Length = 1 ))
+                Assert.True(( res_pr_in2.ReservationKey.[0] = itr.Value ))
+
+            // clear reservation key
+            for itr in vResKey do
+                let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK itr.Key NACA.T itr.Value
+                let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
+                ()
+
+            do! r1.Close()
+            do! r2.Close()
+        }
+
+    // Check the operation codes supported
+    [<Theory>]
+    [<InlineData( 0UL, 26 )>]
+    [<InlineData( 1UL, 39 )>]
+    member _.GetOpcode_001 ( argLUN : uint64 ) ( exp : int ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam1 m_defaultConnParam1
+            let lun = lun_me.fromPrim argLUN
+            let! itt_rsoc = r1.Send_ReportSupportedOperationCodes TaskATTRCd.SIMPLE_TASK lun 0uy 0uy 0us 1024u NACA.T
+            let! res_rsoc = r1.Wait_ReportSupportedOperationCodes_AllCommand itt_rsoc
+            Assert.True(( res_rsoc.Descs.Length = exp ))
+            do! r1.Close()
         }
