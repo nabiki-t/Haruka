@@ -1281,6 +1281,15 @@ type BlockDeviceLU
                         ( taskType : BlockDeviceTaskType )
                         ( curTS : TaskSet ) : TaskSet =
         let loginfo = struct ( m_ObjID, ValueSome( source ), ValueSome( command.InitiatorTaskTag ), ValueSome( m_LUN ) )
+
+        // If the operation code cannot be identified, the NACA value cannot be trusted either.
+        // Therefore, in this case, it is unconditionally treated as CA.
+        let wnaca =
+            if ex.SenseKey = SenseKeyCd.ILLEGAL_REQUEST && ex.ASC = ASCCd.INVALID_COMMAND_OPERATION_CODE then
+                false
+            else
+                naca
+
         let ptn =
             if taskType = BlockDeviceTaskType.InternalTask then
                 // ACA exception can be raised in only SCSI task, others are unexpected error.
@@ -1302,14 +1311,14 @@ type BlockDeviceLU
                 2
             elif curTS.ACA.IsNone then
                 if command.ATTR = TaskATTRCd.ACA_TASK then
-                    if naca then
+                    if wnaca then
                         HLogger.Trace( LogID.I_ACA_TASK_ABORTED_IN_NORMAL_STAT, fun g -> g.Gen0 loginfo )
                         3   // Establish new ACA status.
                     else
                         HLogger.Trace( LogID.I_ACA_TASK_ABORTED_IN_NORMAL_STAT, fun g -> g.Gen0 loginfo )
                         4   // Responce CA. ACA is not established.
                 else
-                    if naca then
+                    if wnaca then
                         HLogger.Trace( LogID.I_ESTABLISH_NEW_ACA, fun g -> g.Gen0 loginfo )
                         3   // Establish new ACA status.
                     else
@@ -1317,7 +1326,7 @@ type BlockDeviceLU
                         4   // Responce CA. ACA is not established.
             elif ITNexus.Equals( fst curTS.ACA.Value, source.I_TNexus ) then
                 if command.ATTR = TaskATTRCd.ACA_TASK then
-                    if naca then
+                    if wnaca then
                         HLogger.Trace( LogID.I_CLEAR_ACA_AND_EST_NEW_ACA, fun g -> g.Gen0 loginfo )
                         3   // Clear ACA. And new ACA is established.
                     else
