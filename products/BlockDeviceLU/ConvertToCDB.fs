@@ -1294,9 +1294,9 @@ type ConvertToCDB() =
                     sprintf
                         "Unsupported service action code(Operation Code=0xA3, Service Action Code=0x%02X)."
                         ( command.ScsiCDB.[1] &&& 0x1Fuy )
-                HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
+                HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_COMMAND_OPERATION_CODE, errmsg )
                 raise <| SCSIACAException (
-                    source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
+                    source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_COMMAND_OPERATION_CODE,
                     { CommandData = true; BPV = true; BitPointer = 4uy; FieldPointer = 1us },
                     errmsg
                 )
@@ -1310,9 +1310,9 @@ type ConvertToCDB() =
                     sprintf
                         "Unsupported service action code(Operation Code=0x9E, Service Action Code=0x%02X)."
                         ( command.ScsiCDB.[1] &&& 0x1Fuy )
-                HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
+                HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_COMMAND_OPERATION_CODE, errmsg )
                 raise <| SCSIACAException (
-                    source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
+                    source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_COMMAND_OPERATION_CODE,
                     { CommandData = true; BPV = true; BitPointer = 4uy; FieldPointer = 1us },
                     errmsg
                 )

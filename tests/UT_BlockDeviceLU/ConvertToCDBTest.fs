@@ -116,7 +116,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( concnt_me.fromPrim  2 = x.CommandSource.ConCounter ) )
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
-            Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ASCCd.INVALID_COMMAND_OPERATION_CODE = x.ASC ) )
             Assert.True( ( x.Message.Contains( "Unsupported service action code(Operation Code=0xA3" ) ) )
 
     [<Fact>]
@@ -135,7 +135,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( concnt_me.fromPrim 2 = x.CommandSource.ConCounter ) )
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
-            Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ASCCd.INVALID_COMMAND_OPERATION_CODE = x.ASC ) )
             Assert.True( ( x.Message.Contains( "Unsupported service action code(Operation Code=0x9E" ) ) )
 
     [<Fact>]
