@@ -1024,6 +1024,7 @@ type BlockDeviceLU
             let msg = "Overlapped task is detected."
             HLogger.ACAException( loginfo, SenseKeyCd.ABORTED_COMMAND, ASCCd.OVERLAPPED_COMMANDS_ATTEMPTED, msg )
             SCSIACAException(
+                ValueNone,
                 source,
                 ScsiCmdStatCd.CHECK_CONDITION,
                 SenseData(

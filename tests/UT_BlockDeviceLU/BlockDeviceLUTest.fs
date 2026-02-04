@@ -156,6 +156,7 @@ type BlockDeviceLU_Test () =
         ( senseKey : SenseKeyCd )
         ( asc : ASCCd ) =
             new SCSIACAException(
+                ValueNone,
                 BlockDeviceLU_Test.cmdSource(),
                 stat,
                 new SenseData( true, senseKey, asc, "" ),
@@ -2502,6 +2503,7 @@ type BlockDeviceLU_Test () =
         ua.TryAdd(
             source.I_TNexus.InitiatorPortName,
             new SCSIACAException(
+                ValueNone,
                 source,
                 ScsiCmdStatCd.CHECK_CONDITION,
                 new SenseData(
@@ -2541,6 +2543,7 @@ type BlockDeviceLU_Test () =
         ua.TryAdd(
             ( new ITNexus( "INIT", isid_me.zero, "TARG", tpgt_me.fromPrim 0us ) ).InitiatorPortName,
             new SCSIACAException(
+                ValueNone,
                 source,
                 ScsiCmdStatCd.CHECK_CONDITION,
                 new SenseData(
@@ -2589,6 +2592,7 @@ type BlockDeviceLU_Test () =
         ua.TryAdd(
             ( new ITNexus( "INIT_2", isid_me.zero, "TARG", tpgt_me.fromPrim 0us ) ).InitiatorPortName,
             new SCSIACAException(
+                ValueNone,
                 {
                     source with
                         I_TNexus = new ITNexus( "INIT_2", isid_me.zero, "TARG", tpgt_me.fromPrim 0us );
@@ -2638,6 +2642,7 @@ type BlockDeviceLU_Test () =
         ua.TryAdd(
             ( new ITNexus( "INIT_2", isid_me.zero, "TARG", tpgt_me.fromPrim 0us ) ).InitiatorPortName,
             new SCSIACAException(
+                ValueNone,
                 {
                     source with
                         I_TNexus = new ITNexus( "INIT_2", isid_me.zero, "TARG", tpgt_me.fromPrim 0us );
@@ -2698,6 +2703,7 @@ type BlockDeviceLU_Test () =
         ua.TryAdd(
             ( new ITNexus( "INIT_2", isid_me.zero, "TARG", tpgt_me.fromPrim 0us ) ).InitiatorPortName,
             new SCSIACAException(
+                ValueNone,
                 {
                     source with
                         I_TNexus = new ITNexus( "INIT_2", isid_me.zero, "TARG", tpgt_me.fromPrim 0us );

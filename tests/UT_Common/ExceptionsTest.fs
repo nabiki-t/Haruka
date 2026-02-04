@@ -12,6 +12,7 @@ namespace Haruka.Test.UT.Commons
 // Import declaration
 
 open System
+open System.Text
 
 open Xunit
 
@@ -3543,3 +3544,158 @@ type Exceptions_Test () =
         Assert.True(( sd2.BlockCommand |> ValueOption.isSome ))
         Assert.False(( sd2.BlockCommand |> ValueOption.get |> _.ILI ))
 
+    [<Fact>]
+    member _.SCSIACAException_001() =
+        let src = {
+            I_TNexus = ITNexus( "initiator1", isid_me.zero, "target1", tpgt_me.zero );
+            CID = cid_me.zero;
+            ConCounter = concnt_me.zero;
+            TSIH = tsih_me.zero;
+            ProtocolService = CProtocolService_Stub();
+            SessionKiller = HKiller()
+        }
+        let sense = new SenseData(
+            false,
+            SenseKeyCd.MISCOMPARE,
+            ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT,
+            ValueNone,
+            ValueNone,
+            ValueNone,
+            ValueNone,
+            ValueNone,
+            ValueNone
+        )
+        let e = SCSIACAException( ValueNone, src, ScsiCmdStatCd.ACA_ACTIVE, sense, "message" )
+        Assert.True(( e.NACA = ValueNone ))
+        Assert.True(( Functions.IsSame e.CommandSource src ))
+        Assert.True(( e.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+        Assert.True(( e.SenseKey = SenseKeyCd.MISCOMPARE ))
+        Assert.True(( e.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
+        Assert.True(( e.IsCurrent = false ))
+        Assert.True(( Functions.IsSame e.SenseData sense ))
+
+    [<Fact>]
+    member _.SCSIACAException_002() =
+        let src = {
+            I_TNexus = ITNexus( "initiator1", isid_me.zero, "target1", tpgt_me.zero );
+            CID = cid_me.zero;
+            ConCounter = concnt_me.zero;
+            TSIH = tsih_me.zero;
+            ProtocolService = CProtocolService_Stub();
+            SessionKiller = HKiller()
+        }
+        let fpssd = {
+            CommandData = true;
+            BPV = true;
+            BitPointer = 99uy;
+            FieldPointer = 88us;
+        }
+        let e = SCSIACAException( ValueSome true, src, true, SenseKeyCd.ABORTED_COMMAND, ASCCd.INVALID_BITS_IN_IDENTIFY_MESSAGE, fpssd, "aaaaa" )
+        Assert.True(( e.NACA = ValueSome true ))
+        Assert.True(( Functions.IsSame e.CommandSource src ))
+        Assert.True(( e.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+        Assert.True(( e.SenseKey = SenseKeyCd.ABORTED_COMMAND ))
+        Assert.True(( e.ASC = ASCCd.INVALID_BITS_IN_IDENTIFY_MESSAGE ))
+        Assert.True(( e.IsCurrent = true ))
+        Assert.True(( ValueOption.isNone e.SenseData.Information ))
+        Assert.True(( ValueOption.isNone e.SenseData.CommandSpecific ))
+        Assert.True(( ValueOption.isSome e.SenseData.FieldPointer ))
+        Assert.True(( ValueOption.get e.SenseData.FieldPointer |> _.BitPointer = 99uy ))
+        Assert.True(( ValueOption.isNone e.SenseData.ActualRetryCount ))
+        Assert.True(( ValueOption.isNone e.SenseData.ProgressIndication ))
+        Assert.True(( ValueOption.isNone e.SenseData.SegmentPointer ))
+        Assert.True(( ValueOption.isNone e.SenseData.FieldReplaceableUnit ))
+        Assert.True(( ValueOption.isSome e.SenseData.VendorSpecific ))
+        Assert.True(( ValueOption.get e.SenseData.VendorSpecific |> _.VendorSpecific = Encoding.UTF8.GetBytes "aaaaa" ))
+        Assert.True(( ValueOption.isNone e.SenseData.BlockCommand ))
+
+    [<Fact>]
+    member _.SCSIACAException_003() =
+        let src = {
+            I_TNexus = ITNexus( "initiator1", isid_me.zero, "target1", tpgt_me.zero );
+            CID = cid_me.zero;
+            ConCounter = concnt_me.zero;
+            TSIH = tsih_me.zero;
+            ProtocolService = CProtocolService_Stub();
+            SessionKiller = HKiller()
+        }
+        let fpssd = {
+            CommandData = true;
+            BPV = true;
+            BitPointer = 99uy;
+            FieldPointer = 88us;
+        }
+        let e = SCSIACAException( src, false, SenseKeyCd.ABORTED_COMMAND, ASCCd.INVALID_BITS_IN_IDENTIFY_MESSAGE, fpssd, "bbbbbbb" )
+        Assert.True(( e.NACA = ValueNone ))
+        Assert.True(( Functions.IsSame e.CommandSource src ))
+        Assert.True(( e.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+        Assert.True(( e.SenseKey = SenseKeyCd.ABORTED_COMMAND ))
+        Assert.True(( e.ASC = ASCCd.INVALID_BITS_IN_IDENTIFY_MESSAGE ))
+        Assert.True(( e.IsCurrent = false ))
+        Assert.True(( ValueOption.isNone e.SenseData.Information ))
+        Assert.True(( ValueOption.isNone e.SenseData.CommandSpecific ))
+        Assert.True(( ValueOption.isSome e.SenseData.FieldPointer ))
+        Assert.True(( ValueOption.get e.SenseData.FieldPointer |> _.BitPointer = 99uy ))
+        Assert.True(( ValueOption.isNone e.SenseData.ActualRetryCount ))
+        Assert.True(( ValueOption.isNone e.SenseData.ProgressIndication ))
+        Assert.True(( ValueOption.isNone e.SenseData.SegmentPointer ))
+        Assert.True(( ValueOption.isNone e.SenseData.FieldReplaceableUnit ))
+        Assert.True(( ValueOption.isSome e.SenseData.VendorSpecific ))
+        Assert.True(( ValueOption.get e.SenseData.VendorSpecific |> _.VendorSpecific = Encoding.UTF8.GetBytes "bbbbbbb" ))
+        Assert.True(( ValueOption.isNone e.SenseData.BlockCommand ))
+
+    [<Fact>]
+    member _.SCSIACAException_004() =
+        let src = {
+            I_TNexus = ITNexus( "initiator1", isid_me.zero, "target1", tpgt_me.zero );
+            CID = cid_me.zero;
+            ConCounter = concnt_me.zero;
+            TSIH = tsih_me.zero;
+            ProtocolService = CProtocolService_Stub();
+            SessionKiller = HKiller()
+        }
+        let e = SCSIACAException( ValueSome false, src, false, SenseKeyCd.ABORTED_COMMAND, ASCCd.INVALID_BITS_IN_IDENTIFY_MESSAGE, "ggtthhh" )
+        Assert.True(( e.NACA = ValueSome false ))
+        Assert.True(( Functions.IsSame e.CommandSource src ))
+        Assert.True(( e.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+        Assert.True(( e.SenseKey = SenseKeyCd.ABORTED_COMMAND ))
+        Assert.True(( e.ASC = ASCCd.INVALID_BITS_IN_IDENTIFY_MESSAGE ))
+        Assert.True(( e.IsCurrent = false ))
+        Assert.True(( ValueOption.isNone e.SenseData.Information ))
+        Assert.True(( ValueOption.isNone e.SenseData.CommandSpecific ))
+        Assert.True(( ValueOption.isNone e.SenseData.FieldPointer ))
+        Assert.True(( ValueOption.isNone e.SenseData.ActualRetryCount ))
+        Assert.True(( ValueOption.isNone e.SenseData.ProgressIndication ))
+        Assert.True(( ValueOption.isNone e.SenseData.SegmentPointer ))
+        Assert.True(( ValueOption.isNone e.SenseData.FieldReplaceableUnit ))
+        Assert.True(( ValueOption.isSome e.SenseData.VendorSpecific ))
+        Assert.True(( ValueOption.get e.SenseData.VendorSpecific |> _.VendorSpecific = Encoding.UTF8.GetBytes "ggtthhh" ))
+        Assert.True(( ValueOption.isNone e.SenseData.BlockCommand ))
+
+    [<Fact>]
+    member _.SCSIACAException_005() =
+        let src = {
+            I_TNexus = ITNexus( "initiator1", isid_me.zero, "target1", tpgt_me.zero );
+            CID = cid_me.zero;
+            ConCounter = concnt_me.zero;
+            TSIH = tsih_me.zero;
+            ProtocolService = CProtocolService_Stub();
+            SessionKiller = HKiller()
+        }
+        let e = SCSIACAException( src, true, SenseKeyCd.ABORTED_COMMAND, ASCCd.INVALID_BITS_IN_IDENTIFY_MESSAGE, "eerrtt" )
+        Assert.True(( e.NACA = ValueNone ))
+        Assert.True(( Functions.IsSame e.CommandSource src ))
+        Assert.True(( e.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+        Assert.True(( e.SenseKey = SenseKeyCd.ABORTED_COMMAND ))
+        Assert.True(( e.ASC = ASCCd.INVALID_BITS_IN_IDENTIFY_MESSAGE ))
+        Assert.True(( e.IsCurrent = true ))
+        Assert.True(( ValueOption.isNone e.SenseData.Information ))
+        Assert.True(( ValueOption.isNone e.SenseData.CommandSpecific ))
+        Assert.True(( ValueOption.isNone e.SenseData.FieldPointer ))
+        Assert.True(( ValueOption.isNone e.SenseData.ActualRetryCount ))
+        Assert.True(( ValueOption.isNone e.SenseData.ProgressIndication ))
+        Assert.True(( ValueOption.isNone e.SenseData.SegmentPointer ))
+        Assert.True(( ValueOption.isNone e.SenseData.FieldReplaceableUnit ))
+        Assert.True(( ValueOption.isSome e.SenseData.VendorSpecific ))
+        Assert.True(( ValueOption.get e.SenseData.VendorSpecific |> _.VendorSpecific = Encoding.UTF8.GetBytes "eerrtt" ))
+        Assert.True(( ValueOption.isNone e.SenseData.BlockCommand ))

@@ -2143,6 +2143,7 @@ type ScsiTask_Test () =
             Assert.True(( itn = stask.Source.I_TNexus ))
             ValueSome <|
                 SCSIACAException(
+                    ValueNone,
                     {
                         I_TNexus = new ITNexus( "INIT", isid_me.zero, "TARG", tpgt_me.zero );
                         CID = cid_me.fromPrim 0us;

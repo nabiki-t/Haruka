@@ -1084,6 +1084,10 @@ type SCSIStatusException
 /// <summary>
 ///   SCSI error is occurred and ACA is established.
 /// </summary>
+/// <param name="m_NACA">
+///   The NACA value of the command that caused the error.
+///   This is specified if the error handling needs to force the use of a specific NACA value.
+/// </param>
 /// <param name="m_source">
 ///   Command received source information.
 /// </param>
@@ -1098,6 +1102,7 @@ type SCSIStatusException
 /// </param>
 type SCSIACAException
     (
+        m_NACA : bool voption,
         m_source : CommandSourceInfo,
         m_Status : ScsiCmdStatCd,
         m_SenseData : SenseData,
@@ -1105,14 +1110,41 @@ type SCSIACAException
     ) =
     inherit Exception( m_Message )
 
+    /// <summary>
+    ///  Specify the Field Pointer Sense Key and throw an exception.
+    /// </summary>
+    /// <param name="naca">
+    ///  NACA value of the command
+    /// </param>
+    /// <param name="source">
+    ///  Command received source information.
+    /// </param>
+    /// <param name="isCurrent">
+    ///  Current error or not.
+    /// </param>
+    /// <param name="senseKey">
+    ///  Sense Key value according to the error that occurred.
+    /// </param>
+    /// <param name="asc">
+    ///  ASC value according to the error that occurred.
+    /// </param>
+    /// <param name="fieldPointer">
+    ///  Detailed information describing the error.
+    /// </param>
+    /// <param name="message">
+    ///  Error message.
+    /// </param>
     new (
+        naca : bool voption,
         source : CommandSourceInfo,
         isCurrent : bool,
         senseKey : SenseKeyCd,
         asc : ASCCd,
         fieldPointer : fieldPointerSenseKeySpecificData,
         message : string ) =
+
             new SCSIACAException (
+                naca,
                 source,
                 ScsiCmdStatCd.CHECK_CONDITION,
                 new SenseData (
@@ -1126,13 +1158,80 @@ type SCSIACAException
                 message
             )
 
+    /// <summary>
+    ///  Specify the Field Pointer Sense Key and throw an exception.
+    ///  NACA is treated as an abbreviation.
+    /// </summary>
+    /// <param name="source">
+    ///  Command received source information.
+    /// </param>
+    /// <param name="isCurrent">
+    ///  Current error or not.
+    /// </param>
+    /// <param name="senseKey">
+    ///  Sense Key value according to the error that occurred.
+    /// </param>
+    /// <param name="asc">
+    ///  ASC value according to the error that occurred.
+    /// </param>
+    /// <param name="fieldPointer">
+    ///  Detailed information describing the error.
+    /// </param>
+    /// <param name="message">
+    ///  Error message.
+    /// </param>
     new (
+        source : CommandSourceInfo,
+        isCurrent : bool,
+        senseKey : SenseKeyCd,
+        asc : ASCCd,
+        fieldPointer : fieldPointerSenseKeySpecificData,
+        message : string ) =
+            new SCSIACAException (
+                ValueNone,
+                source,
+                ScsiCmdStatCd.CHECK_CONDITION,
+                new SenseData (
+                    isCurrent,
+                    senseKey,
+                    asc,
+                    fieldPointer,
+                    VendorSpecificSenseDataDescType.TEXT_MESSAGE,
+                    message
+                ),
+                message
+            )
+
+    /// <summary>
+    ///  Generates an ACA exception without specifying detailed error information.
+    /// </summary>
+    /// <param name="naca">
+    ///  NACA value of the command
+    /// </param>
+    /// <param name="source">
+    ///  Command received source information.
+    /// </param>
+    /// <param name="isCurrent">
+    ///  Current error or not.
+    /// </param>
+    /// <param name="senseKey">
+    ///  Sense Key value according to the error that occurred.
+    /// </param>
+    /// <param name="asc">
+    ///  ASC value according to the error that occurred.
+    /// </param>
+    /// <param name="message">
+    ///  Error message.
+    /// </param>
+    new (
+        naca : bool voption,
         source : CommandSourceInfo,
         isCurrent : bool,
         senseKey : SenseKeyCd,
         asc : ASCCd,
         message : string ) =
             new SCSIACAException (
+                naca,
                 source,
                 ScsiCmdStatCd.CHECK_CONDITION,
                 new SenseData (
@@ -1144,7 +1243,50 @@ type SCSIACAException
                 message
             )
 
+    /// <summary>
+    ///  Generates an ACA exception without specifying detailed error information.
+    ///  NACA is treated as an abbreviation.
+    /// </summary>
+    /// <param name="source">
+    ///  Command received source information.
+    /// </param>
+    /// <param name="isCurrent">
+    ///  Current error or not.
+    /// </param>
+    /// <param name="senseKey">
+    ///  Sense Key value according to the error that occurred.
+    /// </param>
+    /// <param name="asc">
+    ///  ASC value according to the error that occurred.
+    /// </param>
+    /// <param name="message">
+    ///  Error message.
+    /// </param>
+    new (
+        source : CommandSourceInfo,
+        isCurrent : bool,
+        senseKey : SenseKeyCd,
+        asc : ASCCd,
+        message : string ) =
+            new SCSIACAException (
+                ValueNone,
+                source,
+                ScsiCmdStatCd.CHECK_CONDITION,
+                new SenseData (
+                    isCurrent,
+                    senseKey,
+                    asc,
+                    message
+                ),
+                message
+            )
 
+    /// NACA value of the command that caused the error.
+    /// If a NACA value was set at the source of the error, that value is returned, otherwise ValueNone.
+    /// When handling an SCSIACAException, if a NACA value was provided, that value must be used. 
+    // If it is ValueNone, refer to the NACA value in the CDB for the command.
+    member _.NACA : bool voption =
+        m_NACA
 
     /// Get command that raise this exception source information.
     member _.CommandSource : CommandSourceInfo =
@@ -1169,5 +1311,4 @@ type SCSIACAException
     /// Get sense data that has to be established at ACA.
     member _.SenseData : SenseData =
         m_SenseData
-
 
