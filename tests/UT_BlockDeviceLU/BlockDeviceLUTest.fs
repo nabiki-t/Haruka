@@ -152,11 +152,12 @@ type BlockDeviceLU_Test () =
         }
 
     static member private defSCSIACAException
+        ( naca : bool voption )
         ( stat : ScsiCmdStatCd )
         ( senseKey : SenseKeyCd )
         ( asc : ASCCd ) =
             new SCSIACAException(
-                ValueNone,
+                naca,
                 BlockDeviceLU_Test.cmdSource(),
                 stat,
                 new SenseData( true, senseKey, asc, "" ),
@@ -1031,7 +1032,7 @@ type BlockDeviceLU_Test () =
             Queue = testTasks2.ToImmutableArray();
             ACA = ValueSome( 
                 source.I_TNexus,
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+                BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
             );
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -1309,7 +1310,7 @@ type BlockDeviceLU_Test () =
             Queue = testTasks1.ToImmutableArray();
             ACA = ValueSome( 
                 source.I_TNexus,
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+                BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
             );
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -1755,7 +1756,7 @@ type BlockDeviceLU_Test () =
             Queue = testTasks1.ToImmutableArray();
             ACA = ValueSome( 
                 source.I_TNexus,
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+                BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
             );
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -2586,7 +2587,7 @@ type BlockDeviceLU_Test () =
         ua.Clear()
         ua.TryAdd(
             source.I_TNexus.InitiatorPortName,
-            BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+            BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
         )
         |> ignore
         ua.TryAdd(
@@ -2636,7 +2637,7 @@ type BlockDeviceLU_Test () =
         ua.Clear()
         ua.TryAdd(
             source.I_TNexus.InitiatorPortName,
-            BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+            BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
         )
         |> ignore
         ua.TryAdd(
@@ -2697,7 +2698,7 @@ type BlockDeviceLU_Test () =
 
         ua.TryAdd(
             source.I_TNexus.InitiatorPortName,
-            BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+            BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
         )
         |> ignore
         ua.TryAdd(
@@ -2739,8 +2740,8 @@ type BlockDeviceLU_Test () =
 
         let iportn_1 = ( new ITNexus( "INIT_1", isid_me.zero, "TARG", tpgt_me.fromPrim 0us ) ).InitiatorPortName
         let iportn_2 = ( new ITNexus( "INIT_2", isid_me.zero, "TARG", tpgt_me.fromPrim 0us ) ).InitiatorPortName
-        let ex_1 = BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
-        let ex_2 = BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+        let ex_1 = BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+        let ex_2 = BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
         inlu.EstablishUnitAttention iportn_1 ex_1
         Assert.True(( ua.Count = 1 ))
 
@@ -3465,7 +3466,7 @@ type BlockDeviceLU_Test () =
             Queue = ImmutableArray< TaskStatus >.Empty;
             ACA = ValueSome( 
                 source.I_TNexus,
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+                BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
             );
         }
         let queue2 =
@@ -3507,7 +3508,7 @@ type BlockDeviceLU_Test () =
             Queue = ImmutableArray< TaskStatus >.Empty.Add testTask;
             ACA = ValueSome( 
                 source.I_TNexus,
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+                BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
             );
         }
 
@@ -3544,7 +3545,7 @@ type BlockDeviceLU_Test () =
             Queue = ImmutableArray< TaskStatus >.Empty;
             ACA = ValueSome( 
                 source.I_TNexus,
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+                BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
             );
         }
 
@@ -3575,7 +3576,7 @@ type BlockDeviceLU_Test () =
             Queue = ImmutableArray< TaskStatus >.Empty;
             ACA = ValueSome( 
                 new ITNexus( "INIT2", isid_me.fromElem 1uy 2uy 3us 4uy 5us, "TARG6", tpgt_me.fromPrim 7us ),
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+                BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
             );
         }
 
@@ -3607,7 +3608,7 @@ type BlockDeviceLU_Test () =
             Queue = ImmutableArray< TaskStatus >.Empty;
             ACA = ValueSome( 
                 new ITNexus( "INIT2", isid_me.fromElem 1uy 2uy 3us 4uy 5us, "TARG6", tpgt_me.fromPrim 7us ),
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+                BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
             );
         }
 
@@ -3640,7 +3641,7 @@ type BlockDeviceLU_Test () =
             Queue = ImmutableArray< TaskStatus >.Empty;
             ACA = ValueSome( 
                 new ITNexus( "INIT2", isid_me.fromElem 1uy 2uy 3us 4uy 5us, "TARG6", tpgt_me.fromPrim 7us ),
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+                BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
             );
         }
 
@@ -3749,7 +3750,7 @@ type BlockDeviceLU_Test () =
         let media, sm, lu = this.createBlockDevice()
         let source = BlockDeviceLU_Test.cmdSource()
         let pc = new PrivateCaller( lu )
-        let exp = BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+        let exp = BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
         let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK
 
         media.p_Terminate <- ( fun () ->
@@ -3778,7 +3779,7 @@ type BlockDeviceLU_Test () =
         let media, sm, lu = this.createBlockDevice()
         let source = BlockDeviceLU_Test.cmdSource()
         let pc = new PrivateCaller( lu )
-        let exp = BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.BUSY SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+        let exp = BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.BUSY SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
         let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK
 
         let w = new SemaphoreSlim(1)
@@ -3804,14 +3805,43 @@ type BlockDeviceLU_Test () =
 
         w.Release() |> ignore
 
-    // The ACA task failed without an ACA being established( NACA=true ).
-    [<Fact>]
-    member this.EstablishNewACAStatus_003() =
+    static member m_EstablishNewACAStatus_003_data : obj[][] = [|
+        // Task type               NACA(argument), NACA(exception),             SenseKey,                   ASC,                                  ACA or CA
+        [| TaskATTRCd.ACA_TASK;    true;           ValueOption<bool>.ValueNone; SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; true; |]
+        [| TaskATTRCd.ACA_TASK;    true;           ValueOption<bool>.ValueNone; SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; false; |]
+        [| TaskATTRCd.ACA_TASK;    true;           ValueSome true;              SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; true; |]
+        [| TaskATTRCd.ACA_TASK;    true;           ValueSome true;              SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; false; |]
+        [| TaskATTRCd.ACA_TASK;    true;           ValueSome false;             SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; false; |]
+        [| TaskATTRCd.ACA_TASK;    true;           ValueSome false;             SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; false; |]
+        [| TaskATTRCd.ACA_TASK;    false;          ValueOption<bool>.ValueNone; SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; false; |]
+        [| TaskATTRCd.ACA_TASK;    false;          ValueOption<bool>.ValueNone; SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; false; |]
+        [| TaskATTRCd.ACA_TASK;    false;          ValueSome true;              SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; true; |]
+        [| TaskATTRCd.ACA_TASK;    false;          ValueSome true;              SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; false; |]
+        [| TaskATTRCd.ACA_TASK;    false;          ValueSome false;             SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; false; |]
+        [| TaskATTRCd.ACA_TASK;    false;          ValueSome false;             SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; false; |]
+        [| TaskATTRCd.SIMPLE_TASK; true;           ValueOption<bool>.ValueNone; SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; true; |]
+        [| TaskATTRCd.SIMPLE_TASK; true;           ValueOption<bool>.ValueNone; SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; false; |]
+        [| TaskATTRCd.SIMPLE_TASK; true;           ValueSome true;              SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; true; |]
+        [| TaskATTRCd.SIMPLE_TASK; true;           ValueSome true;              SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; false; |]
+        [| TaskATTRCd.SIMPLE_TASK; true;           ValueSome false;             SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; false; |]
+        [| TaskATTRCd.SIMPLE_TASK; true;           ValueSome false;             SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; false; |]
+        [| TaskATTRCd.SIMPLE_TASK; false;          ValueOption<bool>.ValueNone; SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; false; |]
+        [| TaskATTRCd.SIMPLE_TASK; false;          ValueOption<bool>.ValueNone; SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; false; |]
+        [| TaskATTRCd.SIMPLE_TASK; false;          ValueSome true;              SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; true; |]
+        [| TaskATTRCd.SIMPLE_TASK; false;          ValueSome true;              SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; false; |]
+        [| TaskATTRCd.SIMPLE_TASK; false;          ValueSome false;             SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; false; |]
+        [| TaskATTRCd.SIMPLE_TASK; false;          ValueSome false;             SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; false; |]
+    |]
+    
+    // The task(ACA/Simple) failed without an ACA being established.
+    [<Theory>]
+    [<MemberData( "m_EstablishNewACAStatus_003_data" )>]
+    member this.EstablishNewACAStatus_003 ( taskAttr : TaskATTRCd ) ( arg_naca : bool ) ( exp_naca : bool voption ) ( sensekey : SenseKeyCd ) ( asc : ASCCd ) ( expaca : bool ) =
         let media, sm, lu = this.createBlockDevice()
         let source = BlockDeviceLU_Test.cmdSource()
         let pc = new PrivateCaller( lu )
-        let exp = BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
-        let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK       // ACA task failed
+        let exp = BlockDeviceLU_Test.defSCSIACAException exp_naca ScsiCmdStatCd.CHECK_CONDITION sensekey asc
+        let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand taskAttr
 
         let queue1 = {
             Queue = ImmutableArray< TaskStatus >.Empty;
@@ -3825,12 +3855,15 @@ type BlockDeviceLU_Test () =
         )
         
         let queue2 =
-            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 98u, true, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
+            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 98u, arg_naca, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
 
         let waca = queue2.ACA
-        Assert.True( waca.IsSome )
-        Assert.True( fst( waca.Value ) = source.I_TNexus )
-        Assert.True( snd( waca.Value ) = exp )
+        if expaca then
+            Assert.True( waca.IsSome )
+            Assert.True( fst( waca.Value ) = source.I_TNexus )
+            Assert.True( snd( waca.Value ) = exp )
+        else
+            Assert.True( waca.IsNone )
 
         Assert.True(( queue2.Queue.Length = 1 ))
         Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
@@ -3839,222 +3872,55 @@ type BlockDeviceLU_Test () =
         let pcwt = new PrivateCaller( wt )
         Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.CHECK_CONDITION ))
         let senseData = pcwt.GetField( "m_SenseData" ) :?> SenseData option
-        Assert.True(( senseData.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-        Assert.True(( senseData.Value.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
+        Assert.True(( senseData.Value.SenseKey = sensekey ))
+        Assert.True(( senseData.Value.ASC = asc ))
 
         w.Release() |> ignore
 
-    // The ACA task failed without an ACA being established
-    // NACA=true, but ASC = INVALID_COMMAND_OPERATION_CODE. In this case, it will be treated as a CA.
-    [<Fact>]
-    member this.EstablishNewACAStatus_004() =
+
+    static member m_EstablishNewACAStatus_009_data : obj[][] = [|
+        // Task type               NACA(argument), NACA(exception),             SenseKey,                   ASC,                                  ACA or CA
+        [| TaskATTRCd.ACA_TASK;    true;           ValueOption<bool>.ValueNone; SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; true; |]
+        [| TaskATTRCd.ACA_TASK;    true;           ValueOption<bool>.ValueNone; SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; false; |]
+        [| TaskATTRCd.ACA_TASK;    true;           ValueSome true;              SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; true; |]
+        [| TaskATTRCd.ACA_TASK;    true;           ValueSome true;              SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; false; |]
+        [| TaskATTRCd.ACA_TASK;    true;           ValueSome false;             SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; false; |]
+        [| TaskATTRCd.ACA_TASK;    true;           ValueSome false;             SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; false; |]
+        [| TaskATTRCd.ACA_TASK;    false;          ValueOption<bool>.ValueNone; SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; false; |]
+        [| TaskATTRCd.ACA_TASK;    false;          ValueOption<bool>.ValueNone; SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; false; |]
+        [| TaskATTRCd.ACA_TASK;    false;          ValueSome true;              SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; true; |]
+        [| TaskATTRCd.ACA_TASK;    false;          ValueSome true;              SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; false; |]
+        [| TaskATTRCd.ACA_TASK;    false;          ValueSome false;             SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; false; |]
+        [| TaskATTRCd.ACA_TASK;    false;          ValueSome false;             SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; false; |]
+        [| TaskATTRCd.SIMPLE_TASK; true;           ValueOption<bool>.ValueNone; SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; true; |]
+        [| TaskATTRCd.SIMPLE_TASK; true;           ValueOption<bool>.ValueNone; SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; true; |]
+        [| TaskATTRCd.SIMPLE_TASK; true;           ValueSome true;              SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; true; |]
+        [| TaskATTRCd.SIMPLE_TASK; true;           ValueSome true;              SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; true; |]
+        [| TaskATTRCd.SIMPLE_TASK; true;           ValueSome false;             SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; true; |]
+        [| TaskATTRCd.SIMPLE_TASK; true;           ValueSome false;             SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; true; |]
+        [| TaskATTRCd.SIMPLE_TASK; false;          ValueOption<bool>.ValueNone; SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; true; |]
+        [| TaskATTRCd.SIMPLE_TASK; false;          ValueOption<bool>.ValueNone; SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; true; |]
+        [| TaskATTRCd.SIMPLE_TASK; false;          ValueSome true;              SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; true; |]
+        [| TaskATTRCd.SIMPLE_TASK; false;          ValueSome true;              SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; true; |]
+        [| TaskATTRCd.SIMPLE_TASK; false;          ValueSome false;             SenseKeyCd.ILLEGAL_REQUEST; ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT; true; |]
+        [| TaskATTRCd.SIMPLE_TASK; false;          ValueSome false;             SenseKeyCd.ILLEGAL_REQUEST; ASCCd.INVALID_COMMAND_OPERATION_CODE; true; |]
+    |]
+
+    // The task(ACA/Simple) failed while ACA was established.
+    [<Theory>]
+    [<MemberData( "m_EstablishNewACAStatus_009_data" )>]
+    member this.EstablishNewACAStatus_009 ( taskAttr : TaskATTRCd ) ( arg_naca : bool ) ( exp_naca : bool voption ) ( sensekey : SenseKeyCd ) ( asc : ASCCd ) ( expaca : bool ) =
         let media, sm, lu = this.createBlockDevice()
         let source = BlockDeviceLU_Test.cmdSource()
         let pc = new PrivateCaller( lu )
-        let exp = BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.INVALID_COMMAND_OPERATION_CODE
-        let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK       // ACA task failed
-
-        let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
-            ACA = ValueNone;
-        }
-
-        let w = new SemaphoreSlim(1)
-        w.Wait()
-        ( source.ProtocolService :?> CProtocolService_Stub ).p_SendSCSIResponse <- ( fun _ _ _ _ _ _ _ _ _ _ ->
-            w.Wait()
-        )
-        
-        // NACA=true
-        let queue2 =
-            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 98u, true, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
-
-        let waca = queue2.ACA
-        Assert.True( waca.IsNone )  // ACA will not be established.
-
-        Assert.True(( queue2.Queue.Length = 1 ))
-        Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
-        let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
-        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 98u ))
-        let pcwt = new PrivateCaller( wt )
-        Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.CHECK_CONDITION ))
-        let senseData = pcwt.GetField( "m_SenseData" ) :?> SenseData option
-        Assert.True(( senseData.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-        Assert.True(( senseData.Value.ASC = ASCCd.INVALID_COMMAND_OPERATION_CODE ))
-
-        w.Release() |> ignore
-
-    // The ACA task failed without an ACA being established( NACA=false ).
-    [<Fact>]
-    member this.EstablishNewACAStatus_005() =
-        let media, sm, lu = this.createBlockDevice()
-        let source = BlockDeviceLU_Test.cmdSource()
-        let pc = new PrivateCaller( lu )
-        let exp = BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
-        let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK       // ACA task failed
-
-        media.p_Terminate <- ( fun () ->
-            Assert.Fail __LINE__
-        )
-        sm.p_NotifyLUReset <- ( fun lun lu ->
-            Assert.Fail __LINE__
-        )
-
-        let w = new SemaphoreSlim(1)
-        w.Wait()
-        ( source.ProtocolService :?> CProtocolService_Stub ).p_SendSCSIResponse <- ( fun _ _ _ _ _ _ _ _ _ _ ->
-            w.Wait()
-        )
-        let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
-            ACA = ValueNone;
-        }
-
-        let queue2 =
-            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 7u, false, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
-
-        let waca = queue2.ACA
-        Assert.True( waca.IsNone )
-        Assert.True(( queue2.Queue.Length = 1 ))
-        Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
-        let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
-        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 7u ))
-        let pcwt = new PrivateCaller( wt )
-        Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.CHECK_CONDITION ))
-        let senseData = pcwt.GetField( "m_SenseData" ) :?> SenseData option
-        Assert.True(( senseData.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-        Assert.True(( senseData.Value.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-
-        w.Release() |> ignore
-
-    // A task that is not an ACA task failed while ACA was not established( NACA=true ).
-    [<Fact>]
-    member this.EstablishNewACAStatus_006() =
-        let media, sm, lu = this.createBlockDevice()
-        let source = BlockDeviceLU_Test.cmdSource()
-        let pc = new PrivateCaller( lu )
-        let exp = BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
-        let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK    // Normal task failed
-
-        let w = new SemaphoreSlim(1)
-        w.Wait()
-        ( source.ProtocolService :?> CProtocolService_Stub ).p_SendSCSIResponse <- ( fun _ _ _ _ _ _ _ _ _ _ ->
-            w.Wait()
-        )
-        let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
-            ACA = ValueNone;
-        }
-        
-        let queue2 =
-            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 50u, true, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
-
-        let waca = queue2.ACA
-        Assert.True( waca.IsSome )
-        Assert.True( fst( waca.Value ) = source.I_TNexus )
-        Assert.True( snd( waca.Value ) = exp )
-
-        Assert.True(( queue2.Queue.Length = 1 ))
-        Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
-        let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
-        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 50u ))
-        let pcwt = new PrivateCaller( wt )
-        Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.CHECK_CONDITION ))
-        let senseData = pcwt.GetField( "m_SenseData" ) :?> SenseData option
-        Assert.True(( senseData.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-        Assert.True(( senseData.Value.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-
-        w.Release() |> ignore
-
-    // A task that is not an ACA task failed while ACA was not established.
-    // NACA=true, but ASC = INVALID_COMMAND_OPERATION_CODE. In this case, it will be treated as a CA.
-    [<Fact>]
-    member this.EstablishNewACAStatus_007() =
-        let media, sm, lu = this.createBlockDevice()
-        let source = BlockDeviceLU_Test.cmdSource()
-        let pc = new PrivateCaller( lu )
-        let exp = BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.INVALID_COMMAND_OPERATION_CODE
-        let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK    // Normal task failed
-
-        let w = new SemaphoreSlim(1)
-        w.Wait()
-        ( source.ProtocolService :?> CProtocolService_Stub ).p_SendSCSIResponse <- ( fun _ _ _ _ _ _ _ _ _ _ ->
-            w.Wait()
-        )
-        let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
-            ACA = ValueNone;
-        }
-        
-        // NACA=true
-        let queue2 =
-            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 50u, true, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
-
-        let waca = queue2.ACA
-        Assert.True( waca.IsNone )  // ACA will not be established.
-
-        Assert.True(( queue2.Queue.Length = 1 ))
-        Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
-        let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
-        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 50u ))
-        let pcwt = new PrivateCaller( wt )
-        Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.CHECK_CONDITION ))
-        let senseData = pcwt.GetField( "m_SenseData" ) :?> SenseData option
-        Assert.True(( senseData.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-        Assert.True(( senseData.Value.ASC = ASCCd.INVALID_COMMAND_OPERATION_CODE ))
-
-        w.Release() |> ignore
-
-    // A task that is not an ACA task failed while ACA was not established( NACA=false ).
-    [<Fact>]
-    member this.EstablishNewACAStatus_008() =
-        let media, sm, lu = this.createBlockDevice()
-        let source = BlockDeviceLU_Test.cmdSource()
-        let pc = new PrivateCaller( lu )
-        let exp = BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
-        let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK    // Normal task failed
-
-        let w = new SemaphoreSlim(1)
-        w.Wait()
-        ( source.ProtocolService :?> CProtocolService_Stub ).p_SendSCSIResponse <- ( fun _ _ _ _ _ _ _ _ _ _ ->
-            w.Wait()
-        )
-        let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
-            ACA = ValueNone;
-        }
-
-        let queue2 =
-            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 40u, false, BlockDeviceTaskType.ScsiTask, queue1) :?> TaskSet
-
-        let waca = queue2.ACA
-        Assert.True( waca.IsNone )
-        Assert.True(( queue2.Queue.Length = 1 ))
-        Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
-        let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
-        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 40u ))
-        let pcwt = new PrivateCaller( wt )
-        Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.CHECK_CONDITION ))
-        let senseData = pcwt.GetField( "m_SenseData" ) :?> SenseData option
-        Assert.True(( senseData.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-        Assert.True(( senseData.Value.ASC = ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-
-        w.Release() |> ignore
-
-    // ACA task failed while ACA was established( NACA=true ).
-    [<Fact>]
-    member this.EstablishNewACAStatus_009() =
-        let media, sm, lu = this.createBlockDevice()
-        let source = BlockDeviceLU_Test.cmdSource()
-        let pc = new PrivateCaller( lu )
-        let exp = BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.MEDIUM_ERROR ASCCd.AUXILIARY_MEMORY_READ_ERROR
-        let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK     // ACA task failed
+        let exp = BlockDeviceLU_Test.defSCSIACAException exp_naca ScsiCmdStatCd.CHECK_CONDITION sensekey asc
+        let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand taskAttr
 
         let queue1 = {
             Queue = ImmutableArray< TaskStatus >.Empty;
             ACA = ValueSome( 
                 source.I_TNexus,
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ABORTED_COMMAND ASCCd.ACK_NAK_TIMEOUT
+                BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ABORTED_COMMAND ASCCd.ACK_NAK_TIMEOUT
             );
         }
 
@@ -4065,153 +3931,41 @@ type BlockDeviceLU_Test () =
         )
         
         let queue2 =
-            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 30u, true, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
+            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 30u, arg_naca, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
 
         let waca = queue2.ACA
-        Assert.True( waca.IsSome )
-        Assert.True( fst( waca.Value ) = source.I_TNexus )
-        Assert.True( snd( waca.Value ) = exp )
+        if taskAttr = TaskATTRCd.ACA_TASK then
+            // If an ACA task fails while an ACA is established,
+            // a new ACA is established or the existing ACA is cleared, depending on the value of NACA.
+            if expaca then
+                Assert.True( waca.IsSome )
+                Assert.True( fst( waca.Value ) = source.I_TNexus )
+                Assert.True( snd( waca.Value ) = exp )
+            else
+                Assert.True( waca.IsNone )
+        else
+            // If a Simple task is received while ACA is established, the task will end with TASK_ABORTED.
+            // Since it is not a CHECK_CONDITION, it will not affect the existing ACA status.
+            Assert.True(( queue2.ACA = queue1.ACA ))
 
         Assert.True(( queue2.Queue.Length = 1 ))
         Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
         let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
         Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 30u ))
         let pcwt = new PrivateCaller( wt )
-        Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.CHECK_CONDITION ))
-        let senseData = pcwt.GetField( "m_SenseData" ) :?> SenseData option
-        Assert.True(( senseData.Value.SenseKey = SenseKeyCd.MEDIUM_ERROR ))
-        Assert.True(( senseData.Value.ASC = ASCCd.AUXILIARY_MEMORY_READ_ERROR ))
 
-        w.Release() |> ignore
+        if taskAttr = TaskATTRCd.ACA_TASK then
+            Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.CHECK_CONDITION ))
+            let senseData = pcwt.GetField( "m_SenseData" ) :?> SenseData option
+            Assert.True(( senseData.Value.SenseKey = sensekey ))
+            Assert.True(( senseData.Value.ASC = asc ))
+        else
+            // If a Simple task is received while ACA is established, the task will end with TASK_ABORTED.
+            // Since it is not a CHECK_CONDITION, it will not affect the existing ACA status.
+            Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.TASK_ABORTED ))
+            let senseData = pcwt.GetField( "m_SenseData" ) :?> SenseData option
+            Assert.True( senseData.IsNone )
 
-    // ACA task failed while ACA was established.
-    // NACA=true, but ASC = INVALID_COMMAND_OPERATION_CODE. In this case, it will be treated as a CA.
-    [<Fact>]
-    member this.EstablishNewACAStatus_010() =
-        let media, sm, lu = this.createBlockDevice()
-        let source = BlockDeviceLU_Test.cmdSource()
-        let pc = new PrivateCaller( lu )
-        let exp = BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.INVALID_COMMAND_OPERATION_CODE
-        let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK     // ACA task failed
-
-        let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
-            ACA = ValueSome( 
-                source.I_TNexus,
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ABORTED_COMMAND ASCCd.ACK_NAK_TIMEOUT
-            );
-        }
-
-        let w = new SemaphoreSlim(1)
-        w.Wait()
-        ( source.ProtocolService :?> CProtocolService_Stub ).p_SendSCSIResponse <- ( fun _ _ _ _ _ _ _ _ _ _ ->
-            w.Wait()
-        )
-        
-        // NACA=true
-        let queue2 =
-            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 30u, true, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
-
-        let waca = queue2.ACA
-        Assert.True( waca.IsNone )  // ACA will not be established.
-
-        Assert.True(( queue2.Queue.Length = 1 ))
-        Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
-        let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
-        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 30u ))
-        let pcwt = new PrivateCaller( wt )
-        Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.CHECK_CONDITION ))
-        let senseData = pcwt.GetField( "m_SenseData" ) :?> SenseData option
-        Assert.True(( senseData.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-        Assert.True(( senseData.Value.ASC = ASCCd.INVALID_COMMAND_OPERATION_CODE ))
-
-        w.Release() |> ignore
-
-    // ACA task failed while ACA was established( NACA=false ).
-    [<Fact>]
-    member this.EstablishNewACAStatus_011() =
-        let media, sm, lu = this.createBlockDevice()
-        let source = BlockDeviceLU_Test.cmdSource()
-        let pc = new PrivateCaller( lu )
-        let exp = BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.MEDIUM_ERROR ASCCd.AUXILIARY_MEMORY_READ_ERROR
-        let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK     // ACA task failed
-
-        media.p_Terminate <- ( fun () ->
-            Assert.Fail __LINE__
-        )
-        sm.p_NotifyLUReset <- ( fun lun lu ->
-            Assert.Fail __LINE__
-        )
-
-        let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
-            ACA = ValueSome( 
-                source.I_TNexus,
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ABORTED_COMMAND ASCCd.ACK_NAK_TIMEOUT
-            );
-        }
-
-        let w = new SemaphoreSlim(1)
-        w.Wait()
-        ( source.ProtocolService :?> CProtocolService_Stub ).p_SendSCSIResponse <- ( fun _ _ _ _ _ _ _ _ _ _ ->
-            w.Wait()
-        )
-        
-        let queue2 =
-            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 20u, false, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
-
-        let waca = queue2.ACA
-        Assert.True( waca.IsNone )
-        Assert.True(( queue2.Queue.Length = 1 ))
-        Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
-        let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
-        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 20u ))
-        let pcwt = new PrivateCaller( wt )
-        Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.CHECK_CONDITION ))
-        let senseData = pcwt.GetField( "m_SenseData" ) :?> SenseData option
-        Assert.True(( senseData.Value.SenseKey = SenseKeyCd.MEDIUM_ERROR ))
-        Assert.True(( senseData.Value.ASC = ASCCd.AUXILIARY_MEMORY_READ_ERROR ))
-        
-        w.Release() |> ignore
-
-    // A task other than the ACA task fails while an ACA is established.
-    [<Fact>]
-    member this.EstablishNewACAStatus_012() =
-        let media, sm, lu = this.createBlockDevice()
-        let source = BlockDeviceLU_Test.cmdSource()
-        let pc = new PrivateCaller( lu )
-        let exp = BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.MEDIUM_ERROR ASCCd.AUXILIARY_MEMORY_READ_ERROR
-        let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.HEAD_OF_QUEUE_TASK     // Normal task failed
-
-        let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
-            ACA = ValueSome( 
-                source.I_TNexus,
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ABORTED_COMMAND ASCCd.ACK_NAK_TIMEOUT
-            );
-        }
-
-        let w = new SemaphoreSlim(1)
-        w.Wait()
-        ( source.ProtocolService :?> CProtocolService_Stub ).p_SendSCSIResponse <- ( fun _ _ _ _ _ _ _ _ _ _ ->
-            w.Wait()
-        )
-        
-        let queue2 =
-            pc.Invoke( "EstablishNewACAStatus", source, exp, scsiCmd, 10u, false, BlockDeviceTaskType.ScsiTask, queue1 ) :?> TaskSet
-
-        let waca = queue2.ACA
-        Assert.True( waca.IsSome )
-        Assert.True(( queue2.ACA = queue1.ACA ))
-        Assert.True(( queue2.Queue.Length = 1 ))
-        Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
-        let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
-        Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 10u ))
-        let pcwt = new PrivateCaller( wt )
-        Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.TASK_ABORTED ))
-        let senseData = pcwt.GetField( "m_SenseData" ) :?> SenseData option
-        Assert.True( senseData.IsNone )
-        
         w.Release() |> ignore
 
     // The ACA task failed while an ACA was established for another initiator.
@@ -4220,14 +3974,14 @@ type BlockDeviceLU_Test () =
         let media, sm, lu = this.createBlockDevice()
         let source = BlockDeviceLU_Test.cmdSource()
         let pc = new PrivateCaller( lu )
-        let exp = BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.MEDIUM_ERROR ASCCd.AUXILIARY_MEMORY_READ_ERROR
+        let exp = BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.MEDIUM_ERROR ASCCd.AUXILIARY_MEMORY_READ_ERROR
         let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK    // ACA task failed
 
         let queue1 = {
             Queue = ImmutableArray< TaskStatus >.Empty;
             ACA = ValueSome( 
                 new ITNexus( "INIT_2", isid_me.fromElem 1uy 2uy 3us 4uy 5us, "TARG_6", tpgt_me.fromPrim 7us ),
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ABORTED_COMMAND ASCCd.ACK_NAK_TIMEOUT
+                BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ABORTED_COMMAND ASCCd.ACK_NAK_TIMEOUT
             );
         }
 
@@ -4245,14 +3999,14 @@ type BlockDeviceLU_Test () =
         let media, sm, lu = this.createBlockDevice()
         let source = BlockDeviceLU_Test.cmdSource()
         let pc = new PrivateCaller( lu )
-        let exp = BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.MEDIUM_ERROR ASCCd.AUXILIARY_MEMORY_READ_ERROR
+        let exp = BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.MEDIUM_ERROR ASCCd.AUXILIARY_MEMORY_READ_ERROR
         let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.HEAD_OF_QUEUE_TASK    // Normal task failed
 
         let queue1 = {
             Queue = ImmutableArray< TaskStatus >.Empty;
             ACA = ValueSome( 
                 new ITNexus( "INIT_2", isid_me.fromElem 1uy 2uy 3us 4uy 5us, "TARG_6", tpgt_me.fromPrim 7us ),
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ABORTED_COMMAND ASCCd.ACK_NAK_TIMEOUT
+                BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ABORTED_COMMAND ASCCd.ACK_NAK_TIMEOUT
             );
         }
 
@@ -4371,7 +4125,7 @@ type BlockDeviceLU_Test () =
         // Unit Attention is exist
         ua.TryAdd(
             source.I_TNexus.InitiatorPortName,
-            BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+            BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
         )
         |> ignore
 
@@ -4425,6 +4179,7 @@ type BlockDeviceLU_Test () =
                 // ACA Exception
                 let ex =
                     BlockDeviceLU_Test.defSCSIACAException
+                        ValueNone
                         ScsiCmdStatCd.CHECK_CONDITION
                         SenseKeyCd.ILLEGAL_REQUEST
                         ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
@@ -4574,6 +4329,7 @@ type BlockDeviceLU_Test () =
                 // raise ACA exception in internal task ( it will occur LU reset )
                 let ex =
                     BlockDeviceLU_Test.defSCSIACAException
+                        ValueNone 
                         ScsiCmdStatCd.CHECK_CONDITION
                         SenseKeyCd.ILLEGAL_REQUEST
                         ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
@@ -4858,7 +4614,7 @@ type BlockDeviceLU_Test () =
             Queue = ImmutableArray<TaskStatus>.Empty;
             ACA = ValueSome( 
                 source.I_TNexus,
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+                BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
             );
         }
 
@@ -4901,7 +4657,7 @@ type BlockDeviceLU_Test () =
             Queue = ImmutableArray<TaskStatus>.Empty.Add( TaskStatus.TASK_STAT_Dormant( task1 ) );
             ACA = ValueSome(
                 source.I_TNexus,
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+                BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
             );
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -4950,7 +4706,7 @@ type BlockDeviceLU_Test () =
             Queue = ImmutableArray<TaskStatus>.Empty.Add( TaskStatus.TASK_STAT_Dormant( task1 ) );
             ACA = ValueSome(
                 source.I_TNexus,
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+                BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
             );
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -5029,7 +4785,7 @@ type BlockDeviceLU_Test () =
             Queue = testTasks.ToImmutableArray();
             ACA = ValueSome(
                 source.I_TNexus,
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+                BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
             );
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -5119,7 +4875,7 @@ type BlockDeviceLU_Test () =
             Queue = testTasks.ToImmutableArray();
             ACA = ValueSome(
                 source.I_TNexus,
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+                BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
             );
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -5195,7 +4951,7 @@ type BlockDeviceLU_Test () =
             Queue = testTasks.ToImmutableArray();
             ACA = ValueSome(
                 source.I_TNexus,
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+                BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
             );
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -5254,7 +5010,7 @@ type BlockDeviceLU_Test () =
             Queue = testTasks.ToImmutableArray();
             ACA = ValueSome(
                 source.I_TNexus,
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+                BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
             );
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -5313,7 +5069,7 @@ type BlockDeviceLU_Test () =
             Queue = testTasks.ToImmutableArray();
             ACA = ValueSome(
                 source.I_TNexus,
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+                BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
             );
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -5372,7 +5128,7 @@ type BlockDeviceLU_Test () =
             Queue = testTasks.ToImmutableArray();
             ACA = ValueSome(
                 source.I_TNexus,
-                BlockDeviceLU_Test.defSCSIACAException ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
+                BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
             );
         }
         pc.SetField( "m_TaskSet", queue1 )

@@ -1283,11 +1283,14 @@ type BlockDeviceLU
                         ( curTS : TaskSet ) : TaskSet =
         let loginfo = struct ( m_ObjID, ValueSome( source ), ValueSome( command.InitiatorTaskTag ), ValueSome( m_LUN ) )
 
-        // If the operation code cannot be identified, the NACA value cannot be trusted either.
-        // Therefore, in this case, it is unconditionally treated as CA.
         let wnaca =
             if ex.SenseKey = SenseKeyCd.ILLEGAL_REQUEST && ex.ASC = ASCCd.INVALID_COMMAND_OPERATION_CODE then
+                // If the operation code cannot be identified, the NACA value cannot be trusted either.
+                // Therefore, in this case, it is unconditionally treated as CA.
                 false
+            elif ValueOption.isSome ex.NACA then
+                // If a NACA value is reported with the exception, use that value.
+                ValueOption.get ex.NACA
             else
                 naca
 
