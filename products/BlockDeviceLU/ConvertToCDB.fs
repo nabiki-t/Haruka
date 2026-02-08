@@ -59,6 +59,7 @@ type ConvertToCDB() =
             let loginfo = struct ( objID, ValueSome( source ), ValueSome( command.InitiatorTaskTag ), ValueSome( command.LUN ) )
             HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
             raise <| SCSIACAException (
+                ValueSome ( Functions.CheckBitflag r.Control 0x04uy ),
                 source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
                 { CommandData = true; BPV = true; BitPointer = 1uy; FieldPointer = 1us },
                 errmsg
@@ -244,6 +245,7 @@ type ConvertToCDB() =
             let errmsg = sprintf "In PERSISTENT RESERVE IN CDB, invalid SERVICE ACTION value(0x%02X). " r.ServiceAction
             HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
             raise <| SCSIACAException (
+                ValueSome ( Functions.CheckBitflag r.Control 0x04uy ),
                 source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
                 { CommandData = true; BPV = true; BitPointer = 4uy; FieldPointer = 1us },
                 errmsg
@@ -305,6 +307,7 @@ type ConvertToCDB() =
                         let errmsg = sprintf "In PERSISTENT RESERVE OUT CDB, invalid TYPE value(0x%02X)." r
                         HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
                         raise <| SCSIACAException (
+                            ValueSome ( Functions.CheckBitflag command.ScsiCDB.[9] 0x04uy ),
                             source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
                             { CommandData = true; BPV = true; BitPointer = 3uy; FieldPointer = 2us },
                             errmsg
@@ -319,6 +322,7 @@ type ConvertToCDB() =
             let errmsg = sprintf "In PERSISTENT RESERVE OUT CDB, invalid SERVICE ACTION value(0x%02X)." r.ServiceAction
             HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
             raise <| SCSIACAException (
+                ValueSome ( Functions.CheckBitflag r.Control 0x04uy ),
                 source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
                 { CommandData = true; BPV = true; BitPointer = 4uy; FieldPointer = 1us },
                 errmsg
@@ -328,6 +332,7 @@ type ConvertToCDB() =
             let errmsg = sprintf "In PERSISTENT RESERVE OUT CDB, invalid SCOPE value(0x%02X)." r.Scope
             HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
             raise <| SCSIACAException (
+                ValueSome ( Functions.CheckBitflag r.Control 0x04uy ),
                 source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
                 { CommandData = true; BPV = true; BitPointer = 7uy; FieldPointer = 2us },
                 errmsg
@@ -456,6 +461,7 @@ type ConvertToCDB() =
             let errmsg = sprintf "In REPORT LUNs CDB, invalid SELECT REPORT value(0x%02X)." r.SelectReport
             HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
             raise <| SCSIACAException (
+                ValueSome ( Functions.CheckBitflag r.Control 0x04uy ),
                 source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
                 { CommandData = true; BPV = true; BitPointer = 7uy; FieldPointer = 2us },
                 errmsg
@@ -465,6 +471,7 @@ type ConvertToCDB() =
             let errmsg = sprintf "In REPORT LUNs CDB, ALLOCATION LENGTH value(%d) is too short." r.AllocationLength
             HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
             raise <| SCSIACAException (
+                ValueSome ( Functions.CheckBitflag r.Control 0x04uy ),
                 source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
                 { CommandData = true; BPV = true; BitPointer = 7uy; FieldPointer = 6us },
                 errmsg
@@ -641,6 +648,7 @@ type ConvertToCDB() =
             let errmsg = sprintf "In READ(10) CDB, invalid RDPROTECT value(0x%02X)." r.RdProtect
             HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
             raise <| SCSIACAException (
+                ValueSome ( Functions.CheckBitflag r.Control 0x04uy ),
                 source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
                 { CommandData = true; BPV = true; BitPointer = 7uy; FieldPointer = 1us },
                 errmsg
@@ -693,6 +701,7 @@ type ConvertToCDB() =
             let errmsg = sprintf " In READ(12) CDB, invalid RDPROTECT value(0x%02X)." r.RdProtect
             HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
             raise <| SCSIACAException (
+                ValueSome ( Functions.CheckBitflag r.Control 0x04uy ),
                 source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
                 { CommandData = true; BPV = true; BitPointer = 7uy; FieldPointer = 1us },
                 errmsg
@@ -744,6 +753,7 @@ type ConvertToCDB() =
             let errmsg = sprintf " In READ(16) CDB, invalid RDPROTECT value(0x%02X)." r.RdProtect
             HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
             raise <| SCSIACAException (
+                ValueSome ( Functions.CheckBitflag r.Control 0x04uy ),
                 source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
                 { CommandData = true; BPV = true; BitPointer = 7uy; FieldPointer = 1us },
                 errmsg
@@ -953,6 +963,7 @@ type ConvertToCDB() =
             let errmsg = sprintf "In WRITE(10) CDB, invalid WRPROTECT value(0x%02X)." r.WRPROTECT
             HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
             raise <| SCSIACAException (
+                ValueSome ( Functions.CheckBitflag r.Control 0x04uy ),
                 source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
                 { CommandData = true; BPV = true; BitPointer = 7uy; FieldPointer = 1us },
                 errmsg
@@ -1004,6 +1015,7 @@ type ConvertToCDB() =
             let errmsg = sprintf "In WRITE(12) CDB, invalid WRPROTECT value(0x%02X)." r.WRPROTECT
             HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
             raise <| SCSIACAException (
+                ValueSome ( Functions.CheckBitflag r.Control 0x04uy ),
                 source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
                 { CommandData = true; BPV = true; BitPointer = 7uy; FieldPointer = 1us },
                 errmsg
@@ -1056,6 +1068,7 @@ type ConvertToCDB() =
             let errmsg = sprintf "In WRITE(16) CDB, invalid WRPROTECT value(0x%02X)." r.WRPROTECT
             HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
             raise <| SCSIACAException (
+                ValueSome ( Functions.CheckBitflag r.Control 0x04uy ),
                 source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
                 { CommandData = true; BPV = true; BitPointer = 7uy; FieldPointer = 1us },
                 errmsg
@@ -1107,6 +1120,7 @@ type ConvertToCDB() =
             let errmsg = sprintf "In REPORT SUPPORTED OPERATION CODES CDB, invalid REPORTING OPTIONS value(0x%02X)." r.ReportingOptions
             HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
             raise <| SCSIACAException (
+                ValueSome ( Functions.CheckBitflag r.Control 0x04uy ),
                 source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
                 { CommandData = true; BPV = true; BitPointer = 7uy; FieldPointer = 1us },
                 errmsg
@@ -1155,6 +1169,7 @@ type ConvertToCDB() =
             let errmsg = sprintf "In REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS CDB, AllocationLength value(%d) is too short." r.AllocationLength
             HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
             raise <| SCSIACAException (
+                ValueSome ( Functions.CheckBitflag r.Control 0x04uy ),
                 source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
                 { CommandData = true; BPV = true; BitPointer = 7uy; FieldPointer = 6us },
                 errmsg

@@ -80,6 +80,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( x.Message.Contains( "CDB length is too short(length=5)" ) )
 
     [<Fact>]
@@ -99,6 +100,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_COMMAND_OPERATION_CODE = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "Unsupported operation code(0xFF)." ) ) )
 
     [<Fact>]
@@ -117,6 +119,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_COMMAND_OPERATION_CODE = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "Unsupported service action code(Operation Code=0xA3" ) ) )
 
     [<Fact>]
@@ -136,6 +139,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_COMMAND_OPERATION_CODE = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "Unsupported service action code(Operation Code=0x9E" ) ) )
 
     [<Fact>]
@@ -154,6 +158,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueSome true = x.NACA ) )
             Assert.True( ( x.Message.Contains( "EVPD bit in CDB is 0, but PageCode is not 0" ) ) )
 
     [<Fact>]
@@ -202,6 +207,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "CDB length in MODE SELECT(10) CDB" ) ) )
 
     [<Fact>]
@@ -252,6 +258,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "CDB length in MODE SENSE(10) CDB" ) ) )
 
     [<Fact>]
@@ -288,13 +295,14 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "CDB length in PERSISTENT RESERVE IN CDB" ) ) )
 
     [<Fact>]
     member _.ConvertScsiCommandPDUToPersistentReserveInCDB_0601() =
         let command : SCSICommandPDU = {
             defaultScsiCommand with
-                ScsiCDB = [| 0x5Euy; 0x04uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0xAAuy; 0xBBuy; 0xCCuy; |];
+                ScsiCDB = [| 0x5Euy; 0x04uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0xAAuy; 0xBBuy; 0xFFuy; |];
         }
         try
             ConvertToCDB.ConvertScsiCommandPDUToCDB defaultSource ( objidx_me.NewID() ) command |> ignore
@@ -306,6 +314,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueSome true = x.NACA ) )
             Assert.True( ( x.Message.Contains( "In PERSISTENT RESERVE IN CDB, invalid SERVICE ACTION value" ) ) )
 
     [<Fact>]
@@ -338,6 +347,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "CDB length in PERSISTENT RESERVE OUT CDB" ) ) )
 
     [<Fact>]
@@ -356,6 +366,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueSome true = x.NACA ) )
             Assert.True( ( x.Message.Contains( "In PERSISTENT RESERVE OUT CDB, invalid SERVICE ACTION value" ) ) )
 
     [<Fact>]
@@ -374,6 +385,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueSome true = x.NACA ) )
             Assert.True( ( x.Message.Contains( "In PERSISTENT RESERVE OUT CDB, invalid SCOPE value" ) ) )
 
     [<Theory>]
@@ -396,6 +408,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueSome true = x.NACA ) )
             Assert.True( ( x.Message.Contains( "In PERSISTENT RESERVE OUT CDB, invalid TYPE value" ) ) )
 
     [<Theory>]
@@ -434,6 +447,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueSome true = x.NACA ) )
             Assert.True( ( x.Message.Contains( "In PERSISTENT RESERVE OUT CDB, invalid TYPE value" ) ) )
 
     [<Fact>]
@@ -468,13 +482,14 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "CDB length in REPORT LUNs CDB is too short" ) ) )
 
     [<Fact>]
     member _.ConvertScsiCommandPDUToReportLUNsCDB_0801() =
         let command : SCSICommandPDU = {
             defaultScsiCommand with
-                ScsiCDB = [| 0xA0uy; 0x00uy; 0x03uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0xAAuy; 0xBBuy; 0x00uy; 0x00uy; 0x00uy |];
+                ScsiCDB = [| 0xA0uy; 0x00uy; 0x03uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0xAAuy; 0xBBuy; 0x00uy; 0x00uy; 0x0Fuy |];
         }
         try
             ConvertToCDB.ConvertScsiCommandPDUToCDB defaultSource ( objidx_me.NewID() ) command |> ignore
@@ -486,6 +501,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueSome true = x.NACA ) )
             Assert.True( ( x.Message.Contains( "In REPORT LUNs CDB, invalid SELECT REPORT value" ) ) )
 
     [<Fact>]
@@ -626,13 +642,14 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "CDB length in READ(10) CDB is too short" ) ) )
 
     [<Fact>]
     member _.ConvertScsiCommandPDUToRead10CDB_1301() =
         let command : SCSICommandPDU = {
             defaultScsiCommand with
-                ScsiCDB = [| 0x28uy; 0xEAuy; 0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; 0x1Fuy; 0xEEuy; 0xFFuy; 0xABuy; |];
+                ScsiCDB = [| 0x28uy; 0xEAuy; 0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; 0x1Fuy; 0xEEuy; 0xFFuy; 0xAFuy; |];
         }
         try
             ConvertToCDB.ConvertScsiCommandPDUToCDB defaultSource ( objidx_me.NewID() ) command |> ignore
@@ -644,6 +661,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueSome true = x.NACA ) )
             Assert.True( ( x.Message.Contains( "In READ(10) CDB, invalid RDPROTECT value" ) ) )
 
     [<Fact>]
@@ -681,13 +699,14 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "CDB length in READ(12) CDB is too short" ) ) )
 
     [<Fact>]
     member _.ConvertScsiCommandPDUToRead12CDB_1401() =
         let command : SCSICommandPDU = {
             defaultScsiCommand with
-                ScsiCDB = [| 0xA8uy; 0xEAuy; 0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; 0xEEuy; 0xFFuy; 0xAAuy; 0xBBuy; 0xaFuy; 0xABuy; |];
+                ScsiCDB = [| 0xA8uy; 0xEAuy; 0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; 0xEEuy; 0xFFuy; 0xAAuy; 0xBBuy; 0xAFuy; 0xABuy; |];
         }
         try
             ConvertToCDB.ConvertScsiCommandPDUToCDB defaultSource ( objidx_me.NewID() ) command |> ignore
@@ -699,6 +718,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueSome false = x.NACA ) )
             Assert.True( ( x.Message.Contains( "In READ(12) CDB, invalid RDPROTECT value" ) ) )
 
     [<Fact>]
@@ -736,13 +756,14 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "CDB length in READ(16) CDB is too short" ) ) )
 
     [<Fact>]
     member _.ConvertScsiCommandPDUToRead16CDB_1501() =
         let command : SCSICommandPDU = {
             defaultScsiCommand with
-                ScsiCDB = [| 0x88uy; 0xFAuy; 0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; 0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; 0xDEuy; 0xADuy; 0xBEuy; 0xEFuy; 0x18uy; 0xAAuy; |];
+                ScsiCDB = [| 0x88uy; 0xFAuy; 0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; 0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; 0xDEuy; 0xADuy; 0xBEuy; 0xEFuy; 0x18uy; 0xA4uy; |];
         }
         try
             ConvertToCDB.ConvertScsiCommandPDUToCDB defaultSource ( objidx_me.NewID() ) command |> ignore
@@ -754,6 +775,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueSome true = x.NACA ) )
             Assert.True( ( x.Message.Contains( "In READ(16) CDB, invalid RDPROTECT value" ) ) )
 
     [<Fact>]
@@ -791,6 +813,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "CDB length in READ CAPACITY(10) CDB is too short" ) ) )
 
     [<Fact>]
@@ -851,13 +874,14 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "CDB length in WRITE(10) CDB is too short" ) ) )
 
     [<Fact>]
     member _.ConvertScsiCommandPDUToWrite10CDB_1801() =
         let command : SCSICommandPDU = {
             defaultScsiCommand with
-                ScsiCDB = [| 0x2Auy; 0xEAuy; 0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; 0x1Fuy; 0xEEuy; 0xFFuy; 0xABuy; |];
+                ScsiCDB = [| 0x2Auy; 0xEAuy; 0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; 0x1Fuy; 0xEEuy; 0xFFuy; 0xAFuy; |];
         }
         try
             ConvertToCDB.ConvertScsiCommandPDUToCDB defaultSource ( objidx_me.NewID() ) command |> ignore
@@ -869,6 +893,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueSome true = x.NACA ) )
             Assert.True( ( x.Message.Contains( "In WRITE(10) CDB, invalid WRPROTECT value" ) ) )
 
     [<Fact>]
@@ -907,13 +932,14 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "CDB length in WRITE(12) CDB is too short" ) ) )
 
     [<Fact>]
     member _.ConvertScsiCommandPDUToWrite12CDB_1901() =
         let command : SCSICommandPDU = {
             defaultScsiCommand with
-                ScsiCDB = [| 0xAAuy; 0xEAuy; 0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; 0xEEuy; 0xFFuy; 0xAAuy; 0xBBuy; 0xaFuy; 0xABuy; |];
+                ScsiCDB = [| 0xAAuy; 0xEAuy; 0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; 0xEEuy; 0xFFuy; 0xAAuy; 0xBBuy; 0xaFuy; 0xAFuy; |];
         }
         try
             ConvertToCDB.ConvertScsiCommandPDUToCDB defaultSource ( objidx_me.NewID() ) command |> ignore
@@ -925,6 +951,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueSome true = x.NACA ) )
             Assert.True( ( x.Message.Contains( "In WRITE(12) CDB, invalid WRPROTECT value" ) ) )
 
     [<Fact>]
@@ -962,13 +989,14 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "CDB length in WRITE(16) CDB is too short" ) ) )
 
     [<Fact>]
     member _.ConvertScsiCommandPDUToWrite16CDB_2001() =
         let command : SCSICommandPDU = {
             defaultScsiCommand with
-                ScsiCDB = [| 0x8Auy; 0xFAuy; 0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; 0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; 0xDEuy; 0xADuy; 0xBEuy; 0xEFuy; 0x18uy; 0xAAuy; |];
+                ScsiCDB = [| 0x8Auy; 0xFAuy; 0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; 0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; 0xDEuy; 0xADuy; 0xBEuy; 0xEFuy; 0x18uy; 0xAFuy; |];
         }
         try
             ConvertToCDB.ConvertScsiCommandPDUToCDB defaultSource ( objidx_me.NewID() ) command |> ignore
@@ -980,6 +1008,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueSome true = x.NACA ) )
             Assert.True( ( x.Message.Contains( "In WRITE(16) CDB, invalid WRPROTECT value" ) ) )
 
     [<Fact>]
@@ -1017,13 +1046,14 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "CDB length in REPORT SUPPORTED OPERATION CODES CDB is too short" ) ) )
 
     [<Fact>]
     member _.ConvertScsiCommandPDUToReportSupportedOperationCodesCDB_2101() =
         let command : SCSICommandPDU = {
             defaultScsiCommand with
-                ScsiCDB = [| 0xA3uy; 0x0Cuy; 0x07uy; 0xAAuy; 0xBBuy; 0xCCuy; 0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; 0x00uy; 0xAAuy |];
+                ScsiCDB = [| 0xA3uy; 0x0Cuy; 0x07uy; 0xAAuy; 0xBBuy; 0xCCuy; 0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; 0x00uy; 0xAFuy |];
         }
         try
             ConvertToCDB.ConvertScsiCommandPDUToCDB defaultSource ( objidx_me.NewID() ) command |> ignore
@@ -1035,6 +1065,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueSome true = x.NACA ) )
             Assert.True( ( x.Message.Contains( "In REPORT SUPPORTED OPERATION CODES CDB, invalid REPORTING OPTIONS value" ) ) )
 
     [<Fact>]
@@ -1070,13 +1101,14 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "CDB length in REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS CDB is too short" ) ) )
 
     [<Fact>]
     member _.ConvertScsiCommandPDUToReportSupportedTaskManagementFunctionsCDB_2201() =
         let command : SCSICommandPDU = {
             defaultScsiCommand with
-                ScsiCDB = [| 0xA3uy; 0x0Duy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x03uy; 0x00uy; 0xBBuy; |];
+                ScsiCDB = [| 0xA3uy; 0x0Duy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x03uy; 0x00uy; 0xFFuy; |];
         }
         try
             ConvertToCDB.ConvertScsiCommandPDUToCDB defaultSource ( objidx_me.NewID() ) command |> ignore
@@ -1088,6 +1120,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueSome true = x.NACA ) )
             Assert.True( ( x.Message.Contains( "In REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS CDB, AllocationLength value" ) ) )
 
     [<Fact>]
@@ -1120,6 +1153,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "CDB length in READ CAPACITY(16) CDB is too short" ) ) )
 
     [<Fact>]
@@ -1153,6 +1187,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "CDB length in SYNCHRONIZE CACHE(10) CDB is too short" ) ) )
 
     [<Fact>]
@@ -1188,6 +1223,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "CDB length in SYNCHRONIZE CACHE(16) CDB is too short" ) ) )
 
     [<Fact>]
@@ -1223,6 +1259,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "CDB length in PRE-FETCH(10) CDB is too short" ) ) )
 
     [<Fact>]
@@ -1257,6 +1294,7 @@ type ConvertToCDB_Test () =
             Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
             Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
             Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
+            Assert.True( ( ValueOption.isNone x.NACA ) )
             Assert.True( ( x.Message.Contains( "CDB length in PRE-FETCH(16) CDB is too short" ) ) )
 
     [<Fact>]
