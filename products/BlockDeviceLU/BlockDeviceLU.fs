@@ -476,21 +476,28 @@ type BlockDeviceLU
             else
                 m_TaskSetQueue.Enqueue( fun () ->
                     // If the value of the NACA bit cannot be determined, consider CA.
-                    let mutable errNACAval : bool = false
+                    let cdb =
+                        try
+                            ConvertToCDB.ConvertScsiCommandPDUToCDB source m_ObjID command
+                            |> Ok
+                        with
+                        | :? SCSIACAException as x ->
+                            Error x
                     try
-                        // Create new SCSI task object
-                        let cdb = ConvertToCDB.ConvertScsiCommandPDUToCDB source m_ObjID command
-                        errNACAval <- cdb.NACA
-
+                        let cdb2 = Result.defaultWith raise cdb
                         m_TaskSet <-
                             m_TaskSet
-                            |> this.AddNewScsiTaskToQueue source command cdb data
+                            |> this.AddNewScsiTaskToQueue source command cdb2 data
                             |> this.StartExecutableSCSITasks
                     with
                     | :? SCSIACAException as x ->
                         // ACA established
                         try
                             let recvDataLen = BlockDeviceLU.ReturnDataSegment command data
+                            let naca =
+                                match cdb with
+                                | Ok( x ) -> x.NACA
+                                | Error _ -> false
                             m_TaskSet <- 
                                 m_TaskSet
                                 |> this.EstablishNewACAStatus
@@ -498,7 +505,7 @@ type BlockDeviceLU
                                     x
                                     { command with DataSegment = PooledBuffer.Empty }   // for safty
                                     recvDataLen
-                                    errNACAval
+                                    naca
                                     BlockDeviceTaskType.ScsiTask
                                 |> this.StartExecutableSCSITasks 
                         with
