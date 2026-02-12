@@ -69,12 +69,13 @@ type ScsiTaskForDummyDevice
         m_PRManager : PRManager,
         m_ACANoncompliant : bool
     ) =
+    inherit ScsiTask( m_StatusMaster, m_Source, m_Command, m_CDB, m_DataOut, m_LU, m_Media, m_ModeParameter, m_PRManager, m_ACANoncompliant )
 
     /// Hash value identify this instance
-    let m_ObjID = objidx_me.NewID()
+    let m_ObjID = base.GetObjID()
 
     /// original ScsiTask object
-    let m_ScsiTask = new ScsiTask( m_StatusMaster, m_Source, m_Command, m_CDB, m_DataOut, m_LU, m_Media, m_ModeParameter, m_PRManager, m_ACANoncompliant )
+//    let m_ScsiTask = new ScsiTask( m_StatusMaster, m_Source, m_Command, m_CDB, m_DataOut, m_LU, m_Media, m_ModeParameter, m_PRManager, m_ACANoncompliant )
 
     /// Log Information
     let m_LogInfo = struct ( m_ObjID, ValueSome m_Source, ValueSome m_Command.InitiatorTaskTag, ValueSome m_Command.LUN )
@@ -90,27 +91,27 @@ type ScsiTaskForDummyDevice
 
         /// Return task type.
         override _.TaskType : BlockDeviceTaskType =
-            ( m_ScsiTask :> IBlockDeviceTask ).TaskType
+            base.GetTaskType()
 
         /// Return source information of this task.
         override _.Source : CommandSourceInfo =
-            ( m_ScsiTask :> IBlockDeviceTask ).Source
+            base.GetCommandSource()
     
         /// Return  Initiator task tag.
         override _.InitiatorTaskTag : ITT_T =
-            ( m_ScsiTask :> IBlockDeviceTask ).InitiatorTaskTag
+            base.GetInitiatorTaskTag()
 
         /// Return SCSI Command object of this object.
         override _.SCSICommand : SCSICommandPDU =
-            ( m_ScsiTask :> IBlockDeviceTask ).SCSICommand
+            base.GetSCSICommand()
 
         /// Return total received data length in bytes.
-        override _.ReceivedDataLength : uint =
-            ( m_ScsiTask :> IBlockDeviceTask ).ReceivedDataLength
+        override this.ReceivedDataLength : uint =
+            base.GetReceivedDataLength()
 
         /// Return CDB of this object
         override _.CDB : ICDB voption =
-            ( m_ScsiTask :> IBlockDeviceTask ).CDB
+            base.GetCDB()
 
         /// Execute this SCSI task.
         override this.Execute() : unit -> Task<unit> =
@@ -202,7 +203,7 @@ type ScsiTaskForDummyDevice
             | RequestSense                              // SPC-3 6.27 REQUEST SENSE command
             | ReadCapacity                              // SBC-2 5.10 READ CAPACITY(10), 5.11 READ CAPACITY(16) command
                 ->
-                    ( m_ScsiTask :> IBlockDeviceTask ).Execute()
+                    base.Execute()
 
 
             | TestUnitReady                             // SPC-3 6.33 TEST UNIT READY command
@@ -219,7 +220,7 @@ type ScsiTaskForDummyDevice
                 // Nothig to do
 
                 // Send response data to the initiator
-                let receivedDataLength = ( m_ScsiTask :> IBlockDeviceTask ).ReceivedDataLength
+                let receivedDataLength = base.GetReceivedDataLength()
                 m_Source.ProtocolService.SendSCSIResponse
                     m_Command
                     m_Source.CID
@@ -247,7 +248,7 @@ type ScsiTaskForDummyDevice
 
             | ReportSupportedTaskManagementFunctions    // SPC-3 6.24 REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS command
                 ->
-                    ( m_ScsiTask :> IBlockDeviceTask ).Execute()
+                    base.Execute()
 
 
         /// Get task description string.
@@ -261,18 +262,15 @@ type ScsiTaskForDummyDevice
         ///   If task is terminated from the other I_T Nexus, set true to this value.
         /// </param>
         override _.NotifyTerminate( needResp : bool ) : unit =
-            ( m_ScsiTask :> IBlockDeviceTask ).NotifyTerminate needResp
+            base.NotifyTerminate needResp
 
         /// Return ACANoncompliant flag value
         override _.ACANoncompliant : bool =
-            m_ACANoncompliant
+            base.GetACANoncompliantFlag()
 
         /// Release PooledBuffer
         override _.ReleasePooledBuffer() =
-            m_DataOut
-            |> Seq.map _.DataSegment
-            |> Seq.insertAt 0 m_Command.DataSegment
-            |> PooledBuffer.Return
+            base.ReleasePooledBuffer()
 
     //=========================================================================
     // Private method
@@ -458,10 +456,10 @@ type ScsiTaskForDummyDevice
                     for _ = 74 to 95 do yield 0uy;
                 |]
 
-        let init, current = m_ScsiTask.SetTerminateFlag 1
+        let init, current = base.SetTerminateFlag 1
         if init = 0 && current = 1 then
             // Send response data to the initiator
-            let receivedDataLength = ( m_ScsiTask :> IBlockDeviceTask ).ReceivedDataLength
+            let receivedDataLength = base.GetReceivedDataLength()
             m_Source.ProtocolService.SendSCSIResponse
                 m_Command
                 m_Source.CID
@@ -589,7 +587,7 @@ type ScsiTaskForDummyDevice
                     errmsg
                 )
 
-        let init, current = m_ScsiTask.SetTerminateFlag 1
+        let init, current = base.SetTerminateFlag 1
         if init = 0 && current = 1 then
             // Send response data to the initiator
             let recvDataLength = ( this :> IBlockDeviceTask ).ReceivedDataLength

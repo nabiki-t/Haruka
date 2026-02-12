@@ -110,273 +110,36 @@ type ScsiTask
     interface IBlockDeviceTask with
 
         /// Return task type.
-        override _.TaskType : BlockDeviceTaskType =
-            BlockDeviceTaskType.ScsiTask
+        override this.TaskType : BlockDeviceTaskType =
+            this.GetTaskType()
 
         /// Return source information of this task.
-        override _.Source : CommandSourceInfo =
-            m_Source
+        override this.Source : CommandSourceInfo =
+            this.GetCommandSource()
     
         /// Return  Initiator task tag.
-        override _.InitiatorTaskTag : ITT_T =
-            m_ITT
+        override this.InitiatorTaskTag : ITT_T =
+            this.GetInitiatorTaskTag()
 
         /// Return SCSI Command object of this object.
-        override _.SCSICommand : SCSICommandPDU =
-            m_Command
+        override this.SCSICommand : SCSICommandPDU =
+            this.GetSCSICommand()
 
         /// Return total received data length in bytes.
-        override _.ReceivedDataLength : uint =
-            let len1 = PooledBuffer.length m_Command.DataSegment |> uint32
-            let len2 =
-                m_DataOut
-                |> List.sumBy ( fun x -> uint32 ( PooledBuffer.length x.DataSegment ) )
-            len1 + len2
+        override this.ReceivedDataLength : uint =
+            this.GetReceivedDataLength()
 
         /// Return CDB of this object
-        override _.CDB : ICDB voption =
-            ValueSome m_CDB
+        override this.CDB : ICDB voption =
+            this.GetCDB()
 
         /// Execute this SCSI task.
         override this.Execute() : unit -> Task<unit> =
-
-            // ****************************************************************
-            // This method is called in critical section of BlockDeviceLU task set lock.
-            // And returned task workflow is executed in asyncnously.
-            // ****************************************************************
-
-            if HLogger.IsVerbose then
-                HLogger.Trace( LogID.V_TRACE, fun g ->
-                    let msg = sprintf "Scsi task has been started. Operation code=%s" ( CDBTypes.getName m_CDB.Type )
-                    g.Gen1( m_LogInfo, msg )
-                )
-
-            match m_CDB.Type with
-            | ChangeAliases                             // SPC-3 6.2 CHANGE ALIASES command
-            | ExtendedCopy                              // SPC-3 6.3 EXTENDED COPY command
-            | LogSelect                                 // SPC-3 6.5 LOG SELECT command
-            | LogSense                                  // SPC-3 6.6 LOG SENSE command
-            | PreventAllowMediumRemoval                 // SPC-3 6.13 PREVENT ALLOW MEDIUM REMOVAL command
-            | ReadAttribute                             // SPC-3 6.14 READ ATTRIBUTE command
-            | ReadBuffer                                // SPC-3 6.15 READ BUFFER command
-            | ReadMediaSerialNumber                     // SPC-3 6.16 READ MEDIA SERIAL NUMBER command
-            | ReceiveCopyResults                        // SPC-3 6.17 RECEIVE COPY RESULTS command
-            | ReceiveDiagnosticResults                  // SPC-3 6.18 RECEIVE DIAGNOSTIC RESULTS command
-            | ReportAliases                             // SPC-3 6.19 REPORT ALIASES command
-            | ReportDeviceIdentifier                    // SPC-3 6.20 REPORT DEVICE IDENTIFIER command
-            | ReportPriority                            // SPC-3 6.22 REPORT PRIORITY command
-            | ReportTargetPortGroups                    // SPC-3 6.25 REPORT TARGET PORT GROUPS command
-            | ReportTimestamp                           // SPC-3 6.26 REPORT TIMESTAMP command
-            | SendDiagnostic                            // SPC-3 6.28 SEND DIAGNOSTIC command
-            | SetDeviceIdentifier                       // SPC-3 6.29 SET DEVICE IDENTIFIER command
-            | SetPriority                               // SPC-3 6.30 SET PRIORITY command
-            | SetTargetPortGroups                       // SPC-3 6.31 SET TARGET PORT GROUPS command
-            | SetTimestamp                              // SPC-3 6.32 SET TIMESTAMP command
-            | WriteAttribute                            // SPC-3 6.34 WRITE ATTRIBUTE command
-            | WriteBuffer                               // SPC-3 6.35 WRITE BUFFER command
-            | AccessControlIn                           // SPC-3 8.3.2 ACCESS CONTROL IN command
-            | AccessControlOut                          // SPC-3 8.3.3 ACCESS CONTROL OUT command
-            | ReadDefectData                            // SBC-2 5.12 READ DEFECT DATA(10), 5.13 READ DEFECT DATA(12) command
-            | ReadLong                                  // SBC-2 5.14 READ LONG(10), 5.15 READ LONG(16) command
-            | ReassignBlocks                            // SBC-2 5.16 REASSIGN BLOCKS command
-            | StartStopUnit                             // SBC-2 5.17 START STOP UNIT command
-            | Verify                                    // SBC-2 5.20 VERIFY(10), 5.21 VERIFY(12), 5.22 VERIFY(16), 5.23 VERIFY(32) command
-            | WriteAndVerify                            // SBC-2 5.29 WRITE AND VERIFY(10), 5.30 WRITE AND VERIFY(12), 5.31 WRITE AND VERIFY(16), 5.32 WRITE AND VERIFY(32) command
-            | WriteLong                                 // SBC-2 5.33 WRITE LONG(10), 5.34 WRITE LONG(16) command
-            | WriteSame                                 // SBC-2 5.35 WRITE SAME(10), 5.36 WRITE SAME(16), 5.37 WRITE SAME(32) command
-            | XDRead                                    // SBC-2 5.38 XDREAD(10), 5.39 XDREAD(32) command
-            | XDWrite                                   // SBC-2 5.40 XDWRITE(10), 5.41 XDWRITE(32) command
-            | XDWriteRead                               // SBC-2 5.42 XDWRITEREAD(10), 5.43 XDWRITEREAD(32) command
-            | XPWrite                                   // SBC-2 5.44 XPWRITE(10), 5.45 XPWRITE(32) command
-                ->
-                    fun () -> task {
-                        let errmsg =
-                            sprintf
-                                "Specified operation code (%s) is not supported."
-                                ( CDBTypes.getName m_CDB.Type )
-                        HLogger.ACAException( m_LogInfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_COMMAND_OPERATION_CODE, errmsg )
-                        let ex =
-                            new SCSIACAException (
-                                m_Source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_COMMAND_OPERATION_CODE,
-                                { CommandData = true; BPV = true; BitPointer = 7uy; FieldPointer = 0us },
-                                errmsg
-                            )
-                        m_LU.NotifyTerminateTaskWithException this ex
-                    }
-
-            | Inquiry                                   // SPC-3 6.4 INQUIRY command
-                ->
-                    fun () -> task {
-                        try
-                            this.Execute_Inquiry()
-                            m_LU.NotifyTerminateTask this
-                        with
-                        | _ as x ->
-                            m_LU.NotifyTerminateTaskWithException this x
-                    }
-
-            | ModeSelect                                // SPC-3 6.7 MODE SELECT(6), 6.8 MODE SELECT(10) command
-                ->
-                    fun () -> task {
-                        try
-                            this.Execute_ModeSelect()
-                            m_LU.NotifyTerminateTask this
-                        with
-                        | _ as x ->
-                            m_LU.NotifyTerminateTaskWithException this x
-                    }
-
-            | ModeSense                                 // SPC-3 6.9 MODE SENSE(6), 6.10 MODE SENSE(10) command
-                ->
-                    fun () -> task {
-                        try
-                            this.Execute_ModeSense()
-                            m_LU.NotifyTerminateTask this
-                        with
-                        | _ as x ->
-                            m_LU.NotifyTerminateTaskWithException this x
-                    }
-
-            | PersistentReserveIn                       // SPC-3 6.11 PERSISTENT RESERVE IN command
-                ->
-                    fun () -> task {
-                        try
-                            this.Execute_PersistentReserveIn()
-                            m_LU.NotifyTerminateTask this
-                        with
-                        | _ as x ->
-                            m_LU.NotifyTerminateTaskWithException this x
-                    }
-
-            | PersistentReserveOut                      // SPC-3 6.12 PERSISTENT RESERVE OUT command
-                -> 
-                    // Note that the method is being called directly here.
-                    this.Execute_PersistentReserveOut()
-
-            | PreFetch                                  // SBC-2 5.3 PRE-FETCH(10), 5.4 PRE-FETCH(16) command
-                ->
-                    fun () -> task {
-                        try
-                            this.Execute_PreFetch()
-                            m_LU.NotifyTerminateTask this
-                        with
-                        | _ as x ->
-                            m_LU.NotifyTerminateTaskWithException this x
-                    }
-
-            | ReportLUNs                                // SPC-3 6.21 REPORT LUNS command
-                ->
-                    fun () -> task {
-                        try
-                            this.Execute_ReportLUNs()
-                            m_LU.NotifyTerminateTask this
-                        with
-                        | _ as x ->
-                            m_LU.NotifyTerminateTaskWithException this x
-                    }
-
-            | ReportSupportedOperationCodes             // SPC-3 6.23 REPORT SUPPORTED OPERATION CODES command
-                ->
-                    fun () -> task {
-                        try
-                            this.Execute_ReportSupportedOperationCodes()
-                            m_LU.NotifyTerminateTask this
-                        with
-                        | _ as x ->
-                            m_LU.NotifyTerminateTaskWithException this x
-                    }
-
-            | ReportSupportedTaskManagementFunctions    // SPC-3 6.24 REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS command
-                ->
-                    fun () -> task {
-                        try
-                            this.Execute_ReportSupportedTaskManagementFunctions()
-                            m_LU.NotifyTerminateTask this
-                        with
-                        | _ as x ->
-                            m_LU.NotifyTerminateTaskWithException this x
-                    }
-
-            | RequestSense                              // SPC-3 6.27 REQUEST SENSE command
-                ->
-                    fun () -> task {
-                        try
-                            this.Execute_RequestSense()
-                            m_LU.NotifyTerminateTask this
-                        with
-                        | _ as x ->
-                            m_LU.NotifyTerminateTaskWithException this x
-                    }
-
-            | TestUnitReady                             // SPC-3 6.33 TEST UNIT READY command
-                ->
-                    fun () -> task {
-                        try
-                            this.Execute_TestUnitReady()
-                            m_LU.NotifyTerminateTask this
-                        with
-                        | _ as x ->
-                            m_LU.NotifyTerminateTaskWithException this x
-                    }
-
-            | FormatUnit                                // SBC-2 5.2 FORMAT UNIT command
-                ->
-                    fun () -> task {
-                        try
-                            do! this.Execute_FormatUnit()
-                            m_LU.NotifyTerminateTask this
-                        with
-                        | _ as x ->
-                            m_LU.NotifyTerminateTaskWithException this x
-                    }
-
-            | Read                                      // SBC-2 5.5 READ(6), 5.6 READ(10), 5.7 READ(12), 5.8 READ(16), 5.9 READ(32) command
-                ->
-                    fun () -> task {
-                        try
-                            do! this.Execute_Read()
-                            m_LU.NotifyTerminateTask this
-                        with
-                        | _ as x ->
-                            m_LU.NotifyTerminateTaskWithException this x
-                    }
-
-            | ReadCapacity                              // SBC-2 5.10 READ CAPACITY(10), 5.11 READ CAPACITY(16) command
-                ->
-                    fun () -> task {
-                        try
-                            this.Execute_ReadCapacity()
-                            m_LU.NotifyTerminateTask this
-                        with
-                        | _ as x ->
-                            m_LU.NotifyTerminateTaskWithException this x
-                    }
-
-            | SynchronizeCache                          // SBC-2 5.18 SYNCHRONIZE CACHE(10), 5.19 SYNCHRONIZE CACHE(16) command
-                ->
-                    fun () -> task {
-                        try
-                            this.Execute_SynchronizeCache()
-                            m_LU.NotifyTerminateTask this
-                        with
-                        | _ as x ->
-                            m_LU.NotifyTerminateTaskWithException this x
-                    }
-
-            | Write                                     // SBC-2 5.24 WRITE(6), 5.25 WRITE(10), 5.26 WRITE(12), 5.27 WRITE(16), 5.28 WRITE(32) command
-                ->
-                    fun () -> task {
-                        try
-                            do! this.Execute_Write()
-                            m_LU.NotifyTerminateTask this
-                        with
-                        | _ as x ->
-                            m_LU.NotifyTerminateTaskWithException this x
-                    }
+            this.Execute()
 
         /// Get task description string.
-        override _.DescString : string =
-            "SCSI task. Command=" + m_CDB.DescriptString
+        override this.DescString : string =
+            this.GetDescString()
 
         /// <summary>
         ///   Notify task terminate request
@@ -385,39 +148,321 @@ type ScsiTask
         ///   If task is terminated from the other I_T Nexus, set true to this value.
         /// </param>
         override this.NotifyTerminate( needResp : bool ) : unit =
-
-            let init, current = this.SetTerminateFlag 2
-            if init = 0 && current = 2 then
-                // If this task is aborted by the other I_T Nexus, returns TASK ABORTED response.
-                if needResp then
-                    let recvDataLength = ( this :> IBlockDeviceTask ).ReceivedDataLength
-                    m_Source.ProtocolService.SendSCSIResponse
-                        m_Command
-                        m_Source.CID
-                        m_Source.ConCounter
-                        recvDataLength
-                        iScsiSvcRespCd.COMMAND_COMPLETE
-                        ScsiCmdStatCd.TASK_ABORTED
-                        PooledBuffer.Empty
-                        PooledBuffer.Empty
-                        0u
-                        ResponseFenceNeedsFlag.R_Mode
+            this.NotifyTerminate needResp
 
         /// Return ACANoncompliant flag value
-        override _.ACANoncompliant : bool =
-            m_ACANoncompliant
+        override this.ACANoncompliant : bool =
+            this.GetACANoncompliantFlag()
 
         /// Release PooledBuffer
-        override _.ReleasePooledBuffer() =
-            m_DataOut
-            |> List.map _.DataSegment
-            |> List.insertAt 0 m_Command.DataSegment
-            |> List.iter ( fun itr ->
-                itr.Return()
-            )
+        override this.ReleasePooledBuffer() =
+            this.ReleasePooledBuffer()
 
     //=========================================================================
     // Public method
+
+    /// Get task type.
+    member _.GetTaskType() : BlockDeviceTaskType =
+        BlockDeviceTaskType.ScsiTask
+
+    /// Get source information of this task.
+    member _.GetCommandSource() : CommandSourceInfo =
+        m_Source
+
+    /// Get Initiator task tag.
+    member _.GetInitiatorTaskTag() : ITT_T =
+        m_ITT
+
+    /// Get SCSI Command object of this object.
+    member _.GetSCSICommand() : SCSICommandPDU =
+        m_Command
+
+    /// Get total received data length in bytes.
+    member _.GetReceivedDataLength() : uint =
+        let len1 = PooledBuffer.length m_Command.DataSegment |> uint32
+        let len2 =
+            m_DataOut
+            |> List.sumBy ( fun x -> uint32 ( PooledBuffer.length x.DataSegment ) )
+        len1 + len2
+
+    /// Get CDB of this object
+    member _.GetCDB() : ICDB voption =
+        ValueSome m_CDB
+
+    /// Execute this SCSI task.
+    member this.Execute() : unit -> Task<unit> =
+        // ****************************************************************
+        // This method is called in critical section of BlockDeviceLU task set lock.
+        // And returned task workflow is executed in asyncnously.
+        // ****************************************************************
+
+        if HLogger.IsVerbose then
+            HLogger.Trace( LogID.V_TRACE, fun g ->
+                let msg = sprintf "Scsi task has been started. Operation code=%s" ( CDBTypes.getName m_CDB.Type )
+                g.Gen1( m_LogInfo, msg )
+            )
+
+        match m_CDB.Type with
+        | ChangeAliases                             // SPC-3 6.2 CHANGE ALIASES command
+        | ExtendedCopy                              // SPC-3 6.3 EXTENDED COPY command
+        | LogSelect                                 // SPC-3 6.5 LOG SELECT command
+        | LogSense                                  // SPC-3 6.6 LOG SENSE command
+        | PreventAllowMediumRemoval                 // SPC-3 6.13 PREVENT ALLOW MEDIUM REMOVAL command
+        | ReadAttribute                             // SPC-3 6.14 READ ATTRIBUTE command
+        | ReadBuffer                                // SPC-3 6.15 READ BUFFER command
+        | ReadMediaSerialNumber                     // SPC-3 6.16 READ MEDIA SERIAL NUMBER command
+        | ReceiveCopyResults                        // SPC-3 6.17 RECEIVE COPY RESULTS command
+        | ReceiveDiagnosticResults                  // SPC-3 6.18 RECEIVE DIAGNOSTIC RESULTS command
+        | ReportAliases                             // SPC-3 6.19 REPORT ALIASES command
+        | ReportDeviceIdentifier                    // SPC-3 6.20 REPORT DEVICE IDENTIFIER command
+        | ReportPriority                            // SPC-3 6.22 REPORT PRIORITY command
+        | ReportTargetPortGroups                    // SPC-3 6.25 REPORT TARGET PORT GROUPS command
+        | ReportTimestamp                           // SPC-3 6.26 REPORT TIMESTAMP command
+        | SendDiagnostic                            // SPC-3 6.28 SEND DIAGNOSTIC command
+        | SetDeviceIdentifier                       // SPC-3 6.29 SET DEVICE IDENTIFIER command
+        | SetPriority                               // SPC-3 6.30 SET PRIORITY command
+        | SetTargetPortGroups                       // SPC-3 6.31 SET TARGET PORT GROUPS command
+        | SetTimestamp                              // SPC-3 6.32 SET TIMESTAMP command
+        | WriteAttribute                            // SPC-3 6.34 WRITE ATTRIBUTE command
+        | WriteBuffer                               // SPC-3 6.35 WRITE BUFFER command
+        | AccessControlIn                           // SPC-3 8.3.2 ACCESS CONTROL IN command
+        | AccessControlOut                          // SPC-3 8.3.3 ACCESS CONTROL OUT command
+        | ReadDefectData                            // SBC-2 5.12 READ DEFECT DATA(10), 5.13 READ DEFECT DATA(12) command
+        | ReadLong                                  // SBC-2 5.14 READ LONG(10), 5.15 READ LONG(16) command
+        | ReassignBlocks                            // SBC-2 5.16 REASSIGN BLOCKS command
+        | StartStopUnit                             // SBC-2 5.17 START STOP UNIT command
+        | Verify                                    // SBC-2 5.20 VERIFY(10), 5.21 VERIFY(12), 5.22 VERIFY(16), 5.23 VERIFY(32) command
+        | WriteAndVerify                            // SBC-2 5.29 WRITE AND VERIFY(10), 5.30 WRITE AND VERIFY(12), 5.31 WRITE AND VERIFY(16), 5.32 WRITE AND VERIFY(32) command
+        | WriteLong                                 // SBC-2 5.33 WRITE LONG(10), 5.34 WRITE LONG(16) command
+        | WriteSame                                 // SBC-2 5.35 WRITE SAME(10), 5.36 WRITE SAME(16), 5.37 WRITE SAME(32) command
+        | XDRead                                    // SBC-2 5.38 XDREAD(10), 5.39 XDREAD(32) command
+        | XDWrite                                   // SBC-2 5.40 XDWRITE(10), 5.41 XDWRITE(32) command
+        | XDWriteRead                               // SBC-2 5.42 XDWRITEREAD(10), 5.43 XDWRITEREAD(32) command
+        | XPWrite                                   // SBC-2 5.44 XPWRITE(10), 5.45 XPWRITE(32) command
+            ->
+                fun () -> task {
+                    let errmsg =
+                        sprintf
+                            "Specified operation code (%s) is not supported."
+                            ( CDBTypes.getName m_CDB.Type )
+                    HLogger.ACAException( m_LogInfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_COMMAND_OPERATION_CODE, errmsg )
+                    let ex =
+                        new SCSIACAException (
+                            m_Source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_COMMAND_OPERATION_CODE,
+                            { CommandData = true; BPV = true; BitPointer = 7uy; FieldPointer = 0us },
+                            errmsg
+                        )
+                    m_LU.NotifyTerminateTaskWithException this ex
+                }
+
+        | Inquiry                                   // SPC-3 6.4 INQUIRY command
+            ->
+                fun () -> task {
+                    try
+                        this.Execute_Inquiry()
+                        m_LU.NotifyTerminateTask this
+                    with
+                    | _ as x ->
+                        m_LU.NotifyTerminateTaskWithException this x
+                }
+
+        | ModeSelect                                // SPC-3 6.7 MODE SELECT(6), 6.8 MODE SELECT(10) command
+            ->
+                fun () -> task {
+                    try
+                        this.Execute_ModeSelect()
+                        m_LU.NotifyTerminateTask this
+                    with
+                    | _ as x ->
+                        m_LU.NotifyTerminateTaskWithException this x
+                }
+
+        | ModeSense                                 // SPC-3 6.9 MODE SENSE(6), 6.10 MODE SENSE(10) command
+            ->
+                fun () -> task {
+                    try
+                        this.Execute_ModeSense()
+                        m_LU.NotifyTerminateTask this
+                    with
+                    | _ as x ->
+                        m_LU.NotifyTerminateTaskWithException this x
+                }
+
+        | PersistentReserveIn                       // SPC-3 6.11 PERSISTENT RESERVE IN command
+            ->
+                fun () -> task {
+                    try
+                        this.Execute_PersistentReserveIn()
+                        m_LU.NotifyTerminateTask this
+                    with
+                    | _ as x ->
+                        m_LU.NotifyTerminateTaskWithException this x
+                }
+
+        | PersistentReserveOut                      // SPC-3 6.12 PERSISTENT RESERVE OUT command
+            -> 
+                // Note that the method is being called directly here.
+                this.Execute_PersistentReserveOut()
+
+        | PreFetch                                  // SBC-2 5.3 PRE-FETCH(10), 5.4 PRE-FETCH(16) command
+            ->
+                fun () -> task {
+                    try
+                        this.Execute_PreFetch()
+                        m_LU.NotifyTerminateTask this
+                    with
+                    | _ as x ->
+                        m_LU.NotifyTerminateTaskWithException this x
+                }
+
+        | ReportLUNs                                // SPC-3 6.21 REPORT LUNS command
+            ->
+                fun () -> task {
+                    try
+                        this.Execute_ReportLUNs()
+                        m_LU.NotifyTerminateTask this
+                    with
+                    | _ as x ->
+                        m_LU.NotifyTerminateTaskWithException this x
+                }
+
+        | ReportSupportedOperationCodes             // SPC-3 6.23 REPORT SUPPORTED OPERATION CODES command
+            ->
+                fun () -> task {
+                    try
+                        this.Execute_ReportSupportedOperationCodes()
+                        m_LU.NotifyTerminateTask this
+                    with
+                    | _ as x ->
+                        m_LU.NotifyTerminateTaskWithException this x
+                }
+
+        | ReportSupportedTaskManagementFunctions    // SPC-3 6.24 REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS command
+            ->
+                fun () -> task {
+                    try
+                        this.Execute_ReportSupportedTaskManagementFunctions()
+                        m_LU.NotifyTerminateTask this
+                    with
+                    | _ as x ->
+                        m_LU.NotifyTerminateTaskWithException this x
+                }
+
+        | RequestSense                              // SPC-3 6.27 REQUEST SENSE command
+            ->
+                fun () -> task {
+                    try
+                        this.Execute_RequestSense()
+                        m_LU.NotifyTerminateTask this
+                    with
+                    | _ as x ->
+                        m_LU.NotifyTerminateTaskWithException this x
+                }
+
+        | TestUnitReady                             // SPC-3 6.33 TEST UNIT READY command
+            ->
+                fun () -> task {
+                    try
+                        this.Execute_TestUnitReady()
+                        m_LU.NotifyTerminateTask this
+                    with
+                    | _ as x ->
+                        m_LU.NotifyTerminateTaskWithException this x
+                }
+
+        | FormatUnit                                // SBC-2 5.2 FORMAT UNIT command
+            ->
+                fun () -> task {
+                    try
+                        do! this.Execute_FormatUnit()
+                        m_LU.NotifyTerminateTask this
+                    with
+                    | _ as x ->
+                        m_LU.NotifyTerminateTaskWithException this x
+                }
+
+        | Read                                      // SBC-2 5.5 READ(6), 5.6 READ(10), 5.7 READ(12), 5.8 READ(16), 5.9 READ(32) command
+            ->
+                fun () -> task {
+                    try
+                        do! this.Execute_Read()
+                        m_LU.NotifyTerminateTask this
+                    with
+                    | _ as x ->
+                        m_LU.NotifyTerminateTaskWithException this x
+                }
+
+        | ReadCapacity                              // SBC-2 5.10 READ CAPACITY(10), 5.11 READ CAPACITY(16) command
+            ->
+                fun () -> task {
+                    try
+                        this.Execute_ReadCapacity()
+                        m_LU.NotifyTerminateTask this
+                    with
+                    | _ as x ->
+                        m_LU.NotifyTerminateTaskWithException this x
+                }
+
+        | SynchronizeCache                          // SBC-2 5.18 SYNCHRONIZE CACHE(10), 5.19 SYNCHRONIZE CACHE(16) command
+            ->
+                fun () -> task {
+                    try
+                        this.Execute_SynchronizeCache()
+                        m_LU.NotifyTerminateTask this
+                    with
+                    | _ as x ->
+                        m_LU.NotifyTerminateTaskWithException this x
+                }
+
+        | Write                                     // SBC-2 5.24 WRITE(6), 5.25 WRITE(10), 5.26 WRITE(12), 5.27 WRITE(16), 5.28 WRITE(32) command
+            ->
+                fun () -> task {
+                    try
+                        do! this.Execute_Write()
+                        m_LU.NotifyTerminateTask this
+                    with
+                    | _ as x ->
+                        m_LU.NotifyTerminateTaskWithException this x
+                }
+
+    /// Get task description string.
+    member _.GetDescString() : string =
+        "SCSI task. Command=" + m_CDB.DescriptString
+
+    /// <summary>
+    ///   Notify task terminate request
+    /// </summary>
+    /// <param name="needResp">
+    ///   If task is terminated from the other I_T Nexus, set true to this value.
+    /// </param>
+    member this.NotifyTerminate( needResp : bool ) : unit =
+        let init, current = this.SetTerminateFlag 2
+        if init = 0 && current = 2 then
+            // If this task is aborted by the other I_T Nexus, returns TASK ABORTED response.
+            if needResp then
+                let recvDataLength = ( this :> IBlockDeviceTask ).ReceivedDataLength
+                m_Source.ProtocolService.SendSCSIResponse
+                    m_Command
+                    m_Source.CID
+                    m_Source.ConCounter
+                    recvDataLength
+                    iScsiSvcRespCd.COMMAND_COMPLETE
+                    ScsiCmdStatCd.TASK_ABORTED
+                    PooledBuffer.Empty
+                    PooledBuffer.Empty
+                    0u
+                    ResponseFenceNeedsFlag.R_Mode
+
+    /// Get ACANoncompliant flag value
+    member _.GetACANoncompliantFlag() : bool =
+        m_ACANoncompliant
+
+    /// Release PooledBuffer
+    member _.ReleasePooledBuffer() : unit =
+        m_DataOut
+        |> List.map _.DataSegment
+        |> List.insertAt 0 m_Command.DataSegment
+        |> List.iter _.Return()
 
     /// Get media object of this SCSI task
     member _.Media : IMedia =
@@ -429,6 +474,9 @@ type ScsiTask
 
     member _.SetTerminateFlag ( flg : int ) : int * int =
         Interlocked.CompareExchange( &m_TerminateFlag, flg, 0 ), m_TerminateFlag
+
+    member _.GetObjID() : OBJIDX_T =
+        m_ObjID
 
     //=========================================================================
     // Private method

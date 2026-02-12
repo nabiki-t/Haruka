@@ -198,8 +198,7 @@ type BlockDeviceLU
                     try
                         // Remove the tasks that will be terminated from the task queue.
                         let oldTaskSet = m_TaskSet
-                        let builder = ImmutableArray.CreateBuilder< TaskStatus >()
-                        builder.Capacity <- oldTaskSet.Queue.Length
+                        let builder = ImmutableArray.CreateBuilder< TaskStatus >( Capacity = oldTaskSet.Queue.Length )
                         for itr in oldTaskSet.Queue do
                             let t = TaskStatus.getTask itr
                             if t.TaskType = BlockDeviceTaskType.ScsiTask && t.InitiatorTaskTag = referencedTaskTag then
@@ -250,8 +249,7 @@ type BlockDeviceLU
                     try
                         // Remove the tasks that will be terminated from the task queue.
                         let oldTaskSet = m_TaskSet
-                        let builder = ImmutableArray.CreateBuilder< TaskStatus >()
-                        builder.Capacity <- oldTaskSet.Queue.Length
+                        let builder = ImmutableArray.CreateBuilder< TaskStatus >( Capacity = oldTaskSet.Queue.Length )
                         for itr in oldTaskSet.Queue do
                             let t = TaskStatus.getTask itr
                             if t.TaskType = BlockDeviceTaskType.ScsiTask && ITNexus.Equals( t.Source.I_TNexus, source.I_TNexus ) then
@@ -301,8 +299,7 @@ type BlockDeviceLU
                     try
                         // Remove ACA tasks from the task queue.
                         let oldTaskSet = m_TaskSet
-                        let builder = ImmutableArray.CreateBuilder< TaskStatus >()
-                        builder.Capacity <- oldTaskSet.Queue.Length
+                        let builder = ImmutableArray.CreateBuilder< TaskStatus >( Capacity = oldTaskSet.Queue.Length )
                         for itr in oldTaskSet.Queue do
                             let t = TaskStatus.getTask itr
                             if t.TaskType = BlockDeviceTaskType.ScsiTask && ITNexus.Equals( t.Source.I_TNexus, source.I_TNexus ) && t.SCSICommand.ATTR = TaskATTRCd.ACA_TASK then
@@ -704,8 +701,7 @@ type BlockDeviceLU
 
             let loginfo = struct ( m_ObjID, ValueSome( self.Source ), ValueSome( self.InitiatorTaskTag ), ValueSome( m_LUN ) )
             let oldTaskSet = m_TaskSet
-            let builder = ImmutableArray.CreateBuilder< TaskStatus >()
-            builder.Capacity <- oldTaskSet.Queue.Length
+            let builder = ImmutableArray.CreateBuilder< TaskStatus >( Capacity = oldTaskSet.Queue.Length )
 
             for itr in oldTaskSet.Queue do
                 let t = TaskStatus.getTask itr
@@ -996,8 +992,7 @@ type BlockDeviceLU
 
         this.CheckOverlappedTask curTS.Queue source ( t.InitiatorTaskTag )
 
-        let builder = ImmutableArray.CreateBuilder< TaskStatus >()
-        builder.Capacity <- curTS.Queue.Length + 1
+        let builder = ImmutableArray.CreateBuilder< TaskStatus >( Capacity = curTS.Queue.Length + 1 )
         for i in curTS.Queue do
             builder.Add i
         builder.Add( TASK_STAT_Dormant( t ) )
@@ -1085,8 +1080,7 @@ type BlockDeviceLU
         )
 #endif
 
-        let builder = ImmutableArray.CreateBuilder< TaskStatus >()
-        builder.Capacity <- curTS.Queue.Length
+        let builder = ImmutableArray.CreateBuilder< TaskStatus >( Capacity = curTS.Queue.Length )
 
         if curTS.ACA.IsNone then
             // If ACA is not established, SIMPLE, ORDERED, HEAD OF QUEUE task is executable.
@@ -1484,16 +1478,18 @@ type BlockDeviceLU
     ///   Call this method in critical section at task set lock.
     /// </remarks>
     member private _.DeleteTask ( deltask : IBlockDeviceTask ) ( curTS : TaskSet ) : TaskSet =
-        if HLogger.IsVerbose then
-            let loginfo = struct ( m_ObjID, ValueSome( deltask.Source ), ValueSome( deltask.InitiatorTaskTag ), ValueSome( m_LUN ) )
-            HLogger.Trace( LogID.V_TRACE, fun g -> g.Gen1( loginfo, "SCSI task is deleted." ) )
-
-        let builder = ImmutableArray.CreateBuilder< TaskStatus >()
-        builder.Capacity <- curTS.Queue.Length
+        let builder = ImmutableArray.CreateBuilder< TaskStatus >( Capacity = curTS.Queue.Length )
         for itr in curTS.Queue do
             let wr = TaskStatus.getTask itr
             if Functions.IsSame wr deltask |> not then
                 builder.Add itr
+
+        HLogger.Trace( LogID.V_TRACE, fun g ->
+            let loginfo = struct ( m_ObjID, ValueSome( deltask.Source ), ValueSome( deltask.InitiatorTaskTag ), ValueSome( m_LUN ) )
+            let msg = sprintf "SCSI task was deleted. Before=%d, After=%d, task=%s" curTS.Queue.Length builder.Count deltask.DescString
+            g.Gen1( loginfo, msg )
+        )
+
         {
             curTS with
                 Queue = builder.DrainToImmutable()

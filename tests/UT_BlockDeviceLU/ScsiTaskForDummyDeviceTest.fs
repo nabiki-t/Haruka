@@ -697,9 +697,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
         ilu.p_NotifyTerminateTask <- ( fun _ ->  cnt2 <- cnt2 + 1 )
 
         let pc_dummy = new PrivateCaller( select_task )
-        let internalScsiTask = pc_dummy.GetField( "m_ScsiTask" ) :?> ScsiTask
-        let pc_st = new PrivateCaller( internalScsiTask )
-        let select_ModeParameter = pc_st.GetField( "m_ModeParameter" ) :?> ModeParameter
+        let select_ModeParameter = pc_dummy.GetField( "m_ModeParameter" ) :?> ModeParameter
 
         select_task.Execute()()
         |> Functions.RunTaskSynchronously
@@ -747,9 +745,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
         )
         ilu.p_NotifyTerminateTask <- ( fun _ -> cnt1 <- cnt1 + 1 )
 
-        let pc_dummy = new PrivateCaller( sense_task )
-        let internalScsiTask = pc_dummy.GetField( "m_ScsiTask" ) :?> ScsiTask
-        let media_stub = internalScsiTask.Media :?> CMedia_Stub
+        let media_stub = ( sense_task :?> ScsiTask ).Media :?> CMedia_Stub
         media_stub.p_GetBlockCount <- ( fun () -> 0xAABBUL )
         media_stub.p_GetWriteProtect <- ( fun () -> false )
 
@@ -1065,10 +1061,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
         }
         let stask, ilu = createDefScsiTaskForDummyDevice defaultSCSICommandPDU cdb [] false
         let psStub = stask.Source.ProtocolService :?> CProtocolService_Stub
-
-        let pc_dummy = new PrivateCaller( stask )
-        let internalScsiTask = pc_dummy.GetField( "m_ScsiTask" ) :?> ScsiTask
-        let mediaStub = internalScsiTask.Media :?> CMedia_Stub
+        let mediaStub = ( stask :?> ScsiTask ).Media :?> CMedia_Stub
 
         psStub.p_SendSCSIResponse <- ( fun _ _ _ _ resp stat _ indata alloclen _ ->
             cnt2 <- cnt2 + 1
@@ -1188,9 +1181,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
         let psStub = stask.Source.ProtocolService :?> CProtocolService_Stub
 
         let pc_dummy = new PrivateCaller( stask )
-        let internalScsiTask = pc_dummy.GetField( "m_ScsiTask" ) :?> ScsiTask
-        let pc_ist = new PrivateCaller( internalScsiTask )
-        let prManager = pc_ist.GetField( "m_PRManager" ) :?> PRManager
+        let prManager = pc_dummy.GetField( "m_PRManager" ) :?> PRManager
 
         psStub.p_SendSCSIResponse <- ( fun _ _ _ resvLen resp stat _ _ _ _ ->
             cnt2 <- cnt2 + 1
