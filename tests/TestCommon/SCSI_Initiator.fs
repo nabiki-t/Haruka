@@ -116,7 +116,8 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     // Static method
 
     /// <summary>
-    ///  Connect to the target.
+    ///  Connect to the target without using the specified ISID.
+    ///  The ISID will use the newly issued number.
     /// </summary>
     /// <param name="exp_SessParams">
     ///  Session wide parameters.
@@ -130,6 +131,24 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     static member Create ( exp_SessParams : SessParams ) ( exp_ConnParams : ConnParams ) : Task<SCSI_Initiator> =
         task {
             let! iit = iSCSI_Initiator.CreateInitialSession exp_SessParams exp_ConnParams
+            return SCSI_Initiator( iit )
+        }
+
+    /// <summary>
+    ///  Connects to the target using the specified ISID.
+    /// </summary>
+    /// <param name="exp_SessParams">
+    ///  Session wide parameters.
+    /// </param>
+    /// <param name="exp_ConnParams">
+    ///  Connection wide parameters.
+    /// </param>
+    /// <returns>
+    ///  The connected instance of the SCSI_Initiator class.
+    /// </returns>
+    static member CreateWithISID ( exp_SessParams : SessParams ) ( exp_ConnParams : ConnParams ) : Task<SCSI_Initiator> =
+        task {
+            let! iit = iSCSI_Initiator.CreateInitialSessionWithInitialCmdSN exp_SessParams exp_ConnParams cmdsn_me.zero
             return SCSI_Initiator( iit )
         }
 
@@ -1796,7 +1815,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// <returns>
     ///  Received rasponse data.
     /// </returns>
-    member _.WaitSCSIResponseGoogStatus ( itt : ITT_T ) : Task<PooledBuffer> =
+    member this.WaitSCSIResponseGoogStatus ( itt : ITT_T ) : Task<PooledBuffer> =
         task {
             let! r = this.WaitSCSIResponse itt
             if r.Response <> iScsiSvcRespCd.COMMAND_COMPLETE then

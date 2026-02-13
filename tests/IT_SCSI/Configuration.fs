@@ -320,9 +320,9 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
 
     // Verify that the same LU can be accessed through different network portals and targets.
     [<Theory>]
-    [<InlineData( "iqn.2020-05.example.com:target1", "iqn.2020-05.example.com:target1", 0, 1, 1UL, 16UL )>]
+    [<InlineData( "iqn.2020-05.example.com:target1", "iqn.2020-05.example.com:target1", 0, 1, 0UL, 16UL )>]
     [<InlineData( "iqn.2020-05.example.com:target2", "iqn.2020-05.example.com:target2", 0, 1, 17UL, 32UL )>]
-    [<InlineData( "iqn.2020-05.example.com:target1", "iqn.2020-05.example.com:target2", 2, 3, 1UL, 16UL )>]
+    [<InlineData( "iqn.2020-05.example.com:target1", "iqn.2020-05.example.com:target2", 2, 3, 0UL, 16UL )>]
     member _.LUAccess_002 ( target1 : string ) ( target2 : string ) ( port1 : int ) ( port2 : int ) ( vlun1 : uint64 ) ( vlun2 : uint64 ) =
         task {
             let nport = [| iSCSIPortNo1; iSCSIPortNo2; iSCSIPortNo3; iSCSIPortNo4 |]
@@ -335,7 +335,7 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
             let vResKey =
                 [|
                     for itr = vlun1 to vlun2 do
-                        yield ( lun_me.fromPrim itr, resvkey_me.fromPrim ( itr * 97UL ) )
+                        yield ( lun_me.fromPrim itr, resvkey_me.fromPrim ( itr * 97UL + 1UL ) )
                 |]
                 |> Array.map KeyValuePair
                 |> Dictionary
@@ -379,5 +379,150 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
             let! itt_rsoc = r1.Send_ReportSupportedOperationCodes TaskATTRCd.SIMPLE_TASK lun 0uy 0uy 0us 1024u NACA.T
             let! res_rsoc = r1.Wait_ReportSupportedOperationCodes_AllCommand itt_rsoc
             Assert.True(( res_rsoc.Descs.Length = exp ))
+            do! r1.Close()
+        }
+
+    static member NotSupportedOperationCode_001_data : obj[][] = [|
+        [|  0x0UL; 11; [| 0xA4uy; 0x0Buy; |]; |]  // CHANGE ALIASES
+        [|  0x0UL; 15; [| 0x83uy |];          |]  // EXTENDED COPY
+        [|  0x0UL;  9; [| 0x4Cuy |];          |]  // LOG SELECT
+        [|  0x0UL;  9; [| 0x4Duy |];          |]  // LOG SENSE
+        [|  0x0UL;  5; [| 0x1Euy |];          |]  // PREVENT ALLOW MEDIUM REMOVAL
+        [|  0x0UL; 15; [| 0x8Cuy |];          |]  // READ ATTRIBUTE
+        [|  0x0UL;  9; [| 0x3Cuy |];          |]  // READ BUFFER
+        [|  0x0UL; 11; [| 0xABuy; 0x01uy; |]; |]  // READ MEDIA SERIAL NUMBER
+        [|  0x0UL; 15; [| 0x84uy |];          |]  // RECEIVE COPY RESULTS
+        [|  0x0UL;  5; [| 0x1Cuy |];          |]  // RECEIVE DIAGNOSTIC RESULTS
+        [|  0x0UL; 11; [| 0xA3uy; 0x0Buy; |]; |]  // REPORT ALIASES
+        [|  0x0UL; 11; [| 0xA3uy; 0x05uy; |]; |]  // REPORT DEVICE IDENTIFIER
+        [|  0x0UL; 11; [| 0xA3uy; 0x0Euy; |]; |]  // REPORT PRIORITY
+        [|  0x0UL; 11; [| 0xA3uy; 0x0Auy; |]; |]  // REPORT TARGET PORT GROUPS
+        [|  0x0UL; 11; [| 0xA3uy; 0x0Fuy; |]; |]  // REPORT TIMESTAMP
+        [|  0x0UL;  5; [| 0x1Duy; |];         |]  // SEND DIAGNOSTIC
+        [|  0x0UL; 11; [| 0xA4uy; 0x06uy; |]; |]  // SET DEVICE IDENTIFIER
+        [|  0x0UL; 11; [| 0xA4uy; 0x0Euy; |]; |]  // SET PRIORITY
+        [|  0x0UL; 11; [| 0xA4uy; 0x0Auy; |]; |]  // SET TARGET PORT GROUPS
+        [|  0x0UL; 11; [| 0xA4uy; 0x0Fuy; |]; |]  // SET TIMESTAMP
+        [|  0x0UL; 15; [| 0x8Duy; |];         |]  // WRITE ATTRIBUTE
+        [|  0x0UL;  9; [| 0x3Buy; |];         |]  // WRITE BUFFER
+        [|  0x0UL; 15; [| 0x86uy; |];         |]  // ACCESS CONTROL IN
+        [|  0x0UL; 15; [| 0x87uy; |];         |]  // ACCESS CONTROL OUT
+        [|  0x0UL;  5; [| 0x04uy; |];         |]  // FORMAT UNIT
+        [|  0x0UL;  9; [| 0x34uy; |];         |]  // PRE-FETCH(10)
+        [|  0x0UL; 15; [| 0x90uy; |];         |]  // PRE-FETCH(16)
+        [|  0x0UL;  5; [| 0x08uy; |];         |]  // READ(6)
+        [|  0x0UL;  9; [| 0x28uy; |];         |]  // READ(10)
+        [|  0x0UL; 11; [| 0xA8uy; |];         |]  // READ(12)
+        [|  0x0UL; 15; [| 0x88uy; |];         |]  // READ(16)
+        [|  0x0UL;  1; [| 0x7Fuy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x18uy; 0x00uy; 0x09uy; |];         |]  // READ(32)
+        [|  0x0UL;  9; [| 0x37uy; |];         |]  // READ DEFECT DATA(10)
+        [|  0x0UL; 11; [| 0xB7uy; |];         |]  // READ DEFECT DATA(12)
+        [|  0x0UL;  9; [| 0x3Euy; |];         |]  // READ LONG(10)
+        [|  0x0UL; 15; [| 0x9Euy; 0x11uy |];  |]  // READ LONG(16)
+        [|  0x0UL;  5; [| 0x07uy; |];         |]  // REASSIGN BLOCKS
+        [|  0x0UL;  5; [| 0x1Buy; |];         |]  // START STOP UNIT
+        [|  0x0UL;  9; [| 0x2Fuy; |];         |]  // VERIFY(10)
+        [|  0x0UL; 11; [| 0xAFuy; |];         |]  // VERIFY(12)
+        [|  0x0UL; 15; [| 0x8Fuy; |];         |]  // VERIFY(16)
+        [|  0x0UL;  1; [| 0x7Fuy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x18uy; 0x00uy; 0x0Auy; |];         |]  // VERIFY(32)
+        [|  0x0UL;  5; [| 0x0Auy; |];         |]  // WRITE(6)
+        [|  0x0UL;  9; [| 0x2Auy; |];         |]  // WRITE(10)
+        [|  0x0UL; 11; [| 0xAAuy; |];         |]  // WRITE(12)
+        [|  0x0UL; 15; [| 0x8Auy; |];         |]  // WRITE(16)
+        [|  0x0UL;  1; [| 0x7Fuy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x18uy; 0x00uy; 0x0Buy; |];         |]  // WRITE(32)
+        [|  0x0UL;  9; [| 0x2Euy; |];         |]  // WRITE AND VERIFY(10)
+        [|  0x0UL; 11; [| 0xAEuy; |];         |]  // WRITE AND VERIFY(12)
+        [|  0x0UL; 15; [| 0x8Euy; |];         |]  // WRITE AND VERIFY(16)
+        [|  0x0UL;  1; [| 0x7Fuy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x18uy; 0x00uy; 0x0Cuy; |];         |]  // WRITE AND VERIFY(32)
+        [|  0x0UL;  9; [| 0x3Fuy; |];         |]  // WRITE LONG(10)
+        [|  0x0UL; 15; [| 0x9Fuy; |];         |]  // WRITE LONG(16)
+        [|  0x0UL;  9; [| 0x41uy; |];         |]  // WRITE SAME(10)
+        [|  0x0UL; 15; [| 0x93uy; |];         |]  // WRITE SAME(16)
+        [|  0x0UL;  1; [| 0x7Fuy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x18uy; 0x00uy; 0x0Duy; |];         |]  // WRITE SAME(32)
+        [|  0x0UL;  9; [| 0x52uy; |];         |]  // XDREAD(10)
+        [|  0x0UL;  1; [| 0x7Fuy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x18uy; 0x00uy; 0x03uy; |];         |]  // XDREAD(32)
+        [|  0x0UL;  9; [| 0x50uy; |];         |]  // XDWRITE(10)
+        [|  0x0UL;  1; [| 0x7Fuy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x18uy; 0x00uy; 0x04uy; |];         |]  // XDWRITE(32)
+        [|  0x0UL;  9; [| 0x53uy; |];         |]  // XDWRITEREAD(10)
+        [|  0x0UL;  1; [| 0x7Fuy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x18uy; 0x00uy; 0x07uy; |];         |]  // XDWRITEREAD(32)
+        [|  0x0UL;  9; [| 0x51uy; |];         |]  // XPWRITE(10)
+        [|  0x0UL;  1; [| 0x7Fuy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x18uy; 0x00uy; 0x06uy; |];         |]  // XPWRITE(32)
+        [|  0x1UL; 11; [| 0xA4uy; 0x0Buy; |]; |]  // CHANGE ALIASES
+        [|  0x1UL; 15; [| 0x83uy |];          |]  // EXTENDED COPY
+        [|  0x1UL;  9; [| 0x4Cuy |];          |]  // LOG SELECT
+        [|  0x1UL;  9; [| 0x4Duy |];          |]  // LOG SENSE
+        [|  0x1UL;  5; [| 0x1Euy |];          |]  // PREVENT ALLOW MEDIUM REMOVAL
+        [|  0x1UL; 15; [| 0x8Cuy |];          |]  // READ ATTRIBUTE
+        [|  0x1UL;  9; [| 0x3Cuy |];          |]  // READ BUFFER
+        [|  0x1UL; 11; [| 0xABuy; 0x01uy; |]; |]  // READ MEDIA SERIAL NUMBER
+        [|  0x1UL; 15; [| 0x84uy |];          |]  // RECEIVE COPY RESULTS
+        [|  0x1UL;  5; [| 0x1Cuy |];          |]  // RECEIVE DIAGNOSTIC RESULTS
+        [|  0x1UL; 11; [| 0xA3uy; 0x0Buy; |]; |]  // REPORT ALIASES
+        [|  0x1UL; 11; [| 0xA3uy; 0x05uy; |]; |]  // REPORT DEVICE IDENTIFIER
+        [|  0x1UL; 11; [| 0xA3uy; 0x0Euy; |]; |]  // REPORT PRIORITY
+        [|  0x1UL; 11; [| 0xA3uy; 0x0Auy; |]; |]  // REPORT TARGET PORT GROUPS
+        [|  0x1UL; 11; [| 0xA3uy; 0x0Fuy; |]; |]  // REPORT TIMESTAMP
+        [|  0x1UL;  5; [| 0x1Duy; |];         |]  // SEND DIAGNOSTIC
+        [|  0x1UL; 11; [| 0xA4uy; 0x06uy; |]; |]  // SET DEVICE IDENTIFIER
+        [|  0x1UL; 11; [| 0xA4uy; 0x0Euy; |]; |]  // SET PRIORITY
+        [|  0x1UL; 11; [| 0xA4uy; 0x0Auy; |]; |]  // SET TARGET PORT GROUPS
+        [|  0x1UL; 11; [| 0xA4uy; 0x0Fuy; |]; |]  // SET TIMESTAMP
+        [|  0x1UL; 15; [| 0x8Duy; |];         |]  // WRITE ATTRIBUTE
+        [|  0x1UL;  9; [| 0x3Buy; |];         |]  // WRITE BUFFER
+        [|  0x1UL; 15; [| 0x86uy; |];         |]  // ACCESS CONTROL IN
+        [|  0x1UL; 15; [| 0x87uy; |];         |]  // ACCESS CONTROL OUT
+        [|  0x1UL;  9; [| 0x37uy; |];         |]  // READ DEFECT DATA(10)
+        [|  0x1UL; 11; [| 0xB7uy; |];         |]  // READ DEFECT DATA(12)
+        [|  0x1UL;  9; [| 0x3Euy; |];         |]  // READ LONG(10)
+        [|  0x1UL; 15; [| 0x9Euy; 0x11uy |];  |]  // READ LONG(16)
+        [|  0x1UL;  5; [| 0x07uy; |];         |]  // REASSIGN BLOCKS
+        [|  0x1UL;  5; [| 0x1Buy; |];         |]  // START STOP UNIT
+        [|  0x1UL;  9; [| 0x2Fuy; |];         |]  // VERIFY(10)
+        [|  0x1UL; 11; [| 0xAFuy; |];         |]  // VERIFY(12)
+        [|  0x1UL; 15; [| 0x8Fuy; |];         |]  // VERIFY(16)
+        [|  0x1UL;  1; [| 0x7Fuy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x18uy; 0x00uy; 0x0Auy; |];         |]  // VERIFY(32)
+        [|  0x1UL;  9; [| 0x2Euy; |];         |]  // WRITE AND VERIFY(10)
+        [|  0x1UL; 11; [| 0xAEuy; |];         |]  // WRITE AND VERIFY(12)
+        [|  0x1UL; 15; [| 0x8Euy; |];         |]  // WRITE AND VERIFY(16)
+        [|  0x1UL;  1; [| 0x7Fuy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x18uy; 0x00uy; 0x0Cuy; |];         |]  // WRITE AND VERIFY(32)
+        [|  0x1UL;  9; [| 0x3Fuy; |];         |]  // WRITE LONG(10)
+        [|  0x1UL; 15; [| 0x9Fuy; |];         |]  // WRITE LONG(16)
+        [|  0x1UL;  9; [| 0x41uy; |];         |]  // WRITE SAME(10)
+        [|  0x1UL; 15; [| 0x93uy; |];         |]  // WRITE SAME(16)
+        [|  0x1UL;  1; [| 0x7Fuy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x18uy; 0x00uy; 0x0Duy; |];         |]  // WRITE SAME(32)
+        [|  0x1UL;  9; [| 0x52uy; |];         |]  // XDREAD(10)
+        [|  0x1UL;  1; [| 0x7Fuy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x18uy; 0x00uy; 0x03uy; |];         |]  // XDREAD(32)
+        [|  0x1UL;  9; [| 0x50uy; |];         |]  // XDWRITE(10)
+        [|  0x1UL;  1; [| 0x7Fuy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x18uy; 0x00uy; 0x04uy; |];         |]  // XDWRITE(32)
+        [|  0x1UL;  9; [| 0x53uy; |];         |]  // XDWRITEREAD(10)
+        [|  0x1UL;  1; [| 0x7Fuy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x18uy; 0x00uy; 0x07uy; |];         |]  // XDWRITEREAD(32)
+        [|  0x1UL;  9; [| 0x51uy; |];         |]  // XPWRITE(10)
+        [|  0x1UL;  1; [| 0x7Fuy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x18uy; 0x00uy; 0x06uy; |];         |]  // XPWRITE(32)
+    |]
+
+    // Check the operation codes not supported
+    [<Theory>]
+    [<MemberData( "NotSupportedOperationCode_001_data" )>]
+    member _.NotSupportedOperationCode_001 ( argLUN : uint64 ) ( ctrlpos : int ) ( cdbparam : byte[] ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam1 m_defaultConnParam1
+
+            // create unuported CDB bytes
+            let lun = lun_me.fromPrim argLUN
+            let cdb = Array.zeroCreate<byte> 16
+            Array.blit cdbparam 0 cdb 0 ( min 16 cdbparam.Length )
+            cdb.[ctrlpos] <- 0x04uy
+
+            // send unsupported CDB.
+            let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK lun cdb PooledBuffer.Empty 0u
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_COMMAND_OPERATION_CODE ))
+
+            // Errors with unknown operation codes are always treated as CA, regardless of the value of the control byte.
+            let! itt_i = r1.Send_Inquiry TaskATTRCd.SIMPLE_TASK lun EVPD.T 0uy 256us NACA.T
+            let! res_i = r1.Wait_Inquiry_Standerd itt_i
+
             do! r1.Close()
         }

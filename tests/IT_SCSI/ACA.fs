@@ -210,28 +210,42 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                 Some( method, tsih, itt )
         )
 
-    let raiseACA ( s : SCSI_Initiator ) ( lun : LUN_T ) =
+    let raiseCA_ACA ( taskcd : TaskATTRCd ) ( s : SCSI_Initiator ) ( lun : LUN_T ) ( naca : NACA ) : Task<TaskResult_ScsiCmd> =
         task {
             let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
-            let! itt = s.Send_Write10 TaskATTRCd.SIMPLE_TASK lun ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.T
+            let! itt =
+                if lun = g_LUN0 then
+                    s.Send_TestUnitReady taskcd lun naca
+                else
+                    s.Send_Write10 taskcd lun ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 naca
             let! res = s.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
             writeData1.Return()
+            return res
         }
 
-    let checkACA ( s : SCSI_Initiator ) ( lun : LUN_T ) =
+    let checkACA ( taskcd : TaskATTRCd ) ( s : SCSI_Initiator ) ( lun : LUN_T ) ( naca : NACA ) : Task<unit> =
         task {
             let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
-            let! itt = s.Send_Write10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
+            let! itt =
+                if lun = g_LUN0 then
+                    s.Send_Inquiry taskcd g_LUN0 EVPD.T 0uy 256us naca
+                else
+                    s.Send_Write10 taskcd lun blkcnt_me.zero32 m_MediaBlockSize writeData1 naca
             let! res = s.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.ACA_ACTIVE ))
             writeData1.Return()
         }
 
-    let checkACACleared ( s : SCSI_Initiator ) ( lun : LUN_T ) =
+    let checkACACleared ( taskcd : TaskATTRCd ) ( s : SCSI_Initiator ) ( lun : LUN_T ) ( naca : NACA ) : Task<unit> =
         task {
             let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
-            let! itt = s.Send_Write10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
+            let! itt =
+                if lun = g_LUN0 then
+                    s.Send_Inquiry taskcd g_LUN0 EVPD.T 0uy 256us naca
+                else
+                    s.Send_Write10 taskcd lun blkcnt_me.zero32 m_MediaBlockSize writeData1 naca
+
             let! _ = s.WaitSCSIResponseGoogStatus itt
             writeData1.Return()
         }
@@ -270,13 +284,16 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             do! r.Close()
         }
 
-    [<Fact>]
-    member _.SenseData_FixedFormat_ACA_001() =
+    [<Theory>]
+    [<InlineData( 0UL )>]
+    [<InlineData( 1UL )>]
+    member _.SenseData_FixedFormat_ACA_001 ( argLUN : uint64 ) =
         task {
+            let lun = lun_me.fromPrim argLUN
             let! r = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
             // Set Sense Data to use fixed format.
-            let! itt_msense = r.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK g_LUN1 LLBAA.T DBD.F 0uy 0x0Auy 0x00uy 256us NACA.T
+            let! itt_msense = r.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun LLBAA.T DBD.F 0uy 0x0Auy 0x00uy 256us NACA.T
             let! res_msense = r.Wait_ModeSense10 itt_msense
             Assert.True(( res_msense.Control.IsSome ))
             let param = {
@@ -286,16 +303,19 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                             DescriptorFormatSenseData = false
                     })
             }
-            let! itt_mselect = r.Send_ModeSelect10 TaskATTRCd.SIMPLE_TASK g_LUN1 PF.T SP.T param NACA.T
+            let! itt_mselect = r.Send_ModeSelect10 TaskATTRCd.SIMPLE_TASK lun PF.T SP.T param NACA.T
             let! _ = r.WaitSCSIResponseGoogStatus itt_mselect
 
             // raise ACA
-            let! itt = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize ( blkcnt_me.ofUInt16 0xFFFFus ) NACA.T
-            let! result = r.WaitSCSIResponse itt
+            let! result = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r lun NACA.T
             Assert.True(( result.Status = ScsiCmdStatCd.CHECK_CONDITION ))
             Assert.True(( result.Sense.IsSome ))
-            Assert.True(( result.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( result.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
+            if lun = g_LUN0 then
+                Assert.True(( result.Sense.Value.SenseKey = SenseKeyCd.NOT_READY ))
+                Assert.True(( result.Sense.Value.ASC = ASCCd.MEDIUM_NOT_PRESENT ))
+            else
+                Assert.True(( result.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+                Assert.True(( result.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
             Assert.True(( result.Sense.Value.BlockCommand.IsSome ))         // There is no useful information
             Assert.True(( result.Sense.Value.Information.IsNone ))
             Assert.True(( result.Sense.Value.CommandSpecific.IsSome ))      // There is no useful information
@@ -307,20 +327,21 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             Assert.True(( result.Sense.Value.VendorSpecific.IsSome ))   // message
 
             // Clear ACA
-            let! itt2 = r.SendTMFRequest_ClearACA BitI.F g_LUN1
-            let! result2 = r.WaitTMFResponse itt2
-            Assert.True(( result2 = TaskMgrResCd.FUNCTION_COMPLETE ))
+            do! clearACA r lun
 
             do! r.Close()
         }
 
-    [<Fact>]
-    member _.SenseData_DescriptorFormat_ACA_001() =
+    [<Theory>]
+    [<InlineData( 0UL )>]
+    [<InlineData( 1UL )>]
+    member _.SenseData_DescriptorFormat_ACA_001 ( argLUN : uint64 ) =
         task {
+            let lun = lun_me.fromPrim argLUN
             let! r = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
             // Set Sense Data to use descriptor format.
-            let! itt_msense = r.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK g_LUN1 LLBAA.T DBD.F 0uy 0x0Auy 0x00uy 256us NACA.T
+            let! itt_msense = r.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun LLBAA.T DBD.F 0uy 0x0Auy 0x00uy 256us NACA.T
             let! res_msense = r.Wait_ModeSense10 itt_msense
             Assert.True(( res_msense.Control.IsSome ))
             let param = {
@@ -330,16 +351,19 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                             DescriptorFormatSenseData = true
                     })
             }
-            let! itt_mselect = r.Send_ModeSelect10 TaskATTRCd.SIMPLE_TASK g_LUN1 PF.T SP.T param NACA.T
+            let! itt_mselect = r.Send_ModeSelect10 TaskATTRCd.SIMPLE_TASK lun PF.T SP.T param NACA.T
             let! _ = r.WaitSCSIResponseGoogStatus itt_mselect
 
             // raise ACA
-            let! itt = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize ( blkcnt_me.ofUInt16 0xFFFFus ) NACA.T
-            let! result = r.WaitSCSIResponse itt
+            let! result = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r lun NACA.T
             Assert.True(( result.Status = ScsiCmdStatCd.CHECK_CONDITION ))
             Assert.True(( result.Sense.IsSome ))
-            Assert.True(( result.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( result.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
+            if lun = g_LUN0 then
+                Assert.True(( result.Sense.Value.SenseKey = SenseKeyCd.NOT_READY ))
+                Assert.True(( result.Sense.Value.ASC = ASCCd.MEDIUM_NOT_PRESENT ))
+            else
+                Assert.True(( result.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+                Assert.True(( result.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
             Assert.True(( result.Sense.Value.BlockCommand.IsNone ))
             Assert.True(( result.Sense.Value.Information.IsNone ))
             Assert.True(( result.Sense.Value.CommandSpecific.IsNone ))
@@ -351,7 +375,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             Assert.True(( result.Sense.Value.VendorSpecific.IsSome ))   // message
 
             // Clear ACA
-            let! itt2 = r.SendTMFRequest_ClearACA BitI.F g_LUN1
+            let! itt2 = r.SendTMFRequest_ClearACA BitI.F lun
             let! result2 = r.WaitTMFResponse itt2
             Assert.True(( result2 = TaskMgrResCd.FUNCTION_COMPLETE ))
 
@@ -468,35 +492,50 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
         }
 
     [<Theory>]
-    [<InlineData( false, TaskATTRCd.HEAD_OF_QUEUE_TASK, true )>]
-    [<InlineData( false, TaskATTRCd.HEAD_OF_QUEUE_TASK, false )>]
-    [<InlineData( false, TaskATTRCd.ORDERED_TASK, true )>]
-    [<InlineData( false, TaskATTRCd.ORDERED_TASK, false )>]
-    [<InlineData( false, TaskATTRCd.SIMPLE_TASK, true )>]
-    [<InlineData( false, TaskATTRCd.SIMPLE_TASK, false )>]
-    [<InlineData( false, TaskATTRCd.TAGLESS_TASK, false )>]
-    [<InlineData( false, TaskATTRCd.TAGLESS_TASK, true )>]
-    [<InlineData( true, TaskATTRCd.HEAD_OF_QUEUE_TASK, true )>]
-    [<InlineData( true, TaskATTRCd.HEAD_OF_QUEUE_TASK, false )>]
-    [<InlineData( true, TaskATTRCd.ORDERED_TASK, true )>]
-    [<InlineData( true, TaskATTRCd.ORDERED_TASK, false )>]
-    [<InlineData( true, TaskATTRCd.SIMPLE_TASK, true )>]
-    [<InlineData( true, TaskATTRCd.SIMPLE_TASK, false )>]
-    [<InlineData( true, TaskATTRCd.TAGLESS_TASK, false )>]
-    [<InlineData( true, TaskATTRCd.TAGLESS_TASK, true )>]
-    member _.NonACA_NormalTask_Success_001 ( argca : bool, taskCode : TaskATTRCd, argNACA : bool ) =
+    [<InlineData( 0UL, false, TaskATTRCd.HEAD_OF_QUEUE_TASK, true )>]
+    [<InlineData( 0UL, false, TaskATTRCd.HEAD_OF_QUEUE_TASK, false )>]
+    [<InlineData( 0UL, false, TaskATTRCd.ORDERED_TASK, true )>]
+    [<InlineData( 0UL, false, TaskATTRCd.ORDERED_TASK, false )>]
+    [<InlineData( 0UL, false, TaskATTRCd.SIMPLE_TASK, true )>]
+    [<InlineData( 0UL, false, TaskATTRCd.SIMPLE_TASK, false )>]
+    [<InlineData( 0UL, false, TaskATTRCd.TAGLESS_TASK, false )>]
+    [<InlineData( 0UL, false, TaskATTRCd.TAGLESS_TASK, true )>]
+    [<InlineData( 0UL, true, TaskATTRCd.HEAD_OF_QUEUE_TASK, true )>]
+    [<InlineData( 0UL, true, TaskATTRCd.HEAD_OF_QUEUE_TASK, false )>]
+    [<InlineData( 0UL, true, TaskATTRCd.ORDERED_TASK, true )>]
+    [<InlineData( 0UL, true, TaskATTRCd.ORDERED_TASK, false )>]
+    [<InlineData( 0UL, true, TaskATTRCd.SIMPLE_TASK, true )>]
+    [<InlineData( 0UL, true, TaskATTRCd.SIMPLE_TASK, false )>]
+    [<InlineData( 0UL, true, TaskATTRCd.TAGLESS_TASK, false )>]
+    [<InlineData( 0UL, true, TaskATTRCd.TAGLESS_TASK, true )>]
+    [<InlineData( 1UL, false, TaskATTRCd.HEAD_OF_QUEUE_TASK, true )>]
+    [<InlineData( 1UL, false, TaskATTRCd.HEAD_OF_QUEUE_TASK, false )>]
+    [<InlineData( 1UL, false, TaskATTRCd.ORDERED_TASK, true )>]
+    [<InlineData( 1UL, false, TaskATTRCd.ORDERED_TASK, false )>]
+    [<InlineData( 1UL, false, TaskATTRCd.SIMPLE_TASK, true )>]
+    [<InlineData( 1UL, false, TaskATTRCd.SIMPLE_TASK, false )>]
+    [<InlineData( 1UL, false, TaskATTRCd.TAGLESS_TASK, false )>]
+    [<InlineData( 1UL, false, TaskATTRCd.TAGLESS_TASK, true )>]
+    [<InlineData( 1UL, true, TaskATTRCd.HEAD_OF_QUEUE_TASK, true )>]
+    [<InlineData( 1UL, true, TaskATTRCd.HEAD_OF_QUEUE_TASK, false )>]
+    [<InlineData( 1UL, true, TaskATTRCd.ORDERED_TASK, true )>]
+    [<InlineData( 1UL, true, TaskATTRCd.ORDERED_TASK, false )>]
+    [<InlineData( 1UL, true, TaskATTRCd.SIMPLE_TASK, true )>]
+    [<InlineData( 1UL, true, TaskATTRCd.SIMPLE_TASK, false )>]
+    [<InlineData( 1UL, true, TaskATTRCd.TAGLESS_TASK, false )>]
+    [<InlineData( 1UL, true, TaskATTRCd.TAGLESS_TASK, true )>]
+    member _.NonACA_NormalTask_Success_001 ( argLUN : uint64, argca : bool, taskCode : TaskATTRCd, argNACA : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-            let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
+            let lun = lun_me.fromPrim argLUN
 
             if argca then
                 // it raise CA
-                let! itt_w1_ca = r1.Send_Write10 taskCode g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.F
-                let! res_w1_ca = r1.WaitSCSIResponse itt_w1_ca
-                Assert.True(( res_w1_ca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+                let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 lun NACA.F
+                ()
 
             let naca = NACA.ofBool argNACA
-            let! itt_w1 = r1.Send_Write10 taskCode g_LUN1 ( blkcnt_me.ofUInt32 3u ) m_MediaBlockSize writeData1 naca
+            let! itt_w1 = r1.Send_SynchronizeCache10 taskCode lun ( blkcnt_me.ofUInt32 3u ) blkcnt_me.zero16 naca
             let! res_r1 = r1.WaitSCSIResponseGoogStatus itt_w1
             res_r1.Return()
 
@@ -504,65 +543,80 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
         }
 
     [<Theory>]
-    [<InlineData( false, TaskATTRCd.HEAD_OF_QUEUE_TASK, true )>]
-    [<InlineData( false, TaskATTRCd.HEAD_OF_QUEUE_TASK, false )>]
-    [<InlineData( false, TaskATTRCd.ORDERED_TASK, true )>]
-    [<InlineData( false, TaskATTRCd.ORDERED_TASK, false )>]
-    [<InlineData( false, TaskATTRCd.SIMPLE_TASK, true )>]
-    [<InlineData( false, TaskATTRCd.SIMPLE_TASK, false )>]
-    [<InlineData( false, TaskATTRCd.TAGLESS_TASK, true )>]
-    [<InlineData( false, TaskATTRCd.TAGLESS_TASK, false )>]
-    [<InlineData( true, TaskATTRCd.HEAD_OF_QUEUE_TASK, true )>]
-    [<InlineData( true, TaskATTRCd.HEAD_OF_QUEUE_TASK, false )>]
-    [<InlineData( true, TaskATTRCd.ORDERED_TASK, true )>]
-    [<InlineData( true, TaskATTRCd.ORDERED_TASK, false )>]
-    [<InlineData( true, TaskATTRCd.SIMPLE_TASK, true )>]
-    [<InlineData( true, TaskATTRCd.SIMPLE_TASK, false )>]
-    [<InlineData( true, TaskATTRCd.TAGLESS_TASK, true )>]
-    [<InlineData( true, TaskATTRCd.TAGLESS_TASK, false )>]
-    member _.NonACA_NormalTask_Failed_CA_001 ( argca : bool, taskCode : TaskATTRCd, raiseaca : bool ) =
+    [<InlineData( 0UL, false, TaskATTRCd.HEAD_OF_QUEUE_TASK, true )>]
+    [<InlineData( 0UL, false, TaskATTRCd.HEAD_OF_QUEUE_TASK, false )>]
+    [<InlineData( 0UL, false, TaskATTRCd.ORDERED_TASK, true )>]
+    [<InlineData( 0UL, false, TaskATTRCd.ORDERED_TASK, false )>]
+    [<InlineData( 0UL, false, TaskATTRCd.SIMPLE_TASK, true )>]
+    [<InlineData( 0UL, false, TaskATTRCd.SIMPLE_TASK, false )>]
+    [<InlineData( 0UL, false, TaskATTRCd.TAGLESS_TASK, true )>]
+    [<InlineData( 0UL, false, TaskATTRCd.TAGLESS_TASK, false )>]
+    [<InlineData( 0UL, true, TaskATTRCd.HEAD_OF_QUEUE_TASK, true )>]
+    [<InlineData( 0UL, true, TaskATTRCd.HEAD_OF_QUEUE_TASK, false )>]
+    [<InlineData( 0UL, true, TaskATTRCd.ORDERED_TASK, true )>]
+    [<InlineData( 0UL, true, TaskATTRCd.ORDERED_TASK, false )>]
+    [<InlineData( 0UL, true, TaskATTRCd.SIMPLE_TASK, true )>]
+    [<InlineData( 0UL, true, TaskATTRCd.SIMPLE_TASK, false )>]
+    [<InlineData( 0UL, true, TaskATTRCd.TAGLESS_TASK, true )>]
+    [<InlineData( 0UL, true, TaskATTRCd.TAGLESS_TASK, false )>]
+    [<InlineData( 1UL, false, TaskATTRCd.HEAD_OF_QUEUE_TASK, true )>]
+    [<InlineData( 1UL, false, TaskATTRCd.HEAD_OF_QUEUE_TASK, false )>]
+    [<InlineData( 1UL, false, TaskATTRCd.ORDERED_TASK, true )>]
+    [<InlineData( 1UL, false, TaskATTRCd.ORDERED_TASK, false )>]
+    [<InlineData( 1UL, false, TaskATTRCd.SIMPLE_TASK, true )>]
+    [<InlineData( 1UL, false, TaskATTRCd.SIMPLE_TASK, false )>]
+    [<InlineData( 1UL, false, TaskATTRCd.TAGLESS_TASK, true )>]
+    [<InlineData( 1UL, false, TaskATTRCd.TAGLESS_TASK, false )>]
+    [<InlineData( 1UL, true, TaskATTRCd.HEAD_OF_QUEUE_TASK, true )>]
+    [<InlineData( 1UL, true, TaskATTRCd.HEAD_OF_QUEUE_TASK, false )>]
+    [<InlineData( 1UL, true, TaskATTRCd.ORDERED_TASK, true )>]
+    [<InlineData( 1UL, true, TaskATTRCd.ORDERED_TASK, false )>]
+    [<InlineData( 1UL, true, TaskATTRCd.SIMPLE_TASK, true )>]
+    [<InlineData( 1UL, true, TaskATTRCd.SIMPLE_TASK, false )>]
+    [<InlineData( 1UL, true, TaskATTRCd.TAGLESS_TASK, true )>]
+    [<InlineData( 1UL, true, TaskATTRCd.TAGLESS_TASK, false )>]
+    member _.NonACA_NormalTask_Failed_CA_001 ( argLUN : uint64, argca : bool, taskCode : TaskATTRCd, raiseaca : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let lun = lun_me.fromPrim argLUN
             let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
 
             if argca then
                 // it raise CA
-                let! itt_w1_ca = r1.Send_Write10 taskCode g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.F
-                let! res_w1_ca = r1.WaitSCSIResponse itt_w1_ca
-                Assert.True(( res_w1_ca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+                let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 lun NACA.F
+                ()
 
             // register reservation key
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 111UL ) false false false [||]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 111UL ) false false false [||]
+            //let! itt_pr_out1 = r1.Send_Inquiry TaskATTRCd.SIMPLE_TASK lun EVPD.T 0uy 256us NACA.T
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
 
             if raiseaca then
                 // send task with NACA=1
-                let! itt_w2_aca = r1.Send_Write10 taskCode g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.T
-                let! res_w2_aca = r1.WaitSCSIResponse itt_w2_aca
+                let! res_w2_aca = raiseCA_ACA taskCode r1 lun NACA.T
                 Assert.True(( res_w2_aca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
             
                 // Check that ACA is established
-                do! checkACA r1 g_LUN1
+                do! checkACA TaskATTRCd.SIMPLE_TASK r1 lun NACA.T
 
                 // clear ACA
-                do! clearACA r1 g_LUN1
+                do! clearACA r1 lun
             else
                 // send task with NACA=0
-                let! itt_w4_ca = r1.Send_Write10 taskCode g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.F
-                let! res_w4_ca = r1.WaitSCSIResponse itt_w4_ca
+                let! res_w4_ca = raiseCA_ACA taskCode r1 lun NACA.F
                 Assert.True(( res_w4_ca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
             
             // Get reservarion key. Make sure the reservation remains intact.
-            let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
+            let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 0uy 256us NACA.T
             let! res_pr_in1 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in1
             Assert.True(( res_pr_in1.ReservationKey.Length = 1 ))
             Assert.True(( res_pr_in1.ReservationKey.[0] = resvkey_me.fromPrim 111UL ))
 
             // clear reservation key
-            let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 111UL )
+            let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 111UL )
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
 
-            let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
+            let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 0uy 256us NACA.T
             let! itt_pr_in2 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in2
             Assert.True(( itt_pr_in2.ReservationKey.Length = 0 ))
 
@@ -571,109 +625,108 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
         }
 
     [<Theory>]
-    [<InlineData( false, true )>]
-    [<InlineData( false, false )>]
-    [<InlineData( true, true )>]
-    [<InlineData( true, false )>]
-    member _.NonACA_ACATask_CA_001 ( argca : bool, raiseaca : bool ) =
+    [<InlineData( 0UL, false, true )>]
+    [<InlineData( 0UL, false, false )>]
+    [<InlineData( 0UL, true, true )>]
+    [<InlineData( 0UL, true, false )>]
+    [<InlineData( 1UL, false, true )>]
+    [<InlineData( 1UL, false, false )>]
+    [<InlineData( 1UL, true, true )>]
+    [<InlineData( 1UL, true, false )>]
+    member _.NonACA_ACATask_CA_001 ( argLUN : uint64, argca : bool, raiseaca : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-            let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
+            let lun = lun_me.fromPrim argLUN
 
             if argca then
                 // it raise CA
-                let! itt_w1_ca = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize writeData1 NACA.F
-                let! res_w1_ca = r1.WaitSCSIResponse itt_w1_ca
-                Assert.True(( res_w1_ca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+                let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 lun NACA.F
+                ()
 
             // register reservation key
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 111UL ) false false false [||]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 111UL ) false false false [||]
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
 
             if raiseaca then
                 // send task with NACA=1
-                let! itt_w2_aca = r1.Send_Write10 TaskATTRCd.ACA_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
-                let! res_w2_aca = r1.WaitSCSIResponse itt_w2_aca
-                Assert.True(( res_w2_aca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-                Assert.True(( res_w2_aca.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-                Assert.True(( res_w2_aca.Sense.Value.ASC = ASCCd.INVALID_MESSAGE_ERROR ))
+                let! _ = raiseCA_ACA TaskATTRCd.ACA_TASK r1 lun NACA.T
             
                 // Check that ACA is established
-                do! checkACA r1 g_LUN1
+                do! checkACA TaskATTRCd.SIMPLE_TASK r1 lun NACA.T
 
                 // clear ACA
-                do! clearACA r1 g_LUN1
+                do! clearACA r1 lun
             else
                 // send ACA task with NACA=0
-                let! itt_w4_ca = r1.Send_Write10 TaskATTRCd.ACA_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.F
-                let! res_w4_ca = r1.WaitSCSIResponse itt_w4_ca
-                Assert.True(( res_w4_ca.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-                Assert.True(( res_w4_ca.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-                Assert.True(( res_w4_ca.Sense.Value.ASC = ASCCd.INVALID_MESSAGE_ERROR ))
+                let! _ = raiseCA_ACA TaskATTRCd.ACA_TASK r1 lun NACA.F
+                ()
             
             // Get reservarion key. Make sure the reservation remains intact.
-            let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
+            let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 0uy 256us NACA.T
             let! res_pr_in1 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in1
             Assert.True(( res_pr_in1.ReservationKey.Length = 1 ))
             Assert.True(( res_pr_in1.ReservationKey.[0] = resvkey_me.fromPrim 111UL ))
 
             // clear reservation key
-            let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 111UL )
+            let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 111UL )
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
 
-            let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
+            let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 0uy 256us NACA.T
             let! itt_pr_in2 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in2
             Assert.True(( itt_pr_in2.ReservationKey.Length = 0 ))
 
-            writeData1.Return()
             do! r1.Close()
         }
 
     [<Theory>]
-    [<InlineData( TaskATTRCd.HEAD_OF_QUEUE_TASK, true )>]
-    [<InlineData( TaskATTRCd.HEAD_OF_QUEUE_TASK, false )>]
-    [<InlineData( TaskATTRCd.ORDERED_TASK, true )>]
-    [<InlineData( TaskATTRCd.ORDERED_TASK, false )>]
-    [<InlineData( TaskATTRCd.SIMPLE_TASK, true )>]
-    [<InlineData( TaskATTRCd.SIMPLE_TASK, false )>]
-    [<InlineData( TaskATTRCd.TAGLESS_TASK, true )>]
-    [<InlineData( TaskATTRCd.TAGLESS_TASK, false )>]
-    member _.ACAActive_NormalTask_001 ( taskCode : TaskATTRCd, argNaca : bool ) =
+    [<InlineData( 0UL, TaskATTRCd.HEAD_OF_QUEUE_TASK, true )>]
+    [<InlineData( 0UL, TaskATTRCd.HEAD_OF_QUEUE_TASK, false )>]
+    [<InlineData( 0UL, TaskATTRCd.ORDERED_TASK, true )>]
+    [<InlineData( 0UL, TaskATTRCd.ORDERED_TASK, false )>]
+    [<InlineData( 0UL, TaskATTRCd.SIMPLE_TASK, true )>]
+    [<InlineData( 0UL, TaskATTRCd.SIMPLE_TASK, false )>]
+    [<InlineData( 0UL, TaskATTRCd.TAGLESS_TASK, true )>]
+    [<InlineData( 0UL, TaskATTRCd.TAGLESS_TASK, false )>]
+    [<InlineData( 1UL, TaskATTRCd.HEAD_OF_QUEUE_TASK, true )>]
+    [<InlineData( 1UL, TaskATTRCd.HEAD_OF_QUEUE_TASK, false )>]
+    [<InlineData( 1UL, TaskATTRCd.ORDERED_TASK, true )>]
+    [<InlineData( 1UL, TaskATTRCd.ORDERED_TASK, false )>]
+    [<InlineData( 1UL, TaskATTRCd.SIMPLE_TASK, true )>]
+    [<InlineData( 1UL, TaskATTRCd.SIMPLE_TASK, false )>]
+    [<InlineData( 1UL, TaskATTRCd.TAGLESS_TASK, true )>]
+    [<InlineData( 1UL, TaskATTRCd.TAGLESS_TASK, false )>]
+    member _.ACAActive_NormalTask_001 ( argLUN : uint64, taskCode : TaskATTRCd, argNaca : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-            let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
+            let lun = lun_me.fromPrim argLUN
 
             // register reservation key
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) false false false [||]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) false false false [||]
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
 
             // raise ACA
-            do! raiseACA r1 g_LUN1
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 lun NACA.T
 
             // send task
-            let naca = NACA.ofBool argNaca
-            let! itt_w2 = r1.Send_Write10 taskCode g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 naca
-            let! res_w2 = r1.WaitSCSIResponse itt_w2
-            Assert.True(( res_w2.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+            do! checkACA taskCode r1 lun ( NACA.ofBool argNaca )
 
             // clear ACA
-            do! clearACA r1 g_LUN1
+            do! clearACA r1 lun
             
             // Get reservarion key. Make sure the reservation remains intact.
-            let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
+            let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 0uy 256us NACA.T
             let! res_pr_in1 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in1
             Assert.True(( res_pr_in1.ReservationKey.Length = 1 ))
             Assert.True(( res_pr_in1.ReservationKey.[0] = resvkey_me.fromPrim 222UL ))
 
             // clear reservation key
-            let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 222UL )
+            let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 222UL )
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
 
-            let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
+            let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 0uy 256us NACA.T
             let! itt_pr_in2 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in2
             Assert.True(( itt_pr_in2.ReservationKey.Length = 0 ))
 
-            writeData1.Return()
             do! r1.Close()
         }
 
@@ -693,7 +746,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
 
             // raise ACA
-            do! raiseACA r1 g_LUN1
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 g_LUN1 NACA.T
 
             // Add debug media trap
             m_ClientProc.RunCommand "add trap /e Write /a Wait" "Trap added" "MD> "
@@ -745,43 +798,42 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
     // There are no ACA tasks in the task set.
     // The ACA task(NACA=0/1) will complete successfully.
     [<Theory>]
-    [<InlineData( true )>]
-    [<InlineData( false )>]
-    member _.ACAActive_ACATask_ACATaskNotExists_Success_001 ( argNaca : bool ) =
+    [<InlineData( 0UL, true )>]
+    [<InlineData( 0UL, false )>]
+    [<InlineData( 1UL, true )>]
+    [<InlineData( 1UL, false )>]
+    member _.ACAActive_ACATask_ACATaskNotExists_Success_001 ( argLUN : uint64, argNaca : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-            let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
+            let lun = lun_me.fromPrim argLUN
 
             // register reservation key
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) false false false [||]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) false false false [||]
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
 
             // raise ACA
-            do! raiseACA r1 g_LUN1
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 lun NACA.T
 
             // send ACA task
-            let naca = NACA.ofBool argNaca
-            let! itt_w3_aca = r1.Send_Write10 TaskATTRCd.ACA_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize writeData1 naca
-            let! _ = r1.WaitSCSIResponseGoogStatus itt_w3_aca
+            do! checkACACleared TaskATTRCd.ACA_TASK r1 lun ( NACA.ofBool argNaca )
 
             // clear ACA
-            do! clearACA r1 g_LUN1
+            do! clearACA r1 lun
             
             // Get reservarion key. Make sure the reservation remains intact.
-            let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
+            let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 0uy 256us NACA.T
             let! res_pr_in1 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in1
             Assert.True(( res_pr_in1.ReservationKey.Length = 1 ))
             Assert.True(( res_pr_in1.ReservationKey.[0] = resvkey_me.fromPrim 222UL ))
 
             // clear reservation key
-            let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 222UL )
+            let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 222UL )
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
 
-            let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
+            let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 0uy 256us NACA.T
             let! itt_pr_in2 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in2
             Assert.True(( itt_pr_in2.ReservationKey.Length = 0 ))
 
-            writeData1.Return()
             do! r1.Close()
         }
 
@@ -875,32 +927,47 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
 
     // ACA is established.
     [<Theory>]
-    [<InlineData( TaskATTRCd.HEAD_OF_QUEUE_TASK, true, true )>]
-    [<InlineData( TaskATTRCd.HEAD_OF_QUEUE_TASK, false, false )>]
-    [<InlineData( TaskATTRCd.ORDERED_TASK, true, true )>]
-    [<InlineData( TaskATTRCd.ORDERED_TASK, false, false )>]
-    [<InlineData( TaskATTRCd.SIMPLE_TASK, true, true )>]
-    [<InlineData( TaskATTRCd.SIMPLE_TASK, false, false )>]
-    [<InlineData( TaskATTRCd.TAGLESS_TASK, true, true )>]
-    [<InlineData( TaskATTRCd.TAGLESS_TASK, false, false )>]
-    [<InlineData( TaskATTRCd.ACA_TASK, true, true )>]
-    [<InlineData( TaskATTRCd.ACA_TASK, false, true )>]
-    member _.ACAActive_NonFailedInitiator_001 ( taskCode : TaskATTRCd, argNaca : bool, expresult : bool ) =
+    [<InlineData( 0UL, TaskATTRCd.HEAD_OF_QUEUE_TASK, true, true )>]
+    [<InlineData( 0UL, TaskATTRCd.HEAD_OF_QUEUE_TASK, false, false )>]
+    [<InlineData( 0UL, TaskATTRCd.ORDERED_TASK, true, true )>]
+    [<InlineData( 0UL, TaskATTRCd.ORDERED_TASK, false, false )>]
+    [<InlineData( 0UL, TaskATTRCd.SIMPLE_TASK, true, true )>]
+    [<InlineData( 0UL, TaskATTRCd.SIMPLE_TASK, false, false )>]
+    [<InlineData( 0UL, TaskATTRCd.TAGLESS_TASK, true, true )>]
+    [<InlineData( 0UL, TaskATTRCd.TAGLESS_TASK, false, false )>]
+    [<InlineData( 0UL, TaskATTRCd.ACA_TASK, true, true )>]
+    [<InlineData( 0UL, TaskATTRCd.ACA_TASK, false, true )>]
+    [<InlineData( 1UL, TaskATTRCd.HEAD_OF_QUEUE_TASK, true, true )>]
+    [<InlineData( 1UL, TaskATTRCd.HEAD_OF_QUEUE_TASK, false, false )>]
+    [<InlineData( 1UL, TaskATTRCd.ORDERED_TASK, true, true )>]
+    [<InlineData( 1UL, TaskATTRCd.ORDERED_TASK, false, false )>]
+    [<InlineData( 1UL, TaskATTRCd.SIMPLE_TASK, true, true )>]
+    [<InlineData( 1UL, TaskATTRCd.SIMPLE_TASK, false, false )>]
+    [<InlineData( 1UL, TaskATTRCd.TAGLESS_TASK, true, true )>]
+    [<InlineData( 1UL, TaskATTRCd.TAGLESS_TASK, false, false )>]
+    [<InlineData( 1UL, TaskATTRCd.ACA_TASK, true, true )>]
+    [<InlineData( 1UL, TaskATTRCd.ACA_TASK, false, true )>]
+    member _.ACAActive_NonFailedInitiator_001 ( argLUN : uint64, taskCode : TaskATTRCd, argNaca : bool, expresult : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
+            let lun = lun_me.fromPrim argLUN
 
             // register reservation key
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) false false false [||]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) false false false [||]
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
 
             // establish ACA
-            do! raiseACA r1 g_LUN1
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 lun NACA.T
 
             // send task
             let naca = NACA.ofBool argNaca
-            let! itt_t2 = r2.Send_Write10 taskCode g_LUN1 ( blkcnt_me.ofUInt32 1u ) m_MediaBlockSize writeData1 naca
+            let! itt_t2 =
+                if lun = g_LUN0 then
+                    r2.Send_Inquiry taskCode lun EVPD.T 0uy 256us naca
+                else
+                    r2.Send_Write10 taskCode lun ( blkcnt_me.ofUInt32 1u ) m_MediaBlockSize writeData1 naca
             let! res_t2 = r2.WaitSCSIResponse itt_t2
 
             if expresult then
@@ -909,17 +976,17 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                 Assert.True(( res_t2.Status = ScsiCmdStatCd.BUSY ))
 
             // clear ACA
-            do! clearACA r1 g_LUN1
-            do! clearACA r2 g_LUN1
+            do! clearACA r1 lun
+            do! clearACA r2 lun
 
             // Get reservarion key. Make sure the reservation remains intact.
-            let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
+            let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 0uy 256us NACA.T
             let! res_pr_in1 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in1
             Assert.True(( res_pr_in1.ReservationKey.Length = 1 ))
             Assert.True(( res_pr_in1.ReservationKey.[0] = resvkey_me.fromPrim 222UL ))
 
             // clear reservation key
-            let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 222UL )
+            let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 222UL )
             let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
 
             writeData1.Return()
@@ -935,52 +1002,76 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let! r3 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target3" } m_defaultConnParam   // Target Device1, Target3, LU3
             let! r4 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target4" } { m_defaultConnParam with PortNo = iSCSIPortNo2 }   // Target Device2, Target4, LU4
 
-            // establish ACA at LU1, LU2, LU3, LU4
-            do! raiseACA r1 g_LUN1
-            do! raiseACA r2 g_LUN2
-            do! raiseACA r3 g_LUN3
-            do! raiseACA r4 g_LUN4
+            // establish ACA on LU1, LU2, LU3, LU4
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 g_LUN1 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r2 g_LUN2 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r3 g_LUN3 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r4 g_LUN4 NACA.T
 
-            // check the ACA is established at LU1, LU2, LU3, LU4
-            do! checkACA r1 g_LUN1
-            do! checkACA r2 g_LUN1
-            do! checkACA r1 g_LUN2
-            do! checkACA r2 g_LUN2
-            do! checkACA r3 g_LUN3
-            do! checkACA r4 g_LUN4
+            // establish ACA on LU0 ( Target Device 1, 2 )
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 g_LUN0 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r4 g_LUN0 NACA.T
 
-            // LU Reset at LU1
+            // check the ACA is established on LU1, LU2, LU3, LU4
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN1 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN1 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN2 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN2 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN3 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN4 NACA.T
+
+            // check the ACA is established on LU0 ( Target Device 1, 2 )
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN0 NACA.T
+
+            // LU Reset on LU1
             let! itt_tmf1 = r1.SendTMFRequest_LogicalUnitReset BitI.F g_LUN1
             let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
             Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
 
-            // check the ACA is cleared at LU1
-            do! checkACACleared r1 g_LUN1
-            do! checkACACleared r2 g_LUN1
+            // check the ACA is cleared on LU1
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r1 g_LUN1 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r2 g_LUN1 NACA.T
 
-            // check the ACA is established at LU2, LU3, LU4
-            do! checkACA r1 g_LUN2
-            do! checkACA r2 g_LUN2
-            do! checkACA r3 g_LUN3
-            do! checkACA r4 g_LUN4
+            // check the ACA still remains on LU2, LU3, LU4
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN2 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN2 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN3 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN4 NACA.T
 
-            // LU Reset at LU2
+            // check the ACA still remains on LU0 ( Target Device 1, 2 )
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN0 NACA.T
+
+            // LU Reset on LU2
             let! itt_tmf2 = r2.SendTMFRequest_LogicalUnitReset BitI.F g_LUN2
             let! res_tmf2 = r2.WaitTMFResponse itt_tmf2
             Assert.True(( res_tmf2 = TaskMgrResCd.FUNCTION_COMPLETE ))
 
-            // check the ACA is cleared at LU1, LU2
-            do! checkACACleared r1 g_LUN1
-            do! checkACACleared r2 g_LUN1
-            do! checkACACleared r1 g_LUN2
-            do! checkACACleared r2 g_LUN2
+            // check the ACA is cleared on LU1, LU2
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r1 g_LUN1 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r2 g_LUN1 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r1 g_LUN2 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r2 g_LUN2 NACA.T
 
-            // check the ACA is established at LU3, LU4
-            do! checkACA r3 g_LUN3
-            do! checkACA r4 g_LUN4
+            // check the ACA still remains on LU3, LU4
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN3 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN4 NACA.T
 
+            // check the ACA still remains on LU0 ( Target Device 1, 2 )
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN0 NACA.T
+
+            do! clearACA r1 g_LUN0
             do! clearACA r3 g_LUN3
             do! clearACA r4 g_LUN4
+            do! clearACA r4 g_LUN0
             do! r1.Close()
             do! r2.Close()
             do! r3.Close()
@@ -997,19 +1088,29 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let! r3 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target3" } m_defaultConnParam   // Target Device1, Target3, LU3
             let! r4 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target4" } { m_defaultConnParam with PortNo = iSCSIPortNo2 }   // Target Device2, Target4, LU4
 
-            // establish ACA at LU1, LU2, LU3, LU4
-            do! raiseACA r1 g_LUN1
-            do! raiseACA r2 g_LUN2
-            do! raiseACA r3 g_LUN3
-            do! raiseACA r4 g_LUN4
+            // establish ACA on LU1, LU2, LU3, LU4
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 g_LUN1 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r2 g_LUN2 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r3 g_LUN3 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r4 g_LUN4 NACA.T
 
-            // check the ACA is established at LU1, LU2, LU3, LU4
-            do! checkACA r1 g_LUN1
-            do! checkACA r2 g_LUN1
-            do! checkACA r1 g_LUN2
-            do! checkACA r2 g_LUN2
-            do! checkACA r3 g_LUN3
-            do! checkACA r4 g_LUN4
+            // establish ACA on LU0 ( Target Device 1, 2 )
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 g_LUN0 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r4 g_LUN0 NACA.T
+
+            // check the ACA is established on LU1, LU2, LU3, LU4
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN1 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN1 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN2 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN2 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN3 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN4 NACA.T
+
+            // check the ACA is established on LU0 ( Target Device 1, 2 )
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN0 NACA.T
 
             // Targtet reset
             let! itt_tmf1 = 
@@ -1020,18 +1121,26 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
             Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
 
-            // check the ACA is cleared at LU1, LU2
-            do! checkACACleared r1 g_LUN1
-            do! checkACACleared r2 g_LUN1
-            do! checkACACleared r1 g_LUN2
-            do! checkACACleared r2 g_LUN2
+            // check the ACA is cleared on LU1, LU2
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r1 g_LUN1 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r2 g_LUN1 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r1 g_LUN2 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r2 g_LUN2 NACA.T
 
-            // check the ACA is established at LU3, LU4
-            do! checkACA r3 g_LUN3
-            do! checkACA r4 g_LUN4
+            // check the ACA still remains on LU3, LU4
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN3 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN4 NACA.T
 
+            // check the ACA still remains on LU0 ( Target Device 1, 2 )
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN0 NACA.T
+
+            do! clearACA r1 g_LUN0
             do! clearACA r3 g_LUN3
             do! clearACA r4 g_LUN4
+            do! clearACA r4 g_LUN0
             do! r1.Close()
             do! r2.Close()
             do! r3.Close()
@@ -1048,22 +1157,32 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let! r3 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target3" } m_defaultConnParam   // Target Device1, Target3, LU3
             let! r4 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target4" } { m_defaultConnParam with PortNo = iSCSIPortNo2 }   // Target Device2, Target4, LU4
 
-            // establish ACA at LU1, LU2, LU3, LU4
-            do! raiseACA r1 g_LUN1
-            do! raiseACA r2 g_LUN2
-            do! raiseACA r3 g_LUN3
-            do! raiseACA r4 g_LUN4
+            // establish ACA on LU1, LU2, LU3, LU4
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 g_LUN1 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r2 g_LUN2 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r3 g_LUN3 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r4 g_LUN4 NACA.T
 
-            // check the ACA is established at LU1, LU2, LU3, LU4
-            do! checkACA r1 g_LUN1
-            do! checkACA r2 g_LUN1
-            do! checkACA r1 g_LUN2
-            do! checkACA r2 g_LUN2
-            do! checkACA r3 g_LUN3
-            do! checkACA r4 g_LUN4
+            // establish ACA on LU0 ( Target Device 1, 2 )
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 g_LUN0 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r4 g_LUN0 NACA.T
+
+            // check the ACA is established on LU1, LU2, LU3, LU4
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN1 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN1 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN2 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN2 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN3 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN4 NACA.T
+
+            // check the ACA is established on LU0 ( Target Device 1, 2 )
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN0 NACA.T
 
             // Targtet reset
-            let! itt_tmf1 = 
+            let! _ = 
                 if tc then
                     r1.SendTMFRequest_TargetWarmReset BitI.F g_LUN0
                 else
@@ -1074,8 +1193,9 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             do! checkDisconnected r2
             do! checkDisconnected r3
 
-            // check the ACA is established at LU3, LU4
-            do! checkACA r4 g_LUN4
+            // check the ACA still remains on LU0, LU4 ( Target Device 2 )
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN4 NACA.T
 
             // wait for restart target device 1
             let n = GlbFunc.ConnectToServer iSCSIPortNo1
@@ -1086,14 +1206,18 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let! r2_2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam   // Target Device1, Target1, LU1, LU2
             let! r3_2 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target3" } m_defaultConnParam   // Target Device1, Target3, LU3
 
-            // check the ACA is cleared at LU1, LU2, LU3
-            do! checkACACleared r1_2 g_LUN1
-            do! checkACACleared r2_2 g_LUN1
-            do! checkACACleared r1_2 g_LUN2
-            do! checkACACleared r2_2 g_LUN2
-            do! checkACACleared r3_2 g_LUN3
+            // check the ACA is cleared on LU0, LU1, LU2, LU3 ( Target Device 1 )
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r1_2 g_LUN0 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r2_2 g_LUN0 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r3_2 g_LUN0 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r1_2 g_LUN1 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r2_2 g_LUN1 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r1_2 g_LUN2 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r2_2 g_LUN2 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r3_2 g_LUN3 NACA.T
 
             do! clearACA r4 g_LUN4
+            do! clearACA r4 g_LUN0
             do! r1_2.Close()
             do! r2_2.Close()
             do! r3_2.Close()
@@ -1108,19 +1232,29 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let! r3 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target3" } m_defaultConnParam   // Target Device1, Target3, LU3
             let! r4 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target4" } { m_defaultConnParam with PortNo = iSCSIPortNo2 }   // Target Device2, Target4, LU4
 
-            // establish ACA at LU1, LU2, LU3, LU4
-            do! raiseACA r1 g_LUN1
-            do! raiseACA r2 g_LUN2
-            do! raiseACA r3 g_LUN3
-            do! raiseACA r4 g_LUN4
+            // establish ACA on LU1, LU2, LU3, LU4
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 g_LUN1 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r2 g_LUN2 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r3 g_LUN3 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r4 g_LUN4 NACA.T
 
-            // check the ACA is established at LU1, LU2, LU3, LU4
-            do! checkACA r1 g_LUN1
-            do! checkACA r2 g_LUN1
-            do! checkACA r1 g_LUN2
-            do! checkACA r2 g_LUN2
-            do! checkACA r3 g_LUN3
-            do! checkACA r4 g_LUN4
+            // establish ACA on LU0 ( Target Device 1, 2 )
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 g_LUN0 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r4 g_LUN0 NACA.T
+
+            // check the ACA is established on LU1, LU2, LU3, LU4
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN1 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN1 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN2 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN2 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN3 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN4 NACA.T
+
+            // check the ACA is established on LU0 ( Target Device 1, 2 )
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN0 NACA.T
 
             // disconnect session
             do! r1.Close()
@@ -1132,22 +1266,33 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             m_ClientProc.RunCommand "load" "Loaded :" "MD> "
             m_ClientProc.RunCommand "activate" "Activated :" "MD> "
 
-            // Reconnect sessions
-            let! r1_2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam   // Target Device1, Target1, LU1, LU2
-            let! r2_2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam   // Target Device1, Target1, LU1, LU2
+            // Reconnect sessions ( Target Device1, Target1, LU1, LU2 )
+            // To clear the ACA, the same ISID must be used.
+            let! r1_2 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = r1.SessionParams.ISID } m_defaultConnParam
+            let! r2_2 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = r2.SessionParams.ISID } m_defaultConnParam
 
-            // check the ACA is cleared at LU1, LU2
-            do! checkACACleared r1_2 g_LUN1
-            do! checkACACleared r2_2 g_LUN1
-            do! checkACACleared r1_2 g_LUN2
-            do! checkACACleared r2_2 g_LUN2
+            // check the ACA is cleared on LU1, LU2
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r1_2 g_LUN1 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r2_2 g_LUN1 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r1_2 g_LUN2 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r2_2 g_LUN2 NACA.T
 
-            // check the ACA is established at LU3, LU4
-            do! checkACA r3 g_LUN3
-            do! checkACA r4 g_LUN4
+            // check the ACA still remains on LU3, LU4
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN3 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN4 NACA.T
 
+            // check the ACA still remains on LU0 ( Target Device 1, 2 )
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1_2 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2_2 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN0 NACA.T
+
+            do! clearACA r1_2 g_LUN0
+            do! clearACA r2_2 g_LUN0
+            do! clearACA r4 g_LUN0
             do! clearACA r3 g_LUN3
             do! clearACA r4 g_LUN4
+
             do! r1_2.Close()
             do! r2_2.Close()
             do! r3.Close()
@@ -1162,21 +1307,31 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let! r3 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target3" } m_defaultConnParam   // Target Device1, Target3, LU3
             let! r4 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target4" } { m_defaultConnParam with PortNo = iSCSIPortNo2 }   // Target Device2, Target4, LU4
 
-            // establish ACA at LU1, LU2, LU3, LU4
-            do! raiseACA r1 g_LUN1
-            do! raiseACA r2 g_LUN2
-            do! raiseACA r3 g_LUN3
-            do! raiseACA r4 g_LUN4
+            // establish ACA on LU1, LU2, LU3, LU4
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 g_LUN1 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r2 g_LUN2 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r3 g_LUN3 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r4 g_LUN4 NACA.T
 
-            // check the ACA is established at LU1, LU2, LU3, LU4
-            do! checkACA r1 g_LUN1
-            do! checkACA r2 g_LUN1
-            do! checkACA r1 g_LUN2
-            do! checkACA r2 g_LUN2
-            do! checkACA r3 g_LUN3
-            do! checkACA r4 g_LUN4
+            // establish ACA on LU0 ( Target Device 1, 2 )
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 g_LUN0 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r4 g_LUN0 NACA.T
 
-            // Restart target group
+            // check the ACA is established on LU1, LU2, LU3, LU4
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN1 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN1 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN2 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN2 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN3 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN4 NACA.T
+
+            // check the ACA is established on LU0 ( Target Device 1, 2 )
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN0 NACA.T
+
+            // Restart target device 1
             m_ClientProc.RunCommand "kill" "Killed :" "MD> "
             m_ClientProc.RunCommand "start" "Started :" "MD> "
 
@@ -1190,20 +1345,28 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let! r2_2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam   // Target Device1, Target1, LU1, LU2
             let! r3_2 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target3" } m_defaultConnParam   // Target Device1, Target3, LU3
 
-            // check the ACA is cleared at LU1, LU2, LU3
-            do! checkACACleared r1_2 g_LUN1
-            do! checkACACleared r2_2 g_LUN1
-            do! checkACACleared r1_2 g_LUN2
-            do! checkACACleared r2_2 g_LUN2
-            do! checkACACleared r3_2 g_LUN3
+            // check the ACA is cleared on LU1, LU2, LU3
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r1_2 g_LUN1 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r2_2 g_LUN1 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r1_2 g_LUN2 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r2_2 g_LUN2 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r3_2 g_LUN3 NACA.T
 
-            // check the ACA is established at LU4
-            do! checkACA r4 g_LUN4
+            // check the ACA still remains on LU4
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN4 NACA.T
+
+            // check the ACA is cleared on LU0 ( Target Device 1 )
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r1_2 g_LUN0 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r2_2 g_LUN0 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r3_2 g_LUN0 NACA.T
+
+            // check the ACA still remains on LU0 ( Target Device 2 )
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN0 NACA.T
 
             do! clearACA r4 g_LUN4
+            do! clearACA r4 g_LUN0
             do! r1_2.Close()
             do! r2_2.Close()
             do! r3_2.Close()
             do! r4.Close()
         }
-
