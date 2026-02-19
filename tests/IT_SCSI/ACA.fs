@@ -995,6 +995,89 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
         }
 
     [<Fact>]
+    member _.ClearACA_TMF_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam   // Target Device1, Target1, LU1, LU2
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam   // Target Device1, Target1, LU1, LU2
+            let! r3 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target3" } m_defaultConnParam   // Target Device1, Target3, LU3
+            let! r4 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target4" } { m_defaultConnParam with PortNo = iSCSIPortNo2 }   // Target Device2, Target4, LU4
+
+            // establish ACA on LU1, LU2, LU3, LU4
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 g_LUN1 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r2 g_LUN2 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r3 g_LUN3 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r4 g_LUN4 NACA.T
+
+            // establish ACA on LU0 ( Target Device 1, 2 )
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 g_LUN0 NACA.T
+            let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r4 g_LUN0 NACA.T
+
+            // check the ACA is established on LU1, LU2, LU3, LU4
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN1 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN1 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN2 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN2 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN3 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN4 NACA.T
+
+            // check the ACA is established on LU0 ( Target Device 1, 2 )
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN0 NACA.T
+
+            // Attempt to clear the ACA from an initiator other than the failed initiator
+            do! clearACA r2 g_LUN1
+            do! clearACA r1 g_LUN2
+            do! clearACA r2 g_LUN0
+
+            // check the ACA still remains on LU1, LU2, LU3, LU4
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN1 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN1 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN2 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN2 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN3 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN4 NACA.T
+
+            // check the ACA still remains on LU0 ( Target Device 1, 2 )
+            do! checkACA TaskATTRCd.SIMPLE_TASK r1 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r2 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN0 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN0 NACA.T
+
+            // Attempt to clear the ACA from the failed initiator
+            do! clearACA r1 g_LUN1
+            do! clearACA r2 g_LUN2
+            do! clearACA r1 g_LUN0
+
+            // check the ACA is cleared on LU1, LU2
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r1 g_LUN1 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r2 g_LUN1 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r1 g_LUN2 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r2 g_LUN2 NACA.T
+
+            // check the ACA is cleared on LU0 ( Target Device 1 )
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r1 g_LUN0 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r2 g_LUN0 NACA.T
+            do! checkACACleared TaskATTRCd.SIMPLE_TASK r3 g_LUN0 NACA.T
+
+            // check the ACA still remains on LU3, LU4
+            do! checkACA TaskATTRCd.SIMPLE_TASK r3 g_LUN3 NACA.T
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN4 NACA.T
+
+            // check the ACA still remains on LU0 ( Target Device 2 )
+            do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN0 NACA.T
+
+            do! clearACA r3 g_LUN3
+            do! clearACA r4 g_LUN4
+            do! clearACA r4 g_LUN0
+            do! r1.Close()
+            do! r2.Close()
+            do! r3.Close()
+            do! r4.Close()
+        }
+
+    [<Fact>]
     member _.ClearACA_LUReset_001 () =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam   // Target Device1, Target1, LU1, LU2
