@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="Configuration.fs" />
     <Compile Include="ACA.fs" />
+    <Compile Include="Queueing.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
 
