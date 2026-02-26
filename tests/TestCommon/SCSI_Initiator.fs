@@ -91,6 +91,9 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// A collection object for accumulating input data received until the command is completed.
     let m_InBuffer = OptimisticLock( ImmutableDictionary< ITT_T, SCSIDataInPDU list >.Empty )
 
+    /// A collection object for CMDSN.
+    let m_CmdSN = OptimisticLock( ImmutableDictionary< ITT_T, CMDSN_T >.Empty )
+
     /// Set to True if a request to stop PDU reception processing is made.
     let mutable m_ExitFlg = false
 
@@ -176,6 +179,19 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
         Functions.StartTask this.Receiver
 
     /// <summary>
+    ///  Get CmdSN value for specified ITT.
+    /// </summary>
+    /// <param name="itt">
+    ///  ITT value
+    /// </param>
+    member _.GetCmdSN ( itt : ITT_T ) : CMDSN_T voption =
+        let r, v = m_CmdSN.obj.TryGetValue itt
+        if r then
+            ValueSome v
+        else
+            ValueNone
+
+    /// <summary>
     ///  Send SCSI Command.
     /// </summary>
     /// <param name="att">
@@ -207,7 +223,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
                 // If it is an read command or the amount of data to be transmitted is equal to or less than FirstBurstLength,
                 // the command is transmitted as is.
                 // In this case, no R2T PDUs are expected to be received.
-                let! itt, _ = m_ISCIInitiator.SendSCSICommandPDU m_CID BitI.F BitF.T rFlag wFlag att lun edtl cdb param 0u
+                let! itt, cmdsn = m_ISCIInitiator.SendSCSICommandPDU m_CID BitI.F BitF.T rFlag wFlag att lun edtl cdb param 0u
 
                 if not writeCmd then
                     m_InBuffer.Update( fun old ->
@@ -218,16 +234,32 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
                     )
                     |> ignore
 
+                m_CmdSN.Update( fun old ->
+                    if old.ContainsKey itt |> not then
+                        old.Add( itt, cmdsn )
+                    else
+                        old // Unexpected
+                )
+                |> ignore
+
                 m_RegistWaiter.Notify( itt, edtl )
                 return itt
             else
-                let! itt, _ = m_ISCIInitiator.SendSCSICommandPDU m_CID BitI.F BitF.T rFlag wFlag att lun edtl cdb PooledBuffer.Empty 0u
+                let! itt, cmdsn = m_ISCIInitiator.SendSCSICommandPDU m_CID BitI.F BitF.T rFlag wFlag att lun edtl cdb PooledBuffer.Empty 0u
 
                 m_OutBuffer.Update( fun old ->
                     if old.ContainsKey itt |> not then
                         old.Add( itt, param )
                     else
                         old // Unexpedted
+                )
+                |> ignore
+
+                m_CmdSN.Update( fun old ->
+                    if old.ContainsKey itt |> not then
+                        old.Add( itt, cmdsn )
+                    else
+                        old // Unexpected
                 )
                 |> ignore
 
@@ -2258,6 +2290,9 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
                         struct( old, [] )
                 )
 
+            // Delete CmdSN value
+            m_CmdSN.Update ( fun o -> o.Remove itt ) |> ignore
+
             let r = {
                 Response = pdu.Response;
                 Status = pdu.Status;
@@ -2308,6 +2343,8 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
             )
             |> ignore
             m_InBuffer.Update ( fun old -> old.Remove itt )
+            |> ignore
+            m_CmdSN.Update ( fun o -> o.Remove itt )
             |> ignore
 
             m_ReceiveWaiter.Notify( itt, TaskResult.TMF( pdu.Response ) )
@@ -2380,7 +2417,6 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
                     sendData.Return()
 
                 return true
-
         }
 
     /// <summary>
@@ -2392,7 +2428,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// <returns>
     ///  Whether it ended normally or not.
     /// </returns>
-    member private this.Receive_NopInPDU ( pdu : NOPInPDU ) : Task<bool> =
+    member private _.Receive_NopInPDU ( pdu : NOPInPDU ) : Task<bool> =
         task {
             // If TTT is 0xFFFFFFFF, it must be silent.
             if pdu.TargetTransferTag <> ttt_me.fromPrim 0xFFFFFFFFu then
