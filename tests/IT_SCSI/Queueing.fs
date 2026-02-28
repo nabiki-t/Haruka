@@ -179,7 +179,11 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
     // If a second task is submitted after the first task is submitted, the two tasks will be executed simultaneously.
     [<Theory>]
     [<InlineData( TaskATTRCd.SIMPLE_TASK, TaskATTRCd.SIMPLE_TASK )>]
+    [<InlineData( TaskATTRCd.SIMPLE_TASK, TaskATTRCd.TAGLESS_TASK )>]
+    [<InlineData( TaskATTRCd.TAGLESS_TASK, TaskATTRCd.SIMPLE_TASK )>]
+    [<InlineData( TaskATTRCd.TAGLESS_TASK, TaskATTRCd.TAGLESS_TASK )>]
     [<InlineData( TaskATTRCd.SIMPLE_TASK, TaskATTRCd.HEAD_OF_QUEUE_TASK )>]
+    [<InlineData( TaskATTRCd.TAGLESS_TASK, TaskATTRCd.HEAD_OF_QUEUE_TASK )>]
     [<InlineData( TaskATTRCd.ORDERED_TASK, TaskATTRCd.HEAD_OF_QUEUE_TASK )>]
     [<InlineData( TaskATTRCd.HEAD_OF_QUEUE_TASK, TaskATTRCd.HEAD_OF_QUEUE_TASK )>]
     member _.ConcurrencyExecution_001 ( at1 :  TaskATTRCd ) ( at2 :  TaskATTRCd ) =
@@ -228,8 +232,11 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
     // When two tasks are submitted, the second task will be executed after the first task is completed.
     [<Theory>]
     [<InlineData( TaskATTRCd.HEAD_OF_QUEUE_TASK, TaskATTRCd.SIMPLE_TASK )>]
+    [<InlineData( TaskATTRCd.HEAD_OF_QUEUE_TASK, TaskATTRCd.TAGLESS_TASK )>]
     [<InlineData( TaskATTRCd.SIMPLE_TASK, TaskATTRCd.ORDERED_TASK )>]
+    [<InlineData( TaskATTRCd.TAGLESS_TASK, TaskATTRCd.ORDERED_TASK )>]
     [<InlineData( TaskATTRCd.ORDERED_TASK, TaskATTRCd.SIMPLE_TASK )>]
+    [<InlineData( TaskATTRCd.ORDERED_TASK, TaskATTRCd.TAGLESS_TASK )>]
     [<InlineData( TaskATTRCd.HEAD_OF_QUEUE_TASK, TaskATTRCd.ORDERED_TASK )>]
     [<InlineData( TaskATTRCd.ORDERED_TASK, TaskATTRCd.ORDERED_TASK )>]
     member _.SequentiallyExecution_001 ( at1 :  TaskATTRCd ) ( at2 :  TaskATTRCd ) =
@@ -285,8 +292,10 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
 
     // Submit tasks in the order of HOQ1, SIMPLE2, HOQ3, and SIMPLE4.
     // If HOQ1 finishes first, HOQ3 and SIMPLE2 will be executed simultaneously.
-    [<Fact>]
-    member _.HOQ_Simple_HOQ_Simple_001() =
+    [<Theory>]
+    [<InlineData( TaskATTRCd.SIMPLE_TASK )>]
+    [<InlineData( TaskATTRCd.TAGLESS_TASK )>]
+    member _.HOQ_Simple_HOQ_Simple_001 ( simpleatt : TaskATTRCd ) =
         task {
             let! r = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
@@ -301,7 +310,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 10
 
             // Submit a SIMPLE 2 task.
-            let! itt_r2 = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r2 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Wait until the SIMPLE 2 task is queued.
             do! Task.Delay 100
@@ -315,7 +324,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 10
 
             // Submit a SIMPLE 4 task.
-            let! itt_r4 = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r4 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Wait until the SIMPLE 4 task is queued.
             do! Task.Delay 100
@@ -378,8 +387,10 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
 
     // Submit tasks in the order of HOQ1, SIMPLE2, HOQ3, and SIMPLE4.
     // If HOQ3 finishes first, SIMPLE2 and SIMPLE4 will not be executed, and once HOQ1 finishes, SIMPLE2 and SIMPLE4 will be executed simultaneously.
-    [<Fact>]
-    member _.HOQ_Simple_HOQ_Simple_002() =
+    [<Theory>]
+    [<InlineData( TaskATTRCd.SIMPLE_TASK )>]
+    [<InlineData( TaskATTRCd.TAGLESS_TASK )>]
+    member _.HOQ_Simple_HOQ_Simple_002 ( simpleatt : TaskATTRCd ) =
         task {
             let! r = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
@@ -394,7 +405,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 10
 
             // Submit a SIMPLE 2 task.
-            let! itt_r2 = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r2 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Wait until the SIMPLE 2 task is queued.
             do! Task.Delay 100
@@ -408,7 +419,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 10
 
             // Submit a SIMPLE 4 task.
-            let! itt_r4 = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r4 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Wait until the SIMPLE 4 task is queued.
             do! Task.Delay 100
@@ -466,16 +477,18 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
 
     // After submitting two SIMPLE tasks, submit the ORDERED task.
     // After the two SIMPLE tasks are completed, the ORDERED task is executed.
-    [<Fact>]
-    member _.Simple_Simple_Ordered_001 () =
+    [<Theory>]
+    [<InlineData( TaskATTRCd.SIMPLE_TASK )>]
+    [<InlineData( TaskATTRCd.TAGLESS_TASK )>]
+    member _.Simple_Simple_Ordered_001 ( simpleatt : TaskATTRCd ) =
         task {
             let! r = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
             m_ClientProc.RunCommand "add trap /e Read /a Wait" "Trap added" "MD> "
 
             // Submit two SIMPLE tasks.
-            let! itt_r1 = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
-            let! itt_r2 = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r1 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r2 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Confirm that above two tasks are stuck.
             do! Task.Delay 10
@@ -527,8 +540,10 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
 
     // After submitting the ORDERED task, submit two SIMPLE tasks.
     // After the ORDERED task is completed, two SIMPLE tasks are executed.
-    [<Fact>]
-    member _.Ordered_Simple_Simple_001 () =
+    [<Theory>]
+    [<InlineData( TaskATTRCd.SIMPLE_TASK )>]
+    [<InlineData( TaskATTRCd.TAGLESS_TASK )>]
+    member _.Ordered_Simple_Simple_001 ( simpleatt : TaskATTRCd ) =
         task {
             let! r = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
@@ -543,8 +558,8 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 10
 
             // Submit two SIMPLE tasks.
-            let! itt_r2 = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
-            let! itt_r3 = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r2 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r3 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Wait until the two SIMPLE tasks are queued.
             do! Task.Delay 100
@@ -582,15 +597,17 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
 
     // Submit tasks in the order of SIMPLE, ORDERED, SIMPLE. Abort the dormant ORDERED task.
     // Two SIMPLE tasks are executed simultaneously.
-    [<Fact>]
-    member _.Simple_Ordered_Simple_001 () =
+    [<Theory>]
+    [<InlineData( TaskATTRCd.SIMPLE_TASK )>]
+    [<InlineData( TaskATTRCd.TAGLESS_TASK )>]
+    member _.Simple_Ordered_Simple_001 ( simpleatt : TaskATTRCd ) =
         task {
             let! r = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
             m_ClientProc.RunCommand "add trap /e Read /a Wait" "Trap added" "MD> "
 
             // Submit a SIMPLE task.
-            let! itt_r1 = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r1 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Confirm that SIMPLE task is stuck.
             do! Task.Delay 10
@@ -600,13 +617,13 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             // Submit a ORDERED tasks.
             let! itt_r2 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
-            // Wait until the the ORDERED task is queued.
+            // Wait until the ORDERED task is queued.
             do! Task.Delay 100
 
             // Submit a SIMPLE task.
-            let! itt_r3 = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r3 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
-            // Wait until the the SIMPLE task is queued.
+            // Wait until the SIMPLE task is queued.
             do! Task.Delay 100
 
             // abort the ORDERD task
@@ -657,7 +674,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             // Submit a ORDERED 2 tasks.
             let! itt_r2 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
-            // Wait until the the ORDERED task is queued.
+            // Wait until the ORDERED task is queued.
             do! Task.Delay 100
 
             // Submit a HOQ task.
@@ -728,7 +745,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             // Submit a ORDERED 2 tasks.
             let! itt_r2 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
-            // Wait until the the ORDERED 2 task is queued.
+            // Wait until the ORDERED 2 task is queued.
             do! Task.Delay 100
 
             // Submit a HOQ task.
@@ -761,6 +778,266 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
             let! result_r2 = r.WaitSCSIResponseGoogStatus itt_r2
             result_r2.Return()
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
+            let! result_r3 = r.WaitSCSIResponseGoogStatus itt_r3
+            result_r3.Return()
+            
+            m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
+            do! r.Close()
+        }
+
+    // When ACA is not established, an ACA task is submitted.
+    // The ACA task ends with a CHECK CONDITION.
+    [<Fact>]
+    member _.ACA_InNormalState_001 () =
+        task {
+            let! r = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            // Submit a ACA task.
+            let! itt_r1 = r.Send_Read10 TaskATTRCd.ACA_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! resp_r1 = r.WaitSCSIResponse itt_r1
+            Assert.True(( resp_r1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // Clear ACA
+            let! tmf_r1 = r.SendTMFRequest_ClearACA BitI.F g_LUN1
+            let! resp_tmf = r.WaitTMFResponse tmf_r1
+            Assert.True(( resp_tmf = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            do! r.Close()
+        }
+
+    // When ACA is established, SIMPLE, HOQ, ORDERED, TAGLESS task are submitted.
+    // The other that ACA task ends with a CHECK CONDITION.
+    [<Theory>]
+    [<InlineData( TaskATTRCd.SIMPLE_TASK )>]
+    [<InlineData( TaskATTRCd.ORDERED_TASK )>]
+    [<InlineData( TaskATTRCd.HEAD_OF_QUEUE_TASK )>]
+    [<InlineData( TaskATTRCd.TAGLESS_TASK )>]
+    member _.NormalTask_InACAState_001 ( att : TaskATTRCd ) =
+        task {
+            let! r = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            // establish ACA.
+            let! itt_r1 = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0xFFFFFFFFu ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! resp_r1 = r.WaitSCSIResponse itt_r1
+            Assert.True(( resp_r1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // Submit a task.
+            let! itt_r1 = r.Send_Read10 att g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! resp_r1 = r.WaitSCSIResponse itt_r1
+            Assert.True(( resp_r1.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+
+            // Clear ACA
+            let! tmf_r1 = r.SendTMFRequest_ClearACA BitI.F g_LUN1
+            let! resp_tmf = r.WaitTMFResponse tmf_r1
+            Assert.True(( resp_tmf = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            do! r.Close()
+        }
+
+    // Submit the ACA task while the SIMPLE task or ORDERED task are dormant.
+    // The ACA task is executed.
+    // After the ACA condition is cleared, the dormant task resumes execution.
+    [<Theory>]
+    [<InlineData( TaskATTRCd.SIMPLE_TASK )>]
+    [<InlineData( TaskATTRCd.ORDERED_TASK )>]
+    [<InlineData( TaskATTRCd.TAGLESS_TASK )>]
+    member _.ACA_InACA_001 ( att : TaskATTRCd ) =
+        task {
+            let! r = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            m_ClientProc.RunCommand "add trap /e Read /a Wait" "Trap added" "MD> "
+            m_ClientProc.RunCommand "add trap /e Read /a ACA /slba 10 /elba 20" "Trap added" "MD> "
+
+            // Submit a ORDERED 1 task.
+            let! itt_r1 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+
+            // Confirm that ORDERED 1 task is stuck.
+            do! Task.Delay 10
+            while ( ( GetStuckTasks() ).Length < 1 ) do
+                do! Task.Delay 10
+            let tasks = GetStuckTasks()
+            Assert.True(( tasks.Length = 1 ))
+            Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r1 ) ) tasks ))
+
+            // Submit SIMPLE or ORDERED task.
+            let! itt_r2 = r.Send_Read10 att g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+
+            // Wait until above task is queued.
+            do! Task.Delay 100
+
+            // Resume execution of ORDERED 1 task. ACA status is established.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
+            let! result_r1 = r.WaitSCSIResponse itt_r1
+            Assert.True(( result_r1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // Task execution is not resumed.
+            do! Task.Delay 10
+            while ( ( GetStuckTasks() ).Length >= 1 ) do
+                do! Task.Delay 10
+
+            // Submit ACA task.
+            let! itt_r4 = r.Send_Read10 TaskATTRCd.ACA_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+
+            // ACA task is executed.
+            do! Task.Delay 10
+            while ( ( GetStuckTasks() ).Length < 1 ) do
+                do! Task.Delay 10
+            let tasks = GetStuckTasks()
+            Assert.True(( tasks.Length = 1 ))
+            Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r4 ) ) tasks ))
+
+            // Resume execution of ACA task.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r4 ) "Task(" "MD> "
+            let! result_r4 = r.WaitSCSIResponseGoogStatus itt_r4
+            result_r4.Return()
+
+            // Clear ACA
+            let! tmf_r1 = r.SendTMFRequest_ClearACA BitI.F g_LUN1
+            let! resp_tmf = r.WaitTMFResponse tmf_r1
+            Assert.True(( resp_tmf = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            // Confirm that SIMPLE or ORDERED task is executed.
+            do! Task.Delay 10
+            while ( ( GetStuckTasks() ).Length < 1 ) do
+                do! Task.Delay 10
+            let tasks = GetStuckTasks()
+            Assert.True(( tasks.Length = 1 ))
+            Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r2 ) ) tasks ))
+
+            // Resume execution of SIMPLE or ORDERED task.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
+            let! result_r2 = r.WaitSCSIResponseGoogStatus itt_r2
+            result_r2.Return()
+
+            m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
+            do! r.Close()
+        }
+
+    // Submit the ACA task while the SIMPLE task or ORDERED task are dormant.
+    // After the ACA condition is cleared, the dormant task resumes execution.
+    [<Theory>]
+    [<InlineData( TaskATTRCd.SIMPLE_TASK )>]
+    [<InlineData( TaskATTRCd.ORDERED_TASK )>]
+    [<InlineData( TaskATTRCd.TAGLESS_TASK )>]
+    member _.ClearACA_001 ( att : TaskATTRCd ) =
+        task {
+            let! r = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            m_ClientProc.RunCommand "add trap /e Read /a Wait" "Trap added" "MD> "
+            m_ClientProc.RunCommand "add trap /e Read /a ACA /slba 10 /elba 20" "Trap added" "MD> "
+
+            // Submit a ORDERED 1 task.
+            let! itt_r1 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+
+            // Confirm that ORDERED 1 task is stuck.
+            do! Task.Delay 10
+            while ( ( GetStuckTasks() ).Length < 1 ) do
+                do! Task.Delay 10
+            let tasks = GetStuckTasks()
+            Assert.True(( tasks.Length = 1 ))
+            Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r1 ) ) tasks ))
+
+            // Submit SIMPLE or ORDERED task.
+            let! itt_r2 = r.Send_Read10 att g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+
+            // Wait until above task is queued.
+            do! Task.Delay 100
+
+            // Resume execution of ORDERED 1 task. ACA status is established.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
+            let! result_r1 = r.WaitSCSIResponse itt_r1
+            Assert.True(( result_r1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // Task execution is not resumed.
+            do! Task.Delay 10
+            while ( ( GetStuckTasks() ).Length >= 1 ) do
+                do! Task.Delay 10
+
+            // Clear ACA by failing the CA task.
+            let! itt_r3 = r.Send_Read10 TaskATTRCd.ACA_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.F
+            do! Task.Delay 10
+            while ( ( GetStuckTasks() ).Length < 1 ) do
+                do! Task.Delay 10
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
+            let! result_r3 = r.WaitSCSIResponse itt_r3
+            Assert.True(( result_r3.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // Confirm that SIMPLE or ORDERED task is executed.
+            do! Task.Delay 10
+            while ( ( GetStuckTasks() ).Length < 1 ) do
+                do! Task.Delay 10
+            let tasks = GetStuckTasks()
+            Assert.True(( tasks.Length = 1 ))
+            Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r2 ) ) tasks ))
+
+            // Resume execution of SIMPLE or ORDERED task.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
+            let! result_r2 = r.WaitSCSIResponseGoogStatus itt_r2
+            result_r2.Return()
+
+            m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
+            do! r.Close()
+        }
+
+    // Submit SIMPLE1, SIMPLE2, and ORDERED tasks. Then SIMPLE1 fails and ACA is established.
+    // After the ACA is cleared, the ORDERED task will not be executed until the SIMPLE2 task is completed.
+    [<Fact>]
+    member _.ClearACA_002 () =
+        task {
+            let! r = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            m_ClientProc.RunCommand "add trap /e Read /a Wait" "Trap added" "MD> "
+            m_ClientProc.RunCommand "add trap /e Read /a ACA /slba 10 /elba 20" "Trap added" "MD> "
+
+            // Submit a SIMPLE 1 and SIMPLE 2 task.
+            let! itt_r1 = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! itt_r2 = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+
+            // Confirm that above two tasks are stuck.
+            do! Task.Delay 10
+            while ( ( GetStuckTasks() ).Length < 2 ) do
+                do! Task.Delay 10
+
+            // Submit ORDERED task.
+            let! itt_r3 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+
+            // Wait until above task is queued.
+            do! Task.Delay 100
+
+            // The ORDERED tasks will not be executed
+            let tasks = GetStuckTasks()
+            Assert.True(( tasks.Length = 2 ))
+            Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r1 ) ) tasks ))
+            Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r2 ) ) tasks ))
+
+            // Resume execution of SIMPLE 1 task. ACA status is established.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
+            let! result_r1 = r.WaitSCSIResponse itt_r1
+            Assert.True(( result_r1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // Clear ACA
+            let! tmf_r1 = r.SendTMFRequest_ClearACA BitI.F g_LUN1
+            let! resp_tmf = r.WaitTMFResponse tmf_r1
+            Assert.True(( resp_tmf = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            // The ORDERED tasks will not be executed
+            do! Task.Delay 100
+            let tasks = GetStuckTasks()
+            Assert.True(( tasks.Length = 1 ))
+            Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r2 ) ) tasks ))
+
+            // Resume execution of SIMPLE 2 task.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
+            let! result_r2 = r.WaitSCSIResponseGoogStatus itt_r2
+            result_r2.Return()
+
+            // The ORDERED task is executed
+            do! Task.Delay 10
+            while ( ( GetStuckTasks() ).Length < 1 ) do
+                do! Task.Delay 10
+            let tasks = GetStuckTasks()
+            Assert.True(( tasks.Length = 1 ))
+            Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r3 ) ) tasks ))
+
+            // Resume execution of the ORDERED task.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
             let! result_r3 = r.WaitSCSIResponseGoogStatus itt_r3
             result_r3.Return()
