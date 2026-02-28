@@ -295,22 +295,22 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
 
                 // write
                 let! itt_w1 = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
-                let! _ = r1.WaitSCSIResponseGoogStatus itt_w1
+                let! _ = r1.WaitSCSIResponseGoodStatus itt_w1
 
                 // read
                 let! itt_r1 = r2.Send_Read10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
-                let! res_r1 = r2.WaitSCSIResponseGoogStatus itt_r1
+                let! res_r1 = r2.WaitSCSIResponseGoodStatus itt_r1
                 Assert.True(( PooledBuffer.ValueEquals writeData1 res_r1 ))
 
                 Random.Shared.NextBytes( writeData1.ArraySegment.AsSpan() )
 
                 // write
                 let! itt_w2 = r2.Send_Write10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize writeData1 NACA.T
-                let! _ = r2.WaitSCSIResponseGoogStatus itt_w2
+                let! _ = r2.WaitSCSIResponseGoodStatus itt_w2
 
                 // read
                 let! itt_r2 = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
-                let! res_r2 = r1.WaitSCSIResponseGoogStatus itt_r2
+                let! res_r2 = r1.WaitSCSIResponseGoodStatus itt_r2
                 Assert.True(( PooledBuffer.ValueEquals writeData1 res_r2 ))
 
             writeData1.Return()
@@ -343,7 +343,7 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
             // register reservation key
             for itr in vResKey do
                 let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK itr.Key NACA.T resvkey_me.zero itr.Value false false false [||]
-                let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
+                let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
                 ()
 
             // Get reservarion key
@@ -361,7 +361,7 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
             // clear reservation key
             for itr in vResKey do
                 let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK itr.Key NACA.T itr.Value
-                let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
+                let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
                 ()
 
             do! r1.Close()

@@ -246,7 +246,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                 else
                     s.Send_Write10 taskcd lun blkcnt_me.zero32 m_MediaBlockSize writeData1 naca
 
-            let! _ = s.WaitSCSIResponseGoogStatus itt
+            let! _ = s.WaitSCSIResponseGoodStatus itt
             writeData1.Return()
         }
 
@@ -304,7 +304,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                     })
             }
             let! itt_mselect = r.Send_ModeSelect10 TaskATTRCd.SIMPLE_TASK lun PF.T SP.T param NACA.T
-            let! _ = r.WaitSCSIResponseGoogStatus itt_mselect
+            let! _ = r.WaitSCSIResponseGoodStatus itt_mselect
 
             // raise ACA
             let! result = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r lun NACA.T
@@ -352,7 +352,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                     })
             }
             let! itt_mselect = r.Send_ModeSelect10 TaskATTRCd.SIMPLE_TASK lun PF.T SP.T param NACA.T
-            let! _ = r.WaitSCSIResponseGoogStatus itt_mselect
+            let! _ = r.WaitSCSIResponseGoodStatus itt_mselect
 
             // raise ACA
             let! result = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r lun NACA.T
@@ -463,8 +463,8 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r2.TSIH itt_s2_w4 ) "Task(" "MD> "
 
             // Check result the write request 3 and 4.
-            let! _ = r1.WaitSCSIResponseGoogStatus itt_s1_w3
-            let! _ = r2.WaitSCSIResponseGoogStatus itt_s2_w4
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_s1_w3
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_s2_w4
 
             // There should be no stuck tasks.
             Assert.True(( ( GetStuckTasks() ).Length = 0 ))
@@ -475,8 +475,8 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             do! r1.Send_StatusACK()
 
             // Receive the results of read requests 1 and 2.
-            let! res_s1_r1 = r1.WaitSCSIResponseGoogStatus itt_s1_r1
-            let! res_s2_r2 = r2.WaitSCSIResponseGoogStatus itt_s2_r2
+            let! res_s1_r1 = r1.WaitSCSIResponseGoodStatus itt_s1_r1
+            let! res_s2_r2 = r2.WaitSCSIResponseGoodStatus itt_s2_r2
 
             // Verify that the write data has been read by Write requests 3 and 4, which were executed earlier.
             Assert.True(( PooledBuffer.ValueEquals res_s1_r1 writeData3 ))
@@ -536,7 +536,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
 
             let naca = NACA.ofBool argNACA
             let! itt_w1 = r1.Send_SynchronizeCache10 taskCode lun ( blkcnt_me.ofUInt32 3u ) blkcnt_me.zero16 naca
-            let! res_r1 = r1.WaitSCSIResponseGoogStatus itt_w1
+            let! res_r1 = r1.WaitSCSIResponseGoodStatus itt_w1
             res_r1.Return()
 
             do! r1.Close()
@@ -589,7 +589,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             // register reservation key
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 111UL ) false false false [||]
             //let! itt_pr_out1 = r1.Send_Inquiry TaskATTRCd.SIMPLE_TASK lun EVPD.T 0uy 256us NACA.T
-            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             if raiseaca then
                 // send task with NACA=1
@@ -614,7 +614,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
 
             // clear reservation key
             let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 111UL )
-            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 0uy 256us NACA.T
             let! itt_pr_in2 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in2
@@ -645,7 +645,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
 
             // register reservation key
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 111UL ) false false false [||]
-            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             if raiseaca then
                 // send task with NACA=1
@@ -669,7 +669,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
 
             // clear reservation key
             let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 111UL )
-            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 0uy 256us NACA.T
             let! itt_pr_in2 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in2
@@ -702,7 +702,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
 
             // register reservation key
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) false false false [||]
-            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             // raise ACA
             let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 lun NACA.T
@@ -721,7 +721,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
 
             // clear reservation key
             let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 222UL )
-            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 0uy 256us NACA.T
             let! itt_pr_in2 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in2
@@ -743,7 +743,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
 
             // register reservation key
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) false false false [||]
-            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             // raise ACA
             let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 g_LUN1 NACA.T
@@ -768,7 +768,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
 
             // Resume stucked task.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_w2_stuck ) "Task(" "MD> "
-            let! _ = r1.WaitSCSIResponseGoogStatus itt_w2_stuck
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_w2_stuck
 
             // clear ACA
             do! clearACA r1 g_LUN1
@@ -781,7 +781,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
 
             // clear reservation key
             let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 222UL )
-            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T
             let! itt_pr_in2 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in2
@@ -809,7 +809,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
 
             // register reservation key
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) false false false [||]
-            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             // raise ACA
             let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 lun NACA.T
@@ -828,7 +828,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
 
             // clear reservation key
             let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 222UL )
-            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 0uy 256us NACA.T
             let! itt_pr_in2 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in2
@@ -860,7 +860,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
 
             // register reservation key
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) false false false [||]
-            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             // Send HOQ task(T1), and stucked at debug media
             let! itt_t1 = r1.Send_Write10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 ( blkcnt_me.ofUInt32 3u ) m_MediaBlockSize writeData1 NACA.T
@@ -905,7 +905,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                 do! clearACA r1 g_LUN1
 
             // Receive the results of T2 Simple task
-            let! res_t2 = r1.WaitSCSIResponseGoogStatus itt_t2
+            let! res_t2 = r1.WaitSCSIResponseGoodStatus itt_t2
             res_t2.Return()
 
             // Get reservarion key. Make sure the reservation remains intact.
@@ -916,7 +916,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
 
             // clear reservation key
             let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 222UL )
-            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             // Clear debug media traps
             m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
@@ -956,7 +956,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
 
             // register reservation key
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) false false false [||]
-            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             // establish ACA
             let! _ = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r1 lun NACA.T
@@ -987,7 +987,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
 
             // clear reservation key
             let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 222UL )
-            let! _ = r1.WaitSCSIResponseGoogStatus itt_pr_out2
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             writeData1.Return()
             do! r1.Close()

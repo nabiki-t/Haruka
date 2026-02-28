@@ -1847,7 +1847,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// <returns>
     ///  Received rasponse data.
     /// </returns>
-    member this.WaitSCSIResponseGoogStatus ( itt : ITT_T ) : Task<PooledBuffer> =
+    member this.WaitSCSIResponseGoodStatus ( itt : ITT_T ) : Task<PooledBuffer> =
         task {
             let! r = this.WaitSCSIResponse itt
             if r.Response <> iScsiSvcRespCd.COMMAND_COMPLETE then
@@ -1891,7 +1891,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// </returns>
     member this.Wait_Inquiry_Standerd ( itt : ITT_T ) : Task<StanderdInquiry> =
         task {
-            let! r = this.WaitSCSIResponseGoogStatus itt
+            let! r = this.WaitSCSIResponseGoodStatus itt
             let rp = GenScsiParams.Inquiry_Standerd r
             r.Return()
             return rp
@@ -1908,7 +1908,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// </returns>
     member this.Wait_Inquiry_UnitSerialNumberVPD ( itt : ITT_T ) : Task<UnitSerialNumberVPD> =
         task {
-            let! r = this.WaitSCSIResponseGoogStatus itt
+            let! r = this.WaitSCSIResponseGoodStatus itt
             let rp = GenScsiParams.Inquiry_UnitSerialNumberVPD r
             r.Return()
             return rp
@@ -1925,7 +1925,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// </returns>
     member this.Wait_Inquiry_DeviceIdentifierVPD ( itt : ITT_T ) : Task<DeviceIdentifierVPD> =
         task {
-            let! r = this.WaitSCSIResponseGoogStatus itt
+            let! r = this.WaitSCSIResponseGoodStatus itt
             let rp = GenScsiParams.Inquiry_DeviceIdentifierVPD r
             r.Return()
             return rp
@@ -1942,7 +1942,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// </returns>
     member this.Wait_Inquiry_ExtendedInquiryDataVPD ( itt : ITT_T ) : Task<ExtendedInquiryDataVPD> =
         task {
-            let! r = this.WaitSCSIResponseGoogStatus itt
+            let! r = this.WaitSCSIResponseGoodStatus itt
             let rp = GenScsiParams.Inquiry_ExtendedInquiryDataVPD r
             r.Return()
             return rp
@@ -1959,7 +1959,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// </returns>
     member this.Wait_Inquiry_BlockLimitVPD ( itt : ITT_T ) : Task<BlockLimitVPD> =
         task {
-            let! r = this.WaitSCSIResponseGoogStatus itt
+            let! r = this.WaitSCSIResponseGoodStatus itt
             let rp = GenScsiParams.Inquiry_BlockLimitVPD r
             r.Return()
             return rp
@@ -1976,7 +1976,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// </returns>
     member this.Wait_Inquiry_BlockDeviceCharacteristicsVPD ( itt : ITT_T ) : Task<BlockDeviceCharacteristicsVPD> =
         task {
-            let! r = this.WaitSCSIResponseGoogStatus itt
+            let! r = this.WaitSCSIResponseGoodStatus itt
             let rp = GenScsiParams.Inquiry_BlockDeviceCharacteristicsVPD r
             r.Return()
             return rp
@@ -1993,7 +1993,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// </returns>
     member this.Wait_Inquiry_SupportedVPD ( itt : ITT_T ) : Task<SupportedVPD> =
         task {
-            let! r = this.WaitSCSIResponseGoogStatus itt
+            let! r = this.WaitSCSIResponseGoodStatus itt
             let rp = GenScsiParams.Inquiry_SupportedVPD r
             r.Return()
             return rp
@@ -2010,7 +2010,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// </returns>
     member this.Wait_ModeSense6 ( itt : ITT_T ) : Task<ModeParameter6> =
         task {
-            let! r = this.WaitSCSIResponseGoogStatus itt
+            let! r = this.WaitSCSIResponseGoodStatus itt
             let rp = GenScsiParams.ModeSense6 r
             r.Return()
             return rp
@@ -2027,7 +2027,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// </returns>
     member this.Wait_ModeSense10 ( itt : ITT_T ) : Task<ModeParameter10> =
         task {
-            let! r = this.WaitSCSIResponseGoogStatus itt
+            let! r = this.WaitSCSIResponseGoodStatus itt
             let rp = GenScsiParams.ModeSense10 r
             r.Return()
             return rp
@@ -2044,7 +2044,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// </returns>
     member this.Wait_PersistentReserveIn_ReadKey ( itt : ITT_T ) : Task<PR_ReadKey> =
         task {
-            let! r = this.WaitSCSIResponseGoogStatus itt
+            let! r = this.WaitSCSIResponseGoodStatus itt
             let rp = GenScsiParams.PersistentReserveIn_ReadKey r
             r.Return()
             return rp
@@ -2061,7 +2061,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// </returns>
     member this.Wait_PersistentReserveIn_ReadReservation ( itt : ITT_T ) : Task<PR_ReadReservation> =
         task {
-            let! r = this.WaitSCSIResponseGoogStatus itt
+            let! r = this.WaitSCSIResponseGoodStatus itt
             let rp = GenScsiParams.PersistentReserveIn_ReadReservation r
             r.Return()
             return rp
@@ -2078,7 +2078,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// </returns>
     member this.Wait_PersistentReserveIn_ReportCapabilities ( itt : ITT_T ) : Task<PR_ReportCapabilities> =
         task {
-            let! r = this.WaitSCSIResponseGoogStatus itt
+            let! r = this.WaitSCSIResponseGoodStatus itt
             let rp = GenScsiParams.PersistentReserveIn_ReportCapabilities r
             r.Return()
             return rp
@@ -2095,7 +2095,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// </returns>
     member this.Wait_PersistentReserveIn_ReadFullStatus ( itt : ITT_T ) : Task<PR_ReadFullStatus> =
         task {
-            let! r = this.WaitSCSIResponseGoogStatus itt
+            let! r = this.WaitSCSIResponseGoodStatus itt
             let rp = GenScsiParams.PersistentReserveIn_ReadFullStatus r
             r.Return()
             return rp
@@ -2112,7 +2112,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// </returns>
     member this.Wait_ReportLUNs ( itt : ITT_T ) : Task<struct( uint32 * LUN_T[] )> =
         task {
-            let! r = this.WaitSCSIResponseGoogStatus itt
+            let! r = this.WaitSCSIResponseGoodStatus itt
             let rp = GenScsiParams.ReportLUNs r
             r.Return()
             return rp
@@ -2129,7 +2129,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// </returns>
     member this.Wait_ReadCapacity10 ( itt : ITT_T ) : Task<struct( uint32 * uint32 )> =
         task {
-            let! r = this.WaitSCSIResponseGoogStatus itt
+            let! r = this.WaitSCSIResponseGoodStatus itt
             let rp = GenScsiParams.ReadCapacity10 r
             r.Return()
             return rp
@@ -2146,7 +2146,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// </returns>
     member this.Wait_ReadCapacity16 ( itt : ITT_T ) : Task<ReadCapacity16Param> =
         task {
-            let! r = this.WaitSCSIResponseGoogStatus itt
+            let! r = this.WaitSCSIResponseGoodStatus itt
             let rp = GenScsiParams.ReadCapacity16 r
             r.Return()
             return rp
@@ -2163,7 +2163,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// </returns>
     member this.Wait_ReportSupportedOperationCodes_AllCommand ( itt : ITT_T ) : Task<SOCParam_All> =
         task {
-            let! r = this.WaitSCSIResponseGoogStatus itt
+            let! r = this.WaitSCSIResponseGoodStatus itt
             let rp = GenScsiParams.ReportSupportedOperationCodes_AllCommand r
             r.Return()
             return rp
@@ -2180,7 +2180,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// </returns>
     member this.Wait_ReportSupportedOperationCodes_OneCommand ( itt : ITT_T ) : Task<SOCParam_One> =
         task {
-            let! r = this.WaitSCSIResponseGoogStatus itt
+            let! r = this.WaitSCSIResponseGoodStatus itt
             let rp = GenScsiParams.ReportSupportedOperationCodes_OneCommand r
             r.Return()
             return rp
@@ -2197,7 +2197,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// </returns>
     member this.Wait_ReportSupportedTaskManagementFunctions ( itt : ITT_T ) : Task<RSTMFParam> =
         task {
-            let! r = this.WaitSCSIResponseGoogStatus itt
+            let! r = this.WaitSCSIResponseGoodStatus itt
             let rp = GenScsiParams.ReportSupportedTaskManagementFunctions r
             r.Return()
             return rp

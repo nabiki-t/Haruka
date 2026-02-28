@@ -219,9 +219,9 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
 
             // Receive responses of above two tasks
-            let! result_r1 = r.WaitSCSIResponseGoogStatus itt_r1
+            let! result_r1 = r.WaitSCSIResponseGoodStatus itt_r1
             result_r1.Return()
-            let! result_r2 = r.WaitSCSIResponseGoogStatus itt_r2
+            let! result_r2 = r.WaitSCSIResponseGoodStatus itt_r2
             result_r2.Return()
 
             m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
@@ -268,7 +268,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
 
             // Receive response of the task 1.
-            let! result_r1 = r.WaitSCSIResponseGoogStatus itt_r1
+            let! result_r1 = r.WaitSCSIResponseGoodStatus itt_r1
             result_r1.Return()
 
             // Confirm that the task 2 is stuck.
@@ -283,7 +283,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
 
             // Receive response of the task 2.
-            let! result_r2 = r.WaitSCSIResponseGoogStatus itt_r2
+            let! result_r2 = r.WaitSCSIResponseGoodStatus itt_r2
             result_r2.Return()
 
             m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
@@ -339,7 +339,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
 
             // Receive response of the HEAD OF QUEUE 1 task.
-            let! result_r1 = r.WaitSCSIResponseGoogStatus itt_r1
+            let! result_r1 = r.WaitSCSIResponseGoodStatus itt_r1
             result_r1.Return()
 
             // Confirm that the SIMPLE 2 task is stuck.
@@ -357,7 +357,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
 
             // Receive response of the HEAD OF QUEUE 3 task.
-            let! result_r3 = r.WaitSCSIResponseGoogStatus itt_r3
+            let! result_r3 = r.WaitSCSIResponseGoodStatus itt_r3
             result_r3.Return()
 
             // Confirm that the SIMPLE 4 task is stuck.
@@ -376,9 +376,9 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r4 ) "Task(" "MD> "
 
             // Receive response of the SIMPLE task.
-            let! result_r2 = r.WaitSCSIResponseGoogStatus itt_r2
+            let! result_r2 = r.WaitSCSIResponseGoodStatus itt_r2
             result_r2.Return()
-            let! result_r4 = r.WaitSCSIResponseGoogStatus itt_r4
+            let! result_r4 = r.WaitSCSIResponseGoodStatus itt_r4
             result_r4.Return()
 
             m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
@@ -434,7 +434,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
 
             // Receive response of the HEAD OF QUEUE 1 task.
-            let! result_r3 = r.WaitSCSIResponseGoogStatus itt_r3
+            let! result_r3 = r.WaitSCSIResponseGoodStatus itt_r3
             result_r3.Return()
 
             // Ensure that no SIMPLE tasks are executed.
@@ -447,7 +447,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
 
             // Receive response of the HEAD OF QUEUE 1 task.
-            let! result_r1 = r.WaitSCSIResponseGoogStatus itt_r1
+            let! result_r1 = r.WaitSCSIResponseGoodStatus itt_r1
             result_r1.Return()
 
             // Confirm that the SIMPLE 2 and 4 tasks are stuck.
@@ -466,9 +466,9 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r4 ) "Task(" "MD> "
 
             // Receive response of the SIMPLE task.
-            let! result_r2 = r.WaitSCSIResponseGoogStatus itt_r2
+            let! result_r2 = r.WaitSCSIResponseGoodStatus itt_r2
             result_r2.Return()
-            let! result_r4 = r.WaitSCSIResponseGoogStatus itt_r4
+            let! result_r4 = r.WaitSCSIResponseGoodStatus itt_r4
             result_r4.Return()
 
             m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
@@ -509,7 +509,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
 
             // Resume execution of the SIMPLE task.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
-            let! result_r1 = r.WaitSCSIResponseGoogStatus itt_r1
+            let! result_r1 = r.WaitSCSIResponseGoodStatus itt_r1
             result_r1.Return()
 
             // ORDERED tasks have not yet been executed.
@@ -520,7 +520,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
 
             // Resume execution of the SIMPLE task.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
-            let! result_r2 = r.WaitSCSIResponseGoogStatus itt_r2
+            let! result_r2 = r.WaitSCSIResponseGoodStatus itt_r2
             result_r2.Return()
 
             // The ORDERED task is executed.
@@ -531,7 +531,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
 
             // Resume execution of the ORDERED task.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
-            let! result_r3 = r.WaitSCSIResponseGoogStatus itt_r3
+            let! result_r3 = r.WaitSCSIResponseGoodStatus itt_r3
             result_r3.Return()
 
             m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
@@ -571,7 +571,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
 
             // Resume execution of the ORDERED task.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
-            let! result_r1 = r.WaitSCSIResponseGoogStatus itt_r1
+            let! result_r1 = r.WaitSCSIResponseGoodStatus itt_r1
             result_r1.Return()
 
             // Wait for two SIMPLE tasks to be executed
@@ -585,10 +585,10 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
 
             // Resume execution of two SIMPLE tasks.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
-            let! result_r2 = r.WaitSCSIResponseGoogStatus itt_r2
+            let! result_r2 = r.WaitSCSIResponseGoodStatus itt_r2
             result_r2.Return()
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
-            let! result_r3 = r.WaitSCSIResponseGoogStatus itt_r3
+            let! result_r3 = r.WaitSCSIResponseGoodStatus itt_r3
             result_r3.Return()
 
             m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
@@ -643,10 +643,10 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
 
             // Resume execution of two SIMPLE tasks.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
-            let! result_r1 = r.WaitSCSIResponseGoogStatus itt_r1
+            let! result_r1 = r.WaitSCSIResponseGoodStatus itt_r1
             result_r1.Return()
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
-            let! result_r3 = r.WaitSCSIResponseGoogStatus itt_r3
+            let! result_r3 = r.WaitSCSIResponseGoodStatus itt_r3
             result_r3.Return()
 
             m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
@@ -693,7 +693,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
 
             // Resume execution of the HOQ task.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
-            let! result_r3 = r.WaitSCSIResponseGoogStatus itt_r3
+            let! result_r3 = r.WaitSCSIResponseGoodStatus itt_r3
             result_r3.Return()
 
             // ORDERED 2 task has not yet been executed
@@ -704,7 +704,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
 
             // Resume execution of the ORDERED 1 task.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
-            let! result_r1 = r.WaitSCSIResponseGoogStatus itt_r1
+            let! result_r1 = r.WaitSCSIResponseGoodStatus itt_r1
             result_r1.Return()
 
             // Confirm that ORDERED 2 task is stuck.
@@ -717,7 +717,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
 
             // Resume execution of ORDERED 2 task.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
-            let! result_r2 = r.WaitSCSIResponseGoogStatus itt_r2
+            let! result_r2 = r.WaitSCSIResponseGoodStatus itt_r2
             result_r2.Return()
 
             m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
@@ -764,7 +764,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
 
             // Resume execution of the ORDERED 1 task.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
-            let! result_r1 = r.WaitSCSIResponseGoogStatus itt_r1
+            let! result_r1 = r.WaitSCSIResponseGoodStatus itt_r1
             result_r1.Return()
 
             // ORDERED2 task is executed
@@ -776,10 +776,10 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
 
             // Resume execution of HOQ and ORDERED 2 task.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
-            let! result_r2 = r.WaitSCSIResponseGoogStatus itt_r2
+            let! result_r2 = r.WaitSCSIResponseGoodStatus itt_r2
             result_r2.Return()
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
-            let! result_r3 = r.WaitSCSIResponseGoogStatus itt_r3
+            let! result_r3 = r.WaitSCSIResponseGoodStatus itt_r3
             result_r3.Return()
             
             m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
@@ -888,7 +888,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
 
             // Resume execution of ACA task.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r4 ) "Task(" "MD> "
-            let! result_r4 = r.WaitSCSIResponseGoogStatus itt_r4
+            let! result_r4 = r.WaitSCSIResponseGoodStatus itt_r4
             result_r4.Return()
 
             // Clear ACA
@@ -906,7 +906,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
 
             // Resume execution of SIMPLE or ORDERED task.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
-            let! result_r2 = r.WaitSCSIResponseGoogStatus itt_r2
+            let! result_r2 = r.WaitSCSIResponseGoodStatus itt_r2
             result_r2.Return()
 
             m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
@@ -971,7 +971,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
 
             // Resume execution of SIMPLE or ORDERED task.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
-            let! result_r2 = r.WaitSCSIResponseGoogStatus itt_r2
+            let! result_r2 = r.WaitSCSIResponseGoodStatus itt_r2
             result_r2.Return()
 
             m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
@@ -1026,7 +1026,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
 
             // Resume execution of SIMPLE 2 task.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
-            let! result_r2 = r.WaitSCSIResponseGoogStatus itt_r2
+            let! result_r2 = r.WaitSCSIResponseGoodStatus itt_r2
             result_r2.Return()
 
             // The ORDERED task is executed
@@ -1039,7 +1039,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
 
             // Resume execution of the ORDERED task.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
-            let! result_r3 = r.WaitSCSIResponseGoogStatus itt_r3
+            let! result_r3 = r.WaitSCSIResponseGoodStatus itt_r3
             result_r3.Return()
 
             m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
