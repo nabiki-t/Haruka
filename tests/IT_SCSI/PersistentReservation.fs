@@ -191,6 +191,14 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             return! r.Wait_PersistentReserveIn_ReadKey itt_pr_in1
         }
 
+    let ClearReservationKey ( r : SCSI_Initiator ) ( lun : LUN_T ) ( key : RESVKEY_T ) : Task<unit> =
+        task {
+            // clear reservation key
+            let! itt = r.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK lun NACA.T key
+            let! _ = r.WaitSCSIResponseGoodStatus itt
+            ()
+        }
+
 
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
@@ -202,12 +210,15 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let resvkey = resvkey_me.fromPrim 1UL
             let prfname = GetPRFileName g_LUN1
-            File.Delete prfname
+            let fexist = File.Exists prfname
 
             // register reservation key
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey false false true [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
-            Wait_CreateFile prfname
+            if fexist then
+                Wait_UpdateFile prfname
+            else
+                Wait_CreateFile prfname
 
             // LU Reset
             let! itt_tmf = r1.SendTMFRequest_LogicalUnitReset BitI.F g_LUN1
@@ -216,13 +227,9 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
 
             // Get reservarion key
             let! res_pr_in1 = PR_ReadKey r1 g_LUN1
-            Assert.True(( res_pr_in1.ReservationKey.Length = 1 ))
-            Assert.True(( res_pr_in1.ReservationKey.[0] = resvkey ))
+            Assert.True(( res_pr_in1.ReservationKey = [| resvkey |] ))
 
-            // clear reservation key
-            let! itt_pr_out2 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey
-            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
-
+            do! ClearReservationKey r1 g_LUN1 resvkey
             do! r1.Close()
         }
         
@@ -233,12 +240,15 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let resvkey = resvkey_me.fromPrim 1UL
             let prfname = GetPRFileName g_LUN1
-            File.Delete prfname
+            let fexist = File.Exists prfname
 
             // register reservation key
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey false false true [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
-            Wait_CreateFile prfname
+            if fexist then
+                Wait_UpdateFile prfname
+            else
+                Wait_CreateFile prfname
 
             // Target device reset
             let! _ = r1.SendTMFRequest_LogicalUnitReset BitI.F g_LUN0
@@ -248,12 +258,32 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
 
             // Get reservarion key
             let! res_pr_in1 = PR_ReadKey r2 g_LUN1
-            Assert.True(( res_pr_in1.ReservationKey.Length = 1 ))
-            Assert.True(( res_pr_in1.ReservationKey.[0] = resvkey ))
+            Assert.True(( res_pr_in1.ReservationKey = [| resvkey |] ))
 
-            // clear reservation key
-            let! itt_pr_out2 = r2.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey
-            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out2
+            do! ClearReservationKey r2 g_LUN1 resvkey
+            do! r2.Close()
+        }
+        
+    // For the same initiator port and LU, a unique reservation key is required for each I_T nexus.
+    [<Fact>]
+    member _.DuplicateResvKey_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let resvkey = resvkey_me.fromPrim 1UL
 
+            // register reservation key
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey false false true [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+            do! r1.Close()
+
+            // Reconnect with the same ISID
+            let! r2 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = r1.SessionParams.ISID } m_defaultConnParam
+
+            // register reservation key ( failed )
+            let! itt_pr_out2 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey false false true [||]
+            let! resp_2 = r2.WaitSCSIResponse itt_pr_out2
+            Assert.True(( resp_2.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
+
+            do! ClearReservationKey r2 g_LUN1 resvkey
             do! r2.Close()
         }
