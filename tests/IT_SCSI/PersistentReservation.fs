@@ -287,3 +287,44 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             do! ClearReservationKey r2 g_LUN1 resvkey
             do! r2.Close()
         }
+
+    // The same reservation key can be used on different initiator ports.
+    [<Fact>]
+    member _.DuplicateResvKey_002 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let resvkey = resvkey_me.fromPrim 1UL
+
+            // register reservation key
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey false false true [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            // Reconnect with a different ISID
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            // register reservation key. ( success )
+            let! itt_pr_out2 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey false false true [||]
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out2
+            do! ClearReservationKey r2 g_LUN1 resvkey
+            do! r2.Close()
+        }
+
+    // The same reservation key can be used on different LU.
+    [<Fact>]
+    member _.DuplicateResvKey_003 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let resvkey = resvkey_me.fromPrim 1UL
+
+            // register reservation key LU1
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey false false true [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            // register reservation key LU0
+            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN0 NACA.T resvkey_me.zero resvkey false false true [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            do! ClearReservationKey r1 g_LUN1 resvkey
+            do! ClearReservationKey r1 g_LUN0 resvkey
+            do! r1.Close()
+        }
