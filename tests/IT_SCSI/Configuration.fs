@@ -471,6 +471,7 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
         [|  0x1UL;  9; [| 0x3Buy; |];         |]  // WRITE BUFFER
         [|  0x1UL; 15; [| 0x86uy; |];         |]  // ACCESS CONTROL IN
         [|  0x1UL; 15; [| 0x87uy; |];         |]  // ACCESS CONTROL OUT
+        [|  0x1UL;  1; [| 0x7Fuy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x18uy; 0x00uy; 0x09uy; |];         |]  // READ(32)
         [|  0x1UL;  9; [| 0x37uy; |];         |]  // READ DEFECT DATA(10)
         [|  0x1UL; 11; [| 0xB7uy; |];         |]  // READ DEFECT DATA(12)
         [|  0x1UL;  9; [| 0x3Euy; |];         |]  // READ LONG(10)
@@ -481,6 +482,7 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
         [|  0x1UL; 11; [| 0xAFuy; |];         |]  // VERIFY(12)
         [|  0x1UL; 15; [| 0x8Fuy; |];         |]  // VERIFY(16)
         [|  0x1UL;  1; [| 0x7Fuy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x18uy; 0x00uy; 0x0Auy; |];         |]  // VERIFY(32)
+        [|  0x1UL;  1; [| 0x7Fuy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x18uy; 0x00uy; 0x0Buy; |];         |]  // WRITE(32)
         [|  0x1UL;  9; [| 0x2Euy; |];         |]  // WRITE AND VERIFY(10)
         [|  0x1UL; 11; [| 0xAEuy; |];         |]  // WRITE AND VERIFY(12)
         [|  0x1UL; 15; [| 0x8Euy; |];         |]  // WRITE AND VERIFY(16)

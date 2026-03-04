@@ -167,9 +167,8 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             Thread.Sleep 10
 
     // Wait until a file is updated
-    let Wait_UpdateFile( fname : string ) : unit =
-        let lwt = File.GetLastWriteTimeUtc fname
-        while ( lwt = File.GetLastWriteTimeUtc fname ) do
+    let Wait_UpdateFile ( fname : string ) ( ftime : DateTime ) : unit =
+        while ( ftime = File.GetLastWriteTimeUtc fname ) do
             Thread.Sleep 10
 
     let checkDisconnected ( s : SCSI_Initiator ) : Task =
@@ -270,6 +269,174 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             Assert.True(( resp_cmd.Status = ex ))
         }
 
+    static member PreFetch16 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
+        task {
+            let! itt_msense = r.Send_PreFetch16 TaskATTRCd.SIMPLE_TASK lun IMMED.F blkcnt_me.zero64 ( blkcnt_me.ofUInt32 1u ) NACA.T
+            let! resp_cmd = r.WaitSCSIResponse itt_msense
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+        }
+
+    static member ReportLUNs ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
+        task {
+            let! itt_msense = r.Send_ReportLUNs TaskATTRCd.SIMPLE_TASK lun 0uy 256u NACA.T
+            let! resp_cmd = r.WaitSCSIResponse itt_msense
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+        }
+
+    static member RequestSense ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
+        task {
+            let! itt_msense = r.Send_RequestSense TaskATTRCd.SIMPLE_TASK lun DESC.T 255uy NACA.T
+            let! resp_cmd = r.WaitSCSIResponse itt_msense
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+        }
+
+    static member TestUnitReady ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
+        task {
+            let! itt_msense = r.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK lun NACA.T
+            let! resp_cmd = r.WaitSCSIResponse itt_msense
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+        }
+
+    static member FormatUnit ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
+        task {
+            let! itt_msense = r.Send_FormatUnit TaskATTRCd.SIMPLE_TASK lun NACA.T
+            let! resp_cmd = r.WaitSCSIResponse itt_msense
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+        }
+
+    static member Read6 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
+        task {
+            let bs = if Constants.MEDIA_BLOCK_SIZE = 512UL then Blocksize.BS_512 else Blocksize.BS_4096
+            let! itt_msense = r.Send_Read6 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 bs ( blkcnt_me.ofUInt8 1uy ) NACA.T
+            let! resp_cmd = r.WaitSCSIResponse itt_msense
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+        }
+
+    static member Read10 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
+        task {
+            let bs = if Constants.MEDIA_BLOCK_SIZE = 512UL then Blocksize.BS_512 else Blocksize.BS_4096
+            let! itt_msense = r.Send_Read10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 bs ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! resp_cmd = r.WaitSCSIResponse itt_msense
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+        }
+
+    static member Read12 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
+        task {
+            let bs = if Constants.MEDIA_BLOCK_SIZE = 512UL then Blocksize.BS_512 else Blocksize.BS_4096
+            let! itt_msense = r.Send_Read12 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 bs ( blkcnt_me.ofUInt32 1u ) NACA.T
+            let! resp_cmd = r.WaitSCSIResponse itt_msense
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+        }
+
+    static member Read16 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
+        task {
+            let bs = if Constants.MEDIA_BLOCK_SIZE = 512UL then Blocksize.BS_512 else Blocksize.BS_4096
+            let! itt_msense = r.Send_Read16 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero64 bs ( blkcnt_me.ofUInt32 1u ) NACA.T
+            let! resp_cmd = r.WaitSCSIResponse itt_msense
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+        }
+
+    static member ReadCapacity10 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
+        task {
+            let bs = if Constants.MEDIA_BLOCK_SIZE = 512UL then Blocksize.BS_512 else Blocksize.BS_4096
+            let! itt_msense = r.Send_ReadCapacity10 TaskATTRCd.SIMPLE_TASK lun NACA.T
+            let! resp_cmd = r.WaitSCSIResponse itt_msense
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+        }
+
+    static member ReadCapacity16 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
+        task {
+            let bs = if Constants.MEDIA_BLOCK_SIZE = 512UL then Blocksize.BS_512 else Blocksize.BS_4096
+            let! itt_msense = r.Send_ReadCapacity16 TaskATTRCd.SIMPLE_TASK lun 256u NACA.T
+            let! resp_cmd = r.WaitSCSIResponse itt_msense
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+        }
+
+    static member SynchronizeCache10 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
+        task {
+            let bs = if Constants.MEDIA_BLOCK_SIZE = 512UL then Blocksize.BS_512 else Blocksize.BS_4096
+            let! itt_msense = r.Send_SynchronizeCache10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! resp_cmd = r.WaitSCSIResponse itt_msense
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+        }
+
+    static member SynchronizeCache16 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
+        task {
+            let bs = if Constants.MEDIA_BLOCK_SIZE = 512UL then Blocksize.BS_512 else Blocksize.BS_4096
+            let! itt_msense = r.Send_SynchronizeCache16 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero64 ( blkcnt_me.ofUInt32 1u ) NACA.T
+            let! resp_cmd = r.WaitSCSIResponse itt_msense
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+        }
+
+    static member Write6 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
+        task {
+            let bs = if Constants.MEDIA_BLOCK_SIZE = 512UL then Blocksize.BS_512 else Blocksize.BS_4096
+            let senddata = PooledBuffer.Rent ( int Constants.MEDIA_BLOCK_SIZE )
+            let! itt_msense = r.Send_Write6 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 bs senddata NACA.T
+            let! resp_cmd = r.WaitSCSIResponse itt_msense
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+        }
+
+    static member Write10 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
+        task {
+            let bs = if Constants.MEDIA_BLOCK_SIZE = 512UL then Blocksize.BS_512 else Blocksize.BS_4096
+            let senddata = PooledBuffer.Rent ( int Constants.MEDIA_BLOCK_SIZE )
+            let! itt_msense = r.Send_Write10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 bs senddata NACA.T
+            let! resp_cmd = r.WaitSCSIResponse itt_msense
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+        }
+
+    static member Write12 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
+        task {
+            let bs = if Constants.MEDIA_BLOCK_SIZE = 512UL then Blocksize.BS_512 else Blocksize.BS_4096
+            let senddata = PooledBuffer.Rent ( int Constants.MEDIA_BLOCK_SIZE )
+            let! itt_msense = r.Send_Write12 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 bs senddata NACA.T
+            let! resp_cmd = r.WaitSCSIResponse itt_msense
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+        }
+
+    static member Write16 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
+        task {
+            let bs = if Constants.MEDIA_BLOCK_SIZE = 512UL then Blocksize.BS_512 else Blocksize.BS_4096
+            let senddata = PooledBuffer.Rent ( int Constants.MEDIA_BLOCK_SIZE )
+            let! itt_msense = r.Send_Write16 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero64 bs senddata NACA.T
+            let! resp_cmd = r.WaitSCSIResponse itt_msense
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+        }
+
+    static member ReportSupportedOperationCodes ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
+        task {
+            let! itt_msense = r.Send_ReportSupportedOperationCodes TaskATTRCd.SIMPLE_TASK lun 0uy 0uy 0us 256u NACA.T
+            let! resp_cmd = r.WaitSCSIResponse itt_msense
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+        }
+
+    static member ReportSupportedTaskManagementFunctions ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
+        task {
+            let! itt_msense = r.Send_ReportSupportedTaskManagementFunctions TaskATTRCd.SIMPLE_TASK lun 256u NACA.T
+            let! resp_cmd = r.WaitSCSIResponse itt_msense
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+        }
+
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
 
@@ -280,13 +447,17 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let resvkey = resvkey_me.fromPrim 1UL
             let prfname = GetPRFileName g_LUN1
-            let fexist = File.Exists prfname
+            let fexist =
+                if File.Exists prfname then
+                    Some( File.GetLastWriteTimeUtc prfname )
+                else
+                    None
 
             // register reservation key
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey false false true [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
-            if fexist then
-                Wait_UpdateFile prfname
+            if fexist.IsSome then
+                Wait_UpdateFile prfname fexist.Value
             else
                 Wait_CreateFile prfname
 
@@ -310,13 +481,17 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let resvkey = resvkey_me.fromPrim 1UL
             let prfname = GetPRFileName g_LUN1
-            let fexist = File.Exists prfname
+            let fexist =
+                if File.Exists prfname then
+                    Some( File.GetLastWriteTimeUtc prfname )
+                else
+                    None
 
             // register reservation key
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey false false true [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
-            if fexist then
-                Wait_UpdateFile prfname
+            if fexist.IsSome then
+                Wait_UpdateFile prfname fexist.Value
             else
                 Wait_CreateFile prfname
 
@@ -399,91 +574,351 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             do! r1.Close()
         }
 
+    // The same reservation key can be used by two I_T Nexuses through different targets.
+    [<Fact>]
+    member _.DuplicateResvKey_004 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let sessParam = {
+                m_defaultSessParam with
+                    TargetName = "iqn.2020-05.example.com:target2";
+                    ISID = r1.SessionParams.ISID;
+            }
+            let! r2 = SCSI_Initiator.CreateWithISID sessParam m_defaultConnParam
+            let resvkey = resvkey_me.fromPrim 1UL
+
+            // register reservation key on session r1
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey false false true [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            // register reservation key on session r2
+            let! itt_pr_out2 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey false false true [||]
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // unregister on session r1
+            let! itt_pr_out3 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey resvkey_me.zero false false true [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
+
+            // unregister on session r2
+            let! itt_pr_out4 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey resvkey_me.zero false false true [||]
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out4
+
+            do! r1.Close()
+            do! r2.Close()
+        }
+
     static member PersistentReservation_000_data : obj[][] = [|
-        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Inquiry;        ScsiCmdStatCd.GOOD; |];
-        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSelect6;    ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSelect10;   ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSense6;     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSense10;    ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.PreFetch10;     ScsiCmdStatCd.CONDITION_MET; |];
-
-        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Inquiry;        ScsiCmdStatCd.GOOD; |];
-        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSelect6;    ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSelect10;   ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSense6;     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSense10;    ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.PreFetch10;     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-
-        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Inquiry;        ScsiCmdStatCd.GOOD; |];
-        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSelect6;    ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSelect10;   ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSense6;     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSense10;    ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.PreFetch10;     ScsiCmdStatCd.CONDITION_MET; |];
-
-        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Inquiry;        ScsiCmdStatCd.GOOD; |];
-        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSelect6;    ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSelect10;   ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSense6;     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSense10;    ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.PreFetch10;     ScsiCmdStatCd.CONDITION_MET; |];
-
-        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Inquiry;        ScsiCmdStatCd.GOOD; |];
-        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSelect6;    ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSelect10;   ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSense6;     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSense10;    ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.PreFetch10;     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-
-        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Inquiry;        ScsiCmdStatCd.GOOD; |];
-        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSelect6;    ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSelect10;   ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSense6;     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSense10;    ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.PreFetch10;     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-
-        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Inquiry;        ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSelect6;    ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSelect10;   ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSense6;     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSense10;    ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.PreFetch10;     ScsiCmdStatCd.CONDITION_MET; |];
-
-        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Inquiry;        ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSelect6;    ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSelect10;   ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSense6;     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSense10;    ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.PreFetch10;     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-
-        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Inquiry;        ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSelect6;    ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSelect10;   ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSense6;     ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSense10;    ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.PreFetch10;     ScsiCmdStatCd.CONDITION_MET; |];
-
-        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Inquiry;        ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSelect6;    ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSelect10;   ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSense6;     ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSense10;    ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.PreFetch10;     ScsiCmdStatCd.CONDITION_MET; |];
-
-        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Inquiry;        ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSelect6;    ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSelect10;   ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSense6;     ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSense10;    ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.PreFetch10;     ScsiCmdStatCd.CONDITION_MET; |];
-
-        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Inquiry;        ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSelect6;    ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSelect10;   ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSense6;     ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSense10;    ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.PreFetch10;     ScsiCmdStatCd.CONDITION_MET; |];
-
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSelect10;                           ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSense6;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSense10;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.PreFetch10;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.PreFetch16;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ReportLUNs;                             ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.RequestSense;                           ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.TestUnitReady;                          ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.FormatUnit;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Read6;                                  ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Read10;                                 ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Read12;                                 ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Read16;                                 ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ReadCapacity10;                         ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ReadCapacity16;                         ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.SynchronizeCache10;                     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.SynchronizeCache16;                     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Write6;                                 ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Write10;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Write12;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+                                                                                                            
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSelect10;                           ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSense6;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSense10;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.PreFetch10;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.PreFetch16;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ReportLUNs;                             ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.RequestSense;                           ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.TestUnitReady;                          ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.FormatUnit;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Read6;                                  ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Read10;                                 ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Read12;                                 ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Read16;                                 ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ReadCapacity10;                         ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ReadCapacity16;                         ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.SynchronizeCache10;                     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.SynchronizeCache16;                     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Write6;                                 ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Write10;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Write12;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+                                                                                                                                
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSelect10;                           ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSense6;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSense10;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.PreFetch10;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.PreFetch16;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ReportLUNs;                             ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.RequestSense;                           ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.TestUnitReady;                          ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.FormatUnit;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Read6;                                  ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Read10;                                 ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Read12;                                 ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Read16;                                 ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ReadCapacity10;                         ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ReadCapacity16;                         ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.SynchronizeCache10;                     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.SynchronizeCache16;                     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Write6;                                 ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Write10;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Write12;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+                                                                                                                                
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSelect10;                           ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSense6;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSense10;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.PreFetch10;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.PreFetch16;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ReportLUNs;                             ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.RequestSense;                           ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.TestUnitReady;                          ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.FormatUnit;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Read6;                                  ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Read10;                                 ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Read12;                                 ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Read16;                                 ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ReadCapacity10;                         ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ReadCapacity16;                         ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.SynchronizeCache10;                     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.SynchronizeCache16;                     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Write6;                                 ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Write10;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Write12;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+                                                                                                                                
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSelect10;                           ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSense6;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSense10;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.PreFetch10;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.PreFetch16;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ReportLUNs;                             ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.RequestSense;                           ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.TestUnitReady;                          ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.FormatUnit;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Read6;                                  ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Read10;                                 ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Read12;                                 ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Read16;                                 ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ReadCapacity10;                         ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ReadCapacity16;                         ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.SynchronizeCache10;                     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.SynchronizeCache16;                     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Write6;                                 ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Write10;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Write12;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+                                                                                                                                
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSelect10;                           ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSense6;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSense10;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.PreFetch10;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.PreFetch16;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ReportLUNs;                             ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.RequestSense;                           ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.TestUnitReady;                          ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.FormatUnit;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Read6;                                  ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Read10;                                 ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Read12;                                 ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Read16;                                 ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ReadCapacity10;                         ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ReadCapacity16;                         ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.SynchronizeCache10;                     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.SynchronizeCache16;                     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Write6;                                 ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Write10;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Write12;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+                                                                                                                                
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSelect10;                           ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSense6;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSense10;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.PreFetch10;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.PreFetch16;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ReportLUNs;                             ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.RequestSense;                           ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.TestUnitReady;                          ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.FormatUnit;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Read6;                                  ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Read10;                                 ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Read12;                                 ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Read16;                                 ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ReadCapacity10;                         ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ReadCapacity16;                         ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.SynchronizeCache10;                     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.SynchronizeCache16;                     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Write6;                                 ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Write10;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Write12;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+                                                                                                                                
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSelect10;                           ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSense6;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSense10;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.PreFetch10;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.PreFetch16;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ReportLUNs;                             ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.RequestSense;                           ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.TestUnitReady;                          ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.FormatUnit;                             ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Read6;                                  ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Read10;                                 ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Read12;                                 ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Read16;                                 ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ReadCapacity10;                         ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ReadCapacity16;                         ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.SynchronizeCache10;                     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.SynchronizeCache16;                     ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Write6;                                 ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Write10;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Write12;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+                                                                                                                                
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSelect10;                           ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSense6;                             ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSense10;                            ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.PreFetch10;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.PreFetch16;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ReportLUNs;                             ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.RequestSense;                           ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.TestUnitReady;                          ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.FormatUnit;                             ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Read6;                                  ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Read10;                                 ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Read12;                                 ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Read16;                                 ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ReadCapacity10;                         ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ReadCapacity16;                         ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.SynchronizeCache10;                     ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.SynchronizeCache16;                     ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Write6;                                 ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Write10;                                ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Write12;                                ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.GOOD; |];
+                                                                                                                                
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSelect10;                           ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSense6;                             ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSense10;                            ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.PreFetch10;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.PreFetch16;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ReportLUNs;                             ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.RequestSense;                           ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.TestUnitReady;                          ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.FormatUnit;                             ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Read6;                                  ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Read10;                                 ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Read12;                                 ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Read16;                                 ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ReadCapacity10;                         ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ReadCapacity16;                         ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.SynchronizeCache10;                     ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.SynchronizeCache16;                     ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Write6;                                 ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Write10;                                ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Write12;                                ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.GOOD; |];
+                                                                                                                                
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSelect10;                           ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSense6;                             ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSense10;                            ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.PreFetch10;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.PreFetch16;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ReportLUNs;                             ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.RequestSense;                           ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.TestUnitReady;                          ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.FormatUnit;                             ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Read6;                                  ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Read10;                                 ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Read12;                                 ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Read16;                                 ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ReadCapacity10;                         ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ReadCapacity16;                         ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.SynchronizeCache10;                     ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.SynchronizeCache16;                     ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Write6;                                 ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Write10;                                ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Write12;                                ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.GOOD; |];
+                                                                                                                                
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSelect10;                           ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSense6;                             ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSense10;                            ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.PreFetch10;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.PreFetch16;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ReportLUNs;                             ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.RequestSense;                           ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.TestUnitReady;                          ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.FormatUnit;                             ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Read6;                                  ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Read10;                                 ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Read12;                                 ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Read16;                                 ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ReadCapacity10;                         ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ReadCapacity16;                         ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.SynchronizeCache10;                     ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.SynchronizeCache16;                     ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Write6;                                 ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Write10;                                ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Write12;                                ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.GOOD; |];
     |]
 
     [<Theory>]
