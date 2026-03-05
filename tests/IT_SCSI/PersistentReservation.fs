@@ -437,6 +437,14 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             Assert.True(( resp_cmd.Status = ex ))
         }
 
+    static member PersistentReserveIn ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
+        task {
+            let! itt_msense = r.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 0uy 256us NACA.T
+            let! resp_cmd = r.WaitSCSIResponse itt_msense
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+        }
+
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
 
@@ -633,6 +641,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
         [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.PersistentReserveIn;                    ScsiCmdStatCd.GOOD; |];
                                                                                                             
         [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
         [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
@@ -659,6 +668,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
         [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.PersistentReserveIn;                    ScsiCmdStatCd.GOOD; |];
                                                                                                                                 
         [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
         [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
@@ -685,6 +695,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
         [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.PersistentReserveIn;                    ScsiCmdStatCd.GOOD; |];
                                                                                                                                 
         [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
         [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
@@ -711,6 +722,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
         [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.PersistentReserveIn;                    ScsiCmdStatCd.GOOD; |];
                                                                                                                                 
         [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
         [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
@@ -737,6 +749,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
         [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.PersistentReserveIn;                    ScsiCmdStatCd.GOOD; |];
                                                                                                                                 
         [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
         [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
@@ -763,6 +776,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
         [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.PersistentReserveIn;                    ScsiCmdStatCd.GOOD; |];
                                                                                                                                 
         [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
         [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
@@ -789,6 +803,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
         [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.PersistentReserveIn;                    ScsiCmdStatCd.GOOD; |];
                                                                                                                                 
         [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
         [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
@@ -815,6 +830,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
         [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.PersistentReserveIn;                    ScsiCmdStatCd.GOOD; |];
                                                                                                                                 
         [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
         [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.GOOD; |];
@@ -841,6 +857,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
         [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.GOOD; |];
         [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.GOOD; |];
         [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.PersistentReserveIn;                    ScsiCmdStatCd.GOOD; |];
                                                                                                                                 
         [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
         [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.GOOD; |];
@@ -867,6 +884,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
         [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.GOOD; |];
         [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.GOOD; |];
         [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.PersistentReserveIn;                    ScsiCmdStatCd.GOOD; |];
                                                                                                                                 
         [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
         [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.GOOD; |];
@@ -893,6 +911,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
         [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.GOOD; |];
         [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.GOOD; |];
         [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.PersistentReserveIn;                    ScsiCmdStatCd.GOOD; |];
                                                                                                                                 
         [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
         [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.GOOD; |];
@@ -919,6 +938,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
         [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.GOOD; |];
         [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.GOOD; |];
         [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.PersistentReserveIn;                    ScsiCmdStatCd.GOOD; |];
     |]
 
     [<Theory>]
@@ -959,6 +979,133 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             // unregister reservation key on session 1
             let! itt_pr_out6 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey1 resvkey_me.zero false false true [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out6
+
+            do! r1.Close()
+            do! r2.Close()
+        }
+
+    static member PersistentReserveOut_CLEAR_001_data : obj[][] = [|
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  ScsiCmdStatCd.GOOD; |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "PersistentReserveOut_CLEAR_001_data" )>]
+    member _.PersistentReserveOut_CLEAR_001 ( regist : bool ) ( prtype : PR_TYPE ) ( exp : ScsiCmdStatCd ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let resvkey1 = resvkey_me.fromPrim 1UL
+            let resvkey2 = resvkey_me.fromPrim 2UL
+
+            // register reservation key on session 1
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey1 false false true [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            // reserve reservation
+            let! itt_pr_out2 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // register reservation key on session 2
+            if regist then
+                let! itt_pr_out3 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey2 false false true [||]
+                let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out3
+                ()
+
+            let! itt_pr_out4 = r2.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey2
+            let! resp_cmd = r2.WaitSCSIResponse itt_pr_out4
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = exp ))
+
+            if resp_cmd.Status = ScsiCmdStatCd.GOOD then
+                // clear unit attention on session 1
+                let! itt_tmf1 = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
+                let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
+                Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+            else
+                // unregister reservation key on session 2
+                if regist then
+                    let! itt_pr_out5 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey2 resvkey_me.zero false false true [||]
+                    let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out5
+                    ()
+
+                // release reservation
+                let! itt_pr_out6 = r1.Send_PROut_RELEASE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+                let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out6
+
+                // unregister reservation key on session 1
+                let! itt_pr_out7 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey1 resvkey_me.zero false false true [||]
+                let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out7
+                ()
+
+            do! r1.Close()
+            do! r2.Close()
+        }
+
+    static member PersistentReserveOut_PREEMPT_001_data : obj[][] = [|
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   1UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  1UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  1UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   0UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; 1UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  0UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   1UL; ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  1UL; ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  1UL; ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   0UL; ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; 1UL; ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  0UL; ScsiCmdStatCd.GOOD; |];
+    |]
+
+
+    [<Theory>]
+    [<MemberData( "PersistentReserveOut_PREEMPT_001_data" )>]
+    member _.PersistentReserveOut_PREEMPT_001 ( regist : bool ) ( prtype : PR_TYPE ) ( sark : uint64 ) ( exp : ScsiCmdStatCd ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let resvkey1 = resvkey_me.fromPrim 1UL
+            let resvkey2 = resvkey_me.fromPrim 2UL
+            let srResvKey = resvkey_me.fromPrim sark
+
+            // register reservation key on session 1
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey1 false false true [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            // reserve reservation
+            let! itt_pr_out2 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // register reservation key on session 2
+            if regist then
+                let! itt_pr_out3 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey2 false false true [||]
+                let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out3
+                ()
+
+            // PREEMPT
+            let! itt_pr_out4 = r2.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE resvkey2 srResvKey
+            let! resp_cmd = r2.WaitSCSIResponse itt_pr_out4
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = exp ))
+
+            // clear PR
+            if regist then
+                do! ClearReservationKey r2 g_LUN1 resvkey2
+                let! itt_tmf1 = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
+                let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
+                Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+            else
+                do! ClearReservationKey r1 g_LUN1 resvkey1
 
             do! r1.Close()
             do! r2.Close()
