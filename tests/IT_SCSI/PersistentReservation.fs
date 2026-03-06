@@ -1053,24 +1053,35 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
         }
 
     static member PersistentReserveOut_PREEMPT_001_data : obj[][] = [|
-        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   1UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  1UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  1UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   0UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; 1UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  0UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
-        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   1UL; ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  1UL; ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  1UL; ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   0UL; ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; 1UL; ScsiCmdStatCd.GOOD; |];
-        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  0UL; ScsiCmdStatCd.GOOD; |];
+        [| false; false; PR_TYPE.WRITE_EXCLUSIVE;                   1UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; false; PR_TYPE.EXCLUSIVE_ACCESS;                  1UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  1UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   0UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; 1UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  0UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; true;  PR_TYPE.WRITE_EXCLUSIVE;                   1UL; ScsiCmdStatCd.GOOD; |];
+        [| false; true;  PR_TYPE.EXCLUSIVE_ACCESS;                  1UL; ScsiCmdStatCd.GOOD; |];
+        [| false; true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  1UL; ScsiCmdStatCd.GOOD; |];
+        [| false; true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   0UL; ScsiCmdStatCd.GOOD; |];
+        [| false; true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; 1UL; ScsiCmdStatCd.GOOD; |];
+        [| false; true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  0UL; ScsiCmdStatCd.GOOD; |];
+        [| true;  false; PR_TYPE.WRITE_EXCLUSIVE;                   1UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  false; PR_TYPE.EXCLUSIVE_ACCESS;                  1UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  1UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   0UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; 1UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  0UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  true;  PR_TYPE.WRITE_EXCLUSIVE;                   1UL; ScsiCmdStatCd.GOOD; |];
+        [| true;  true;  PR_TYPE.EXCLUSIVE_ACCESS;                  1UL; ScsiCmdStatCd.GOOD; |];
+        [| true;  true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  1UL; ScsiCmdStatCd.GOOD; |];
+        [| true;  true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   0UL; ScsiCmdStatCd.GOOD; |];
+        [| true;  true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; 1UL; ScsiCmdStatCd.GOOD; |];
+        [| true;  true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  0UL; ScsiCmdStatCd.GOOD; |];
     |]
-
 
     [<Theory>]
     [<MemberData( "PersistentReserveOut_PREEMPT_001_data" )>]
-    member _.PersistentReserveOut_PREEMPT_001 ( regist : bool ) ( prtype : PR_TYPE ) ( sark : uint64 ) ( exp : ScsiCmdStatCd ) =
+    member _.PersistentReserveOut_PREEMPT_001 ( func : bool ) ( regist : bool ) ( prtype : PR_TYPE ) ( sark : uint64 ) ( exp : ScsiCmdStatCd ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
@@ -1092,8 +1103,12 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
                 let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out3
                 ()
 
-            // PREEMPT
-            let! itt_pr_out4 = r2.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE resvkey2 srResvKey
+            // PREEMPT / PREEMPT_AND_ABORT
+            let! itt_pr_out4 = 
+                if func then
+                    r2.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE resvkey2 srResvKey
+                else
+                    r2.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE resvkey2 srResvKey
             let! resp_cmd = r2.WaitSCSIResponse itt_pr_out4
             resp_cmd.ResData.Return()
             Assert.True(( resp_cmd.Status = exp ))
@@ -1106,6 +1121,146 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
                 Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
             else
                 do! ClearReservationKey r1 g_LUN1 resvkey1
+
+            do! r1.Close()
+            do! r2.Close()
+        }
+
+    static member PersistentReserveOut_REGISTER_001_data : obj[][] = [|
+        [| false; false; PR_TYPE.WRITE_EXCLUSIVE;                   |];
+        [| false; false; PR_TYPE.EXCLUSIVE_ACCESS;                  |];
+        [| false; false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |];
+        [| false; false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   |];
+        [| false; false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |];
+        [| false; false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  |];
+        [| false; true;  PR_TYPE.WRITE_EXCLUSIVE;                   |];
+        [| false; true;  PR_TYPE.EXCLUSIVE_ACCESS;                  |];
+        [| false; true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |];
+        [| false; true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   |];
+        [| false; true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |];
+        [| false; true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  |];
+        [| true;  false; PR_TYPE.WRITE_EXCLUSIVE;                   |];
+        [| true;  false; PR_TYPE.EXCLUSIVE_ACCESS;                  |];
+        [| true;  false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |];
+        [| true;  false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   |];
+        [| true;  false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |];
+        [| true;  false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  |];
+        [| true;  true;  PR_TYPE.WRITE_EXCLUSIVE;                   |];
+        [| true;  true;  PR_TYPE.EXCLUSIVE_ACCESS;                  |];
+        [| true;  true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |];
+        [| true;  true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   |];
+        [| true;  true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |];
+        [| true;  true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "PersistentReserveOut_REGISTER_001_data" )>]
+    member _.PersistentReserveOut_REGISTER_001 ( func : bool ) ( regist : bool ) ( prtype : PR_TYPE ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let resvkey1 = resvkey_me.fromPrim 1UL
+            let resvkey2 = resvkey_me.fromPrim 2UL
+            let resvkey3 = resvkey_me.fromPrim 3UL
+
+            // register reservation key on session 1
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey1 false false true [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            // reserve reservation
+            let! itt_pr_out2 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // register reservation key on session 2
+            if regist then
+                let! itt_pr_out3 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey2 false false true [||]
+                let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out3
+                ()
+
+            // REGISTER / REGISTER_AND_IGNORE_EXISTING_KEY
+            let! itt_pr_out4 =
+                if func then
+                    r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( if regist then resvkey2 else resvkey_me.zero ) resvkey3 false false true [||]
+                else
+                    r2.Send_PROut_REGISTER_AND_IGNORE_EXISTING_KEY TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey3 false false true [||]
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out4
+
+            // unregister reservation key on session 2
+            let! itt_pr_out5 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey3 resvkey_me.zero false false true [||]
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out5
+
+            // release reservation
+            let! itt_pr_out6 = r1.Send_PROut_RELEASE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out6
+
+            // unregister reservation key on session 1
+            let! itt_pr_out7 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey1 resvkey_me.zero false false true [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out7
+            ()
+
+            do! r1.Close()
+            do! r2.Close()
+        }
+
+    static member PersistentReserveOut_REGISTER_AND_MOVE_001_data : obj[][] = [|
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "PersistentReserveOut_REGISTER_AND_MOVE_001_data" )>]
+    member _.PersistentReserveOut_REGISTER_AND_MOVE_001 ( regist : bool ) ( prtype : PR_TYPE ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let resvkey1 = resvkey_me.fromPrim 1UL
+            let resvkey2 = resvkey_me.fromPrim 2UL
+            let resvkey3 = resvkey_me.fromPrim 2UL
+
+            // register reservation key on session 1
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey1 false false true [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            // reserve reservation
+            let! itt_pr_out2 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // register reservation key on session 2
+            if regist then
+                let! itt_pr_out3 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey2 false false true [||]
+                let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out3
+                ()
+
+            // REGISTER_AND_MOVE
+            let! itt_pr_out4 = r2.Send_PROut_REGISTER_AND_MOVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS resvkey2 resvkey3 true true 0us ( "", None )
+            let! resp_cmd = r2.WaitSCSIResponse itt_pr_out4
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
+
+            // unregister reservation key on session 2
+            if regist then
+                let! itt_pr_out5 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey2 resvkey_me.zero false false true [||]
+                let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out5
+                ()
+
+            // release reservation
+            let! itt_pr_out6 = r1.Send_PROut_RELEASE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out6
+
+            // unregister reservation key on session 1
+            let! itt_pr_out7 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey1 resvkey_me.zero false false true [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out7
+            ()
 
             do! r1.Close()
             do! r2.Close()

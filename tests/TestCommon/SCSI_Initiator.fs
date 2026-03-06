@@ -1046,7 +1046,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// <returns>
     ///  Initiator task tag.
     /// </returns>
-    member this.Send_PersistentReserveOut_REGISTER_AND_MOVE
+    member this.Send_PROut_REGISTER_AND_MOVE
             ( att : TaskATTRCd )
             ( lun : LUN_T )
             ( argNACA : NACA )
