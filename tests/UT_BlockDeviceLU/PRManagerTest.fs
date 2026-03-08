@@ -1005,13 +1005,14 @@ type PRManager_Test1 () =
         let fname = Functions.AppendPathName pDirName "SavePRFile_001.txt"
 
         let pr = {
+            m_APTPL = true;
             m_Type = PR_TYPE.NO_RESERVATION;
             m_Holder = None;
             m_PRGeneration = 0u;
             m_Registrations = ImmutableDictionary< ITNexus, RESVKEY_T >.Empty;
         }
 
-        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr, true ) :?> Task
+        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr ) :?> Task
         |> Functions.RunTaskSynchronously
 
         Assert.True( File.Exists fname )
@@ -1031,6 +1032,7 @@ type PRManager_Test1 () =
         let fname = Functions.AppendPathName pDirName "SavePRFile_002.txt"
 
         let pr = {
+            m_APTPL = false;
             m_Type = PR_TYPE.NO_RESERVATION;
             m_Holder = None;
             m_PRGeneration = 0u;
@@ -1038,7 +1040,7 @@ type PRManager_Test1 () =
         }
         File.WriteAllText( fname, "" )
 
-        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr, false ) :?> Task
+        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr ) :?> Task
         |> Functions.RunTaskSynchronously
 
         Assert.False( File.Exists fname )
@@ -1056,6 +1058,7 @@ type PRManager_Test1 () =
         let itn3 = new ITNexus( "initiator003", isid_me.fromElem ( 3uy <<< 6 ) 3uy 3us 3uy 3us, "target003", tpgt_me.fromPrim 3us );
         let itn4 = new ITNexus( "initiator004", isid_me.fromElem ( 0uy <<< 6 ) 4uy 4us 4uy 4us, "target004", tpgt_me.fromPrim 4us );
         let pr = {
+            m_APTPL = true;
             m_Type = PR_TYPE.NO_RESERVATION;
             m_Holder = None;
             m_PRGeneration = 1u;
@@ -1068,7 +1071,7 @@ type PRManager_Test1 () =
                 r.ToImmutableDictionary()
         }
 
-        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr, true ) :?> Task
+        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr ) :?> Task
         |> Functions.RunTaskSynchronously
 
         Assert.True( File.Exists fname )
@@ -1097,6 +1100,7 @@ type PRManager_Test1 () =
         let itn4 = new ITNexus( "initiator004", isid_me.fromElem ( 0uy <<< 6 ) 4uy 4us 4uy 4us, "target004", tpgt_me.fromPrim 4us );
         let itn5 = new ITNexus( "initiator005", isid_me.fromElem ( 1uy <<< 6 ) 5uy 5us 5uy 5us, "target005", tpgt_me.fromPrim 5us );
         let pr = {
+            m_APTPL = true;
             m_Type = PR_TYPE.WRITE_EXCLUSIVE;
             m_Holder = Some itn2;
             m_PRGeneration = 1u;
@@ -1110,7 +1114,7 @@ type PRManager_Test1 () =
                 r.ToImmutableDictionary()
         }
 
-        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr, true ) :?> Task
+        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr ) :?> Task
         |> Functions.RunTaskSynchronously
 
         Assert.True( File.Exists fname )
@@ -1142,6 +1146,7 @@ type PRManager_Test1 () =
         let itn5 = new ITNexus( "initiator005", isid_me.fromElem ( 1uy <<< 6 ) 5uy 5us 5uy 5us, "target005", tpgt_me.fromPrim 5us );
         let itn6 = new ITNexus( "initiator006", isid_me.fromElem ( 2uy <<< 6 ) 6uy 6us 6uy 6us, "target006", tpgt_me.fromPrim 6us );
         let pr = {
+            m_APTPL = true;
             m_Type = PR_TYPE.EXCLUSIVE_ACCESS;
             m_Holder = Some itn3;
             m_PRGeneration = 1u;
@@ -1156,7 +1161,7 @@ type PRManager_Test1 () =
                 r.ToImmutableDictionary()
         }
 
-        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr, true ) :?> Task
+        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr ) :?> Task
         |> Functions.RunTaskSynchronously
 
         Assert.True( File.Exists fname )
@@ -1190,6 +1195,7 @@ type PRManager_Test1 () =
         let itn6 = new ITNexus( "initiator006", isid_me.fromElem ( 2uy <<< 6 ) 6uy 6us 6uy 6us, "target006", tpgt_me.fromPrim 6us );
         let itn7 = new ITNexus( "initiator007", isid_me.fromElem ( 3uy <<< 6 ) 7uy 7us 7uy 7us, "target007", tpgt_me.fromPrim 7us );
         let pr = {
+            m_APTPL = true;
             m_Type = PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;
             m_Holder = Some itn4;
             m_PRGeneration = 1u;
@@ -1205,7 +1211,7 @@ type PRManager_Test1 () =
                 r.ToImmutableDictionary()
         }
 
-        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr, true ) :?> Task
+        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr ) :?> Task
         |> Functions.RunTaskSynchronously
 
         Assert.True( File.Exists fname )
@@ -1241,6 +1247,7 @@ type PRManager_Test1 () =
         let itn7 = new ITNexus( "initiator007", isid_me.fromElem ( 3uy <<< 6 ) 7uy 7us 7uy 7us, "target007", tpgt_me.fromPrim 7us );
         let itn8 = new ITNexus( "initiator008", isid_me.fromElem ( 0uy <<< 6 ) 8uy 8us 8uy 8us, "target008", tpgt_me.fromPrim 8us );
         let pr = {
+            m_APTPL = true;
             m_Type = PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;
             m_Holder = None;
             m_PRGeneration = 5u;
@@ -1257,7 +1264,7 @@ type PRManager_Test1 () =
                 r.ToImmutableDictionary()
         }
 
-        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr, true ) :?> Task
+        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr ) :?> Task
         |> Functions.RunTaskSynchronously
 
         Assert.True( File.Exists fname )
@@ -1294,6 +1301,7 @@ type PRManager_Test1 () =
         let itn8 = new ITNexus( "initiator008", isid_me.fromElem ( 0uy <<< 6 ) 8uy 8us 8uy 8us, "target008", tpgt_me.fromPrim 8us );
         let itn9 = new ITNexus( "initiator009", isid_me.fromElem ( 1uy <<< 6 ) 9uy 9us 9uy 9us, "target009", tpgt_me.fromPrim 9us );
         let pr = {
+            m_APTPL = true;
             m_Type = PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY;
             m_Holder = Some itn8;
             m_PRGeneration = 5u;
@@ -1311,7 +1319,7 @@ type PRManager_Test1 () =
                 r.ToImmutableDictionary()
         }
 
-        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr, true ) :?> Task
+        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr ) :?> Task
         |> Functions.RunTaskSynchronously
 
         Assert.True( File.Exists fname )
@@ -1351,6 +1359,7 @@ type PRManager_Test1 () =
         let itn9 = new ITNexus( "initiator009", isid_me.fromElem ( 1uy <<< 6 ) 9uy 9us 9uy 9us, "target009", tpgt_me.fromPrim 9us );
         let itn10 = new ITNexus( "initiator010", isid_me.fromElem ( 2uy <<< 6 ) 10uy 10us 10uy 10us, "target010", tpgt_me.fromPrim 10us );
         let pr = {
+            m_APTPL = true;
             m_Type = PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;
             m_Holder = None;
             m_PRGeneration = 5u;
@@ -1369,7 +1378,7 @@ type PRManager_Test1 () =
                 r.ToImmutableDictionary()
         }
 
-        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr, true ) :?> Task
+        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr ) :?> Task
         |> Functions.RunTaskSynchronously
 
         Assert.True( File.Exists fname )
@@ -1401,6 +1410,7 @@ type PRManager_Test1 () =
         let itn1 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us );
 
         let pr = {
+            m_APTPL = true;
             m_Type = PR_TYPE.NO_RESERVATION;
             m_Holder = None;
             m_PRGeneration = 0u;
@@ -1413,7 +1423,7 @@ type PRManager_Test1 () =
         use s = new FileStream( fname, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None, 512, true )
 
         let t1 =
-            PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr, true ) :?> Task;
+            PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr ) :?> Task;
         let t2 =
             task {
                 do! Task.Delay 70
@@ -1442,6 +1452,7 @@ type PRManager_Test1 () =
         let itn1 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us )
 
         let pr = {
+            m_APTPL = true;
             m_Type = PR_TYPE.NO_RESERVATION;
             m_Holder = None;
             m_PRGeneration = 0u;
@@ -1453,7 +1464,7 @@ type PRManager_Test1 () =
 
         use s = new FileStream( fname, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None, 512, true )
 
-        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr, true ) :?> Task
+        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr ) :?> Task
         |> Functions.RunTaskSynchronously
 
         s.Close()
@@ -1470,6 +1481,7 @@ type PRManager_Test1 () =
         let itn1 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us );
 
         let pr = {
+            m_APTPL = true;
             m_Type = PR_TYPE.NO_RESERVATION;
             m_Holder = None;
             m_PRGeneration = 0u;
@@ -1481,7 +1493,7 @@ type PRManager_Test1 () =
 
         GlbFunc.CreateDir fname |> ignore
 
-        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr, true ) :?> Task
+        PrivateCaller.Invoke< PRManager >( "SavePRFile", objidx_me.NewID(), lun_me.zero, fname, pr ) :?> Task
         |> Functions.RunTaskSynchronously
 
         GlbFunc.DeleteDir fname

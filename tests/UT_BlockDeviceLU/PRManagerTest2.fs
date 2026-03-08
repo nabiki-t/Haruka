@@ -115,6 +115,12 @@ type PRManager_Test2 () =
             Thread.Sleep 5
             cnt <- cnt + 1
 
+    member _.WaitForFileCreate ( fname : string ) =
+        let mutable cnt = 0
+        while ( File.Exists fname |> not ) && cnt < 200 do
+            Thread.Sleep 5
+            cnt <- cnt + 1
+
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
 
@@ -148,6 +154,7 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.False(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_PRGeneration = 0u ))
         Assert.True(( prinfo.m_Registrations.Count = 1 ))
         Assert.True(( prinfo.m_Registrations.ContainsKey initITN1 ))
@@ -192,6 +199,7 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 2 ))
         Assert.True(( prinfo.m_Registrations.Item( initITN1 ) = resvkey_me.fromPrim 0xAABBCCDD11223344UL ))
@@ -202,6 +210,7 @@ type PRManager_Test2 () =
         Assert.True( File.Exists fname )
         let pm2 = new PRManager( new CStatus_Stub(), new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero ), lun_me.zero, fname, k )
         let prinfo2 = PRManager_Test2.GetPRInfoRec pm2
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo2.m_PRGeneration = 0u ))
         Assert.True(( prinfo2.m_Registrations.Count = 2 ))
         Assert.True(( prinfo2.m_Registrations.Item( initITN1 ) = resvkey_me.fromPrim 0xAABBCCDD11223344UL ))
@@ -262,6 +271,7 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.False(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 4 ))
         Assert.True(( prinfo.m_Registrations.Item( initITN1 ) = resvkey_me.fromPrim 0xAABBCCDD11223344UL ))
@@ -330,6 +340,7 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.False(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 7 ))
         Assert.True(( prinfo.m_Registrations.Item( initITN1 ) = resvkey_me.fromPrim 0xAABBCCDD11223344UL ))
@@ -401,6 +412,7 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.False(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 9 ))
         Assert.True(( prinfo.m_Registrations.Item( initITN1 ) = resvkey_me.fromPrim 0xAABBCCDD11223344UL ))
@@ -457,6 +469,7 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.False(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 3 ))
         Assert.True(( prinfo.m_Registrations.Item( initITN1 ) = resvkey_me.fromPrim 0xAABBCCDD11223344UL ))
@@ -506,6 +519,7 @@ type PRManager_Test2 () =
             Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_PRGeneration = 0u ))
         Assert.True(( prinfo.m_Registrations.Count = 1 ))
         Assert.True(( prinfo.m_Registrations.Item( initITN1 ) = resvkey_me.fromPrim 0xAABBCCDD11223344UL ))
@@ -573,6 +587,7 @@ type PRManager_Test2 () =
             Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_PRGeneration = 0u ))
         Assert.True(( prinfo.m_Registrations.Count = 1 ))
         Assert.True(( prinfo.m_Registrations.Item( initITN1 ) = resvkey_me.fromPrim 0xAABBCCDD11223344UL ))
@@ -594,6 +609,7 @@ type PRManager_Test2 () =
                 initITN1, resvkey_me.fromPrim 0xAABBCCDD11223344UL, false;
             |]
             fname
+        let initPRFileTime = File.GetLastWriteTimeUtc fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS_ALL_REGISTRANTS 1
         let param = [|
             0x11uy; 0x11uy; 0x11uy; 0x11uy; // RESERVATION KEY 
@@ -613,14 +629,15 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.RESERVATION_CONFLICT ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_PRGeneration = 0u ))
         Assert.True(( prinfo.m_Registrations.Count = 1 ))
         Assert.True(( prinfo.m_Registrations.Item( initITN1 ) = resvkey_me.fromPrim 0xAABBCCDD11223344UL ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileUpdate fname initPRFileTime
         k.NoticeTerminate()
 
+        GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -634,6 +651,7 @@ type PRManager_Test2 () =
                 initITN1, resvkey_me.fromPrim 0xAABBCCDD11223344UL, false;
             |]
             fname
+        let initPRFileTime = File.GetLastWriteTimeUtc fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS_ALL_REGISTRANTS 1
         let param = [|
             0x11uy; 0x11uy; 0x11uy; 0x11uy; // RESERVATION KEY 
@@ -653,14 +671,15 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.RESERVATION_CONFLICT ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_PRGeneration = 0u ))
         Assert.True(( prinfo.m_Registrations.Count = 1 ))
         Assert.True(( prinfo.m_Registrations.Item( initITN1 ) = resvkey_me.fromPrim 0xAABBCCDD11223344UL ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileUpdate fname initPRFileTime
         k.NoticeTerminate()
 
+        GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -694,6 +713,7 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.NO_RESERVATION ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 0 ))
@@ -703,6 +723,7 @@ type PRManager_Test2 () =
         Assert.True( File.Exists fname )
         let pm2 = new PRManager( new CStatus_Stub(), new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero ), lun_me.zero, fname, k )
         let prinfo2 = PRManager_Test2.GetPRInfoRec pm2
+        Assert.True(( prinfo2.m_APTPL ))
         Assert.True(( prinfo2.m_Type = PR_TYPE.NO_RESERVATION ))
         Assert.True(( prinfo2.m_PRGeneration = 0u ))
         Assert.True(( prinfo2.m_Registrations.Count = 0 ))
@@ -744,6 +765,7 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 1 ))
@@ -754,6 +776,7 @@ type PRManager_Test2 () =
         Assert.True( File.Exists fname )
         let pm2 = new PRManager( new CStatus_Stub(), new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero ), lun_me.zero, fname, k )
         let prinfo2 = PRManager_Test2.GetPRInfoRec pm2
+        Assert.True(( prinfo2.m_APTPL ))
         Assert.True(( prinfo2.m_Type = PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS ))
         Assert.True(( prinfo2.m_PRGeneration = 0u ))
         Assert.True(( prinfo2.m_Registrations.Count = 1 ))
@@ -796,6 +819,7 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.NO_RESERVATION ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 1 ))
@@ -807,6 +831,7 @@ type PRManager_Test2 () =
         Assert.True( File.Exists fname )
         let pm2 = new PRManager( new CStatus_Stub(), new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero ), lun_me.zero, fname, k )
         let prinfo2 = PRManager_Test2.GetPRInfoRec pm2
+        Assert.True(( prinfo2.m_APTPL ))
         Assert.True(( prinfo2.m_Type = PR_TYPE.NO_RESERVATION ))
         Assert.True(( prinfo2.m_PRGeneration = 0u ))
         Assert.True(( prinfo2.m_Registrations.Count = 1 ))
@@ -850,6 +875,7 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.WRITE_EXCLUSIVE ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 1 ))
@@ -861,6 +887,7 @@ type PRManager_Test2 () =
         Assert.True( File.Exists fname )
         let pm2 = new PRManager( new CStatus_Stub(), new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero ), lun_me.zero, fname, k )
         let prinfo2 = PRManager_Test2.GetPRInfoRec pm2
+        Assert.True(( prinfo2.m_APTPL ))
         Assert.True(( prinfo2.m_Type = PR_TYPE.WRITE_EXCLUSIVE ))
         Assert.True(( prinfo2.m_PRGeneration = 0u ))
         Assert.True(( prinfo2.m_Registrations.Count = 1 ))
@@ -901,6 +928,7 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.False(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.NO_RESERVATION ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 0 ))
@@ -958,6 +986,7 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.False(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.NO_RESERVATION ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 3 ))
@@ -1008,6 +1037,7 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.False(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 3 ))
@@ -1051,6 +1081,7 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.False(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.NO_RESERVATION ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 0 ))
@@ -1116,6 +1147,7 @@ type PRManager_Test2 () =
             Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY ))
         Assert.True(( prinfo.m_PRGeneration = 0u ))
         Assert.True(( prinfo.m_Registrations.Count = 1 ))
@@ -1176,6 +1208,7 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.False(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.NO_RESERVATION ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 2 ))
@@ -1220,6 +1253,7 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.False(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.WRITE_EXCLUSIVE ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 2 ))
@@ -1262,6 +1296,7 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.False(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.WRITE_EXCLUSIVE ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 1 ))
@@ -1328,6 +1363,7 @@ type PRManager_Test2 () =
             Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY ))
         Assert.True(( prinfo.m_PRGeneration = 0u ))
         Assert.True(( prinfo.m_Registrations.Count = 1 ))
@@ -1375,6 +1411,7 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.False(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 4 ))
@@ -1389,28 +1426,74 @@ type PRManager_Test2 () =
         k.NoticeTerminate()
         GlbFunc.DeleteDir pDirName
 
+    [<Fact>]
+    member this.Register_025() =
+        let pDirName = this.CreateTestDir()
+        let fname = Functions.AppendPathName pDirName "Register_025.txt"
+        let initITN1 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 3us 4uy 5us, "target000", tpgt_me.fromPrim 1us )
+        let k, luStub, pm = this.CreateDefaultPM fname NO_RESERVATION 0
+        let param = [|
+            0x00uy; 0x00uy; 0x00uy; 0x00uy; // RESERVATION KEY 
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;
+            0x00uy; 0x00uy; 0x00uy; 0x00uy; // SERVICE ACTION RESERVATION KEY  
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;
+            0x00uy; 0x00uy; 0x00uy; 0x00uy; // Obsolute
+            0x01uy;                         // SPEC_I_PT(0), ALL_TG_PT(0), APTPL(1)
+            0x00uy;                         // Reserved
+            0x00uy; 0x00uy;                 // Obsolute
+        |]
+        let source = {
+            defaultSource with
+                I_TNexus = new ITNexus( "initiator111", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us );
+        }
+
+        let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.False(( prinfo.m_APTPL ))
+
+        let v = pm.Register source ( itt_me.fromPrim 0u ) NO_RESERVATION ( uint32 param.Length ) ( PooledBuffer.Rent param )
+        Assert.True(( v = ScsiCmdStatCd.GOOD ))
+
+        let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
+
+        this.WaitForFileCreate fname
+        Assert.True(( File.Exists fname ))
+        GlbFunc.DeleteFile fname
+        k.NoticeTerminate()
+
+        GlbFunc.DeleteDir pDirName
 
     [<Fact>]
     member this.Clear_001() =
-        let k, luStub, pm = this.CreateDefaultPM "" NO_RESERVATION 0
+        let pDirName = this.CreateTestDir()
+        let fname = Functions.AppendPathName pDirName "Clear_001.txt"
+        let k, luStub, pm = this.CreateDefaultPM fname NO_RESERVATION 0
         let param = [|
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // RESERVATION KEY 
             0x00uy; 0x00uy; 0x00uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // SERVICE ACTION RESERVATION KEY(0)
             0x00uy; 0x00uy; 0x00uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Obsolute
-            0x00uy;                         // SPEC_I_PT(0), ALL_TG_PT(0), APTPL(0)
+            0x01uy;                         // SPEC_I_PT(0), ALL_TG_PT(0), APTPL(1)
             0x00uy;                         // Reserved
             0x00uy; 0x00uy;                 // Obsolute
         |]
+
+        let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.False(( prinfo.m_APTPL ))
+
         let v = pm.Clear defaultSource ( itt_me.fromPrim 0u ) PR_TYPE.NO_RESERVATION ( uint32 param.Length ) ( PooledBuffer.Rent param )
         Assert.True(( v = ScsiCmdStatCd.RESERVATION_CONFLICT ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.False(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.NO_RESERVATION ))
         Assert.True(( prinfo.m_PRGeneration = 0u ))
         Assert.True(( prinfo.m_Registrations.Count = 0 ))
         Assert.True(( prinfo.m_Holder.IsNone ))
+
+        Thread.Sleep 100
+        Assert.False(( File.Exists fname ))
 
         k.NoticeTerminate()
 
@@ -1447,6 +1530,7 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.RESERVATION_CONFLICT ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.NO_RESERVATION ))
         Assert.True(( prinfo.m_PRGeneration = 0u ))
         Assert.True(( prinfo.m_Registrations.Count = 1  ))
@@ -1457,6 +1541,7 @@ type PRManager_Test2 () =
         Assert.True( File.Exists fname )
         let pm2 = new PRManager( new CStatus_Stub(), new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero ), lun_me.zero, fname, k )
         let prinfo2 = PRManager_Test2.GetPRInfoRec pm2
+        Assert.True(( prinfo2.m_APTPL ))
         Assert.True(( prinfo2.m_Type = PR_TYPE.NO_RESERVATION ))
         Assert.True(( prinfo2.m_PRGeneration = 0u ))
         Assert.True(( prinfo2.m_Registrations.Count = 1  ))
@@ -1481,6 +1566,7 @@ type PRManager_Test2 () =
                 initITN3, resvkey_me.fromPrim 0x3333333333333333UL, false;
             |]
             fname
+        let initPRFileTime = File.GetLastWriteTimeUtc fname
         let k, luStub, pm = this.CreateDefaultPM fname WRITE_EXCLUSIVE 3
         let param = [|
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // RESERVATION KEY 
@@ -1500,6 +1586,7 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.RESERVATION_CONFLICT ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.WRITE_EXCLUSIVE ))
         Assert.True(( prinfo.m_PRGeneration = 0u ))
         Assert.True(( prinfo.m_Registrations.Count = 3 ))
@@ -1508,9 +1595,9 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( initITN3 ) = resvkey_me.fromPrim 0x3333333333333333UL ))
         Assert.True(( prinfo.m_Holder.Value = initITN2 ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileUpdate fname initPRFileTime
         k.NoticeTerminate()
+        GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -1528,6 +1615,7 @@ type PRManager_Test2 () =
                 initITN3, resvkey_me.fromPrim 0x3333333333333333UL, false;
             |]
             fname
+        let initPRFileTime = File.GetLastWriteTimeUtc fname
         let k, luStub, pm = this.CreateDefaultPM fname WRITE_EXCLUSIVE 3
         let param = [|
             0x11uy; 0x11uy; 0x11uy; 0x11uy; // RESERVATION KEY 
@@ -1555,15 +1643,16 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.NO_RESERVATION ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 0 ))
         Assert.True(( prinfo.m_Holder.IsNone ))
         Assert.True(( cnt = 2 ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileUpdate fname initPRFileTime
         k.NoticeTerminate()
+        GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -1581,6 +1670,7 @@ type PRManager_Test2 () =
                 initITN3, resvkey_me.fromPrim 0x3333333333333333UL, false;
             |]
             fname
+        let initPRFileTime = File.GetLastWriteTimeUtc fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS_ALL_REGISTRANTS 3
         let param = [|
             0x22uy; 0x22uy; 0x22uy; 0x22uy; // RESERVATION KEY 
@@ -1608,15 +1698,16 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.NO_RESERVATION ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 0 ))
         Assert.True(( prinfo.m_Holder.IsNone ))
         Assert.True(( cnt = 2 ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileUpdate fname initPRFileTime
         k.NoticeTerminate()
+        GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -1636,6 +1727,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x4444444444444444UL, true;
             |]
             fname
+        let initPRFileTime = File.GetLastWriteTimeUtc fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS_REGISTRANTS_ONLY 4
         let param = [|
             0x44uy; 0x44uy; 0x44uy; 0x44uy; // RESERVATION KEY 
@@ -1666,31 +1758,37 @@ type PRManager_Test2 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.NO_RESERVATION ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 0 ))
         Assert.True(( prinfo.m_Holder.IsNone ))
         Assert.True(( cnt = 3 ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileUpdate fname initPRFileTime
         k.NoticeTerminate()
+        GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
     member this.PreemptAndAbort_001() =
-        let k, luStub, pm = this.CreateDefaultPM "" NO_RESERVATION 0
+        let pDirName = this.CreateTestDir()
+        let fname = Functions.AppendPathName pDirName "PreemptAndAbort_001.txt"
+        let k, luStub, pm = this.CreateDefaultPM fname NO_RESERVATION 0
         let param = [|
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // RESERVATION KEY 
             0x00uy; 0x00uy; 0x00uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // SERVICE ACTION RESERVATION KEY(0)
             0x00uy; 0x00uy; 0x00uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Obsolute
-            0x00uy;                         // SPEC_I_PT(0), ALL_TG_PT(0), APTPL(0)
+            0x01uy;                         // SPEC_I_PT(0), ALL_TG_PT(0), APTPL(1)
             0x00uy;                         // Reserved
             0x00uy; 0x00uy;                 // Obsolute
         |]
         let parambuf = PooledBuffer.Rent param
+
+        let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.False(( prinfo.m_APTPL ))
 
         let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort defaultSource ( itt_me.fromPrim 0u ) PR_TYPE.NO_RESERVATION parambuf.uCount parambuf
         Assert.True(( stat = ScsiCmdStatCd.RESERVATION_CONFLICT ))
@@ -1699,10 +1797,14 @@ type PRManager_Test2 () =
         Assert.True(( saResvKey = resvkey_me.fromPrim 0UL ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.False(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.NO_RESERVATION ))
         Assert.True(( prinfo.m_PRGeneration = 0u ))
         Assert.True(( prinfo.m_Registrations.Count = 0 ))
         Assert.True(( prinfo.m_Holder.IsNone ))
+
+        Thread.Sleep 100
+        Assert.False(( File.Exists fname ))
 
         k.NoticeTerminate()
 
@@ -1723,6 +1825,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x4444444444444444UL, true;
             |]
             fname
+        let initPRFileTime = File.GetLastWriteTimeUtc fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS_REGISTRANTS_ONLY 4
         let param = [|
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // RESERVATION KEY 
@@ -1743,6 +1846,7 @@ type PRManager_Test2 () =
         Assert.True(( saResvKey = resvkey_me.fromPrim 0UL ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY ))
         Assert.True(( prinfo.m_PRGeneration = 0u ))
         Assert.True(( prinfo.m_Registrations.Count = 4 ))
@@ -1752,9 +1856,9 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( initITN4 ) = resvkey_me.fromPrim 0x4444444444444444UL ))
         Assert.True(( prinfo.m_Holder.Value = initITN4 ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileUpdate fname initPRFileTime
         k.NoticeTerminate()
+        GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -1774,6 +1878,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x4444444444444444UL, false;
             |]
             fname
+        let initPRFileTime = File.GetLastWriteTimeUtc fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS_REGISTRANTS_ONLY 4
         let param = [|
             0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // RESERVATION KEY 
@@ -1798,6 +1903,7 @@ type PRManager_Test2 () =
         Assert.True(( saResvKey = resvkey_me.fromPrim 0UL ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY ))
         Assert.True(( prinfo.m_PRGeneration = 0u ))
         Assert.True(( prinfo.m_Registrations.Count = 4 ))
@@ -1807,9 +1913,9 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( initITN4 ) = resvkey_me.fromPrim 0x4444444444444444UL ))
         Assert.True(( prinfo.m_Holder.Value = initITN2 ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileUpdate fname initPRFileTime
         k.NoticeTerminate()
+        GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -1829,6 +1935,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x4444444444444444UL, false;
             |]
             fname
+        let initPRFileTime = File.GetLastWriteTimeUtc fname
         let k, luStub, pm = this.CreateDefaultPM fname NO_RESERVATION 4
         let param = [|
             0x22uy; 0x22uy; 0x22uy; 0x22uy; // RESERVATION KEY 
@@ -1853,6 +1960,7 @@ type PRManager_Test2 () =
         Assert.True(( saResvKey = resvkey_me.fromPrim 0UL ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.NO_RESERVATION ))
         Assert.True(( prinfo.m_PRGeneration = 0u ))
         Assert.True(( prinfo.m_Registrations.Count = 4 ))
@@ -1862,9 +1970,9 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( initITN4 ) = resvkey_me.fromPrim 0x4444444444444444UL ))
         Assert.True(( prinfo.m_Holder.IsNone ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileUpdate fname initPRFileTime
         k.NoticeTerminate()
+        GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -1884,6 +1992,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x4444444444444444UL, false;
             |]
             fname
+        let initPRFileTime = File.GetLastWriteTimeUtc fname
         let k, luStub, pm = this.CreateDefaultPM fname NO_RESERVATION 4
         let param = [|
             0x22uy; 0x22uy; 0x22uy; 0x22uy; // RESERVATION KEY 
@@ -1917,6 +2026,7 @@ type PRManager_Test2 () =
         Assert.True(( saResvKey = resvkey_me.fromPrim 0x1111111111111111UL ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.NO_RESERVATION ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 3 ))
@@ -1926,9 +2036,9 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Holder.IsNone ))
         Assert.True(( cnt = 1 ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileUpdate fname initPRFileTime
         k.NoticeTerminate()
+        GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -1948,6 +2058,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x4444444444444444UL, false;  // Delete target
             |]
             fname
+        let initPRFileTime = File.GetLastWriteTimeUtc fname
         let k, luStub, pm = this.CreateDefaultPM fname WRITE_EXCLUSIVE_ALL_REGISTRANTS 4
         let param = [|
             0x22uy; 0x22uy; 0x22uy; 0x22uy; // RESERVATION KEY 
@@ -1984,6 +2095,7 @@ type PRManager_Test2 () =
         Assert.True(( saResvKey = resvkey_me.fromPrim 0x0000000000000000UL ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.EXCLUSIVE_ACCESS ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 1 ))
@@ -1991,9 +2103,9 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Holder.Value = initITN2 ))
         Assert.True(( cnt = 3 ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileUpdate fname initPRFileTime
         k.NoticeTerminate()
+        GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -2013,6 +2125,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x4444444444444444UL, false;
             |]
             fname
+        let initPRFileTime = File.GetLastWriteTimeUtc fname
         let k, luStub, pm = this.CreateDefaultPM fname WRITE_EXCLUSIVE_ALL_REGISTRANTS 4
         let param = [|
             0x22uy; 0x22uy; 0x22uy; 0x22uy; // RESERVATION KEY 
@@ -2045,6 +2158,7 @@ type PRManager_Test2 () =
         Assert.True(( saResvKey = resvkey_me.fromPrim 0x3333333333333333UL ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 3 ))
@@ -2054,9 +2168,9 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Holder.IsNone ))
         Assert.True(( cnt = 1 ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileUpdate fname initPRFileTime
         k.NoticeTerminate()
+        GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -2123,6 +2237,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x4444444444444444UL, false;
             |]
             fname
+        let initPRFileTime = File.GetLastWriteTimeUtc fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS 4
         let param = [|
             0x22uy; 0x22uy; 0x22uy; 0x22uy; // RESERVATION KEY 
@@ -2155,6 +2270,7 @@ type PRManager_Test2 () =
         Assert.True(( saResvKey = resvkey_me.fromPrim 0x1111111111111111UL ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 3 ))
@@ -2164,12 +2280,9 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Holder.IsNone ))
         Assert.True(( cnt = 1 ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileUpdate fname initPRFileTime
         k.NoticeTerminate()
-
         GlbFunc.DeleteFile fname
-        k.NoticeTerminate()
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -2189,6 +2302,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x4444444444444444UL, false;
             |]
             fname
+        let initPRFileTime = File.GetLastWriteTimeUtc fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS 4
         let param = [|
             0x22uy; 0x22uy; 0x22uy; 0x22uy; // RESERVATION KEY 
@@ -2223,6 +2337,7 @@ type PRManager_Test2 () =
         Assert.True(( saResvKey = resvkey_me.fromPrim 0x1111111111111111UL ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.NO_RESERVATION ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 2 ))
@@ -2231,12 +2346,9 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Holder.IsNone ))
         Assert.True(( cnt = 2 ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileUpdate fname initPRFileTime
         k.NoticeTerminate()
-
         GlbFunc.DeleteFile fname
-        k.NoticeTerminate()
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -2256,6 +2368,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x1111111111111111UL, false;   // delete target
             |]
             fname
+        let initPRFileTime = File.GetLastWriteTimeUtc fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS 4
         let param = [|
             0x11uy; 0x11uy; 0x11uy; 0x11uy; // RESERVATION KEY 
@@ -2292,6 +2405,7 @@ type PRManager_Test2 () =
         Assert.True(( saResvKey = resvkey_me.fromPrim 0x1111111111111111UL ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 1 ))
@@ -2299,12 +2413,9 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Holder.Value = initITN2 ))
         Assert.True(( cnt = 3 ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileUpdate fname initPRFileTime
         k.NoticeTerminate()
-
         GlbFunc.DeleteFile fname
-        k.NoticeTerminate()
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -2324,6 +2435,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x1111111111111111UL, false;   // delete target
             |]
             fname
+        let initPRFileTime = File.GetLastWriteTimeUtc fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS 4
         let param = [|
             0x22uy; 0x22uy; 0x22uy; 0x22uy; // RESERVATION KEY 
@@ -2358,6 +2470,7 @@ type PRManager_Test2 () =
         Assert.True(( saResvKey = resvkey_me.fromPrim 0x1111111111111111UL ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.EXCLUSIVE_ACCESS ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 2 ))
@@ -2366,12 +2479,9 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Holder.Value = initITN3 ))
         Assert.True(( cnt = 2 ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileUpdate fname initPRFileTime
         k.NoticeTerminate()
-
         GlbFunc.DeleteFile fname
-        k.NoticeTerminate()
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -2391,6 +2501,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x1111111111111111UL, false;
             |]
             fname
+        let initPRFileTime = File.GetLastWriteTimeUtc fname
         let k, luStub, pm = this.CreateDefaultPM fname WRITE_EXCLUSIVE_REGISTRANTS_ONLY 4
         let param = [|
             0x22uy; 0x22uy; 0x22uy; 0x22uy; // RESERVATION KEY 
@@ -2415,6 +2526,7 @@ type PRManager_Test2 () =
         Assert.True(( saResvKey = resvkey_me.fromPrim 0xFFFFFFFFFFFFFFFFUL ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY ))
         Assert.True(( prinfo.m_PRGeneration = 0u ))
         Assert.True(( prinfo.m_Registrations.Count = 4 ))
@@ -2424,10 +2536,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( initITN4 ) = resvkey_me.fromPrim 0x1111111111111111UL ))
         Assert.True(( prinfo.m_Holder.Value = initITN3 ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileUpdate fname initPRFileTime
         k.NoticeTerminate()
-
         GlbFunc.DeleteFile fname
-        k.NoticeTerminate()
         GlbFunc.DeleteDir pDirName

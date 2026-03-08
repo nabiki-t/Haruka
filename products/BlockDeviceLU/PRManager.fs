@@ -79,6 +79,10 @@ type MoveParameterList = {
 [<NoComparison>]
 type PRInfoRec =
     {
+        /// The APTPL value specified in a PERSISTENT RESERVE OUT command with REGISTER or REGISTER AND IGNORE EXISTING KEY service action.
+        /// Specifies whether the contents of persistent reservations are saved to a file.
+        m_APTPL : bool;
+
         /// Reservation type which is currentry established.
         /// If reservation is not established , m_Type is NO_RESERVATION.
         m_Type : PR_TYPE;
@@ -138,8 +142,8 @@ type PRManager(
         new OptimisticLock< PRInfoRec >( r )
 
     /// Queue to hold APTPL flag that requested by PERSISTENT RESERVE OUT command.
-    let m_SavePRReqQueue = new WorkingTaskQueue< bool >( fun flg -> task {
-        do! PRManager.SavePRFile m_ObjID m_LUN m_FileName m_Locker.obj flg
+    let m_SavePRReqQueue = new WorkingTaskQueue< unit >( fun () -> task {
+        do! PRManager.SavePRFile m_ObjID m_LUN m_FileName m_Locker.obj
     })
 
     do
@@ -704,8 +708,7 @@ type PRManager(
             )
 
         // Request saving PR info to file.
-        //( m_SavePRReqQueue :> ITargetBlock< int > ).Post( if basicParam.APTPL then 1 else 0 ) |> ignore
-        m_SavePRReqQueue.Enqueue basicParam.APTPL
+        m_SavePRReqQueue.Enqueue()
 
         if statCode = ScsiCmdStatCd.RESERVATION_CONFLICT then
             HLogger.Trace( LogID.W_RESERVATION_CONFLICT, fun g -> g.Gen2( loginfo, "PERSISTENT RESERVE OUT(RESERVE service action)", msg ) )
@@ -819,8 +822,7 @@ type PRManager(
             )
 
         // Request saving PR info to file.
-        //( m_SavePRReqQueue :> ITargetBlock< int > ).Post( if basicParam.APTPL then 1 else 0 ) |> ignore
-        m_SavePRReqQueue.Enqueue basicParam.APTPL
+        m_SavePRReqQueue.Enqueue()
 
         if rStatus = ScsiCmdStatCd.RESERVATION_CONFLICT then
             HLogger.Trace( LogID.W_RESERVATION_CONFLICT, fun g -> g.Gen2( loginfo, "PERSISTENT RESERVE OUT(RELEASE service action)", rMessage ) )
@@ -888,18 +890,18 @@ type PRManager(
     
                     struct (
                         {
-                                m_Type = PR_TYPE.NO_RESERVATION;
-                                m_Holder = None;
-                                m_PRGeneration = oldVal.m_PRGeneration + 1u;
-                                m_Registrations = ImmutableDictionary.Empty;
+                            m_APTPL = oldVal.m_APTPL;
+                            m_Type = PR_TYPE.NO_RESERVATION;
+                            m_Holder = None;
+                            m_PRGeneration = oldVal.m_PRGeneration + 1u;
+                            m_Registrations = ImmutableDictionary.Empty;
                         },
                         struct ( ScsiCmdStatCd.GOOD, "", uaList )
                     )
             )
 
         // Request saving PR info to file.
-        //( m_SavePRReqQueue :> ITargetBlock< int > ).Post( if basicParam.APTPL then 1 else 0 ) |> ignore
-        m_SavePRReqQueue.Enqueue basicParam.APTPL
+        m_SavePRReqQueue.Enqueue()
 
         if rStatus = ScsiCmdStatCd.RESERVATION_CONFLICT then
             HLogger.Trace( LogID.W_RESERVATION_CONFLICT, fun g -> g.Gen2( loginfo, "PERSISTENT RESERVE OUT(RELEASE service action)", rMessage ) )
@@ -1103,6 +1105,7 @@ type PRManager(
                     struct(
                         {
                             oldVal with
+                                m_APTPL = moveParam.APTPL;
                                 m_Holder = Some itNexuses.[0];
                                 m_PRGeneration = oldVal.m_PRGeneration + 1u;
                                 m_Registrations = nextRegist2;
@@ -1112,8 +1115,7 @@ type PRManager(
             )
 
         // Request saving PR info to file.
-        //( m_SavePRReqQueue :> ITargetBlock< int > ).Post( if moveParam.APTPL then 1 else 0 ) |> ignore
-        m_SavePRReqQueue.Enqueue moveParam.APTPL
+        m_SavePRReqQueue.Enqueue()
 
         if rStatus = ScsiCmdStatCd.RESERVATION_CONFLICT then
             HLogger.Trace( LogID.W_RESERVATION_CONFLICT, fun g -> g.Gen2( loginfo, "PERSISTENT RESERVE OUT(REGISTER AND MOVE service action)", rMessage ) )
@@ -1350,6 +1352,7 @@ type PRManager(
                         struct(
                             {
                                 oldVal with
+                                    m_APTPL = basicParam.APTPL;
                                     m_PRGeneration = oldVal.m_PRGeneration + 1u;
                                     m_Registrations = nextRegist
                             },
@@ -1399,6 +1402,7 @@ type PRManager(
 
                         struct (
                             {
+                                m_APTPL = basicParam.APTPL;
                                 m_Type = if reservationIsDeleted then PR_TYPE.NO_RESERVATION else oldVal.m_Type;
                                 m_Holder = if reservationIsDeleted then None else oldVal.m_Holder;
                                 m_PRGeneration = oldVal.m_PRGeneration + 1u;
@@ -1426,18 +1430,24 @@ type PRManager(
                         struct (
                             {
                                 oldVal with
+                                    m_APTPL = basicParam.APTPL;
                                     m_PRGeneration = oldVal.m_PRGeneration + 1u;
                                     m_Registrations = nextRegist;
                             },
                             struct ( ScsiCmdStatCd.GOOD, "", [] )
                         )
                     else
-                        struct( oldVal, struct ( ScsiCmdStatCd.GOOD, "", [] ) )
+                        struct (
+                            {
+                                oldVal with
+                                    m_APTPL = basicParam.APTPL;
+                            },
+                            struct ( ScsiCmdStatCd.GOOD, "", [] )
+                        )
             )
 
         // Request saving PR info to file.
-        //( m_SavePRReqQueue :> ITargetBlock< int > ).Post( if basicParam.APTPL then 1 else 0 ) |> ignore
-        m_SavePRReqQueue.Enqueue basicParam.APTPL
+        m_SavePRReqQueue.Enqueue()
 
         if rStatus = ScsiCmdStatCd.RESERVATION_CONFLICT then
             HLogger.Trace( LogID.W_RESERVATION_CONFLICT, fun g ->
@@ -1575,6 +1585,7 @@ type PRManager(
 
                         struct (
                             {
+                                m_APTPL = oldVal.m_APTPL;
                                 m_Type = if reservationIsDeleted then PR_TYPE.NO_RESERVATION else oldVal.m_Type;
                                 m_Holder = if reservationIsDeleted then None else oldVal.m_Holder;
                                 m_PRGeneration = oldVal.m_PRGeneration + 1u;
@@ -1605,6 +1616,7 @@ type PRManager(
 
                     struct (
                         {
+                            m_APTPL = oldVal.m_APTPL;
                             m_Type = prType;
                             m_Holder = Some source.I_TNexus;
                             m_PRGeneration = oldVal.m_PRGeneration + 1u;
@@ -1645,6 +1657,7 @@ type PRManager(
 
                     struct (
                         {
+                            m_APTPL = oldVal.m_APTPL;
                             m_Type =
                                 if nextRegist.Count <= 0 then
                                     PR_TYPE.NO_RESERVATION
@@ -1666,8 +1679,7 @@ type PRManager(
             )
 
         // Request saving PR info to file.
-        //( m_SavePRReqQueue :> ITargetBlock< int > ).Post( if basicParam.APTPL then 1 else 0 ) |> ignore
-        m_SavePRReqQueue.Enqueue basicParam.APTPL
+        m_SavePRReqQueue.Enqueue()
 
         if rStatus = ScsiCmdStatCd.RESERVATION_CONFLICT then
             HLogger.Trace( LogID.W_RESERVATION_CONFLICT, fun g -> g.Gen2( loginfo, "PERSISTENT RESERVE OUT(PREEMPT service action)", rMessage ) )
@@ -1722,6 +1734,7 @@ type PRManager(
                         }
                     )
                     {
+                        m_APTPL = true;
                         m_Type = p.Type;
                         m_Holder = None;
                         m_PRGeneration = 0u;
@@ -1748,6 +1761,7 @@ type PRManager(
         | _ as x ->
             HLogger.Trace( LogID.I_FAILED_LOAD_PR_FILE, fun g -> g.Gen2( loginfo, fname, x.Message ) )
             {
+                m_APTPL = false;
                 m_Type = PR_TYPE.NO_RESERVATION;
                 m_Holder = None;
                 m_PRGeneration = 0u;
@@ -1769,9 +1783,6 @@ type PRManager(
     /// <param name="pr">
     /// Persistent reservation info to save specified file.
     /// </param>
-    /// <param name="aptpl">
-    /// APTPL value in parameter list of PERSISTENT RESERVE OUT command.
-    /// </param>
     /// <remarks>
     /// If save failed or fname is empty, it will give up to save PR info to file.
     /// </remarks>
@@ -1780,7 +1791,6 @@ type PRManager(
             ( lun : LUN_T )
             ( fname : string )
             ( pr : PRInfoRec )
-            ( aptpl : bool )
             : Task<unit> =
 
         let loginfo = struct ( objID, ValueNone, ValueNone, ValueSome lun )
@@ -1809,7 +1819,7 @@ type PRManager(
             let mutable cnt = if fname.Length > 0 then 0 else 20
             while ( cnt < 10 ) do
                 try
-                    if aptpl then
+                    if pr.m_APTPL then
                         PersistentReservation.ReaderWriter.WriteFile fname ws
                         HLogger.Trace( LogID.I_SUCCEED_TO_SAVE_PR_FILE, fun g -> g.Gen0 loginfo )
                     else
