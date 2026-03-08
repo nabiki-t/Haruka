@@ -28,8 +28,8 @@ open System.Text.RegularExpressions
 //=============================================================================
 // Class implementation
 
-[<CollectionDefinition( "SCSI_PersistentReservation" )>]
-type SCSI_PersistentReservation_Fixture() =
+[<CollectionDefinition( "SCSI_PersistentReservation1" )>]
+type SCSI_PersistentReservation1_Fixture() =
 
     let m_iSCSIPortNo = GlbFunc.nextTcpPortNo()
     let m_MediaSize = 65536u
@@ -84,7 +84,7 @@ type SCSI_PersistentReservation_Fixture() =
         member _.Dispose (): unit =
             m_Client.Kill()
 
-    interface ICollectionFixture<SCSI_PersistentReservation_Fixture>
+    interface ICollectionFixture<SCSI_PersistentReservation1_Fixture>
 
     member _.controllerProc = m_Controller
     member _.clientProc = m_Client
@@ -98,8 +98,8 @@ type SCSI_PersistentReservation_Fixture() =
     member _.WorkPath = m_WorkPath
 
 
-[<Collection( "SCSI_PersistentReservation" )>]
-type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
+[<Collection( "SCSI_PersistentReservation1" )>]
+type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
 
     ///////////////////////////////////////////////////////////////////////////
     // Common definition
@@ -188,6 +188,13 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
         task {
             let! itt_pr_in1 = r.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 0uy 512us NACA.T
             return! r.Wait_PersistentReserveIn_ReadKey itt_pr_in1
+        }
+
+    let PR_Register ( r : SCSI_Initiator ) ( lun : LUN_T ) ( rsvkey : RESVKEY_T ) ( srrsvkey : RESVKEY_T ) : Task<unit> =
+        task {
+            let! itt_pr_out1 = r.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T rsvkey srrsvkey false false true [||]
+            let! _ = r.WaitSCSIResponseGoodStatus itt_pr_out1
+            ()
         }
 
     let ClearReservationKey ( r : SCSI_Initiator ) ( lun : LUN_T ) ( key : RESVKEY_T ) : Task<unit> =
@@ -462,8 +469,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
                     None
 
             // register reservation key
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey false false true [||]
-            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+            do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey
             if fexist.IsSome then
                 Wait_UpdateFile prfname fexist.Value
             else
@@ -496,8 +502,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
                     None
 
             // register reservation key
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey false false true [||]
-            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+            do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey
             if fexist.IsSome then
                 Wait_UpdateFile prfname fexist.Value
             else
@@ -525,8 +530,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             let resvkey = resvkey_me.fromPrim 1UL
 
             // register reservation key
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey false false true [||]
-            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+            do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey
             do! r1.Close()
 
             // Reconnect with the same ISID
@@ -549,15 +553,14 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             let resvkey = resvkey_me.fromPrim 1UL
 
             // register reservation key
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey false false true [||]
-            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+            do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey
 
             // Reconnect with a different ISID
             let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
             // register reservation key. ( success )
-            let! itt_pr_out2 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey false false true [||]
-            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out2
+            do! PR_Register r2 g_LUN1 resvkey_me.zero resvkey
+
             do! ClearReservationKey r2 g_LUN1 resvkey
             do! r2.Close()
         }
@@ -570,12 +573,10 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             let resvkey = resvkey_me.fromPrim 1UL
 
             // register reservation key LU1
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey false false true [||]
-            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+            do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey
 
             // register reservation key LU0
-            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN0 NACA.T resvkey_me.zero resvkey false false true [||]
-            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+            do! PR_Register r1 g_LUN0 resvkey_me.zero resvkey
 
             do! ClearReservationKey r1 g_LUN1 resvkey
             do! ClearReservationKey r1 g_LUN0 resvkey
@@ -596,26 +597,22 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             let resvkey = resvkey_me.fromPrim 1UL
 
             // register reservation key on session r1
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey false false true [||]
-            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+            do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey
 
             // register reservation key on session r2
-            let! itt_pr_out2 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey false false true [||]
-            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out2
+            do! PR_Register r2 g_LUN1 resvkey_me.zero resvkey
 
             // unregister on session r1
-            let! itt_pr_out3 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey resvkey_me.zero false false true [||]
-            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
+            do! PR_Register r1 g_LUN1 resvkey resvkey_me.zero
 
             // unregister on session r2
-            let! itt_pr_out4 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey resvkey_me.zero false false true [||]
-            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out4
+            do! PR_Register r2 g_LUN1 resvkey resvkey_me.zero
 
             do! r1.Close()
             do! r2.Close()
         }
 
-    static member PersistentReservation_000_data : obj[][] = [|
+    static member PR_Effective_000_data : obj[][] = [|
         [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
         [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| false; PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSelect10;                           ScsiCmdStatCd.RESERVATION_CONFLICT; |];
@@ -942,8 +939,8 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
     |]
 
     [<Theory>]
-    [<MemberData( "PersistentReservation_000_data" )>]
-    member _.PersistentReservation_000 ( regist : bool ) ( prtype : PR_TYPE )  ( func : ( SCSI_Initiator -> LUN_T -> ScsiCmdStatCd -> Task<unit> ) ) ( exp : ScsiCmdStatCd ) =
+    [<MemberData( "PR_Effective_000_data" )>]
+    member _.PR_Effective_000 ( regist : bool ) ( prtype : PR_TYPE )  ( func : ( SCSI_Initiator -> LUN_T -> ScsiCmdStatCd -> Task<unit> ) ) ( exp : ScsiCmdStatCd ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
@@ -951,8 +948,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             let resvkey2 = resvkey_me.fromPrim 2UL
 
             // register reservation key on session 1
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey1 false false true [||]
-            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+            do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey1
 
             // reserve reservation
             let! itt_pr_out2 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
@@ -960,31 +956,26 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
 
             // register reservation key on session 2
             if regist then
-                let! itt_pr_out3 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey2 false false true [||]
-                let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out3
-                ()
+                do! PR_Register r2 g_LUN1 resvkey_me.zero resvkey2
 
             do! func r2 g_LUN1 exp
 
             // unregister reservation key on session 2
             if regist then
-                let! itt_pr_out5 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey2 resvkey_me.zero false false true [||]
-                let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out5
-                ()
+                do! PR_Register r2 g_LUN1 resvkey2 resvkey_me.zero
 
             // release reservation
             let! itt_pr_out4 = r1.Send_PROut_RELEASE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out4
 
             // unregister reservation key on session 1
-            let! itt_pr_out6 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey1 resvkey_me.zero false false true [||]
-            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out6
+            do! PR_Register r1 g_LUN1 resvkey1 resvkey_me.zero
 
             do! r1.Close()
             do! r2.Close()
         }
 
-    static member PersistentReserveOut_CLEAR_001_data : obj[][] = [|
+    static member PR_Effective_PROut_CLEAR_001_data : obj[][] = [|
         [| false; PR_TYPE.WRITE_EXCLUSIVE;                   ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  ScsiCmdStatCd.RESERVATION_CONFLICT; |];
@@ -1000,8 +991,8 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
     |]
 
     [<Theory>]
-    [<MemberData( "PersistentReserveOut_CLEAR_001_data" )>]
-    member _.PersistentReserveOut_CLEAR_001 ( regist : bool ) ( prtype : PR_TYPE ) ( exp : ScsiCmdStatCd ) =
+    [<MemberData( "PR_Effective_PROut_CLEAR_001_data" )>]
+    member _.PR_Effective_PROut_CLEAR_001 ( regist : bool ) ( prtype : PR_TYPE ) ( exp : ScsiCmdStatCd ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
@@ -1009,8 +1000,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             let resvkey2 = resvkey_me.fromPrim 2UL
 
             // register reservation key on session 1
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey1 false false true [||]
-            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+            do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey1
 
             // reserve reservation
             let! itt_pr_out2 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
@@ -1018,9 +1008,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
 
             // register reservation key on session 2
             if regist then
-                let! itt_pr_out3 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey2 false false true [||]
-                let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out3
-                ()
+                do! PR_Register r2 g_LUN1 resvkey_me.zero resvkey2
 
             let! itt_pr_out4 = r2.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey2
             let! resp_cmd = r2.WaitSCSIResponse itt_pr_out4
@@ -1035,24 +1023,20 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             else
                 // unregister reservation key on session 2
                 if regist then
-                    let! itt_pr_out5 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey2 resvkey_me.zero false false true [||]
-                    let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out5
-                    ()
+                    do! PR_Register r2 g_LUN1 resvkey2 resvkey_me.zero
 
                 // release reservation
                 let! itt_pr_out6 = r1.Send_PROut_RELEASE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
                 let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out6
 
                 // unregister reservation key on session 1
-                let! itt_pr_out7 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey1 resvkey_me.zero false false true [||]
-                let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out7
-                ()
+                do! PR_Register r1 g_LUN1 resvkey1 resvkey_me.zero
 
             do! r1.Close()
             do! r2.Close()
         }
 
-    static member PersistentReserveOut_PREEMPT_001_data : obj[][] = [|
+    static member PR_Effective_PROut_PREEMPT_001_data : obj[][] = [|
         [| false; false; PR_TYPE.WRITE_EXCLUSIVE;                   1UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| false; false; PR_TYPE.EXCLUSIVE_ACCESS;                  1UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| false; false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  1UL; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
@@ -1080,8 +1064,8 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
     |]
 
     [<Theory>]
-    [<MemberData( "PersistentReserveOut_PREEMPT_001_data" )>]
-    member _.PersistentReserveOut_PREEMPT_001 ( func : bool ) ( regist : bool ) ( prtype : PR_TYPE ) ( sark : uint64 ) ( exp : ScsiCmdStatCd ) =
+    [<MemberData( "PR_Effective_PROut_PREEMPT_001_data" )>]
+    member _.PR_Effective_PROut_PREEMPT_001 ( func : bool ) ( regist : bool ) ( prtype : PR_TYPE ) ( sark : uint64 ) ( exp : ScsiCmdStatCd ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
@@ -1090,8 +1074,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             let srResvKey = resvkey_me.fromPrim sark
 
             // register reservation key on session 1
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey1 false false true [||]
-            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+            do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey1
 
             // reserve reservation
             let! itt_pr_out2 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
@@ -1099,9 +1082,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
 
             // register reservation key on session 2
             if regist then
-                let! itt_pr_out3 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey2 false false true [||]
-                let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out3
-                ()
+                do! PR_Register r2 g_LUN1 resvkey_me.zero resvkey2
 
             // PREEMPT / PREEMPT_AND_ABORT
             let! itt_pr_out4 = 
@@ -1126,7 +1107,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             do! r2.Close()
         }
 
-    static member PersistentReserveOut_REGISTER_001_data : obj[][] = [|
+    static member PR_Effective_PROut_REGISTER_001_data : obj[][] = [|
         [| false; false; PR_TYPE.WRITE_EXCLUSIVE;                   |];
         [| false; false; PR_TYPE.EXCLUSIVE_ACCESS;                  |];
         [| false; false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |];
@@ -1154,8 +1135,8 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
     |]
 
     [<Theory>]
-    [<MemberData( "PersistentReserveOut_REGISTER_001_data" )>]
-    member _.PersistentReserveOut_REGISTER_001 ( func : bool ) ( regist : bool ) ( prtype : PR_TYPE ) =
+    [<MemberData( "PR_Effective_PROut_REGISTER_001_data" )>]
+    member _.PR_Effective_PROut_REGISTER_001 ( func : bool ) ( regist : bool ) ( prtype : PR_TYPE ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
@@ -1164,8 +1145,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             let resvkey3 = resvkey_me.fromPrim 3UL
 
             // register reservation key on session 1
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey1 false false true [||]
-            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+            do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey1
 
             // reserve reservation
             let! itt_pr_out2 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
@@ -1173,9 +1153,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
 
             // register reservation key on session 2
             if regist then
-                let! itt_pr_out3 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey2 false false true [||]
-                let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out3
-                ()
+                do! PR_Register r2 g_LUN1 resvkey_me.zero resvkey2
 
             // REGISTER / REGISTER_AND_IGNORE_EXISTING_KEY
             let! itt_pr_out4 =
@@ -1186,23 +1164,20 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
             let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out4
 
             // unregister reservation key on session 2
-            let! itt_pr_out5 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey3 resvkey_me.zero false false true [||]
-            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out5
+            do! PR_Register r2 g_LUN1 resvkey3 resvkey_me.zero
 
             // release reservation
             let! itt_pr_out6 = r1.Send_PROut_RELEASE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out6
 
             // unregister reservation key on session 1
-            let! itt_pr_out7 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey1 resvkey_me.zero false false true [||]
-            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out7
-            ()
+            do! PR_Register r1 g_LUN1 resvkey1 resvkey_me.zero
 
             do! r1.Close()
             do! r2.Close()
         }
 
-    static member PersistentReserveOut_REGISTER_AND_MOVE_001_data : obj[][] = [|
+    static member PR_Effective_PROut_REGISTER_AND_MOVE_001_data : obj[][] = [|
         [| false; PR_TYPE.WRITE_EXCLUSIVE;                   |];
         [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  |];
         [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |];
@@ -1218,18 +1193,17 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
     |]
 
     [<Theory>]
-    [<MemberData( "PersistentReserveOut_REGISTER_AND_MOVE_001_data" )>]
-    member _.PersistentReserveOut_REGISTER_AND_MOVE_001 ( regist : bool ) ( prtype : PR_TYPE ) =
+    [<MemberData( "PR_Effective_PROut_REGISTER_AND_MOVE_001_data" )>]
+    member _.PR_Effective_PROut_REGISTER_AND_MOVE_001 ( regist : bool ) ( prtype : PR_TYPE ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let resvkey1 = resvkey_me.fromPrim 1UL
             let resvkey2 = resvkey_me.fromPrim 2UL
-            let resvkey3 = resvkey_me.fromPrim 2UL
+            let resvkey3 = resvkey_me.fromPrim 3UL
 
             // register reservation key on session 1
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey1 false false true [||]
-            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+            do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey1
 
             // reserve reservation
             let! itt_pr_out2 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
@@ -1237,9 +1211,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
 
             // register reservation key on session 2
             if regist then
-                let! itt_pr_out3 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey2 false false true [||]
-                let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out3
-                ()
+                do! PR_Register r2 g_LUN1 resvkey_me.zero resvkey2
 
             // REGISTER_AND_MOVE
             let! itt_pr_out4 = r2.Send_PROut_REGISTER_AND_MOVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS resvkey2 resvkey3 true true 0us ( "", None )
@@ -1249,18 +1221,125 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation_Fixture ) =
 
             // unregister reservation key on session 2
             if regist then
-                let! itt_pr_out5 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey2 resvkey_me.zero false false true [||]
-                let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out5
-                ()
+                do! PR_Register r2 g_LUN1 resvkey2 resvkey_me.zero
 
             // release reservation
             let! itt_pr_out6 = r1.Send_PROut_RELEASE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out6
 
             // unregister reservation key on session 1
-            let! itt_pr_out7 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey1 resvkey_me.zero false false true [||]
-            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out7
-            ()
+            do! PR_Register r1 g_LUN1 resvkey1 resvkey_me.zero
+
+            do! r1.Close()
+            do! r2.Close()
+        }
+
+    static member PR_Effective_PROut_RELEASE_001_data : obj[][] = [|
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  ScsiCmdStatCd.RESERVATION_CONFLICT; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  ScsiCmdStatCd.GOOD; |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "PR_Effective_PROut_RELEASE_001_data" )>]
+    member _.PR_Effective_PROut_RELEASE_001 ( regist : bool ) ( prtype : PR_TYPE ) ( ex : ScsiCmdStatCd ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let resvkey1 = resvkey_me.fromPrim 1UL
+            let resvkey2 = resvkey_me.fromPrim 2UL
+
+            // register reservation key on session 1
+            do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey1
+
+            // reserve reservation
+            let! itt_pr_out2 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // register reservation key on session 2
+            if regist then
+                do! PR_Register r2 g_LUN1 resvkey_me.zero resvkey2
+
+            // RELEASE
+            let! itt_pr_out4 = r2.Send_PROut_RELEASE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey2
+            let! resp_cmd = r2.WaitSCSIResponse itt_pr_out4
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+
+            // unregister reservation key on session 2
+            if regist then
+                do! PR_Register r2 g_LUN1 resvkey2 resvkey_me.zero
+
+            // release reservation
+            let! itt_pr_out6 = r1.Send_PROut_RELEASE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out6
+
+            // unregister reservation key on session 1
+            do! PR_Register r1 g_LUN1 resvkey1 resvkey_me.zero
+
+            do! r1.Close()
+            do! r2.Close()
+        }
+
+    static member PR_Effective_PROut_RESERVE_001_data : obj[][] = [|
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  |];
+    |]
+    [<Theory>]
+    [<MemberData( "PR_Effective_PROut_RESERVE_001_data" )>]
+    member _.PR_Effective_PROut_RESERVE_001 ( regist : bool ) ( prtype : PR_TYPE ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let resvkey1 = resvkey_me.fromPrim 1UL
+            let resvkey2 = resvkey_me.fromPrim 2UL
+
+            // register reservation key on session 1
+            do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey1
+
+            // reserve reservation
+            let! itt_pr_out2 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // register reservation key on session 2
+            if regist then
+                do! PR_Register r2 g_LUN1 resvkey_me.zero resvkey2
+
+            // RESERVE
+            let! itt_pr_out4 = r2.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE resvkey2
+            let! resp_cmd = r2.WaitSCSIResponse itt_pr_out4
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
+
+            // unregister reservation key on session 2
+            if regist then
+                do! PR_Register r2 g_LUN1 resvkey2 resvkey_me.zero
+
+            // release reservation
+            let! itt_pr_out6 = r1.Send_PROut_RELEASE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out6
+
+            // unregister reservation key on session 1
+            do! PR_Register r1 g_LUN1 resvkey1 resvkey_me.zero
 
             do! r1.Close()
             do! r2.Close()
