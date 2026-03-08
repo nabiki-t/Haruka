@@ -1493,7 +1493,7 @@ type GenScsiParams() =
                                     0us;
                             iSCSIName =
                                 if wlen > s + 28 && wAdditionalLength > 0us then
-                                    let wnextpos1 = s + int wAdditionalDescriptorLength
+                                    let wnextpos1 = s + 24 + int wAdditionalDescriptorLength
                                     let wnextpos2 = s + 28 + int wAdditionalLength
                                     let epos = ( min wnextpos1 wnextpos2 ) - 1
                                     pv.Array.[ s + 28 .. epos ]
@@ -1503,7 +1503,7 @@ type GenScsiParams() =
                                     "";
                         }
                         if wAdditionalDescriptorLength > 0u then
-                            loop ( s + int wAdditionalDescriptorLength ) ( desc :: acc )
+                            loop ( s + 24 + int wAdditionalDescriptorLength ) ( desc :: acc )
                         else
                             desc :: acc
                     else

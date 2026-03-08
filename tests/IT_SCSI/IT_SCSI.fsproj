@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="PersistentReserveOut1.fs" />
     <Compile Include="PersistentReservation1.fs" />
     <Compile Include="Configuration.fs" />
     <Compile Include="ACA.fs" />

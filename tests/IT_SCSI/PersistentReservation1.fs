@@ -1,6 +1,6 @@
 //=============================================================================
 // Haruka Software Storage.
-// PersistentReservation.fs : Test cases for Persistent Reservation behavior.
+// PersistentReservation1.fs : Test cases for Persistent Reservation behavior.
 //
 
 //=============================================================================
