@@ -161,16 +161,6 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
         let tdid = tdid_me.fromPrim 99u
         sprintf "%s%c%s%c%s%c%s" m_WorkPath c ( tdid_me.toString tdid ) c ( lun_me.WorkDirName lun ) c Constants.PR_SAVE_FILE_NAME
 
-    // Wait until a file is created
-    let Wait_CreateFile ( fname : string ) : unit =
-        while ( File.Exists fname |> not ) do
-            Thread.Sleep 10
-
-    // Wait until a file is updated
-    let Wait_UpdateFile ( fname : string ) ( ftime : DateTime ) : unit =
-        while ( ftime = File.GetLastWriteTimeUtc fname ) do
-            Thread.Sleep 10
-
     let checkDisconnected ( s : SCSI_Initiator ) : Task =
         task {
             try
@@ -471,9 +461,9 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
             // register reservation key
             do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey
             if fexist.IsSome then
-                Wait_UpdateFile prfname fexist.Value
+                GlbFunc.WaitForFileUpdate prfname fexist.Value
             else
-                Wait_CreateFile prfname
+                GlbFunc.WaitForFileCreate prfname
 
             // LU Reset
             let! itt_tmf = r1.SendTMFRequest_LogicalUnitReset BitI.F g_LUN1
@@ -504,9 +494,9 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
             // register reservation key
             do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey
             if fexist.IsSome then
-                Wait_UpdateFile prfname fexist.Value
+                GlbFunc.WaitForFileUpdate prfname fexist.Value
             else
-                Wait_CreateFile prfname
+                GlbFunc.WaitForFileCreate prfname
 
             // Target device reset
             let! _ = r1.SendTMFRequest_LogicalUnitReset BitI.F g_LUN0

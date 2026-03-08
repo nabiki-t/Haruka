@@ -27,6 +27,15 @@ open Haruka.Commons
 //=============================================================================
 // Class implementation
 
+/// <summary>
+///  Exception classes used in test cases.
+/// </summary>
+/// <param name="argMsg">
+///  Error message.
+/// </param>
+type TestException( argMsg : string ) =
+    inherit System.Exception( argMsg )
+
 type GlbFunc() =
 
     /// MemoryMappedFile used to generate unique TCP port numbers.
@@ -344,13 +353,15 @@ type GlbFunc() =
     ///   The file name to wait for deletion.
     /// </param>
     /// <remarks>
-    ///   This method will wait for up to 1 second for the file to be deleted.
+    ///   This method will wait for up to 3 second for the file to be deleted.
     /// </remarks>
     static member WaitForFileDelete ( fname : string ) : unit =
         let mutable cnt = 0
-        while ( File.Exists fname ) && cnt < 200 do
-            Thread.Sleep 5
+        while ( File.Exists fname ) && cnt < 300 do
+            Thread.Sleep 10
             cnt <- cnt + 1
+        if File.Exists fname then
+            raise <| TestException( sprintf "Timeout waiting for file deletion. %s" fname )
 
     /// <summary>
     ///  Wait for the specified file to be created.
@@ -359,13 +370,15 @@ type GlbFunc() =
     ///   The file name to wait for creation.
     /// </param>
     /// <remarks>
-    ///   This method will wait for up to 1 second for the file to be created.
+    ///   This method will wait for up to 3 second for the file to be created.
     /// </remarks>
     static member WaitForFileCreate ( fname : string ) : unit =
         let mutable cnt = 0
-        while ( fname |> File.Exists |> not ) && cnt < 200 do
-            Thread.Sleep 5
+        while ( fname |> File.Exists |> not ) && cnt < 300 do
+            Thread.Sleep 10
             cnt <- cnt + 1
+        if not ( File.Exists fname ) then
+            raise <| TestException( sprintf "Timeout waiting for file creation. %s" fname )
 
     /// <summary>
     ///  Wait for the specified file to be updated.
@@ -377,24 +390,28 @@ type GlbFunc() =
     ///   The initial last write time of the file.
     /// </param>
     /// <remarks>
-    ///   This method will wait for up to 1 second for the file to be updated.
+    ///   This method will wait for up to 3 second for the file to be updated.
     ///   File updates are determined by monitoring the last update date and time.
     /// </remarks>
     static member WaitForFileUpdate ( fname : string ) ( initFileTime : DateTime ) : unit =
         let mutable cnt = 0
-        while ( initFileTime = File.GetLastWriteTimeUtc fname ) && cnt < 200 do
-            Thread.Sleep 5
+        while ( initFileTime = File.GetLastWriteTimeUtc fname ) && cnt < 300 do
+            Thread.Sleep 10
             cnt <- cnt + 1
+        if cnt >= 300 then
+            raise <| TestException( sprintf "Timeout waiting for file update. %s" fname )
         cnt <- 0
-        while cnt < 200 do
+        while cnt >= 0 && cnt < 300 do
             try
                 use s = File.OpenRead( fname )
-                cnt <- 10000
+                cnt <- -1
                 s.Close()
             with
             | _ ->
                 cnt <- cnt + 1
-                Thread.Sleep 5
+                Thread.Sleep 10
+        if cnt >= 300 then
+            raise <| TestException( sprintf "Timeout waiting for file update. %s" fname )
 
     /// <summary>
     ///  Construct a pair of anonymous pipes.
@@ -491,12 +508,4 @@ type GlbFunc() =
             cnt <- cnt + r
         String( buf )
 
-/// <summary>
-///  Exception classes used in test cases.
-/// </summary>
-/// <param name="argMsg">
-///  Error message.
-/// </param>
-type TestException( argMsg : string ) =
-    inherit System.Exception( argMsg )
 

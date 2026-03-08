@@ -109,18 +109,6 @@ type PRManager_Test2 () =
 
         k, luStub, pm
 
-    member _.WaitForFileDelete ( fname : string ) =
-        let mutable cnt = 0
-        while ( File.Exists fname ) && cnt < 200 do
-            Thread.Sleep 5
-            cnt <- cnt + 1
-
-    member _.WaitForFileCreate ( fname : string ) =
-        let mutable cnt = 0
-        while ( File.Exists fname |> not ) && cnt < 200 do
-            Thread.Sleep 5
-            cnt <- cnt + 1
-
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
 
@@ -159,8 +147,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Count = 1 ))
         Assert.True(( prinfo.m_Registrations.ContainsKey initITN1 ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileDelete fname
         k.NoticeTerminate()
 
         GlbFunc.DeleteDir pDirName
@@ -282,8 +269,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( ansITN1 ) = resvkey_me.fromPrim 0xFFFFFFFFFFFFFFFFUL ))
         Assert.True(( prinfo.m_Registrations.Item( ansITN2 ) = resvkey_me.fromPrim 0xFFFFFFFFFFFFFFFFUL ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileDelete fname
         k.NoticeTerminate()
 
         GlbFunc.DeleteDir pDirName
@@ -358,8 +344,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( ansITN5 ) = resvkey_me.fromPrim 0xFFFFFFFFFFFFFFFFUL ))
         Assert.True(( prinfo.m_Registrations.Item( ansITN6 ) = resvkey_me.fromPrim 0xFFFFFFFFFFFFFFFFUL ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileDelete fname
         k.NoticeTerminate()
         GlbFunc.DeleteDir pDirName
 
@@ -434,8 +419,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( ansITN7 ) = resvkey_me.fromPrim 0xFFFFFFFFFFFFFFFFUL ))
         Assert.True(( prinfo.m_Registrations.Item( ansITN8 ) = resvkey_me.fromPrim 0xFFFFFFFFFFFFFFFFUL ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileDelete fname
         k.NoticeTerminate()
         GlbFunc.DeleteDir pDirName
 
@@ -479,8 +463,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( ansITN1 ) = resvkey_me.fromPrim 0xFFFFFFFFFFFFFFFFUL ))
         Assert.True(( prinfo.m_Registrations.Item( ansITN4 ) = resvkey_me.fromPrim 0xFFFFFFFFFFFFFFFFUL ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileDelete fname
         k.NoticeTerminate()
         GlbFunc.DeleteDir pDirName
 
@@ -934,8 +917,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Count = 0 ))
         Assert.True(( prinfo.m_Holder.IsNone ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileDelete fname
         k.NoticeTerminate()
         GlbFunc.DeleteDir pDirName
 
@@ -996,8 +978,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Holder.IsNone ))
         Assert.True(( cnt = 2 ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileDelete fname
         k.NoticeTerminate()
         GlbFunc.DeleteDir pDirName
 
@@ -1046,8 +1027,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( initITN4 ) = resvkey_me.fromPrim 0xAABBCCDD11223344UL ))
         Assert.True(( prinfo.m_Holder.Value = initITN1 ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileDelete fname
         k.NoticeTerminate()
         GlbFunc.DeleteDir pDirName
 
@@ -1087,8 +1067,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Count = 0 ))
         Assert.True(( prinfo.m_Holder.IsNone ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileDelete fname
         k.NoticeTerminate()
         GlbFunc.DeleteDir pDirName
 
@@ -1217,8 +1196,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Holder.IsNone ))
         Assert.True(( cnt = 2 ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileDelete fname
         k.NoticeTerminate()
 
     [<Fact>]
@@ -1261,8 +1239,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( initITN2 ) = resvkey_me.fromPrim 0xAABBCCDD11223344UL ))
         Assert.True(( prinfo.m_Holder.Value = initITN1 ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileDelete fname
         k.NoticeTerminate()
         GlbFunc.DeleteDir pDirName
 
@@ -1303,8 +1280,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( initITN1 ) = resvkey_me.fromPrim 0xFFFFFFFFEEEEEEEEUL ))
         Assert.True(( prinfo.m_Holder.Value = initITN1 ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileDelete fname
         k.NoticeTerminate()
         GlbFunc.DeleteDir pDirName
 
@@ -1421,8 +1397,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( initITN4 ) = resvkey_me.fromPrim 0xAABBCCDD11223344UL ))
         Assert.True(( prinfo.m_Holder.Value = initITN2 ))
 
-        this.WaitForFileDelete fname
-        Assert.False( File.Exists fname )
+        GlbFunc.WaitForFileDelete fname
         k.NoticeTerminate()
         GlbFunc.DeleteDir pDirName
 
@@ -1456,8 +1431,7 @@ type PRManager_Test2 () =
         let prinfo = PRManager_Test2.GetPRInfoRec pm
         Assert.True(( prinfo.m_APTPL ))
 
-        this.WaitForFileCreate fname
-        Assert.True(( File.Exists fname ))
+        GlbFunc.WaitForFileCreate fname
         GlbFunc.DeleteFile fname
         k.NoticeTerminate()
 
