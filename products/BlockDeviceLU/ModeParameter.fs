@@ -570,11 +570,6 @@ type ModeParameter
                 )
 
         let modeDataLength = modeParameterBlockDescriptor.Length + modePage.Length + 3
-        if modeDataLength >= 256 then
-            HLogger.Trace( LogID.F_ERROR_EXIT, fun g ->
-                g.Gen1( loginfo, "Mode parameter data length is over than 256 bytes." )
-            )
-            exit( 1 )
 
         let modeParameterHeader = [|
             byte modeDataLength;

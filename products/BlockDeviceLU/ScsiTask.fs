@@ -673,6 +673,12 @@ type ScsiTask
                     for _ = 74 to 95 do yield 0uy;
                 |]
 
+        // SPC-3 4.3.4.6 ( The following conditions will never be met )
+        if inData.Length > int UInt16.MaxValue then
+            let errmsg = "The parameter data length exceeds 65535 bytes."
+            HLogger.ACAException( m_LogInfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
+            raise <| SCSIACAException ( m_Source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
+
         let init, current = this.SetTerminateFlag 1
         if init = 0 && current = 1 then
             // Send response data to the initiator
@@ -740,15 +746,22 @@ type ScsiTask
         assert( match m_CDB with | :? ModeSenseCDB -> true | _ -> false )
         let cdb = m_CDB :?> ModeSenseCDB
 
-        let result =
+        let maxlen, result =
             match cdb.OperationCode with
             | 0x1Auy -> // MODE SENSE(6)
-                m_ModeParameter.Sense6 cdb.DBD cdb.PageCode cdb.SubPageCode cdb.PC m_Source m_ITT
+                255, m_ModeParameter.Sense6 cdb.DBD cdb.PageCode cdb.SubPageCode cdb.PC m_Source m_ITT
             | 0x5Auy -> // MODE SENSE(10)
-                m_ModeParameter.Sense10 cdb.LLBAA cdb.DBD cdb.PageCode cdb.SubPageCode cdb.PC m_Source m_ITT
+                65535, m_ModeParameter.Sense10 cdb.LLBAA cdb.DBD cdb.PageCode cdb.SubPageCode cdb.PC m_Source m_ITT
             | _ ->
                 HLogger.Trace( LogID.F_ERROR_EXIT, fun g -> g.Gen1( m_LogInfo, sprintf "Invalid OPERATION CODE(0x%02X)" cdb.OperationCode ) )
                 exit( 1 )
+
+        // SPC-3 4.3.4.6
+        // The mode parameter length will not exceed 255 bytes, and the following conditions will not be met.
+        if result.Length > maxlen then
+            let errmsg = sprintf "The parameter data length exceeds %d bytes." maxlen
+            HLogger.ACAException( m_LogInfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
+            raise <| SCSIACAException ( m_Source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
 
         let init, current = this.SetTerminateFlag 1
         if init = 0 && current = 1 then
@@ -795,6 +808,12 @@ type ScsiTask
                     { CommandData = true; BPV = true; BitPointer = 4uy; FieldPointer = 1us },
                     errmsg
                 )
+
+        // SPC-3 4.3.4.6
+        if paramdata.Length > int UInt16.MaxValue then
+            let errmsg = "The parameter data length exceeds 65535 bytes."
+            HLogger.ACAException( m_LogInfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
+            raise <| SCSIACAException ( m_Source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
 
         let init, current = this.SetTerminateFlag 1
         if init = 0 && current = 1 then
@@ -1250,6 +1269,12 @@ type ScsiTask
                 m_LU.ClearUnitAttention m_Source.I_TNexus
                 x.SenseData.GetSenseData cdb.DESC
 
+        // SPC-3 4.3.4.6
+        // Note that the maximum length of sense data is 252 bytes, so the following conditions are theoretically not true.
+        if result.Length > int UInt16.MaxValue then
+            let errmsg = "The parameter data length exceeds 256 bytes."
+            HLogger.ACAException( m_LogInfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
+            raise <| SCSIACAException ( m_Source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
 
         let init, current = this.SetTerminateFlag 1
         if init = 0 && current = 1 then
