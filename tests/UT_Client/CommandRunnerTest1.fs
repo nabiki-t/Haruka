@@ -439,7 +439,7 @@ type CommandRunner_Test1() =
 
     static member m_TargetNode =
         let conf : TargetGroupConf.T_Target = {
-            IdentNumber = tnodeidx_me.fromPrim 0u;
+            IdentNumber = tnodeidx_me.fromPrim 10us;
             TargetPortalGroupTag = tpgt_me.zero;
             TargetName = "";
             TargetAlias = "";
@@ -2328,7 +2328,7 @@ type CommandRunner_Test1() =
                 let sessList : TargetDeviceCtrlRes.T_Session list = [
                     {
                         TargetGroupID = tgid_me.fromPrim( 99u );
-                        TargetNodeID = tnodeidx_me.fromPrim 1u;
+                        TargetNodeID = tnodeidx_me.fromPrim 1us;
                         TSIH = tsih_me.fromPrim 1us;
                         ITNexus = {
                             InitiatorName = "initiator001";

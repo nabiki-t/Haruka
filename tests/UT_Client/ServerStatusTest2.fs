@@ -166,7 +166,7 @@ type ServerStatus_Test2() =
                 let _ = ss.AddNetworkPortalNode tdNode ServerStatus_Test1.defaultNP 
                 let tgNode = ss.AddTargetGroupNode tdNode ( GlbFunc.newTargetGroupID() ) "tg01" false
                 let tNode = ss.AddTargetNode tgNode {
-                            IdentNumber = tnodeidx_me.fromPrim 1u;
+                            IdentNumber = tnodeidx_me.fromPrim 1us;
                             TargetPortalGroupTag = tpgt_me.zero;
                             TargetName = "t001"
                             TargetAlias = "";
@@ -205,7 +205,7 @@ type ServerStatus_Test2() =
         let tdConfFName1 = Functions.AppendPathName tdConfDName1 ( Constants.TARGET_DEVICE_CONF_FILE_NAME )
         ServerStatus_Test1.WriteCtrlConfig dname portNo
         ServerStatus_Test1.WriteTargetDeviceConfig dname portalPortNo tdid1
-        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid1 tgid1 ( lun_me.fromPrim 1UL ) "b001" 1u
+        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid1 tgid1 ( lun_me.fromPrim 1UL ) "b001" 1us
 
         let killer = new HKiller() :> IKiller
         let ctrl = new Controller( dname, killer, GlbFunc.tdExePath, GlbFunc.imExePath )
@@ -237,7 +237,7 @@ type ServerStatus_Test2() =
                 let _ = ss.AddNetworkPortalNode tdNode2 ServerStatus_Test1.defaultNP 
                 let tgNode = ss.AddTargetGroupNode tdNode2 ( GlbFunc.newTargetGroupID() ) "tg01" false
                 let tNode = ss.AddTargetNode tgNode {
-                            IdentNumber = tnodeidx_me.fromPrim 1u;
+                            IdentNumber = tnodeidx_me.fromPrim 1us;
                             TargetPortalGroupTag = tpgt_me.zero;
                             TargetName = "t001"
                             TargetAlias = "";
@@ -279,7 +279,7 @@ type ServerStatus_Test2() =
         let tdConfFName = Functions.AppendPathName tdConfDName ( Constants.TARGET_DEVICE_CONF_FILE_NAME )
         ServerStatus_Test1.WriteCtrlConfig dname portNo
         ServerStatus_Test1.WriteTargetDeviceConfig dname portalPortNo tdid
-        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid tgid ( lun_me.fromPrim 1UL ) "b001" 1u
+        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid tgid ( lun_me.fromPrim 1UL ) "b001" 1us
 
         let killer = new HKiller() :> IKiller
         let ctrl = new Controller( dname, killer, GlbFunc.tdExePath, GlbFunc.imExePath )
@@ -330,7 +330,7 @@ type ServerStatus_Test2() =
         let tdConfDName = Functions.AppendPathName dname ( tdid_me.toString tdid )
         ServerStatus_Test1.WriteCtrlConfig dname portNo
         ServerStatus_Test1.WriteTargetDeviceConfig dname portalPortNo tdid
-        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid tgid ( lun_me.fromPrim 1UL ) "b001" 1u
+        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid tgid ( lun_me.fromPrim 1UL ) "b001" 1us
 
         let killer = new HKiller() :> IKiller
         let ctrl = new Controller( dname, killer, GlbFunc.tdExePath, GlbFunc.imExePath )
@@ -383,8 +383,8 @@ type ServerStatus_Test2() =
         ServerStatus_Test1.WriteCtrlConfig dname portNo
         ServerStatus_Test1.WriteTargetDeviceConfig dname portalPortNo1 tdid1
         ServerStatus_Test1.WriteTargetDeviceConfig dname portalPortNo2 tdid2
-        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid1 tgid1 ( lun_me.fromPrim 10UL ) "b001" 1u
-        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid2 tgid2 ( lun_me.fromPrim 20UL ) "b002" 2u
+        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid1 tgid1 ( lun_me.fromPrim 10UL ) "b001" 1us
+        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid2 tgid2 ( lun_me.fromPrim 20UL ) "b002" 2us
 
         let killer = new HKiller() :> IKiller
         let ctrl = new Controller( dname, killer, GlbFunc.tdExePath, GlbFunc.imExePath )
@@ -413,7 +413,7 @@ type ServerStatus_Test2() =
                 let tgidA = GlbFunc.newTargetGroupID()
                 let tgNodeA = ss.AddTargetGroupNode tdNode1 tgidA "tg01" false
                 let tNodeA = ss.AddTargetNode tgNodeA {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetPortalGroupTag = tpgt_me.zero;
                             TargetName = "t001"
                             TargetAlias = "";
@@ -426,7 +426,7 @@ type ServerStatus_Test2() =
                 let tgidB = GlbFunc.newTargetGroupID()
                 let tgNodeB = ss.AddTargetGroupNode tdNode2 tgidB "tg11" false
                 let tNodeB = ss.AddTargetNode tgNodeB {
-                            IdentNumber = tnodeidx_me.fromPrim 101u;
+                            IdentNumber = tnodeidx_me.fromPrim 101us;
                             TargetPortalGroupTag = tpgt_me.zero;
                             TargetName = "t011"
                             TargetAlias = "";

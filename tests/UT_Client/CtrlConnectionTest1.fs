@@ -3206,7 +3206,7 @@ type CtrlConnection_Test1() =
             EnabledAtStart = false;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 0u;
+                    IdentNumber = tnodeidx_me.fromPrim 10us;
                     TargetPortalGroupTag = tpgt_me.zero;
                     TargetName = "abcd";
                     TargetAlias = "eee";
@@ -3463,7 +3463,7 @@ type CtrlConnection_Test1() =
                 EnabledAtStart = false;
                 Target = [
                     {
-                        IdentNumber = tnodeidx_me.fromPrim 0u;
+                        IdentNumber = tnodeidx_me.fromPrim 10us;
                         TargetPortalGroupTag = tpgt_me.zero;
                         TargetName = "abcd";
                         TargetAlias = "eee";
@@ -3667,7 +3667,7 @@ type CtrlConnection_Test1() =
                 EnabledAtStart = false;
                 Target = [
                     {
-                        IdentNumber = tnodeidx_me.fromPrim 0u;
+                        IdentNumber = tnodeidx_me.fromPrim 10us;
                         TargetPortalGroupTag = tpgt_me.zero;
                         TargetName = "abcd";
                         TargetAlias = "eee";

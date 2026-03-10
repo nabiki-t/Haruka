@@ -78,7 +78,7 @@ type ServerStatus_Test1() =
         WriteProtect = false;
     }
 
-    static member defTarget ( ident : uint32 ) ( name : string ) : TargetGroupConf.T_Target = {
+    static member defTarget ( ident : uint16 ) ( name : string ) : TargetGroupConf.T_Target = {
         IdentNumber = tnodeidx_me.fromPrim ident;
         TargetPortalGroupTag = tpgt_me.zero;
         TargetName = name;
@@ -252,7 +252,7 @@ type ServerStatus_Test1() =
                         TargetGroupName = "targetgroup000";
                         EnabledAtStart = false;
                         Target = [{
-                            IdentNumber = tnodeidx_me.fromPrim 0u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetPortalGroupTag = tpgt_me.zero;
                             TargetName = "target000";
                             TargetAlias = "";
@@ -304,7 +304,7 @@ type ServerStatus_Test1() =
         GlbFunc.CreateDir tdConfDName |> ignore
         TargetDeviceConf.ReaderWriter.WriteFile tdConfFName tdConf
 
-    static member WriteTargetGroupConfig_WithDummyLU ( dname : string ) ( tdid : TDID_T ) ( tgid : TGID_T ) ( lun : LUN_T ) ( tgname : string ) ( tid : uint32 ) =
+    static member WriteTargetGroupConfig_WithDummyLU ( dname : string ) ( tdid : TDID_T ) ( tgid : TGID_T ) ( lun : LUN_T ) ( tgname : string ) ( tid : uint16 ) =
         let tdConfDName = Functions.AppendPathName dname ( tdid_me.toString tdid )
         let tgConfFName = Functions.AppendPathName tdConfDName ( tgid_me.toString tgid )
         let tgConf : TargetGroupConf.T_TargetGroup = {
@@ -679,7 +679,7 @@ type ServerStatus_Test1() =
             TargetGroupName = "b001";
             EnabledAtStart = false;
             Target = [{
-                IdentNumber = tnodeidx_me.fromPrim 99u;
+                IdentNumber = tnodeidx_me.fromPrim 99us;
                 TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                 TargetName = "c001";
                 TargetAlias = "";
@@ -731,7 +731,7 @@ type ServerStatus_Test1() =
 
             let tlist = ( tglist.[0] :> IConfigureNode ).GetChildNodes<ConfNode_Target>()
             Assert.True(( tlist.Length = 1 ))
-            Assert.True(( tlist.[0].Values.IdentNumber = tnodeidx_me.fromPrim 99u ))
+            Assert.True(( tlist.[0].Values.IdentNumber = tnodeidx_me.fromPrim 99us ))
             Assert.True(( tlist.[0].Values.TargetName = "c001" ))
             Assert.True(( tlist.[0].Values.LUN = [ lun_me.fromPrim 88UL ] ))
 
@@ -759,7 +759,7 @@ type ServerStatus_Test1() =
             TargetGroupName = "b001";
             EnabledAtStart = false;
             Target = [{
-                IdentNumber = tnodeidx_me.fromPrim 99u;
+                IdentNumber = tnodeidx_me.fromPrim 99us;
                 TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                 TargetName = "c001";
                 TargetAlias = "";
@@ -871,7 +871,7 @@ type ServerStatus_Test1() =
 
             let tlist = ( tglist.[0] :> IConfigureNode ).GetChildNodes<ConfNode_Target>()
             Assert.True(( tlist.Length = 1 ))
-            Assert.True(( tlist.[0].Values.IdentNumber = tnodeidx_me.fromPrim 99u ))
+            Assert.True(( tlist.[0].Values.IdentNumber = tnodeidx_me.fromPrim 99us ))
             Assert.True(( tlist.[0].Values.TargetName = "c001" ))
             Assert.True(( tlist.[0].Values.LUN = [ lun_me.fromPrim 1UL; lun_me.fromPrim 2UL; lun_me.fromPrim 3UL; lun_me.fromPrim 4UL ] ))
 
@@ -961,7 +961,7 @@ type ServerStatus_Test1() =
             TargetGroupName = "b001";
             EnabledAtStart = false;
             Target = [{
-                IdentNumber = tnodeidx_me.fromPrim 99u;
+                IdentNumber = tnodeidx_me.fromPrim 99us;
                 TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                 TargetName = "c001";
                 TargetAlias = "";
@@ -1020,7 +1020,7 @@ type ServerStatus_Test1() =
                 Assert.True(( tglist.Length = 1 ))
                 let tlist = ( tglist.[0]  :> IConfigureNode ).GetChildNodes<ConfNode_Target>()
                 Assert.True(( tlist.Length = 1 ))
-                Assert.True(( tlist.[0].Values.IdentNumber = tnodeidx_me.fromPrim 99u ))
+                Assert.True(( tlist.[0].Values.IdentNumber = tnodeidx_me.fromPrim 99us ))
                 Assert.True(( tlist.[0].Values.TargetName = "c001" ))
                 Assert.True(( tlist.[0].Values.LUN = [ lun_me.fromPrim 1UL ] ))
 
@@ -1063,7 +1063,7 @@ type ServerStatus_Test1() =
             EnabledAtStart = false;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 0u;
+                    IdentNumber = tnodeidx_me.fromPrim 10us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "c001";
                     TargetAlias = "";
@@ -1071,7 +1071,7 @@ type ServerStatus_Test1() =
                     Auth = TargetGroupConf.U_None();
                 };
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 1u;
+                    IdentNumber = tnodeidx_me.fromPrim 11us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "c002";
                     TargetAlias = "";
@@ -1119,11 +1119,11 @@ type ServerStatus_Test1() =
                     ( tglist.[0] :> IConfigureNode ).GetChildNodes<ConfNode_Target>()
                     |> List.sortBy ( fun itr -> itr.Values.IdentNumber )
                 Assert.True(( tlist.Length = 2 ))
-                Assert.True(( tlist.[0].Values.IdentNumber = tnodeidx_me.fromPrim 0u ))
+                Assert.True(( tlist.[0].Values.IdentNumber = tnodeidx_me.fromPrim 10us ))
                 Assert.True(( tlist.[0].Values.TargetName = "c001" ))
                 Assert.True(( tlist.[0].Values.LUN = [ lun_me.fromPrim 1UL ] ))
 
-                Assert.True(( tlist.[1].Values.IdentNumber = tnodeidx_me.fromPrim 1u ))
+                Assert.True(( tlist.[1].Values.IdentNumber = tnodeidx_me.fromPrim 11us ))
                 Assert.True(( tlist.[1].Values.TargetName = "c002" ))
                 Assert.True(( tlist.[1].Values.LUN = [ lun_me.fromPrim 1UL ] ))
 
@@ -1165,7 +1165,7 @@ type ServerStatus_Test1() =
             EnabledAtStart = false;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 0u;
+                    IdentNumber = tnodeidx_me.fromPrim 10us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "c001";
                     TargetAlias = "";
@@ -1173,7 +1173,7 @@ type ServerStatus_Test1() =
                     Auth = TargetGroupConf.U_None();
                 };
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 1u;
+                    IdentNumber = tnodeidx_me.fromPrim 11us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "c002";
                     TargetAlias = "";
@@ -1279,7 +1279,7 @@ type ServerStatus_Test1() =
             EnabledAtStart = false;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 0u;
+                    IdentNumber = tnodeidx_me.fromPrim 10us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "c001";
                     TargetAlias = "";

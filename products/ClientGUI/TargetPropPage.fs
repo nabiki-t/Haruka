@@ -256,13 +256,13 @@ type TargetPropPage(
             let tn = m_ServerStatus.GetNode m_NodeID :?> ConfNode_Target
 
             let targetID =
-                let r, w = UInt32.TryParse m_TargetIDTextBox.Text
-                if not r then
+                let r, w = UInt16.TryParse m_TargetIDTextBox.Text
+                if not r || w = 0us then
                     let msg =
                         m_Config.MessagesText.GetMessage(
                             "MSG_INVALID_TARGET_ID",
-                            "0",
-                            sprintf "%d" UInt32.MaxValue
+                            "1",
+                            sprintf "%d" UInt16.MaxValue
                         )
                     raise <| Exception msg
                 else

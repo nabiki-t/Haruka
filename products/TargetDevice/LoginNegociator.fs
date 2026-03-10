@@ -339,7 +339,7 @@ type LoginNegociator
             }
 
             let dummyTargetNodeConfig : TargetGroupConf.T_Target = {
-                IdentNumber = tnodeidx_me.fromPrim 0u;
+                IdentNumber = tnodeidx_me.fromPrim 1us;
                 TargetName = "";
                 TargetAlias = "";
                 TargetPortalGroupTag = tpgt_me.fromPrim 0us;

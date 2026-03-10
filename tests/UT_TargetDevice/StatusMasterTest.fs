@@ -43,7 +43,7 @@ type StatusMaster_Test () =
             EnabledAtStart = eas;
             Target = 
                 [{
-                    IdentNumber = tnodeidx_me.fromPrim ( uint32 idx );
+                    IdentNumber = tnodeidx_me.fromPrim ( uint16 idx + 1us );
                     TargetPortalGroupTag = tpgt_me.zero;
                     TargetName = sprintf "target%03d" idx;
                     TargetAlias = sprintf "target%03d" idx;
@@ -87,7 +87,7 @@ type StatusMaster_Test () =
             MaxConnections = Constants.NEGOPARAM_MaxConnections;
             TargetGroupID = tgid_me.Zero;
             TargetConf = {
-                IdentNumber = tnodeidx_me.fromPrim 0u;
+                IdentNumber = tnodeidx_me.fromPrim 10us;
                 TargetName = "target001001";
                 TargetAlias = "";
                 TargetPortalGroupTag = tpgt_me.fromPrim 0us;
@@ -143,7 +143,7 @@ type StatusMaster_Test () =
         Assert.True(( np.[0].IdentNumber = netportidx_me.fromPrim 0u ))
 
         Assert.True(( sm.GetActiveTarget().Length = 1 ))
-        Assert.True(( sm.GetActiveTarget().[0].IdentNumber = tnodeidx_me.fromPrim 0u ))
+        Assert.True(( sm.GetActiveTarget().[0].IdentNumber = tnodeidx_me.fromPrim 1us ))
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName
@@ -169,7 +169,7 @@ type StatusMaster_Test () =
         Assert.True(( np.[0].IdentNumber = netportidx_me.fromPrim 0u ))
 
         Assert.True(( sm.GetActiveTarget().Length = 1 ))
-        Assert.True(( sm.GetActiveTarget().[0].IdentNumber = tnodeidx_me.fromPrim 1u ))
+        Assert.True(( sm.GetActiveTarget().[0].IdentNumber = tnodeidx_me.fromPrim 2us ))
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName0
@@ -455,7 +455,7 @@ type StatusMaster_Test () =
 
         let atg = sm.GetActiveTarget()
         Assert.True(( atg.Length = 1 ))
-        Assert.True(( atg.[0].IdentNumber = tnodeidx_me.fromPrim 99u ))
+        Assert.True(( atg.[0].IdentNumber = tnodeidx_me.fromPrim 100us ))
 
         GlbFunc.DeleteDir pDirName
 
@@ -485,7 +485,7 @@ type StatusMaster_Test () =
 
         let atg = sm.GetActiveTarget()
         Assert.True(( atg.Length = 1 ))
-        Assert.True(( atg.[0].IdentNumber = tnodeidx_me.fromPrim 99u ))
+        Assert.True(( atg.[0].IdentNumber = tnodeidx_me.fromPrim 100us ))
 
         GlbFunc.DeleteDir pDirName
 
@@ -512,7 +512,7 @@ type StatusMaster_Test () =
 
         let tgl = sm.GetTargetFromLUN ( lun_me.fromPrim 89UL )
         Assert.True(( tgl.Length = 1 ))
-        Assert.True(( tgl.[0].IdentNumber = tnodeidx_me.fromPrim 88u ))
+        Assert.True(( tgl.[0].IdentNumber = tnodeidx_me.fromPrim 89us ))
 
         GlbFunc.DeleteDir pDirName
 
@@ -565,7 +565,7 @@ type StatusMaster_Test () =
                 EnabledAtStart = true;
                 Target = [
                     {
-                        IdentNumber = tnodeidx_me.fromPrim 0u;
+                        IdentNumber = tnodeidx_me.fromPrim 10us;
                         TargetPortalGroupTag = tpgt_me.zero;
                         TargetName = "target000";
                         TargetAlias = "Target000";
@@ -573,7 +573,7 @@ type StatusMaster_Test () =
                         Auth = TargetGroupConf.T_Auth.U_None();
                     };
                     {
-                        IdentNumber = tnodeidx_me.fromPrim 1u;
+                        IdentNumber = tnodeidx_me.fromPrim 11us;
                         TargetPortalGroupTag = tpgt_me.zero;
                         TargetName = "target001";
                         TargetAlias = "Target001";
@@ -609,7 +609,7 @@ type StatusMaster_Test () =
 
         let tgl2 = sm.GetTargetFromLUN ( lun_me.fromPrim 1UL )
         Assert.True(( tgl2.Length = 1 ))
-        Assert.True(( tgl2.[0].IdentNumber = tnodeidx_me.fromPrim 0u ))
+        Assert.True(( tgl2.[0].IdentNumber = tnodeidx_me.fromPrim 10us ))
 
         let tgl3 = sm.GetTargetFromLUN ( lun_me.fromPrim 2UL )
         Assert.True(( tgl3.Length = 2 ))
@@ -973,7 +973,7 @@ type StatusMaster_Test () =
                                 StatusMaster_Test.defaultSessParam with
                                     TargetConf = {
                                         StatusMaster_Test.defaultSessParam.TargetConf with
-                                            IdentNumber = tnodeidx_me.fromPrim ( uint32 i );
+                                            IdentNumber = tnodeidx_me.fromPrim ( uint16 i );
                                             LUN = [ lun_me.fromPrim ( uint64 i ) ];
                                     }
                             } )
@@ -1019,7 +1019,7 @@ type StatusMaster_Test () =
                                 StatusMaster_Test.defaultSessParam with
                                     TargetConf = {
                                         StatusMaster_Test.defaultSessParam.TargetConf with
-                                            IdentNumber = tnodeidx_me.fromPrim ( uint32 i );
+                                            IdentNumber = tnodeidx_me.fromPrim ( uint16 i );
                                             LUN = [ lun_me.fromPrim ( uint64 i ) ];
                                     }
                             } )
@@ -1141,7 +1141,7 @@ type StatusMaster_Test () =
                                 StatusMaster_Test.defaultSessParam with
                                     TargetConf = {
                                         StatusMaster_Test.defaultSessParam.TargetConf with
-                                            IdentNumber = tnodeidx_me.fromPrim ( uint32 i );
+                                            IdentNumber = tnodeidx_me.fromPrim ( uint16 i );
                                             LUN = [ lun_me.fromPrim 1UL ];
                                     }
                             } )
@@ -1186,7 +1186,7 @@ type StatusMaster_Test () =
                                 StatusMaster_Test.defaultSessParam with
                                     TargetConf = {
                                         StatusMaster_Test.defaultSessParam.TargetConf with
-                                            IdentNumber = tnodeidx_me.fromPrim ( uint32 i );
+                                            IdentNumber = tnodeidx_me.fromPrim ( uint16 i );
                                             LUN = [ lun_me.fromPrim 1UL ];
                                     }
                             } )
@@ -2119,8 +2119,16 @@ type StatusMaster_Test () =
                 let m_ActiveTargetGroups = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
                 Assert.True( m_ActiveTargetGroups.Count = 1 )
 
+                let sessParam = {
+                    StatusMaster_Test.defaultSessParam with
+                        TargetConf = {
+                            StatusMaster_Test.defaultSessParam.TargetConf with
+                                IdentNumber = tnodeidx_me.fromPrim 1us;
+                        }
+                }
+
                 let m_sessions1 =
-                    let ss = new CSession_Stub( p_GetSessionParameter = ( fun _ -> StatusMaster_Test.defaultSessParam ) )
+                    let ss = new CSession_Stub( p_GetSessionParameter = ( fun _ -> sessParam ) )
                     [
                         KeyValuePair< TSIH_T, ISession >( tsih_me.fromPrim 1us, ss );
                     ]
@@ -2858,7 +2866,7 @@ type StatusMaster_Test () =
                 | TargetDeviceCtrlRes.T_Response.U_SessionList( x ) ->
                     Assert.True(( x.Session.Length = 1 ))
                     Assert.True(( x.Session.[0].TargetGroupID = tgid0 ))
-                    Assert.True(( x.Session.[0].TargetNodeID = tnodeidx_me.fromPrim 0u ))
+                    Assert.True(( x.Session.[0].TargetNodeID = tnodeidx_me.fromPrim 10us ))
                     Assert.True(( x.Session.[0].EstablishTime = wCreateDate ))
                     Assert.True(( x.Session.[0].TSIH = tsih_me.fromPrim 1us ))
                 | _ ->
@@ -2906,7 +2914,7 @@ type StatusMaster_Test () =
                                 TargetGroupID = tgid_me.fromPrim( 1u );
                                 TargetConf = {
                                     StatusMaster_Test.defaultSessParam.TargetConf with
-                                        IdentNumber = tnodeidx_me.fromPrim 1u;
+                                        IdentNumber = tnodeidx_me.fromPrim 1us;
                                         TargetName = "target001001";
                                 };
                         } ),
@@ -2920,7 +2928,7 @@ type StatusMaster_Test () =
                                 TargetGroupID = tgid_me.fromPrim( 2u );
                                 TargetConf = {
                                     StatusMaster_Test.defaultSessParam.TargetConf with
-                                        IdentNumber = tnodeidx_me.fromPrim 21u;
+                                        IdentNumber = tnodeidx_me.fromPrim 21us;
                                         TargetName = "target002001";
                                 };
                         } ),
@@ -2934,7 +2942,7 @@ type StatusMaster_Test () =
                                 TargetGroupID = tgid_me.fromPrim( 2u );
                                 TargetConf = {
                                     StatusMaster_Test.defaultSessParam.TargetConf with
-                                        IdentNumber = tnodeidx_me.fromPrim 22u;
+                                        IdentNumber = tnodeidx_me.fromPrim 22us;
                                         TargetName = "target002002";
                                 };
                         } ),
@@ -2963,14 +2971,14 @@ type StatusMaster_Test () =
                 | TargetDeviceCtrlRes.T_Response.U_SessionList( x ) ->
                     Assert.True(( x.Session.Length = 2 ))
                     let rss1, rss2 =
-                        if x.Session.[0].TargetNodeID = tnodeidx_me.fromPrim 21u then
+                        if x.Session.[0].TargetNodeID = tnodeidx_me.fromPrim 21us then
                             x.Session.[0], x.Session.[1]
                         else
                             x.Session.[1], x.Session.[2]
                     Assert.True(( rss1.TargetGroupID = tgid_me.fromPrim( 2u ) ))
-                    Assert.True(( rss1.TargetNodeID = tnodeidx_me.fromPrim 21u ))
+                    Assert.True(( rss1.TargetNodeID = tnodeidx_me.fromPrim 21us ))
                     Assert.True(( rss2.TargetGroupID = tgid_me.fromPrim( 2u ) ))
-                    Assert.True(( rss2.TargetNodeID = tnodeidx_me.fromPrim 22u ))
+                    Assert.True(( rss2.TargetNodeID = tnodeidx_me.fromPrim 22us ))
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -3016,7 +3024,7 @@ type StatusMaster_Test () =
                                 TargetGroupID = tgid_me.fromPrim( 1u );
                                 TargetConf = {
                                     StatusMaster_Test.defaultSessParam.TargetConf with
-                                        IdentNumber = tnodeidx_me.fromPrim 21u;
+                                        IdentNumber = tnodeidx_me.fromPrim 21us;
                                         TargetName = "target002001";
                                 };
                         } ),
@@ -3030,7 +3038,7 @@ type StatusMaster_Test () =
                                 TargetGroupID = tgid_me.fromPrim( 1u );
                                 TargetConf = {
                                     StatusMaster_Test.defaultSessParam.TargetConf with
-                                        IdentNumber = tnodeidx_me.fromPrim 99u;
+                                        IdentNumber = tnodeidx_me.fromPrim 99us;
                                         TargetName = "target999999";
                                 };
                         } ),
@@ -3044,7 +3052,7 @@ type StatusMaster_Test () =
                                 TargetGroupID = tgid_me.fromPrim( 1u );
                                 TargetConf = {
                                     StatusMaster_Test.defaultSessParam.TargetConf with
-                                        IdentNumber = tnodeidx_me.fromPrim 21u;
+                                        IdentNumber = tnodeidx_me.fromPrim 21us;
                                         TargetName = "target002001";
                                 };
                         } ),
@@ -3063,7 +3071,7 @@ type StatusMaster_Test () =
                 pc.SetField( "m_Sessions", m_sessions1 )
 
                 let req1 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
-                    Request = TargetDeviceCtrlReq.T_Request.U_GetSession( TargetDeviceCtrlReq.U_SessInTarget( tnodeidx_me.fromPrim 21u ) )
+                    Request = TargetDeviceCtrlReq.T_Request.U_GetSession( TargetDeviceCtrlReq.U_SessInTarget( tnodeidx_me.fromPrim 21us ) )
                 }
                 s.WriteLine( TargetDeviceCtrlReq.ReaderWriter.ToString req1 )
                 s.Flush()
@@ -3074,8 +3082,8 @@ type StatusMaster_Test () =
                     Assert.True(( x.Session.Length = 2 ))
                     Assert.True(( x.Session.[0].TargetGroupID = tgid_me.fromPrim( 1u ) ))
                     Assert.True(( x.Session.[1].TargetGroupID = tgid_me.fromPrim( 1u ) ))
-                    Assert.True(( x.Session.[0].TargetNodeID = tnodeidx_me.fromPrim 21u ))
-                    Assert.True(( x.Session.[1].TargetNodeID = tnodeidx_me.fromPrim 21u ))
+                    Assert.True(( x.Session.[0].TargetNodeID = tnodeidx_me.fromPrim 21us ))
+                    Assert.True(( x.Session.[1].TargetNodeID = tnodeidx_me.fromPrim 21us ))
                     let in0 = x.Session.[0].ITNexus.InitiatorName
                     let in1 = x.Session.[1].ITNexus.InitiatorName
                     Assert.True(( ( in0 = "in1" && in1 = "in3" ) || ( in0 = "in1" && in1 = "in3" ) ))
@@ -3649,7 +3657,7 @@ type StatusMaster_Test () =
                             { StatusMaster_Test.defaultSessParam with
                                 TargetConf = {
                                     StatusMaster_Test.defaultSessParam.TargetConf with
-                                        IdentNumber = tnodeidx_me.fromPrim 0u;
+                                        IdentNumber = tnodeidx_me.fromPrim 10us;
                                 }
                             }
                         )
@@ -3672,7 +3680,7 @@ type StatusMaster_Test () =
                             { StatusMaster_Test.defaultSessParam with
                                 TargetConf = {
                                     StatusMaster_Test.defaultSessParam.TargetConf with
-                                        IdentNumber = tnodeidx_me.fromPrim 0u;
+                                        IdentNumber = tnodeidx_me.fromPrim 10us;
                                 }
                             }
                         )
@@ -3695,7 +3703,7 @@ type StatusMaster_Test () =
                             { StatusMaster_Test.defaultSessParam with
                                 TargetConf = {
                                     StatusMaster_Test.defaultSessParam.TargetConf with
-                                        IdentNumber = tnodeidx_me.fromPrim 1u;
+                                        IdentNumber = tnodeidx_me.fromPrim 1us;
                                 }
                             }
                         )
@@ -3712,7 +3720,7 @@ type StatusMaster_Test () =
 
                 let req1 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
                     Request = TargetDeviceCtrlReq.T_Request.U_GetConnection(
-                        TargetDeviceCtrlReq.U_ConInTarget( tnodeidx_me.fromPrim 0u )
+                        TargetDeviceCtrlReq.U_ConInTarget( tnodeidx_me.fromPrim 10us )
                     )
                 }
                 s.WriteLine( TargetDeviceCtrlReq.ReaderWriter.ToString req1 )
@@ -4919,7 +4927,7 @@ type StatusMaster_Test () =
                 EnabledAtStart = true;
                 Target = 
                     [{
-                        IdentNumber = tnodeidx_me.fromPrim 0u;
+                        IdentNumber = tnodeidx_me.fromPrim 10us;
                         TargetPortalGroupTag = tpgt_me.zero;
                         TargetName = "target000";
                         TargetAlias = "target000";

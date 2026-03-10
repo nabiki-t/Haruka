@@ -405,7 +405,12 @@ type ReaderWriter() =
                     </xsd:simpleType>
                   </xsd:element>
                   <xsd:element name='TargetNodeID' >
-                    <xsd:simpleType><xsd:restriction base='xsd:unsignedInt' /></xsd:simpleType>
+                    <xsd:simpleType>
+                      <xsd:restriction base='xsd:unsignedShort' >
+                        <xsd:minInclusive value='1' />
+                        <xsd:maxInclusive value='65535' />
+                      </xsd:restriction>
+                    </xsd:simpleType>
                   </xsd:element>
                   <xsd:element name='TSIH' >
                     <xsd:simpleType>
@@ -1125,7 +1130,7 @@ type ReaderWriter() =
             TargetGroupID =
                 tgid_me.fromString( elem.Element( XName.Get "TargetGroupID" ).Value );
             TargetNodeID =
-                tnodeidx_me.fromPrim( UInt32.Parse( elem.Element( XName.Get "TargetNodeID" ).Value ) );
+                tnodeidx_me.fromPrim( UInt16.Parse( elem.Element( XName.Get "TargetNodeID" ).Value ) );
             TSIH =
                 tsih_me.fromPrim( UInt16.Parse( elem.Element( XName.Get "TSIH" ).Value ) );
             ITNexus =
@@ -1941,6 +1946,8 @@ type ReaderWriter() =
         seq {
             yield sprintf "%s<%s>" indentStr elemName
             yield sprintf "%s%s<TargetGroupID>%s</TargetGroupID>" singleIndent indentStr ( tgid_me.toString (elem.TargetGroupID) )
+            if tnodeidx_me.toPrim (elem.TargetNodeID) = 0us then
+                raise <| ConfRWException( "Min value(TNODEIDX_T) restriction error. TargetNodeID" )
             yield sprintf "%s%s<TargetNodeID>%d</TargetNodeID>" singleIndent indentStr ( tnodeidx_me.toPrim (elem.TargetNodeID) )
             yield sprintf "%s%s<TSIH>%d</TSIH>" singleIndent indentStr ( tsih_me.toPrim (elem.TSIH) )
             yield! ReaderWriter.T_ITNEXUS_toString ( indent + 1 ) indentStep ( elem.ITNexus ) "ITNexus"

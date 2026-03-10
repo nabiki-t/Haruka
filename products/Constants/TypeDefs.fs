@@ -414,18 +414,18 @@ type tnodeidx_me =
     /// <summary>Convert tnodeidx_me value to primitive value.</summary>
     /// <param name="v">tnodeidx_me value to be converted.</param>
     /// <returns>Converted value.</returns>
-    static member inline toPrim( v : uint32<tnodeidx_me> ) : uint32 =
-        uint32 v
+    static member inline toPrim( v : uint16<tnodeidx_me> ) : uint16 =
+        uint16 v
 
     /// <summary>Convert primitive value to tnodeidx_me value.</summary>
     /// <param name="v">Primitive value to be converted.</param>
     /// <returns>Converted value.</returns>
-    static member inline fromPrim( v : uint32 ) : uint32<tnodeidx_me> =
-        ( uint32 v ) * 1u<tnodeidx_me>
+    static member inline fromPrim( v : uint16 ) : uint16<tnodeidx_me> =
+        ( uint16 v ) * 1us<tnodeidx_me>
 
 
 /// Data types of tnodeidx_me
-type TNODEIDX_T = uint32<tnodeidx_me>
+type TNODEIDX_T = uint16<tnodeidx_me>
 
 /// Measure for media index number in configuration data.
 [<Measure>]

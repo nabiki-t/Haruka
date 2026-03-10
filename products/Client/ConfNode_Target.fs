@@ -70,7 +70,7 @@ type ConfNode_Target(
             |> Seq.map ( fun itr -> KeyValuePair( itr.Name, itr.Value ) )
             |> Dictionary
         let conf : TargetGroupConf.T_Target = {
-            IdentNumber = Functions.SearchAndConvert d "ID" ( UInt32.Parse >> tnodeidx_me.fromPrim ) ( tnodeidx_me.fromPrim 0u );
+            IdentNumber = Functions.SearchAndConvert d "ID" ( UInt16.Parse >> tnodeidx_me.fromPrim ) ( tnodeidx_me.fromPrim 1us );
             TargetPortalGroupTag = Functions.SearchAndConvert d "TPGT" ( UInt16.Parse >> tpgt_me.fromPrim ) tpgt_me.zero;
             TargetName = Functions.SearchAndConvert d "Name" id "";
             TargetAlias = Functions.SearchAndConvert d "Alias" id "";
@@ -117,6 +117,14 @@ type ConfNode_Target(
                 let v = m_Value.TargetPortalGroupTag
                 if v <> tpgt_me.zero then
                     let msg = m_MessageTable.GetMessage( "CHKMSG_UNSUPPORTED_TPGT_VALUE" )
+                    ( curID, msg ) :: argmsg
+                else
+                    argmsg
+            )
+            |> ( fun argmsg ->
+                let v = m_Value.IdentNumber
+                if v = tnodeidx_me.fromPrim 0us then
+                    let msg = m_MessageTable.GetMessage( "CHKMSG_UNSUPPORTED_TARGET_NODE_ID_VALUE" )
                     ( curID, msg ) :: argmsg
                 else
                     argmsg
@@ -274,7 +282,7 @@ type ConfNode_Target(
             [
                 yield sprintf "Node type : %s" ( this :> IConfigureNode ).NodeTypeName
                 yield         "Values :"
-                yield sprintf "  ID(uint32)    : %d" m_Value.IdentNumber
+                yield sprintf "  ID(uint16)    : %d" m_Value.IdentNumber
                 yield sprintf "  TPGT(uint16)  : %d" m_Value.TargetPortalGroupTag
                 yield sprintf "  Name(string)  : %s" m_Value.TargetName
                 yield sprintf "  Alias(string) : %s" m_Value.TargetAlias
@@ -373,8 +381,9 @@ type ConfNode_Target(
     static member GenNewID ( v : ConfNode_Target seq ) : TNODEIDX_T =
         v
         |> Seq.map _.Values.IdentNumber
+        |> Seq.append [| 0us<tnodeidx_me> |]    // Does not generate 0
         |> Seq.toArray
-        |> Functions.GenUniqueNumber ( (+) 1u<tnodeidx_me> ) ( tnodeidx_me.fromPrim 0u )
+        |> Functions.GenUniqueNumber ( (+) 1us<tnodeidx_me> ) ( tnodeidx_me.fromPrim 1us )
 
     /// <summary>
     ///  Generate new target name.

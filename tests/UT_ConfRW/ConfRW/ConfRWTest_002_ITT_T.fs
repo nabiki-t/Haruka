@@ -45,29 +45,19 @@ type ConfRW_UT002_ITT_T() =
   <xsd:element name='Test' >
     <xsd:complexType><xsd:sequence>
       <xsd:element name='D1' >
-        <xsd:simpleType>
-          <xsd:restriction base='xsd:unsignedInt' />
-        </xsd:simpleType>
+        <xsd:simpleType><xsd:restriction base='xsd:unsignedInt' /></xsd:simpleType>
       </xsd:element>
       <xsd:element name='D2' minOccurs='2' maxOccurs='3' >
-        <xsd:simpleType>
-          <xsd:restriction base='xsd:unsignedInt' />
-        </xsd:simpleType>
+        <xsd:simpleType><xsd:restriction base='xsd:unsignedInt' /></xsd:simpleType>
       </xsd:element>
       <xsd:element name='D3' minOccurs='0' maxOccurs='1' >
-        <xsd:simpleType>
-          <xsd:restriction base='xsd:unsignedInt' />
-        </xsd:simpleType>
+        <xsd:simpleType><xsd:restriction base='xsd:unsignedInt' /></xsd:simpleType>
       </xsd:element>
       <xsd:element name='D7' minOccurs='0' maxOccurs='1' >
-        <xsd:simpleType>
-          <xsd:restriction base='xsd:unsignedInt' />
-        </xsd:simpleType>
+        <xsd:simpleType><xsd:restriction base='xsd:unsignedInt' /></xsd:simpleType>
       </xsd:element>
       <xsd:element name='D8' minOccurs='0' maxOccurs='1' >
-        <xsd:simpleType>
-          <xsd:restriction base='xsd:unsignedInt' />
-        </xsd:simpleType>
+        <xsd:simpleType><xsd:restriction base='xsd:unsignedInt' /></xsd:simpleType>
       </xsd:element>
     </xsd:sequence></xsd:complexType>
   </xsd:element>

@@ -2126,7 +2126,7 @@ type CommandRunner_Test2() =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let wnode = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
         let conf : TargetGroupConf.T_Target = {
-            IdentNumber = tnodeidx_me.fromPrim 0u;
+            IdentNumber = tnodeidx_me.fromPrim 10us;
             TargetPortalGroupTag = tpgt_me.zero;
             TargetName = "";
             TargetAlias = "";
@@ -2139,7 +2139,7 @@ type CommandRunner_Test2() =
         ss.p_UpdateTargetNode <- ( fun argcn argconf ->
             flg1 <- true
             Assert.True(( argcn = initnode ))
-            Assert.True(( argconf.IdentNumber = tnodeidx_me.fromPrim 333u ))
+            Assert.True(( argconf.IdentNumber = tnodeidx_me.fromPrim 333us ))
             initnode.CreateUpdatedNode argconf
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
@@ -2152,7 +2152,7 @@ type CommandRunner_Test2() =
         Assert.True(( cc :> CtrlConnection = r_cc ))
         let expconf = {
             conf with
-                IdentNumber = tnodeidx_me.fromPrim 333u;
+                IdentNumber = tnodeidx_me.fromPrim 333us;
         }
         Assert.True(( ( r_cn :?> ConfNode_Target ).Values = expconf ))
         Assert.True(( flg1 ))
@@ -2177,7 +2177,7 @@ type CommandRunner_Test2() =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let wnode = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
         let conf : TargetGroupConf.T_Target = {
-            IdentNumber = tnodeidx_me.fromPrim 0u;
+            IdentNumber = tnodeidx_me.fromPrim 10us;
             TargetPortalGroupTag = tpgt_me.zero;
             TargetName = "";
             TargetAlias = "";
@@ -2228,7 +2228,7 @@ type CommandRunner_Test2() =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let wnode = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
         let conf : TargetGroupConf.T_Target = {
-            IdentNumber = tnodeidx_me.fromPrim 0u;
+            IdentNumber = tnodeidx_me.fromPrim 10us;
             TargetPortalGroupTag = tpgt_me.zero;
             TargetName = "";
             TargetAlias = "";
@@ -2267,7 +2267,7 @@ type CommandRunner_Test2() =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let wnode = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
         let conf : TargetGroupConf.T_Target = {
-            IdentNumber = tnodeidx_me.fromPrim 0u;
+            IdentNumber = tnodeidx_me.fromPrim 10us;
             TargetPortalGroupTag = tpgt_me.zero;
             TargetName = "";
             TargetAlias = "";

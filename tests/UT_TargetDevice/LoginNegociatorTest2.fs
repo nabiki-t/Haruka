@@ -57,7 +57,7 @@ type LoginNegociator_Test2 () =
             MaxConnections = Constants.NEGOPARAM_MaxConnections;
             TargetGroupID = tgid_me.Zero;
             TargetConf = {
-                IdentNumber = tnodeidx_me.fromPrim 0u;
+                IdentNumber = tnodeidx_me.fromPrim 10us;
                 TargetName = "";
                 TargetAlias = "";
                 TargetPortalGroupTag = tpgt_me.fromPrim 0us;
@@ -105,7 +105,7 @@ type LoginNegociator_Test2 () =
                 [
                     for idx = 0 to vTargetNames.Length - 1 do
                         yield {
-                            IdentNumber = tnodeidx_me.fromPrim ( uint32 idx );
+                            IdentNumber = tnodeidx_me.fromPrim ( uint16 idx + 1us );
                             TargetName = vTargetNames.[idx];
                             TargetAlias = vTargetNames.[idx];
                             TargetPortalGroupTag = tpgt_me.fromPrim 0us;

@@ -56,8 +56,8 @@ type ServerStatus_Test3() =
         ServerStatus_Test1.WriteCtrlConfig dname portNo
         ServerStatus_Test1.WriteTargetDeviceConfig dname portalPortNo1 tdid1
         ServerStatus_Test1.WriteTargetDeviceConfig dname portalPortNo2 tdid2
-        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid1 tgid1 ( lun_me.fromPrim 1UL ) "b001" 1u
-        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid2 tgid2 ( lun_me.fromPrim 2UL ) "b002" 2u
+        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid1 tgid1 ( lun_me.fromPrim 1UL ) "b001" 1us
+        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid2 tgid2 ( lun_me.fromPrim 2UL ) "b002" 2us
 
         let killer = new HKiller() :> IKiller
         let ctrl = new Controller( dname, killer, GlbFunc.tdExePath, GlbFunc.imExePath )
@@ -135,10 +135,10 @@ type ServerStatus_Test3() =
         ServerStatus_Test1.WriteCtrlConfig dname portNo
         ServerStatus_Test1.WriteTargetDeviceConfig dname portalPortNo1 tdid1
         ServerStatus_Test1.WriteTargetDeviceConfig dname portalPortNo2 tdid2
-        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid1 tgid11 ( lun_me.fromPrim 1UL ) "b001" 1u
-        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid1 tgid12 ( lun_me.fromPrim 2UL ) "b002" 2u
-        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid2 tgid21 ( lun_me.fromPrim 3UL ) "b003" 3u
-        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid2 tgid22 ( lun_me.fromPrim 4UL ) "b004" 4u
+        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid1 tgid11 ( lun_me.fromPrim 1UL ) "b001" 1us
+        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid1 tgid12 ( lun_me.fromPrim 2UL ) "b002" 2us
+        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid2 tgid21 ( lun_me.fromPrim 3UL ) "b003" 3us
+        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid2 tgid22 ( lun_me.fromPrim 4UL ) "b004" 4us
 
         let killer = new HKiller() :> IKiller
         let ctrl = new Controller( dname, killer, GlbFunc.tdExePath, GlbFunc.imExePath )
@@ -212,7 +212,7 @@ type ServerStatus_Test3() =
 
         ServerStatus_Test1.WriteCtrlConfig dname portNo
         ServerStatus_Test1.WriteTargetDeviceConfig dname portalPortNo1 tdid1
-        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid1 tgid1 ( lun_me.fromPrim 1UL ) "b001" 1u
+        ServerStatus_Test1.WriteTargetGroupConfig_WithDummyLU dname tdid1 tgid1 ( lun_me.fromPrim 1UL ) "b001" 1us
 
         let killer = new HKiller() :> IKiller
         let ctrl = new Controller( dname, killer, GlbFunc.tdExePath, GlbFunc.imExePath )
@@ -276,7 +276,7 @@ type ServerStatus_Test3() =
             TargetGroupName = "tg001";
             EnabledAtStart = true;
             Target = [{
-                IdentNumber = tnodeidx_me.fromPrim 1u;
+                IdentNumber = tnodeidx_me.fromPrim 1us;
                 TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                 TargetName = "target001";
                 TargetAlias = "";
@@ -379,7 +379,7 @@ type ServerStatus_Test3() =
                             TargetGroupName = ( sprintf "targetgroup_bbb_%03d" j );
                             EnabledAtStart = false;
                             Target = [{
-                                IdentNumber = tnodeidx_me.fromPrim 0u;
+                                IdentNumber = tnodeidx_me.fromPrim 10us;
                                 TargetPortalGroupTag = tpgt_me.zero;
                                 TargetName = ( sprintf "target%03d" j );
                                 TargetAlias = "";

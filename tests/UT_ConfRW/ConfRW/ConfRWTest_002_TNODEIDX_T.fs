@@ -45,19 +45,44 @@ type ConfRW_UT002_TNODEIDX_T() =
   <xsd:element name='Test' >
     <xsd:complexType><xsd:sequence>
       <xsd:element name='D1' >
-        <xsd:simpleType><xsd:restriction base='xsd:unsignedInt' /></xsd:simpleType>
+        <xsd:simpleType>
+          <xsd:restriction base='xsd:unsignedShort' >
+            <xsd:minInclusive value='1' />
+            <xsd:maxInclusive value='65535' />
+          </xsd:restriction>
+        </xsd:simpleType>
       </xsd:element>
       <xsd:element name='D2' minOccurs='2' maxOccurs='3' >
-        <xsd:simpleType><xsd:restriction base='xsd:unsignedInt' /></xsd:simpleType>
+        <xsd:simpleType>
+          <xsd:restriction base='xsd:unsignedShort' >
+            <xsd:minInclusive value='1' />
+            <xsd:maxInclusive value='65535' />
+          </xsd:restriction>
+        </xsd:simpleType>
       </xsd:element>
       <xsd:element name='D3' minOccurs='0' maxOccurs='1' >
-        <xsd:simpleType><xsd:restriction base='xsd:unsignedInt' /></xsd:simpleType>
+        <xsd:simpleType>
+          <xsd:restriction base='xsd:unsignedShort' >
+            <xsd:minInclusive value='1' />
+            <xsd:maxInclusive value='65535' />
+          </xsd:restriction>
+        </xsd:simpleType>
       </xsd:element>
       <xsd:element name='D7' minOccurs='0' maxOccurs='1' >
-        <xsd:simpleType><xsd:restriction base='xsd:unsignedInt' /></xsd:simpleType>
+        <xsd:simpleType>
+          <xsd:restriction base='xsd:unsignedShort' >
+            <xsd:minInclusive value='1' />
+            <xsd:maxInclusive value='65535' />
+          </xsd:restriction>
+        </xsd:simpleType>
       </xsd:element>
       <xsd:element name='D8' minOccurs='0' maxOccurs='1' >
-        <xsd:simpleType><xsd:restriction base='xsd:unsignedInt' /></xsd:simpleType>
+        <xsd:simpleType>
+          <xsd:restriction base='xsd:unsignedShort' >
+            <xsd:minInclusive value='1' />
+            <xsd:maxInclusive value='65535' />
+          </xsd:restriction>
+        </xsd:simpleType>
       </xsd:element>
     </xsd:sequence></xsd:complexType>
   </xsd:element>
@@ -149,33 +174,33 @@ type ConfRW_UT002_TNODEIDX_T() =
     static member private Read_T_Test ( elem : XElement ) : T_Test = 
         {
             D1 =
-                tnodeidx_me.fromPrim( UInt32.Parse( elem.Element( XName.Get "D1" ).Value ) );
+                tnodeidx_me.fromPrim( UInt16.Parse( elem.Element( XName.Get "D1" ).Value ) );
             D2 =
                 elem.Elements()
                 |> Seq.filter ( fun itr -> itr.Name = XName.Get "D2" )
-                |> Seq.map ( fun itr -> tnodeidx_me.fromPrim( UInt32.Parse( itr.Value ) ) )
+                |> Seq.map ( fun itr -> tnodeidx_me.fromPrim( UInt16.Parse( itr.Value ) ) )
                 |> Seq.toList
             D3 = 
                 let subElem = elem.Element( XName.Get "D3" )
                 if subElem = null then
                     None
                 else
-                    Some( tnodeidx_me.fromPrim( UInt32.Parse( subElem.Value ) ) );
-            D4 = tnodeidx_me.fromPrim( 0u );
-            D5 = tnodeidx_me.fromPrim( 99u );
-            D6 = tnodeidx_me.fromPrim( 16u );
+                    Some( tnodeidx_me.fromPrim( UInt16.Parse( subElem.Value ) ) );
+            D4 = tnodeidx_me.fromPrim( 1us );
+            D5 = tnodeidx_me.fromPrim( 99us );
+            D6 = tnodeidx_me.fromPrim( 16us );
             D7 = 
                 let subElem = elem.Element( XName.Get "D7" )
                 if subElem = null then
-                    tnodeidx_me.fromPrim( 98u );
+                    tnodeidx_me.fromPrim( 98us );
                 else
-                    tnodeidx_me.fromPrim( UInt32.Parse( subElem.Value ) );
+                    tnodeidx_me.fromPrim( UInt16.Parse( subElem.Value ) );
             D8 = 
                 let subElem = elem.Element( XName.Get "D8" )
                 if subElem = null then
-                    tnodeidx_me.fromPrim( 16u );
+                    tnodeidx_me.fromPrim( 16us );
                 else
-                    tnodeidx_me.fromPrim( UInt32.Parse( subElem.Value ) );
+                    tnodeidx_me.fromPrim( UInt16.Parse( subElem.Value ) );
         }
 
     /// <summary>
@@ -230,14 +255,24 @@ type ConfRW_UT002_TNODEIDX_T() =
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
             yield sprintf "%s<%s>" indentStr elemName
+            if tnodeidx_me.toPrim (elem.D1) = 0us then
+                raise <| ConfRWException( "Min value(TNODEIDX_T) restriction error. D1" )
             yield sprintf "%s%s<D1>%d</D1>" singleIndent indentStr ( tnodeidx_me.toPrim (elem.D1) )
             if elem.D2.Length < 2 || elem.D2.Length > 3 then 
                 raise <| ConfRWException( "Element count restriction error. D2" )
             for itr in elem.D2 do
+                if tnodeidx_me.toPrim (itr) = 0us then
+                    raise <| ConfRWException( "Min value(TNODEIDX_T) restriction error. D2" )
                 yield sprintf "%s%s<D2>%d</D2>" singleIndent indentStr ( tnodeidx_me.toPrim (itr) )
             if elem.D3.IsSome then
+                if tnodeidx_me.toPrim (elem.D3.Value) = 0us then
+                    raise <| ConfRWException( "Min value(TNODEIDX_T) restriction error. D3" )
                 yield sprintf "%s%s<D3>%d</D3>" singleIndent indentStr ( tnodeidx_me.toPrim (elem.D3.Value) )
+            if tnodeidx_me.toPrim (elem.D7) = 0us then
+                raise <| ConfRWException( "Min value(TNODEIDX_T) restriction error. D7" )
             yield sprintf "%s%s<D7>%d</D7>" singleIndent indentStr ( tnodeidx_me.toPrim (elem.D7) )
+            if tnodeidx_me.toPrim (elem.D8) = 0us then
+                raise <| ConfRWException( "Min value(TNODEIDX_T) restriction error. D8" )
             yield sprintf "%s%s<D8>%d</D8>" singleIndent indentStr ( tnodeidx_me.toPrim (elem.D8) )
             yield sprintf "%s</%s>" indentStr elemName
         }

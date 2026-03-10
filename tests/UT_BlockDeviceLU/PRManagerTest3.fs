@@ -63,7 +63,7 @@ type PRManager_Test3 () =
                 [
                     if lun = lun_me.zero || lun = lun_me.fromPrim 1UL then
                         yield {
-                            IdentNumber = tnodeidx_me.fromPrim 0u;
+                            IdentNumber = tnodeidx_me.fromPrim 1us;
                             TargetName = "target000";
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.fromPrim 0us;
@@ -72,7 +72,7 @@ type PRManager_Test3 () =
                         };
                     if lun = lun_me.zero || lun = lun_me.fromPrim 1UL then
                         yield {
-                            IdentNumber = tnodeidx_me.fromPrim 1u;
+                            IdentNumber = tnodeidx_me.fromPrim 2us;
                             TargetName = "target001";
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.fromPrim 1us;
@@ -81,7 +81,7 @@ type PRManager_Test3 () =
                         };
                     if lun = lun_me.fromPrim 2UL then
                         yield {
-                            IdentNumber = tnodeidx_me.fromPrim 2u;
+                            IdentNumber = tnodeidx_me.fromPrim 3us;
                             TargetName = "target002";
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.fromPrim 0us;

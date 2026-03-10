@@ -196,7 +196,12 @@ type ReaderWriter() =
                 </xsd:simpleType>
               </xsd:element>
               <xsd:element name='SessInTarget' >
-                <xsd:simpleType><xsd:restriction base='xsd:unsignedInt' /></xsd:simpleType>
+                <xsd:simpleType>
+                  <xsd:restriction base='xsd:unsignedShort' >
+                    <xsd:minInclusive value='1' />
+                    <xsd:maxInclusive value='65535' />
+                  </xsd:restriction>
+                </xsd:simpleType>
               </xsd:element>
             </xsd:choice></xsd:complexType>
           </xsd:element>
@@ -226,7 +231,12 @@ type ReaderWriter() =
                 </xsd:simpleType>
               </xsd:element>
               <xsd:element name='ConInTarget' >
-                <xsd:simpleType><xsd:restriction base='xsd:unsignedInt' /></xsd:simpleType>
+                <xsd:simpleType>
+                  <xsd:restriction base='xsd:unsignedShort' >
+                    <xsd:minInclusive value='1' />
+                    <xsd:maxInclusive value='65535' />
+                  </xsd:restriction>
+                </xsd:simpleType>
               </xsd:element>
               <xsd:element name='ConInSession' >
                 <xsd:simpleType>
@@ -466,7 +476,7 @@ type ReaderWriter() =
         | "SessInTargetGroup" ->
             U_SessInTargetGroup( tgid_me.fromString( firstChild.Value ) )
         | "SessInTarget" ->
-            U_SessInTarget( tnodeidx_me.fromPrim( UInt32.Parse( firstChild.Value ) ) )
+            U_SessInTarget( tnodeidx_me.fromPrim( UInt16.Parse( firstChild.Value ) ) )
         | _ -> raise <| ConfRWException( "Unexpected tag name." )
 
     /// <summary>
@@ -489,7 +499,7 @@ type ReaderWriter() =
         | "ConInTargetGroup" ->
             U_ConInTargetGroup( tgid_me.fromString( firstChild.Value ) )
         | "ConInTarget" ->
-            U_ConInTarget( tnodeidx_me.fromPrim( UInt32.Parse( firstChild.Value ) ) )
+            U_ConInTarget( tnodeidx_me.fromPrim( UInt16.Parse( firstChild.Value ) ) )
         | "ConInSession" ->
             U_ConInSession( tsih_me.fromPrim( UInt16.Parse( firstChild.Value ) ) )
         | _ -> raise <| ConfRWException( "Unexpected tag name." )
@@ -719,6 +729,8 @@ type ReaderWriter() =
             | U_SessInTargetGroup( x ) ->
                 yield sprintf "%s%s<SessInTargetGroup>%s</SessInTargetGroup>" singleIndent indentStr ( tgid_me.toString (x) )
             | U_SessInTarget( x ) ->
+                if tnodeidx_me.toPrim (x) = 0us then
+                    raise <| ConfRWException( "Min value(TNODEIDX_T) restriction error. SessInTarget" )
                 yield sprintf "%s%s<SessInTarget>%d</SessInTarget>" singleIndent indentStr ( tnodeidx_me.toPrim (x) )
             yield sprintf "%s</%s>" indentStr elemName
         }
@@ -754,6 +766,8 @@ type ReaderWriter() =
             | U_ConInTargetGroup( x ) ->
                 yield sprintf "%s%s<ConInTargetGroup>%s</ConInTargetGroup>" singleIndent indentStr ( tgid_me.toString (x) )
             | U_ConInTarget( x ) ->
+                if tnodeidx_me.toPrim (x) = 0us then
+                    raise <| ConfRWException( "Min value(TNODEIDX_T) restriction error. ConInTarget" )
                 yield sprintf "%s%s<ConInTarget>%d</ConInTarget>" singleIndent indentStr ( tnodeidx_me.toPrim (x) )
             | U_ConInSession( x ) ->
                 yield sprintf "%s%s<ConInSession>%d</ConInSession>" singleIndent indentStr ( tsih_me.toPrim (x) )

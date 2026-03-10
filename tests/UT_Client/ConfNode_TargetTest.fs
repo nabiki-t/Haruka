@@ -30,7 +30,7 @@ type ConfNode_Target_Test() =
     // Common definition
 
     let defaultConf : TargetGroupConf.T_Target = {
-        IdentNumber = tnodeidx_me.fromPrim 1u;
+        IdentNumber = tnodeidx_me.fromPrim 1us;
         TargetPortalGroupTag = tpgt_me.fromPrim 0us;
         TargetName = "aaa";
         TargetAlias = "";
@@ -67,7 +67,7 @@ type ConfNode_Target_Test() =
         let n = ConfNode_Target( st, rel, cid, te )
         rel.AddNode n   // The value cannot be referenced unless n is added to ConfNodeRelation.
         Assert.True(( ( n :> IConfigureNode ).NodeID = cid ))
-        Assert.True(( n.Values.IdentNumber = tnodeidx_me.fromPrim 0u ))
+        Assert.True(( n.Values.IdentNumber = tnodeidx_me.fromPrim 1us ))
         Assert.True(( n.Values.TargetPortalGroupTag = tpgt_me.zero ))
         Assert.True(( n.Values.TargetName = "" ))
         Assert.True(( n.Values.TargetAlias = "" ))
@@ -111,7 +111,7 @@ type ConfNode_Target_Test() =
         let n = ConfNode_Target( st, rel, cid, te )
         rel.AddNode n   // The value cannot be referenced unless n is added to ConfNodeRelation.
         Assert.True(( ( n :> IConfigureNode ).NodeID = cid ))
-        Assert.True(( n.Values.IdentNumber = tnodeidx_me.fromPrim 1254u ))
+        Assert.True(( n.Values.IdentNumber = tnodeidx_me.fromPrim 1254us ))
         Assert.True(( n.Values.TargetPortalGroupTag = tpgt_me.fromPrim 145us ))
         Assert.True(( n.Values.TargetName = "asdf" ))
         Assert.True(( n.Values.TargetAlias = "123rfg" ))
@@ -171,7 +171,7 @@ type ConfNode_Target_Test() =
         let n = ConfNode_Target( st, rel, cid, te )
         rel.AddNode n   // The value cannot be referenced unless n is added to ConfNodeRelation.
         Assert.True(( ( n :> IConfigureNode ).NodeID = cid ))
-        Assert.True(( n.Values.IdentNumber = tnodeidx_me.fromPrim 1254u ))
+        Assert.True(( n.Values.IdentNumber = tnodeidx_me.fromPrim 1254us ))
         Assert.True(( n.Values.TargetPortalGroupTag = tpgt_me.fromPrim 145us ))
         Assert.True(( n.Values.TargetName = "asdf" ))
         Assert.True(( n.Values.TargetAlias = "123rfg" ))
@@ -194,7 +194,7 @@ type ConfNode_Target_Test() =
         Assert.True(( n.NodeTypeName = "Target" ))
 
         let confVal2 : TargetGroupConf.T_Target = {
-            IdentNumber = tnodeidx_me.fromPrim 1u;
+            IdentNumber = tnodeidx_me.fromPrim 1us;
             TargetPortalGroupTag = tpgt_me.fromPrim 1us;
             TargetName = "bbb";
             TargetAlias = "ggg";
@@ -252,6 +252,29 @@ type ConfNode_Target_Test() =
         Assert.True(( r.Length = 1 ))
         Assert.True(( fst r.[0] = n.NodeID ))
         Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_UNSUPPORTED_TPGT_VALUE" ))
+
+    [<Fact>]
+    member _.Validate_002_1() =
+        let st = new StringTable( "" )
+        let rel = new ConfNodeRelation()
+        let conf = {
+            defaultConf with
+                IdentNumber = tnodeidx_me.fromPrim 0us;
+        }
+
+        let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
+        let n = new ConfNode_Target( st, rel, rel.NextID, conf ) :> IConfigureNode
+        let dd = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> ILUNode
+        rel.AddNode tg
+        rel.AddNode n
+        rel.AddNode dd
+        rel.AddRelation tg.NodeID n.NodeID
+        rel.AddRelation n.NodeID dd.NodeID
+
+        let r = n.Validate []
+        Assert.True(( r.Length = 1 ))
+        Assert.True(( fst r.[0] = n.NodeID ))
+        Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_UNSUPPORTED_TARGET_NODE_ID_VALUE" ))
 
     [<Fact>]
     member _.Validate_003() =
@@ -1111,7 +1134,7 @@ type ConfNode_Target_Test() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf : TargetGroupConf.T_Target = {
-            IdentNumber = tnodeidx_me.fromPrim 2u;
+            IdentNumber = tnodeidx_me.fromPrim 2us;
             TargetPortalGroupTag = tpgt_me.fromPrim 0us;
             TargetName = "abcdefg";
             TargetAlias = "aabbccd";
@@ -1122,7 +1145,7 @@ type ConfNode_Target_Test() =
         rel.AddNode n
 
         let v = ( n :?> ConfNode_Target ).Values
-        Assert.True(( v.IdentNumber = tnodeidx_me.fromPrim 2u ))
+        Assert.True(( v.IdentNumber = tnodeidx_me.fromPrim 2us ))
         Assert.True(( v.TargetName = "abcdefg" ))
         Assert.True(( v.TargetAlias = "aabbccd" ))
         Assert.True(( v.LUN = [] ))
@@ -1133,7 +1156,7 @@ type ConfNode_Target_Test() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf : TargetGroupConf.T_Target = {
-            IdentNumber = tnodeidx_me.fromPrim 2u;
+            IdentNumber = tnodeidx_me.fromPrim 2us;
             TargetPortalGroupTag = tpgt_me.fromPrim 0us;
             TargetName = "abcdefg";
             TargetAlias = "aabbccd";
@@ -1152,7 +1175,7 @@ type ConfNode_Target_Test() =
         rel.AddRelation n.NodeID dd2.NodeID
 
         let v = ( n :?> ConfNode_Target ).Values
-        Assert.True(( v.IdentNumber = tnodeidx_me.fromPrim 2u ))
+        Assert.True(( v.IdentNumber = tnodeidx_me.fromPrim 2us ))
         Assert.True(( v.TargetName = "abcdefg" ))
         Assert.True(( v.TargetAlias = "aabbccd" ))
         Assert.True(( v.LUN = [ lun_me.fromPrim 10UL; lun_me.fromPrim 11UL ] ))
@@ -1390,31 +1413,31 @@ type ConfNode_Target_Test() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let v = [
-            new ConfNode_Target( st, rel, rel.NextID, { defaultConf with IdentNumber = tnodeidx_me.fromPrim 0u } );
-            new ConfNode_Target( st, rel, rel.NextID, { defaultConf with IdentNumber = tnodeidx_me.fromPrim 1u } );
+            new ConfNode_Target( st, rel, rel.NextID, { defaultConf with IdentNumber = tnodeidx_me.fromPrim 1us } );
+            new ConfNode_Target( st, rel, rel.NextID, { defaultConf with IdentNumber = tnodeidx_me.fromPrim 2us } );
         ]
         for i in v do rel.AddNode i
         let n = ConfNode_Target.GenNewID v
-        Assert.True(( n = tnodeidx_me.fromPrim 2u ))
+        Assert.True(( n = tnodeidx_me.fromPrim 3us ))
 
     [<Fact>]
     member _.GenNewID_002() =
         let n = ConfNode_Target.GenNewID []
-        Assert.True(( n = tnodeidx_me.fromPrim 0u ))
+        Assert.True(( n = tnodeidx_me.fromPrim 1us ))
 
     [<Fact>]
     member _.GenNewID_003() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let v = [
-            new ConfNode_Target( st, rel, rel.NextID, { defaultConf with IdentNumber = tnodeidx_me.fromPrim 0u } );
-            new ConfNode_Target( st, rel, rel.NextID, { defaultConf with IdentNumber = tnodeidx_me.fromPrim 1u } );
-            new ConfNode_Target( st, rel, rel.NextID, { defaultConf with IdentNumber = tnodeidx_me.fromPrim 2u } );
-            new ConfNode_Target( st, rel, rel.NextID, { defaultConf with IdentNumber = tnodeidx_me.fromPrim UInt32.MaxValue } );
+            new ConfNode_Target( st, rel, rel.NextID, { defaultConf with IdentNumber = tnodeidx_me.fromPrim 1us } );
+            new ConfNode_Target( st, rel, rel.NextID, { defaultConf with IdentNumber = tnodeidx_me.fromPrim 2us } );
+            new ConfNode_Target( st, rel, rel.NextID, { defaultConf with IdentNumber = tnodeidx_me.fromPrim 3us } );
+            new ConfNode_Target( st, rel, rel.NextID, { defaultConf with IdentNumber = tnodeidx_me.fromPrim UInt16.MaxValue } );
         ]
         for i in v do rel.AddNode i
         let n = ConfNode_Target.GenNewID v
-        Assert.True(( n = tnodeidx_me.fromPrim 3u ))
+        Assert.True(( n = tnodeidx_me.fromPrim 4us ))
 
     [<Fact>]
     member _.GenDefaultTargetName_001() =
@@ -1464,7 +1487,7 @@ type ConfNode_Target_Test() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf : TargetGroupConf.T_Target = {
-            IdentNumber = tnodeidx_me.fromPrim 423u;
+            IdentNumber = tnodeidx_me.fromPrim 423us;
             TargetPortalGroupTag = tpgt_me.fromPrim 0us;
             TargetName = "a456aa";
             TargetAlias = "bbggrrtt";
@@ -1485,7 +1508,7 @@ type ConfNode_Target_Test() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf : TargetGroupConf.T_Target = {
-            IdentNumber = tnodeidx_me.fromPrim 423u;
+            IdentNumber = tnodeidx_me.fromPrim 423us;
             TargetPortalGroupTag = tpgt_me.fromPrim 99us;
             TargetName = "a456aa";
             TargetAlias = "bbggrrtt";
@@ -1508,7 +1531,7 @@ type ConfNode_Target_Test() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf : TargetGroupConf.T_Target = {
-            IdentNumber = tnodeidx_me.fromPrim 423u;
+            IdentNumber = tnodeidx_me.fromPrim 423us;
             TargetPortalGroupTag = tpgt_me.fromPrim 99us;
             TargetName = "a456aa";
             TargetAlias = "bbggrrtt";

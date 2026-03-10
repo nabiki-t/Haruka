@@ -60,7 +60,7 @@ type ConfNode_TargetDevice_Test() =
     }
 
     let defaultTargetConf : TargetGroupConf.T_Target = {
-        IdentNumber = tnodeidx_me.fromPrim 1u;
+        IdentNumber = tnodeidx_me.fromPrim 11us;
         TargetPortalGroupTag = tpgt_me.fromPrim 0us;
         TargetName = "aaa";
         TargetAlias = "";
@@ -1596,7 +1596,7 @@ type ConfNode_TargetDevice_Test() =
         for i = 1 to Constants.MAX_TARGET_GROUP_COUNT_IN_TD do
             let targetConf = {
                 defaultTargetConf with
-                    IdentNumber = tnodeidx_me.fromPrim ( uint32 i );
+                    IdentNumber = tnodeidx_me.fromPrim ( uint16 i );
                     TargetName = sprintf "aaa%d" i
                     LUN = [ lun_me.fromPrim ( uint64 i ) ];
             }
@@ -1630,7 +1630,7 @@ type ConfNode_TargetDevice_Test() =
         for i = 1 to Constants.MAX_TARGET_GROUP_COUNT_IN_TD + 1 do
             let targetConf = {
                 defaultTargetConf with
-                    IdentNumber = tnodeidx_me.fromPrim ( uint32 i );
+                    IdentNumber = tnodeidx_me.fromPrim ( uint16 i );
                     TargetName = sprintf "aaa%d" i
                     LUN = [ lun_me.fromPrim 1UL ];
             }
@@ -1688,7 +1688,7 @@ type ConfNode_TargetDevice_Test() =
         for i = 1 to Constants.MAX_TARGET_COUNT_IN_TD do
             let targetConf = {
                 defaultTargetConf with
-                    IdentNumber = tnodeidx_me.fromPrim ( uint32 i );
+                    IdentNumber = tnodeidx_me.fromPrim ( uint16 i );
                     TargetName = sprintf "aaa%d" i
                     LUN = [ lun_me.fromPrim ( uint64 i ) ];
             }
@@ -1724,7 +1724,7 @@ type ConfNode_TargetDevice_Test() =
         for i = 1 to Constants.MAX_TARGET_COUNT_IN_TD do
             let targetConf = {
                 defaultTargetConf with
-                    IdentNumber = tnodeidx_me.fromPrim ( uint32 i );
+                    IdentNumber = tnodeidx_me.fromPrim ( uint16 i );
                     TargetName = sprintf "aaa%d" i
                     LUN = [ lun_me.fromPrim ( uint64 i ) ];
             }
@@ -1741,7 +1741,7 @@ type ConfNode_TargetDevice_Test() =
         let widx = Constants.MAX_TARGET_COUNT_IN_TD + 1
         let targetConf = {
             defaultTargetConf with
-                IdentNumber = tnodeidx_me.fromPrim ( uint32 widx );
+                IdentNumber = tnodeidx_me.fromPrim ( uint16 widx );
                 TargetName = sprintf "aaa%d" widx
                 LUN = [ lun_me.fromPrim ( uint64 widx ) ];
         }
@@ -1774,7 +1774,7 @@ type ConfNode_TargetDevice_Test() =
 
         let targetConf1 = {
             defaultTargetConf with
-                IdentNumber = tnodeidx_me.fromPrim 1u;
+                IdentNumber = tnodeidx_me.fromPrim 1us;
                 TargetName = "aaa1"
                 LUN = [ lun_me.fromPrim 1UL ];
         }
@@ -1809,7 +1809,7 @@ type ConfNode_TargetDevice_Test() =
 
         let targetConf1 = {
             defaultTargetConf with
-                IdentNumber = tnodeidx_me.fromPrim 1u;
+                IdentNumber = tnodeidx_me.fromPrim 1us;
                 TargetName = "aaa1"
                 LUN = [ lun_me.fromPrim 1UL ];
         }
@@ -1827,7 +1827,7 @@ type ConfNode_TargetDevice_Test() =
         rel.AddRelation n.NodeID tg2.NodeID
         let targetConf2 = {
             defaultTargetConf with
-                IdentNumber = tnodeidx_me.fromPrim 2u;
+                IdentNumber = tnodeidx_me.fromPrim 2us;
                 TargetName = "aaa2"
                 LUN = [ lun_me.fromPrim 2UL ];
         }
@@ -1928,12 +1928,12 @@ type ConfNode_TargetDevice_Test() =
         let rel = new ConfNodeRelation()
         let targetConf1 = {
             defaultTargetConf with
-                IdentNumber = tnodeidx_me.fromPrim 1u;
+                IdentNumber = tnodeidx_me.fromPrim 1us;
                 TargetName = "aaa"
         }
         let targetConf2 = {
             defaultTargetConf with
-                IdentNumber = tnodeidx_me.fromPrim 2u;
+                IdentNumber = tnodeidx_me.fromPrim 2us;
                 TargetName = "bbb"
         }
         let cn = new ConfNode_Controller( st, rel, rel.NextID, defContConf, ModifiedStatus.NotModified ) :> IConfigFileNode
@@ -1973,12 +1973,12 @@ type ConfNode_TargetDevice_Test() =
         let tgid = GlbFunc.newTargetGroupID()
         let targetConf1 = {
             defaultTargetConf with
-                IdentNumber = tnodeidx_me.fromPrim 1u;
+                IdentNumber = tnodeidx_me.fromPrim 1us;
                 TargetName = "aaa"
         }
         let targetConf2 = {
             defaultTargetConf with
-                IdentNumber = tnodeidx_me.fromPrim 2u;
+                IdentNumber = tnodeidx_me.fromPrim 2us;
                 TargetName = "bbb"
         }
         let cn = new ConfNode_Controller( st, rel, rel.NextID, defContConf, ModifiedStatus.NotModified ) :> IConfigFileNode
@@ -2022,12 +2022,12 @@ type ConfNode_TargetDevice_Test() =
         let rel = new ConfNodeRelation()
         let targetConf1 = {
             defaultTargetConf with
-                IdentNumber = tnodeidx_me.fromPrim 1u;
+                IdentNumber = tnodeidx_me.fromPrim 1us;
                 TargetName = "aaa"
         }
         let targetConf2 = {
             defaultTargetConf with
-                IdentNumber = tnodeidx_me.fromPrim 2u;
+                IdentNumber = tnodeidx_me.fromPrim 2us;
                 TargetName = "bbb"
         }
         let cn = new ConfNode_Controller( st, rel, rel.NextID, defContConf, ModifiedStatus.NotModified ) :> IConfigFileNode
@@ -2060,12 +2060,12 @@ type ConfNode_TargetDevice_Test() =
         let rel = new ConfNodeRelation()
         let targetConf1 = {
             defaultTargetConf with
-                IdentNumber = tnodeidx_me.fromPrim 1u;
+                IdentNumber = tnodeidx_me.fromPrim 1us;
                 TargetName = "aaa"
         }
         let targetConf2 = {
             defaultTargetConf with
-                IdentNumber = tnodeidx_me.fromPrim 1u;
+                IdentNumber = tnodeidx_me.fromPrim 1us;
                 TargetName = "bbb"
         }
         let cn = new ConfNode_Controller( st, rel, rel.NextID, defContConf, ModifiedStatus.NotModified ) :> IConfigFileNode
@@ -2106,12 +2106,12 @@ type ConfNode_TargetDevice_Test() =
         let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
         let targetConf1 = {
             defaultTargetConf with
-                IdentNumber = tnodeidx_me.fromPrim 1u;
+                IdentNumber = tnodeidx_me.fromPrim 1us;
                 TargetName = "aaa"
         }
         let targetConf2 = {
             defaultTargetConf with
-                IdentNumber = tnodeidx_me.fromPrim 2u;
+                IdentNumber = tnodeidx_me.fromPrim 2us;
                 TargetName = "bbb"
         }
         let cn = new ConfNode_Controller( st, rel, rel.NextID, defContConf, ModifiedStatus.NotModified ) :> IConfigFileNode
@@ -2161,12 +2161,12 @@ type ConfNode_TargetDevice_Test() =
         let rel = new ConfNodeRelation()
         let targetConf1 = {
             defaultTargetConf with
-                IdentNumber = tnodeidx_me.fromPrim 1u;
+                IdentNumber = tnodeidx_me.fromPrim 1us;
                 TargetName = "aaa"
         }
         let targetConf2 = {
             defaultTargetConf with
-                IdentNumber = tnodeidx_me.fromPrim 2u;
+                IdentNumber = tnodeidx_me.fromPrim 2us;
                 TargetName = "aaa"
         }
         let cn = new ConfNode_Controller( st, rel, rel.NextID, defContConf, ModifiedStatus.NotModified ) :> IConfigFileNode

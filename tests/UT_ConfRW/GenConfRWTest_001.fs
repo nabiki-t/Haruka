@@ -1097,15 +1097,16 @@ type GenConfRW_Test_001 () =
             ()
 
     [<Theory>]
-    [<InlineData( "<Test><D1>-1</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>" )>]
-    [<InlineData( "<Test><D1>4294967296</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>" )>]
-    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D3>0</D3></Test>" )>]
-    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D2>0</D2><D2>0</D2><D3>0</D3></Test>" )>]
-    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D3>0</D3></Test>" )>]
-    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D3>0</D3><D3>0</D3></Test>" )>]
-    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D4>0</D4></Test>" )>]
-    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D5>0</D5></Test>" )>]
-    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3><D6>0</D6></Test>" )>]
+    [<InlineData( "<Test><D1>-1</D1><D2>1</D2><D2>1</D2><D3>1</D3></Test>" )>]
+    [<InlineData( "<Test><D1>0</D1><D2>1</D2><D2>1</D2><D3>1</D3></Test>" )>]
+    [<InlineData( "<Test><D1>65536</D1><D2>1</D2><D2>1</D2><D3>1</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>1</D2><D3>1</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>1</D2><D2>1</D2><D2>1</D2><D2>1</D2><D3>1</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>1</D2><D2>1</D2><D3>1</D3><D3>1</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>1</D2><D2>1</D2><D3>1</D3><D3>1</D3><D3>1</D3></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>1</D2><D2>1</D2><D3>1</D3><D4>1</D4></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>1</D2><D2>1</D2><D3>1</D3><D5>1</D5></Test>" )>]
+    [<InlineData( "<Test><D1>2</D1><D2>1</D2><D2>1</D2><D3>1</D3><D6>1</D6></Test>" )>]
     member _.SingleValue_TNODEIDX_001 ( s : string ) =
         try
             ConfRW_002_TNODEIDX_T.ConfRW_UT002_TNODEIDX_T.LoadString s |> ignore
@@ -1116,17 +1117,17 @@ type GenConfRW_Test_001 () =
             ()
 
     [<Theory>]
-    [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 2u )>]
-    [<InlineData( "<Test><D1>3</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 3u )>]
-    [<InlineData( "<Test><D1>4</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 4u )>]
-    [<InlineData( "<Test><D1>5</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 5u )>]
-    member _.SingleValue_TNODEIDX_002 ( s : string ) ( exr : uint32 ) =
+    [<InlineData( "<Test><D1>2</D1><D2>1</D2><D2>1</D2><D3>1</D3></Test>", 2us )>]
+    [<InlineData( "<Test><D1>3</D1><D2>1</D2><D2>1</D2><D3>1</D3></Test>", 3us )>]
+    [<InlineData( "<Test><D1>4</D1><D2>1</D2><D2>1</D2><D3>1</D3></Test>", 4us )>]
+    [<InlineData( "<Test><D1>5</D1><D2>1</D2><D2>1</D2><D3>1</D3></Test>", 5us )>]
+    member _.SingleValue_TNODEIDX_002 ( s : string ) ( exr : uint16 ) =
         let r = ConfRW_002_TNODEIDX_T.ConfRW_UT002_TNODEIDX_T.LoadString s
         Assert.True( r.D1 = tnodeidx_me.fromPrim exr )
 
     static member m_SingleValue_TNODEIDX_003_data = [|
-        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>0</D3></Test>" :> obj; [ tnodeidx_me.fromPrim 0u; tnodeidx_me.fromPrim 1u; ] :> obj |];
-        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D2>2</D2><D3>0</D3></Test>" :> obj; [ tnodeidx_me.fromPrim 0u; tnodeidx_me.fromPrim 1u; tnodeidx_me.fromPrim 2u; ] :> obj |];
+        [| "<Test><D1>2</D1><D2>1</D2><D2>2</D2><D3>1</D3></Test>" :> obj; [ tnodeidx_me.fromPrim 1us; tnodeidx_me.fromPrim 2us; ] :> obj |];
+        [| "<Test><D1>2</D1><D2>1</D2><D2>2</D2><D2>3</D2><D3>1</D3></Test>" :> obj; [ tnodeidx_me.fromPrim 1us; tnodeidx_me.fromPrim 2us; tnodeidx_me.fromPrim 3us; ] :> obj |];
     |]
 
     [<Theory>]
@@ -1136,8 +1137,8 @@ type GenConfRW_Test_001 () =
         Assert.True( r.D2 = exr )
 
     static member m_SingleValue_TNODEIDX_004_data = [|
-        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2></Test>" :> obj; None :> obj |];
-        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>1</D3></Test>" :> obj; Some( tnodeidx_me.fromPrim 1u ) :> obj |];
+        [| "<Test><D1>2</D1><D2>1</D2><D2>2</D2></Test>" :> obj; None :> obj |];
+        [| "<Test><D1>2</D1><D2>1</D2><D2>2</D2><D3>2</D3></Test>" :> obj; Some( tnodeidx_me.fromPrim 2us ) :> obj |];
     |]
 
     [<Theory>]
@@ -1147,32 +1148,32 @@ type GenConfRW_Test_001 () =
         Assert.True( r.D3 = exr )
 
     static member m_SingleValue_TNODEIDX_005_data = [|
-        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2></Test>" :> obj; tnodeidx_me.fromPrim 98u :> obj; tnodeidx_me.fromPrim ( uint32 Constants.MAX_TARGET_DEVICE_COUNT ) :> obj; |];
-        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D7>4</D7><D8>5</D8></Test>" :> obj; tnodeidx_me.fromPrim 4u :> obj; tnodeidx_me.fromPrim 5u :> obj; |];
+        [| "<Test><D1>2</D1><D2>1</D2><D2>2</D2></Test>" :> obj; tnodeidx_me.fromPrim 98us :> obj; tnodeidx_me.fromPrim ( uint16 Constants.MAX_TARGET_DEVICE_COUNT ) :> obj; |];
+        [| "<Test><D1>2</D1><D2>1</D2><D2>2</D2><D7>5</D7><D8>6</D8></Test>" :> obj; tnodeidx_me.fromPrim 5us :> obj; tnodeidx_me.fromPrim 6us :> obj; |];
     |]
 
     [<Theory>]
     [<MemberData( "m_SingleValue_TNODEIDX_005_data" )>]
     member _.SingleValue_TNODEIDX_005 ( s : string ) ( exr_D7 : TNODEIDX_T ) ( exr_D8 : TNODEIDX_T ) =
         let r = ConfRW_002_TNODEIDX_T.ConfRW_UT002_TNODEIDX_T.LoadString s
-        Assert.True( r.D4 = tnodeidx_me.fromPrim 0u )
-        Assert.True( r.D5 = tnodeidx_me.fromPrim 99u )
-        Assert.True( r.D6 = tnodeidx_me.fromPrim ( uint32 Constants.MAX_TARGET_DEVICE_COUNT ) )
+        Assert.True( r.D4 = tnodeidx_me.fromPrim 1us )
+        Assert.True( r.D5 = tnodeidx_me.fromPrim 99us )
+        Assert.True( r.D6 = tnodeidx_me.fromPrim ( uint16 Constants.MAX_TARGET_DEVICE_COUNT ) )
         Assert.True( r.D7 = exr_D7 )
         Assert.True( r.D8 = exr_D8 )
 
     static member m_SingleValue_TNODEIDX_006_data = [|
         [|
-            ( { D1 = tnodeidx_me.fromPrim 2u; D2 = [ tnodeidx_me.fromPrim 0u; tnodeidx_me.fromPrim 1u; ]; D3 = None; D4 = tnodeidx_me.fromPrim 0u; D5 = tnodeidx_me.fromPrim 0u; D6 = tnodeidx_me.fromPrim 1u; D7 = tnodeidx_me.fromPrim 2u; D8 = tnodeidx_me.fromPrim 3u; } : ConfRW_002_TNODEIDX_T.T_Test ) :> obj;
-            "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D7>2</D7><D8>3</D8></Test>" :> obj
+            ( { D1 = tnodeidx_me.fromPrim 2us; D2 = [ tnodeidx_me.fromPrim 1us; tnodeidx_me.fromPrim 1us; ]; D3 = None; D4 = tnodeidx_me.fromPrim 1us; D5 = tnodeidx_me.fromPrim 1us; D6 = tnodeidx_me.fromPrim 1us; D7 = tnodeidx_me.fromPrim 2us; D8 = tnodeidx_me.fromPrim 3us; } : ConfRW_002_TNODEIDX_T.T_Test ) :> obj;
+            "<Test><D1>2</D1><D2>1</D2><D2>1</D2><D7>2</D7><D8>3</D8></Test>" :> obj
         |];
         [|
-            ( { D1 = tnodeidx_me.fromPrim 3u; D2 = [ tnodeidx_me.fromPrim 0u; tnodeidx_me.fromPrim 1u; tnodeidx_me.fromPrim 2u; ]; D3 = None; D4 = tnodeidx_me.fromPrim 0u; D5 = tnodeidx_me.fromPrim 0u; D6 = tnodeidx_me.fromPrim 2u; D7 = tnodeidx_me.fromPrim 3u; D8 = tnodeidx_me.fromPrim 4u; } : ConfRW_002_TNODEIDX_T.T_Test ) :> obj;
-            "<Test><D1>3</D1><D2>0</D2><D2>1</D2><D2>2</D2><D7>3</D7><D8>4</D8></Test>" :> obj
+            ( { D1 = tnodeidx_me.fromPrim 3us; D2 = [ tnodeidx_me.fromPrim 1us; tnodeidx_me.fromPrim 1us; tnodeidx_me.fromPrim 2us; ]; D3 = None; D4 = tnodeidx_me.fromPrim 1us; D5 = tnodeidx_me.fromPrim 1us; D6 = tnodeidx_me.fromPrim 2us; D7 = tnodeidx_me.fromPrim 3us; D8 = tnodeidx_me.fromPrim 4us; } : ConfRW_002_TNODEIDX_T.T_Test ) :> obj;
+            "<Test><D1>3</D1><D2>1</D2><D2>1</D2><D2>2</D2><D7>3</D7><D8>4</D8></Test>" :> obj
         |];
         [|
-            ( { D1 = tnodeidx_me.fromPrim 2u; D2 = [ tnodeidx_me.fromPrim 0u; tnodeidx_me.fromPrim 1u; ]; D3 = Some( tnodeidx_me.fromPrim 5u ); D4 = tnodeidx_me.fromPrim 0u; D5 = tnodeidx_me.fromPrim 0u; D6 = tnodeidx_me.fromPrim 3u; D7 = tnodeidx_me.fromPrim 4u; D8 = tnodeidx_me.fromPrim 5u; } : ConfRW_002_TNODEIDX_T.T_Test ) :> obj;
-            "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D3>5</D3><D7>4</D7><D8>5</D8></Test>" :> obj
+            ( { D1 = tnodeidx_me.fromPrim 2us; D2 = [ tnodeidx_me.fromPrim 1us; tnodeidx_me.fromPrim 1us; ]; D3 = Some( tnodeidx_me.fromPrim 5us ); D4 = tnodeidx_me.fromPrim 1us; D5 = tnodeidx_me.fromPrim 1us; D6 = tnodeidx_me.fromPrim 3us; D7 = tnodeidx_me.fromPrim 4us; D8 = tnodeidx_me.fromPrim 5us; } : ConfRW_002_TNODEIDX_T.T_Test ) :> obj;
+            "<Test><D1>2</D1><D2>1</D2><D2>1</D2><D3>5</D3><D7>4</D7><D8>5</D8></Test>" :> obj
         |];
     |]
 
@@ -1183,8 +1184,9 @@ type GenConfRW_Test_001 () =
         Assert.True(( r = exr ))
 
     static member m_SingleValue_TNODEIDX_007_data = [|
-        [| ( { D1 = tnodeidx_me.fromPrim 2u; D2 = [ tnodeidx_me.fromPrim 0u; ]; D3 = None; D4 = tnodeidx_me.fromPrim 0u; D5 = tnodeidx_me.fromPrim 0u; D6 = tnodeidx_me.fromPrim 1u; D7 = tnodeidx_me.fromPrim 2u; D8 = tnodeidx_me.fromPrim 3u; } : ConfRW_002_TNODEIDX_T.T_Test ) :> obj |];
-        [| ( { D1 = tnodeidx_me.fromPrim 2u; D2 = [ tnodeidx_me.fromPrim 0u; tnodeidx_me.fromPrim 1u; tnodeidx_me.fromPrim 2u; tnodeidx_me.fromPrim 3u; ]; D3 = None; D4 = tnodeidx_me.fromPrim 0u; D5 = tnodeidx_me.fromPrim 0u; D6 = tnodeidx_me.fromPrim 1u; D7 = tnodeidx_me.fromPrim 2u; D8 = tnodeidx_me.fromPrim 3u; } : ConfRW_002_TNODEIDX_T.T_Test ) :> obj |];
+        [| ( { D1 = tnodeidx_me.fromPrim 0us; D2 = [ tnodeidx_me.fromPrim 1us; tnodeidx_me.fromPrim 1us; ]; D3 = None; D4 = tnodeidx_me.fromPrim 1us; D5 = tnodeidx_me.fromPrim 1us; D6 = tnodeidx_me.fromPrim 1us; D7 = tnodeidx_me.fromPrim 2us; D8 = tnodeidx_me.fromPrim 3us; } : ConfRW_002_TNODEIDX_T.T_Test ) :> obj; |];
+        [| ( { D1 = tnodeidx_me.fromPrim 2us; D2 = [ tnodeidx_me.fromPrim 1us; ]; D3 = None; D4 = tnodeidx_me.fromPrim 1us; D5 = tnodeidx_me.fromPrim 1us; D6 = tnodeidx_me.fromPrim 1us; D7 = tnodeidx_me.fromPrim 2us; D8 = tnodeidx_me.fromPrim 3us; } : ConfRW_002_TNODEIDX_T.T_Test ) :> obj |];
+        [| ( { D1 = tnodeidx_me.fromPrim 2us; D2 = [ tnodeidx_me.fromPrim 1us; tnodeidx_me.fromPrim 1us; tnodeidx_me.fromPrim 2us; tnodeidx_me.fromPrim 3us; ]; D3 = None; D4 = tnodeidx_me.fromPrim 1us; D5 = tnodeidx_me.fromPrim 1us; D6 = tnodeidx_me.fromPrim 1us; D7 = tnodeidx_me.fromPrim 2us; D8 = tnodeidx_me.fromPrim 3us; } : ConfRW_002_TNODEIDX_T.T_Test ) :> obj |];
     |]
 
     [<Theory>]

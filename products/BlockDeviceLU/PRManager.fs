@@ -1233,7 +1233,9 @@ type PRManager(
                                                                     yield new ITNexus( iname, j.ISID, sourIT.TargetName, sourIT.TPGT )
                                                         else
                                                             // TransportID is initiator name + ISID.
-                                                            yield new ITNexus( iname, isid_o.Value, sourIT.TargetName, sourIT.TPGT );
+                                                            let newitn = new ITNexus( iname, isid_o.Value, sourIT.TargetName, sourIT.TPGT );
+                                                            if allITNexus |> Array.exists ( fun itr -> String.Equals( itr.InitiatorName, iname, StringComparison.Ordinal ) && itr.ISID = isid_o.Value ) then
+                                                                yield newitn
                                                 |]
                                             )
                                 else

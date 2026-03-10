@@ -266,6 +266,10 @@
       <Value>TPGT must be zero.</Value>
     </Message>
     <Message>
+      <Name>CHKMSG_UNSUPPORTED_TARGET_NODE_ID_VALUE</Name>
+      <Value>Target node ID must not be zero.</Value>
+    </Message>
+    <Message>
       <Name>CHKMSG_INVALID_MEDIA_SIZE</Name>
       <Value>Too large media size. Max value is {0}</Value>
     </Message>

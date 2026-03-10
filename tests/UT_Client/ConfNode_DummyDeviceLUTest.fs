@@ -30,7 +30,7 @@ type ConfNode_DummyDeviceLU_Test() =
     // Common definition
 
     let defTargetConf : TargetGroupConf.T_Target = {
-        IdentNumber = tnodeidx_me.fromPrim 1u;
+        IdentNumber = tnodeidx_me.fromPrim 11us;
         TargetPortalGroupTag = tpgt_me.fromPrim 0us;
         TargetName = "aaa";
         TargetAlias = "";

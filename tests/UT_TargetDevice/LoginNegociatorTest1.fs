@@ -59,7 +59,7 @@ type LoginNegociator_Test1 () =
             TargetGroupID = tgid_me.Zero;
             TargetConf = 
                 {
-                IdentNumber = tnodeidx_me.fromPrim 0u;
+                IdentNumber = tnodeidx_me.fromPrim 10us;
                 TargetName = "";
                 TargetAlias = "";
                 TargetPortalGroupTag = tpgt_me.zero;
@@ -1503,7 +1503,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 0u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                             TargetName = "";
                             TargetAlias = "";
@@ -1597,7 +1597,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -1689,7 +1689,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -1788,7 +1788,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -1963,7 +1963,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -2713,7 +2713,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -2846,7 +2846,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -2953,7 +2953,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -3143,7 +3143,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -3314,7 +3314,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -3457,7 +3457,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -3586,7 +3586,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -3719,7 +3719,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -3851,7 +3851,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -4055,7 +4055,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -4229,7 +4229,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -4402,7 +4402,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -4583,7 +4583,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -4766,7 +4766,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -4949,7 +4949,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -5132,7 +5132,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -5314,7 +5314,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -5496,7 +5496,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -5694,7 +5694,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -5879,7 +5879,7 @@ type LoginNegociator_Test1 () =
                     EnabledAtStart = true;
                     Target = [
                         {
-                            IdentNumber = tnodeidx_me.fromPrim 10u;
+                            IdentNumber = tnodeidx_me.fromPrim 10us;
                             TargetName = "target1"
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.zero;
@@ -6065,7 +6065,7 @@ type LoginNegociator_Test1 () =
                 MaxConnections = Constants.NEGOPARAM_MaxConnections;
                 TargetGroupID = tgid_me.Zero;
                 TargetConf = {
-                    IdentNumber = tnodeidx_me.fromPrim 1u;
+                    IdentNumber = tnodeidx_me.fromPrim 1us;
                     TargetName = "target001"
                     TargetAlias = "";
                     TargetPortalGroupTag = tpgt_me.zero;
@@ -6105,7 +6105,7 @@ type LoginNegociator_Test1 () =
                     MaxConnections = Constants.NEGOPARAM_MaxConnections;
                     TargetGroupID = tgid_me.Zero;
                     TargetConf = {
-                        IdentNumber = tnodeidx_me.fromPrim 1u;
+                        IdentNumber = tnodeidx_me.fromPrim 1us;
                         TargetName = "target001"
                         TargetAlias = "";
                         TargetPortalGroupTag = tpgt_me.zero;
@@ -6173,7 +6173,7 @@ type LoginNegociator_Test1 () =
                 MaxConnections = Constants.NEGOPARAM_MaxConnections;
                 TargetGroupID = tgid_me.Zero;
                 TargetConf = {
-                    IdentNumber = tnodeidx_me.fromPrim 1u;
+                    IdentNumber = tnodeidx_me.fromPrim 1us;
                     TargetName = "target001"
                     TargetAlias = "";
                     TargetPortalGroupTag = tpgt_me.zero;
@@ -6259,7 +6259,7 @@ type LoginNegociator_Test1 () =
                 MaxConnections = Constants.NEGOPARAM_MaxConnections;
                 TargetGroupID = tgid_me.Zero;
                 TargetConf = {
-                    IdentNumber = tnodeidx_me.fromPrim 1u;
+                    IdentNumber = tnodeidx_me.fromPrim 1us;
                     TargetName = "target001"
                     TargetAlias = "";
                     TargetPortalGroupTag = tpgt_me.zero;
@@ -6360,7 +6360,7 @@ type LoginNegociator_Test1 () =
                 MaxConnections = Constants.NEGOPARAM_MaxConnections;
                 TargetGroupID = tgid_me.Zero;
                 TargetConf = {
-                    IdentNumber = tnodeidx_me.fromPrim 1u;
+                    IdentNumber = tnodeidx_me.fromPrim 1us;
                     TargetName = "target001"
                     TargetAlias = "";
                     TargetPortalGroupTag = tpgt_me.zero;
@@ -6452,7 +6452,7 @@ type LoginNegociator_Test1 () =
                 MaxConnections = Constants.NEGOPARAM_MaxConnections;
                 TargetGroupID = tgid_me.Zero;
                 TargetConf = {
-                    IdentNumber = tnodeidx_me.fromPrim 1u;
+                    IdentNumber = tnodeidx_me.fromPrim 1us;
                     TargetName = "target001"
                     TargetAlias = "";
                     TargetPortalGroupTag = tpgt_me.zero;
@@ -6529,7 +6529,7 @@ type LoginNegociator_Test1 () =
                 MaxConnections = Constants.NEGOPARAM_MaxConnections;
                 TargetGroupID = tgid_me.Zero;
                 TargetConf = {
-                    IdentNumber = tnodeidx_me.fromPrim 1u;
+                    IdentNumber = tnodeidx_me.fromPrim 1us;
                     TargetName = "target001"
                     TargetAlias = "";
                     TargetPortalGroupTag = tpgt_me.zero;
@@ -6610,7 +6610,7 @@ type LoginNegociator_Test1 () =
                 MaxConnections = Constants.NEGOPARAM_MaxConnections;
                 TargetGroupID = tgid_me.Zero;
                 TargetConf = {
-                    IdentNumber = tnodeidx_me.fromPrim 1u;
+                    IdentNumber = tnodeidx_me.fromPrim 1us;
                     TargetName = "target001"
                     TargetAlias = "";
                     TargetPortalGroupTag = tpgt_me.zero;
@@ -6686,7 +6686,7 @@ type LoginNegociator_Test1 () =
                 MaxConnections = Constants.NEGOPARAM_MaxConnections;
                 TargetGroupID = tgid_me.Zero;
                 TargetConf = {
-                    IdentNumber = tnodeidx_me.fromPrim 1u;
+                    IdentNumber = tnodeidx_me.fromPrim 1us;
                     TargetName = "target001"
                     TargetAlias = "";
                     TargetPortalGroupTag = tpgt_me.zero;
@@ -6761,7 +6761,7 @@ type LoginNegociator_Test1 () =
             }
         let argTargetConfig : TargetGroupConf.T_Target =
             {
-                IdentNumber = tnodeidx_me.fromPrim 0u;
+                IdentNumber = tnodeidx_me.fromPrim 10us;
                 TargetName = "target001";
                 TargetAlias = "";
                 TargetPortalGroupTag = tpgt_me.zero;
@@ -6870,7 +6870,7 @@ type LoginNegociator_Test1 () =
             }
         let argTargetConfig : TargetGroupConf.T_Target =
             {
-                IdentNumber = tnodeidx_me.fromPrim 0u;
+                IdentNumber = tnodeidx_me.fromPrim 10us;
                 TargetName = "target002";
                 TargetAlias = "TARGETALIAS002";
                 TargetPortalGroupTag = tpgt_me.fromPrim 99us;
@@ -7080,7 +7080,7 @@ type LoginNegociator_Test1 () =
             }
         let argTargetConfig : TargetGroupConf.T_Target =
             {
-                IdentNumber = tnodeidx_me.fromPrim 0u;
+                IdentNumber = tnodeidx_me.fromPrim 10us;
                 TargetName = "target002";
                 TargetAlias = "TARGETALIAS002";
                 TargetPortalGroupTag = tpgt_me.fromPrim 99us;
@@ -7316,7 +7316,7 @@ type LoginNegociator_Test1 () =
             }
         let argTargetConfig : TargetGroupConf.T_Target =
             {
-                IdentNumber = tnodeidx_me.fromPrim 0u;
+                IdentNumber = tnodeidx_me.fromPrim 10us;
                 TargetName = "target002";
                 TargetAlias = "TARGETALIAS002";
                 TargetPortalGroupTag = tpgt_me.fromPrim 99us;
@@ -7498,7 +7498,7 @@ type LoginNegociator_Test1 () =
             }
         let argTargetConfig : TargetGroupConf.T_Target =
             {
-                IdentNumber = tnodeidx_me.fromPrim 0u;
+                IdentNumber = tnodeidx_me.fromPrim 10us;
                 TargetName = "target002";
                 TargetAlias = "TARGETALIAS002";
                 TargetPortalGroupTag = tpgt_me.fromPrim 99us;
@@ -7711,7 +7711,7 @@ type LoginNegociator_Test1 () =
             }
         let argTargetConfig : TargetGroupConf.T_Target =
             {
-                IdentNumber = tnodeidx_me.fromPrim 0u;
+                IdentNumber = tnodeidx_me.fromPrim 10us;
                 TargetName = "target002";
                 TargetAlias = "TARGETALIAS002";
                 TargetPortalGroupTag = tpgt_me.fromPrim 99us;

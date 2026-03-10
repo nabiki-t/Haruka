@@ -69,7 +69,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
             MaxConnections = Constants.NEGOPARAM_MaxConnections;
             TargetGroupID = tgid_me.Zero;
             TargetConf = {
-                IdentNumber = tnodeidx_me.fromPrim 0u;
+                IdentNumber = tnodeidx_me.fromPrim 1us;
                 TargetName = "targetname0";
                 TargetAlias = "";
                 TargetPortalGroupTag = tpgt_me.fromPrim 0us;
@@ -99,7 +99,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
             p_GetTargetFromLUN = ( fun lun ->
                 [
                     {
-                        IdentNumber = tnodeidx_me.fromPrim 0u;
+                        IdentNumber = tnodeidx_me.fromPrim 1us;
                         TargetName = "target000";
                         TargetAlias = "";
                         TargetPortalGroupTag = tpgt_me.fromPrim 0us;

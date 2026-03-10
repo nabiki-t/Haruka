@@ -58,7 +58,7 @@ type ConfNode_Controller_Test() =
     }
 
     let defaultTargetConf : TargetGroupConf.T_Target = {
-        IdentNumber = tnodeidx_me.fromPrim 1u;
+        IdentNumber = tnodeidx_me.fromPrim 11us;
         TargetPortalGroupTag = tpgt_me.fromPrim 0us;
         TargetName = "aaa";
         TargetAlias = "";

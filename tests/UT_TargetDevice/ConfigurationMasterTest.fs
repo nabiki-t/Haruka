@@ -58,7 +58,7 @@ type ConfigurationMaster_Test () =
             TargetGroupName = "a";
             EnabledAtStart = true;
             Target = [ {
-                    IdentNumber = tnodeidx_me.fromPrim 0u;
+                    IdentNumber = tnodeidx_me.fromPrim 1us;
                     TargetPortalGroupTag = tpgt_me.zero;
                     TargetName = "target001";
                     TargetAlias = "target001";
@@ -318,7 +318,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 0u;
+                    IdentNumber = tnodeidx_me.fromPrim 1us;
                     TargetPortalGroupTag = tpgt_me.zero;
                     TargetName = "target000";
                     TargetAlias = "target000";
@@ -326,7 +326,7 @@ type ConfigurationMaster_Test () =
                     Auth = TargetGroupConf.T_Auth.U_None();
                 };
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 1u;
+                    IdentNumber = tnodeidx_me.fromPrim 2us;
                     TargetPortalGroupTag = tpgt_me.zero;
                     TargetName = "target001";
                     TargetAlias = "target001";
@@ -358,7 +358,7 @@ type ConfigurationMaster_Test () =
         let targets = getAllTagetConf tgc
         let lus = getAllLUConf tgc
         Assert.True(( targets.Length = 2 ))
-        Assert.True(( targets.[0].IdentNumber = tnodeidx_me.fromPrim 0u ))
+        Assert.True(( targets.[0].IdentNumber = tnodeidx_me.fromPrim 1us ))
         Assert.True(( targets.[0].TargetPortalGroupTag = tpgt_me.fromPrim 0us ))
         Assert.True(( targets.[0].TargetName = "target000" ))
         Assert.True(( targets.[0].TargetAlias = "target000" ))
@@ -366,7 +366,7 @@ type ConfigurationMaster_Test () =
         Assert.True(( targets.[0].LUN.[0] = lun_me.fromPrim 1UL ))
         Assert.True(( targets.[0].LUN.[1] = lun_me.fromPrim 2UL ))
         Assert.True(( targets.[0].Auth = TargetGroupConf.T_Auth.U_None() ))
-        Assert.True(( targets.[1].IdentNumber = tnodeidx_me.fromPrim 1u ))
+        Assert.True(( targets.[1].IdentNumber = tnodeidx_me.fromPrim 2us ))
         Assert.True(( targets.[1].TargetPortalGroupTag = tpgt_me.fromPrim 0us ))
         Assert.True(( targets.[1].TargetName = "target001" ))
         Assert.True(( targets.[1].TargetAlias = "target001" ))
@@ -418,7 +418,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 1u;
+                    IdentNumber = tnodeidx_me.fromPrim 2us;
                     TargetPortalGroupTag = tpgt_me.zero;
                     TargetName = "target002";
                     TargetAlias = "target002";
@@ -443,14 +443,14 @@ type ConfigurationMaster_Test () =
         let targets = getAllTagetConf tgc
         let lus = getAllLUConf tgc
         Assert.True(( targets.Length = 2 ))
-        Assert.True(( targets.[0].IdentNumber = tnodeidx_me.fromPrim 0u ))
+        Assert.True(( targets.[0].IdentNumber = tnodeidx_me.fromPrim 1us ))
         Assert.True(( targets.[0].TargetPortalGroupTag = tpgt_me.fromPrim 0us ))
         Assert.True(( targets.[0].TargetName = "target001" ))
         Assert.True(( targets.[0].TargetAlias = "target001" ))
         Assert.True(( targets.[0].LUN.Length = 1 ))
         Assert.True(( targets.[0].LUN.[0] = lun_me.fromPrim 1UL ))
         Assert.True(( targets.[0].Auth = TargetGroupConf.T_Auth.U_None() ))
-        Assert.True(( targets.[1].IdentNumber = tnodeidx_me.fromPrim 1u ))
+        Assert.True(( targets.[1].IdentNumber = tnodeidx_me.fromPrim 2us ))
         Assert.True(( targets.[1].TargetPortalGroupTag = tpgt_me.fromPrim 0us ))
         Assert.True(( targets.[1].TargetName = "target002" ))
         Assert.True(( targets.[1].TargetAlias = "target002" ))
@@ -629,7 +629,7 @@ type ConfigurationMaster_Test () =
             let tgid = tgid_me.fromPrim( uint32 i )
             let targetGroupConfName1 = Functions.AppendPathName pDirName ( tgid_me.toString tgid )
             let targetGroupConfStr1 =
-                genTargetGroupConfStr tgid ( tnodeidx_me.fromPrim ( uint32 i ) ) ( sprintf "target%03d" i ) ( lun_me.fromPrim 1UL )
+                genTargetGroupConfStr tgid ( tnodeidx_me.fromPrim ( uint16 i ) ) ( sprintf "target%03d" i ) ( lun_me.fromPrim 1UL )
             File.WriteAllText( targetGroupConfName1, targetGroupConfStr1 )
 
         try
@@ -664,7 +664,7 @@ type ConfigurationMaster_Test () =
         for i = 0 to Constants.MAX_TARGET_COUNT_IN_TD - 1 do
             let targetGroupConfName1 = Functions.AppendPathName pDirName ( tgid_me.toString tgids.[i] )
             let targetGroupConfStr1 =
-                genTargetGroupConfStr tgids.[i] ( tnodeidx_me.fromPrim ( uint32 i ) ) ( sprintf "target%03d" i ) ( lun_me.fromPrim ( uint64 i + 1UL ) )
+                genTargetGroupConfStr tgids.[i] ( tnodeidx_me.fromPrim ( uint16 i + 1us ) ) ( sprintf "target%03d" i ) ( lun_me.fromPrim ( uint64 i + 1UL ) )
             File.WriteAllText( targetGroupConfName1, targetGroupConfStr1 )
 
         let c = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
@@ -697,7 +697,7 @@ type ConfigurationMaster_Test () =
             Target = [
                 for i = 1 to Constants.MAX_TARGET_COUNT_IN_TD - 1 do
                     yield {
-                        IdentNumber = tnodeidx_me.fromPrim( uint32 i );
+                        IdentNumber = tnodeidx_me.fromPrim( uint16 i );
                         TargetPortalGroupTag = tpgt_me.zero;
                         TargetName = sprintf "target%03d" i;
                         TargetAlias = "target001";
@@ -722,7 +722,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim( 999u );
+                    IdentNumber = tnodeidx_me.fromPrim( 999us );
                     TargetPortalGroupTag = tpgt_me.zero;
                     TargetName = "target999";
                     TargetAlias = "target001";
@@ -768,7 +768,7 @@ type ConfigurationMaster_Test () =
             Target = [
                 for i = 1 to Constants.MAX_TARGET_COUNT_IN_TD - 1 do
                     yield {
-                        IdentNumber = tnodeidx_me.fromPrim( uint32 i );
+                        IdentNumber = tnodeidx_me.fromPrim( uint16 i );
                         TargetPortalGroupTag = tpgt_me.zero;
                         TargetName = sprintf "target%03d" i;
                         TargetAlias = "target001";
@@ -793,7 +793,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim( 998u );
+                    IdentNumber = tnodeidx_me.fromPrim( 998us );
                     TargetPortalGroupTag = tpgt_me.zero;
                     TargetName = "target998";
                     TargetAlias = "target001";
@@ -801,7 +801,7 @@ type ConfigurationMaster_Test () =
                     Auth = TargetGroupConf.T_Auth.U_None();
                 }
                 {
-                    IdentNumber = tnodeidx_me.fromPrim( 999u );
+                    IdentNumber = tnodeidx_me.fromPrim( 999us );
                     TargetPortalGroupTag = tpgt_me.zero;
                     TargetName = "target999";
                     TargetAlias = "target001";
@@ -852,7 +852,7 @@ type ConfigurationMaster_Test () =
             TargetGroupName = "a";
             EnabledAtStart = true;
             Target = [{
-                    IdentNumber = tnodeidx_me.fromPrim( 1u );
+                    IdentNumber = tnodeidx_me.fromPrim( 1us );
                     TargetPortalGroupTag = tpgt_me.zero;
                     TargetName = "target002";
                     TargetAlias = "target002";
@@ -902,7 +902,7 @@ type ConfigurationMaster_Test () =
             TargetGroupName = "a";
             EnabledAtStart = true;
             Target = [{
-                    IdentNumber = tnodeidx_me.fromPrim( 1u );
+                    IdentNumber = tnodeidx_me.fromPrim( 1us );
                     TargetPortalGroupTag = tpgt_me.zero;
                     TargetName = "target002";
                     TargetAlias = "target002";
@@ -960,7 +960,7 @@ type ConfigurationMaster_Test () =
             TargetGroupName = "a";
             EnabledAtStart = true;
             Target = [{
-                    IdentNumber = tnodeidx_me.fromPrim( 1u );
+                    IdentNumber = tnodeidx_me.fromPrim( 1us );
                     TargetPortalGroupTag = tpgt_me.zero;
                     TargetName = "target002";
                     TargetAlias = "target002";
@@ -1017,7 +1017,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 yield {
-                    IdentNumber = tnodeidx_me.fromPrim 0u;
+                    IdentNumber = tnodeidx_me.fromPrim 3us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "target000";
                     TargetAlias = "";
@@ -1049,7 +1049,7 @@ type ConfigurationMaster_Test () =
             Target = [
                 let i = Constants.MAX_LUN_VALUE
                 yield {
-                    IdentNumber = tnodeidx_me.fromPrim 999u;
+                    IdentNumber = tnodeidx_me.fromPrim 999us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "target999";
                     TargetAlias = "";
@@ -1098,7 +1098,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 0u;
+                    IdentNumber = tnodeidx_me.fromPrim 3us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "target000";
                     TargetAlias = "";
@@ -1129,7 +1129,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 999u;
+                    IdentNumber = tnodeidx_me.fromPrim 999us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "target999";
                     TargetAlias = "";
@@ -1184,7 +1184,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 0u;
+                    IdentNumber = tnodeidx_me.fromPrim 10us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "target000";
                     TargetAlias = "target000";
@@ -1218,7 +1218,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 1u;
+                    IdentNumber = tnodeidx_me.fromPrim 11us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "target001";
                     TargetAlias = "target001";
@@ -1282,7 +1282,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 1u;
+                    IdentNumber = tnodeidx_me.fromPrim 11us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "target001";
                     TargetAlias = "target001";
@@ -1343,7 +1343,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 0u;
+                    IdentNumber = tnodeidx_me.fromPrim 10us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "target001";
                     TargetAlias = "target001";
@@ -1403,7 +1403,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 0u;
+                    IdentNumber = tnodeidx_me.fromPrim 10us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "target001";
                     TargetAlias = "target001";
@@ -1464,7 +1464,7 @@ type ConfigurationMaster_Test () =
             Target = [
                 for i = 1 to Constants.MAX_TARGET_COUNT_IN_TD do
                     yield {
-                        IdentNumber = tnodeidx_me.fromPrim ( uint32  i);
+                        IdentNumber = tnodeidx_me.fromPrim ( uint16 i );
                         TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                         TargetName = 
                             if i = Constants.MAX_TARGET_COUNT_IN_TD then
@@ -1519,7 +1519,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim ( 0u );
+                    IdentNumber = tnodeidx_me.fromPrim ( 10us );
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "target001";
                     TargetAlias = "target001";
@@ -1544,7 +1544,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 1u;
+                    IdentNumber = tnodeidx_me.fromPrim 11us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "target001";
                     TargetAlias = "target001";
@@ -1598,9 +1598,9 @@ type ConfigurationMaster_Test () =
                     yield {
                         IdentNumber =
                             if i = Constants.MAX_TARGET_COUNT_IN_TD then
-                                tnodeidx_me.fromPrim ( uint32  i - 1u )
+                                tnodeidx_me.fromPrim ( uint16 i - 1us )
                             else
-                                tnodeidx_me.fromPrim ( uint32  i );
+                                tnodeidx_me.fromPrim ( uint16 i );
                         TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                         TargetName = sprintf "target%d" i;
                         TargetAlias = "target001";
@@ -1652,7 +1652,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 1u;
+                    IdentNumber = tnodeidx_me.fromPrim 1us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "target001";
                     TargetAlias = "target001";
@@ -1677,7 +1677,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 1u;
+                    IdentNumber = tnodeidx_me.fromPrim 1us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "target002";
                     TargetAlias = "target002";
@@ -1732,7 +1732,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 2u;
+                    IdentNumber = tnodeidx_me.fromPrim 2us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "target002";
                     TargetAlias = "target002";
@@ -1784,7 +1784,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 0u;
+                    IdentNumber = tnodeidx_me.fromPrim 1us;
                     TargetPortalGroupTag = tpgt_me.zero;
                     TargetName = "target001";
                     TargetAlias = "";
@@ -1861,7 +1861,7 @@ type ConfigurationMaster_Test () =
             TargetGroupName = "b";
             EnabledAtStart = true;
             Target = [{
-                    IdentNumber = tnodeidx_me.fromPrim 1u;
+                    IdentNumber = tnodeidx_me.fromPrim 11us;
                     TargetPortalGroupTag = tpgt_me.zero;
                     TargetName = "target002";
                     TargetAlias = "target002";
@@ -1919,7 +1919,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 1u;
+                    IdentNumber = tnodeidx_me.fromPrim 11us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "target002";
                     TargetAlias = "target002";
@@ -1945,7 +1945,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 2u;
+                    IdentNumber = tnodeidx_me.fromPrim 12us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "target003";
                     TargetAlias = "target003";
@@ -2203,7 +2203,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 1u;
+                    IdentNumber = tnodeidx_me.fromPrim 11us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "target002";
                     TargetAlias = "target002";
@@ -2228,7 +2228,7 @@ type ConfigurationMaster_Test () =
             EnabledAtStart = true;
             Target = [
                 {
-                    IdentNumber = tnodeidx_me.fromPrim 2u;
+                    IdentNumber = tnodeidx_me.fromPrim 12us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "target003";
                     TargetAlias = "target003";

@@ -491,11 +491,20 @@ let OutputOwnNode ( outfile : TextWriter ) ( elem : XElement ) ( indent : int ) 
                 fprintfn outfile "%s</xsd:element>" indentStr
 
             | "NETPORTIDX_T"
-            | "TNODEIDX_T"
             | "MEDIAIDX_T"
             | "ITT_T" ->
                 fprintfn outfile "%s%s" indentStr ( GenElementTagStr "" elem parentIsSelection )
                 fprintfn outfile "%s  <xsd:simpleType><xsd:restriction base='xsd:unsignedInt' /></xsd:simpleType>" indentStr
+                fprintfn outfile "%s</xsd:element>" indentStr
+
+            | "TNODEIDX_T" ->
+                fprintfn outfile "%s%s" indentStr ( GenElementTagStr "" elem parentIsSelection )
+                fprintfn outfile "%s  <xsd:simpleType>" indentStr
+                fprintfn outfile "%s    <xsd:restriction base='xsd:unsignedShort' >" indentStr
+                fprintfn outfile "%s      <xsd:minInclusive value='1' />" indentStr
+                fprintfn outfile "%s      <xsd:maxInclusive value='65535' />" indentStr
+                fprintfn outfile "%s    </xsd:restriction>" indentStr
+                fprintfn outfile "%s  </xsd:simpleType>" indentStr
                 fprintfn outfile "%s</xsd:element>" indentStr
 
             | "TPGT_T" ->
@@ -786,7 +795,7 @@ let callReadFuncStr ( className : string ) ( elemCallName : string ) ( constrain
     | "NETPORTIDX_T" ->
         sprintf "netportidx_me.fromPrim( UInt32.Parse( %s.Value ) )" elemCallName
     | "TNODEIDX_T" ->
-        sprintf "tnodeidx_me.fromPrim( UInt32.Parse( %s.Value ) )" elemCallName
+        sprintf "tnodeidx_me.fromPrim( UInt16.Parse( %s.Value ) )" elemCallName
     | "MEDIAIDX_T" ->
         sprintf "mediaidx_me.fromPrim( UInt32.Parse( %s.Value ) )" elemCallName
     | "TPGT_T" ->
@@ -882,7 +891,7 @@ let genSetDefaultValueStr ( defValue : string ) ( constraintStr : string ) : str
     | "NETPORTIDX_T" ->
         sprintf "netportidx_me.fromPrim( %su )" defValue
     | "TNODEIDX_T" ->
-        sprintf "tnodeidx_me.fromPrim( %su )" defValue
+        sprintf "tnodeidx_me.fromPrim( %sus )" defValue
     | "MEDIAIDX_T" ->
         sprintf "mediaidx_me.fromPrim( %su )" defValue
     | "TPGT_T" ->
@@ -989,7 +998,7 @@ let genSetDefaultValueStr_Default ( constraintStr : string ) : string =
     | "NETPORTIDX_T" ->
         "netportidx_me.fromPrim( 0u )"
     | "TNODEIDX_T" ->
-        "tnodeidx_me.fromPrim( 0u )"
+        "tnodeidx_me.fromPrim( 1us )"
     | "MEDIAIDX_T" ->
         "mediaidx_me.fromPrim( 0u )"
     | "TPGT_T" ->
@@ -1028,6 +1037,8 @@ let genSetDefaultValueStr_Default ( constraintStr : string ) : string =
         "()"
     | "IPCondition" ->
         "IPCondition.Loopback"
+    | "ITT_T" ->
+        "itt_me.fromPrim 0u"
     | "BLKCNT8_T" ->
         "blkcnt_me.zero8"
     | "BLKCNT16_T" ->
@@ -1347,6 +1358,8 @@ let callWriteFuncStr ( outfile : TextWriter ) ( indent : int ) ( className : str
         fprintfn outfile "%syield sprintf \"%%s%%s<%s>%%d</%s>\" singleIndent indentStr ( netportidx_me.toPrim (%s) )" indentStr elemName elemName elemCallName
 
     | "TNODEIDX_T" ->
+        fprintfn outfile "%sif tnodeidx_me.toPrim (%s) = 0us then" indentStr elemCallName 
+        fprintfn outfile "%s    raise <| ConfRWException( \"Min value(TNODEIDX_T) restriction error. %s\" )" indentStr elemName
         fprintfn outfile "%syield sprintf \"%%s%%s<%s>%%d</%s>\" singleIndent indentStr ( tnodeidx_me.toPrim (%s) )" indentStr elemName elemName elemCallName
 
     | "MEDIAIDX_T" ->

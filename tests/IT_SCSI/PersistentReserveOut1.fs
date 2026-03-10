@@ -396,3 +396,40 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r2.Close()
             do! r3.Close()
         }
+
+    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0 and SPEC_I_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // If the parameter list contains unknown initiator ports, 
+    [<Fact>]
+    member _.Register_FromUnregistered_006 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create { m_defaultSessParam with InitiatorName = "iqn.bbbb"; } m_defaultConnParam
+            let itn_r1 = GetITNexus r1
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
+
+            // register r1 with unknown initiator port
+            let transid = [|
+                ( "iqn.aaaaaaaaaaaaaaaa", None );           // unknown, it is ignored.
+                ( "iqn.bbbb", Some ( GlbFunc.newISID() ) ); // unknown, it is ignored.
+            |]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 true false true transid
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
+            let fsd2 = fstat2.FullStatusDescriptor
+            Assert.True(( fsd2.Length = 1 ))
+            Assert.True(( fsd2.[0].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd2.[0].iSCSIName = itn_r1.InitiatorPortName ))
+
+            // unregister r1
+            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero false false true [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+            let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
+
+            do! r1.Close()
+            do! r2.Close()
+        }

@@ -733,7 +733,7 @@ type ServerStatus_Test4() =
                 let tNodes1 = ( tgNode :> IConfigureNode ).GetChildNodes<ConfNode_Target>()
                 Assert.True(( tNodes1.Length = 0 ))
 
-                let tconf = ServerStatus_Test1.defTarget 1u "target000"
+                let tconf = ServerStatus_Test1.defTarget 1us "target000"
                 let tNode = ss.AddTargetNode tgNode tconf
 
                 let tNodes2 = ( tgNode :> IConfigureNode ).GetChildNodes<ConfNode_Target>()
@@ -812,7 +812,7 @@ type ServerStatus_Test4() =
                 let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true :> IConfigFileNode
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
 
-                let tconf = ServerStatus_Test1.defTarget 2u "target000"
+                let tconf = ServerStatus_Test1.defTarget 2us "target000"
                 let tNode = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf
 
                 let plist = ( tNode :> IConfigureNode ).GetParentNodes<IConfigureNode>()
@@ -858,7 +858,7 @@ type ServerStatus_Test4() =
                 let tNodes = ( tgNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_Target>()
                 Assert.True(( tNodes.Length = 1 ))
 
-                let tconf = ServerStatus_Test1.defTarget 2u "target000"
+                let tconf = ServerStatus_Test1.defTarget 2us "target000"
                 let tNode = ss.AddTargetNode tgNodes.[0] tconf
 
                 let plist = ( tNode :> IConfigureNode ).GetParentNodes<IConfigureNode>()
@@ -902,10 +902,10 @@ type ServerStatus_Test4() =
                 let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true :> IConfigFileNode
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
                 
-                let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
+                let tconf1 = ServerStatus_Test1.defTarget 2us "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
 
-                let tconf2 = ServerStatus_Test1.defTarget 33u "target999"
+                let tconf2 = ServerStatus_Test1.defTarget 33us "target999"
                 let tNode2 = ss.UpdateTargetNode tNode1 tconf2
                 Assert.True(( tNode2.Values = tconf2 ))
 
@@ -951,7 +951,7 @@ type ServerStatus_Test4() =
                 let tNodes = ( tgNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_Target>()
                 Assert.True(( tNodes.Length = 1 ))
 
-                let tconf = ServerStatus_Test1.defTarget 2u "target999"
+                let tconf = ServerStatus_Test1.defTarget 2us "target999"
                 let tNode = ss.UpdateTargetNode tNodes.[0] tconf
                 Assert.True(( tNode.Values.TargetName = tconf.TargetName ))
 
@@ -996,7 +996,7 @@ type ServerStatus_Test4() =
                 let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true :> IConfigFileNode
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
                 
-                let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
+                let tconf1 = ServerStatus_Test1.defTarget 2us "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
 
                 let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 1UL ) "luname001" Constants.LU_DEF_MULTIPLICITY
@@ -1006,7 +1006,7 @@ type ServerStatus_Test4() =
 
                 let tconf2 : TargetGroupConf.T_Target = {
                     tconf1 with
-                        IdentNumber = tnodeidx_me.fromPrim 3u;
+                        IdentNumber = tnodeidx_me.fromPrim 3us;
                         TargetName = "target111";
                 }
                 let tNode2 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf2
@@ -1051,11 +1051,11 @@ type ServerStatus_Test4() =
                         EnabledAtStart = false;
                         Target = [
                             {
-                                ( ServerStatus_Test1.defTarget 0u "target000" ) with
+                                ( ServerStatus_Test1.defTarget 10us "target000" ) with
                                     LUN = [ lun_me.fromPrim 1UL ];
                             }
                             {
-                                ( ServerStatus_Test1.defTarget 1u "target001" ) with
+                                ( ServerStatus_Test1.defTarget 1us "target001" ) with
                                     LUN = [ lun_me.fromPrim 2UL ];
                             }
                         ];
@@ -1143,7 +1143,7 @@ type ServerStatus_Test4() =
                 let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true :> IConfigFileNode
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
                 
-                let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
+                let tconf1 = ServerStatus_Test1.defTarget 2us "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
 
                 let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 1UL ) "luname001" Constants.LU_DEF_MULTIPLICITY
@@ -1239,7 +1239,7 @@ type ServerStatus_Test4() =
                 let luNodes = ( tNodes.[0] :> IConfigureNode ).GetChildNodes<IConfigureNode>()
                 Assert.True(( luNodes.Length = 1 ))
                 
-                let tconf2 = ServerStatus_Test1.defTarget 2u "target999"
+                let tconf2 = ServerStatus_Test1.defTarget 2us "target999"
                 let tNode2 = ss.AddTargetNode tgNodes.[0] tconf2
                 ss.AddTargetLURelation tNode2 ( luNodes.[0] :?> ILUNode )
 
@@ -1289,7 +1289,7 @@ type ServerStatus_Test4() =
                 let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true :> IConfigFileNode
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
                 
-                let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
+                let tconf1 = ServerStatus_Test1.defTarget 2us "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
 
                 let mult = Constants.LU_DEF_MULTIPLICITY
@@ -1489,7 +1489,7 @@ type ServerStatus_Test4() =
                 let tgid = GlbFunc.newTargetGroupID()
                 let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true :> IConfigFileNode
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
-                let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
+                let tconf1 = ServerStatus_Test1.defTarget 2us "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
 
                 let mult1 = Constants.LU_DEF_MULTIPLICITY
@@ -1545,7 +1545,7 @@ type ServerStatus_Test4() =
                         TargetGroupName = "targetgroup000";
                         EnabledAtStart = false;
                         Target = [{
-                            ( ServerStatus_Test1.defTarget 0u "target000" ) with
+                            ( ServerStatus_Test1.defTarget 10us "target000" ) with
                                 LUN = [ lun_me.fromPrim 1UL ];
                         }];
                         LogicalUnit = [{
@@ -1636,7 +1636,7 @@ type ServerStatus_Test4() =
                 let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true :> IConfigFileNode
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
                 
-                let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
+                let tconf1 = ServerStatus_Test1.defTarget 2us "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
 
                 let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
@@ -1722,7 +1722,7 @@ type ServerStatus_Test4() =
                 let tgid = GlbFunc.newTargetGroupID()
                 let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true :> IConfigFileNode
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
-                let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
+                let tconf1 = ServerStatus_Test1.defTarget 2us "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
                 let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
 
@@ -1812,7 +1812,7 @@ type ServerStatus_Test4() =
                 let tgid = GlbFunc.newTargetGroupID()
                 let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true :> IConfigFileNode
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
-                let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
+                let tconf1 = ServerStatus_Test1.defTarget 2us "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
                 let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
 
@@ -1897,7 +1897,7 @@ type ServerStatus_Test4() =
                 let tgid = GlbFunc.newTargetGroupID()
                 let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true :> IConfigFileNode
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
-                let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
+                let tconf1 = ServerStatus_Test1.defTarget 2us "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
                 let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
                 let mNode = ss.AddPlainFileMediaNode luNode ServerStatus_Test1.defaultSF
@@ -1949,7 +1949,7 @@ type ServerStatus_Test4() =
                         TargetGroupName = "targetgroup000";
                         EnabledAtStart = false;
                         Target = [{
-                            ( ServerStatus_Test1.defTarget 0u "target000" ) with
+                            ( ServerStatus_Test1.defTarget 10us "target000" ) with
                                 LUN = [ lun_me.fromPrim 1UL ];
                         }];
                         LogicalUnit = [{
@@ -2032,7 +2032,7 @@ type ServerStatus_Test4() =
                 let tgid = GlbFunc.newTargetGroupID()
                 let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true :> IConfigFileNode
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
-                let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
+                let tconf1 = ServerStatus_Test1.defTarget 12us "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
                 let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
 
@@ -2125,7 +2125,7 @@ type ServerStatus_Test4() =
                 let tgid = GlbFunc.newTargetGroupID()
                 let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true :> IConfigFileNode
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
-                let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
+                let tconf1 = ServerStatus_Test1.defTarget 2us "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
                 let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
                 let mNode = ss.AddMemBufferMediaNode luNode {
@@ -2182,7 +2182,7 @@ type ServerStatus_Test4() =
                         TargetGroupName = "targetgroup000";
                         EnabledAtStart = false;
                         Target = [{
-                            ( ServerStatus_Test1.defTarget 0u "target000" ) with
+                            ( ServerStatus_Test1.defTarget 10us "target000" ) with
                                 LUN = [ lun_me.fromPrim 1UL ];
                         }];
                         LogicalUnit = [{
@@ -2270,7 +2270,7 @@ type ServerStatus_Test4() =
                 let tgid = GlbFunc.newTargetGroupID()
                 let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true :> IConfigFileNode
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
-                let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
+                let tconf1 = ServerStatus_Test1.defTarget 2us "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
                 let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
 
@@ -2355,7 +2355,7 @@ type ServerStatus_Test4() =
                 let tgid = GlbFunc.newTargetGroupID()
                 let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true :> IConfigFileNode
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
-                let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
+                let tconf1 = ServerStatus_Test1.defTarget 2us "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
                 let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
                 let mNode = ss.AddDummyMediaNode luNode ( mediaidx_me.fromPrim 1u ) ""
@@ -2404,7 +2404,7 @@ type ServerStatus_Test4() =
                         TargetGroupName = "targetgroup000";
                         EnabledAtStart = false;
                         Target = [{
-                            ( ServerStatus_Test1.defTarget 0u "target000" ) with
+                            ( ServerStatus_Test1.defTarget 10us "target000" ) with
                                 LUN = [ lun_me.fromPrim 1UL ];
                         }];
                         LogicalUnit = [{
@@ -2487,7 +2487,7 @@ type ServerStatus_Test4() =
                 let tgid = GlbFunc.newTargetGroupID()
                 let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true :> IConfigFileNode
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
-                let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
+                let tconf1 = ServerStatus_Test1.defTarget 2us "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
                 let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
 
@@ -2572,7 +2572,7 @@ type ServerStatus_Test4() =
                 let tgid = GlbFunc.newTargetGroupID()
                 let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true :> IConfigFileNode
                 Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
-                let tconf1 = ServerStatus_Test1.defTarget 2u "target000"
+                let tconf1 = ServerStatus_Test1.defTarget 2us "target000"
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
                 let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
                 let mNode = ss.AddDebugMediaNode luNode ( mediaidx_me.fromPrim 1u ) ""
@@ -2623,7 +2623,7 @@ type ServerStatus_Test4() =
                         TargetGroupName = "targetgroup000";
                         EnabledAtStart = false;
                         Target = [{
-                            ( ServerStatus_Test1.defTarget 0u "target000" ) with
+                            ( ServerStatus_Test1.defTarget 10us "target000" ) with
                                 LUN = [ lun_me.fromPrim 1UL ];
                         }];
                         LogicalUnit = [{

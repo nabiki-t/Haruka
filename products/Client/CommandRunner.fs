@@ -1488,9 +1488,9 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             | :? ConfNode_Target as x ->
                 match entNameUp with
                 | "ID" ->
-                    let r, v = UInt32.TryParse entValue
+                    let r, v = UInt16.TryParse entValue
                     if not r then
-                        m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint32" )
+                        m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint16" )
                         |> this.Output 0
                         return Some ( ss, cc, cn )
                     else

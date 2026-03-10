@@ -140,7 +140,12 @@ type ReaderWriter() =
       <xsd:element name='Target' minOccurs='1' maxOccurs='255' >
         <xsd:complexType><xsd:sequence>
           <xsd:element name='IdentNumber' >
-            <xsd:simpleType><xsd:restriction base='xsd:unsignedInt' /></xsd:simpleType>
+            <xsd:simpleType>
+              <xsd:restriction base='xsd:unsignedShort' >
+                <xsd:minInclusive value='1' />
+                <xsd:maxInclusive value='65535' />
+              </xsd:restriction>
+            </xsd:simpleType>
           </xsd:element>
           <xsd:element name='TargetPortalGroupTag' >
             <xsd:simpleType>
@@ -517,7 +522,7 @@ type ReaderWriter() =
     static member private Read_T_Target ( elem : XElement ) : T_Target = 
         {
             IdentNumber =
-                tnodeidx_me.fromPrim( UInt32.Parse( elem.Element( XName.Get "IdentNumber" ).Value ) );
+                tnodeidx_me.fromPrim( UInt16.Parse( elem.Element( XName.Get "IdentNumber" ).Value ) );
             TargetPortalGroupTag =
                 tpgt_me.fromPrim( UInt16.Parse( elem.Element( XName.Get "TargetPortalGroupTag" ).Value ) );
             TargetName =
@@ -879,6 +884,8 @@ type ReaderWriter() =
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
             yield sprintf "%s<%s>" indentStr elemName
+            if tnodeidx_me.toPrim (elem.IdentNumber) = 0us then
+                raise <| ConfRWException( "Min value(TNODEIDX_T) restriction error. IdentNumber" )
             yield sprintf "%s%s<IdentNumber>%d</IdentNumber>" singleIndent indentStr ( tnodeidx_me.toPrim (elem.IdentNumber) )
             if (elem.TargetPortalGroupTag) < ( tpgt_me.fromPrim 0us ) then
                 raise <| ConfRWException( "Min value(TPGT_T) restriction error. TargetPortalGroupTag" )

@@ -189,9 +189,9 @@ type ConfigurationMaster( m_WorkDirPath : string, killer : IKiller ) as this =
             {
                 MaxConnections = Constants.NEGOPARAM_MaxConnections;    // Harula does not support the function of 
                                                                         // constraining the maximum number of connections.
-                TargetGroupID = tgid_me.Zero;                     // Target group ID is is decided when the target name is given by initiator.
+                TargetGroupID = tgid_me.Zero;                           // Target group ID is is decided when the target name is given by initiator.
                 TargetConf = {                                          // Target node is decided when the target name is given by initiator.
-                    IdentNumber = tnodeidx_me.fromPrim 0u;
+                    IdentNumber = tnodeidx_me.fromPrim 1us;
                     TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                     TargetName = "";
                     TargetAlias = "";

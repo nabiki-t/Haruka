@@ -46,7 +46,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             MaxConnections = 3us;
             TargetGroupID = tgid_me.Zero;
             TargetConf = {
-                IdentNumber = tnodeidx_me.fromPrim 0u;
+                IdentNumber = tnodeidx_me.fromPrim 10us;
                 TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                 TargetName = "abcT";
                 TargetAlias = "";
@@ -84,7 +84,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         smStub.p_GetActiveTarget <-
             ( fun _ ->
                 [ { 
-                    IdentNumber = tnodeidx_me.fromPrim 0u;
+                    IdentNumber = tnodeidx_me.fromPrim 10us;
                     TargetName = "abcT";
                     TargetAlias = "abcTA";
                     TargetPortalGroupTag = tpgt_me.zero;

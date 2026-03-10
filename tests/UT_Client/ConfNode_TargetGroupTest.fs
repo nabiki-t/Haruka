@@ -30,7 +30,7 @@ type ConfNode_TargetGroup_Test() =
     // Common definition
 
     let defaultConf : TargetGroupConf.T_Target = {
-        IdentNumber = tnodeidx_me.fromPrim 1u;
+        IdentNumber = tnodeidx_me.fromPrim 1us;
         TargetPortalGroupTag = tpgt_me.fromPrim 0us;
         TargetName = "aaa";
         TargetAlias = "";
@@ -292,7 +292,7 @@ type ConfNode_TargetGroup_Test() =
         // target 1
         let conf1 = {
             defaultConf with
-                IdentNumber = tnodeidx_me.fromPrim 1u;
+                IdentNumber = tnodeidx_me.fromPrim 1us;
                 TargetName = "a";
         }
         let tn1 = new ConfNode_Target( st, rel, rel.NextID, conf1 ) :> IConfigureNode
@@ -305,7 +305,7 @@ type ConfNode_TargetGroup_Test() =
         // target 2
         let conf2 = {
             defaultConf with
-                IdentNumber = tnodeidx_me.fromPrim 1u;
+                IdentNumber = tnodeidx_me.fromPrim 1us;
                 TargetName = "a";
         }
         let tn2 = new ConfNode_Target( st, rel, rel.NextID, conf2 ) :> IConfigureNode
@@ -332,7 +332,7 @@ type ConfNode_TargetGroup_Test() =
         // target 1
         let conf1 = {
             defaultConf with
-                IdentNumber = tnodeidx_me.fromPrim 1u;
+                IdentNumber = tnodeidx_me.fromPrim 1us;
                 TargetName = "a";
         }
         let tn1 = new ConfNode_Target( st, rel, rel.NextID, conf1 ) :> IConfigureNode
@@ -345,7 +345,7 @@ type ConfNode_TargetGroup_Test() =
         // target 2
         let conf2 = {
             defaultConf with
-                IdentNumber = tnodeidx_me.fromPrim 1u;
+                IdentNumber = tnodeidx_me.fromPrim 1us;
                 TargetName = "a";
         }
         let tn2 = new ConfNode_Target( st, rel, rel.NextID, conf2 ) :> IConfigureNode

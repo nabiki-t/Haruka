@@ -224,9 +224,7 @@ type ReaderWriter() =
                     </xsd:simpleType>
                   </xsd:element>
                   <xsd:element name='ITT' >
-                    <xsd:simpleType>
-                      <xsd:restriction base='xsd:unsignedInt' />
-                    </xsd:simpleType>
+                    <xsd:simpleType><xsd:restriction base='xsd:unsignedInt' /></xsd:simpleType>
                   </xsd:element>
                 </xsd:sequence></xsd:complexType>
               </xsd:element>

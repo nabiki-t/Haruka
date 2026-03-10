@@ -63,7 +63,7 @@ type PRManager_Test2 () =
                 [
                     if lun = lun_me.zero || lun = lun_me.fromPrim 1UL then
                         yield {
-                            IdentNumber = tnodeidx_me.fromPrim 0u;
+                            IdentNumber = tnodeidx_me.fromPrim 1us;
                             TargetName = "target000";
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.fromPrim 0us;
@@ -72,7 +72,7 @@ type PRManager_Test2 () =
                         };
                     if lun = lun_me.zero || lun = lun_me.fromPrim 1UL then
                         yield {
-                            IdentNumber = tnodeidx_me.fromPrim 1u;
+                            IdentNumber = tnodeidx_me.fromPrim 2us;
                             TargetName = "target001";
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.fromPrim 1us;
@@ -81,7 +81,7 @@ type PRManager_Test2 () =
                         };
                     if lun = lun_me.fromPrim 2UL then
                         yield {
-                            IdentNumber = tnodeidx_me.fromPrim 2u;
+                            IdentNumber = tnodeidx_me.fromPrim 3us;
                             TargetName = "target002";
                             TargetAlias = "";
                             TargetPortalGroupTag = tpgt_me.fromPrim 0us;
@@ -235,7 +235,7 @@ type PRManager_Test2 () =
             0x45uy;                         // FORMAT CODE, PROTOCOL IDENTIFIER
             0x00uy;                         // Reserved
             0x00uy; 0x20uy;                 // ADDITIONAL LENGTH
-            yield! Encoding.UTF8.GetBytes "initiator333"
+            yield! Encoding.UTF8.GetBytes "initiator333"        // unknown, ignored
             yield! Encoding.UTF8.GetBytes ",i,0x"
             yield! Encoding.UTF8.GetBytes "830004050006"
             0x00uy; 0x00uy; 0x00uy;
@@ -244,9 +244,9 @@ type PRManager_Test2 () =
             0x45uy;                         // FORMAT CODE, PROTOCOL IDENTIFIER
             0x00uy;                         // Reserved
             0x00uy; 0x20uy;                 // ADDITIONAL LENGTH
-            yield! Encoding.UTF8.GetBytes "initiator444"
+            yield! Encoding.UTF8.GetBytes "initiator002"
             yield! Encoding.UTF8.GetBytes ",i,0x"
-            yield! Encoding.UTF8.GetBytes "830004050006"
+            yield! Encoding.UTF8.GetBytes "440004040004"
             0x00uy; 0x00uy; 0x00uy;
 
         |]
@@ -260,13 +260,11 @@ type PRManager_Test2 () =
         let prinfo = PRManager_Test2.GetPRInfoRec pm
         Assert.False(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
-        Assert.True(( prinfo.m_Registrations.Count = 4 ))
+        Assert.True(( prinfo.m_Registrations.Count = 3 ))
         Assert.True(( prinfo.m_Registrations.Item( initITN1 ) = resvkey_me.fromPrim 0xAABBCCDD11223344UL ))
 
-        let ansITN1 = new ITNexus( "initiator333", isid_me.fromElem ( 2uy <<< 6 ) 3uy 4us 5uy 6us, "target001", tpgt_me.fromPrim 1us );
-        let ansITN2 = new ITNexus( "initiator444", isid_me.fromElem ( 2uy <<< 6 ) 3uy 4us 5uy 6us, "target001", tpgt_me.fromPrim 1us );
+        let ansITN2 = new ITNexus( "initiator002", isid_me.fromElem ( 1uy <<< 6 ) 4uy 4us 4uy 4us, "target001", tpgt_me.fromPrim 1us );
         Assert.True(( prinfo.m_Registrations.Item( source.I_TNexus ) = resvkey_me.fromPrim 0xFFFFFFFFFFFFFFFFUL ))
-        Assert.True(( prinfo.m_Registrations.Item( ansITN1 ) = resvkey_me.fromPrim 0xFFFFFFFFFFFFFFFFUL ))
         Assert.True(( prinfo.m_Registrations.Item( ansITN2 ) = resvkey_me.fromPrim 0xFFFFFFFFFFFFFFFFUL ))
 
         GlbFunc.WaitForFileDelete fname
@@ -303,18 +301,18 @@ type PRManager_Test2 () =
             0x45uy;                         // FORMAT CODE, PROTOCOL IDENTIFIER
             0x00uy;                         // Reserved
             0x00uy; 0x20uy;                 // ADDITIONAL LENGTH
-            yield! Encoding.UTF8.GetBytes "initiator333"
+            yield! Encoding.UTF8.GetBytes "initiator001"
             yield! Encoding.UTF8.GetBytes ",i,0x"
-            yield! Encoding.UTF8.GetBytes "830004050006"
+            yield! Encoding.UTF8.GetBytes "420002020002"
             0x00uy; 0x00uy; 0x00uy;
 
             // TransportID 2
             0x45uy;                         // FORMAT CODE, PROTOCOL IDENTIFIER
             0x00uy;                         // Reserved
             0x00uy; 0x20uy;                 // ADDITIONAL LENGTH
-            yield! Encoding.UTF8.GetBytes "initiator444"
+            yield! Encoding.UTF8.GetBytes "initiator002"
             yield! Encoding.UTF8.GetBytes ",i,0x"
-            yield! Encoding.UTF8.GetBytes "830004050006"
+            yield! Encoding.UTF8.GetBytes "440004040004"
             0x00uy; 0x00uy; 0x00uy;
 
         |]
@@ -332,11 +330,11 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( initITN1 ) = resvkey_me.fromPrim 0xAABBCCDD11223344UL ))
 
         let ansITN1 = new ITNexus( "initiator111", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us );
-        let ansITN2 = new ITNexus( "initiator333", isid_me.fromElem ( 2uy <<< 6 ) 3uy 4us 5uy 6us, "target000", tpgt_me.fromPrim 0us );
-        let ansITN3 = new ITNexus( "initiator444", isid_me.fromElem ( 2uy <<< 6 ) 3uy 4us 5uy 6us, "target000", tpgt_me.fromPrim 0us );
+        let ansITN2 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us );
+        let ansITN3 = new ITNexus( "initiator002", isid_me.fromElem ( 1uy <<< 6 ) 4uy 4us 4uy 4us, "target000", tpgt_me.fromPrim 0us );
         let ansITN4 = new ITNexus( "initiator111", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us );
-        let ansITN5 = new ITNexus( "initiator333", isid_me.fromElem ( 2uy <<< 6 ) 3uy 4us 5uy 6us, "target001", tpgt_me.fromPrim 1us );
-        let ansITN6 = new ITNexus( "initiator444", isid_me.fromElem ( 2uy <<< 6 ) 3uy 4us 5uy 6us, "target001", tpgt_me.fromPrim 1us );
+        let ansITN5 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target001", tpgt_me.fromPrim 1us );
+        let ansITN6 = new ITNexus( "initiator002", isid_me.fromElem ( 1uy <<< 6 ) 4uy 4us 4uy 4us, "target001", tpgt_me.fromPrim 1us );
         Assert.True(( prinfo.m_Registrations.Item( ansITN1 ) = resvkey_me.fromPrim 0xFFFFFFFFFFFFFFFFUL ))
         Assert.True(( prinfo.m_Registrations.Item( ansITN2 ) = resvkey_me.fromPrim 0xFFFFFFFFFFFFFFFFUL ))
         Assert.True(( prinfo.m_Registrations.Item( ansITN3 ) = resvkey_me.fromPrim 0xFFFFFFFFFFFFFFFFUL ))
@@ -498,6 +496,7 @@ type PRManager_Test2 () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            Assert.True(( x.Message.EndsWith "is already registered." ))
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
 
@@ -517,7 +516,7 @@ type PRManager_Test2 () =
     member this.Register_008() =
         let pDirName = this.CreateTestDir()
         let fname = Functions.AppendPathName pDirName "Register_008.txt"
-        let initITN1 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 3us 4uy 5us, "target000", tpgt_me.fromPrim 0us )
+        let initITN1 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us )
         GlbFunc.writeDefaultPRFile
             EXCLUSIVE_ACCESS_ALL_REGISTRANTS
             [|
@@ -543,7 +542,7 @@ type PRManager_Test2 () =
             0x00uy; 0x20uy;                 // ADDITIONAL LENGTH
             yield! Encoding.UTF8.GetBytes "initiator001"
             yield! Encoding.UTF8.GetBytes ",i,0x"
-            yield! Encoding.UTF8.GetBytes "420003040005"
+            yield! Encoding.UTF8.GetBytes "420002020002"
             0x00uy; 0x00uy; 0x00uy;
 
             // TransportID 2
@@ -566,6 +565,7 @@ type PRManager_Test2 () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            Assert.True(( x.Message.EndsWith "is already registered." ))
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
 

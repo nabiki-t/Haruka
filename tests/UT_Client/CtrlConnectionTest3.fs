@@ -1882,7 +1882,7 @@ type CtrlConnection_Test3() =
                 let sessList : TargetDeviceCtrlRes.T_Session list = [
                     {
                         TargetGroupID = tgid_me.fromPrim( 99u );
-                        TargetNodeID = tnodeidx_me.fromPrim 1u;
+                        TargetNodeID = tnodeidx_me.fromPrim 1us;
                         TSIH = tsih_me.fromPrim 1us;
                         ITNexus = {
                             InitiatorName = "initiator001";
@@ -1919,7 +1919,7 @@ type CtrlConnection_Test3() =
                 let! sesList = cc1.GetSession_InTargetDevice tdid
                 Assert.True(( sesList.Length = 1 ))
                 Assert.True(( sesList.[0].TargetGroupID = tgid_me.fromPrim( 99u ) ))
-                Assert.True(( sesList.[0].TargetNodeID = tnodeidx_me.fromPrim 1u ))
+                Assert.True(( sesList.[0].TargetNodeID = tnodeidx_me.fromPrim 1us ))
                 k.NoticeTerminate()
             }
         |]
@@ -2074,7 +2074,7 @@ type CtrlConnection_Test3() =
                 let sessList : TargetDeviceCtrlRes.T_Session list = [
                     {
                         TargetGroupID = tgid_me.fromPrim( 4u );        // Retrieved target group ID will not be checked.
-                        TargetNodeID = tnodeidx_me.fromPrim 1u;
+                        TargetNodeID = tnodeidx_me.fromPrim 1us;
                         TSIH = tsih_me.fromPrim 1us;
                         ITNexus = {
                             InitiatorName = "initiator001";
@@ -2111,7 +2111,7 @@ type CtrlConnection_Test3() =
                 let! sesList = cc1.GetSession_InTargetGroup tdid ( tgid_me.fromPrim( 3u ) )
                 Assert.True(( sesList.Length = 1 ))
                 Assert.True(( sesList.[0].TargetGroupID = tgid_me.fromPrim( 4u ) ))    // not checked
-                Assert.True(( sesList.[0].TargetNodeID = tnodeidx_me.fromPrim 1u ))
+                Assert.True(( sesList.[0].TargetNodeID = tnodeidx_me.fromPrim 1us ))
                 k.NoticeTerminate()
             }
         |]
@@ -2258,14 +2258,14 @@ type CtrlConnection_Test3() =
                 | TargetDeviceCtrlReq.U_GetSession( x ) ->
                     match x with
                     | TargetDeviceCtrlReq.U_SessInTarget( tid ) ->
-                        Assert.True(( tid = tnodeidx_me.fromPrim 4u ))
+                        Assert.True(( tid = tnodeidx_me.fromPrim 4us ))
                     | _ -> Assert.Fail __LINE__
                 | _ -> Assert.Fail __LINE__
 
                 let sessList : TargetDeviceCtrlRes.T_Session list = [
                     {
                         TargetGroupID = tgid_me.fromPrim( 4u );
-                        TargetNodeID = tnodeidx_me.fromPrim 5u; // Retrieved target node ID will not be checked.
+                        TargetNodeID = tnodeidx_me.fromPrim 5us; // Retrieved target node ID will not be checked.
                         TSIH = tsih_me.fromPrim 1us;
                         ITNexus = {
                             InitiatorName = "initiator001";
@@ -2299,10 +2299,10 @@ type CtrlConnection_Test3() =
             };
             fun () -> task {
                 let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                let! sesList = cc1.GetSession_InTarget tdid ( tnodeidx_me.fromPrim 4u )
+                let! sesList = cc1.GetSession_InTarget tdid ( tnodeidx_me.fromPrim 4us )
                 Assert.True(( sesList.Length = 1 ))
                 Assert.True(( sesList.[0].TargetGroupID = tgid_me.fromPrim( 4u ) ))
-                Assert.True(( sesList.[0].TargetNodeID = tnodeidx_me.fromPrim 5u ))    // not checked
+                Assert.True(( sesList.[0].TargetNodeID = tnodeidx_me.fromPrim 5us ))    // not checked
                 k.NoticeTerminate()
             }
         |]
@@ -2326,7 +2326,7 @@ type CtrlConnection_Test3() =
                 | TargetDeviceCtrlReq.U_GetSession( x ) ->
                     match x with
                     | TargetDeviceCtrlReq.U_SessInTarget( tid ) ->
-                        Assert.True(( tid = tnodeidx_me.fromPrim 4u ))
+                        Assert.True(( tid = tnodeidx_me.fromPrim 4us ))
                     | _ -> Assert.Fail __LINE__
                 | _ -> Assert.Fail __LINE__
 
@@ -2338,7 +2338,7 @@ type CtrlConnection_Test3() =
             };
             fun () -> task {
                 let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                let! sesList = cc1.GetSession_InTarget tdid ( tnodeidx_me.fromPrim 4u )
+                let! sesList = cc1.GetSession_InTarget tdid ( tnodeidx_me.fromPrim 4us )
                 Assert.True(( sesList.Length = 0 ))
                 k.NoticeTerminate()
             }
@@ -2363,7 +2363,7 @@ type CtrlConnection_Test3() =
                 | TargetDeviceCtrlReq.U_GetSession( x ) ->
                     match x with
                     | TargetDeviceCtrlReq.U_SessInTarget( tid ) ->
-                        Assert.True(( tid = tnodeidx_me.fromPrim 4u ))
+                        Assert.True(( tid = tnodeidx_me.fromPrim 4us ))
                     | _ -> Assert.Fail __LINE__
                 | _ -> Assert.Fail __LINE__
 
@@ -2376,7 +2376,7 @@ type CtrlConnection_Test3() =
             fun () -> task {
                 let! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
-                    let! _ = cc1.GetSession_InTarget tdid ( tnodeidx_me.fromPrim 4u )
+                    let! _ = cc1.GetSession_InTarget tdid ( tnodeidx_me.fromPrim 4us )
                     Assert.Fail __LINE__
                 with
                 | :? RequestError as x ->
@@ -2404,7 +2404,7 @@ type CtrlConnection_Test3() =
                 | TargetDeviceCtrlReq.U_GetSession( x ) ->
                     match x with
                     | TargetDeviceCtrlReq.U_SessInTarget( tid ) ->
-                        Assert.True(( tid = tnodeidx_me.fromPrim 4u ))
+                        Assert.True(( tid = tnodeidx_me.fromPrim 4us ))
                     | _ -> Assert.Fail __LINE__
                 | _ -> Assert.Fail __LINE__
 
@@ -2421,7 +2421,7 @@ type CtrlConnection_Test3() =
             fun () -> task {
                 let! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
-                    let! _ = cc1.GetSession_InTarget tdid ( tnodeidx_me.fromPrim 4u )
+                    let! _ = cc1.GetSession_InTarget tdid ( tnodeidx_me.fromPrim 4us )
                     Assert.Fail __LINE__
                 with
                 | :? RequestError as x ->
@@ -3193,7 +3193,7 @@ type CtrlConnection_Test3() =
                 | TargetDeviceCtrlReq.U_GetConnection( x ) ->
                     match x with
                     | TargetDeviceCtrlReq.U_ConInTarget( tnode ) ->
-                        Assert.True(( tnode = tnodeidx_me.fromPrim 7u ))
+                        Assert.True(( tnode = tnodeidx_me.fromPrim 7us ))
                     | _ -> Assert.Fail __LINE__
                 | _ -> Assert.Fail __LINE__
 
@@ -3223,7 +3223,7 @@ type CtrlConnection_Test3() =
             };
             fun () -> task {
                 let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                let! conList = cc1.GetConnection_InTarget tdid ( tnodeidx_me.fromPrim 7u )
+                let! conList = cc1.GetConnection_InTarget tdid ( tnodeidx_me.fromPrim 7us )
                 Assert.True(( conList.Length = 1 ))
                 Assert.True(( conList.[0].TSIH = tsih_me.fromPrim 10us ))
                 Assert.True(( conList.[0].ConnectionID = cid_me.fromPrim 11us ))
@@ -3251,7 +3251,7 @@ type CtrlConnection_Test3() =
                 | TargetDeviceCtrlReq.U_GetConnection( x ) ->
                     match x with
                     | TargetDeviceCtrlReq.U_ConInTarget( tnode ) ->
-                        Assert.True(( tnode = tnodeidx_me.fromPrim 7u ))
+                        Assert.True(( tnode = tnodeidx_me.fromPrim 7us ))
                     | _ -> Assert.Fail __LINE__
                 | _ -> Assert.Fail __LINE__
 
@@ -3263,7 +3263,7 @@ type CtrlConnection_Test3() =
             };
             fun () -> task {
                 let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                let! conList = cc1.GetConnection_InTarget tdid ( tnodeidx_me.fromPrim 7u )
+                let! conList = cc1.GetConnection_InTarget tdid ( tnodeidx_me.fromPrim 7us )
                 Assert.True(( conList.Length = 0 ))
                 k.NoticeTerminate()
             }
@@ -3288,7 +3288,7 @@ type CtrlConnection_Test3() =
                 | TargetDeviceCtrlReq.U_GetConnection( x ) ->
                     match x with
                     | TargetDeviceCtrlReq.U_ConInTarget( tnode ) ->
-                        Assert.True(( tnode = tnodeidx_me.fromPrim 7u ))
+                        Assert.True(( tnode = tnodeidx_me.fromPrim 7us ))
                     | _ -> Assert.Fail __LINE__
                 | _ -> Assert.Fail __LINE__
 
@@ -3301,7 +3301,7 @@ type CtrlConnection_Test3() =
             fun () -> task {
                 let! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
-                    let! _ = cc1.GetConnection_InTarget tdid ( tnodeidx_me.fromPrim 7u )
+                    let! _ = cc1.GetConnection_InTarget tdid ( tnodeidx_me.fromPrim 7us )
                     Assert.Fail __LINE__
                 with
                 | :? RequestError as x ->
@@ -3329,7 +3329,7 @@ type CtrlConnection_Test3() =
                 | TargetDeviceCtrlReq.U_GetConnection( x ) ->
                     match x with
                     | TargetDeviceCtrlReq.U_ConInTarget( tnode ) ->
-                        Assert.True(( tnode = tnodeidx_me.fromPrim 7u ))
+                        Assert.True(( tnode = tnodeidx_me.fromPrim 7us ))
                     | _ -> Assert.Fail __LINE__
                 | _ -> Assert.Fail __LINE__
 
@@ -3346,7 +3346,7 @@ type CtrlConnection_Test3() =
             fun () -> task {
                 let! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
-                    let! _ = cc1.GetConnection_InTarget tdid ( tnodeidx_me.fromPrim 7u )
+                    let! _ = cc1.GetConnection_InTarget tdid ( tnodeidx_me.fromPrim 7us )
                     Assert.Fail __LINE__
                 with
                 | :? RequestError as x ->
