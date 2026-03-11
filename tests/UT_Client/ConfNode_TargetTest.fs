@@ -216,7 +216,7 @@ type ConfNode_Target_Test() =
         Assert.True(( rc.TargetAlias = "ggg" ))
 
     [<Fact>]
-    member _.Validate_001() =
+    member _.Validate_NoError_001() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
@@ -231,7 +231,7 @@ type ConfNode_Target_Test() =
         Assert.True(( r.Length = 0 ))
 
     [<Fact>]
-    member _.Validate_002() =
+    member _.Validate_TPGT_001() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -254,7 +254,7 @@ type ConfNode_Target_Test() =
         Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_UNSUPPORTED_TPGT_VALUE" ))
 
     [<Fact>]
-    member _.Validate_002_1() =
+    member _.Validate_TargetNodeID_001() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -277,7 +277,7 @@ type ConfNode_Target_Test() =
         Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_UNSUPPORTED_TARGET_NODE_ID_VALUE" ))
 
     [<Fact>]
-    member _.Validate_003() =
+    member _.Validate_TargetName_001() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -300,7 +300,7 @@ type ConfNode_Target_Test() =
         Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_INVALID_TARGET_NAME_FORMAT" ))
 
     [<Fact>]
-    member _.Validate_004() =
+    member _.Validate_TargetAlias_001() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -321,7 +321,7 @@ type ConfNode_Target_Test() =
         Assert.True(( r.Length = 0 ))
 
     [<Fact>]
-    member _.Validate_005() =
+    member _.Validate_TargetAlias_002() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -344,7 +344,7 @@ type ConfNode_Target_Test() =
         Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_TARGET_ALIAS_TOO_LONG" ))
 
     [<Fact>]
-    member _.Validate_006() =
+    member _.Validate_ChapUserName_I_001() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -375,7 +375,7 @@ type ConfNode_Target_Test() =
         Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_INVALID_CHAP_AUTH_USERNAME_FORMAT" ))
 
     [<Fact>]
-    member _.Validate_007() =
+    member _.Validate_ChapUserName_I_002() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -404,7 +404,7 @@ type ConfNode_Target_Test() =
         Assert.True(( r.Length = 0 ))
 
     [<Fact>]
-    member _.Validate_008() =
+    member _.Validate_ChapUserName_I_003() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -433,7 +433,7 @@ type ConfNode_Target_Test() =
         Assert.True(( r.Length = 0 ))
 
     [<Fact>]
-    member _.Validate_009() =
+    member _.Validate_ChapUserName_I_004() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -464,7 +464,7 @@ type ConfNode_Target_Test() =
         Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_INVALID_CHAP_AUTH_USERNAME_FORMAT" ))
 
     [<Fact>]
-    member _.Validate_010() =
+    member _.Validate_ChapUserName_I_005() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -495,7 +495,7 @@ type ConfNode_Target_Test() =
         Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_INVALID_CHAP_AUTH_USERNAME_FORMAT" ))
 
     [<Fact>]
-    member _.Validate_011() =
+    member _.Validate_ChapPassword_I_001() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -526,7 +526,7 @@ type ConfNode_Target_Test() =
         Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_INVALID_CHAP_AUTH_PASSWORD_FORMAT" ))
 
     [<Fact>]
-    member _.Validate_012() =
+    member _.Validate_ChapPassword_I_002() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -555,7 +555,7 @@ type ConfNode_Target_Test() =
         Assert.True(( r.Length = 0 ))
 
     [<Fact>]
-    member _.Validate_013() =
+    member _.Validate_ChapPassword_I_003() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -584,7 +584,7 @@ type ConfNode_Target_Test() =
         Assert.True(( r.Length = 0 ))
 
     [<Fact>]
-    member _.Validate_014() =
+    member _.Validate_ChapPassword_I_004() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -615,7 +615,7 @@ type ConfNode_Target_Test() =
         Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_INVALID_CHAP_AUTH_PASSWORD_FORMAT" ))
 
     [<Fact>]
-    member _.Validate_015() =
+    member _.Validate_ChapPassword_I_005() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -646,7 +646,7 @@ type ConfNode_Target_Test() =
         Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_INVALID_CHAP_AUTH_PASSWORD_FORMAT" ))
 
     [<Fact>]
-    member _.Validate_016() =
+    member _.Validate_ChapUserName_T_001() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -677,7 +677,7 @@ type ConfNode_Target_Test() =
         Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_INVALID_CHAP_AUTH_PASSWORD_OMIT" ))
 
     [<Fact>]
-    member _.Validate_017() =
+    member _.Validate_ChapUserName_T_002() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -706,7 +706,7 @@ type ConfNode_Target_Test() =
         Assert.True(( r.Length = 0 ))
 
     [<Fact>]
-    member _.Validate_018() =
+    member _.Validate_ChapUserName_T_003() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -735,7 +735,7 @@ type ConfNode_Target_Test() =
         Assert.True(( r.Length = 0 ))
 
     [<Fact>]
-    member _.Validate_019() =
+    member _.Validate_ChapUserName_T_004() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -766,7 +766,7 @@ type ConfNode_Target_Test() =
         Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_INVALID_CHAP_AUTH_USERNAME_FORMAT" ))
 
     [<Fact>]
-    member _.Validate_020() =
+    member _.Validate_ChapUserName_T_005() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -797,7 +797,7 @@ type ConfNode_Target_Test() =
         Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_INVALID_CHAP_AUTH_USERNAME_FORMAT" ))
 
     [<Fact>]
-    member _.Validate_021() =
+    member _.Validate_ChapPassword_T_001() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -828,7 +828,7 @@ type ConfNode_Target_Test() =
         Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_INVALID_CHAP_AUTH_PASSWORD_FORMAT" ))
 
     [<Fact>]
-    member _.Validate_022() =
+    member _.Validate_ChapPassword_T_002() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -857,7 +857,7 @@ type ConfNode_Target_Test() =
         Assert.True(( r.Length = 0 ))
 
     [<Fact>]
-    member _.Validate_023() =
+    member _.Validate_ChapPassword_T_003() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -886,7 +886,7 @@ type ConfNode_Target_Test() =
         Assert.True(( r.Length = 0 ))
 
     [<Fact>]
-    member _.Validate_024() =
+    member _.Validate_ChapPassword_T_004() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -917,7 +917,7 @@ type ConfNode_Target_Test() =
         Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_INVALID_CHAP_AUTH_PASSWORD_FORMAT" ))
 
     [<Fact>]
-    member _.Validate_025() =
+    member _.Validate_ChapPassword_T_005() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -948,7 +948,7 @@ type ConfNode_Target_Test() =
         Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_INVALID_CHAP_AUTH_PASSWORD_FORMAT" ))
 
     [<Fact>]
-    member _.Validate_026() =
+    member _.Validate_ChapOmmitTarget_001() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let conf = {
@@ -977,7 +977,7 @@ type ConfNode_Target_Test() =
         Assert.True(( r.Length = 0 ))
 
     [<Fact>]
-    member _.Validate_027() =
+    member _.Validate_LUNCount_001() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
@@ -999,7 +999,7 @@ type ConfNode_Target_Test() =
         Assert.True(( r.Length = 0 ))
 
     [<Fact>]
-    member _.Validate_028() =
+    member _.Validate_LUNCount_002() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
@@ -1024,7 +1024,7 @@ type ConfNode_Target_Test() =
 
 
     [<Fact>]
-    member _.Validate_029() =
+    member _.Validate_LUNCount_003() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
@@ -1038,7 +1038,7 @@ type ConfNode_Target_Test() =
         Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_MISSING_LU" ))
 
     [<Fact>]
-    member _.Validate_030() =
+    member _.Validate_InvalidSubNode_001() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
@@ -1070,7 +1070,7 @@ type ConfNode_Target_Test() =
         Assert.True(( ( snd r.[2] ).StartsWith "CHKMSG_INVALID_RELATION" ))
 
     [<Fact>]
-    member _.Validate_031() =
+    member _.Validate_ErrorInSubNode_001() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let tg = new ConfNode_TargetGroup( st, rel, rel.NextID, GlbFunc.newTargetGroupID(), "a", true, ModifiedStatus.NotModified ) :> IConfigFileNode
@@ -1096,7 +1096,7 @@ type ConfNode_Target_Test() =
             Assert.True(( ( snd r.[i] ).StartsWith "CHKMSG_INVALID_LUN_VALUE" ))
 
     [<Fact>]
-    member _.Validate_032() =
+    member _.Validate_Parent_001() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let tg1 = new DummyNode( rel.NextID, "D1" ) :> IConfigureNode
@@ -1116,7 +1116,7 @@ type ConfNode_Target_Test() =
         Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_TOO_MANY_PARENT" ))
 
     [<Fact>]
-    member _.Validate_033() =
+    member _.Validate_Parent_002() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
         let n = new ConfNode_Target( st, rel, rel.NextID, defaultConf ) :> IConfigureNode

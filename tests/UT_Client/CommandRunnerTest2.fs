@@ -2121,8 +2121,11 @@ type CommandRunner_Test2() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
-    [<InlineData( "set ID 333" )>]
-    member _.set_Target_001 ( cmdstr : string ) =
+    [<InlineData( "set ID 0", 0us )>]
+    [<InlineData( "set ID 1", 1us )>]
+    [<InlineData( "set ID 333", 333us )>]
+    [<InlineData( "set ID 65535", 65535us )>]
+    member _.set_Target_001 ( cmdstr : string ) ( exp : uint16 ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let wnode = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
         let conf : TargetGroupConf.T_Target = {
@@ -2139,7 +2142,7 @@ type CommandRunner_Test2() =
         ss.p_UpdateTargetNode <- ( fun argcn argconf ->
             flg1 <- true
             Assert.True(( argcn = initnode ))
-            Assert.True(( argconf.IdentNumber = tnodeidx_me.fromPrim 333us ))
+            Assert.True(( argconf.IdentNumber = tnodeidx_me.fromPrim exp ))
             initnode.CreateUpdatedNode argconf
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
@@ -2152,7 +2155,7 @@ type CommandRunner_Test2() =
         Assert.True(( cc :> CtrlConnection = r_cc ))
         let expconf = {
             conf with
-                IdentNumber = tnodeidx_me.fromPrim 333us;
+                IdentNumber = tnodeidx_me.fromPrim exp;
         }
         Assert.True(( ( r_cn :?> ConfNode_Target ).Values = expconf ))
         Assert.True(( flg1 ))
@@ -2161,7 +2164,7 @@ type CommandRunner_Test2() =
 
     [<Theory>]
     [<InlineData( "set ID -1" )>]
-    [<InlineData( "set ID 4294967296" )>]
+    [<InlineData( "set ID 65536" )>]
     [<InlineData( "set ID aaa" )>]
     member _.set_Target_002 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
