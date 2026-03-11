@@ -36,7 +36,8 @@
     <Compile Include="LoginNegociatorTest2.fs" />
     <Compile Include="TaskRouterTest.fs" />
     <Compile Include="SessionTest.fs" />
-    <Compile Include="StatusMasterTest.fs" />
+    <Compile Include="StatusMasterTest1.fs" />
+    <Compile Include="StatusMasterTest2.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
 

@@ -145,8 +145,10 @@ type public CStatus_Stub() =
     let mutable f_GetActiveTargetGroup : ( unit -> TargetGroupConf.T_TargetGroup list ) option = None
     let mutable f_GetActiveTarget : ( unit -> TargetGroupConf.T_Target list ) option = None
     let mutable f_GetTargetFromLUN : ( LUN_T -> TargetGroupConf.T_Target list ) option = None
+    let mutable f_GetLoadedTarget: ( unit -> TargetGroupConf.T_Target list ) option = None
     let mutable f_GetISCSINegoParamCO : ( unit -> IscsiNegoParamCO ) option = None
     let mutable f_GetISCSINegoParamSW : ( unit -> IscsiNegoParamSW ) option = None
+    let mutable f_GetDeviceName : ( unit -> string ) option = None
     let mutable f_CreateLoginNegociator : ( System.IO.Stream -> DateTime -> TPGT_T -> NETPORTIDX_T -> ILoginNegociator ) option = None
     let mutable f_GetTSIH : ( ITNexus -> TSIH_T ) option = None
     let mutable f_GenNewTSIH : ( unit -> TSIH_T ) option = None
@@ -166,8 +168,10 @@ type public CStatus_Stub() =
     member _.p_GetActiveTargetGroup with set v = f_GetActiveTargetGroup <- Some( v )
     member _.p_GetActiveTarget with set v = f_GetActiveTarget <- Some( v )
     member _.p_GetTargetFromLUN with set v = f_GetTargetFromLUN <- Some( v )
+    member _.p_GetLoadedTarget with set v = f_GetLoadedTarget <- Some( v )
     member _.p_GetISCSINegoParamCO with set v = f_GetISCSINegoParamCO <- Some( v )
     member _.p_GetISCSINegoParamSW with set v = f_GetISCSINegoParamSW <- Some( v )
+    member _.p_GetDeviceName with set v = f_GetDeviceName <- Some( v )
     member _.p_CreateLoginNegociator with set v = f_CreateLoginNegociator <- Some( v )
     member _.p_GetTSIH with set v = f_GetTSIH <- Some( v )
     member _.p_GenNewTSIH with set v = f_GenNewTSIH <- Some( v )
@@ -192,10 +196,14 @@ type public CStatus_Stub() =
             f_GetActiveTarget.Value ()
         override _.GetTargetFromLUN ( lun : LUN_T ) =
             f_GetTargetFromLUN.Value lun
+        override _.GetLoadedTarget () =
+            f_GetLoadedTarget.Value ()
         override _.IscsiNegoParamCO with get() =
             f_GetISCSINegoParamCO.Value ()
         override _.IscsiNegoParamSW with get() =
             f_GetISCSINegoParamSW.Value ()
+        override _.DeviceName with get() =
+            f_GetDeviceName.Value ()
         override _.CreateLoginNegociator ( sock : System.Net.Sockets.NetworkStream ) ( ct : DateTime ) ( targetPortalGroupTag : TPGT_T ) ( netPortIdx : NETPORTIDX_T ) =
             f_CreateLoginNegociator.Value sock ct targetPortalGroupTag netPortIdx
         override _.GetTSIH ( argI_TNexus : ITNexus ) : TSIH_T =

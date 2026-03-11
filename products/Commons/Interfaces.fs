@@ -1736,6 +1736,18 @@ type IStatus =
     /// </remarks>
     abstract GetTargetFromLUN : lun:LUN_T -> TargetGroupConf.T_Target list
 
+    // ------------------------------------------------------------------------
+    /// <summary>
+    ///   Get the configurations of all currently loaded target nodes.
+    /// </summary>
+    /// <returns>
+    ///   Currently loaded target node configurations.
+    /// </returns>
+    /// <remarks>
+    ///   This method returns the currently loaded target.
+    ///   Loaded but inactive targets are also included in results.
+    /// </remarks>
+    abstract GetLoadedTarget : unit -> TargetGroupConf.T_Target list
 
     // ------------------------------------------------------------------------
     /// <summary>
@@ -1757,6 +1769,11 @@ type IStatus =
     /// </returns>
     abstract IscsiNegoParamSW : IscsiNegoParamSW
 
+    // ------------------------------------------------------------------------
+    /// <summary>
+    ///   Export target device name.
+    /// </summary>
+    abstract DeviceName : string
 
     // ------------------------------------------------------------------------
     /// <summary>

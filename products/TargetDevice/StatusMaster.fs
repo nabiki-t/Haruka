@@ -146,22 +146,23 @@ type StatusMaster(
 
         // ------------------------------------------------------------------------
         // Implementation of IStatus.GetTargetFromLUN
-        override _.GetTargetFromLUN ( lun : LUN_T ) : TargetGroupConf.T_Target list =
-            // Get all of loaded target configuration
-            let alltarget =
-                m_config.GetAllTargetGroupConf()
-                |> Seq.map fst
-                |> Seq.map _.Target
-                |> Seq.concat
-
+        override this.GetTargetFromLUN ( lun : LUN_T ) : TargetGroupConf.T_Target list =
+            let alltarget = ( this :> IStatus ).GetLoadedTarget()
             if lun = lun_me.zero then
                 // LUN 0 can be accessed from all of targets.
                 alltarget
-                |> Seq.toList
             else
                 alltarget
-                |> Seq.filter ( fun itr -> ( Seq.exists( (=) lun ) itr.LUN ) )
-                |> Seq.toList
+                |> List.filter ( fun itr -> ( List.exists( (=) lun ) itr.LUN ) )
+
+        // ------------------------------------------------------------------------
+        // Get the configurations of all currently loaded target nodes.
+        override _.GetLoadedTarget() : TargetGroupConf.T_Target list =
+            // Get all of loaded target configuration
+            m_config.GetAllTargetGroupConf()
+            |> Seq.map ( fst >> _.Target )
+            |> Seq.concat
+            |> Seq.toList
 
         // ------------------------------------------------------------------------
         // Implementation of IStatus.IscsiNegoParamCO
@@ -172,6 +173,11 @@ type StatusMaster(
         // Implementation of IStatus.IscsiNegoParamCO
         override _.IscsiNegoParamSW : IscsiNegoParamSW =
             m_config.IscsiNegoParamSW
+
+        // ------------------------------------------------------------------------
+        // Implementation of IStatus.DeviceName
+        override _.DeviceName : string =
+            m_config.DeviceName
 
         // --------------------------------------------------------------------
         // Implementation of IStatus.CreateLoginNegociator
