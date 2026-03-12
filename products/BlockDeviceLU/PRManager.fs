@@ -1062,6 +1062,15 @@ type PRManager(
                         raise <| SCSIACAException ( source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST, msg )
 
                     let allITNexus = m_StatusMaster.GetITNexusFromLUN m_LU.LUN
+                    let targetNode =
+                        m_StatusMaster.GetLoadedTarget()
+                        |> List.tryFind ( fun itr -> itr.IdentNumber = tnodeidx_me.fromPrim moveParam.RelativeTargetPortIdentifier )
+                    if targetNode.IsNone then
+                        // CHECK CONDITION
+                        let msg = sprintf "The target specified by Relative Target Port Identifier(%d) does not exist" moveParam.RelativeTargetPortIdentifier
+                        HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST, msg )
+                        raise <| SCSIACAException ( source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST, msg )
+
                     let itNexuses =
                         [|
                             // Register I_T Nexus specified in TransportID.
@@ -1070,10 +1079,10 @@ type PRManager(
                                 // TransportID is only initiator name.
                                 for j in allITNexus do
                                     if String.Equals( j.InitiatorName, iname, StringComparison.Ordinal ) then
-                                        yield new ITNexus( iname, j.ISID, source.I_TNexus.TargetName, tpgt_me.fromPrim moveParam.RelativeTargetPortIdentifier )
+                                        yield new ITNexus( iname, j.ISID, targetNode.Value.TargetName, targetNode.Value.TargetPortalGroupTag )
                             else
                                 // TransportID is initiator name + ISID.
-                                yield new ITNexus( iname, isid_o.Value, source.I_TNexus.TargetName, tpgt_me.fromPrim moveParam.RelativeTargetPortIdentifier );
+                                yield new ITNexus( iname, isid_o.Value, targetNode.Value.TargetName, targetNode.Value.TargetPortalGroupTag );
                         |]
 
                     if itNexuses.Length <> 1 then

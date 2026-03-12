@@ -541,13 +541,24 @@ type ScsiTask
                             yield! targetPortNameBytesData;   // IDENTIFIER
                         |]
 
-                        // DISCRIPTOR 2 ( SCSI target device )
+                        // DISCRIPTOR 3 ( Relative target port identifier )
                         let dec3 = [|
+                            yield 0x51uy;   // PROTOCOL IDENTIFIER(5h)  CODE SET(1h)
+                            yield 0x94uy;   // PIV(1) ASSOCIATION(01b) IDENTIFIER TYPE(4h)
+                            yield 0x00uy;   // Reserved
+                            yield 0x04uy;   // IDENTIFIER LENGTH
+                            yield 0x00uy;   // Reserved
+                            yield 0x00uy;   // Reserved
+                            yield! Functions.UInt16ToNetworkBytes_NewVec ( tnodeidx_me.toPrim sessParam.TargetConf.IdentNumber );   // IDENTIFIER
+                        |]
+
+                        // DISCRIPTOR 4 ( SCSI target device )
+                        let dec4 = [|
                             yield 0x53uy;   // PROTOCOL IDENTIFIER(5h)  CODE SET(3h)
                             yield 0xA8uy;   // PIV(1) ASSOCIATION(10b) IDENTIFIER TYPE(8h)
                             yield 0x00uy;   // Reserved
                             let targetNameBytesData = 
-                                sessParam.TargetConf.TargetName
+                                m_StatusMaster.DeviceName
                                 |> Encoding.UTF8.GetBytes
                                 |> Functions.PadBytesArray 4 256
                             yield byte( targetNameBytesData.Length );   // IDENTIFIER LENGTH
@@ -555,12 +566,13 @@ type ScsiTask
                         |]
 
                         // PAGE LENGTH
-                        yield! int16( dec1.Length + dec2.Length + dec3.Length )
+                        yield! int16( dec1.Length + dec2.Length + dec3.Length + dec4.Length )
                                 |> Functions.Int16ToNetworkBytes_NewVec
 
                         yield! dec1;    // DISCRIPTOR 1
                         yield! dec2;    // DISCRIPTOR 2
                         yield! dec3;    // DISCRIPTOR 3
+                        yield! dec4;    // DISCRIPTOR 4
                     |]
                 | 0x86uy ->
                     // Extended INQUIRY Data

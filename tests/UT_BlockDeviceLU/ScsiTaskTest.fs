@@ -95,36 +95,35 @@ type ScsiTask_Test () =
         let media = new CMedia_Stub(
             p_GetBlockCount = ( fun () -> 512UL )
         )
-        let stat = new CStatus_Stub(
-            p_GetTargetFromLUN = ( fun lun ->
-                [
-                    {
-                        IdentNumber = tnodeidx_me.fromPrim 10us;
-                        TargetName = "target000";
-                        TargetAlias = "";
-                        TargetPortalGroupTag = tpgt_me.fromPrim 0us;
-                        LUN = [ lun_me.zero; lun_me.fromPrim 1UL; ];
-                        Auth = TargetGroupConf.T_Auth.U_CHAP(
-                            {
-                                InitiatorAuth = {
-                                    UserName = "";
-                                    Password = "";
-                                };
-                                TargetAuth = {
-                                    UserName = "";
-                                    Password = "";
-                                }
-                            }
-                        );
+        let targetConf : TargetGroupConf.T_Target = {
+            IdentNumber = tnodeidx_me.fromPrim 10us;
+            TargetName = "target000";
+            TargetAlias = "";
+            TargetPortalGroupTag = tpgt_me.fromPrim 0us;
+            LUN = [ lun_me.zero; lun_me.fromPrim 1UL; ];
+            Auth = TargetGroupConf.T_Auth.U_CHAP(
+                {
+                    InitiatorAuth = {
+                        UserName = "";
+                        Password = "";
                     };
-                ]
-            ),
+                    TargetAuth = {
+                        UserName = "";
+                        Password = "";
+                    }
+                }
+            );
+        }
+        let stat = new CStatus_Stub(
+            p_GetTargetFromLUN = ( fun lun -> [ targetConf ] ),
             p_GetITNexusFromLUN = ( fun lun ->
                 [|
                     new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us );
                     new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us );
                 |]
-            )
+            ),
+            p_GetDeviceName = ( fun () -> "targetdevice0" ),
+            p_GetLoadedTarget = ( fun () -> [ targetConf ] )
         )
         let lu = new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero )
         let t =
@@ -326,7 +325,7 @@ type ScsiTask_Test () =
         Assert.True(( cnt1 = 1 ))
 
     [<Fact>]
-    member _.Inquiry_001() =
+    member _.Inquiry_UnitSerialNumber_001() =
         let mutable cnt = 0
         let mutable cnt1 = 0
         let s = {
@@ -380,7 +379,7 @@ type ScsiTask_Test () =
         
 
     [<Fact>]
-    member _.Inquiry_002() =
+    member _.Inquiry_DeviceIdentification_001() =
         let mutable cnt = 0
         let mutable cnt1 = 0
         let s = {
@@ -398,7 +397,7 @@ type ScsiTask_Test () =
             let v = [|
                 0x00uy; // PERIPHERAL QUALIFIER, PERIPHERAL DEVICE TYPE
                 0x83uy; // PAGE CODE
-                0x00uy; 0x4Cuy; // PAGE LENGTH
+                0x00uy; 0x58uy; // PAGE LENGTH
 
                 // DISCRIPTOR 1 ( 36 bytes )
                 0x03uy; // PROTOCOL IDENTIFIER(0h)  CODE SET(3h)
@@ -422,12 +421,22 @@ type ScsiTask_Test () =
                 ( byte str2.Length ); // IDENTIFIER LENGTH
                 yield! str2;
 
-                // DISCRIPTOR 3 ( 16 bytes )
+                // DISCRIPTOR 4 ( 8 bytes )
+                0x51uy; // PROTOCOL IDENTIFIER(5h)  CODE SET(1h)
+                0x94uy; // PIV(1) ASSOCIATION(01b) IDENTIFIER TYPE(4h)
+                0x00uy; // Reserved
+                0x04uy; // IDENTIFIER LENGTH
+                0x00uy; // Reserved
+                0x00uy; // Reserved
+                0x00uy; // IDENTIFIER ( = target node ID : 1 )
+                0x01uy;
+
+                // DISCRIPTOR 4 ( 20 bytes )
                 0x53uy; // PROTOCOL IDENTIFIER(5h)  CODE SET(3h)
                 0xA8uy; // PIV(1) ASSOCIATION(10b) IDENTIFIER TYPE(8h)
                 0x00uy; // Reserved
                 let str3 = 
-                    ( "targetname0" )
+                    ( "targetdevice0" )
                     |> Encoding.UTF8.GetBytes
                     |> Functions.PadBytesArray 4 256
                 ( byte str3.Length ); // IDENTIFIER LENGTH
@@ -458,7 +467,7 @@ type ScsiTask_Test () =
         Assert.True(( cnt1 = 1 ))
 
     [<Fact>]
-    member _.Inquiry_003() =
+    member _.Inquiry_Extended_001() =
         let mutable cnt = 0
         let mutable cnt1 = 0
         let s = {
@@ -504,7 +513,7 @@ type ScsiTask_Test () =
         Assert.True(( cnt1 = 1 ))
 
     [<Fact>]
-    member _.Inquiry_004() =
+    member _.Inquiry_BlockLimits_001() =
         let mutable cnt = 0
         let mutable cnt1 = 0
         let s = {
@@ -553,7 +562,50 @@ type ScsiTask_Test () =
         Assert.True(( cnt1 = 1 ))
 
     [<Fact>]
-    member _.Inquiry_005() =
+    member _.Inquiry_BlockDeviceCharacteristics_001() =
+        let mutable cnt = 0
+        let mutable cnt1 = 0
+        let s = {
+            OperationCode = 12uy;
+            EVPD = true;
+            PageCode = 0xB1uy;  //  Block Device Characteristics VPD page
+            AllocationLength = 0xEEEEus;
+            Control = 0uy;
+        }
+        let t, ilu = createDefScsiTask defaultSCSICommandPDU s [ defaultSCSIDataOutPDU ] false
+        let psStub = t.Source.ProtocolService :?> CProtocolService_Stub
+        ilu.p_OptimalTransferLength <- ( fun () -> blkcnt_me.ofUInt32 0x08u )
+        psStub.p_SendSCSIResponse <- ( fun _ _ _ _ resp stat _ indata alloclen _ ->
+            Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
+            Assert.True(( stat = ScsiCmdStatCd.GOOD ))
+            let v = [|
+                yield 0x0Cuy;   // PERIPHERAL QUALIFIER(0b) PERIPHERAL DEVICE TYPE(0Ch)
+                yield 0xB1uy;   // PAGE CODE(0xB1)
+                yield 0x00uy;   // PAGE LENGTH(0x003C)
+                yield 0x3Cuy;   // PAGE LENGTH
+                yield 0x00uy;   // MEDIUM ROTATION RATE(0x0000)
+                yield 0x00uy;   // MEDIUM ROTATION RATE
+                yield 0x00uy;   // PRODUCT TYPE(0x00)
+                yield 0x00uy;   // WABEREQ(0)/WACEREQ(0)/NOMINAL FORM FACTOR(0)
+                yield 0x00uy;   // FUAB(0)/VBULS(0)
+                for _ = 9 to 63 do yield 0uy;
+            |]
+            Assert.True(( PooledBuffer.ValueEqualsWithArray indata v ))
+            Assert.True(( alloclen = 0xEEEEu ))
+            cnt <- cnt + 1
+        )
+        ilu.p_NotifyTerminateTask <- ( fun argTask ->
+            cnt1 <- cnt1 + 1
+        )
+
+        t.Execute()()
+        |> Functions.RunTaskSynchronously
+
+        Assert.True(( cnt = 1 ))
+        Assert.True(( cnt1 = 1 ))
+
+    [<Fact>]
+    member _.Inquiry_SupportedVPDPages_001() =
         let mutable cnt = 0
         let mutable cnt1 = 0
         let s = {
@@ -589,7 +641,7 @@ type ScsiTask_Test () =
         Assert.True(( cnt1 = 1 ))
 
     [<Fact>]
-    member _.Inquiry_006() =
+    member _.Inquiry_UnsupportedVPDPage_001() =
         let mutable cnt = 0
         let mutable cnt1 = 0
         let s = {
@@ -622,7 +674,7 @@ type ScsiTask_Test () =
         Assert.True(( cnt1 = 1 ))
 
     [<Fact>]
-    member _.Inquiry_007() =
+    member _.Inquiry_Standerd_001() =
         let mutable cnt = 0
         let mutable cnt1 = 0
         let s = {
@@ -655,7 +707,7 @@ type ScsiTask_Test () =
         Assert.True(( cnt1 = 1 ))
 
     [<Fact>]
-    member _.Inquiry_008() =
+    member _.Inquiry_Standerd_002() =
         let mutable cnt = 0
         let mutable cnt1 = 0
         let s = {
@@ -716,34 +768,6 @@ type ScsiTask_Test () =
         |> Functions.RunTaskSynchronously
 
         Assert.True(( cnt = 1 ))
-        Assert.True(( cnt1 = 1 ))
-
-    [<Fact>]
-    member _.Inquiry_009() =
-        let mutable cnt = 0
-        let mutable cnt1 = 0
-        let s = {
-            OperationCode = 12uy;
-            EVPD = false;
-            PageCode = 0x00uy;
-            AllocationLength = 0xDDDDus;
-            Control = 0uy;
-        }
-        let t, ilu = createDefScsiTask defaultSCSICommandPDU s [ defaultSCSIDataOutPDU ] false
-        let psStub = t.Source.ProtocolService :?> CProtocolService_Stub
-        psStub.p_SendSCSIResponse <- ( fun _ _ _ _ _ _ _ _ _ _ ->
-            cnt <- cnt + 1
-        )
-        ilu.p_NotifyTerminateTask <- ( fun argTask ->
-            cnt1 <- cnt1 + 1
-        )
-
-        t.NotifyTerminate false
-
-        t.Execute()()
-        |> Functions.RunTaskSynchronously
-
-        Assert.True(( cnt = 0 ))
         Assert.True(( cnt1 = 1 ))
 
     [<Fact>]
@@ -4606,7 +4630,7 @@ type ScsiTask_Test () =
         let initITN2 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us )
         let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us )
         let initITN4 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target001", tpgt_me.fromPrim 1us )
-        let ansITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 4uy 4us 4uy 4us, "target000", tpgt_me.fromPrim 0xFFFFus )
+        let ansITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 4uy 4us 4uy 4us, "target000", tpgt_me.fromPrim 0us )
         GlbFunc.writeDefaultPRFile
             PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY
             [|
@@ -4627,7 +4651,7 @@ type ScsiTask_Test () =
                     0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy;
                     0x00uy;                         // Reserved
                     0x00uy;                         // UNREG(0), APTPL(0)
-                    0xFFuy; 0xFFuy;                 // RELATIVE TARGET PORT IDENTIFIER
+                    0x00uy; 0x0Auy;                 // RELATIVE TARGET PORT IDENTIFIER
                     0x00uy; 0x00uy; 0x00uy; 0x24uy; // TRANSPORTID PARAMETER DATA LENGTH
 
                     // TransportID

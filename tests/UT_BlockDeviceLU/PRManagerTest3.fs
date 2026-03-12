@@ -97,7 +97,33 @@ type PRManager_Test3 () =
                     new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 3uy 3us 3uy 3us, "target001", tpgt_me.fromPrim 1us );
                     new ITNexus( "initiator002", isid_me.fromElem ( 1uy <<< 6 ) 4uy 4us 4uy 4us, "target001", tpgt_me.fromPrim 1us );
                 |]
-            )
+            ),
+            p_GetLoadedTarget = ( fun () -> [
+                {
+                    IdentNumber = tnodeidx_me.fromPrim 1us;
+                    TargetName = "target000";
+                    TargetAlias = "";
+                    TargetPortalGroupTag = tpgt_me.fromPrim 0us;
+                    LUN = [ lun_me.zero; lun_me.fromPrim 1UL; ];
+                    Auth = TargetGroupConf.T_Auth.U_None();
+                };
+                {
+                    IdentNumber = tnodeidx_me.fromPrim 2us;
+                    TargetName = "target001";
+                    TargetAlias = "";
+                    TargetPortalGroupTag = tpgt_me.fromPrim 1us;
+                    LUN = [ lun_me.zero; lun_me.fromPrim 1UL; ];
+                    Auth = TargetGroupConf.T_Auth.U_None();
+                };
+                {
+                    IdentNumber = tnodeidx_me.fromPrim 3us;
+                    TargetName = "target002";
+                    TargetAlias = "";
+                    TargetPortalGroupTag = tpgt_me.fromPrim 0us;
+                    LUN = [ lun_me.fromPrim 2UL ];
+                    Auth = TargetGroupConf.T_Auth.U_None();
+                };
+            ] )
         )
         let luStub = new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero )
         let pm = new PRManager( statStub, luStub, lun_me.zero, fname, k )
@@ -1182,6 +1208,7 @@ type PRManager_Test3 () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            Assert.True(( x.Message.StartsWith "PERSISTENT RESERVE OUT command with REGISTER AND MOVE service action was received, and there is no reservation" ))
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
 
@@ -1236,6 +1263,7 @@ type PRManager_Test3 () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            Assert.True(( x.Message.StartsWith "PERSISTENT RESERVE OUT command with REGISTER AND MOVE service action was received, and there is no reservation" ))
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
 
@@ -1414,7 +1442,7 @@ type PRManager_Test3 () =
         |]
         let source = {
             defaultSource with
-                I_TNexus = initITN2;
+                I_TNexus = initITN2;    // registared but not reservation holder
         }
         let v = pm.RegisterAndMove source ( itt_me.fromPrim 0u ) NO_RESERVATION ( uint32 param.Length ) ( PooledBuffer.Rent param )
         Assert.True(( v = ScsiCmdStatCd.RESERVATION_CONFLICT ))
@@ -1455,7 +1483,7 @@ type PRManager_Test3 () =
         let initPRFileTime = File.GetLastWriteTimeUtc fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS_REGISTRANTS_ONLY 4
         let param = [|
-            0x22uy; 0x22uy; 0x22uy; 0x22uy; // RESERVATION KEY 
+            0x22uy; 0x22uy; 0x22uy; 0x22uy; // RESERVATION KEY( Reservation key mismatch )
             0x22uy; 0x22uy; 0x22uy; 0x22uy;
             0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // SERVICE ACTION RESERVATION KEY
             0xEEuy; 0xEEuy; 0xEEuy; 0xEEuy;
@@ -1517,7 +1545,7 @@ type PRManager_Test3 () =
         let param = [|
             0x11uy; 0x11uy; 0x11uy; 0x11uy; // RESERVATION KEY 
             0x11uy; 0x11uy; 0x11uy; 0x11uy;
-            0x00uy; 0x00uy; 0x00uy; 0x00uy; // SERVICE ACTION RESERVATION KEY(0)
+            0x00uy; 0x00uy; 0x00uy; 0x00uy; // SERVICE ACTION RESERVATION KEY(0)    it must not be zero.
             0x00uy; 0x00uy; 0x00uy; 0x00uy;
             0x00uy;                         // Reserved
             0x00uy;                         // UNREG(0), APTPL(0)
@@ -1542,6 +1570,7 @@ type PRManager_Test3 () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            Assert.True(( x.Message.StartsWith "Request was received from the I_T Nexus that holds reservation, but SERVICE ACTION RESERVATION KEY is 0" ))
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
 
@@ -1592,7 +1621,7 @@ type PRManager_Test3 () =
             0x45uy;                         // FORMAT CODE, PROTOCOL IDENTIFIER
             0x00uy;                         // Reserved
             0x00uy; 0x20uy;                 // ADDITIONAL LENGTH
-            yield! Encoding.UTF8.GetBytes "initiator000"
+            yield! Encoding.UTF8.GetBytes "initiator000"    // It equals source initiator port
             yield! Encoding.UTF8.GetBytes ",i,0x"
             yield! Encoding.UTF8.GetBytes "410001010001"
             0x00uy; 0x00uy; 0x00uy;
@@ -1606,6 +1635,7 @@ type PRManager_Test3 () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            Assert.True(( x.Message.StartsWith "TransportID specifies initiator port same as source I_T Nexus. Initiator Name" ))
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
 
@@ -1649,14 +1679,14 @@ type PRManager_Test3 () =
             0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy;
             0x00uy;                         // Reserved
             0x00uy;                         // UNREG(0), APTPL(0)
-            0x00uy; 0x00uy;                 // RELATIVE TARGET PORT IDENTIFIER
+            0x00uy; 0x01uy;                 // RELATIVE TARGET PORT IDENTIFIER
             0x00uy; 0x00uy; 0x00uy; 0x18uy; // TRANSPORTID PARAMETER DATA LENGTH
 
             // TransportID
             0x05uy;                         // FORMAT CODE, PROTOCOL IDENTIFIER
             0x00uy;                         // Reserved
             0x00uy; 0x14uy;                 // ADDITIONAL LENGTH
-            yield! Encoding.UTF8.GetBytes "initiator000"
+            yield! Encoding.UTF8.GetBytes "initiator000"       // It equals source initiator name
             0x00uy; 0x00uy; 0x00uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy;
         |]
@@ -1669,6 +1699,7 @@ type PRManager_Test3 () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            Assert.True(( x.Message.StartsWith "TransportID specifies initiator port same as source I_T Nexus. Initiator Name" ))
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
 
@@ -1698,6 +1729,71 @@ type PRManager_Test3 () =
         GlbFunc.writeDefaultPRFile
             PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY
             [|
+                initITN1, resvkey_me.fromPrim 0x1111111111111111UL, true;
+                initITN2, resvkey_me.fromPrim 0x2222222222222222UL, false;
+                initITN3, resvkey_me.fromPrim 0x3333333333333333UL, false;
+                initITN4, resvkey_me.fromPrim 0x4444444444444444UL, false;
+            |]
+            fname
+        let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS_REGISTRANTS_ONLY 4
+        let param = [|
+            0x11uy; 0x11uy; 0x11uy; 0x11uy; // RESERVATION KEY 
+            0x11uy; 0x11uy; 0x11uy; 0x11uy;
+            0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // SERVICE ACTION RESERVATION KEY(0)
+            0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy;
+            0x00uy;                         // Reserved
+            0x00uy;                         // UNREG(0), APTPL(0)
+            0xABuy; 0xCDuy;                 // RELATIVE TARGET PORT IDENTIFIER
+            0x00uy; 0x00uy; 0x00uy; 0x24uy; // TRANSPORTID PARAMETER DATA LENGTH
+
+            // TransportID
+            0x45uy;                         // FORMAT CODE, PROTOCOL IDENTIFIER
+            0x00uy;                         // Reserved
+            0x00uy; 0x20uy;                 // ADDITIONAL LENGTH
+            yield! Encoding.UTF8.GetBytes "initiator000"
+            yield! Encoding.UTF8.GetBytes ",i,0x"
+            yield! Encoding.UTF8.GetBytes "440004040004"
+            0x00uy; 0x00uy; 0x00uy;
+        |]
+        let source = {
+            defaultSource with
+                I_TNexus = initITN1;
+        }
+        try
+            let _ = pm.RegisterAndMove source ( itt_me.fromPrim 0u ) NO_RESERVATION ( uint32 param.Length ) ( PooledBuffer.Rent param )
+            Assert.Fail __LINE__
+        with
+        | :? SCSIACAException as x ->
+            Assert.True(( x.Message.StartsWith "The target specified by Relative Target Port Identifier" ))
+            Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
+
+        let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
+        Assert.True(( prinfo.m_Type = PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY ))
+        Assert.True(( prinfo.m_PRGeneration = 0u ))
+        Assert.True(( prinfo.m_Registrations.Count = 4 ))
+        Assert.True(( prinfo.m_Registrations.Item( initITN1 ) = resvkey_me.fromPrim 0x1111111111111111UL ))
+        Assert.True(( prinfo.m_Registrations.Item( initITN2 ) = resvkey_me.fromPrim 0x2222222222222222UL ))
+        Assert.True(( prinfo.m_Registrations.Item( initITN3 ) = resvkey_me.fromPrim 0x3333333333333333UL ))
+        Assert.True(( prinfo.m_Registrations.Item( initITN4 ) = resvkey_me.fromPrim 0x4444444444444444UL ))
+        Assert.True(( prinfo.m_Holder.Value = initITN1 ))
+
+        GlbFunc.DeleteFile fname
+        k.NoticeTerminate()
+        GlbFunc.DeleteDir pDirName
+
+    [<Fact>]
+    member this.RegisterAndMove_011() =
+        let pDirName = this.CreateTestDir()
+        let fname = Functions.AppendPathName pDirName "RegisterAndMove_011.txt"
+        let initITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
+        let initITN2 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us )
+        let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us )
+        let initITN4 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target001", tpgt_me.fromPrim 1us )
+        GlbFunc.writeDefaultPRFile
+            PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY
+            [|
                 initITN1, resvkey_me.fromPrim 0x1111111111111111UL, false;
                 initITN2, resvkey_me.fromPrim 0x2222222222222222UL, false;
                 initITN3, resvkey_me.fromPrim 0x3333333333333333UL, true;
@@ -1712,7 +1808,7 @@ type PRManager_Test3 () =
             0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy;
             0x00uy;                         // Reserved
             0x00uy;                         // UNREG(0), APTPL(0)
-            0x00uy; 0x00uy;                 // RELATIVE TARGET PORT IDENTIFIER
+            0x00uy; 0x01uy;                 // RELATIVE TARGET PORT IDENTIFIER
             0x00uy; 0x00uy; 0x00uy; 0x18uy; // TRANSPORTID PARAMETER DATA LENGTH
 
             // TransportID
@@ -1732,6 +1828,7 @@ type PRManager_Test3 () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            Assert.True(( x.Message.StartsWith "Move target TransportID is not unique" ))
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
 
@@ -1751,9 +1848,9 @@ type PRManager_Test3 () =
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
-    member this.RegisterAndMove_011() =
+    member this.RegisterAndMove_012() =
         let pDirName = this.CreateTestDir()
-        let fname = Functions.AppendPathName pDirName "RegisterAndMove_011.txt"
+        let fname = Functions.AppendPathName pDirName "RegisterAndMove_012.txt"
         let initITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
         let initITN2 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us )
         let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us )
@@ -1775,7 +1872,7 @@ type PRManager_Test3 () =
             0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy;
             0x00uy;                         // Reserved
             0x00uy;                         // UNREG(0), APTPL(0)
-            0xFFuy; 0xFFuy;                 // RELATIVE TARGET PORT IDENTIFIER
+            0x00uy; 0x02uy;                 // RELATIVE TARGET PORT IDENTIFIER
             0x00uy; 0x00uy; 0x00uy; 0x24uy; // TRANSPORTID PARAMETER DATA LENGTH
 
             // TransportID
@@ -1795,7 +1892,7 @@ type PRManager_Test3 () =
         Assert.True(( v = ScsiCmdStatCd.GOOD ))
 
         let prinfo = PRManager_Test2.GetPRInfoRec pm
-        let ansITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 4uy 4us 4uy 4us, "target000", tpgt_me.fromPrim 0xFFFFus )
+        let ansITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 4uy 4us 4uy 4us, "target001", tpgt_me.fromPrim 1us )
         Assert.False(( prinfo.m_APTPL ))
         Assert.True(( prinfo.m_Type = PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY ))
         Assert.True(( prinfo.m_PRGeneration = 1u ))
@@ -1812,12 +1909,72 @@ type PRManager_Test3 () =
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
-    member this.RegisterAndMove_012() =
+    member this.RegisterAndMove_013() =
         let pDirName = this.CreateTestDir()
-        let fname = Functions.AppendPathName pDirName "RegisterAndMove_012.txt"
+        let fname = Functions.AppendPathName pDirName "RegisterAndMove_013.txt"
         let initITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
         let initITN2 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us )
-        let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0xAAus )
+        let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us )
+        let initITN4 = new ITNexus( "initiator002", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target001", tpgt_me.fromPrim 1us )
+        GlbFunc.writeDefaultPRFile
+            PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY
+            [|
+                initITN1, resvkey_me.fromPrim 0x1111111111111111UL, true;
+                initITN2, resvkey_me.fromPrim 0x2222222222222222UL, false;
+                initITN3, resvkey_me.fromPrim 0x3333333333333333UL, false;
+                initITN4, resvkey_me.fromPrim 0x4444444444444444UL, false;
+            |]
+            fname
+        let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS_REGISTRANTS_ONLY 4
+        let param = [|
+            0x11uy; 0x11uy; 0x11uy; 0x11uy; // RESERVATION KEY 
+            0x11uy; 0x11uy; 0x11uy; 0x11uy;
+            0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // SERVICE ACTION RESERVATION KEY(0)
+            0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy;
+            0x00uy;                         // Reserved
+            0x00uy;                         // UNREG(0), APTPL(0)
+            0x00uy; 0x03uy;                 // RELATIVE TARGET PORT IDENTIFIER
+            0x00uy; 0x00uy; 0x00uy; 0x18uy; // TRANSPORTID PARAMETER DATA LENGTH
+
+            // TransportID
+            0x05uy;                         // FORMAT CODE, PROTOCOL IDENTIFIER
+            0x00uy;                         // Reserved
+            0x00uy; 0x14uy;                 // ADDITIONAL LENGTH
+            yield! Encoding.UTF8.GetBytes "initiator002"
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;
+        |]
+        let source = {
+            defaultSource with
+                I_TNexus = initITN1;
+        }
+        let v = pm.RegisterAndMove source ( itt_me.fromPrim 0u ) NO_RESERVATION ( uint32 param.Length ) ( PooledBuffer.Rent param )
+        Assert.True(( v = ScsiCmdStatCd.GOOD ))
+
+        let prinfo = PRManager_Test2.GetPRInfoRec pm
+        let ansITN1 = new ITNexus( "initiator002", isid_me.fromElem ( 1uy <<< 6 ) 4uy 4us 4uy 4us, "target002", tpgt_me.fromPrim 0us )
+        Assert.False(( prinfo.m_APTPL ))
+        Assert.True(( prinfo.m_Type = PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY ))
+        Assert.True(( prinfo.m_PRGeneration = 1u ))
+        Assert.True(( prinfo.m_Registrations.Count = 5 ))
+        Assert.True(( prinfo.m_Registrations.Item( initITN1 ) = resvkey_me.fromPrim 0x1111111111111111UL ))
+        Assert.True(( prinfo.m_Registrations.Item( initITN2 ) = resvkey_me.fromPrim 0x2222222222222222UL ))
+        Assert.True(( prinfo.m_Registrations.Item( initITN3 ) = resvkey_me.fromPrim 0x3333333333333333UL ))
+        Assert.True(( prinfo.m_Registrations.Item( initITN4 ) = resvkey_me.fromPrim 0x4444444444444444UL ))
+        Assert.True(( prinfo.m_Registrations.Item( ansITN1 ) =  resvkey_me.fromPrim 0xFFFFFFFFFFFFFFFFUL ))
+        Assert.True(( prinfo.m_Holder.Value = ansITN1 ))
+
+        GlbFunc.WaitForFileDelete fname
+        k.NoticeTerminate()
+        GlbFunc.DeleteDir pDirName
+
+    [<Fact>]
+    member this.RegisterAndMove_014() =
+        let pDirName = this.CreateTestDir()
+        let fname = Functions.AppendPathName pDirName "RegisterAndMove_014.txt"
+        let initITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
+        let initITN2 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us )
+        let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us )
         let initITN4 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target001", tpgt_me.fromPrim 1us )
         GlbFunc.writeDefaultPRFile
             PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY
@@ -1836,7 +1993,7 @@ type PRManager_Test3 () =
             0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy;
             0x00uy;                         // Reserved
             0x00uy;                         // UNREG(0), APTPL(0)
-            0x00uy; 0xAAuy;                 // RELATIVE TARGET PORT IDENTIFIER
+            0x00uy; 0x01uy;                 // RELATIVE TARGET PORT IDENTIFIER
             0x00uy; 0x00uy; 0x00uy; 0x24uy; // TRANSPORTID PARAMETER DATA LENGTH
 
             // TransportID
@@ -1871,72 +2028,12 @@ type PRManager_Test3 () =
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
-    member this.RegisterAndMove_013() =
+    member this.RegisterAndMove_015() =
         let pDirName = this.CreateTestDir()
-        let fname = Functions.AppendPathName pDirName "RegisterAndMove_013.txt"
+        let fname = Functions.AppendPathName pDirName "RegisterAndMove_015.txt"
         let initITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
         let initITN2 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us )
-        let initITN3 = new ITNexus( "initiator002", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us )
-        let initITN4 = new ITNexus( "initiator002", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target001", tpgt_me.fromPrim 1us )
-        GlbFunc.writeDefaultPRFile
-            PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY
-            [|
-                initITN1, resvkey_me.fromPrim 0x1111111111111111UL, true;
-                initITN2, resvkey_me.fromPrim 0x2222222222222222UL, false;
-                initITN3, resvkey_me.fromPrim 0x3333333333333333UL, false;
-                initITN4, resvkey_me.fromPrim 0x4444444444444444UL, false;
-            |]
-            fname
-        let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS_REGISTRANTS_ONLY 4
-        let param = [|
-            0x11uy; 0x11uy; 0x11uy; 0x11uy; // RESERVATION KEY 
-            0x11uy; 0x11uy; 0x11uy; 0x11uy;
-            0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // SERVICE ACTION RESERVATION KEY(0)
-            0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy;
-            0x00uy;                         // Reserved
-            0x00uy;                         // UNREG(0), APTPL(0)
-            0xFFuy; 0xFFuy;                 // RELATIVE TARGET PORT IDENTIFIER
-            0x00uy; 0x00uy; 0x00uy; 0x18uy; // TRANSPORTID PARAMETER DATA LENGTH
-
-            // TransportID
-            0x05uy;                         // FORMAT CODE, PROTOCOL IDENTIFIER
-            0x00uy;                         // Reserved
-            0x00uy; 0x14uy;                 // ADDITIONAL LENGTH
-            yield! Encoding.UTF8.GetBytes "initiator001"
-            0x00uy; 0x00uy; 0x00uy; 0x00uy;
-            0x00uy; 0x00uy; 0x00uy; 0x00uy;
-        |]
-        let source = {
-            defaultSource with
-                I_TNexus = initITN1;
-        }
-        let v = pm.RegisterAndMove source ( itt_me.fromPrim 0u ) NO_RESERVATION ( uint32 param.Length ) ( PooledBuffer.Rent param )
-        Assert.True(( v = ScsiCmdStatCd.GOOD ))
-
-        let prinfo = PRManager_Test2.GetPRInfoRec pm
-        let ansITN1 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0xFFFFus )
-        Assert.False(( prinfo.m_APTPL ))
-        Assert.True(( prinfo.m_Type = PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY ))
-        Assert.True(( prinfo.m_PRGeneration = 1u ))
-        Assert.True(( prinfo.m_Registrations.Count = 5 ))
-        Assert.True(( prinfo.m_Registrations.Item( initITN1 ) = resvkey_me.fromPrim 0x1111111111111111UL ))
-        Assert.True(( prinfo.m_Registrations.Item( initITN2 ) = resvkey_me.fromPrim 0x2222222222222222UL ))
-        Assert.True(( prinfo.m_Registrations.Item( initITN3 ) = resvkey_me.fromPrim 0x3333333333333333UL ))
-        Assert.True(( prinfo.m_Registrations.Item( initITN4 ) = resvkey_me.fromPrim 0x4444444444444444UL ))
-        Assert.True(( prinfo.m_Registrations.Item( ansITN1 ) =  resvkey_me.fromPrim 0xFFFFFFFFFFFFFFFFUL ))
-        Assert.True(( prinfo.m_Holder.Value = ansITN1 ))
-
-        GlbFunc.WaitForFileDelete fname
-        k.NoticeTerminate()
-        GlbFunc.DeleteDir pDirName
-
-    [<Fact>]
-    member this.RegisterAndMove_014() =
-        let pDirName = this.CreateTestDir()
-        let fname = Functions.AppendPathName pDirName "RegisterAndMove_014.txt"
-        let initITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
-        let initITN2 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us )
-        let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0xAAus )
+        let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target002", tpgt_me.fromPrim 0us )
         let initITN4 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target001", tpgt_me.fromPrim 1us )
         GlbFunc.writeDefaultPRFile
             PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY
@@ -1956,7 +2053,7 @@ type PRManager_Test3 () =
             0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy;
             0x00uy;                         // Reserved
             0x03uy;                         // UNREG(1), APTPL(1)
-            0x00uy; 0xAAuy;                 // RELATIVE TARGET PORT IDENTIFIER
+            0x00uy; 0x03uy;                 // RELATIVE TARGET PORT IDENTIFIER
             0x00uy; 0x00uy; 0x00uy; 0x24uy; // TRANSPORTID PARAMETER DATA LENGTH
 
             // TransportID
@@ -2004,9 +2101,9 @@ type PRManager_Test3 () =
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
-    member this.RegisterAndMove_015() =
+    member this.RegisterAndMove_016() =
         let pDirName = this.CreateTestDir()
-        let fname = Functions.AppendPathName pDirName "RegisterAndMove_015.txt"
+        let fname = Functions.AppendPathName pDirName "RegisterAndMove_016.txt"
         let initITN1 = new ITNexus( "initiator00001", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
         GlbFunc.writeDefaultPRFile
             PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY
@@ -2025,7 +2122,7 @@ type PRManager_Test3 () =
             0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy;
             0x00uy;                         // Reserved
             0x00uy;                         // UNREG(0), APTPL(0)
-            0xFFuy; 0xFFuy;                 // RELATIVE TARGET PORT IDENTIFIER
+            0x00uy; 0x02uy;                 // RELATIVE TARGET PORT IDENTIFIER
             0x00uy; 0x00uy; 0x00uy; 0x18uy; // TRANSPORTID PARAMETER DATA LENGTH
 
             // TransportID
@@ -2046,6 +2143,7 @@ type PRManager_Test3 () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            Assert.True(( x.Message.StartsWith "Number of reservations exceeded the limit" ))
             Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( x.ASC = ASCCd.INSUFFICIENT_REGISTRATION_RESOURCES ))
 
