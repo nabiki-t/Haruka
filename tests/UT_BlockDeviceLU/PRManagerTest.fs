@@ -24,6 +24,7 @@ open Haruka.Constants
 open Haruka.Commons
 open Haruka.BlockDeviceLU
 open Haruka.Test
+open Haruka.IODataTypes
 
 //=============================================================================
 // Class implementation
@@ -132,6 +133,15 @@ type PRManager_Test1 () =
         false, true,  ( { OperationCode = 0x5fuy; ServiceAction = 0x02uy; Scope = 0x00uy; PRType = PR_TYPE.WRITE_EXCLUSIVE; ParameterListLength = 0x00u; Control = 0x00uy; } : PersistentReserveOutCDB );
         true,  true,  ( { OperationCode = 0x5fuy; ServiceAction = 0x01uy; Scope = 0x00uy; PRType = PR_TYPE.WRITE_EXCLUSIVE; ParameterListLength = 0x00u; Control = 0x00uy; } : PersistentReserveOutCDB );
     |]
+
+    let defaultTargetConf : TargetGroupConf.T_Target = {
+        IdentNumber = tnodeidx_me.fromPrim 3us;
+        TargetName = "target002";
+        TargetAlias = "";
+        TargetPortalGroupTag = tpgt_me.fromPrim 0us;
+        LUN = [ lun_me.fromPrim 2UL ];
+        Auth = TargetGroupConf.T_Auth.U_None();
+    }
 
     do
         let lock = GlbFunc.LogParamUpdateLock()
@@ -3493,7 +3503,10 @@ type PRManager_Test1 () =
     [<Fact>]
     member this.ReadFullStatus_001() =
         let k = new HKiller() :> IKiller
-        let pm = new PRManager( new CStatus_Stub(), new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero ), lun_me.zero, "", k )
+        let ss = CStatus_Stub(
+            p_GetLoadedTarget = ( fun () -> [] )
+        )
+        let pm = new PRManager( ss, new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero ), lun_me.zero, "", k )
         let v = pm.ReadFullStatus PRManager_Test1.defaultSource ( itt_me.fromPrim 0u )
         let ans = [|
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // PRGENERATION
@@ -3516,7 +3529,26 @@ type PRManager_Test1 () =
             |]
             fname
         let k = new HKiller() :> IKiller
-        let pm = new PRManager( new CStatus_Stub(), new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero ), lun_me.zero, fname, k )
+        let ss = CStatus_Stub(
+            p_GetLoadedTarget = ( fun () -> [
+                {
+                    defaultTargetConf with
+                        IdentNumber = tnodeidx_me.fromPrim 1us;
+                        TargetName = "target001";
+                };
+                {
+                    defaultTargetConf with
+                        IdentNumber = tnodeidx_me.fromPrim 2us;
+                        TargetName = "target002";
+                };
+                {
+                    defaultTargetConf with
+                        IdentNumber = tnodeidx_me.fromPrim 999us;
+                        TargetName = "target999";
+                };
+            ])
+        )
+        let pm = new PRManager( ss, new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero ), lun_me.zero, fname, k )
         let v = pm.ReadFullStatus PRManager_Test1.defaultSource ( itt_me.fromPrim 0u )
         let ans = [|
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // PRGENERATION
@@ -3529,7 +3561,7 @@ type PRManager_Test1 () =
             0x01uy;                         // ALL_TG_PT(0), R_HOLDER(1)
             0x07uy;                         // SCOPE, TYPE
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            0x00uy; 0x01uy;                 // RELATIVE TARGET PORT IDENTIFIER
+            0x00uy; 0x02uy;                 // RELATIVE TARGET PORT IDENTIFIER
             0x00uy; 0x00uy; 0x00uy; 0x18uy; // ADDITIONAL DESCRIPTOR LENGTH
             0x45uy;                         // FORMAT CODE, PROTOCOL IDENTIFIER
             0x00uy;                         // Reserved
@@ -3546,7 +3578,7 @@ type PRManager_Test1 () =
             0x01uy;                         // ALL_TG_PT(0), R_HOLDER(1)
             0x07uy;                         // SCOPE, TYPE
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            0x00uy; 0x00uy;                 // RELATIVE TARGET PORT IDENTIFIER
+            0x00uy; 0x01uy;                 // RELATIVE TARGET PORT IDENTIFIER
             0x00uy; 0x00uy; 0x00uy; 0x24uy; // ADDITIONAL DESCRIPTOR LENGTH
             0x45uy;                         // FORMAT CODE, PROTOCOL IDENTIFIER
             0x00uy;                         // Reserved
@@ -3563,7 +3595,7 @@ type PRManager_Test1 () =
             0x01uy;                         // ALL_TG_PT(0), R_HOLDER(1)
             0x07uy;                         // SCOPE, TYPE
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            0x00uy; 0x02uy;                 // RELATIVE TARGET PORT IDENTIFIER
+            0x00uy; 0x00uy;                 // RELATIVE TARGET PORT IDENTIFIER      target configuration missing
             0x00uy; 0x00uy; 0x00uy; 0x24uy; // ADDITIONAL DESCRIPTOR LENGTH
             0x45uy;                         // FORMAT CODE, PROTOCOL IDENTIFIER
             0x00uy;                         // Reserved
@@ -3594,7 +3626,26 @@ type PRManager_Test1 () =
             |]
             fname
         let k = new HKiller() :> IKiller
-        let pm = new PRManager( new CStatus_Stub(), new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero ), lun_me.zero, fname, k )
+        let ss = CStatus_Stub(
+            p_GetLoadedTarget = ( fun () -> [
+                {
+                    defaultTargetConf with
+                        IdentNumber = tnodeidx_me.fromPrim 11us;
+                        TargetName = "target001";
+                };
+                {
+                    defaultTargetConf with
+                        IdentNumber = tnodeidx_me.fromPrim 12us;
+                        TargetName = "target002";
+                };
+                {
+                    defaultTargetConf with
+                        IdentNumber = tnodeidx_me.fromPrim 13us;
+                        TargetName = "target003";
+                };
+            ])
+        )
+        let pm = new PRManager( ss, new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero ), lun_me.zero, fname, k )
         let v = pm.ReadFullStatus PRManager_Test1.defaultSource ( itt_me.fromPrim 0u )
         let ans = [|
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // PRGENERATION
@@ -3607,7 +3658,7 @@ type PRManager_Test1 () =
             0x00uy;                         // ALL_TG_PT(0), R_HOLDER(0)
             0x00uy;                         // SCOPE, TYPE
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            0x00uy; 0x00uy;                 // RELATIVE TARGET PORT IDENTIFIER
+            0x00uy; 0x0Buy;                 // RELATIVE TARGET PORT IDENTIFIER
             0x00uy; 0x00uy; 0x00uy; 0x24uy; // ADDITIONAL DESCRIPTOR LENGTH
             0x45uy;                         // FORMAT CODE, PROTOCOL IDENTIFIER
             0x00uy;                         // Reserved
@@ -3624,7 +3675,7 @@ type PRManager_Test1 () =
             0x01uy;                         // ALL_TG_PT(0), R_HOLDER(1)
             0x05uy;                         // SCOPE, TYPE
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            0x00uy; 0x01uy;                 // RELATIVE TARGET PORT IDENTIFIER
+            0x00uy; 0x0Cuy;                 // RELATIVE TARGET PORT IDENTIFIER
             0x00uy; 0x00uy; 0x00uy; 0x24uy; // ADDITIONAL DESCRIPTOR LENGTH
             0x45uy;                         // FORMAT CODE, PROTOCOL IDENTIFIER
             0x00uy;                         // Reserved
@@ -3641,7 +3692,7 @@ type PRManager_Test1 () =
             0x00uy;                         // ALL_TG_PT(0), R_HOLDER(0)
             0x00uy;                         // SCOPE, TYPE
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            0x00uy; 0x02uy;                 // RELATIVE TARGET PORT IDENTIFIER
+            0x00uy; 0x0Duy;                 // RELATIVE TARGET PORT IDENTIFIER
             0x00uy; 0x00uy; 0x00uy; 0x24uy; // ADDITIONAL DESCRIPTOR LENGTH
             0x45uy;                         // FORMAT CODE, PROTOCOL IDENTIFIER
             0x00uy;                         // Reserved

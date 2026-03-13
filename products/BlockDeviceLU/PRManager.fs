@@ -553,9 +553,15 @@ type PRManager(
             let v =
                 pr.m_Registrations
                 |> Seq.sortWith ( fun a b -> ITNexus.Compare a.Key b.Key )
+            let loadedTarget = m_StatusMaster.GetLoadedTarget()
             for itr in v do
                 let iITN = itr.Key
                 let iKey = itr.Value
+                let rtpi =
+                    loadedTarget
+                    |> List.tryFind ( fun ti -> String.Compare( ti.TargetName, iITN.TargetName, StringComparison.Ordinal ) = 0 )
+                    |> Option.map _.IdentNumber
+                    |> Option.defaultValue ( tnodeidx_me.fromPrim 0us )
 
                 // RESERVATION KEY
                 yield! Functions.UInt64ToNetworkBytes_NewVec ( resvkey_me.toPrim iKey );
@@ -581,7 +587,7 @@ type PRManager(
                 yield 0x00uy;
                 yield 0x00uy;
                 // RELATIVE TARGET PORT IDENTIFIER
-                yield! Functions.UInt16ToNetworkBytes_NewVec ( tpgt_me.toPrim iITN.TPGT )
+                yield! Functions.UInt16ToNetworkBytes_NewVec ( tnodeidx_me.toPrim rtpi )
 
                 // prepare initiator name bytes array for TransportID
                 let initiatorPortNameStr = Encoding.UTF8.GetBytes iITN.InitiatorPortName

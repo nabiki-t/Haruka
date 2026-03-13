@@ -1851,11 +1851,24 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
         task {
             let! r = this.WaitSCSIResponse itt
             if r.Response <> iScsiSvcRespCd.COMMAND_COMPLETE then
-                raise <| TestException( "Unexpected Response value." )
+                raise <| TestException( "Unexpected Response value. TARGET_FAILURE" )
             if r.Status <> ScsiCmdStatCd.GOOD then
-                raise <| TestException( "Unexpected Status value." )
-            if r.Sense.IsSome then
-                raise <| TestException( r.Sense.Value.DescString )
+                let statmsg = Constants.getScsiCmdStatNameFromValue r.Status
+                if r.Sense.IsNone then
+                    raise <| TestException( "Unexpected Status value. " + statmsg )
+                else
+                    let sense = r.Sense.Value
+                    let sensekeymsg = Constants.getSenseKeyNameFromValue sense.SenseKey
+                    let ascmsg = Constants.getAscAndAscqNameFromValue sense.ASC
+                    let vendormsg =
+                        if ValueOption.isSome sense.VendorSpecific then
+                            sense.VendorSpecific
+                            |> ValueOption.map ( _.VendorSpecific )
+                            |> ValueOption.defaultValue [||]
+                            |> System.Text.Encoding.UTF8.GetString
+                        else
+                            ""
+                    raise <| TestException( sprintf "Unexpected Status value. %s, %s, %s, %s" statmsg sensekeymsg ascmsg vendormsg )
             return r.ResData
         }
 
