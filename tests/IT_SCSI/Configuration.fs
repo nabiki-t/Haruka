@@ -342,7 +342,7 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
 
             // register reservation key
             for itr in vResKey do
-                let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK itr.Key NACA.T resvkey_me.zero itr.Value false false false [||]
+                let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK itr.Key NACA.T resvkey_me.zero itr.Value SPEC_I_PT.F ALL_TG_PT.F APTPL.F [||]
                 let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
                 ()
 

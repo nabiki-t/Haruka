@@ -61,6 +61,66 @@ type TaskResult =
     | TMF of TaskMgrResCd
     | NOP
 
+/// Represents SPEC_I_PT bit in Persistent Reserve Out parameter data is 1 or 0.
+type SPEC_I_PT =
+    | T     // Immidiate flag is 1
+    | F     // Immidiate flag os 0
+    /// Convert BitI to bool
+    static member toBool =
+        function
+        | T -> true
+        | F -> false
+    /// Convert bool to BitI
+    static member ofBool =
+        function
+        | true -> T
+        | false -> F
+
+/// Represents ALL_TG_PT bit in Persistent Reserve Out parameter data is 1 or 0.
+type ALL_TG_PT =
+    | T     // Immidiate flag is 1
+    | F     // Immidiate flag os 0
+    /// Convert BitI to bool
+    static member toBool =
+        function
+        | T -> true
+        | F -> false
+    /// Convert bool to BitI
+    static member ofBool =
+        function
+        | true -> T
+        | false -> F
+
+/// Represents APTPL bit in Persistent Reserve Out parameter data is 1 or 0.
+type APTPL =
+    | T     // Immidiate flag is 1
+    | F     // Immidiate flag os 0
+    /// Convert BitI to bool
+    static member toBool =
+        function
+        | T -> true
+        | F -> false
+    /// Convert bool to BitI
+    static member ofBool =
+        function
+        | true -> T
+        | false -> F
+
+/// Represents UNREG bit in Persistent Reserve Out parameter data is 1 or 0.
+type UNREG =
+    | T     // Immidiate flag is 1
+    | F     // Immidiate flag os 0
+    /// Convert BitI to bool
+    static member toBool =
+        function
+        | T -> true
+        | F -> false
+    /// Convert bool to BitI
+    static member ofBool =
+        function
+        | true -> T
+        | false -> F
+
 //=============================================================================
 // Class implementation
 
@@ -758,16 +818,16 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
             ( argNACA : NACA )
             ( argReservationKey : RESVKEY_T )
             ( argServiceActionReservationKey : RESVKEY_T )
-            ( argSPEC_I_PT : bool )
-            ( argALL_TG_PT : bool )
-            ( argAPTPL : bool ) 
+            ( argSPEC_I_PT : SPEC_I_PT )
+            ( argALL_TG_PT : ALL_TG_PT )
+            ( argAPTPL : APTPL ) 
             ( argTransportID : ( string * ISID_T option )[] ) : Task<ITT_T> =
         let param : Haruka.BlockDeviceLU.BasicParameterList = {
             ReservationKey = argReservationKey;
             ServiceActionReservationKey = argServiceActionReservationKey;
-            SPEC_I_PT = argSPEC_I_PT;
-            ALL_TG_PT = argALL_TG_PT;
-            APTPL = argAPTPL;
+            SPEC_I_PT = SPEC_I_PT.toBool argSPEC_I_PT;
+            ALL_TG_PT = ALL_TG_PT.toBool argALL_TG_PT;
+            APTPL = APTPL.toBool argAPTPL;
             TransportID = argTransportID;
         }
         this.Send_PersistentReserveOut_BasicParam att lun 0uy 0uy PR_TYPE.NO_RESERVATION param argNACA
@@ -996,16 +1056,16 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
             ( lun : LUN_T )
             ( argNACA : NACA )
             ( argServiceActionReservationKey : RESVKEY_T )
-            ( argSPEC_I_PT : bool )
-            ( argALL_TG_PT : bool )
-            ( argAPTPL : bool ) 
+            ( argSPEC_I_PT : SPEC_I_PT )
+            ( argALL_TG_PT : ALL_TG_PT )
+            ( argAPTPL : APTPL ) 
             ( argTransportID : ( string * ISID_T option )[] ): Task<ITT_T> =
         let param : Haruka.BlockDeviceLU.BasicParameterList = {
             ReservationKey = resvkey_me.zero;
             ServiceActionReservationKey = argServiceActionReservationKey;
-            SPEC_I_PT = argSPEC_I_PT;
-            ALL_TG_PT = argALL_TG_PT;
-            APTPL = argAPTPL;
+            SPEC_I_PT = SPEC_I_PT.toBool argSPEC_I_PT;
+            ALL_TG_PT = ALL_TG_PT.toBool argALL_TG_PT;
+            APTPL = APTPL.toBool argAPTPL;
             TransportID = argTransportID;
         }
         this.Send_PersistentReserveOut_BasicParam att lun 6uy 0uy PR_TYPE.NO_RESERVATION param argNACA
@@ -1053,16 +1113,16 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
             ( argType : PR_TYPE )
             ( argReservationKey : RESVKEY_T )
             ( argServiceActionReservationKey : RESVKEY_T )
-            ( argUNREG : bool )
-            ( argAPTPL : bool ) 
+            ( argUNREG : UNREG )
+            ( argAPTPL : APTPL ) 
             ( argRelativeTargetPortIdentifier : uint16 )
             ( argTransportID : string * ISID_T option ): Task<ITT_T> =
         task {
             let param : Haruka.BlockDeviceLU.MoveParameterList = {
                 ReservationKey = argReservationKey;
                 ServiceActionReservationKey = argServiceActionReservationKey;
-                UNREG = argUNREG;
-                APTPL = argAPTPL;
+                UNREG = UNREG.toBool argUNREG;
+                APTPL = APTPL.toBool argAPTPL;
                 RelativeTargetPortIdentifier = argRelativeTargetPortIdentifier;
                 TransportID = argTransportID;
             }

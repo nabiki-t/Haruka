@@ -190,7 +190,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
 
             // REGISTER, with RESERVATION KEY=0 and SERVICE ACTION RESERVATION KEY=0
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey_me.zero false false true [||]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             let! fstat2 = PR_ReadFullStatus r1 g_LUN1
@@ -213,7 +213,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
 
             // REGISTER, with RESERVATION KEY = 0 and SERVICE ACTION RESERVATION KEY = 1
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 false false true [||]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             let! fstat2 = PR_ReadFullStatus r1 g_LUN1
@@ -223,7 +223,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
 
             // unregister
             // RESERVATION KEY = 1 and SERVICE ACTION RESERVATION KEY = 0
-            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero false false true [||]
+            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             let! fstat3 = PR_ReadFullStatus r1 g_LUN1
@@ -244,7 +244,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
 
             // register r1, SPEC_I_PT=0, TransportID is not empty.
             let transid = [| ( "aaaaa", None ) |]
-            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 false false true transid
+            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T transid
             let! res_pr_out2 = r1.WaitSCSIResponse itt_pr_out2
             Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -275,7 +275,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             // REGISTER, with RESERVATION KEY = 0 and SERVICE ACTION RESERVATION KEY = 1
             // The initiator port of r2 is also registered at the same time.
             let transid = [| ( r2.SessionParams.InitiatorName, Some r2.SessionParams.ISID ) |]  // specify ISID
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 true false true transid
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.T ALL_TG_PT.F APTPL.T transid
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             let! fstat2 = PR_ReadFullStatus r1 g_LUN1
@@ -288,7 +288,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             Assert.True(( fsd2 |> Array.exists ( fun itr -> itr.iSCSIName = itn_r2.InitiatorPortName )  ))
 
             // unregister r1
-            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero false false true [||]
+            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             let! fstat3 = PR_ReadFullStatus r1 g_LUN1
@@ -299,7 +299,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             Assert.True(( fsd3.[0].iSCSIName = itn_r2.InitiatorPortName ))
 
             // unregister r2
-            let! itt_pr_out3 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero false false true [||]
+            let! itt_pr_out3 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out3
 
             let! fstat4 = PR_ReadFullStatus r1 g_LUN1
@@ -334,7 +334,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
                 ( r3.SessionParams.InitiatorName, None )    // ommit ISID, it reffer r3 and r4
                 ( r6.SessionParams.InitiatorName, None )    // ommit ISID, it reffer r6
             |]  
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 true false true transid
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.T ALL_TG_PT.F APTPL.T transid
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             let! fstat2 = PR_ReadFullStatus r1 g_LUN1
@@ -349,25 +349,25 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             Assert.True(( fsd2 |> Array.exists ( fun itr -> itr.iSCSIName = itn_r6.InitiatorPortName ) ))
 
             // unregister r1
-            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero false false true [||]
+            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
             let! fstat3 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat3.FullStatusDescriptor.Length = 3 ))
 
             // unregister r3
-            let! itt_pr_out3 = r3.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero false false true [||]
+            let! itt_pr_out3 = r3.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r3.WaitSCSIResponseGoodStatus itt_pr_out3
             let! fstat4 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat4.FullStatusDescriptor.Length = 2 ))
 
             // unregister r4
-            let! itt_pr_out4 = r4.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero false false true [||]
+            let! itt_pr_out4 = r4.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r4.WaitSCSIResponseGoodStatus itt_pr_out4
             let! fstat5 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat5.FullStatusDescriptor.Length = 1 ))
 
             // unregister r6
-            let! itt_pr_out5 = r6.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero false false true [||]
+            let! itt_pr_out5 = r6.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r6.WaitSCSIResponseGoodStatus itt_pr_out5
             let! fstat6 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat6.FullStatusDescriptor.Length = 0 ))
@@ -393,7 +393,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
 
             // REGISTER r1
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 false false true [||]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
             let! fstat1 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat1.FullStatusDescriptor.Length = 1 ))
@@ -403,7 +403,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
                 ( r1.SessionParams.InitiatorName, Some r1.SessionParams.ISID ); // already registered
                 ( r3.SessionParams.InitiatorName, Some r3.SessionParams.ISID );
             |]
-            let! itt_pr_out2 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 true false true transid
+            let! itt_pr_out2 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.T ALL_TG_PT.F APTPL.T transid
             let! res_pr_out2 = r2.WaitSCSIResponse itt_pr_out2
             Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -416,7 +416,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             Assert.True(( fstat2.FullStatusDescriptor.Length = 1 ))
 
             // unregister r1
-            let! itt_pr_out3 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero false false true [||]
+            let! itt_pr_out3 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
             let! fstat3 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
@@ -427,7 +427,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
         }
 
     // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0 and SPEC_I_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
-    // If the parameter list contains unknown initiator ports, 
+    // If the parameter list contains unknown initiator ports, there will be ignored.
     [<Fact>]
     member _.Register_FromUnregistered_SPEC_I_PT_004 () =
         task {
@@ -443,7 +443,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
                 ( "iqn.aaaaaaaaaaaaaaaa", None );           // unknown, it is ignored.
                 ( "iqn.bbbb", Some ( GlbFunc.newISID() ) ); // unknown, it is ignored.
             |]
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 true false true transid
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.T ALL_TG_PT.F APTPL.T transid
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             let! fstat2 = PR_ReadFullStatus r1 g_LUN1
@@ -454,7 +454,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             Assert.True(( fsd2.[0].iSCSIName = itn_r1.InitiatorPortName ))
 
             // unregister r1
-            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero false false true [||]
+            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
             let! fstat3 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
@@ -475,7 +475,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
 
             // register r1 with SPEC_I_PT=1 and empty TransportID
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 true false true [||]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.T ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             let! fstat2 = PR_ReadFullStatus r1 g_LUN1
@@ -486,7 +486,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             Assert.True(( fsd2.[0].RelativeTargetPortIdentifier = 1us ))
 
             // unregister r1
-            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero false false true [||]
+            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
             let! fstat3 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
@@ -505,7 +505,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
 
             // register r1 for all target port
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 false true true [||]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.T APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             let! fstat2 = PR_ReadFullStatus r1 g_LUN1
@@ -520,7 +520,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             Assert.True(( fsd2 |> Array.exists ( fun itr -> itr.RelativeTargetPortIdentifier = 2us ) ))
 
             // unregister r1 ( target 1 )
-            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero false false true [||]
+            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
             let! fstat3 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat3.FullStatusDescriptor.Length = 1 ))
@@ -542,7 +542,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             Assert.True(( fstat4.FullStatusDescriptor.Length = 1 ))
 
             // unregister r2 ( target 2 )
-            let! itt_pr_out3 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero false false true [||]
+            let! itt_pr_out3 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             //let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out3
             let! resp_pr_out3 = r2.WaitSCSIResponse itt_pr_out3
             Assert.True(( resp_pr_out3.Status = ScsiCmdStatCd.GOOD ))
@@ -551,7 +551,9 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             Assert.True(( fstat5.FullStatusDescriptor.Length = 0 ))
 
             do! r2.Close()
-        }    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0 and ALL_TG_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+        }
+        
+    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0 and ALL_TG_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
     [<Fact>]
     member _.Register_FromUnregistered_ALL_TG_PT_002 () =
         task {
@@ -568,14 +570,14 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
 
             // register r1
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey2 false false true [||]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey2 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
             let! fstat2 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat2.FullStatusDescriptor.Length = 1 ))
 
             // register r2 for all target port
             // ( r1 is already registered )
-            let! itt_pr_out2 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 false true true [||]
+            let! itt_pr_out2 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.T APTPL.T [||]
             let! res_pr_out2 = r2.WaitSCSIResponse itt_pr_out2
             Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.CHECK_CONDITION ))
             let msg = 
@@ -597,7 +599,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             Assert.True(( fsd3.[0].RelativeTargetPortIdentifier = 1us ))
 
             // unregister r1 ( target 1 )
-            let! itt_pr_out3 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey2 resvkey_me.zero false false true [||]
+            let! itt_pr_out3 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey2 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
             let! fstat4 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat4.FullStatusDescriptor.Length = 0 ))
@@ -606,3 +608,542 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r2.Close()
         }
 
+    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0 and ALL_TG_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // SPEC_I_PT = 0, but TransportID is not empty. 
+    [<Fact>]
+    member _.Register_FromUnregistered_ALL_TG_PT_003 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
+
+            // register r1, SPEC_I_PT=0, TransportID is not empty.
+            let transid = [| ( "aaaaa", None ) |]
+            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.T APTPL.T transid
+            let! res_pr_out2 = r1.WaitSCSIResponse itt_pr_out2
+            Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // clear ACA
+            let! itt_tmf1 = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
+            let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
+            Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
+
+            do! r1.Close()
+        }
+
+    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0, ALL_TG_PT=1 and SPEC_I_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // It register the source I_T nexus and unregistered I_T nexus specified in the parameter list.
+    [<Fact>]
+    member _.Register_FromUnregistered_ALL_TG_PT_SPEC_I_PT_001 () =
+        task {
+            let r1SP = {
+                m_defaultSessParam with
+                    InitiatorName = "iqn.2020-05.example.com:initiator1";
+                    TargetName = "iqn.2020-05.example.com:target1";
+            }
+            let! r1 = SCSI_Initiator.Create r1SP m_defaultConnParam
+            let itn_r1 = GetITNexus r1
+
+            let r2SP = {
+                m_defaultSessParam with
+                    InitiatorName = "iqn.2020-05.example.com:initiator2";
+                    TargetName = "iqn.2020-05.example.com:target1";
+            }
+            let! r2 = SCSI_Initiator.Create r2SP m_defaultConnParam
+            let itn_r2 = GetITNexus r2
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
+
+            // REGISTER, with RESERVATION KEY = 0 and SERVICE ACTION RESERVATION KEY = 1
+            // The initiator port of r2 is also registered at the same time.
+            let transid = [| ( r2.SessionParams.InitiatorName, Some r2.SessionParams.ISID ) |]  // specify ISID
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.T ALL_TG_PT.T APTPL.T transid
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
+            let fsd2 =
+                fstat2.FullStatusDescriptor
+                |> Array.sortWith ( fun i1 i2 ->
+                    let s = String.Compare( i1.iSCSIName, i2.iSCSIName )
+                    if s <> 0 then
+                        s
+                    else
+                        ( int i1.RelativeTargetPortIdentifier ) - ( int i2.RelativeTargetPortIdentifier )
+                )
+            Assert.True(( fsd2.Length = 4 ))
+            Assert.True(( fsd2.[0].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd2.[0].iSCSIName = itn_r1.InitiatorPortName ))
+            Assert.True(( fsd2.[0].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( fsd2.[1].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd2.[1].iSCSIName = itn_r1.InitiatorPortName ))
+            Assert.True(( fsd2.[1].RelativeTargetPortIdentifier = 2us ))
+            Assert.True(( fsd2.[2].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd2.[2].iSCSIName = itn_r2.InitiatorPortName ))
+            Assert.True(( fsd2.[2].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( fsd2.[3].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd2.[3].iSCSIName = itn_r2.InitiatorPortName ))
+            Assert.True(( fsd2.[3].RelativeTargetPortIdentifier = 2us ))
+
+            // unregister r1
+            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // unregister r2
+            let! itt_pr_out3 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out3
+
+            // unregister r1 on target 2
+            let r1SP_Target2 = {
+                m_defaultSessParam with
+                    InitiatorName = "iqn.2020-05.example.com:initiator1";
+                    TargetName = "iqn.2020-05.example.com:target2";
+                    ISID = r1.SessionParams.ISID;
+            }
+            let! r1_2 = SCSI_Initiator.CreateWithISID r1SP_Target2 m_defaultConnParam
+            let! itt_pr_out4 = r1_2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1_2.WaitSCSIResponseGoodStatus itt_pr_out4
+            do! r1_2.Close()
+
+            // unregister r2 on target 2
+            let r2SP_Target2 = {
+                m_defaultSessParam with
+                    InitiatorName = "iqn.2020-05.example.com:initiator2";
+                    TargetName = "iqn.2020-05.example.com:target2";
+                    ISID = r2.SessionParams.ISID;
+            }
+            let! r2_2 = SCSI_Initiator.CreateWithISID r2SP_Target2 m_defaultConnParam
+            let! itt_pr_out5 = r2_2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r2_2.WaitSCSIResponseGoodStatus itt_pr_out5
+            do! r2_2.Close()
+
+            let! fstat4 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat4.FullStatusDescriptor.Length = 0 ))
+
+            do! r1.Close()
+            do! r2.Close()
+        }
+
+    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0, ALL_TG_PT=1 and SPEC_I_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // It register the source I_T nexus and unregistered I_T nexus specified in the parameter list.
+    [<Fact>]
+    member _.Register_FromUnregistered_ALL_TG_PT_SPEC_I_PT_002 () =
+        task {
+            let isids =
+                Array.init 4 ( fun _ -> GlbFunc.newISID() )
+                |> Array.sortBy isid_me.toPrim
+
+            let r11SP = {
+                m_defaultSessParam with
+                    InitiatorName = "iqn.2020-05.example.com:initiator1";
+                    TargetName = "iqn.2020-05.example.com:target1";
+                    ISID = isids.[0];
+            }
+            let! r11 = SCSI_Initiator.CreateWithISID r11SP m_defaultConnParam
+            let itn_r11 = GetITNexus r11
+
+            let r12SP = {
+                m_defaultSessParam with
+                    InitiatorName = "iqn.2020-05.example.com:initiator1";
+                    TargetName = "iqn.2020-05.example.com:target2";
+                    ISID = isids.[1];
+            }
+            let! r12 = SCSI_Initiator.CreateWithISID r12SP m_defaultConnParam
+
+            let r21SP = {
+                m_defaultSessParam with
+                    InitiatorName = "iqn.2020-05.example.com:initiator2";
+                    TargetName = "iqn.2020-05.example.com:target1";
+                    ISID = isids.[2];
+            }
+            let! r21 = SCSI_Initiator.CreateWithISID r21SP m_defaultConnParam
+            let itn_r21 = GetITNexus r21
+
+            let r22SP = {
+                m_defaultSessParam with
+                    InitiatorName = "iqn.2020-05.example.com:initiator2";
+                    TargetName = "iqn.2020-05.example.com:target2";
+                    ISID = isids.[3];
+            }
+            let! r22 = SCSI_Initiator.CreateWithISID r22SP m_defaultConnParam
+            let itn_r22 = GetITNexus r22
+
+            let! fstat1 = PR_ReadFullStatus r11 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
+
+            // REGISTER, with RESERVATION KEY = 0, SERVICE ACTION RESERVATION KEY = 1, ALL_TG_PT = 1 and SPEC_I_PT = 1 
+            let transid = [| ( r22.SessionParams.InitiatorName, None ) |]  // ommit ISID
+            let! itt_pr_out1 = r11.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.T ALL_TG_PT.T APTPL.T transid
+            let! _ = r11.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            let! fstat2 = PR_ReadFullStatus r11 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
+            let fsd2 =
+                fstat2.FullStatusDescriptor
+                |> Array.sortWith ( fun i1 i2 ->
+                    let s = String.Compare( i1.iSCSIName, i2.iSCSIName )
+                    if s <> 0 then
+                        s
+                    else
+                        ( int i1.RelativeTargetPortIdentifier ) - ( int i2.RelativeTargetPortIdentifier )
+                )
+            Assert.True(( fsd2.Length = 6 ))
+            Assert.True(( fsd2.[0].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd2.[0].iSCSIName = itn_r11.InitiatorPortName ))
+            Assert.True(( fsd2.[0].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( fsd2.[1].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd2.[1].iSCSIName = itn_r11.InitiatorPortName ))
+            Assert.True(( fsd2.[1].RelativeTargetPortIdentifier = 2us ))
+            Assert.True(( fsd2.[2].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd2.[2].iSCSIName = itn_r21.InitiatorPortName ))
+            Assert.True(( fsd2.[2].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( fsd2.[3].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd2.[3].iSCSIName = itn_r21.InitiatorPortName ))
+            Assert.True(( fsd2.[3].RelativeTargetPortIdentifier = 2us ))
+            Assert.True(( fsd2.[4].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd2.[4].iSCSIName = itn_r22.InitiatorPortName ))
+            Assert.True(( fsd2.[4].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( fsd2.[5].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd2.[5].iSCSIName = itn_r22.InitiatorPortName ))
+            Assert.True(( fsd2.[5].RelativeTargetPortIdentifier = 2us ))
+
+            // unregister
+            let! itt_pr_out2 = r11.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r11.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            let! itt_pr_out3 = r21.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r21.WaitSCSIResponseGoodStatus itt_pr_out3
+
+            let! itt_pr_out4 = r22.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r22.WaitSCSIResponseGoodStatus itt_pr_out4
+
+            let! fstat3 = PR_ReadFullStatus r11 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration > fstat2.PersistentReservationsGeneration ))
+            let fsd3 =
+                fstat3.FullStatusDescriptor
+                |> Array.sortWith ( fun i1 i2 ->
+                    let s = String.Compare( i1.iSCSIName, i2.iSCSIName )
+                    if s <> 0 then
+                        s
+                    else
+                        ( int i1.RelativeTargetPortIdentifier ) - ( int i2.RelativeTargetPortIdentifier )
+                )
+            Assert.True(( fsd3.Length = 3 ))
+            Assert.True(( fsd3.[0].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd3.[0].iSCSIName = itn_r11.InitiatorPortName ))
+            Assert.True(( fsd3.[0].RelativeTargetPortIdentifier = 2us ))
+            Assert.True(( fsd3.[1].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd3.[1].iSCSIName = itn_r21.InitiatorPortName ))
+            Assert.True(( fsd3.[1].RelativeTargetPortIdentifier = 2us ))
+            Assert.True(( fsd3.[2].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd3.[2].iSCSIName = itn_r22.InitiatorPortName ))
+            Assert.True(( fsd3.[2].RelativeTargetPortIdentifier = 1us ))
+
+            // unregister r11 on target 2
+            let r11SP_Target2 = {
+                m_defaultSessParam with
+                    InitiatorName = "iqn.2020-05.example.com:initiator1";
+                    TargetName = "iqn.2020-05.example.com:target2";
+                    ISID = r11.SessionParams.ISID;
+            }
+            let! r11_2 = SCSI_Initiator.CreateWithISID r11SP_Target2 m_defaultConnParam
+            let! itt_pr_out5 = r11_2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r11_2.WaitSCSIResponseGoodStatus itt_pr_out5
+            do! r11_2.Close()
+
+            // unregister r21 on target 2
+            let r21SP_Target2 = {
+                m_defaultSessParam with
+                    InitiatorName = "iqn.2020-05.example.com:initiator2";
+                    TargetName = "iqn.2020-05.example.com:target2";
+                    ISID = r21.SessionParams.ISID;
+            }
+            let! r21_2 = SCSI_Initiator.CreateWithISID r21SP_Target2 m_defaultConnParam
+            let! itt_pr_out6 = r21_2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r21_2.WaitSCSIResponseGoodStatus itt_pr_out6
+            do! r21_2.Close()
+
+            // unregister r22 on target 1
+            let r22SP_Target1 = {
+                m_defaultSessParam with
+                    InitiatorName = "iqn.2020-05.example.com:initiator2";
+                    TargetName = "iqn.2020-05.example.com:target1";
+                    ISID = r22.SessionParams.ISID;
+            }
+            let! r22_1 = SCSI_Initiator.CreateWithISID r22SP_Target1 m_defaultConnParam
+            let! itt_pr_out7 = r22_1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r22_1.WaitSCSIResponseGoodStatus itt_pr_out7
+            do! r22_1.Close()
+
+            let! fstat4 = PR_ReadFullStatus r11 g_LUN1
+            Assert.True(( fstat4.FullStatusDescriptor.Length = 0 ))
+
+            do! r11.Close()
+            do! r12.Close()
+            do! r21.Close()
+            do! r22.Close()
+        }
+
+    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0, ALL_TG_PT=1 and SPEC_I_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // If the parameter list contains already registered initiator ports, exit with CHECK CONDITION.
+    [<Fact>]
+    member _.Register_FromUnregistered_ALL_TG_PT_SPEC_I_PT_003 () =
+        task {
+            let r11SP = {
+                m_defaultSessParam with
+                    InitiatorName = "iqn.2020-05.example.com:initiator1";
+                    TargetName = "iqn.2020-05.example.com:target1";
+            }
+            let! r11 = SCSI_Initiator.Create r11SP m_defaultConnParam
+
+            let r21SP = {
+                m_defaultSessParam with
+                    InitiatorName = "iqn.2020-05.example.com:initiator2";
+                    TargetName = "iqn.2020-05.example.com:target1";
+            }
+            let! r21 = SCSI_Initiator.Create r21SP m_defaultConnParam
+
+            let r22SP = {
+                m_defaultSessParam with
+                    InitiatorName = "iqn.2020-05.example.com:initiator2";
+                    TargetName = "iqn.2020-05.example.com:target2";
+            }
+            let! r22 = SCSI_Initiator.Create r22SP m_defaultConnParam
+            let itn_r22 = GetITNexus r22
+
+            // register r22
+            let! itt_pr_out1 = r22.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r22.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            let! fstat1 = PR_ReadFullStatus r11 g_LUN1
+            let fsd1 = fstat1.FullStatusDescriptor
+            Assert.True(( fsd1.Length = 1 ))
+            Assert.True(( fsd1.[0].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd1.[0].iSCSIName = itn_r22.InitiatorPortName ))
+            Assert.True(( fsd1.[0].RelativeTargetPortIdentifier = 2us ))
+
+            // REGISTER, with RESERVATION KEY = 0, SERVICE ACTION RESERVATION KEY = 1, ALL_TG_PT = 1 and SPEC_I_PT = 1 
+            let transid = [| ( r21.SessionParams.InitiatorName, None ) |]  // ommit ISID
+            let! itt_pr_out2 = r11.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.T ALL_TG_PT.T APTPL.T transid
+            let! res_po_out2 = r11.WaitSCSIResponse itt_pr_out2
+            Assert.True(( res_po_out2.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // clear ACA
+            let! itt_tmf1 = r11.SendTMFRequest_ClearACA BitI.F g_LUN1
+            let! res_tmf1 = r11.WaitTMFResponse itt_tmf1
+            Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            let! fstat2 = PR_ReadFullStatus r11 g_LUN1
+            Assert.True(( fstat2.FullStatusDescriptor.Length = 1 ))
+
+            // unregister r22
+            let! itt_pr_out3 = r22.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r22.WaitSCSIResponseGoodStatus itt_pr_out3
+
+            let! fstat3 = PR_ReadFullStatus r11 g_LUN1
+            Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
+
+            do! r11.Close()
+            do! r21.Close()
+            do! r22.Close()
+        }
+
+    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0, ALL_TG_PT=1 and SPEC_I_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // If the parameter list contains unknown initiator ports, there will be ignored.
+    [<Fact>]
+    member _.Register_FromUnregistered_ALL_TG_PT_SPEC_I_PT_004 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create { m_defaultSessParam with InitiatorName = "iqn.bbbb"; } m_defaultConnParam
+            let itn_r1 = GetITNexus r1
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
+
+            // register r1 with unknown initiator port
+            let transid = [|
+                ( "iqn.aaaaaaaaaaaaaaaa", None );           // unknown, it is ignored.
+                ( "iqn.bbbb", Some ( GlbFunc.newISID() ) ); // unknown, it is ignored.
+            |]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.T ALL_TG_PT.T APTPL.T transid
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
+            let fsd2 =
+                fstat2.FullStatusDescriptor
+                |> Array.sortWith ( fun i1 i2 ->
+                    let s = String.Compare( i1.iSCSIName, i2.iSCSIName )
+                    if s <> 0 then
+                        s
+                    else
+                        ( int i1.RelativeTargetPortIdentifier ) - ( int i2.RelativeTargetPortIdentifier )
+                )
+            Assert.True(( fsd2.Length = 2 ))
+            Assert.True(( fsd2.[0].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd2.[0].iSCSIName = itn_r1.InitiatorPortName ))
+            Assert.True(( fsd2.[0].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( fsd2.[1].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd2.[1].iSCSIName = itn_r1.InitiatorPortName ))
+            Assert.True(( fsd2.[1].RelativeTargetPortIdentifier = 2us ))
+
+            // unregister r1 ( ALL_TG_PT = 1 )
+            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.T APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+            let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
+
+            do! r1.Close()
+            do! r2.Close()
+        }
+
+    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0, ALL_TG_PT=1 and SPEC_I_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // SPEC_I_PT=1 but TransportID is empty.
+    [<Fact>]
+    member _.Register_FromUnregistered_ALL_TG_PT_SPEC_I_PT_005 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let itn_r1 = GetITNexus r1
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
+
+            // register r1 with SPEC_I_PT=1 and empty TransportID
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.T ALL_TG_PT.T APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
+            let fsd2 =
+                fstat2.FullStatusDescriptor
+                |> Array.sortWith ( fun i1 i2 ->
+                    let s = String.Compare( i1.iSCSIName, i2.iSCSIName )
+                    if s <> 0 then
+                        s
+                    else
+                        ( int i1.RelativeTargetPortIdentifier ) - ( int i2.RelativeTargetPortIdentifier )
+                )
+            Assert.True(( fsd2.Length = 2 ))
+            Assert.True(( fsd2.[0].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd2.[0].iSCSIName = itn_r1.InitiatorPortName ))
+            Assert.True(( fsd2.[0].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( fsd2.[1].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd2.[1].iSCSIName = itn_r1.InitiatorPortName ))
+            Assert.True(( fsd2.[1].RelativeTargetPortIdentifier = 2us ))
+
+            // unregister r1 ( ALL_TG_PT = 1 )
+            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.T APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+            let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
+
+            do! r1.Close()
+        }
+
+    // RESERVATION KEY <> =0 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    [<Fact>]
+    member _.Register_FromUnregistered_Conflict_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            // register r1 with RESERVATION = 1
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 g_ResvKey2 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! res_pr_out1 = r1.WaitSCSIResponse itt_pr_out1
+            Assert.True(( res_pr_out1.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
+
+            do! r1.Close()
+        }
+
+    // unmatch RESERVATION KEY in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an registered I_T nexus.
+    [<Fact>]
+    member _.Register_FromRegistered_Conflict_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            // register with RESERVATION = 1
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 1 ))
+
+            // register with RESERVATION = 2
+            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey2 g_ResvKey2 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! res_pr_out2 = r1.WaitSCSIResponse itt_pr_out2
+            Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
+
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.FullStatusDescriptor.Length = 1 ))
+
+            // unregister
+            let! itt_pr_out3 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
+
+            let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
+
+            do! r1.Close()
+        }
+
+    // SERVICE ACTION RESERVATION KEY=0 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an registered I_T nexus.
+    [<Fact>]
+    member _.Register_FromRegistered_Unregister_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            // register with RESERVATION = 1
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 1 ))
+
+            // unregister
+            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
+
+            do! r1.Close()
+        }
+
+    // SERVICE ACTION RESERVATION KEY=0 and SPEC_I_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an registered I_T nexus.
+    [<Fact>]
+    member _.Register_FromRegistered_Unregister_SPEC_I_PT_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            // register with RESERVATION = 1
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 1 ))
+
+            // unregister ( SPEC_I_PT = 1 )
+            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.T ALL_TG_PT.F APTPL.T [||]
+            let! res_pr_out2 = r1.WaitSCSIResponse itt_pr_out2
+            Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // clear ACA
+            let! itt_tmf1 = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
+            let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
+            Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            // unregister
+            let! itt_pr_out3 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
+            let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
+
+            do! r1.Close()
+        }

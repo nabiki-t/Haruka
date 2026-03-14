@@ -587,7 +587,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                 ()
 
             // register reservation key
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 111UL ) false false false [||]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 111UL ) SPEC_I_PT.F ALL_TG_PT.F APTPL.F [||]
             //let! itt_pr_out1 = r1.Send_Inquiry TaskATTRCd.SIMPLE_TASK lun EVPD.T 0uy 256us NACA.T
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
@@ -644,7 +644,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                 ()
 
             // register reservation key
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 111UL ) false false false [||]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 111UL ) SPEC_I_PT.F ALL_TG_PT.F APTPL.F [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             if raiseaca then
@@ -701,7 +701,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let lun = lun_me.fromPrim argLUN
 
             // register reservation key
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) false false false [||]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) SPEC_I_PT.F ALL_TG_PT.F APTPL.F [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             // raise ACA
@@ -742,7 +742,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let writeData1 = PooledBuffer.Rent( Blocksize.toUInt32 m_MediaBlockSize |> int32 )
 
             // register reservation key
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) false false false [||]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) SPEC_I_PT.F ALL_TG_PT.F APTPL.F [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             // raise ACA
@@ -808,7 +808,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let lun = lun_me.fromPrim argLUN
 
             // register reservation key
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) false false false [||]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) SPEC_I_PT.F ALL_TG_PT.F APTPL.F [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             // raise ACA
@@ -859,7 +859,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             m_ClientProc.RunCommand "add trap /e Write /slba 3 /elba 3 /a ACA" "Trap added" "MD> "
 
             // register reservation key
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) false false false [||]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) SPEC_I_PT.F ALL_TG_PT.F APTPL.F [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             // Send HOQ task(T1), and stucked at debug media
@@ -955,7 +955,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let lun = lun_me.fromPrim argLUN
 
             // register reservation key
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) false false false [||]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T ( resvkey_me.fromPrim 0UL ) ( resvkey_me.fromPrim 222UL ) SPEC_I_PT.F ALL_TG_PT.F APTPL.F [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             // establish ACA

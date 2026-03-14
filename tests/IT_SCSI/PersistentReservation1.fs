@@ -182,7 +182,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
 
     let PR_Register ( r : SCSI_Initiator ) ( lun : LUN_T ) ( rsvkey : RESVKEY_T ) ( srrsvkey : RESVKEY_T ) : Task<unit> =
         task {
-            let! itt_pr_out1 = r.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T rsvkey srrsvkey false false true [||]
+            let! itt_pr_out1 = r.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T rsvkey srrsvkey SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r.WaitSCSIResponseGoodStatus itt_pr_out1
             ()
         }
@@ -527,7 +527,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
             let! r2 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = r1.SessionParams.ISID } m_defaultConnParam
 
             // register reservation key ( failed )
-            let! itt_pr_out2 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey false false true [||]
+            let! itt_pr_out2 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero resvkey SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! resp_2 = r2.WaitSCSIResponse itt_pr_out2
             Assert.True(( resp_2.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
 
@@ -1148,9 +1148,9 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
             // REGISTER / REGISTER_AND_IGNORE_EXISTING_KEY
             let! itt_pr_out4 =
                 if func then
-                    r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( if regist then resvkey2 else resvkey_me.zero ) resvkey3 false false true [||]
+                    r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T ( if regist then resvkey2 else resvkey_me.zero ) resvkey3 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
                 else
-                    r2.Send_PROut_REGISTER_AND_IGNORE_EXISTING_KEY TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey3 false false true [||]
+                    r2.Send_PROut_REGISTER_AND_IGNORE_EXISTING_KEY TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey3 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out4
 
             // unregister reservation key on session 2
@@ -1204,7 +1204,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
                 do! PR_Register r2 g_LUN1 resvkey_me.zero resvkey2
 
             // REGISTER_AND_MOVE
-            let! itt_pr_out4 = r2.Send_PROut_REGISTER_AND_MOVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS resvkey2 resvkey3 true true 0us ( "", None )
+            let! itt_pr_out4 = r2.Send_PROut_REGISTER_AND_MOVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS resvkey2 resvkey3 UNREG.T APTPL.T 0us ( "", None )
             let! resp_cmd = r2.WaitSCSIResponse itt_pr_out4
             resp_cmd.ResData.Return()
             Assert.True(( resp_cmd.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
