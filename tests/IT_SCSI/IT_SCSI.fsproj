@@ -9,10 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="PersistentReserveOut1.fs" />
-    <Compile Include="PersistentReservation1.fs" />
-    <Compile Include="Configuration.fs" />
     <Compile Include="ACA.fs" />
+    <Compile Include="Configuration.fs" />
+    <Compile Include="PersistentReservation1.fs" />
+    <Compile Include="PersistentReserveOut1.fs" />
+    <Compile Include="PersistentReserveOut2.fs" />
     <Compile Include="Queueing.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
