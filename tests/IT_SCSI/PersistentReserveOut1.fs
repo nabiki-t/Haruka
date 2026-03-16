@@ -175,7 +175,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
 
-    // RESERVATION KEY=0 and SERVICE ACTION RESERVATION KEY=0 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // RESERVATION KEY=0 and SERVICE ACTION RESERVATION KEY=0 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an unregistered I_T nexus.
     // It will return GOOD without doing anything and terminate.
     [<Fact>]
     member _.Register_FromUnregistered_NothingToDo_001 () =
@@ -196,9 +196,9 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r1.Close()
         }
 
-    // RESERVATION KEY=0 and SERVICE ACTION RESERVATION KEY<>0 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus
+    // RESERVATION KEY=0 and SERVICE ACTION RESERVATION KEY<>0 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an unregistered I_T nexus
     // It register the I_T nexus with the value specified in SERVICE ACTION RESERVATION KEY.
-    // RESERVATION KEY equals registered key and SERVICE ACTION RESERVATION KEY = 0 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an registered I_T nexus.
+    // RESERVATION KEY equals registered key and SERVICE ACTION RESERVATION KEY = 0 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an registered I_T nexus.
     // It unregister the I_T nexus.
     [<Fact>]
     member _.Register_FromUnregistered_Register_001 () =
@@ -228,7 +228,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r1.Close()
         }
 
-    // RESERVATION KEY=0 and SERVICE ACTION RESERVATION KEY<>0 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus
+    // RESERVATION KEY=0 and SERVICE ACTION RESERVATION KEY<>0 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an unregistered I_T nexus
     // SPEC_I_PT = 0, but TransportID is not empty. 
     [<Fact>]
     member _.Register_FromUnregistered_Register_002 () =
@@ -255,7 +255,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r1.Close()
         }
 
-    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0 and SPEC_I_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0 and SPEC_I_PT=1 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an unregistered I_T nexus.
     // It register the I_T nexus and unregistered I_T nexus specified in the parameter list.
     [<Fact>]
     member _.Register_FromUnregistered_SPEC_I_PT_001 () =
@@ -305,7 +305,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r2.Close()
         }
 
-    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0 and SPEC_I_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0 and SPEC_I_PT=1 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an unregistered I_T nexus.
     // It register the I_T nexus and unregistered I_T nexus specified in the parameter list.
     [<Fact>]
     member _.Register_FromUnregistered_SPEC_I_PT_002 () =
@@ -376,7 +376,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r6.Close()
         }
 
-    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0 and SPEC_I_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0 and SPEC_I_PT=1 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an unregistered I_T nexus.
     // If the parameter list contains already registered initiator ports, exit with CHECK CONDITION.
     [<Fact>]
     member _.Register_FromUnregistered_SPEC_I_PT_003 () =
@@ -422,7 +422,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r3.Close()
         }
 
-    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0 and SPEC_I_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0 and SPEC_I_PT=1 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an unregistered I_T nexus.
     // If the parameter list contains unknown initiator ports, there will be ignored.
     [<Fact>]
     member _.Register_FromUnregistered_SPEC_I_PT_004 () =
@@ -459,7 +459,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r2.Close()
         }
 
-    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0 and SPEC_I_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0 and SPEC_I_PT=1 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an unregistered I_T nexus.
     // SPEC_I_PT=1 but TransportID is empty.
     [<Fact>]
     member _.Register_FromUnregistered_SPEC_I_PT_005 () =
@@ -490,7 +490,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r1.Close()
         }
 
-    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0 and ALL_TG_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0 and ALL_TG_PT=1 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an unregistered I_T nexus.
     [<Fact>]
     member _.Register_FromUnregistered_ALL_TG_PT_001 () =
         task {
@@ -549,7 +549,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r2.Close()
         }
         
-    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0 and ALL_TG_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0 and ALL_TG_PT=1 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an unregistered I_T nexus.
     [<Fact>]
     member _.Register_FromUnregistered_ALL_TG_PT_002 () =
         task {
@@ -604,7 +604,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r2.Close()
         }
 
-    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0 and ALL_TG_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0 and ALL_TG_PT=1 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an unregistered I_T nexus.
     // SPEC_I_PT = 0, but TransportID is not empty. 
     [<Fact>]
     member _.Register_FromUnregistered_ALL_TG_PT_003 () =
@@ -631,7 +631,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r1.Close()
         }
 
-    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0, ALL_TG_PT=1 and SPEC_I_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0, ALL_TG_PT=1 and SPEC_I_PT=1 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an unregistered I_T nexus.
     // It register the source I_T nexus and unregistered I_T nexus specified in the parameter list.
     [<Fact>]
     member _.Register_FromUnregistered_ALL_TG_PT_SPEC_I_PT_001 () =
@@ -725,7 +725,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r2.Close()
         }
 
-    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0, ALL_TG_PT=1 and SPEC_I_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0, ALL_TG_PT=1 and SPEC_I_PT=1 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an unregistered I_T nexus.
     // It register the source I_T nexus and unregistered I_T nexus specified in the parameter list.
     [<Fact>]
     member _.Register_FromUnregistered_ALL_TG_PT_SPEC_I_PT_002 () =
@@ -885,7 +885,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r22.Close()
         }
 
-    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0, ALL_TG_PT=1 and SPEC_I_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0, ALL_TG_PT=1 and SPEC_I_PT=1 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an unregistered I_T nexus.
     // If the parameter list contains already registered initiator ports, exit with CHECK CONDITION.
     [<Fact>]
     member _.Register_FromUnregistered_ALL_TG_PT_SPEC_I_PT_003 () =
@@ -949,7 +949,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r22.Close()
         }
 
-    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0, ALL_TG_PT=1 and SPEC_I_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0, ALL_TG_PT=1 and SPEC_I_PT=1 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an unregistered I_T nexus.
     // If the parameter list contains unknown initiator ports, there will be ignored.
     [<Fact>]
     member _.Register_FromUnregistered_ALL_TG_PT_SPEC_I_PT_004 () =
@@ -998,7 +998,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r2.Close()
         }
 
-    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0, ALL_TG_PT=1 and SPEC_I_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // RESERVATION KEY=0, SERVICE ACTION RESERVATION KEY<>0, ALL_TG_PT=1 and SPEC_I_PT=1 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an unregistered I_T nexus.
     // SPEC_I_PT=1 but TransportID is empty.
     [<Fact>]
     member _.Register_FromUnregistered_ALL_TG_PT_SPEC_I_PT_005 () =
@@ -1041,13 +1041,13 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r1.Close()
         }
 
-    // RESERVATION KEY <> =0 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an unregistered I_T nexus.
+    // RESERVATION KEY <> =0 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an unregistered I_T nexus.
     [<Fact>]
     member _.Register_FromUnregistered_Conflict_001 () =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
-            // register r1 with RESERVATION = 1
+            // register r1 with RESERVATION KEY = 1
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 g_ResvKey2 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! res_pr_out1 = r1.WaitSCSIResponse itt_pr_out1
             Assert.True(( res_pr_out1.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
@@ -1058,20 +1058,20 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r1.Close()
         }
 
-    // unmatch RESERVATION KEY in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an registered I_T nexus.
+    // unmatch RESERVATION KEY in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an registered I_T nexus.
     [<Fact>]
     member _.Register_FromRegistered_Conflict_001 () =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
-            // register with RESERVATION = 1
+            // register with RESERVATION KEY = 1
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             let! fstat1 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat1.FullStatusDescriptor.Length = 1 ))
 
-            // register with RESERVATION = 2
+            // register with RESERVATION KEY = 2
             let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey2 g_ResvKey2 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! res_pr_out2 = r1.WaitSCSIResponse itt_pr_out2
             Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
@@ -1089,13 +1089,13 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r1.Close()
         }
 
-    // SERVICE ACTION RESERVATION KEY=0 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an registered I_T nexus.
+    // SERVICE ACTION RESERVATION KEY=0 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an registered I_T nexus.
     [<Fact>]
     member _.Register_FromRegistered_Unregister_001 () =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
-            // register with RESERVATION = 1
+            // register with RESERVATION KEY = 1
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
@@ -1112,15 +1112,17 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r1.Close()
         }
 
-    // SERVICE ACTION RESERVATION KEY=0 and SPEC_I_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an registered I_T nexus.
+    // SPEC_I_PT=1 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an registered I_T nexus.
     [<Theory>]
-    [<InlineData( 0UL )>]
-    [<InlineData( 1UL )>]
-    member _.Register_FromRegistered_SPEC_I_PT_001 ( sarv : uint64 ) =
+    [<InlineData( 0UL, false )>]
+    [<InlineData( 1UL, false )>]
+    [<InlineData( 0UL, true )>]
+    [<InlineData( 1UL, true )>]
+    member _.Register_FromRegistered_SPEC_I_PT_001 ( sarv : uint64 ) ( atp : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
-            // register with RESERVATION = 1
+            // register with RESERVATION KEY = 1
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
@@ -1128,7 +1130,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 1 ))
 
             // unregister ( SPEC_I_PT = 1 )
-            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 ( resvkey_me.fromPrim sarv ) SPEC_I_PT.T ALL_TG_PT.F APTPL.T [||]
+            let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 ( resvkey_me.fromPrim sarv ) SPEC_I_PT.T ( ALL_TG_PT.ofBool atp ) APTPL.T [||]
             let! res_pr_out2 = r1.WaitSCSIResponse itt_pr_out2
             Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -1146,7 +1148,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r1.Close()
         }
 
-    // SERVICE ACTION RESERVATION KEY=0 and ALL_TG_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an registered I_T nexus.
+    // SERVICE ACTION RESERVATION KEY=0 and ALL_TG_PT=1 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an registered I_T nexus.
     // Unregistered I_T Nexus will be ignored.
     [<Fact>]
     member _.Register_FromRegistered_Unregister_ALL_TG_PT_001 () =
@@ -1177,7 +1179,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r2.Close()
         }
 
-    // SERVICE ACTION RESERVATION KEY=0 and ALL_TG_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an registered I_T nexus.
+    // SERVICE ACTION RESERVATION KEY=0 and ALL_TG_PT=1 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an registered I_T nexus.
     // I_T Nexus connections from the same initiator to different targets will also be unregistered.
     [<Fact>]
     member _.Register_FromRegistered_Unregister_ALL_TG_PT_002 () =
@@ -1425,14 +1427,14 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r2.Close()
         }
 
-    // Different SERVICE ACTION RESERVATION KEY in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an registered I_T nexus.
+    // Different SERVICE ACTION RESERVATION KEY in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an registered I_T nexus.
     [<Fact>]
     member _.Register_FromRegistered_UpdateKey_001 () =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let itn_r1 = GetITNexus r1
 
-            // register with RESERVATION = 1
+            // register with RESERVATION KEY = 1
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
@@ -1460,7 +1462,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r1.Close()
         }
 
-    // Different SERVICE ACTION RESERVATION KEY and ALL_TG_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an registered I_T nexus.
+    // Different SERVICE ACTION RESERVATION KEY and ALL_TG_PT=1 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an registered I_T nexus.
     // If there is a mix of registered and unregistered targets, the reservation keys for registered targets will be updated,
     // and unregistered targets will be registered.
     [<Fact>]
@@ -1521,7 +1523,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r2.Close()
         }
 
-    // SERVICE ACTION RESERVATION KEY=0 and ALL_TG_PT=1 in a REGISTER service action with PERSISTENT RESERVE OUT command is received from an registered I_T nexus.
+    // SERVICE ACTION RESERVATION KEY=0 and ALL_TG_PT=1 in a PERSISTENT RESERVE OUT command with REGISTER service action is received from an registered I_T nexus.
     // I_T Nexus from the same initiator to different targets will also be updated.
     [<Fact>]
     member _.Register_FromRegistered_UpdateKey_ALL_TG_PT_002 () =
