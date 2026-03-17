@@ -197,6 +197,7 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
         }
 
     // A PERSISTENT RESERVE OUT command with RESERVE service action is received from an registered I_T nexus.
+    // A case where no other registrations exist.
     [<Theory>]
     [<MemberData( "Reserve_FromUnregistered_001_data" )>]
     member _.Reserve_FromRegistered_001 ( prtype : PR_TYPE ) =
@@ -228,4 +229,68 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
 
             do! CheckNoRegistrations r1 g_LUN1
             do! r1.Close()
+        }
+
+    static member Reserve_FromRegistered_002_data : obj[][] = [|
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   false; PR_TYPE.NO_RESERVATION |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  false; PR_TYPE.NO_RESERVATION |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  false; PR_TYPE.NO_RESERVATION |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; false; PR_TYPE.NO_RESERVATION |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS |]
+    |]
+
+    // A PERSISTENT RESERVE OUT command with RESERVE service action is received from an registered I_T nexus.
+    // A case where other registrations exist.
+    [<Theory>]
+    [<MemberData( "Reserve_FromRegistered_002_data" )>]
+    member _.Reserve_FromRegistered_002 ( prtype1 : PR_TYPE ) ( isholder2 : bool ) ( prtype2 : PR_TYPE ) =
+        task {
+            let isids =
+                Array.init 2 ( fun _ -> GlbFunc.newISID() )
+                |> Array.sortBy isid_me.toPrim
+            let! r1 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = isids.[0] } m_defaultConnParam
+            let! r2 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = isids.[1] } m_defaultConnParam
+            let itn_r1 = GetITNexus r1
+            let itn_r2 = GetITNexus r2
+            do! CheckNoRegistrations r1 g_LUN1
+
+            // register r1
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            // register r2
+            let! itt_pr_out2 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey2 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // reserve
+            let! itt_pr_out3 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype1 g_ResvKey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            let fsd1 =
+                fstat1.FullStatusDescriptor
+                |> Array.sortBy _.iSCSIName
+            Assert.True(( fsd1.Length = 2 ))
+            Assert.True(( fsd1.[0].iSCSIName = itn_r1.InitiatorPortName ))
+            Assert.True(( fsd1.[0].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd1.[0].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( fsd1.[0].ReservationHolder ))
+            Assert.True(( fsd1.[0].Type = PR_TYPE.toNumericValue prtype1 ))
+
+            Assert.True(( fsd1.[1].iSCSIName = itn_r2.InitiatorPortName ))
+            Assert.True(( fsd1.[1].ReservationKey = g_ResvKey2 ))
+            Assert.True(( fsd1.[1].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( fsd1.[1].ReservationHolder = isholder2 ))
+            Assert.True(( fsd1.[1].Type = PR_TYPE.toNumericValue prtype2 ))
+
+            // unregister
+            let! itt_pr_out5 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey2 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out5
+            let! itt_pr_out4 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out4
+
+            do! CheckNoRegistrations r1 g_LUN1
+            do! r1.Close()
+            do! r2.Close()
         }
