@@ -965,6 +965,196 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
             do! r2.Close()
         }
 
+    static member PR_Effective_001_data : obj[][] = [|
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSelect10;                           ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSense6;                             ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ModeSense10;                            ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.PreFetch10;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.PreFetch16;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ReportLUNs;                             ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.RequestSense;                           ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.TestUnitReady;                          ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.FormatUnit;                             ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Read6;                                  ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Read10;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Read12;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Read16;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ReadCapacity10;                         ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ReadCapacity16;                         ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.SynchronizeCache10;                     ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.SynchronizeCache16;                     ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Write6;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Write10;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Write12;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   SCSI_PersistentReservation.PersistentReserveIn;                    ScsiCmdStatCd.GOOD; |];
+
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSelect10;                           ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSense6;                             ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ModeSense10;                            ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.PreFetch10;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.PreFetch16;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ReportLUNs;                             ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.RequestSense;                           ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.TestUnitReady;                          ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.FormatUnit;                             ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Read6;                                  ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Read10;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Read12;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Read16;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ReadCapacity10;                         ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ReadCapacity16;                         ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.SynchronizeCache10;                     ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.SynchronizeCache16;                     ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Write6;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Write10;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Write12;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  SCSI_PersistentReservation.PersistentReserveIn;                    ScsiCmdStatCd.GOOD; |];
+
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSelect10;                           ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSense6;                             ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ModeSense10;                            ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.PreFetch10;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.PreFetch16;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ReportLUNs;                             ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.RequestSense;                           ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.TestUnitReady;                          ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.FormatUnit;                             ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Read6;                                  ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Read10;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Read12;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Read16;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ReadCapacity10;                         ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ReadCapacity16;                         ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.SynchronizeCache10;                     ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.SynchronizeCache16;                     ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Write6;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Write10;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Write12;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  SCSI_PersistentReservation.PersistentReserveIn;                    ScsiCmdStatCd.GOOD; |];
+
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSelect10;                           ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSense6;                             ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ModeSense10;                            ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.PreFetch10;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.PreFetch16;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ReportLUNs;                             ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.RequestSense;                           ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.TestUnitReady;                          ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.FormatUnit;                             ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Read6;                                  ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Read10;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Read12;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Read16;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ReadCapacity10;                         ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ReadCapacity16;                         ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.SynchronizeCache10;                     ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.SynchronizeCache16;                     ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Write6;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Write10;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Write12;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   SCSI_PersistentReservation.PersistentReserveIn;                    ScsiCmdStatCd.GOOD; |];
+
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSelect10;                           ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSense6;                             ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ModeSense10;                            ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.PreFetch10;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.PreFetch16;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ReportLUNs;                             ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.RequestSense;                           ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.TestUnitReady;                          ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.FormatUnit;                             ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Read6;                                  ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Read10;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Read12;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Read16;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ReadCapacity10;                         ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ReadCapacity16;                         ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.SynchronizeCache10;                     ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.SynchronizeCache16;                     ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Write6;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Write10;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Write12;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; SCSI_PersistentReservation.PersistentReserveIn;                    ScsiCmdStatCd.GOOD; |];
+
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Inquiry;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSelect6;                            ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSelect10;                           ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSense6;                             ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ModeSense10;                            ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.PreFetch10;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.PreFetch16;                             ScsiCmdStatCd.CONDITION_MET; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ReportLUNs;                             ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.RequestSense;                           ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.TestUnitReady;                          ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.FormatUnit;                             ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Read6;                                  ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Read10;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Read12;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Read16;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ReadCapacity10;                         ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ReadCapacity16;                         ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.SynchronizeCache10;                     ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.SynchronizeCache16;                     ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Write6;                                 ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Write10;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Write12;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.Write16;                                ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ReportSupportedOperationCodes;          ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.ReportSupportedTaskManagementFunctions; ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  SCSI_PersistentReservation.PersistentReserveIn;                    ScsiCmdStatCd.GOOD; |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "PR_Effective_001_data" )>]
+    member _.PR_Effective_001 ( prtype : PR_TYPE )  ( func : ( SCSI_Initiator -> LUN_T -> ScsiCmdStatCd -> Task<unit> ) ) ( exp : ScsiCmdStatCd ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let resvkey1 = resvkey_me.fromPrim 1UL
+
+            // register reservation key on session 1
+            do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey1
+
+            // reserve reservation
+            let! itt_pr_out2 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            do! func r1 g_LUN1 exp
+
+            // release reservation
+            let! itt_pr_out4 = r1.Send_PROut_RELEASE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out4
+
+            // unregister reservation key on session 1
+            do! PR_Register r1 g_LUN1 resvkey1 resvkey_me.zero
+
+            do! r1.Close()
+        }
+
     static member PR_Effective_PROut_CLEAR_001_data : obj[][] = [|
         [| false; PR_TYPE.WRITE_EXCLUSIVE;                   ScsiCmdStatCd.RESERVATION_CONFLICT; |];
         [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  ScsiCmdStatCd.RESERVATION_CONFLICT; |];
@@ -1024,6 +1214,37 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
 
             do! r1.Close()
             do! r2.Close()
+        }
+
+    static member PR_Effective_PROut_CLEAR_002_data : obj[][] = [|
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  ScsiCmdStatCd.GOOD; |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "PR_Effective_PROut_CLEAR_002_data" )>]
+    member _.PR_Effective_PROut_CLEAR_002 ( prtype : PR_TYPE ) ( exp : ScsiCmdStatCd ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let resvkey1 = resvkey_me.fromPrim 1UL
+
+            // register reservation key on session 1
+            do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey1
+
+            // reserve reservation
+            let! itt_pr_out2 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            let! itt_pr_out4 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey1
+            let! resp_cmd = r1.WaitSCSIResponse itt_pr_out4
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = exp ))
+
+            do! r1.Close()
         }
 
     static member PR_Effective_PROut_PREEMPT_001_data : obj[][] = [|
@@ -1097,6 +1318,52 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
             do! r2.Close()
         }
 
+    static member PR_Effective_PROut_PREEMPT_002_data : obj[][] = [|
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   1UL; ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  1UL; ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  1UL; ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   0UL; ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; 1UL; ScsiCmdStatCd.GOOD; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  0UL; ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   1UL; ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  1UL; ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  1UL; ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   0UL; ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; 1UL; ScsiCmdStatCd.GOOD; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  0UL; ScsiCmdStatCd.GOOD; |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "PR_Effective_PROut_PREEMPT_002_data" )>]
+    member _.PR_Effective_PROut_PREEMPT_002 ( func : bool ) ( prtype : PR_TYPE ) ( sark : uint64 ) ( exp : ScsiCmdStatCd ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let resvkey1 = resvkey_me.fromPrim 1UL
+            let srResvKey = resvkey_me.fromPrim sark
+
+            // register reservation key on session 1
+            do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey1
+
+            // reserve reservation
+            let! itt_pr_out2 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // PREEMPT / PREEMPT_AND_ABORT
+            let! itt_pr_out4 = 
+                if func then
+                    r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE resvkey1 srResvKey
+                else
+                    r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE resvkey1 srResvKey
+            let! resp_cmd = r1.WaitSCSIResponse itt_pr_out4
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = exp ))
+
+            // clear PR
+            do! ClearReservationKey r1 g_LUN1 resvkey1
+
+            do! r1.Close()
+        }
+
     static member PR_Effective_PROut_REGISTER_001_data : obj[][] = [|
         [| false; false; PR_TYPE.WRITE_EXCLUSIVE;                   |];
         [| false; false; PR_TYPE.EXCLUSIVE_ACCESS;                  |];
@@ -1167,6 +1434,54 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
             do! r2.Close()
         }
 
+    static member PR_Effective_PROut_REGISTER_002_data : obj[][] = [|
+        [| false; PR_TYPE.WRITE_EXCLUSIVE;                   |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |];
+        [| false; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |];
+        [| false; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE;                   |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS;                  |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |];
+        [| true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |];
+        [| true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "PR_Effective_PROut_REGISTER_002_data" )>]
+    member _.PR_Effective_PROut_REGISTER_002 ( func : bool ) ( prtype : PR_TYPE ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let resvkey1 = resvkey_me.fromPrim 1UL
+            let resvkey3 = resvkey_me.fromPrim 3UL
+
+            // register reservation key on session 1
+            do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey1
+
+            // reserve reservation
+            let! itt_pr_out2 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // REGISTER / REGISTER_AND_IGNORE_EXISTING_KEY
+            let! itt_pr_out4 =
+                if func then
+                    r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey1 resvkey3 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+                else
+                    r1.Send_PROut_REGISTER_AND_IGNORE_EXISTING_KEY TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey3 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out4
+
+            // release reservation
+            let! itt_pr_out6 = r1.Send_PROut_RELEASE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey3
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out6
+
+            // unregister reservation key on session 1
+            do! PR_Register r1 g_LUN1 resvkey3 resvkey_me.zero
+
+            do! r1.Close()
+        }
+
     static member PR_Effective_PROut_REGISTER_AND_MOVE_001_data : obj[][] = [|
         [| false; PR_TYPE.WRITE_EXCLUSIVE;                   |];
         [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  |];
@@ -1207,7 +1522,16 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
             let! itt_pr_out4 = r2.Send_PROut_REGISTER_AND_MOVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS resvkey2 resvkey3 UNREG.T APTPL.T 0us ( "", None )
             let! resp_cmd = r2.WaitSCSIResponse itt_pr_out4
             resp_cmd.ResData.Return()
-            Assert.True(( resp_cmd.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
+            if regist && PR_TYPE.isAllRegistrants prtype then
+                Assert.True(( resp_cmd.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+                // clear ACA
+                let! itt_tmf1 = r2.SendTMFRequest_ClearACA BitI.F g_LUN1
+                let! res_tmf1 = r2.WaitTMFResponse itt_tmf1
+                Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            else
+                Assert.True(( resp_cmd.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
 
             // unregister reservation key on session 2
             if regist then
@@ -1222,6 +1546,50 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
 
             do! r1.Close()
             do! r2.Close()
+        }
+
+    static member PR_Effective_PROut_REGISTER_AND_MOVE_002_data : obj[][] = [|
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "PR_Effective_PROut_REGISTER_AND_MOVE_002_data" )>]
+    member _.PR_Effective_PROut_REGISTER_AND_MOVE_002 ( prtype : PR_TYPE ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let resvkey1 = resvkey_me.fromPrim 1UL
+
+            // register reservation key on session 1
+            do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey1
+
+            // reserve reservation
+            let! itt_pr_out2 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // REGISTER_AND_MOVE
+            let! itt_pr_out4 = r1.Send_PROut_REGISTER_AND_MOVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS resvkey1 resvkey_me.zero UNREG.T APTPL.T 0us ( "", None )
+            let! resp_cmd = r1.WaitSCSIResponse itt_pr_out4
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // clear ACA
+            let! itt_tmf1 = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
+            let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
+            Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            // release reservation
+            let! itt_pr_out6 = r1.Send_PROut_RELEASE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out6
+
+            // unregister reservation key on session 1
+            do! PR_Register r1 g_LUN1 resvkey1 resvkey_me.zero
+
+            do! r1.Close()
         }
 
     static member PR_Effective_PROut_RELEASE_001_data : obj[][] = [|
@@ -1280,6 +1648,41 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
             do! r2.Close()
         }
 
+    static member PR_Effective_PROut_RELEASE_002_data : obj[][] = [|
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; ScsiCmdStatCd.GOOD; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  ScsiCmdStatCd.GOOD; |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "PR_Effective_PROut_RELEASE_002_data" )>]
+    member _.PR_Effective_PROut_RELEASE_002 ( prtype : PR_TYPE ) ( ex : ScsiCmdStatCd ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let resvkey1 = resvkey_me.fromPrim 1UL
+
+            // register reservation key on session 1
+            do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey1
+
+            // reserve reservation
+            let! itt_pr_out2 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // RELEASE
+            let! itt_pr_out4 = r1.Send_PROut_RELEASE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! resp_cmd = r1.WaitSCSIResponse itt_pr_out4
+            resp_cmd.ResData.Return()
+            Assert.True(( resp_cmd.Status = ex ))
+
+            // unregister reservation key on session 1
+            do! PR_Register r1 g_LUN1 resvkey1 resvkey_me.zero
+
+            do! r1.Close()
+        }
+
     static member PR_Effective_PROut_RESERVE_001_data : obj[][] = [|
         [| false; PR_TYPE.WRITE_EXCLUSIVE;                   |];
         [| false; PR_TYPE.EXCLUSIVE_ACCESS;                  |];
@@ -1333,4 +1736,40 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
 
             do! r1.Close()
             do! r2.Close()
+        }
+
+    static member PR_Effective_PROut_RESERVE_002_data : obj[][] = [|
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  |];
+    |]
+    [<Theory>]
+    [<MemberData( "PR_Effective_PROut_RESERVE_002_data" )>]
+    member _.PR_Effective_PROut_RESERVE_002 ( prtype : PR_TYPE ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let resvkey1 = resvkey_me.fromPrim 1UL
+
+            // register reservation key on session 1
+            do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey1
+
+            // reserve reservation
+            let! itt_pr_out2 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // RESERVE
+            let! itt_pr_out4 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out4
+
+            // release reservation
+            let! itt_pr_out6 = r1.Send_PROut_RELEASE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out6
+
+            // unregister reservation key on session 1
+            do! PR_Register r1 g_LUN1 resvkey1 resvkey_me.zero
+
+            do! r1.Close()
         }

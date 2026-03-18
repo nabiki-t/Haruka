@@ -294,3 +294,307 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
             do! r1.Close()
             do! r2.Close()
         }
+
+    static member Reserve_FromRegistered_003_data : obj[][] = [|
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.WRITE_EXCLUSIVE;                   false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.EXCLUSIVE_ACCESS;                  false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  false; |]
+
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.WRITE_EXCLUSIVE;                   false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.EXCLUSIVE_ACCESS;                  false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  false; |]
+
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.WRITE_EXCLUSIVE;                   false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.EXCLUSIVE_ACCESS;                  false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  false; |]
+
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;  PR_TYPE.WRITE_EXCLUSIVE;                   false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;  PR_TYPE.EXCLUSIVE_ACCESS;                  false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   true ; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   true;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  false; |]
+
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.WRITE_EXCLUSIVE;                   false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.EXCLUSIVE_ACCESS;                  false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; false; PR_TYPE.NO_RESERVATION;                   PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  false; |]
+
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS; PR_TYPE.WRITE_EXCLUSIVE;                   false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS; PR_TYPE.EXCLUSIVE_ACCESS;                  false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  true;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  true;  |]
+    |]
+
+    // A PERSISTENT RESERVE OUT command with RESERVE service action is received from an registered I_T nexus.
+    // A case where a reservation is attempted when a reservation already exists.
+    [<Theory>]
+    [<MemberData( "Reserve_FromRegistered_003_data" )>]
+    member _.Reserve_FromRegistered_003 ( prtype1 : PR_TYPE ) ( isholder2 : bool ) ( prtype2 : PR_TYPE ) ( attpr : PR_TYPE ) ( exresult : bool ) =
+        task {
+            let isids =
+                Array.init 2 ( fun _ -> GlbFunc.newISID() )
+                |> Array.sortBy isid_me.toPrim
+            let! r1 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = isids.[0] } m_defaultConnParam
+            let! r2 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = isids.[1] } m_defaultConnParam
+            let itn_r1 = GetITNexus r1
+            let itn_r2 = GetITNexus r2
+            do! CheckNoRegistrations r1 g_LUN1
+
+            // register r1
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            // register r2
+            let! itt_pr_out2 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey2 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // reserve r1
+            let! itt_pr_out3 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype1 g_ResvKey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
+
+            // reserve r2
+            let! itt_pr_out4 = r2.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T attpr g_ResvKey2
+            if exresult then
+                let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out4
+                ()
+            else
+                let! res_pr_out4 = r2.WaitSCSIResponse itt_pr_out4
+                Assert.True(( res_pr_out4.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            let fsd1 =
+                fstat1.FullStatusDescriptor
+                |> Array.sortBy _.iSCSIName
+            Assert.True(( fsd1.Length = 2 ))
+            Assert.True(( fsd1.[0].iSCSIName = itn_r1.InitiatorPortName ))
+            Assert.True(( fsd1.[0].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd1.[0].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( fsd1.[0].ReservationHolder ))
+            Assert.True(( fsd1.[0].Type = PR_TYPE.toNumericValue prtype1 ))
+
+            Assert.True(( fsd1.[1].iSCSIName = itn_r2.InitiatorPortName ))
+            Assert.True(( fsd1.[1].ReservationKey = g_ResvKey2 ))
+            Assert.True(( fsd1.[1].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( fsd1.[1].ReservationHolder = isholder2 ))
+            Assert.True(( fsd1.[1].Type = PR_TYPE.toNumericValue prtype2 ))
+
+            // unregister
+            let! itt_pr_out5 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey2 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out5
+            let! itt_pr_out6 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out6
+
+            do! CheckNoRegistrations r1 g_LUN1
+            do! r1.Close()
+            do! r2.Close()
+        }
+
+    static member Reserve_FromRegistered_004_data : obj[][] = [|
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   PR_TYPE.WRITE_EXCLUSIVE;                   true;  |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   PR_TYPE.EXCLUSIVE_ACCESS;                  false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  false; |]
+
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  PR_TYPE.WRITE_EXCLUSIVE;                   false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  PR_TYPE.EXCLUSIVE_ACCESS;                  true;  |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  false; |]
+
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  PR_TYPE.WRITE_EXCLUSIVE;                   false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  PR_TYPE.EXCLUSIVE_ACCESS;                  false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  true;  |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  false; |]
+
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   PR_TYPE.WRITE_EXCLUSIVE;                   false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   PR_TYPE.EXCLUSIVE_ACCESS;                  false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   true ; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  false; |]
+
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; PR_TYPE.WRITE_EXCLUSIVE;                   false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; PR_TYPE.EXCLUSIVE_ACCESS;                  false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; true;  |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  false; |]
+
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  PR_TYPE.WRITE_EXCLUSIVE;                   false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  PR_TYPE.EXCLUSIVE_ACCESS;                  false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  true;  |]
+    |]
+
+    // A PERSISTENT RESERVE OUT command with RESERVE service action is received from an registered I_T nexus.
+    // Cases where a holder of a reservation attempts to modify an existing reservation.
+    [<Theory>]
+    [<MemberData( "Reserve_FromRegistered_004_data" )>]
+    member _.Reserve_FromRegistered_004 ( prtype1 : PR_TYPE ) ( prtype2 : PR_TYPE ) ( exresult : bool ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let itn_r1 = GetITNexus r1
+            do! CheckNoRegistrations r1 g_LUN1
+
+            // register r1
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            // reserve r1
+            let! itt_pr_out3 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype1 g_ResvKey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
+
+            // modify reservation type
+            let! itt_pr_out4 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype2 g_ResvKey1
+            if exresult then
+                let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out4
+                ()
+            else
+                let! res_pr_out4 = r1.WaitSCSIResponse itt_pr_out4
+                Assert.True(( res_pr_out4.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            let fsd1 =
+                fstat1.FullStatusDescriptor
+                |> Array.sortBy _.iSCSIName
+            Assert.True(( fsd1.Length = 1 ))
+            Assert.True(( fsd1.[0].iSCSIName = itn_r1.InitiatorPortName ))
+            Assert.True(( fsd1.[0].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd1.[0].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( fsd1.[0].ReservationHolder ))
+            Assert.True(( fsd1.[0].Type = PR_TYPE.toNumericValue ( if exresult then prtype2 else prtype1 ) ))
+
+            // unregister
+            let! itt_pr_out5 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out5
+
+            do! CheckNoRegistrations r1 g_LUN1
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.Reserve_FromRegistered_RegKeyMismatch_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            do! CheckNoRegistrations r1 g_LUN1
+
+            // register r1
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            // reserve r1
+            let! itt_pr_out3 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey2
+            let! res_pr_out3 = r1.WaitSCSIResponse itt_pr_out3
+            Assert.True(( res_pr_out3.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
+
+            // unregister
+            let! itt_pr_out5 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out5
+
+            do! CheckNoRegistrations r1 g_LUN1
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.Reserve_InvalidScope_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            do! CheckNoRegistrations r1 g_LUN1
+
+            // register r1
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            // reserve r1 ( SCOPE <> 0 )
+            let param : Haruka.BlockDeviceLU.BasicParameterList = {
+                ReservationKey = g_ResvKey2;
+                ServiceActionReservationKey = resvkey_me.zero;
+                SPEC_I_PT = false;
+                ALL_TG_PT = false;
+                APTPL = false;
+                TransportID = [||];
+            }
+            let! itt_pr_out3 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 1uy 1uy PR_TYPE.WRITE_EXCLUSIVE param NACA.T
+            let! res_pr_out3 = r1.WaitSCSIResponse itt_pr_out3
+            Assert.True(( res_pr_out3.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // clear ACA
+            let! itt_tmf1 = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
+            let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
+            Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            // unregister
+            let! itt_pr_out5 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out5
+
+            do! CheckNoRegistrations r1 g_LUN1
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.Release_FromUnregistered_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            do! CheckNoRegistrations r1 g_LUN1
+
+            let! itt_pr_out1 = r1.Send_PROut_RELEASE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE resvkey_me.zero
+            let! res_pr_out1 = r1.WaitSCSIResponse itt_pr_out1
+            Assert.True(( res_pr_out1.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
+
+            do! CheckNoRegistrations r1 g_LUN1
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.Release_FromRegistered_NotHolder_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let itn_r1 = GetITNexus r1
+            do! CheckNoRegistrations r1 g_LUN1
+
+            // register r1
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            // release
+            let! itt_pr_out2 = r1.Send_PROut_RELEASE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            let fsd1 =
+                fstat1.FullStatusDescriptor
+            Assert.True(( fsd1.Length = 1 ))
+            Assert.True(( fsd1.[0].iSCSIName = itn_r1.InitiatorPortName ))
+            Assert.True(( fsd1.[0].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd1.[0].RelativeTargetPortIdentifier = 1us ))
+            Assert.False(( fsd1.[0].ReservationHolder ))
+            Assert.True(( fsd1.[0].Type = PR_TYPE.toNumericValue PR_TYPE.NO_RESERVATION ))
+
+            // unregister
+            let! itt_pr_out5 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out5
+
+            do! CheckNoRegistrations r1 g_LUN1
+            do! r1.Close()
+        }

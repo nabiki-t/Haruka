@@ -2987,7 +2987,7 @@ type PRManager_Test1 () =
         prOutCdesForIsBlockedByPersistentReservation
         |> Array.iter ( fun ( itrRes, _, itrCDB ) ->
             let task = PRManager_Test1.defaultTaskObj itrCDB pm
-            Assert.True(( pm.IsBlockedByPersistentReservation source_Registered task ) = itrRes )
+            Assert.False(( pm.IsBlockedByPersistentReservation source_Registered task ) )
         )
 
         k.NoticeTerminate()
@@ -3026,7 +3026,7 @@ type PRManager_Test1 () =
         prOutCdesForIsBlockedByPersistentReservation
         |> Array.iter ( fun ( itrRes, _, itrCDB ) ->
             let task = PRManager_Test1.defaultTaskObj itrCDB pm
-            Assert.True(( pm.IsBlockedByPersistentReservation source_Registered task ) = itrRes )
+            Assert.False(( pm.IsBlockedByPersistentReservation source_Registered task ) )
         )
 
         k.NoticeTerminate()

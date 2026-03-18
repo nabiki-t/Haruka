@@ -255,6 +255,8 @@ type PRManager(
             false
         elif pr.m_Holder.IsSome && source.I_TNexus = pr.m_Holder.Value then
             false
+        elif ( pr.m_Type = WRITE_EXCLUSIVE_ALL_REGISTRANTS || pr.m_Type = EXCLUSIVE_ACCESS_ALL_REGISTRANTS ) && srcIsRegistered then
+            false
         else
             let confFunc() =
                 // Reservation conflict
