@@ -607,12 +607,14 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let prfname = GetPRFileName g_LUN1
 
-            // register ( APTPL=0 )
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.F [||]
-            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+            if File.Exists prfname then
+                // register ( APTPL=0 )
+                let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.F [||]
+                let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
-            // wait for delete PR file
-            GlbFunc.WaitForFileDelete prfname
+                // wait for delete PR file
+                GlbFunc.WaitForFileDelete prfname
+            Assert.False(( File.Exists prfname ))
 
             // register ( APTPL=1 )
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
@@ -1349,12 +1351,14 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let prfname = GetPRFileName g_LUN1
 
-            // register ( APTPL=0 )
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.F [||]
-            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+            if File.Exists prfname then
+                // register ( APTPL=0 )
+                let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.F [||]
+                let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
-            // wait for delete PR file
-            GlbFunc.WaitForFileDelete prfname
+                // wait for delete PR file
+                GlbFunc.WaitForFileDelete prfname
+            Assert.False(( File.Exists prfname ))
 
             // register ( APTPL=1 )
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]

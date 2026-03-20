@@ -399,7 +399,7 @@ type GlbFunc() =
             Thread.Sleep 10
             cnt <- cnt + 1
         if cnt >= 300 then
-            raise <| TestException( sprintf "Timeout waiting for file update. %s" fname )
+            raise <| TestException( sprintf "Timeout waiting for file update 1. %s %s" ( initFileTime.ToString "o" ) fname )
         cnt <- 0
         while cnt >= 0 && cnt < 300 do
             try
@@ -411,7 +411,7 @@ type GlbFunc() =
                 cnt <- cnt + 1
                 Thread.Sleep 10
         if cnt >= 300 then
-            raise <| TestException( sprintf "Timeout waiting for file update. %s" fname )
+            raise <| TestException( sprintf "Timeout waiting for file update 2. %s %s" ( initFileTime.ToString "o" ) fname )
 
     /// <summary>
     ///  Construct a pair of anonymous pipes.
