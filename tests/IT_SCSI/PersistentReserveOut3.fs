@@ -601,6 +601,50 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
             do! r1.Close()
         }
 
+    [<Fact>]
+    member _.Reserve_APTPL_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let prfname = GetPRFileName g_LUN1
+
+            // register ( APTPL=0 )
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.F [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            // wait for delete PR file
+            GlbFunc.WaitForFileDelete prfname
+
+            // register ( APTPL=1 )
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            // wait for create PR file
+            GlbFunc.WaitForFileCreate prfname
+            let fdate = File.GetLastWriteTimeUtc prfname
+
+            // reserve ( APTPL=0, ignored )
+            let param : Haruka.BlockDeviceLU.BasicParameterList = {
+                ReservationKey = g_ResvKey1;
+                ServiceActionReservationKey = resvkey_me.zero;
+                SPEC_I_PT = false;
+                ALL_TG_PT = false;
+                APTPL = false;
+                TransportID = [||];
+            }
+            let! itt_pr_out3 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 1uy 0uy PR_TYPE.WRITE_EXCLUSIVE param NACA.T
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
+
+            // wait for update PR file
+            GlbFunc.WaitForFileUpdate prfname fdate
+
+            // unregister
+            let! itt_pr_out5 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out5
+
+            let! _ = CheckNoRegistrations r1 g_LUN1
+            do! r1.Close()
+        }
+
     // A PERSISTENT RESERVE OUT command with RELEASE service action is received from an unregistered I_T nexus.
     [<Fact>]
     member _.Release_FromUnregistered_001 () =
@@ -1290,6 +1334,58 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
             let! fstat2 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat2.PersistentReservationsGeneration = fstat1.PersistentReservationsGeneration ))
             Assert.True(( fstat2.FullStatusDescriptor.Length = 1 ))
+
+            // unregister
+            let! itt_pr_out5 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out5
+
+            let! _ = CheckNoRegistrations r1 g_LUN1
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.Release_APTPL_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let prfname = GetPRFileName g_LUN1
+
+            // register ( APTPL=0 )
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.F [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            // wait for delete PR file
+            GlbFunc.WaitForFileDelete prfname
+
+            // register ( APTPL=1 )
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            // wait for create PR file
+            GlbFunc.WaitForFileCreate prfname
+            let fdate1 = File.GetLastWriteTimeUtc prfname
+
+            // reserve r1
+            let! itt_pr_out05 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out05
+
+            // wait for update PR file
+            GlbFunc.WaitForFileUpdate prfname fdate1
+            let fdate2 = File.GetLastWriteTimeUtc prfname
+
+            // reserve ( APTPL=0, ignored )
+            let param : Haruka.BlockDeviceLU.BasicParameterList = {
+                ReservationKey = g_ResvKey1;
+                ServiceActionReservationKey = resvkey_me.zero;
+                SPEC_I_PT = false;
+                ALL_TG_PT = false;
+                APTPL = false;
+                TransportID = [||];
+            }
+            let! itt_pr_out3 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 2uy 0uy PR_TYPE.WRITE_EXCLUSIVE param NACA.T
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
+
+            // wait for update PR file
+            GlbFunc.WaitForFileUpdate prfname fdate2
 
             // unregister
             let! itt_pr_out5 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]

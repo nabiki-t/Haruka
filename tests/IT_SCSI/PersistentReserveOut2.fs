@@ -938,3 +938,31 @@ type SCSI_PersistentReserveOut2( fx : SCSI_PersistentReserveOut2_Fixture ) =
             do! r2.Close()
         }
 
+    [<Fact>]
+    member _.RegisterAndIgnoreExistingKey_APTPL_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let prfname = GetPRFileName g_LUN1
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
+
+            // register ( APTPL=0 )
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER_AND_IGNORE_EXISTING_KEY TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.F [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            // wait for delete PR file
+            GlbFunc.WaitForFileDelete prfname
+
+            // unregister ( APTPL=1 )
+            let! itt_pr_out4 = r1.Send_PROut_REGISTER_AND_IGNORE_EXISTING_KEY TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out4
+
+            // wait for create PR file
+            GlbFunc.WaitForFileCreate prfname
+
+            let! fstat4 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat4.FullStatusDescriptor.Length = 0 ))
+
+            do! r1.Close()
+        }
