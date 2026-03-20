@@ -223,6 +223,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration > fstat2.PersistentReservationsGeneration ))
             Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
@@ -250,6 +251,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
 
             let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration = fstat1.PersistentReservationsGeneration ))
             Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
@@ -299,6 +301,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out3
 
             let! fstat4 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat4.PersistentReservationsGeneration > fstat3.PersistentReservationsGeneration ))
             Assert.True(( fstat4.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
@@ -348,24 +351,28 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
             let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration > fstat2.PersistentReservationsGeneration ))
             Assert.True(( fstat3.FullStatusDescriptor.Length = 3 ))
 
             // unregister r3
             let! itt_pr_out3 = r3.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r3.WaitSCSIResponseGoodStatus itt_pr_out3
             let! fstat4 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat4.PersistentReservationsGeneration > fstat3.PersistentReservationsGeneration ))
             Assert.True(( fstat4.FullStatusDescriptor.Length = 2 ))
 
             // unregister r4
             let! itt_pr_out4 = r4.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r4.WaitSCSIResponseGoodStatus itt_pr_out4
             let! fstat5 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat5.PersistentReservationsGeneration > fstat4.PersistentReservationsGeneration ))
             Assert.True(( fstat5.FullStatusDescriptor.Length = 1 ))
 
             // unregister r6
             let! itt_pr_out5 = r6.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r6.WaitSCSIResponseGoodStatus itt_pr_out5
             let! fstat6 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat6.PersistentReservationsGeneration > fstat5.PersistentReservationsGeneration ))
             Assert.True(( fstat6.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
@@ -391,8 +398,9 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             // REGISTER r1
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
-            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat1.FullStatusDescriptor.Length = 1 ))
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
+            Assert.True(( fstat2.FullStatusDescriptor.Length = 1 ))
 
             // register r1 r2 r3, from r2
             let transid = [|
@@ -408,14 +416,16 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! res_tmf1 = r2.WaitTMFResponse itt_tmf1
             Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
 
-            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat2.FullStatusDescriptor.Length = 1 ))
+            let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration = fstat2.PersistentReservationsGeneration ))
+            Assert.True(( fstat3.FullStatusDescriptor.Length = 1 ))
 
             // unregister r1
             let! itt_pr_out3 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
-            let! fstat3 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
+            let! fstat4 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat4.PersistentReservationsGeneration > fstat3.PersistentReservationsGeneration ))
+            Assert.True(( fstat4.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
             do! r2.Close()
@@ -453,6 +463,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
             let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration > fstat2.PersistentReservationsGeneration ))
             Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
@@ -475,6 +486,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
             Assert.True(( fstat2.FullStatusDescriptor.Length = 1 ))
             let fsd2 = fstat2.FullStatusDescriptor
             Assert.True(( fsd2.[0].ReservationKey = g_ResvKey1 ))
@@ -485,6 +497,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
             let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration > fstat2.PersistentReservationsGeneration ))
             Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
@@ -519,6 +532,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
             let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration > fstat2.PersistentReservationsGeneration ))
             Assert.True(( fstat3.FullStatusDescriptor.Length = 1 ))
             let fsd3 = fstat3.FullStatusDescriptor
             Assert.True(( fsd3.[0].ReservationKey = g_ResvKey1 ))
@@ -534,16 +548,13 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             }
             let! r2 = SCSI_Initiator.CreateWithISID r2_sessParam m_defaultConnParam
 
-            let! fstat4 = PR_ReadFullStatus r2 g_LUN1
-            Assert.True(( fstat4.FullStatusDescriptor.Length = 1 ))
-
             // unregister r2 ( target 2 )
             let! itt_pr_out3 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
-            //let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out3
             let! resp_pr_out3 = r2.WaitSCSIResponse itt_pr_out3
             Assert.True(( resp_pr_out3.Status = ScsiCmdStatCd.GOOD ))
 
             let! fstat5 = PR_ReadFullStatus r2 g_LUN1
+            Assert.True(( fstat5.PersistentReservationsGeneration > fstat3.PersistentReservationsGeneration ))
             Assert.True(( fstat5.FullStatusDescriptor.Length = 0 ))
 
             do! r2.Close()
@@ -569,6 +580,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey2 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
             let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
             Assert.True(( fstat2.FullStatusDescriptor.Length = 1 ))
 
             // register r2 for all target port
@@ -587,7 +599,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
 
             let! fstat3 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat3.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
+            Assert.True(( fstat3.PersistentReservationsGeneration = fstat2.PersistentReservationsGeneration ))
             let fsd3 = fstat3.FullStatusDescriptor
             Assert.True(( fsd3.Length = 1 ))
             Assert.True(( fsd3.[0].ReservationKey = g_ResvKey2 ))
@@ -598,6 +610,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! itt_pr_out3 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey2 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
             let! fstat4 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat4.PersistentReservationsGeneration > fstat3.PersistentReservationsGeneration ))
             Assert.True(( fstat4.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
@@ -626,6 +639,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
 
             let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration = fstat1.PersistentReservationsGeneration ))
             Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
@@ -719,6 +733,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r2_2.Close()
 
             let! fstat4 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat4.PersistentReservationsGeneration > fstat2.PersistentReservationsGeneration ))
             Assert.True(( fstat4.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
@@ -877,6 +892,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             do! r22_1.Close()
 
             let! fstat4 = PR_ReadFullStatus r11 g_LUN1
+            Assert.True(( fstat4.PersistentReservationsGeneration > fstat3.PersistentReservationsGeneration ))
             Assert.True(( fstat4.FullStatusDescriptor.Length = 0 ))
 
             do! r11.Close()
@@ -935,6 +951,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
 
             let! fstat2 = PR_ReadFullStatus r11 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration = fstat1.PersistentReservationsGeneration ))
             Assert.True(( fstat2.FullStatusDescriptor.Length = 1 ))
 
             // unregister r22
@@ -942,6 +959,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! _ = r22.WaitSCSIResponseGoodStatus itt_pr_out3
 
             let! fstat3 = PR_ReadFullStatus r11 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration > fstat2.PersistentReservationsGeneration ))
             Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
 
             do! r11.Close()
@@ -992,6 +1010,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.T APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
             let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration > fstat2.PersistentReservationsGeneration ))
             Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
@@ -1036,6 +1055,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.T APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
             let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration > fstat2.PersistentReservationsGeneration ))
             Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
@@ -1047,13 +1067,17 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
+
             // register r1 with RESERVATION KEY = 1
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 g_ResvKey2 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! res_pr_out1 = r1.WaitSCSIResponse itt_pr_out1
             Assert.True(( res_pr_out1.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
 
-            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration = fstat1.PersistentReservationsGeneration ))
+            Assert.True(( fstat2.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
         }
@@ -1064,27 +1088,33 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
+
             // register with RESERVATION KEY = 1
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
-            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat1.FullStatusDescriptor.Length = 1 ))
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
+            Assert.True(( fstat2.FullStatusDescriptor.Length = 1 ))
 
             // register with RESERVATION KEY = 2
             let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey2 g_ResvKey2 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! res_pr_out2 = r1.WaitSCSIResponse itt_pr_out2
             Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
 
-            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat2.FullStatusDescriptor.Length = 1 ))
+            let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration = fstat2.PersistentReservationsGeneration ))
+            Assert.True(( fstat3.FullStatusDescriptor.Length = 1 ))
 
             // unregister
             let! itt_pr_out3 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
 
-            let! fstat3 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
+            let! fstat4 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat4.PersistentReservationsGeneration > fstat3.PersistentReservationsGeneration ))
+            Assert.True(( fstat4.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
         }
@@ -1095,18 +1125,23 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
+
             // register with RESERVATION KEY = 1
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
-            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat1.FullStatusDescriptor.Length = 1 ))
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
+            Assert.True(( fstat2.FullStatusDescriptor.Length = 1 ))
 
             // unregister
             let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration > fstat2.PersistentReservationsGeneration ))
             Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
@@ -1122,12 +1157,16 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
+
             // register with RESERVATION KEY = 1
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
-            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat1.FullStatusDescriptor.Length = 1 ))
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
+            Assert.True(( fstat2.FullStatusDescriptor.Length = 1 ))
 
             // unregister ( SPEC_I_PT = 1 )
             let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 ( resvkey_me.fromPrim sarv ) SPEC_I_PT.T ( ALL_TG_PT.ofBool atp ) APTPL.T [||]
@@ -1139,11 +1178,17 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
             Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
 
+            let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration = fstat2.PersistentReservationsGeneration ))
+            Assert.True(( fstat3.FullStatusDescriptor.Length = 1 ))
+
             // unregister
             let! itt_pr_out3 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
-            let! fstat3 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
+
+            let! fstat4 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat4.PersistentReservationsGeneration > fstat3.PersistentReservationsGeneration ))
+            Assert.True(( fstat4.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
         }
@@ -1161,19 +1206,24 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             }
             let! r2 = SCSI_Initiator.CreateWithISID r1params m_defaultConnParam
 
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
+
             // register r1 ( target 1 )
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
-            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat1.FullStatusDescriptor.Length = 1 ))
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
+            Assert.True(( fstat2.FullStatusDescriptor.Length = 1 ))
 
             // unregister ( ALL_TG_PT = 1 )
             let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.T APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
-            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat2.FullStatusDescriptor.Length = 0 ))
+            let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration > fstat2.PersistentReservationsGeneration ))
+            Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
             do! r2.Close()
@@ -1192,6 +1242,9 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             }
             let! r2 = SCSI_Initiator.CreateWithISID r1params m_defaultConnParam
 
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
+
             // register r1 ( target 1 )
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
@@ -1200,15 +1253,17 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! itt_pr_out1 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out1
 
-            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat1.FullStatusDescriptor.Length = 2 ))
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
+            Assert.True(( fstat2.FullStatusDescriptor.Length = 2 ))
 
             // unregister ( ALL_TG_PT = 1 )
             let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.T APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
-            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat2.FullStatusDescriptor.Length = 0 ))
+            let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration > fstat2.PersistentReservationsGeneration ))
+            Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
             do! r2.Close()
@@ -1237,6 +1292,9 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let itn_r1 = GetITNexus r1
             let itn_r2 = GetITNexus r2
 
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
+
             // register r1 
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
@@ -1245,54 +1303,59 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! itt_pr_out2 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype1 g_ResvKey1
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
-            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
-            let fsd1 = fstat1.FullStatusDescriptor
-            Assert.True(( fsd1.Length = 1 ))
-            Assert.True(( fsd1.[0].iSCSIName = itn_r1.InitiatorPortName ))
-            Assert.True(( fsd1.[0].ReservationKey = g_ResvKey1 ))
-            Assert.True(( fsd1.[0].RelativeTargetPortIdentifier = 1us ))
-            Assert.True(( fsd1.[0].ReservationHolder ))
-            Assert.True(( fsd1.[0].Type = PR_TYPE.toNumericValue prtype1 ))
-
-            // register r2
-            let! itt_pr_out3 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey2 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
-            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out3
-
             let! fstat2 = PR_ReadFullStatus r1 g_LUN1
-            let fsd2 =
-                fstat2.FullStatusDescriptor
-                |> Array.sortBy _.iSCSIName
-            Assert.True(( fsd2.Length = 2 ))
+            Assert.True(( fstat2.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
+            let fsd2 = fstat2.FullStatusDescriptor
+            Assert.True(( fsd2.Length = 1 ))
             Assert.True(( fsd2.[0].iSCSIName = itn_r1.InitiatorPortName ))
             Assert.True(( fsd2.[0].ReservationKey = g_ResvKey1 ))
             Assert.True(( fsd2.[0].RelativeTargetPortIdentifier = 1us ))
             Assert.True(( fsd2.[0].ReservationHolder ))
             Assert.True(( fsd2.[0].Type = PR_TYPE.toNumericValue prtype1 ))
 
-            Assert.True(( fsd2.[1].iSCSIName = itn_r2.InitiatorPortName ))
-            Assert.True(( fsd2.[1].ReservationKey = g_ResvKey2 ))
-            Assert.True(( fsd2.[1].RelativeTargetPortIdentifier = 1us ))
-            Assert.True(( fsd2.[1].ReservationHolder = isholder2 ))
-            Assert.True(( fsd2.[1].Type = PR_TYPE.toNumericValue prtype2 ))
-
-            // unregister r2
-            let! itt_pr_out4 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey2 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.T APTPL.T [||]
-            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out4
+            // register r2
+            let! itt_pr_out3 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey2 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out3
 
             let! fstat3 = PR_ReadFullStatus r1 g_LUN1
-            let fsd3 = fstat3.FullStatusDescriptor
-            Assert.True(( fsd3.Length = 1 ))
+            Assert.True(( fstat3.PersistentReservationsGeneration > fstat2.PersistentReservationsGeneration ))
+            let fsd3 =
+                fstat3.FullStatusDescriptor
+                |> Array.sortBy _.iSCSIName
+            Assert.True(( fsd3.Length = 2 ))
             Assert.True(( fsd3.[0].iSCSIName = itn_r1.InitiatorPortName ))
             Assert.True(( fsd3.[0].ReservationKey = g_ResvKey1 ))
             Assert.True(( fsd3.[0].RelativeTargetPortIdentifier = 1us ))
             Assert.True(( fsd3.[0].ReservationHolder ))
             Assert.True(( fsd3.[0].Type = PR_TYPE.toNumericValue prtype1 ))
 
+            Assert.True(( fsd3.[1].iSCSIName = itn_r2.InitiatorPortName ))
+            Assert.True(( fsd3.[1].ReservationKey = g_ResvKey2 ))
+            Assert.True(( fsd3.[1].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( fsd3.[1].ReservationHolder = isholder2 ))
+            Assert.True(( fsd3.[1].Type = PR_TYPE.toNumericValue prtype2 ))
+
+            // unregister r2
+            let! itt_pr_out4 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey2 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.T APTPL.T [||]
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out4
+
+            let! fstat4 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat4.PersistentReservationsGeneration > fstat3.PersistentReservationsGeneration ))
+            let fsd4 = fstat4.FullStatusDescriptor
+            Assert.True(( fsd4.Length = 1 ))
+            Assert.True(( fsd4.[0].iSCSIName = itn_r1.InitiatorPortName ))
+            Assert.True(( fsd4.[0].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd4.[0].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( fsd4.[0].ReservationHolder ))
+            Assert.True(( fsd4.[0].Type = PR_TYPE.toNumericValue prtype1 ))
+
             // unregister r1
             let! itt_pr_out5 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.T APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out5
-            let! fstat4 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat4.FullStatusDescriptor.Length = 0 ))
+
+            let! fstat5 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat5.PersistentReservationsGeneration > fstat4.PersistentReservationsGeneration ))
+            Assert.True(( fstat5.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
             do! r2.Close()
@@ -1316,6 +1379,9 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let itn_r1 = GetITNexus r1
 
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
+
             // register r1 
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
@@ -1324,20 +1390,23 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! itt_pr_out2 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype1 g_ResvKey1
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
-            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
-            let fsd1 = fstat1.FullStatusDescriptor
-            Assert.True(( fsd1.Length = 1 ))
-            Assert.True(( fsd1.[0].iSCSIName = itn_r1.InitiatorPortName ))
-            Assert.True(( fsd1.[0].ReservationKey = g_ResvKey1 ))
-            Assert.True(( fsd1.[0].RelativeTargetPortIdentifier = 1us ))
-            Assert.True(( fsd1.[0].ReservationHolder ))
-            Assert.True(( fsd1.[0].Type = PR_TYPE.toNumericValue prtype1 ))
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
+            let fsd2 = fstat2.FullStatusDescriptor
+            Assert.True(( fsd2.Length = 1 ))
+            Assert.True(( fsd2.[0].iSCSIName = itn_r1.InitiatorPortName ))
+            Assert.True(( fsd2.[0].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd2.[0].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( fsd2.[0].ReservationHolder ))
+            Assert.True(( fsd2.[0].Type = PR_TYPE.toNumericValue prtype1 ))
 
             // unregister r1
             let! itt_pr_out3 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.T APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
-            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat2.FullStatusDescriptor.Length = 0 ))
+
+            let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration > fstat2.PersistentReservationsGeneration ))
+            Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
         }
@@ -1364,6 +1433,9 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let itn_r1 = GetITNexus r1
             let itn_r2 = GetITNexus r2
 
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
+
             // register r1 
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
@@ -1376,22 +1448,23 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! itt_pr_out3 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey2 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out3
 
-            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
-            let fsd1 =
-                fstat1.FullStatusDescriptor
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
+            let fsd2 =
+                fstat2.FullStatusDescriptor
                 |> Array.sortBy _.iSCSIName
-            Assert.True(( fsd1.Length = 2 ))
-            Assert.True(( fsd1.[0].iSCSIName = itn_r1.InitiatorPortName ))
-            Assert.True(( fsd1.[0].ReservationKey = g_ResvKey1 ))
-            Assert.True(( fsd1.[0].RelativeTargetPortIdentifier = 1us ))
-            Assert.True(( fsd1.[0].ReservationHolder ))
-            Assert.True(( fsd1.[0].Type = PR_TYPE.toNumericValue prtype1 ))
+            Assert.True(( fsd2.Length = 2 ))
+            Assert.True(( fsd2.[0].iSCSIName = itn_r1.InitiatorPortName ))
+            Assert.True(( fsd2.[0].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd2.[0].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( fsd2.[0].ReservationHolder ))
+            Assert.True(( fsd2.[0].Type = PR_TYPE.toNumericValue prtype1 ))
 
-            Assert.True(( fsd1.[1].iSCSIName = itn_r2.InitiatorPortName ))
-            Assert.True(( fsd1.[1].ReservationKey = g_ResvKey2 ))
-            Assert.True(( fsd1.[1].RelativeTargetPortIdentifier = 1us ))
-            Assert.True(( fsd1.[1].ReservationHolder = isholder2 ))
-            Assert.True(( fsd1.[1].Type = PR_TYPE.toNumericValue prtype2 ))
+            Assert.True(( fsd2.[1].iSCSIName = itn_r2.InitiatorPortName ))
+            Assert.True(( fsd2.[1].ReservationKey = g_ResvKey2 ))
+            Assert.True(( fsd2.[1].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( fsd2.[1].ReservationHolder = isholder2 ))
+            Assert.True(( fsd2.[1].Type = PR_TYPE.toNumericValue prtype2 ))
 
             // unregister r1
             let! itt_pr_out4 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.T APTPL.T [||]
@@ -1408,20 +1481,23 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
                 let! res_read1 = r2.WaitSCSIResponseGoodStatus itt_read1
                 res_read1.Return()
 
-            let! fstat2 = PR_ReadFullStatus r2 g_LUN1
-            let fsd2 = fstat2.FullStatusDescriptor
-            Assert.True(( fsd2.Length = 1 ))
-            Assert.True(( fsd2.[0].iSCSIName = itn_r2.InitiatorPortName ))
-            Assert.True(( fsd2.[0].ReservationKey = g_ResvKey2 ))
-            Assert.True(( fsd2.[0].RelativeTargetPortIdentifier = 1us ))
-            Assert.True(( fsd2.[0].ReservationHolder = isholder2 ))
-            Assert.True(( fsd2.[0].Type = PR_TYPE.toNumericValue prtype2 ))
+            let! fstat3 = PR_ReadFullStatus r2 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration > fstat2.PersistentReservationsGeneration ))
+            let fsd3 = fstat3.FullStatusDescriptor
+            Assert.True(( fsd3.Length = 1 ))
+            Assert.True(( fsd3.[0].iSCSIName = itn_r2.InitiatorPortName ))
+            Assert.True(( fsd3.[0].ReservationKey = g_ResvKey2 ))
+            Assert.True(( fsd3.[0].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( fsd3.[0].ReservationHolder = isholder2 ))
+            Assert.True(( fsd3.[0].Type = PR_TYPE.toNumericValue prtype2 ))
 
             // unregister r2
             let! itt_pr_out5 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey2 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.T APTPL.T [||]
             let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out5
-            let! fstat3 = PR_ReadFullStatus r2 g_LUN1
-            Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
+
+            let! fstat4 = PR_ReadFullStatus r2 g_LUN1
+            Assert.True(( fstat4.PersistentReservationsGeneration > fstat3.PersistentReservationsGeneration ))
+            Assert.True(( fstat4.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
             do! r2.Close()
@@ -1434,18 +1510,23 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let itn_r1 = GetITNexus r1
 
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
+
             // register with RESERVATION KEY = 1
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
-            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat1.FullStatusDescriptor.Length = 1 ))
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
+            Assert.True(( fstat2.FullStatusDescriptor.Length = 1 ))
 
             // Update reservation key
             let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 g_ResvKey2 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration > fstat2.PersistentReservationsGeneration ))
             let fsd3 = fstat3.FullStatusDescriptor
             Assert.True(( fsd3.Length = 1 ))
             Assert.True(( fsd3.[0].iSCSIName = itn_r1.InitiatorPortName ))
@@ -1456,8 +1537,9 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! itt_pr_out3 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey2 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
 
-            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat2.FullStatusDescriptor.Length = 0 ))
+            let! fstat4 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat4.PersistentReservationsGeneration > fstat3.PersistentReservationsGeneration ))
+            Assert.True(( fstat4.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
         }
@@ -1478,46 +1560,53 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! r2 = SCSI_Initiator.CreateWithISID r1params m_defaultConnParam
             let itn_r2 = GetITNexus r2
 
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
+
             // register r1 ( target 1 )
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
-            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
-            let fsd1 = fstat1.FullStatusDescriptor
-            Assert.True(( fsd1.Length = 1 ))
-            Assert.True(( fsd1.[0].iSCSIName = itn_r1.InitiatorPortName ))
-            Assert.True(( fsd1.[0].ReservationKey = g_ResvKey1 ))
-            Assert.True(( fsd1.[0].RelativeTargetPortIdentifier = 1us ))
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
+            let fsd2 = fstat2.FullStatusDescriptor
+            Assert.True(( fsd2.Length = 1 ))
+            Assert.True(( fsd2.[0].iSCSIName = itn_r1.InitiatorPortName ))
+            Assert.True(( fsd2.[0].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd2.[0].RelativeTargetPortIdentifier = 1us ))
 
             // Update reservation key ( ALL_TG_PT = 1 )
             let! itt_pr_out2 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 g_ResvKey2 SPEC_I_PT.F ALL_TG_PT.T APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
-            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
-            let fsd2 =
-                fstat2.FullStatusDescriptor
+            let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration > fstat2.PersistentReservationsGeneration ))
+            let fsd3 =
+                fstat3.FullStatusDescriptor
                 |> Array.sortBy _.RelativeTargetPortIdentifier
-            Assert.True(( fsd2.Length = 2 ))
-            Assert.True(( fsd2.[0].iSCSIName = itn_r1.InitiatorPortName ))
-            Assert.True(( fsd2.[0].ReservationKey = g_ResvKey2 ))
-            Assert.True(( fsd2.[0].RelativeTargetPortIdentifier = 1us ))
-            Assert.True(( fsd2.[1].iSCSIName = itn_r2.InitiatorPortName ))
-            Assert.True(( fsd2.[1].ReservationKey = g_ResvKey2 ))
-            Assert.True(( fsd2.[1].RelativeTargetPortIdentifier = 2us ))
+            Assert.True(( fsd3.Length = 2 ))
+            Assert.True(( fsd3.[0].iSCSIName = itn_r1.InitiatorPortName ))
+            Assert.True(( fsd3.[0].ReservationKey = g_ResvKey2 ))
+            Assert.True(( fsd3.[0].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( fsd3.[1].iSCSIName = itn_r2.InitiatorPortName ))
+            Assert.True(( fsd3.[1].ReservationKey = g_ResvKey2 ))
+            Assert.True(( fsd3.[1].RelativeTargetPortIdentifier = 2us ))
 
             // Unregister r1 ( target 1 )
             let! itt_pr_out3 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey2 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
 
-            let! fstat3 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat3.FullStatusDescriptor.Length = 1 ))
+            let! fstat4 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat4.PersistentReservationsGeneration > fstat3.PersistentReservationsGeneration ))
+            Assert.True(( fstat4.FullStatusDescriptor.Length = 1 ))
 
             // Unregister r2 ( target 2 )
             let! itt_pr_out4 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey2 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out4
 
-            let! fstat4 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat4.FullStatusDescriptor.Length = 0 ))
+            let! fstat5 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat5.PersistentReservationsGeneration > fstat4.PersistentReservationsGeneration ))
+            Assert.True(( fstat5.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
             do! r2.Close()
@@ -1538,6 +1627,9 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! r2 = SCSI_Initiator.CreateWithISID r1params m_defaultConnParam
             let itn_r2 = GetITNexus r2
 
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
+
             // register r1 ( target 1 )
             let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
@@ -1546,33 +1638,35 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! itt_pr_out2 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey2 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out2
 
-            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
-            let fsd1 =
-                fstat1.FullStatusDescriptor
-                |> Array.sortBy _.RelativeTargetPortIdentifier
-            Assert.True(( fsd1.Length = 2 ))
-            Assert.True(( fsd1.[0].iSCSIName = itn_r1.InitiatorPortName ))
-            Assert.True(( fsd1.[0].ReservationKey = g_ResvKey1 ))
-            Assert.True(( fsd1.[0].RelativeTargetPortIdentifier = 1us ))
-            Assert.True(( fsd1.[1].iSCSIName = itn_r2.InitiatorPortName ))
-            Assert.True(( fsd1.[1].ReservationKey = g_ResvKey2 ))
-            Assert.True(( fsd1.[1].RelativeTargetPortIdentifier = 2us ))
-
-            // update reservation key ( ALL_TG_PT = 1 )
-            let! itt_pr_out3 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 g_ResvKey3 SPEC_I_PT.F ALL_TG_PT.T APTPL.T [||]
-            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
-
             let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
             let fsd2 =
                 fstat2.FullStatusDescriptor
                 |> Array.sortBy _.RelativeTargetPortIdentifier
             Assert.True(( fsd2.Length = 2 ))
             Assert.True(( fsd2.[0].iSCSIName = itn_r1.InitiatorPortName ))
-            Assert.True(( fsd2.[0].ReservationKey = g_ResvKey3 ))
+            Assert.True(( fsd2.[0].ReservationKey = g_ResvKey1 ))
             Assert.True(( fsd2.[0].RelativeTargetPortIdentifier = 1us ))
             Assert.True(( fsd2.[1].iSCSIName = itn_r2.InitiatorPortName ))
-            Assert.True(( fsd2.[1].ReservationKey = g_ResvKey3 ))
+            Assert.True(( fsd2.[1].ReservationKey = g_ResvKey2 ))
             Assert.True(( fsd2.[1].RelativeTargetPortIdentifier = 2us ))
+
+            // update reservation key ( ALL_TG_PT = 1 )
+            let! itt_pr_out3 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 g_ResvKey3 SPEC_I_PT.F ALL_TG_PT.T APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
+
+            let! fstat3 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat3.PersistentReservationsGeneration > fstat2.PersistentReservationsGeneration ))
+            let fsd3 =
+                fstat3.FullStatusDescriptor
+                |> Array.sortBy _.RelativeTargetPortIdentifier
+            Assert.True(( fsd3.Length = 2 ))
+            Assert.True(( fsd3.[0].iSCSIName = itn_r1.InitiatorPortName ))
+            Assert.True(( fsd3.[0].ReservationKey = g_ResvKey3 ))
+            Assert.True(( fsd3.[0].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( fsd3.[1].iSCSIName = itn_r2.InitiatorPortName ))
+            Assert.True(( fsd3.[1].ReservationKey = g_ResvKey3 ))
+            Assert.True(( fsd3.[1].RelativeTargetPortIdentifier = 2us ))
 
             // unregister r1
             let! itt_pr_out4 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey3 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
@@ -1582,8 +1676,9 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! itt_pr_out5 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey3 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out5
 
-            let! fstat3 = PR_ReadFullStatus r1 g_LUN1
-            Assert.True(( fstat3.FullStatusDescriptor.Length = 0 ))
+            let! fstat4 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat4.PersistentReservationsGeneration > fstat3.PersistentReservationsGeneration ))
+            Assert.True(( fstat4.FullStatusDescriptor.Length = 0 ))
 
             do! r1.Close()
             do! r2.Close()

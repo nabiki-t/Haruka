@@ -802,31 +802,28 @@ type PRManager(
                 if r.IsSome then
                     struct( oldVal, r.Value )
                 else
-                    if ( not <| PR_TYPE.isAllRegistrants oldVal.m_Type ) || oldVal.m_Registrations.Count <= 1 then
-                        let uaList =
-                            if PR_TYPE.isAllRegistrants oldVal.m_Type || PR_TYPE.isRegistrantsOnly oldVal.m_Type then
-                                // establish Unit Attention
-                                oldVal.m_Registrations
-                                |> Seq.map _.Key
-                                |> Seq.sortWith ITNexus.Compare
-                                |> Seq.filter ( fun itr -> ITNexus.Equals( itr, source.I_TNexus ) |> not )
-                                |> Seq.map ITNexus.getInitiatorPortName
-                                |> Seq.distinct
-                                |> Seq.toList
-                            else
-                                []
+                    let uaList =
+                        if PR_TYPE.isAllRegistrants oldVal.m_Type || PR_TYPE.isRegistrantsOnly oldVal.m_Type then
+                            // establish Unit Attention
+                            oldVal.m_Registrations
+                            |> Seq.map _.Key
+                            |> Seq.sortWith ITNexus.Compare
+                            |> Seq.filter ( fun itr -> ITNexus.Equals( itr, source.I_TNexus ) |> not )
+                            |> Seq.map ITNexus.getInitiatorPortName
+                            |> Seq.distinct
+                            |> Seq.toList
+                        else
+                            []
 
-                        // Release reservation
-                        struct(
-                            {
-                                oldVal with
-                                    m_Type = PR_TYPE.NO_RESERVATION;
-                                    m_Holder = None;
-                            },
-                            struct( ScsiCmdStatCd.GOOD, "", uaList )
-                        )
-                    else
-                        struct( oldVal, struct( ScsiCmdStatCd.GOOD, "", [] ) )
+                    // Release reservation
+                    struct(
+                        {
+                            oldVal with
+                                m_Type = PR_TYPE.NO_RESERVATION;
+                                m_Holder = None;
+                        },
+                        struct( ScsiCmdStatCd.GOOD, "", uaList )
+                    )
             )
 
         // Request saving PR info to file.
@@ -842,8 +839,8 @@ type PRManager(
                     source,
                     true,
                     SenseKeyCd.UNIT_ATTENTION,
-                    ASCCd.RESERVATIONS_PREEMPTED,
-                    sprintf "Persistent reservation established. source=%s" source.I_TNexus.I_TNexusStr
+                    ASCCd.RESERVATIONS_RELEASED,
+                    sprintf "Persistent reservation released. source=%s" source.I_TNexus.I_TNexusStr
                 )
             uaList
             |> List.iter ( fun itr -> m_LU.EstablishUnitAttention itr ex )
@@ -922,7 +919,7 @@ type PRManager(
                     true,
                     SenseKeyCd.UNIT_ATTENTION,
                     ASCCd.RESERVATIONS_PREEMPTED,
-                    sprintf "Persistent reservation established. source=%s" source.I_TNexus.I_TNexusStr
+                    sprintf "Persistent reservation cleared. source=%s" source.I_TNexus.I_TNexusStr
                 )
             uaList
             |> List.iter ( fun itr -> m_LU.EstablishUnitAttention itr ex )
@@ -1456,6 +1453,13 @@ type PRManager(
                             struct ( ScsiCmdStatCd.GOOD, "", [] )
                         )
                     else
+                        // It does nothing but return a GOOD status.
+                        // SPC-3 6.11.2 stipulates that if the REGISTER or REGISTER AND IGNORE EXISTING KEY service action
+                        // completes successfully, PRGeneration should be incremented.
+                        // However, Tables 33 and 34 in section 5.6.6 stipulate that nothing should be done.
+                        // Section 5.6.5.2 defines PRGeneration as a mechanism that allows application clients
+                        // to verify that the configuration of the I_T nexus registered with a logical unit has not been modified.
+                        // Following PRGeneration's design intent, I determined that it should not be added.
                         struct (
                             {
                                 oldVal with
@@ -1710,8 +1714,8 @@ type PRManager(
                     source,
                     true,
                     SenseKeyCd.UNIT_ATTENTION,
-                    ASCCd.RESERVATIONS_RELEASED,
-                    sprintf "Persistent reservation released. I_T Nexus=%s" source.I_TNexus.I_TNexusStr
+                    ASCCd.REGISTRATIONS_PREEMPTED, 
+                    sprintf "PR registrations preempted. I_T Nexus=%s" source.I_TNexus.I_TNexusStr
                 )
             uaList
             |> Array.iter ( fun itr -> m_LU.EstablishUnitAttention itr uaExp )
