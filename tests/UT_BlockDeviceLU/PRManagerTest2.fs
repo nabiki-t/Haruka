@@ -164,7 +164,7 @@ type PRManager_Test2 () =
                 initITN1, resvkey_me.fromPrim 0xAABBCCDD11223344UL, false;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS_ALL_REGISTRANTS 1
         let param = [|
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // RESERVATION KEY 
@@ -192,7 +192,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( initITN1 ) = resvkey_me.fromPrim 0xAABBCCDD11223344UL ))
         Assert.True(( prinfo.m_Registrations.Item( source.I_TNexus ) = resvkey_me.fromPrim 0xFFFFFFFFFFFFFFFFUL ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
 
         Assert.True( File.Exists fname )
         let pm2 = new PRManager( new CStatus_Stub(), new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero ), lun_me.zero, fname, k )
@@ -592,7 +592,7 @@ type PRManager_Test2 () =
                 initITN1, resvkey_me.fromPrim 0xAABBCCDD11223344UL, false;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS_ALL_REGISTRANTS 1
         let param = [|
             0x11uy; 0x11uy; 0x11uy; 0x11uy; // RESERVATION KEY 
@@ -617,7 +617,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Count = 1 ))
         Assert.True(( prinfo.m_Registrations.Item( initITN1 ) = resvkey_me.fromPrim 0xAABBCCDD11223344UL ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         k.NoticeTerminate()
 
         GlbFunc.DeleteFile fname
@@ -634,7 +634,7 @@ type PRManager_Test2 () =
                 initITN1, resvkey_me.fromPrim 0xAABBCCDD11223344UL, false;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS_ALL_REGISTRANTS 1
         let param = [|
             0x11uy; 0x11uy; 0x11uy; 0x11uy; // RESERVATION KEY 
@@ -659,7 +659,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Count = 1 ))
         Assert.True(( prinfo.m_Registrations.Item( initITN1 ) = resvkey_me.fromPrim 0xAABBCCDD11223344UL ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         k.NoticeTerminate()
 
         GlbFunc.DeleteFile fname
@@ -676,7 +676,7 @@ type PRManager_Test2 () =
                 initITN1, resvkey_me.fromPrim 0xAABBCCDD11223344UL, false;  // Delete target
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS_ALL_REGISTRANTS 1
         let param = [|
             0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; // RESERVATION KEY 
@@ -701,7 +701,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_PRGeneration = 1u ))
         Assert.True(( prinfo.m_Registrations.Count = 0 ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
 
         Assert.True( File.Exists fname )
         let pm2 = new PRManager( new CStatus_Stub(), new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero ), lun_me.zero, fname, k )
@@ -728,7 +728,7 @@ type PRManager_Test2 () =
                 initITN2, resvkey_me.fromPrim 0xAABBCCDD11223344UL, false;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS_ALL_REGISTRANTS 2
         let param = [|
             0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; // RESERVATION KEY 
@@ -754,7 +754,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Count = 1 ))
         Assert.True(( prinfo.m_Registrations.Item( initITN2 ) = resvkey_me.fromPrim 0xAABBCCDD11223344UL ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
 
         Assert.True( File.Exists fname )
         let pm2 = new PRManager( new CStatus_Stub(), new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero ), lun_me.zero, fname, k )
@@ -782,7 +782,7 @@ type PRManager_Test2 () =
                 initITN2, resvkey_me.fromPrim 0xAABBCCDD11223344UL, false;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname WRITE_EXCLUSIVE 2
         let param = [|
             0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; // RESERVATION KEY 
@@ -809,7 +809,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( initITN2 ) = resvkey_me.fromPrim 0xAABBCCDD11223344UL ))
         Assert.True(( prinfo.m_Holder.IsNone ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
 
         Assert.True( File.Exists fname )
         let pm2 = new PRManager( new CStatus_Stub(), new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero ), lun_me.zero, fname, k )
@@ -838,7 +838,7 @@ type PRManager_Test2 () =
                 initITN2, resvkey_me.fromPrim 0xAABBCCDD11223344UL, true;   // Reservation holder
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname WRITE_EXCLUSIVE 2
         let param = [|
             0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; // RESERVATION KEY 
@@ -865,7 +865,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( initITN2 ) = resvkey_me.fromPrim 0xAABBCCDD11223344UL ))
         Assert.True(( prinfo.m_Holder.Value = initITN2 ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
 
         Assert.True( File.Exists fname )
         let pm2 = new PRManager( new CStatus_Stub(), new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero ), lun_me.zero, fname, k )
@@ -1482,7 +1482,7 @@ type PRManager_Test2 () =
                 initITN1, resvkey_me.fromPrim 0x1111111111111111UL, false;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname NO_RESERVATION 1
         let param = [|
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // RESERVATION KEY 
@@ -1510,7 +1510,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Count = 1  ))
         Assert.True(( prinfo.m_Holder.IsNone ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
 
         Assert.True( File.Exists fname )
         let pm2 = new PRManager( new CStatus_Stub(), new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero ), lun_me.zero, fname, k )
@@ -1540,7 +1540,7 @@ type PRManager_Test2 () =
                 initITN3, resvkey_me.fromPrim 0x3333333333333333UL, false;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname WRITE_EXCLUSIVE 3
         let param = [|
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // RESERVATION KEY 
@@ -1569,7 +1569,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( initITN3 ) = resvkey_me.fromPrim 0x3333333333333333UL ))
         Assert.True(( prinfo.m_Holder.Value = initITN2 ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         k.NoticeTerminate()
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
@@ -1589,7 +1589,7 @@ type PRManager_Test2 () =
                 initITN3, resvkey_me.fromPrim 0x3333333333333333UL, false;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname WRITE_EXCLUSIVE 3
         let param = [|
             0x11uy; 0x11uy; 0x11uy; 0x11uy; // RESERVATION KEY 
@@ -1624,7 +1624,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Holder.IsNone ))
         Assert.True(( cnt = 2 ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         k.NoticeTerminate()
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
@@ -1644,7 +1644,7 @@ type PRManager_Test2 () =
                 initITN3, resvkey_me.fromPrim 0x3333333333333333UL, false;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS_ALL_REGISTRANTS 3
         let param = [|
             0x22uy; 0x22uy; 0x22uy; 0x22uy; // RESERVATION KEY 
@@ -1679,7 +1679,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Holder.IsNone ))
         Assert.True(( cnt = 2 ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         k.NoticeTerminate()
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
@@ -1701,7 +1701,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x4444444444444444UL, true;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS_REGISTRANTS_ONLY 4
         let param = [|
             0x44uy; 0x44uy; 0x44uy; 0x44uy; // RESERVATION KEY 
@@ -1739,7 +1739,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Holder.IsNone ))
         Assert.True(( cnt = 3 ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         k.NoticeTerminate()
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
@@ -1799,7 +1799,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x4444444444444444UL, true;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS_REGISTRANTS_ONLY 4
         let param = [|
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // RESERVATION KEY 
@@ -1830,7 +1830,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( initITN4 ) = resvkey_me.fromPrim 0x4444444444444444UL ))
         Assert.True(( prinfo.m_Holder.Value = initITN4 ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         k.NoticeTerminate()
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
@@ -1852,7 +1852,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x4444444444444444UL, false;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS_REGISTRANTS_ONLY 4
         let param = [|
             0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // RESERVATION KEY 
@@ -1887,7 +1887,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( initITN4 ) = resvkey_me.fromPrim 0x4444444444444444UL ))
         Assert.True(( prinfo.m_Holder.Value = initITN2 ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         k.NoticeTerminate()
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
@@ -1909,7 +1909,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x4444444444444444UL, false;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname NO_RESERVATION 4
         let param = [|
             0x22uy; 0x22uy; 0x22uy; 0x22uy; // RESERVATION KEY 
@@ -1944,7 +1944,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( initITN4 ) = resvkey_me.fromPrim 0x4444444444444444UL ))
         Assert.True(( prinfo.m_Holder.IsNone ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         k.NoticeTerminate()
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
@@ -1966,7 +1966,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x4444444444444444UL, false;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname NO_RESERVATION 4
         let param = [|
             0x22uy; 0x22uy; 0x22uy; 0x22uy; // RESERVATION KEY 
@@ -2010,7 +2010,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Holder.IsNone ))
         Assert.True(( cnt = 1 ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         k.NoticeTerminate()
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
@@ -2032,7 +2032,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x4444444444444444UL, false;  // Delete target
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname WRITE_EXCLUSIVE_ALL_REGISTRANTS 4
         let param = [|
             0x22uy; 0x22uy; 0x22uy; 0x22uy; // RESERVATION KEY 
@@ -2077,7 +2077,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Holder.Value = initITN2 ))
         Assert.True(( cnt = 3 ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         k.NoticeTerminate()
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
@@ -2099,7 +2099,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x4444444444444444UL, false;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname WRITE_EXCLUSIVE_ALL_REGISTRANTS 4
         let param = [|
             0x22uy; 0x22uy; 0x22uy; 0x22uy; // RESERVATION KEY 
@@ -2142,7 +2142,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Holder.IsNone ))
         Assert.True(( cnt = 1 ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         k.NoticeTerminate()
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
@@ -2211,7 +2211,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x4444444444444444UL, false;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS 4
         let param = [|
             0x22uy; 0x22uy; 0x22uy; 0x22uy; // RESERVATION KEY 
@@ -2254,7 +2254,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Holder.IsNone ))
         Assert.True(( cnt = 1 ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         k.NoticeTerminate()
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
@@ -2276,7 +2276,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x4444444444444444UL, false;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS 4
         let param = [|
             0x22uy; 0x22uy; 0x22uy; 0x22uy; // RESERVATION KEY 
@@ -2320,7 +2320,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Holder.IsNone ))
         Assert.True(( cnt = 2 ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         k.NoticeTerminate()
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
@@ -2342,7 +2342,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x1111111111111111UL, false;   // delete target
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS 4
         let param = [|
             0x11uy; 0x11uy; 0x11uy; 0x11uy; // RESERVATION KEY 
@@ -2387,7 +2387,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Holder.Value = initITN2 ))
         Assert.True(( cnt = 3 ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         k.NoticeTerminate()
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
@@ -2409,7 +2409,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x1111111111111111UL, false;   // delete target
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname EXCLUSIVE_ACCESS 4
         let param = [|
             0x22uy; 0x22uy; 0x22uy; 0x22uy; // RESERVATION KEY 
@@ -2453,7 +2453,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Holder.Value = initITN3 ))
         Assert.True(( cnt = 2 ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         k.NoticeTerminate()
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
@@ -2475,7 +2475,7 @@ type PRManager_Test2 () =
                 initITN4, resvkey_me.fromPrim 0x1111111111111111UL, false;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let k, luStub, pm = this.CreateDefaultPM fname WRITE_EXCLUSIVE_REGISTRANTS_ONLY 4
         let param = [|
             0x22uy; 0x22uy; 0x22uy; 0x22uy; // RESERVATION KEY 
@@ -2510,7 +2510,7 @@ type PRManager_Test2 () =
         Assert.True(( prinfo.m_Registrations.Item( initITN4 ) = resvkey_me.fromPrim 0x1111111111111111UL ))
         Assert.True(( prinfo.m_Holder.Value = initITN3 ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         k.NoticeTerminate()
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName

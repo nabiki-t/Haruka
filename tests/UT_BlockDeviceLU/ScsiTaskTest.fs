@@ -4330,7 +4330,7 @@ type ScsiTask_Test () =
                 initITN1, resvkey_me.fromPrim 0xFFFFFFFFFFFFFFFFUL, true;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let mutable cnt1 = 0
         let mutable cnt2 = 0
         let data = {
@@ -4390,7 +4390,7 @@ type ScsiTask_Test () =
         Assert.True(( prinfo2.m_Holder.IsNone ))
         Assert.True(( prinfo2.m_Type = NO_RESERVATION ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
 
@@ -4405,7 +4405,7 @@ type ScsiTask_Test () =
                 initITN1, resvkey_me.fromPrim 0xFFFFFFFFFFFFFFFFUL, true;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let mutable cnt1 = 0
         let mutable cnt2 = 0
         let data = {
@@ -4464,7 +4464,7 @@ type ScsiTask_Test () =
         Assert.True(( prinfo2.m_Holder.IsNone ))
         Assert.True(( prinfo2.m_Type = NO_RESERVATION ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
 
@@ -4481,7 +4481,7 @@ type ScsiTask_Test () =
                 initITN2, resvkey_me.fromPrim 0x1111111111111111UL, true;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let mutable cnt1 = 0
         let mutable cnt2 = 0
         let data = {
@@ -4543,7 +4543,7 @@ type ScsiTask_Test () =
         Assert.True(( prinfo2.m_Holder.Value = initITN1 ))
         Assert.True(( prinfo2.m_Type = EXCLUSIVE_ACCESS ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
 
@@ -4731,7 +4731,7 @@ type ScsiTask_Test () =
                 initITN2, resvkey_me.fromPrim 0x1111111111111111UL, true;
             |]
             fname
-        let initPRFileTime = File.GetLastWriteTimeUtc fname
+        let initPRFileHash = GlbFunc.GetFileHash fname
         let mutable cnt1 = 0
         let mutable cnt2 = 0
         let mutable cnt3 = 0
@@ -4802,6 +4802,6 @@ type ScsiTask_Test () =
         Assert.True(( prinfo2.m_Holder.Value = initITN1 ))
         Assert.True(( prinfo2.m_Type = EXCLUSIVE_ACCESS ))
 
-        GlbFunc.WaitForFileUpdate fname initPRFileTime
+        GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName

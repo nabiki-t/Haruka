@@ -175,6 +175,12 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// Other Connection Parameters
     member _.ConnectionParams = ( m_ISCIInitiator.Connection m_CID ).Params
 
+    /// I_T Nexus
+    member _.ITNexus =
+        // TPGT is specified in the configuration and is always 0.
+        let sp = m_ISCIInitiator.Params
+        ITNexus( sp.InitiatorName, sp.ISID, sp.TargetName, tpgt_me.zero )
+
     //=========================================================================
     // Static method
 

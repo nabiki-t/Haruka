@@ -160,11 +160,6 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
         let tdid = tdid_me.fromPrim 99u
         sprintf "%s%c%s%c%s%c%s" m_WorkPath c ( tdid_me.toString tdid ) c ( lun_me.WorkDirName lun ) c Constants.PR_SAVE_FILE_NAME
 
-    let GetITNexus ( r : SCSI_Initiator ) =
-        let sp = r.SessionParams
-        // TPGT is specified in the configuration and is always 0.
-        ITNexus( sp.InitiatorName, sp.ISID, sp.TargetName, tpgt_me.zero )
-
     let PR_ReadFullStatus ( r : SCSI_Initiator ) ( lun : LUN_T ) : Task<PR_ReadFullStatus> =
         task {
             let! itt_pr_in1 = r.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 3uy 512us NACA.T
@@ -215,7 +210,7 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
     member _.Reserve_FromRegistered_001 ( prtype : PR_TYPE ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-            let itn_r1 = GetITNexus r1
+            let itn_r1 = r1.ITNexus
             let! prg1 = CheckNoRegistrations r1 g_LUN1
 
             // register
@@ -269,8 +264,8 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
                 |> Array.sortBy isid_me.toPrim
             let! r1 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = isids.[0] } m_defaultConnParam
             let! r2 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = isids.[1] } m_defaultConnParam
-            let itn_r1 = GetITNexus r1
-            let itn_r2 = GetITNexus r2
+            let itn_r1 = r1.ITNexus
+            let itn_r2 = r2.ITNexus
             let! prg1 = CheckNoRegistrations r1 g_LUN1
 
             // register r1
@@ -373,8 +368,8 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
                 |> Array.sortBy isid_me.toPrim
             let! r1 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = isids.[0] } m_defaultConnParam
             let! r2 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = isids.[1] } m_defaultConnParam
-            let itn_r1 = GetITNexus r1
-            let itn_r2 = GetITNexus r2
+            let itn_r1 = r1.ITNexus
+            let itn_r2 = r2.ITNexus
             let! prg1 = CheckNoRegistrations r1 g_LUN1
 
             // register r1
@@ -482,7 +477,7 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
     member _.Reserve_FromRegistered_004 ( prtype1 : PR_TYPE ) ( prtype2 : PR_TYPE ) ( exresult : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-            let itn_r1 = GetITNexus r1
+            let itn_r1 = r1.ITNexus
             let! prg1 = CheckNoRegistrations r1 g_LUN1
 
             // register r1
@@ -609,7 +604,7 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
 
             if File.Exists prfname then
                 // register ( APTPL=0 )
-                let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.F [||]
+                let! itt_pr_out1 = r1.Send_PROut_REGISTER_AND_IGNORE_EXISTING_KEY TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.F [||]
                 let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
                 // wait for delete PR file
@@ -617,12 +612,12 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
             Assert.False(( File.Exists prfname ))
 
             // register ( APTPL=1 )
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER_AND_IGNORE_EXISTING_KEY TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             // wait for create PR file
             GlbFunc.WaitForFileCreate prfname
-            let fdate = File.GetLastWriteTimeUtc prfname
+            let fdate = GlbFunc.GetFileHash prfname
 
             // reserve ( APTPL=0, ignored )
             let param : Haruka.BlockDeviceLU.BasicParameterList = {
@@ -637,7 +632,7 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
 
             // wait for update PR file
-            GlbFunc.WaitForFileUpdate prfname fdate
+            GlbFunc.WaitForFileUpdateByHash prfname fdate
 
             // unregister
             let! itt_pr_out5 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
@@ -678,7 +673,7 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
     member _.Release_FromRegistered_NotHolder_001 ( prtype :PR_TYPE ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-            let itn_r1 = GetITNexus r1
+            let itn_r1 = r1.ITNexus
             let! prg1 = CheckNoRegistrations r1 g_LUN1
 
             // register r1
@@ -751,8 +746,8 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
                 |> Array.sortBy isid_me.toPrim
             let! r1 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = isids.[0] } m_defaultConnParam
             let! r2 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = isids.[1] } m_defaultConnParam
-            let itn_r1 = GetITNexus r1
-            let itn_r2 = GetITNexus r2
+            let itn_r1 = r1.ITNexus
+            let itn_r2 = r2.ITNexus
             let! prg1 = CheckNoRegistrations r1 g_LUN1
 
             // register r1
@@ -831,7 +826,7 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
     member _.Release_FromHolder_NoOtheres_001 ( prtype1 : PR_TYPE ) ( prtype2 : PR_TYPE ) ( exresult : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-            let itn_r1 = GetITNexus r1
+            let itn_r1 = r1.ITNexus
             let! prg1 = CheckNoRegistrations r1 g_LUN1
 
             // register r1
@@ -924,8 +919,8 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
                 |> Array.sortBy isid_me.toPrim
             let! r1 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = isids.[0] } m_defaultConnParam
             let! r2 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = isids.[1] } m_defaultConnParam
-            let itn_r1 = GetITNexus r1
-            let itn_r2 = GetITNexus r2
+            let itn_r1 = r1.ITNexus
+            let itn_r2 = r2.ITNexus
             let! prg1 = CheckNoRegistrations r1 g_LUN1
 
             // register r1
@@ -1049,10 +1044,10 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
             let! r2 = SCSI_Initiator.CreateWithISID spr2 m_defaultConnParam
             let! r3 = SCSI_Initiator.CreateWithISID spr3 m_defaultConnParam
             let! r4 = SCSI_Initiator.CreateWithISID spr4 m_defaultConnParam
-            let itn_r1 = GetITNexus r1
-            let itn_r2 = GetITNexus r2
-            let itn_r3 = GetITNexus r3
-            let itn_r4 = GetITNexus r4
+            let itn_r1 = r1.ITNexus
+            let itn_r2 = r2.ITNexus
+            let itn_r3 = r3.ITNexus
+            let itn_r4 = r4.ITNexus
             let other_isHolder = PR_TYPE.isAllRegistrants prtype1
             let other_pr_type = if other_isHolder then prtype1 else PR_TYPE.NO_RESERVATION
             let! prg1 = CheckNoRegistrations r1 g_LUN1
@@ -1210,9 +1205,9 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
             let! r1 = SCSI_Initiator.CreateWithISID spr1 m_defaultConnParam
             let! r3 = SCSI_Initiator.CreateWithISID spr3 m_defaultConnParam
             let! r4 = SCSI_Initiator.CreateWithISID spr4 m_defaultConnParam
-            let itn_r1 = GetITNexus r1
-            let itn_r3 = GetITNexus r3
-            let itn_r4 = GetITNexus r4
+            let itn_r1 = r1.ITNexus
+            let itn_r3 = r3.ITNexus
+            let itn_r4 = r4.ITNexus
             let other_isHolder = PR_TYPE.isAllRegistrants prtype1
             let other_pr_type = if other_isHolder then prtype1 else PR_TYPE.NO_RESERVATION
             let! prg1 = CheckNoRegistrations r1 g_LUN1
@@ -1353,7 +1348,7 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
 
             if File.Exists prfname then
                 // register ( APTPL=0 )
-                let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.F [||]
+                let! itt_pr_out1 = r1.Send_PROut_REGISTER_AND_IGNORE_EXISTING_KEY TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.F [||]
                 let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
                 // wait for delete PR file
@@ -1361,20 +1356,20 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
             Assert.False(( File.Exists prfname ))
 
             // register ( APTPL=1 )
-            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER_AND_IGNORE_EXISTING_KEY TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
 
             // wait for create PR file
             GlbFunc.WaitForFileCreate prfname
-            let fdate1 = File.GetLastWriteTimeUtc prfname
+            let fdate1 = GlbFunc.GetFileHash prfname
 
             // reserve r1
             let! itt_pr_out05 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out05
 
             // wait for update PR file
-            GlbFunc.WaitForFileUpdate prfname fdate1
-            let fdate2 = File.GetLastWriteTimeUtc prfname
+            GlbFunc.WaitForFileUpdateByHash prfname fdate1
+            let fdate2 = GlbFunc.GetFileHash prfname
 
             // reserve ( APTPL=0, ignored )
             let param : Haruka.BlockDeviceLU.BasicParameterList = {
@@ -1389,7 +1384,7 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
 
             // wait for update PR file
-            GlbFunc.WaitForFileUpdate prfname fdate2
+            GlbFunc.WaitForFileUpdateByHash prfname fdate2
 
             // unregister
             let! itt_pr_out5 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 resvkey_me.zero SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]

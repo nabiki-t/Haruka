@@ -159,13 +159,6 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
         let tdid = tdid_me.fromPrim 99u
         sprintf "%s%c%s%c%s%c%s" m_WorkPath c ( tdid_me.toString tdid ) c ( lun_me.WorkDirName lun ) c Constants.PR_SAVE_FILE_NAME
 
-    // Get I_T Nexus
-    let GetITNexus ( r : SCSI_Initiator ) =
-        let sp = r.SessionParams
-        // TPGT is specified in the configuration and is always 0.
-        ITNexus( sp.InitiatorName, sp.ISID, sp.TargetName, tpgt_me.zero )
-
-
     let PR_ReadFullStatus ( r : SCSI_Initiator ) ( lun : LUN_T ) : Task<PR_ReadFullStatus> =
         task {
             let! itt_pr_in1 = r.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 3uy 512us NACA.T
@@ -264,8 +257,8 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-            let itn_r1 = GetITNexus r1
-            let itn_r2 = GetITNexus r2
+            let itn_r1 = r1.ITNexus
+            let itn_r2 = r2.ITNexus
 
             let! fstat1 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
@@ -319,10 +312,10 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! r4 = SCSI_Initiator.Create { m_defaultSessParam with InitiatorName = "iqn.aaaa"; } m_defaultConnParam
             let! r5 = SCSI_Initiator.Create { m_defaultSessParam with InitiatorName = "iqn.bbbb"; } m_defaultConnParam
             let! r6 = SCSI_Initiator.Create { m_defaultSessParam with InitiatorName = "iqn.cccc"; } m_defaultConnParam
-            let itn_r1 = GetITNexus r1
-            let itn_r3 = GetITNexus r3
-            let itn_r4 = GetITNexus r4
-            let itn_r6 = GetITNexus r6
+            let itn_r1 = r1.ITNexus
+            let itn_r3 = r3.ITNexus
+            let itn_r4 = r4.ITNexus
+            let itn_r6 = r6.ITNexus
 
             let! fstat1 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
@@ -439,7 +432,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! r2 = SCSI_Initiator.Create { m_defaultSessParam with InitiatorName = "iqn.bbbb"; } m_defaultConnParam
-            let itn_r1 = GetITNexus r1
+            let itn_r1 = r1.ITNexus
 
             let! fstat1 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
@@ -476,7 +469,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
     member _.Register_FromUnregistered_SPEC_I_PT_005 () =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-            let itn_r1 = GetITNexus r1
+            let itn_r1 = r1.ITNexus
 
             let! fstat1 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
@@ -508,7 +501,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
     member _.Register_FromUnregistered_ALL_TG_PT_001 () =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-            let itn_r1 = GetITNexus r1
+            let itn_r1 = r1.ITNexus
 
             let! fstat1 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
@@ -571,7 +564,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
                     ISID = r1.SessionParams.ISID;
             }
             let! r2 = SCSI_Initiator.CreateWithISID r2_sessParam m_defaultConnParam
-            let itn_r1 = GetITNexus r1
+            let itn_r1 = r1.ITNexus
 
             let! fstat1 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
@@ -656,7 +649,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
                     TargetName = "iqn.2020-05.example.com:target1";
             }
             let! r1 = SCSI_Initiator.Create r1SP m_defaultConnParam
-            let itn_r1 = GetITNexus r1
+            let itn_r1 = r1.ITNexus
 
             let r2SP = {
                 m_defaultSessParam with
@@ -664,7 +657,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
                     TargetName = "iqn.2020-05.example.com:target1";
             }
             let! r2 = SCSI_Initiator.Create r2SP m_defaultConnParam
-            let itn_r2 = GetITNexus r2
+            let itn_r2 = r2.ITNexus
 
             let! fstat1 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
@@ -756,7 +749,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
                     ISID = isids.[0];
             }
             let! r11 = SCSI_Initiator.CreateWithISID r11SP m_defaultConnParam
-            let itn_r11 = GetITNexus r11
+            let itn_r11 = r11.ITNexus
 
             let r12SP = {
                 m_defaultSessParam with
@@ -773,7 +766,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
                     ISID = isids.[2];
             }
             let! r21 = SCSI_Initiator.CreateWithISID r21SP m_defaultConnParam
-            let itn_r21 = GetITNexus r21
+            let itn_r21 = r21.ITNexus
 
             let r22SP = {
                 m_defaultSessParam with
@@ -782,7 +775,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
                     ISID = isids.[3];
             }
             let! r22 = SCSI_Initiator.CreateWithISID r22SP m_defaultConnParam
-            let itn_r22 = GetITNexus r22
+            let itn_r22 = r22.ITNexus
 
             let! fstat1 = PR_ReadFullStatus r11 g_LUN1
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
@@ -926,7 +919,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
                     TargetName = "iqn.2020-05.example.com:target2";
             }
             let! r22 = SCSI_Initiator.Create r22SP m_defaultConnParam
-            let itn_r22 = GetITNexus r22
+            let itn_r22 = r22.ITNexus
 
             // register r22
             let! itt_pr_out1 = r22.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
@@ -974,7 +967,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! r2 = SCSI_Initiator.Create { m_defaultSessParam with InitiatorName = "iqn.bbbb"; } m_defaultConnParam
-            let itn_r1 = GetITNexus r1
+            let itn_r1 = r1.ITNexus
 
             let! fstat1 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
@@ -1023,7 +1016,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
     member _.Register_FromUnregistered_ALL_TG_PT_SPEC_I_PT_005 () =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-            let itn_r1 = GetITNexus r1
+            let itn_r1 = r1.ITNexus
 
             let! fstat1 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
@@ -1289,8 +1282,8 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
                 |> Array.sortBy isid_me.toPrim
             let! r1 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = isids.[0] } m_defaultConnParam
             let! r2 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = isids.[1] } m_defaultConnParam
-            let itn_r1 = GetITNexus r1
-            let itn_r2 = GetITNexus r2
+            let itn_r1 = r1.ITNexus
+            let itn_r2 = r2.ITNexus
 
             let! fstat1 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
@@ -1377,7 +1370,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
     member _.Register_FromRegistered_Unregister_LastOne_001 ( prtype1 : PR_TYPE ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-            let itn_r1 = GetITNexus r1
+            let itn_r1 = r1.ITNexus
 
             let! fstat1 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
@@ -1430,8 +1423,8 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
                 |> Array.sortBy isid_me.toPrim
             let! r1 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = isids.[0] } m_defaultConnParam
             let! r2 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = isids.[1] } m_defaultConnParam
-            let itn_r1 = GetITNexus r1
-            let itn_r2 = GetITNexus r2
+            let itn_r1 = r1.ITNexus
+            let itn_r2 = r2.ITNexus
 
             let! fstat1 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
@@ -1508,7 +1501,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
     member _.Register_FromRegistered_UpdateKey_001 () =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-            let itn_r1 = GetITNexus r1
+            let itn_r1 = r1.ITNexus
 
             let! fstat1 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
@@ -1556,9 +1549,9 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
                     TargetName="iqn.2020-05.example.com:target2"
                     ISID = r1.SessionParams.ISID;
             }
-            let itn_r1 = GetITNexus r1
+            let itn_r1 = r1.ITNexus
             let! r2 = SCSI_Initiator.CreateWithISID r1params m_defaultConnParam
-            let itn_r2 = GetITNexus r2
+            let itn_r2 = r2.ITNexus
 
             let! fstat1 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))
@@ -1623,9 +1616,9 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
                     TargetName="iqn.2020-05.example.com:target2"
                     ISID = r1.SessionParams.ISID;
             }
-            let itn_r1 = GetITNexus r1
+            let itn_r1 = r1.ITNexus
             let! r2 = SCSI_Initiator.CreateWithISID r1params m_defaultConnParam
-            let itn_r2 = GetITNexus r2
+            let itn_r2 = r2.ITNexus
 
             let! fstat1 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat1.FullStatusDescriptor.Length = 0 ))

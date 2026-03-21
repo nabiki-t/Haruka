@@ -19,6 +19,7 @@ open System.IO.Pipes
 open System.IO.MemoryMappedFiles
 open System.Threading
 open System.Threading.Tasks
+open System.Security.Cryptography
 
 open Haruka
 open Haruka.Constants
@@ -414,6 +415,26 @@ type GlbFunc() =
             raise <| TestException( sprintf "Timeout waiting for file update 2. %s %s" ( initFileTime.ToString "o" ) fname )
 
     /// <summary>
+    ///  Wait until the file's hash value changes.. 
+    /// </summary>
+    /// <param name="fname">
+    ///   The file name to wait for update.
+    /// </param>
+    /// <param name="initHash">
+    ///   The initial hash value of the file.
+    /// </param>
+    /// <remarks>
+    ///   This method will wait for up to 3 second for the file to be updated.
+    /// </remarks>
+    static member WaitForFileUpdateByHash ( fname : string ) ( initHash : byte[] ) : unit =
+        let mutable cnt = 0
+        while ( initHash = GlbFunc.GetFileHash fname ) && cnt < 300 do
+            Thread.Sleep 10
+            cnt <- cnt + 1
+        if cnt >= 300 then
+            raise <| TestException( sprintf "Timeout waiting for file update. %s" fname )
+
+    /// <summary>
     ///  Construct a pair of anonymous pipes.
     /// </summary>
     /// <returns>
@@ -508,4 +529,36 @@ type GlbFunc() =
             cnt <- cnt + r
         String( buf )
 
+    /// <summary>
+    ///  Get the hash value of the file
+    /// </summary>
+    /// <param name="fname">
+    ///  File nmae.
+    /// </param>
+    /// <returns>
+    ///  File hash value. If failed to read specified file, it raise TestException.
+    /// </returns>
+    static member GetFileHash ( fname : string ) : byte array =
+        let tryReadBytes () : byte[] option =
+            try
+                File.ReadAllBytes fname |> Some
+            with
+            | _ ->
+                None
+        let rec loop ( cnt : int ) : byte[] option =
+            if cnt >= 30 then
+                None
+            else
+                let r = tryReadBytes()
+                if r.IsSome then
+                    r
+                else
+                    Thread.Sleep 100
+                    loop ( cnt + 1 )
+        match loop 0 with
+        | None ->
+            raise <| TestException( sprintf "Failed to read %s." fname )
+        | Some( fd ) ->
+            use m = MD5.Create()
+            m.ComputeHash fd
 

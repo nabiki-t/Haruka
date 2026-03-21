@@ -454,14 +454,14 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
             let prfname = GetPRFileName g_LUN1
             let fexist =
                 if File.Exists prfname then
-                    Some( File.GetLastWriteTimeUtc prfname )
+                    Some( GlbFunc.GetFileHash prfname )
                 else
                     None
 
             // register reservation key
             do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey
             if fexist.IsSome then
-                GlbFunc.WaitForFileUpdate prfname fexist.Value
+                GlbFunc.WaitForFileUpdateByHash prfname fexist.Value
             else
                 GlbFunc.WaitForFileCreate prfname
 
@@ -487,14 +487,14 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
             let prfname = GetPRFileName g_LUN1
             let fexist =
                 if File.Exists prfname then
-                    Some( File.GetLastWriteTimeUtc prfname )
+                    Some( GlbFunc.GetFileHash prfname )
                 else
                     None
 
             // register reservation key
             do! PR_Register r1 g_LUN1 resvkey_me.zero resvkey
             if fexist.IsSome then
-                GlbFunc.WaitForFileUpdate prfname fexist.Value
+                GlbFunc.WaitForFileUpdateByHash prfname fexist.Value
             else
                 GlbFunc.WaitForFileCreate prfname
 
