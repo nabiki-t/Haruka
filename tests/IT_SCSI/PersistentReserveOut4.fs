@@ -660,6 +660,74 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
             do! r1.Close()
             do! r2.Close()
         }
+        
+    // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is no reservation.
+    // The service action reservation key is equal to the reservation key of the I_T Nexus that sent the command.
+    [<Fact>]
+    member _.Preempt_FromRegistered_NoReservation_004 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let itn_r2 = r2.ITNexus
+            let! prg1 = CheckNoRegistrations r1 g_LUN1
+
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+            do! PR_Register r2 g_LUN1 g_ResvKey2
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.PersistentReservationsGeneration > prg1 ))
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 2 ))
+
+            // preempt ( TYPE is ignored, unregister r1 )
+            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // check UA for initiator r1, r2
+            do! Check_UA_Cleared r1 g_LUN1
+            do! Check_UA_Cleared r2 g_LUN1
+
+            // The registrations for r1 have been removed.
+            let! fstat2 = PR_ReadFullStatus r2 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
+            let fsd2 = fstat2.FullStatusDescriptor
+            Assert.True(( fsd2.Length = 1 ))
+            Assert.True(( fsd2.[0].iSCSIName = itn_r2.InitiatorPortName ))
+            Assert.True(( fsd2.[0].ReservationKey = g_ResvKey2 ))
+            Assert.True(( fsd2.[0].RelativeTargetPortIdentifier = 1us ))
+            Assert.False(( fsd2.[0].ReservationHolder ))
+            Assert.True(( fsd2.[0].Type = PR_TYPE.toNumericValue PR_TYPE.NO_RESERVATION ))
+
+            do! PR_Unregister r2 g_LUN1 g_ResvKey2
+            let! _ = CheckNoRegistrations r2 g_LUN1
+            do! r1.Close()
+            do! r2.Close()
+        }
+        
+    // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is no reservation.
+    // The service action reservation key is equal to the reservation key of the I_T Nexus that sent the command.
+    [<Fact>]
+    member _.Preempt_FromRegistered_NoReservation_005 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! prg1 = CheckNoRegistrations r1 g_LUN1
+
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.PersistentReservationsGeneration > prg1 ))
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 1 ))
+
+            // preempt ( TYPE is ignored, unregister r1 )
+            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // check UA for initiator r1
+            do! Check_UA_Cleared r1 g_LUN1
+
+            let! prg2 = CheckNoRegistrations r1 g_LUN1
+            Assert.True(( prg2 > prg1 ))
+            do! r1.Close()
+        }
 
     static member Preempt_FromRegistered_AllRegistrants_001_data : obj[][] = [|
         [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   |]
@@ -980,6 +1048,94 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
             let! _ = CheckNoRegistrations r1 g_LUN1
             do! r1.Close()
             do! r2.Close()
+        }
+
+    // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is reservation.
+    // ALL_REGISTRANTS type, service action reservation key = 0.
+    // The service action reservation key is equal to the reservation key of the I_T Nexus that sent the command.
+    [<Theory>]
+    [<MemberData( "Preempt_FromRegistered_AllRegistrants_001_data" )>]
+    member _.Preempt_FromRegistered_AllRegistrants_006 ( prtype : PR_TYPE ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let itn_r2 = r2.ITNexus
+            let! prg1 = CheckNoRegistrations r1 g_LUN1
+
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+            do! PR_Register r2 g_LUN1 g_ResvKey2
+
+            // reserve
+            let! itt_pr_out1 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype g_ResvKey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.PersistentReservationsGeneration > prg1 ))
+            let fsd1 = fstat1.FullStatusDescriptor
+            Assert.True(( fsd1.Length = 2 ))
+            Assert.True(( fsd1.[0].ReservationHolder ))
+            Assert.True(( fsd1.[0].Type = PR_TYPE.toNumericValue prtype ))
+            Assert.True(( fsd1.[1].ReservationHolder ))
+            Assert.True(( fsd1.[1].Type = PR_TYPE.toNumericValue prtype ))
+
+            // preempt ( unregister r1 )
+            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // check UA for initiator r1, r2
+            do! Check_UA_Cleared r1 g_LUN1
+            do! Check_UA_Cleared r2 g_LUN1
+
+            // The registrations for r1 have been removed.
+            // ALL_REGISTRANTS type reservation still remains.
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > fstat1.PersistentReservationsGeneration ))
+            let fsd2 = fstat2.FullStatusDescriptor
+            Assert.True(( fsd2.Length = 1 ))
+            Assert.True(( fsd2.[0].iSCSIName = itn_r2.InitiatorPortName ))
+            Assert.True(( fsd2.[0].ReservationKey = g_ResvKey2 ))
+            Assert.True(( fsd2.[0].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( fsd2.[0].ReservationHolder ))
+            Assert.True(( fsd2.[0].Type = PR_TYPE.toNumericValue prtype ))
+
+            do! PR_Unregister r2 g_LUN1 g_ResvKey2
+            let! prg2 = CheckNoRegistrations r1 g_LUN1
+            Assert.True(( prg2 > fstat2.PersistentReservationsGeneration ))
+            do! r1.Close()
+            do! r2.Close()
+        }
+
+    // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is reservation.
+    // ALL_REGISTRANTS type, service action reservation key = 0.
+    // The service action reservation key is equal to the reservation key of the I_T Nexus that sent the command.
+    [<Theory>]
+    [<MemberData( "Preempt_FromRegistered_AllRegistrants_001_data" )>]
+    member _.Preempt_FromRegistered_AllRegistrants_007 ( prtype : PR_TYPE ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! prg1 = CheckNoRegistrations r1 g_LUN1
+
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+
+            // reserve
+            let! itt_pr_out1 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype g_ResvKey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.PersistentReservationsGeneration > prg1 ))
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 1 ))
+
+            // preempt
+            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // check UA for initiator r1
+            do! Check_UA_Cleared r1 g_LUN1
+
+            // All registrations will be removed.
+            let! prg2 = CheckNoRegistrations r1 g_LUN1
+            Assert.True(( prg2 > fstat1.PersistentReservationsGeneration ))
+            do! r1.Close()
         }
 
     static member Preempt_FromRegistered_OtherRegistrants_001_data : obj[][] = [|
@@ -1318,3 +1474,189 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
             do! r3.Close()
             do! r4.Close()
         }
+
+    // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is reservation.
+    // All types except ALL_REGISTRANTS service action reservation key <> 0.
+    // The service action reservation key is equal to the reservation key of the I_T Nexus ( = reservation holder ) that sent the command.
+    [<Theory>]
+    [<MemberData( "Preempt_FromRegistered_OtherRegistrants_001_data" )>]
+    member _.Preempt_FromRegistered_OtherRegistrants_006 ( prtype : PR_TYPE ) =
+        task {
+            let isids = GetSortedISID 2
+            let spr1 = { m_defaultSessParam with ISID = isids.[0] }
+            let spr2 = { m_defaultSessParam with ISID = isids.[1] }
+            let! r1 = SCSI_Initiator.CreateWithISID spr1 m_defaultConnParam
+            let! r2 = SCSI_Initiator.CreateWithISID spr2 m_defaultConnParam
+            let! prg1 = CheckNoRegistrations r1 g_LUN1
+
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+            do! PR_Register r2 g_LUN1 g_ResvKey2
+
+            // reserve
+            let! itt_pr_out1 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype g_ResvKey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.PersistentReservationsGeneration > prg1 ))
+            let fsd1 = fstat1.FullStatusDescriptor
+            Assert.True(( fsd1.Length = 2 ))
+            Assert.True(( fsd1.[0].ReservationHolder ))
+            Assert.True(( fsd1.[0].Type = PR_TYPE.toNumericValue prtype ))
+            Assert.False(( fsd1.[1].ReservationHolder ))
+            Assert.True(( fsd1.[1].Type = PR_TYPE.toNumericValue PR_TYPE.NO_RESERVATION ))
+
+            // preempt ( established new reservation )
+            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // check UA for initiator r1, r2
+            do! Check_UA_Cleared r1 g_LUN1
+            do! Check_UA_Cleared r2 g_LUN1
+
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > prg1 ))
+            let fsd2 = fstat2.FullStatusDescriptor
+            Assert.True(( fsd2.Length = 2 ))
+            Assert.True(( fsd2.[0].ReservationHolder ))
+            Assert.True(( fsd2.[0].Type = PR_TYPE.toNumericValue PR_TYPE.WRITE_EXCLUSIVE ))
+            Assert.False(( fsd2.[1].ReservationHolder ))
+            Assert.True(( fsd2.[1].Type = PR_TYPE.toNumericValue PR_TYPE.NO_RESERVATION ))
+
+            do! PR_Unregister r2 g_LUN1 g_ResvKey2
+            do! PR_Unregister r1 g_LUN1 g_ResvKey1
+            let! _ = CheckNoRegistrations r1 g_LUN1
+            do! r1.Close()
+            do! r2.Close()
+        }
+
+    // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is reservation.
+    // All types except ALL_REGISTRANTS service action reservation key <> 0.
+    // The service action reservation key is equal to the reservation key of the I_T Nexus ( <> reservation holder ) that sent the command.
+    [<Theory>]
+    [<MemberData( "Preempt_FromRegistered_OtherRegistrants_001_data" )>]
+    member _.Preempt_FromRegistered_OtherRegistrants_007 ( prtype : PR_TYPE ) =
+        task {
+            let isids = GetSortedISID 2
+            let spr1 = { m_defaultSessParam with ISID = isids.[0] }
+            let spr2 = { m_defaultSessParam with ISID = isids.[1] }
+            let! r1 = SCSI_Initiator.CreateWithISID spr1 m_defaultConnParam
+            let! r2 = SCSI_Initiator.CreateWithISID spr2 m_defaultConnParam
+            let! prg1 = CheckNoRegistrations r1 g_LUN1
+
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+            do! PR_Register r2 g_LUN1 g_ResvKey2
+
+            // reserve
+            let! itt_pr_out1 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype g_ResvKey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.PersistentReservationsGeneration > prg1 ))
+            let fsd1 = fstat1.FullStatusDescriptor
+            Assert.True(( fsd1.Length = 2 ))
+            Assert.True(( fsd1.[0].ReservationHolder ))
+            Assert.True(( fsd1.[0].Type = PR_TYPE.toNumericValue prtype ))
+            Assert.False(( fsd1.[1].ReservationHolder ))
+            Assert.True(( fsd1.[1].Type = PR_TYPE.toNumericValue PR_TYPE.NO_RESERVATION ))
+
+            // preempt ( type is ignored, r2 is removed )
+            let! itt_pr_out2 = r2.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey2 g_ResvKey2
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // check UA for initiator r1, r2
+            do! Check_UA_Cleared r1 g_LUN1
+            do! Check_UA_Cleared r2 g_LUN1
+
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration > prg1 ))
+            let fsd2 = fstat2.FullStatusDescriptor
+            Assert.True(( fsd2.Length = 1 ))
+            Assert.True(( fsd2.[0].ReservationHolder ))
+            Assert.True(( fsd2.[0].Type = PR_TYPE.toNumericValue prtype ))
+
+            do! PR_Unregister r1 g_LUN1 g_ResvKey1
+            let! _ = CheckNoRegistrations r1 g_LUN1
+            do! r1.Close()
+            do! r2.Close()
+        }
+
+    [<Fact>]
+    member _.Preempt_InvalidScope_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! prg1 = CheckNoRegistrations r1 g_LUN1
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.PersistentReservationsGeneration > prg1 ))
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 1 ))
+
+            // Preempt ( SCOPE <> 0 )
+            let param : Haruka.BlockDeviceLU.BasicParameterList = {
+                ReservationKey = g_ResvKey1;
+                ServiceActionReservationKey = resvkey_me.zero;
+                SPEC_I_PT = false;
+                ALL_TG_PT = false;
+                APTPL = false;
+                TransportID = [||];
+            }
+            let! itt_pr_out3 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 4uy 1uy PR_TYPE.WRITE_EXCLUSIVE param NACA.T
+            let! res_pr_out3 = r1.WaitSCSIResponse itt_pr_out3
+            Assert.True(( res_pr_out3.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // clear ACA
+            let! itt_tmf1 = r1.SendTMFRequest_ClearACA BitI.F g_LUN1
+            let! res_tmf1 = r1.WaitTMFResponse itt_tmf1
+            Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat2.PersistentReservationsGeneration = fstat1.PersistentReservationsGeneration ))
+            Assert.True(( fstat2.FullStatusDescriptor.Length = 1 ))
+
+            do! PR_Unregister r1 g_LUN1 g_ResvKey1
+            let! _ = CheckNoRegistrations r1 g_LUN1
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.Preempt_APTPL_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let prfname = GetPRFileName g_LUN1
+
+            if File.Exists prfname then
+                // register ( APTPL=0 )
+                let! itt_pr_out1 = r1.Send_PROut_REGISTER_AND_IGNORE_EXISTING_KEY TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.F [||]
+                let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+                // wait for delete PR file
+                GlbFunc.WaitForFileDelete prfname
+            Assert.False(( File.Exists prfname ))
+
+            // register ( APTPL=1 )
+            let! itt_pr_out2 = r1.Send_PROut_REGISTER_AND_IGNORE_EXISTING_KEY TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // wait for create PR file
+            GlbFunc.WaitForFileCreate prfname
+            let fdate = GlbFunc.GetFileHash prfname
+
+            // Preempt ( APTPL=0, ignored )
+            let param : Haruka.BlockDeviceLU.BasicParameterList = {
+                ReservationKey = g_ResvKey1;
+                ServiceActionReservationKey = g_ResvKey1;
+                SPEC_I_PT = false;
+                ALL_TG_PT = false;
+                APTPL = false;
+                TransportID = [||];
+            }
+            let! itt_pr_out3 = r1.Send_PersistentReserveOut_BasicParam TaskATTRCd.SIMPLE_TASK g_LUN1 4uy 0uy PR_TYPE.WRITE_EXCLUSIVE param NACA.T
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
+
+            // wait for update PR file
+            GlbFunc.WaitForFileUpdateByHash prfname fdate
+
+            let! _ = CheckNoRegistrations r1 g_LUN1
+            do! r1.Close()
+        }
+
