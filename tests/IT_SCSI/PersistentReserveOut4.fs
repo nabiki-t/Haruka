@@ -464,13 +464,20 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
 
     // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an unregistered I_T nexus.
     // It will terminated with RESERVATION_CONFLICT status.
-    [<Fact>]
-    member _.Preempt_FromUnregistered_001 () =
+    // (If there are no tasks to abort, then PREEMPT AND ABORT is also applicable.)
+    [<Theory>]
+    [<InlineData( false )>]
+    [<InlineData( true )>]
+    member _.Preempt_FromUnregistered_001 ( abortflg : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! prg1 = CheckNoRegistrations r1 g_LUN1
 
-            let! itt_pr_out1 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS resvkey_me.zero resvkey_me.zero
+            let! itt_pr_out1 =
+                if abortflg then
+                    r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS resvkey_me.zero resvkey_me.zero
+                else
+                    r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS resvkey_me.zero resvkey_me.zero
             let! res_pr_out1 = r1.WaitSCSIResponse itt_pr_out1
             Assert.True(( res_pr_out1.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
 
@@ -481,8 +488,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
 
     // A PERSISTENT RESERVE OUT command with PREEMPT service action that has invalid registration key is received from an registered I_T nexus.
     // It will terminated with RESERVATION_CONFLICT status.
-    [<Fact>]
-    member _.Preempt_FromRegistered_RegKeyMismatch_001 () =
+    // (If there are no tasks to abort, then PREEMPT AND ABORT is also applicable.)
+    [<Theory>]
+    [<InlineData( false )>]
+    [<InlineData( true )>]
+    member _.Preempt_FromRegistered_RegKeyMismatch_001 ( abortflg : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! prg1 = CheckNoRegistrations r1 g_LUN1
@@ -493,7 +503,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 1 ))
 
             // preempt
-            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey2 resvkey_me.zero
+            let! itt_pr_out2 =
+                if abortflg then
+                    r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey2 resvkey_me.zero
+                else
+                    r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey2 resvkey_me.zero
             let! res_pr_out2 = r1.WaitSCSIResponse itt_pr_out2
             Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
 
@@ -508,8 +522,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
 
     // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is no reservation.
     // The reservation key specified in service action reservation key will be deleted.
-    [<Fact>]
-    member _.Preempt_FromRegistered_NoReservation_001 () =
+    // (If there are no tasks to abort, then PREEMPT AND ABORT is also applicable.)
+    [<Theory>]
+    [<InlineData( false )>]
+    [<InlineData( true )>]
+    member _.Preempt_FromRegistered_NoReservation_001 ( abortflg : bool ) =
         task {
             let isids = GetSortedISID 2
             let spr1 = { m_defaultSessParam with ISID = isids.[0] }
@@ -534,7 +551,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 4 ))
 
             // preempt ( TYPE is ignored, unregister r2 r3 )
-            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey2
+            let! itt_pr_out2 =
+                if abortflg then
+                    r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey2
+                else
+                    r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey2
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             // check UA for initiator r1, r2, r3, r4
@@ -574,8 +595,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
         
     // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is no reservation.
     // The reservation key specified in service action reservation key will be deleted.
-    [<Fact>]
-    member _.Preempt_FromRegistered_NoReservation_002 () =
+    // (If there are no tasks to abort, then PREEMPT AND ABORT is also applicable.)
+    [<Theory>]
+    [<InlineData( false )>]
+    [<InlineData( true )>]
+    member _.Preempt_FromRegistered_NoReservation_002 ( abortflg : bool ) =
         task {
             let isids = GetSortedISID 2
             let spr1 = { m_defaultSessParam with ISID = isids.[0] }
@@ -597,7 +621,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 3 ))
 
             // preempt ( TYPE is ignored, unregister r3 )
-            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey2
+            let! itt_pr_out2 =
+                if abortflg then
+                    r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey2
+                else
+                    r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey2
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             // check UA for initiator r1, r3, r4
@@ -633,8 +661,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
 
     // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is no reservation.
     // If the reservation key specified in the service action reservation key does not exist, the command will terminate with RESERVATION CONFLICT.
-    [<Fact>]
-    member _.Preempt_FromRegistered_NoReservation_003 () =
+    // (If there are no tasks to abort, then PREEMPT AND ABORT is also applicable.)
+    [<Theory>]
+    [<InlineData( false )>]
+    [<InlineData( true )>]
+    member _.Preempt_FromRegistered_NoReservation_003 ( abortflg : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
@@ -647,7 +678,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 2 ))
 
             // preempt ( TYPE is ignored )
-            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey3
+            let! itt_pr_out2 =
+                if abortflg then
+                    r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey3
+                else
+                    r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey3
             let! res_pr_out2 = r1.WaitSCSIResponse itt_pr_out2
             Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
 
@@ -663,8 +698,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
         
     // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is no reservation.
     // The service action reservation key is equal to the reservation key of the I_T Nexus that sent the command.
-    [<Fact>]
-    member _.Preempt_FromRegistered_NoReservation_004 () =
+    // (If there are no tasks to abort, then PREEMPT AND ABORT is also applicable.)
+    [<Theory>]
+    [<InlineData( false )>]
+    [<InlineData( true )>]
+    member _.Preempt_FromRegistered_NoReservation_004 ( abortflg : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
@@ -679,7 +717,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 2 ))
 
             // preempt ( TYPE is ignored, unregister r1 )
-            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey1
+            let! itt_pr_out2 =
+                if abortflg then
+                    r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey1
+                else
+                    r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey1
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             // check UA for initiator r1, r2
@@ -705,8 +747,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
         
     // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is no reservation.
     // The service action reservation key is equal to the reservation key of the I_T Nexus that sent the command.
-    [<Fact>]
-    member _.Preempt_FromRegistered_NoReservation_005 () =
+    // (If there are no tasks to abort, then PREEMPT AND ABORT is also applicable.)
+    [<Theory>]
+    [<InlineData( false )>]
+    [<InlineData( true )>]
+    member _.Preempt_FromRegistered_NoReservation_005 ( abortflg : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! prg1 = CheckNoRegistrations r1 g_LUN1
@@ -718,7 +763,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 1 ))
 
             // preempt ( TYPE is ignored, unregister r1 )
-            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey1
+            let! itt_pr_out2 =
+                if abortflg then
+                    r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey1
+                else
+                    r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey1
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             // check UA for initiator r1
@@ -730,16 +779,19 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
         }
 
     static member Preempt_FromRegistered_AllRegistrants_001_data : obj[][] = [|
-        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   |]
-        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;  false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS; false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;  true;  |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS; true;  |]
     |]
 
     // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is reservation.
     // ALL_REGISTRANTS type, service action reservation key = 0.
     // All existing registrations will be unregistered, and new reservations will be established.
+    // (If there are no tasks to abort, then PREEMPT AND ABORT is also applicable.)
     [<Theory>]
     [<MemberData( "Preempt_FromRegistered_AllRegistrants_001_data" )>]
-    member _.Preempt_FromRegistered_AllRegistrants_001 ( prtype : PR_TYPE ) =
+    member _.Preempt_FromRegistered_AllRegistrants_001 ( prtype : PR_TYPE ) ( abortflg : bool ) =
         task {
             let isids = GetSortedISID 2
             let spr1 = { m_defaultSessParam with ISID = isids.[0] }
@@ -771,7 +823,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
                 Assert.True(( itr.Type = PR_TYPE.toNumericValue prtype ))
 
             // preempt ( unregister r2, r3, r4 )
-            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 resvkey_me.zero
+            let! itt_pr_out2 =
+                if abortflg then
+                    r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 resvkey_me.zero
+                else
+                    r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 resvkey_me.zero
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             // check UA for initiator r1, r2, r3, r4
@@ -805,9 +861,10 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
     // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is reservation.
     // ALL_REGISTRANTS type, service action reservation key = 0.
     // All existing registrations will be unregistered, and new reservations will be established.
+    // (If there are no tasks to abort, then PREEMPT AND ABORT is also applicable.)
     [<Theory>]
     [<MemberData( "Preempt_FromRegistered_AllRegistrants_001_data" )>]
-    member _.Preempt_FromRegistered_AllRegistrants_002 ( prtype : PR_TYPE ) =
+    member _.Preempt_FromRegistered_AllRegistrants_002 ( prtype : PR_TYPE ) ( abortflg : bool ) =
         task {
             let isids = GetSortedISID 2
             let spr1 = { m_defaultSessParam with ISID = isids.[0] }
@@ -836,7 +893,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
                 Assert.True(( itr.Type = PR_TYPE.toNumericValue prtype ))
 
             // preempt ( unregister r2, r3, r4 )
-            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 resvkey_me.zero
+            let! itt_pr_out2 =
+                if abortflg then
+                    r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 resvkey_me.zero
+                else
+                    r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 resvkey_me.zero
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             // check UA for initiator r1, r3, r4
@@ -866,9 +927,10 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
     // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is reservation.
     // ALL_REGISTRANTS type, service action reservation key <> 0.
     // The reservation key specified in service action reservation key will be deleted.
+    // (If there are no tasks to abort, then PREEMPT AND ABORT is also applicable.)
     [<Theory>]
     [<MemberData( "Preempt_FromRegistered_AllRegistrants_001_data" )>]
-    member _.Preempt_FromRegistered_AllRegistrants_003 ( prtype : PR_TYPE ) =
+    member _.Preempt_FromRegistered_AllRegistrants_003 ( prtype : PR_TYPE ) ( abortflg : bool ) =
         task {
             let isids = GetSortedISID 2
             let spr1 = { m_defaultSessParam with ISID = isids.[0] }
@@ -901,7 +963,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
                 Assert.True(( itr.Type = PR_TYPE.toNumericValue prtype ))
 
             // preempt ( TYPE is ignored, unregister r2 r3 )
-            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey2
+            let! itt_pr_out2 =
+                if abortflg then
+                    r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey2
+                else
+                    r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey2
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             // check UA for initiator r1, r2, r3, r4
@@ -942,9 +1008,10 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
     // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is reservation.
     // ALL_REGISTRANTS type, service action reservation key <> 0.
     // The reservation key specified in service action reservation key will be deleted.
+    // (If there are no tasks to abort, then PREEMPT AND ABORT is also applicable.)
     [<Theory>]
     [<MemberData( "Preempt_FromRegistered_AllRegistrants_001_data" )>]
-    member _.Preempt_FromRegistered_AllRegistrants_004 ( prtype : PR_TYPE ) =
+    member _.Preempt_FromRegistered_AllRegistrants_004 ( prtype : PR_TYPE ) ( abortflg : bool ) =
         task {
             let isids = GetSortedISID 2
             let spr1 = { m_defaultSessParam with ISID = isids.[0] }
@@ -974,7 +1041,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
                 Assert.True(( itr.Type = PR_TYPE.toNumericValue prtype ))
 
             // preempt ( TYPE is ignored, unregister r3 )
-            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey2
+            let! itt_pr_out2 =
+                if abortflg then
+                    r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey2
+                else
+                    r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey2
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             // check UA for initiator r1, r3, r4
@@ -1011,9 +1082,10 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
     // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is reservation.
     // ALL_REGISTRANTS type, service action reservation key <> 0.
     // If the reservation key specified in service action reservation key does not exist, the command will terminate with RESERVATION CONFLICT.
+    // (If there are no tasks to abort, then PREEMPT AND ABORT is also applicable.)
     [<Theory>]
     [<MemberData( "Preempt_FromRegistered_AllRegistrants_001_data" )>]
-    member _.Preempt_FromRegistered_AllRegistrants_005 ( prtype : PR_TYPE ) =
+    member _.Preempt_FromRegistered_AllRegistrants_005 ( prtype : PR_TYPE ) ( abortflg : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
@@ -1036,7 +1108,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
             Assert.True(( fsd1.[1].Type = PR_TYPE.toNumericValue prtype ))
 
             // preempt
-            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey3
+            let! itt_pr_out2 =
+                if abortflg then
+                    r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey3
+                else
+                    r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey3
             let! res_pr_out2 = r1.WaitSCSIResponse itt_pr_out2
             Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
 
@@ -1053,9 +1129,10 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
     // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is reservation.
     // ALL_REGISTRANTS type, service action reservation key = 0.
     // The service action reservation key is equal to the reservation key of the I_T Nexus that sent the command.
+    // (If there are no tasks to abort, then PREEMPT AND ABORT is also applicable.)
     [<Theory>]
     [<MemberData( "Preempt_FromRegistered_AllRegistrants_001_data" )>]
-    member _.Preempt_FromRegistered_AllRegistrants_006 ( prtype : PR_TYPE ) =
+    member _.Preempt_FromRegistered_AllRegistrants_006 ( prtype : PR_TYPE ) ( abortflg : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
@@ -1079,7 +1156,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
             Assert.True(( fsd1.[1].Type = PR_TYPE.toNumericValue prtype ))
 
             // preempt ( unregister r1 )
-            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey1
+            let! itt_pr_out2 =
+                if abortflg then
+                    r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey1
+                else
+                    r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey1
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             // check UA for initiator r1, r2
@@ -1108,9 +1189,10 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
     // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is reservation.
     // ALL_REGISTRANTS type, service action reservation key = 0.
     // The service action reservation key is equal to the reservation key of the I_T Nexus that sent the command.
+    // (If there are no tasks to abort, then PREEMPT AND ABORT is also applicable.)
     [<Theory>]
     [<MemberData( "Preempt_FromRegistered_AllRegistrants_001_data" )>]
-    member _.Preempt_FromRegistered_AllRegistrants_007 ( prtype : PR_TYPE ) =
+    member _.Preempt_FromRegistered_AllRegistrants_007 ( prtype : PR_TYPE ) ( abortflg : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! prg1 = CheckNoRegistrations r1 g_LUN1
@@ -1126,7 +1208,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
             Assert.True(( fstat1.FullStatusDescriptor.Length = 1 ))
 
             // preempt
-            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey1
+            let! itt_pr_out2 =
+                if abortflg then
+                    r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey1
+                else
+                    r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey1
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             // check UA for initiator r1
@@ -1139,18 +1225,23 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
         }
 
     static member Preempt_FromRegistered_OtherRegistrants_001_data : obj[][] = [|
-        [| PR_TYPE.WRITE_EXCLUSIVE;                   |]
-        [| PR_TYPE.EXCLUSIVE_ACCESS;                  |]
-        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |]
-        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  false; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; false; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   true;  |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  true;  |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  true;  |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; true;  |]
     |]
 
     // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is reservation.
     // All types except ALL_REGISTRANTS service action reservation key = 0.
     // The command terminates with CHECK CONDITION.
+    // (If there are no tasks to abort, then PREEMPT AND ABORT is also applicable.)
     [<Theory>]
     [<MemberData( "Preempt_FromRegistered_OtherRegistrants_001_data" )>]
-    member _.Preempt_FromRegistered_OtherRegistrants_001 ( prtype : PR_TYPE ) =
+    member _.Preempt_FromRegistered_OtherRegistrants_001 ( prtype : PR_TYPE ) ( abortflg : bool ) =
         task {
             let isids = GetSortedISID 2
             let! r1 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = isids.[0] } m_defaultConnParam
@@ -1174,7 +1265,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
             Assert.True(( fsd1.[1].Type = PR_TYPE.toNumericValue PR_TYPE.NO_RESERVATION ))
 
             // preempt ( failed )
-            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 resvkey_me.zero
+            let! itt_pr_out2 =
+                if abortflg then
+                    r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 resvkey_me.zero
+                else
+                    r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 resvkey_me.zero
             let! res_pr_out2 = r1.WaitSCSIResponse itt_pr_out2
             Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.CHECK_CONDITION ))
             Assert.True(( res_pr_out2.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
@@ -1198,9 +1293,10 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
     // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is reservation.
     // All types except ALL_REGISTRANTS service action reservation key <> 0.
     // The reservation key specified in service action reservation key will be deleted.
+    // (If there are no tasks to abort, then PREEMPT AND ABORT is also applicable.)
     [<Theory>]
     [<MemberData( "Preempt_FromRegistered_OtherRegistrants_001_data" )>]
-    member _.Preempt_FromRegistered_OtherRegistrants_002 ( prtype : PR_TYPE ) =
+    member _.Preempt_FromRegistered_OtherRegistrants_002 ( prtype : PR_TYPE ) ( abortflg : bool ) =
         task {
             let isids = GetSortedISID 2
             let spr1 = { m_defaultSessParam with ISID = isids.[0] }
@@ -1238,7 +1334,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
             Assert.True(( fsd1.[3].Type = PR_TYPE.toNumericValue PR_TYPE.NO_RESERVATION ))
 
             // preempt ( TYPE is ignored, unregister r2 r3 )
-            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey2
+            let! itt_pr_out2 =
+                if abortflg then
+                    r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey2
+                else
+                    r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey2
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             // check UA for initiator r1, r2, r3, r4
@@ -1278,9 +1378,10 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
     // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is reservation.
     // All types except ALL_REGISTRANTS service action reservation key <> 0.
     // The reservation key specified in service action reservation key will be deleted.
+    // (If there are no tasks to abort, then PREEMPT AND ABORT is also applicable.)
     [<Theory>]
     [<MemberData( "Preempt_FromRegistered_OtherRegistrants_001_data" )>]
-    member _.Preempt_FromRegistered_OtherRegistrants_003 ( prtype : PR_TYPE ) =
+    member _.Preempt_FromRegistered_OtherRegistrants_003 ( prtype : PR_TYPE ) ( abortflg : bool ) =
         task {
             let isids = GetSortedISID 2
             let spr1 = { m_defaultSessParam with ISID = isids.[0] }
@@ -1313,7 +1414,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
             Assert.True(( fsd1.[2].Type = PR_TYPE.toNumericValue PR_TYPE.NO_RESERVATION ))
 
             // preempt ( TYPE is ignored, unregister r3 )
-            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey2
+            let! itt_pr_out2 =
+                if abortflg then
+                    r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey2
+                else
+                    r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey2
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             // check UA for initiator r1, r3, r4
@@ -1349,9 +1454,10 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
     // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is reservation.
     // All types except ALL_REGISTRANTS service action reservation key <> 0.
     // If the reservation key specified in service action reservation key does not exist, the command will terminate with RESERVATION CONFLICT.
+    // (If there are no tasks to abort, then PREEMPT AND ABORT is also applicable.)
     [<Theory>]
     [<MemberData( "Preempt_FromRegistered_OtherRegistrants_001_data" )>]
-    member _.Preempt_FromRegistered_OtherRegistrants_004 ( prtype : PR_TYPE ) =
+    member _.Preempt_FromRegistered_OtherRegistrants_004 ( prtype : PR_TYPE ) ( abortflg : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
@@ -1374,7 +1480,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
             Assert.True(( fsd1.[1].Type = PR_TYPE.toNumericValue PR_TYPE.NO_RESERVATION ))
 
             // preempt
-            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey3
+            let! itt_pr_out2 =
+                if abortflg then
+                    r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey3
+                else
+                    r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey3
             let! res_pr_out2 = r1.WaitSCSIResponse itt_pr_out2
             Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
 
@@ -1391,9 +1501,10 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
     // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is reservation.
     // All types except ALL_REGISTRANTS, service action reservation key specified reservation holder.
     // The reservation key specified in service action reservation key will be deleted.
+    // (If there are no tasks to abort, then PREEMPT AND ABORT is also applicable.)
     [<Theory>]
     [<MemberData( "Preempt_FromRegistered_OtherRegistrants_001_data" )>]
-    member _.Preempt_FromRegistered_OtherRegistrants_005 ( prtype : PR_TYPE ) =
+    member _.Preempt_FromRegistered_OtherRegistrants_005 ( prtype : PR_TYPE ) ( abortflg : bool ) =
         task {
             let isids = GetSortedISID 2
             let spr1 = { m_defaultSessParam with ISID = isids.[0] }
@@ -1433,7 +1544,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
             Assert.True(( fsd1.[3].Type = PR_TYPE.toNumericValue PR_TYPE.NO_RESERVATION ))
 
             // preempt ( from r2, unregister r1 )
-            let! itt_pr_out2 = r2.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey2 g_ResvKey1
+            let! itt_pr_out2 =
+                if abortflg then
+                    r2.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey2 g_ResvKey1
+                else
+                    r2.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey2 g_ResvKey1
             let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out2
 
             // check UA for initiator r1, r2, r3, r4
@@ -1478,9 +1593,10 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
     // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is reservation.
     // All types except ALL_REGISTRANTS service action reservation key <> 0.
     // The service action reservation key is equal to the reservation key of the I_T Nexus ( = reservation holder ) that sent the command.
+    // (If there are no tasks to abort, then PREEMPT AND ABORT is also applicable.)
     [<Theory>]
     [<MemberData( "Preempt_FromRegistered_OtherRegistrants_001_data" )>]
-    member _.Preempt_FromRegistered_OtherRegistrants_006 ( prtype : PR_TYPE ) =
+    member _.Preempt_FromRegistered_OtherRegistrants_006 ( prtype : PR_TYPE ) ( abortflg : bool ) =
         task {
             let isids = GetSortedISID 2
             let spr1 = { m_defaultSessParam with ISID = isids.[0] }
@@ -1506,7 +1622,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
             Assert.True(( fsd1.[1].Type = PR_TYPE.toNumericValue PR_TYPE.NO_RESERVATION ))
 
             // preempt ( established new reservation )
-            let! itt_pr_out2 = r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey1
+            let! itt_pr_out2 =
+                if abortflg then
+                    r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey1
+                else
+                    r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey1
             let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
 
             // check UA for initiator r1, r2
@@ -1532,9 +1652,10 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
     // A PERSISTENT RESERVE OUT command with PREEMPT service action is received from an registered I_T nexus while there is reservation.
     // All types except ALL_REGISTRANTS service action reservation key <> 0.
     // The service action reservation key is equal to the reservation key of the I_T Nexus ( <> reservation holder ) that sent the command.
+    // (If there are no tasks to abort, then PREEMPT AND ABORT is also applicable.)
     [<Theory>]
     [<MemberData( "Preempt_FromRegistered_OtherRegistrants_001_data" )>]
-    member _.Preempt_FromRegistered_OtherRegistrants_007 ( prtype : PR_TYPE ) =
+    member _.Preempt_FromRegistered_OtherRegistrants_007 ( prtype : PR_TYPE ) ( abortflg : bool ) =
         task {
             let isids = GetSortedISID 2
             let spr1 = { m_defaultSessParam with ISID = isids.[0] }
@@ -1560,7 +1681,11 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
             Assert.True(( fsd1.[1].Type = PR_TYPE.toNumericValue PR_TYPE.NO_RESERVATION ))
 
             // preempt ( type is ignored, r2 is removed )
-            let! itt_pr_out2 = r2.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey2 g_ResvKey2
+            let! itt_pr_out2 =
+                if abortflg then
+                    r2.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey2 g_ResvKey2
+                else
+                    r2.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey2 g_ResvKey2
             let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out2
 
             // check UA for initiator r1, r2
