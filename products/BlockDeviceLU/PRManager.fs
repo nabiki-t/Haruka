@@ -218,8 +218,8 @@ type PRManager(
         else
             let pr = m_Locker.obj
             let fitnRegved, fitnResvKey = pr.m_Registrations.TryGetValue faultITNexus
-            if pr.m_Holder.IsNone || not fitnRegved then
-                // If there are no reservation, reservation type is all registrants, or fault I_T Nexus is not registered,
+            if PR_TYPE.isAllRegistrants pr.m_Type || not fitnRegved then
+                // If reservation type is all registrants, or fault I_T Nexus is not registered,
                 // the task is must executed in ACA compliant.
                 false
             else

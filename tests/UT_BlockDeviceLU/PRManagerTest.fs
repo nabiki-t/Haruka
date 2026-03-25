@@ -2744,15 +2744,26 @@ type PRManager_Test1 () =
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
 
-    [<Fact>]
-    member this.decideACANoncompliant_005() =
+    static member decideACANoncompliant_005_data : obj[][] = [|
+        [| NO_RESERVATION;                    false; true;  |];
+        [| WRITE_EXCLUSIVE;                   true;  true;  |];
+        [| EXCLUSIVE_ACCESS;                  true;  true;  |];
+        [| WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  true;  true;  |];
+        [| EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; true;  true;  |];
+        [| WRITE_EXCLUSIVE_ALL_REGISTRANTS;   false; false; |];
+        [| EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  false; false; |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "decideACANoncompliant_005_data" )>]
+    member this.decideACANoncompliant_005 ( prtype : PR_TYPE ) ( holder : bool  ) ( exresult : bool ) =
         let pDirName = this.CreateTestDir()
         let fname = Functions.AppendPathName pDirName "decideACANoncompliant_005.txt"
 
         GlbFunc.writeDefaultPRFile
-            WRITE_EXCLUSIVE
+            prtype
             [|
-                new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 3us 4uy 5us, "target001", tpgt_me.fromPrim 6us ), resvkey_me.fromPrim 99UL, true;
+                new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 3us 4uy 5us, "target001", tpgt_me.fromPrim 6us ), resvkey_me.fromPrim 99UL, holder;
             |]
             fname
         let k = new HKiller() :> IKiller
@@ -2784,7 +2795,8 @@ type PRManager_Test1 () =
             |] |> PooledBuffer.Rent;
             ByteCount = 0u;
         }
-        Assert.True( pm.decideACANoncompliant PRManager_Test1.defaultSource lun_me.zero ( itt_me.fromPrim 0u ) cdb PooledBuffer.Empty [ data ] faultI_TNexus )
+        let r = pm.decideACANoncompliant PRManager_Test1.defaultSource lun_me.zero ( itt_me.fromPrim 0u ) cdb PooledBuffer.Empty [ data ] faultI_TNexus
+        Assert.True(( r = exresult ))
         k.NoticeTerminate()
 
         GlbFunc.DeleteFile fname
