@@ -79,7 +79,7 @@ type SendErrorStatusTask
             ValueNone
 
         /// Execute this SCSI task.
-        override this.Execute() : unit -> Task<unit> =
+        override this.Execute() : struct ( ( unit -> Task<unit> ) * ( TaskSet -> TaskSet ) ) =
             fun () -> task {
                 let loginfo = struct ( m_ObjID, ValueSome( m_Source ), ValueSome( m_ITT ), ValueSome( m_LUN ) )
                 try
@@ -114,7 +114,7 @@ type SendErrorStatusTask
                     HLogger.Trace( LogID.V_TRACE, fun g -> g.Gen1( loginfo, sprintf "An exeption raised. Message=%s" x.Message ) )
                     // If any errors occur repeatedly in the error response, escalate to a logical unit reset.
                     m_LU.NotifyTerminateTaskWithException ( this :> IBlockDeviceTask ) x
-            }
+            }, id
 
         // Get task description string.
         override _.DescString : string =

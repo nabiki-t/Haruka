@@ -37,7 +37,7 @@ type public CBlockDeviceTask_Stub() =
     let mutable f_GetSCSICommand : ( unit -> SCSICommandPDU ) option = None
     let mutable f_GetReceivedDataLength : ( unit -> uint ) option = None
     let mutable f_GetCDB : ( unit -> ICDB voption ) option = None
-    let mutable f_Execute : ( unit -> ( unit -> Task<unit> ) ) option = None
+    let mutable f_Execute : ( unit -> struct ( ( unit -> Task<unit> ) * ( TaskSet -> TaskSet ) ) ) option = None
     let mutable f_GetDescString : ( unit -> string ) option = None
     let mutable f_NotifyTerminate : ( bool -> unit ) option = None
     let mutable f_GetACANoncompliant : ( unit -> bool ) option = None
@@ -63,7 +63,7 @@ type public CBlockDeviceTask_Stub() =
         override _.SCSICommand : SCSICommandPDU = f_GetSCSICommand.Value()
         override _.ReceivedDataLength : uint = f_GetReceivedDataLength.Value()
         override _.CDB : ICDB voption = f_GetCDB.Value()
-        override _.Execute() : ( unit -> Task<unit> ) = f_Execute.Value()
+        override _.Execute() : struct ( ( unit -> Task<unit> ) * ( TaskSet -> TaskSet ) ) = f_Execute.Value()
         override _.DescString : string =
             if f_GetDescString.IsSome then
                 f_GetDescString.Value()
@@ -496,11 +496,11 @@ type BlockDeviceLU_Test () =
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 5u ),
                     p_GetSource = ( fun () -> source ),
                     p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK ),
-                    p_Execute = ( fun () () ->
-                        task {
+                    p_Execute = ( fun () ->
+                        fun () -> task {
                             cnt2 <- cnt2 + 1
                             sema2.Release() |> ignore
-                        }
+                        }, id
                     ),
                     p_GetCDB = ( fun () ->
                         let c : InquiryCDB = {
@@ -904,11 +904,11 @@ type BlockDeviceLU_Test () =
                         }
                     ),
                     p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK ),
-                    p_Execute = ( fun () () ->
-                        task {
+                    p_Execute = ( fun () ->
+                        fun () -> task {
                             cnt2 <- cnt2 + 1
                             sema2.Release() |> ignore
-                        }
+                        }, id
                     ),
                     p_GetCDB = ( fun () ->
                         let c : InquiryCDB = {
@@ -1287,11 +1287,11 @@ type BlockDeviceLU_Test () =
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
                     p_GetSource = ( fun () -> source ),
                     p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK ),
-                    p_Execute = ( fun () () ->
-                        task {
+                    p_Execute = ( fun () ->
+                        fun () -> task {
                             cnt2 <- cnt2 + 1
                             sema2.Release() |> ignore
-                        }
+                        }, id
                     ),
                     p_GetCDB = ( fun () ->
                         let c : InquiryCDB = {
@@ -2775,7 +2775,7 @@ type BlockDeviceLU_Test () =
             fun () -> task {
                 cnt <- cnt + 1
                 w.Release() |> ignore
-            }
+            }, id
         )
         taskStub_2.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
         taskStub_2.p_ReleasePooledBuffer <- id
@@ -2866,7 +2866,7 @@ type BlockDeviceLU_Test () =
                 dt.p_GetReceivedDataLength <- ( fun () -> 0u )
                 dt.p_Execute <- ( fun () ->
                     cnt1 <- cnt1 + 1
-                    fun () -> Task.FromResult()
+                    ( fun () -> Task.FromResult() ), id
                 )
                 dt.p_ReleasePooledBuffer <- id
                 yield TaskStatus.TASK_STAT_Dormant( dt :> IBlockDeviceTask )
@@ -2921,7 +2921,7 @@ type BlockDeviceLU_Test () =
             dt2.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
             dt2.p_Execute <- ( fun () ->
                 raise <| SCSIACAException ( source, true, SenseKeyCd.ABORTED_COMMAND, ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT, "" )
-                fun () -> Task.FromResult()
+                ( fun () -> Task.FromResult() ), id
             )
             yield TaskStatus.TASK_STAT_Dormant( dt2 :> IBlockDeviceTask )
         |]
@@ -4042,6 +4042,7 @@ type BlockDeviceLU_Test () =
         let cdb = { OperationCode = 0uy; Control = 0x00uy }
         let w = new SemaphoreSlim( 0 )
         let mutable cnt = 0
+        let mutable cnt2 = 0
 
         let taskStub = new CBlockDeviceTask_Stub()
         taskStub.p_GetSource <- ( fun () -> source )
@@ -4049,23 +4050,29 @@ type BlockDeviceLU_Test () =
         taskStub.p_GetTaskType <- ( fun () -> BlockDeviceTaskType.ScsiTask )
         taskStub.p_GetCDB <- ( fun () -> ValueSome cdb )
         taskStub.p_Execute <- ( fun () ->
-            fun () -> task{
+            let f1() = task{
                 cnt <- cnt + 1
                 w.Release() |> ignore
             }
+            let f2 ( ots : TaskSet ) =
+                cnt2 <- cnt2 + 1
+                ots
+            f1, f2
         )
 
         m_TaskSetQueue.Enqueue( fun () ->
-            let nextStat =
-                pc.Invoke( "RunSCSITask", taskStub ) :?> TaskStatus
+            let struct( nextStat, updateF ) =
+                pc.Invoke( "RunSCSITask", taskStub ) :?> struct( TaskStatus * ( TaskSet -> TaskSet ) )
             match nextStat with
             | TASK_STAT_Dormant( _ ) ->
                 Assert.Fail __LINE__
             | _ -> ()
+            updateF( { Queue = ImmutableArray.Empty; ACA = ValueNone }  ) |> ignore
         )
 
         Assert.True(( w.Wait 100000 ))
         Assert.True(( cnt = 1 ))
+        Assert.True(( cnt2 = 1 ))
 
     [<Fact>]
     member this.RunSCSITask_002() =
@@ -4075,6 +4082,7 @@ type BlockDeviceLU_Test () =
         let m_TaskSetQueue = pc.GetField( "m_TaskSetQueue" ) :?> LambdaQueue
         let w = new SemaphoreSlim( 0 )
         let mutable cnt = 0
+        let mutable cnt2 = 0
 
         let taskStub = new CBlockDeviceTask_Stub()
         taskStub.p_GetSource <- ( fun () -> source )
@@ -4082,22 +4090,29 @@ type BlockDeviceLU_Test () =
         taskStub.p_GetTaskType <- ( fun () -> BlockDeviceTaskType.InternalTask )
         taskStub.p_GetCDB <- ( fun () -> ValueNone )
         taskStub.p_Execute <- ( fun () ->
-            fun () -> task{
+            let f1() = task{
                 cnt <- cnt + 1
                 w.Release() |> ignore
             }
+            let f2 ( ots : TaskSet ) =
+                cnt2 <- cnt2 + 1
+                ots
+            f1, f2
         )
 
         m_TaskSetQueue.Enqueue( fun () ->
-            let nextStat = pc.Invoke( "RunSCSITask", taskStub ) :?> TaskStatus
+            let struct( nextStat, updateF ) =
+                pc.Invoke( "RunSCSITask", taskStub ) :?> struct( TaskStatus * ( TaskSet -> TaskSet ) )
             match nextStat with
             | TASK_STAT_Dormant( _ ) ->
                 Assert.Fail __LINE__
             | _ -> ()
+            updateF( { Queue = ImmutableArray.Empty; ACA = ValueNone }  ) |> ignore
         )
 
         Assert.True(( w.Wait 100000 ))
         Assert.True(( cnt = 1 ))
+        Assert.True(( cnt2 = 1 ))
 
     [<Fact>]
     member this.RunSCSITask_003() =
@@ -4117,7 +4132,7 @@ type BlockDeviceLU_Test () =
         taskStub.p_GetCDB <- ( fun () -> ValueSome cdb )
         taskStub.p_Execute <- ( fun () ->
             Assert.Fail __LINE__
-            fun () -> Task.FromResult()
+            ( fun () -> Task.FromResult() ), id
         )
         taskStub.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
         taskStub.p_GetReceivedDataLength <- ( fun () -> 0u )
@@ -4137,7 +4152,8 @@ type BlockDeviceLU_Test () =
         )
 
         m_TaskSetQueue.Enqueue( fun () ->
-            let nextStat = pc.Invoke( "RunSCSITask", taskStub ) :?> TaskStatus
+            let struct( nextStat, _ ) =
+                pc.Invoke( "RunSCSITask", taskStub ) :?> struct( TaskStatus * ( TaskSet -> TaskSet ) )
 
             match nextStat with
             | TASK_STAT_Dormant( _ ) ->
@@ -4167,6 +4183,7 @@ type BlockDeviceLU_Test () =
         let w3 = new SemaphoreSlim( 0 )
         let mutable cnt1 = 0
         let mutable cnt2 = 0
+        let mutable cnt3 = 0
 
         let taskStub = new CBlockDeviceTask_Stub()
         taskStub.p_GetSource <- ( fun () -> source )
@@ -4174,7 +4191,7 @@ type BlockDeviceLU_Test () =
         taskStub.p_GetTaskType <- ( fun () -> BlockDeviceTaskType.ScsiTask )
         taskStub.p_GetCDB <- ( fun () -> ValueSome cdb )
         taskStub.p_Execute <- ( fun () ->
-            fun () -> task {
+            let f1() = task {
                 cnt1 <- cnt1 + 1
                 // ACA Exception
                 let ex =
@@ -4186,6 +4203,10 @@ type BlockDeviceLU_Test () =
                 ( lu :> IInternalLU ).NotifyTerminateTaskWithException taskStub ex
                 w1.Release() |> ignore
             }
+            let f2 ( ots : TaskSet ) =
+                cnt3 <- cnt3 + 1
+                ots
+            f1, f2
         )
         taskStub.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
         taskStub.p_GetReceivedDataLength <- ( fun () -> 0u )
@@ -4206,7 +4227,8 @@ type BlockDeviceLU_Test () =
 
         task {
             m_TaskSetQueue.Enqueue( fun () ->
-                let nextStat = pc.Invoke( "RunSCSITask", taskStub ) :?> TaskStatus
+                let struct( nextStat, updateF ) =
+                    pc.Invoke( "RunSCSITask", taskStub ) :?> struct( TaskStatus * ( TaskSet -> TaskSet ) )
 
                 match nextStat with
                 | TASK_STAT_Dormant( _ ) ->
@@ -4219,10 +4241,12 @@ type BlockDeviceLU_Test () =
                     ACA = ValueNone;
                 }
                 pc.SetField( "m_TaskSet", queue2 )
+                updateF( { Queue = ImmutableArray.Empty; ACA = ValueNone }  ) |> ignore
             )
 
             do! w1.WaitAsync()
             Assert.True(( cnt1 = 1 ))
+            Assert.True(( cnt3 = 1 ))
 
             do! w2.WaitAsync()
             Assert.True(( cnt2 = 1 ))
@@ -4253,6 +4277,7 @@ type BlockDeviceLU_Test () =
         let mutable cnt1 = 0
         let mutable cnt2 = 0
         let mutable cnt3 = 0
+        let mutable cnt4 = 0
 
         let taskStub = new CBlockDeviceTask_Stub()
         taskStub.p_GetSource <- ( fun () -> source )
@@ -4260,11 +4285,15 @@ type BlockDeviceLU_Test () =
         taskStub.p_GetTaskType <- ( fun () -> BlockDeviceTaskType.ScsiTask )
         taskStub.p_GetCDB <- ( fun () -> ValueSome cdb )
         taskStub.p_Execute <- ( fun () ->
-            fun () -> task {
+            let f1() = task {
                 cnt1 <- cnt1 + 1
                 let ex = new Exception( "" )    // raise other exception( = LU Reset )
                 ( lu :> IInternalLU ).NotifyTerminateTaskWithException taskStub ex
             }
+            let f2 ( ots : TaskSet ) =
+                cnt4 <- cnt4 + 1
+                ots
+            f1, f2
         )
         taskStub.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
         taskStub.p_NotifyTerminate <- ( fun flg ->
@@ -4287,7 +4316,8 @@ type BlockDeviceLU_Test () =
         )
 
         m_TaskSetQueue.Enqueue( fun () ->
-            let nextStat = pc.Invoke( "RunSCSITask", taskStub ) :?> TaskStatus
+            let struct( nextStat, updateF ) =
+                pc.Invoke( "RunSCSITask", taskStub ) :?> struct( TaskStatus * ( TaskSet -> TaskSet ) )
             match nextStat with
             | TASK_STAT_Dormant( _ ) ->
                 Assert.Fail __LINE__
@@ -4299,12 +4329,14 @@ type BlockDeviceLU_Test () =
                 ACA = ValueNone;
             }
             pc.SetField( "m_TaskSet", queue2 )
+            updateF( { Queue = ImmutableArray.Empty; ACA = ValueNone }  ) |> ignore
         )
 
         Assert.True(( w1.Wait 100000 ))
         Assert.True(( cnt1 = 1 ))
         Assert.True(( cnt2 = 1 ))
         Assert.True(( cnt3 = 1 ))
+        Assert.True(( cnt4 = 1 ))
 
     [<Fact>]
     member this.RunSCSITask_006() =
@@ -4312,11 +4344,11 @@ type BlockDeviceLU_Test () =
         let source = BlockDeviceLU_Test.cmdSource()
         let pc = new PrivateCaller( lu )
         let m_TaskSetQueue = pc.GetField( "m_TaskSetQueue" ) :?> LambdaQueue
-//        let cdb = { OperationCode = 0uy; Control = 0x04uy }
         let w1 = new SemaphoreSlim( 0 )
         let mutable cnt1 = 0
         let mutable cnt2 = 0
         let mutable cnt3 = 0
+        let mutable cnt4 = 0
 
         let taskStub = new CBlockDeviceTask_Stub()
         taskStub.p_GetSource <- ( fun () -> source )
@@ -4324,7 +4356,7 @@ type BlockDeviceLU_Test () =
         taskStub.p_GetTaskType <- ( fun () -> BlockDeviceTaskType.InternalTask )
         taskStub.p_GetCDB <- ( fun () -> ValueNone )
         taskStub.p_Execute <- ( fun () ->
-            fun () -> task {
+            let f1() = task {
                 cnt1 <- cnt1 + 1
                 // raise ACA exception in internal task ( it will occur LU reset )
                 let ex =
@@ -4335,6 +4367,10 @@ type BlockDeviceLU_Test () =
                         ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
                 ( lu :> IInternalLU ).NotifyTerminateTaskWithException taskStub ex
             }
+            let f2 ( ots : TaskSet ) =
+                cnt4 <- cnt4 + 1
+                ots
+            f1, f2
         )
         taskStub.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
         taskStub.p_NotifyTerminate <- ( fun flg ->
@@ -4358,7 +4394,8 @@ type BlockDeviceLU_Test () =
         )
 
         m_TaskSetQueue.Enqueue( fun () ->
-            let nextStat = pc.Invoke( "RunSCSITask", taskStub ) :?> TaskStatus
+            let struct( nextStat, updateF ) =
+                pc.Invoke( "RunSCSITask", taskStub ) :?> struct( TaskStatus * ( TaskSet -> TaskSet ) )
             match nextStat with
             | TASK_STAT_Dormant( _ ) ->
                 Assert.Fail __LINE__
@@ -4370,12 +4407,14 @@ type BlockDeviceLU_Test () =
                 ACA = ValueNone;
             }
             pc.SetField( "m_TaskSet", queue2 )
+            updateF( { Queue = ImmutableArray.Empty; ACA = ValueNone }  ) |> ignore
         )
 
         Assert.True(( w1.Wait 100000 ))
         Assert.True(( cnt1 = 1 ))
         Assert.True(( cnt2 = 1 ))
         Assert.True(( cnt3 = 1 ))
+        Assert.True(( cnt4 = 1 ))
 
     [<Fact>]
     member this.RunSCSITask_007() =
@@ -4386,6 +4425,7 @@ type BlockDeviceLU_Test () =
         let cdb = { OperationCode = 0uy; Control = 0x04uy }
         let mutable cnt1 = 0
         let mutable cnt2 = 0
+        let mutable cnt3 = 0
         let w1 = new SemaphoreSlim( 0 )
 
         let task2 = new CBlockDeviceTask_Stub()
@@ -4398,7 +4438,7 @@ type BlockDeviceLU_Test () =
                 cnt2 <- cnt2 + 1
                 ( lu :> IInternalLU ).NotifyTerminateTask task2
                 w1.Release() |> ignore
-            }
+            }, id
         )
         task2.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
 
@@ -4408,9 +4448,8 @@ type BlockDeviceLU_Test () =
         task1.p_GetTaskType <- ( fun () -> BlockDeviceTaskType.ScsiTask )
         task1.p_GetCDB <- ( fun () -> ValueSome cdb )
         task1.p_Execute <- ( fun () ->
-            fun () -> task {
+            let f1() = task {
                 cnt1 <- cnt1 + 1
-
                 m_TaskSetQueue.Enqueue( fun () ->
                     let m_TaskSet = pc.GetField( "m_TaskSet" ) :?> TaskSet
                     let queue2 = {
@@ -4422,6 +4461,10 @@ type BlockDeviceLU_Test () =
 
                 ( lu :> IInternalLU ).NotifyTerminateTask task1
             }
+            let f2 ( ots : TaskSet ) =
+                cnt3 <- cnt3 + 1
+                ots
+            f1, f2
         )
         task1.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
 
@@ -4432,7 +4475,8 @@ type BlockDeviceLU_Test () =
         pc.SetField( "m_TaskSet", queue1 )
 
         m_TaskSetQueue.Enqueue( fun () ->
-            let nextStat = pc.Invoke( "RunSCSITask", task1 ) :?> TaskStatus
+            let struct( nextStat, updateF ) =
+                pc.Invoke( "RunSCSITask", task1 ) :?> struct( TaskStatus * ( TaskSet -> TaskSet ) )
             match nextStat with
             | TASK_STAT_Dormant( _ ) ->
                 Assert.Fail __LINE__
@@ -4444,11 +4488,13 @@ type BlockDeviceLU_Test () =
                 ACA = ValueNone;
             }
             pc.SetField( "m_TaskSet", queue3 )
+            updateF( { Queue = ImmutableArray.Empty; ACA = ValueNone }  ) |> ignore
         )
 
         Assert.True(( w1.Wait 100000 ))
         Assert.True(( cnt1 = 1 ))
         Assert.True(( cnt2 = 1 ))
+        Assert.True(( cnt3 = 1 ))
 
         let mutable wcnt = 0
         while m_TaskSetQueue.RunWaitCount > 0u && wcnt < 100 do
@@ -4466,6 +4512,7 @@ type BlockDeviceLU_Test () =
         let m_TaskSetQueue = pc.GetField( "m_TaskSetQueue" ) :?> LambdaQueue
         let cdb = { OperationCode = 0uy; Control = 0x04uy }
         let mutable cnt1 = 0
+        let mutable cnt2 = 0
         let sema1 = new SemaphoreSlim( 0 )
         let sema3 = new SemaphoreSlim( 0 )
 
@@ -4489,11 +4536,15 @@ type BlockDeviceLU_Test () =
         task1.p_GetTaskType <- ( fun () -> BlockDeviceTaskType.ScsiTask )
         task1.p_GetCDB <- ( fun () -> ValueSome cdb )
         task1.p_Execute <- ( fun () ->
-            fun () -> task {
+            let f1() = task {
                 cnt1 <- cnt1 + 1
                 ( lu :> IInternalLU ).NotifyTerminateTask task1
                 sema3.Release() |> ignore
             }
+            let f2 ( ots : TaskSet ) =
+                cnt2 <- cnt2 + 1
+                ots
+            f1, f2
         )
         task1.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
 
@@ -4504,7 +4555,8 @@ type BlockDeviceLU_Test () =
         pc.SetField( "m_TaskSet", queue1 )
 
         m_TaskSetQueue.Enqueue( fun () ->
-            let nextStat = pc.Invoke( "RunSCSITask", task1 ) :?> TaskStatus
+            let struct( nextStat, updateF ) =
+                pc.Invoke( "RunSCSITask", task1 ) :?> struct( TaskStatus * ( TaskSet -> TaskSet ) )
 
             match nextStat with
             | TASK_STAT_Dormant( _ ) ->
@@ -4518,6 +4570,7 @@ type BlockDeviceLU_Test () =
             }
             pc.SetField( "m_TaskSet", queue2 )
             sema1.Release() |> ignore
+            updateF( { Queue = ImmutableArray.Empty; ACA = ValueNone }  ) |> ignore
         )
         Assert.True(( sema1.Wait 100000 ))
         Assert.True(( sema3.Wait 100000 ))
@@ -4530,6 +4583,7 @@ type BlockDeviceLU_Test () =
         let m_TaskSet = pc.GetField( "m_TaskSet" ) :?> TaskSet
         Assert.True(( m_TaskSet.Queue.Length = 16 ))
         Assert.True(( cnt1 = 1 ))
+        Assert.True(( cnt2 = 1 ))
 
     [<Fact>]
     member this.RunSCSITask_009() =
@@ -4539,6 +4593,7 @@ type BlockDeviceLU_Test () =
         let m_TaskSetQueue = pc.GetField( "m_TaskSetQueue" ) :?> LambdaQueue
         let cdb = { OperationCode = 0uy; Control = 0x04uy }
         let mutable cnt1 = 0
+        let mutable cnt2 = 0
         let w = new SemaphoreSlim( 0 )
 
         let rec task1() =
@@ -4548,7 +4603,7 @@ type BlockDeviceLU_Test () =
             t.p_GetTaskType <- ( fun () -> BlockDeviceTaskType.ScsiTask )
             t.p_GetCDB <- ( fun () -> ValueSome cdb )
             t.p_Execute <- ( fun () ->
-                fun () -> task {
+                let f1() = task {
                     if cnt1 < 10000 then
                         cnt1 <- cnt1 + 1
 
@@ -4566,6 +4621,10 @@ type BlockDeviceLU_Test () =
                         ( lu :> IInternalLU ).NotifyTerminateTask t
                         w.Release() |> ignore
                 }
+                let f2 ( ots : TaskSet ) =
+                    cnt2 <- cnt2 + 1
+                    ots
+                f1, f2
             )
             t.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
             t
@@ -4578,7 +4637,8 @@ type BlockDeviceLU_Test () =
         pc.SetField( "m_TaskSet", queue1 )
 
         m_TaskSetQueue.Enqueue( fun () ->
-            let nextStat = pc.Invoke( "RunSCSITask", testTask1 ) :?> TaskStatus
+            let struct( nextStat, updateF ) =
+                pc.Invoke( "RunSCSITask", testTask1 ) :?> struct( TaskStatus * ( TaskSet -> TaskSet ) )
             match nextStat with
             | TASK_STAT_Dormant( _ ) ->
                 Assert.Fail __LINE__
@@ -4590,6 +4650,7 @@ type BlockDeviceLU_Test () =
                 ACA = ValueNone;
             }
             pc.SetField( "m_TaskSet", queue1 )
+            updateF( { Queue = ImmutableArray.Empty; ACA = ValueNone }  ) |> ignore
         )
         Assert.True(( w.Wait 100000 ))
 
@@ -4601,6 +4662,7 @@ type BlockDeviceLU_Test () =
         let m_TaskSet = pc.GetField( "m_TaskSet" ) :?> TaskSet
         Assert.True(( m_TaskSet.Queue.Length = 0 ))
         Assert.True(( cnt1 = 10000 ))
+        Assert.True(( cnt2 = 10001 ))
 
     [<Fact>]
     member this.StartExecutableSCSITasks_001() =
@@ -4649,7 +4711,7 @@ type BlockDeviceLU_Test () =
                 ( lu :> IInternalLU ).NotifyTerminateTask task1
                 cnt1 <- cnt1 + 1
                 w.Release() |> ignore
-            }
+            }, id
         )
         task1.p_GetACANoncompliant <- ( fun () -> true )   // InternalTask always must return true.
 
@@ -4697,7 +4759,7 @@ type BlockDeviceLU_Test () =
                 ( lu :> IInternalLU ).NotifyTerminateTask task1
                 cnt1 <- cnt1 + 1
                 w.Release() |> ignore
-            }
+            }, id
         )
         task1.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK )
         task1.p_GetACANoncompliant <- ( fun () -> false )
@@ -4745,7 +4807,7 @@ type BlockDeviceLU_Test () =
                     p_GetCDB = ( fun () -> ValueSome cdb ),
                     p_Execute = ( fun () ->
                         Assert.Fail __LINE__
-                        fun () -> Task.FromResult()
+                        ( fun () -> Task.FromResult() ), id
                     ),
                     p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK ),
                     p_GetACANoncompliant = ( fun () -> false )
@@ -4759,7 +4821,7 @@ type BlockDeviceLU_Test () =
                     p_GetCDB = ( fun () -> ValueNone ),
                     p_Execute = ( fun () ->
                         Assert.Fail __LINE__
-                        fun () -> Task.FromResult()
+                        ( fun () -> Task.FromResult() ), id
                     ),
                     p_GetACANoncompliant = ( fun () -> true )   // InternalTask always must return true.
                 ) :> IBlockDeviceTask
@@ -4776,7 +4838,7 @@ type BlockDeviceLU_Test () =
                         let wcnt = Interlocked.Increment( &cnt1 )
                         if wcnt >= 14 then
                             w.Release() |> ignore
-                    }
+                    }, id
                 )
                 task3.p_GetACANoncompliant <- ( fun () -> true )   // InternalTask always must return true.
                 yield TaskStatus.TASK_STAT_Dormant( task3 )
@@ -4832,7 +4894,7 @@ type BlockDeviceLU_Test () =
                     p_GetCDB = ( fun () -> ValueSome cdb ),
                     p_Execute = ( fun () ->
                         Assert.Fail __LINE__
-                        fun () -> Task.FromResult()
+                        ( fun () -> Task.FromResult() ), id
                     ),
                     p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK ),
                     p_GetACANoncompliant = ( fun () -> false )
@@ -4846,7 +4908,7 @@ type BlockDeviceLU_Test () =
                     p_GetCDB = ( fun () -> ValueNone ),
                     p_Execute = ( fun () ->
                         Assert.Fail __LINE__
-                        fun () -> Task.FromResult()
+                        ( fun () -> Task.FromResult() ), id
                     ),
                     p_GetACANoncompliant = ( fun () -> true )   // InternalTask always must return true.
                 ) :> IBlockDeviceTask
@@ -4864,7 +4926,7 @@ type BlockDeviceLU_Test () =
                         let wcnt = Interlocked.Increment( &cnt1 )
                         if wcnt >= 14 then
                             w.Release() |> ignore
-                    }
+                    }, id
                 )
                 task3.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK )
                 task3.p_GetACANoncompliant <- ( fun () -> false )
@@ -4923,7 +4985,7 @@ type BlockDeviceLU_Test () =
                     p_GetCDB = ( fun () -> ValueSome cdb ),
                     p_Execute = ( fun () ->
                         Assert.Fail __LINE__
-                        fun () -> Task.FromResult()
+                        ( fun () -> Task.FromResult() ), id
                     ),
                     p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.HEAD_OF_QUEUE_TASK ),
                     p_GetACANoncompliant = ( fun () -> false )
@@ -4943,7 +5005,7 @@ type BlockDeviceLU_Test () =
                     ( lu :> IInternalLU ).NotifyTerminateTask task2
                     cnt1 <- cnt1 + 1
                     w.Release() |> ignore
-                }
+                }, id
             )
             yield TaskStatus.TASK_STAT_Dormant( task2 )
         |]
@@ -4982,7 +5044,7 @@ type BlockDeviceLU_Test () =
                 p_GetCDB = ( fun () -> ValueSome cdb ),
                 p_Execute = ( fun () ->
                     Assert.Fail __LINE__
-                    fun () -> Task.FromResult()
+                    ( fun () -> Task.FromResult() ), id
                 ),
                 p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ORDERED_TASK ),
                 p_GetACANoncompliant = ( fun () -> false )
@@ -4997,7 +5059,7 @@ type BlockDeviceLU_Test () =
                 ( lu :> IInternalLU ).NotifyTerminateTask task2
                 cnt1 <- cnt1 + 1
                 w.Release() |> ignore
-            }
+            }, id
         )
         task2.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK )
         task2.p_GetACANoncompliant <- ( fun () -> false )
@@ -5041,7 +5103,7 @@ type BlockDeviceLU_Test () =
                 p_GetCDB = ( fun () -> ValueSome cdb ),
                 p_Execute = ( fun () ->
                     Assert.Fail __LINE__
-                    fun () -> Task.FromResult()
+                    ( fun () -> Task.FromResult() ), id
                 ),
                 p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK ),
                 p_GetACANoncompliant = ( fun () -> false )
@@ -5056,7 +5118,7 @@ type BlockDeviceLU_Test () =
                 ( lu :> IInternalLU ).NotifyTerminateTask task2
                 cnt1 <- cnt1 + 1
                 w.Release() |> ignore
-            }
+            }, id
         )
         task2.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK )
         task2.p_GetACANoncompliant <- ( fun () -> false )
@@ -5100,7 +5162,7 @@ type BlockDeviceLU_Test () =
                 p_GetCDB = ( fun () -> ValueSome cdb ),
                 p_Execute = ( fun () ->
                     Assert.Fail __LINE__
-                    fun () -> Task.FromResult()
+                    ( fun () -> Task.FromResult() ), id
                 ),
                 p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.TAGLESS_TASK ),
                 p_GetACANoncompliant = ( fun () -> false )
@@ -5115,7 +5177,7 @@ type BlockDeviceLU_Test () =
                 cnt1 <- cnt1 + 1
                 w.Release() |> ignore
                 ( lu :> IInternalLU ).NotifyTerminateTask task2
-            }
+            }, id
         )
         task2.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK )
         task2.p_GetACANoncompliant <- ( fun () -> false )
@@ -5179,7 +5241,7 @@ type BlockDeviceLU_Test () =
                 ( lu :> IInternalLU ).NotifyTerminateTask task1
                 cnt1 <- cnt1 + 1
                 w.Release() |> ignore
-            }
+            }, id
         )
         task1.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand attr )
         task1.p_GetACANoncompliant <- ( fun () -> false )
@@ -5225,7 +5287,7 @@ type BlockDeviceLU_Test () =
                 ( lu :> IInternalLU ).NotifyTerminateTask task1
                 cnt1 <- cnt1 + 1
                 w.Release() |> ignore
-            }
+            }, id
         )
         task1.p_GetACANoncompliant <- ( fun () -> true )
 
@@ -5410,7 +5472,7 @@ type BlockDeviceLU_Test () =
                     w1.Release() |> ignore
                 else
                     Assert.Fail __LINE__
-            }
+            }, id
         )
         task1.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand attr1 )
         task1.p_GetACANoncompliant <- ( fun () -> false )
@@ -5428,7 +5490,7 @@ type BlockDeviceLU_Test () =
                     w2.Release() |> ignore
                 else
                     Assert.Fail __LINE__
-            }
+            }, id
         )
         task2.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand attr2 )
         task2.p_GetACANoncompliant <- ( fun () -> false )
@@ -5446,7 +5508,7 @@ type BlockDeviceLU_Test () =
                     w3.Release() |> ignore
                 else
                     Assert.Fail __LINE__
-            }
+            }, id
         )
         task3.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand attr3 )
         task3.p_GetACANoncompliant <- ( fun () -> false )
@@ -5695,7 +5757,7 @@ type BlockDeviceLU_Test () =
         task1.p_GetCDB <- ( fun () -> ValueSome cdb )
         task1.p_Execute <- ( fun () ->
             Assert.Fail __LINE__
-            fun () -> Task.FromResult()
+            ( fun () -> Task.FromResult() ), id
         )
         task1.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand attr1 )
         task1.p_GetACANoncompliant <- ( fun () -> false )
@@ -5713,7 +5775,7 @@ type BlockDeviceLU_Test () =
                     w2.Release() |> ignore
                 else
                     Assert.Fail __LINE__
-            }
+            }, id
         )
         task2.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand attr2 )
         task2.p_GetACANoncompliant <- ( fun () -> false )
@@ -5731,7 +5793,7 @@ type BlockDeviceLU_Test () =
                     w3.Release() |> ignore
                 else
                     Assert.Fail __LINE__
-            }
+            }, id
         )
         task3.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand attr3 )
         task3.p_GetACANoncompliant <- ( fun () -> false )
@@ -5972,7 +6034,7 @@ type BlockDeviceLU_Test () =
                     w1.Release() |> ignore
                 else
                     Assert.Fail __LINE__
-            }
+            }, id
         )
         task1.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand attr1 )
         task1.p_GetACANoncompliant <- ( fun () -> false )
@@ -5987,7 +6049,7 @@ type BlockDeviceLU_Test () =
                 ( lu :> IInternalLU ).NotifyTerminateTask task_int_1
                 cnt_int_1 <- cnt_int_1 + 1
                 w_int_1.Release() |> ignore
-            }
+            }, id
         )
 
         let task2 = new CBlockDeviceTask_Stub()
@@ -6003,7 +6065,7 @@ type BlockDeviceLU_Test () =
                     w2.Release() |> ignore
                 else
                     Assert.Fail __LINE__
-            }
+            }, id
         )
         task2.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand attr2 )
         task2.p_GetACANoncompliant <- ( fun () -> false )
@@ -6018,7 +6080,7 @@ type BlockDeviceLU_Test () =
                 ( lu :> IInternalLU ).NotifyTerminateTask task_int_2
                 cnt_int_2 <- cnt_int_2 + 1
                 w_int_2.Release() |> ignore
-            }
+            }, id
         )
 
         let task3 = new CBlockDeviceTask_Stub()
@@ -6034,7 +6096,7 @@ type BlockDeviceLU_Test () =
                     w3.Release() |> ignore
                 else
                     Assert.Fail __LINE__
-            }
+            }, id
         )
         task3.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand attr3 )
         task3.p_GetACANoncompliant <- ( fun () -> false )
@@ -6049,7 +6111,7 @@ type BlockDeviceLU_Test () =
                 ( lu :> IInternalLU ).NotifyTerminateTask task_int_3
                 cnt_int_3 <- cnt_int_3 + 1
                 w_int_3.Release() |> ignore
-            }
+            }, id
         )
 
         let testTasks = [|
@@ -6195,7 +6257,7 @@ type BlockDeviceLU_Test () =
                         let wcnt = Interlocked.Increment( &cnt1 )
                         if wcnt >= 16 then
                             w1.Release() |> ignore
-                    }
+                    }, id
                 )
                 yield TaskStatus.TASK_STAT_Dormant( task1 )
         |]
@@ -6255,7 +6317,7 @@ type BlockDeviceLU_Test () =
                         let wcnt = Interlocked.Increment( &cnt1 )
                         if wcnt >= 16 then
                             w1.Release() |> ignore
-                    }
+                    }, id
                 )
                 task1.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand attr )
                 task1.p_GetACANoncompliant <- ( fun () -> false )
@@ -6320,7 +6382,7 @@ type BlockDeviceLU_Test () =
                         ( lu :> IInternalLU ).NotifyTerminateTask task1
                         if cnt1 >= 16 then
                             w1.Release() |> ignore
-                    }
+                    }, id
                 )
                 task1.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ORDERED_TASK )
                 task1.p_GetACANoncompliant <- ( fun () -> false )

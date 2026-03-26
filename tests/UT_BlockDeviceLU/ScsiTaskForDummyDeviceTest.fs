@@ -155,6 +155,10 @@ type ScsiTaskForDummyDeviceTest_Test () =
     let createDefScsiTaskForDummyDevice ( cmd : SCSICommandPDU ) ( cdb : ICDB ) ( data : SCSIDataOutPDU list ) ( acaNoncompliant : bool ) =
         createDefScsiTaskWithPRManager cmd cdb data acaNoncompliant ""
 
+    let RunTask ( t : IBlockDeviceTask ) : unit =
+        let struct( rf, _ ) = t.Execute()
+        rf() |> Functions.RunTaskSynchronously
+
     do
         let lock = GlbFunc.LogParamUpdateLock()
         HLogger.SetLogParameters( 100u, 100u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
@@ -237,8 +241,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
                 Assert.Fail __LINE__
         )
 
-        t.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask t
 
         Assert.True(( cnt = 1 ))
 
@@ -279,8 +282,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
             cnt1 <- cnt1 + 1
         )
 
-        t.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask t
 
         Assert.True(( cnt = 1 ))
         Assert.True(( cnt1 = 1 ))
@@ -337,8 +339,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
             cnt1 <- cnt1 + 1
         )
 
-        t.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask t
 
         Assert.True(( cnt = 1 ))
         Assert.True(( cnt1 = 1 ))
@@ -381,8 +382,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
         )
         ilu.p_NotifyTerminateTask <- ( fun _ -> cnt1 <- cnt1 + 1 )
 
-        t.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask t
 
         Assert.True(( cnt = 1 ))
         Assert.True(( cnt1 = 1 ))
@@ -427,8 +427,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
         )
         ilu.p_NotifyTerminateTask <- ( fun _ -> cnt1 <- cnt1 + 1 )
 
-        t.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask t
 
         Assert.True(( cnt = 1 ))
         Assert.True(( cnt1 = 1 ))
@@ -480,8 +479,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
         )
         ilu.p_NotifyTerminateTask <- ( fun _ -> cnt1 <- cnt1 + 1 )
 
-        t.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask t
 
         Assert.True(( cnt = 1 ))
         Assert.True(( cnt1 = 1 ))
@@ -515,8 +513,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
         )
         ilu.p_NotifyTerminateTask <- ( fun _ -> cnt1 <- cnt1 + 1 )
 
-        t.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask t
 
         Assert.True(( cnt = 1 ))
         Assert.True(( cnt1 = 1 ))
@@ -544,8 +541,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
                 Assert.Fail __LINE__
         )
 
-        t.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask t
 
         Assert.True(( cnt1 = 1 ))
 
@@ -572,8 +568,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
                 Assert.Fail __LINE__
         )
 
-        t.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask t
 
         Assert.True(( cnt1 = 1 ))
 
@@ -633,8 +628,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
         )
         ilu.p_NotifyTerminateTask <- ( fun _ -> cnt1 <- cnt1 + 1 )
 
-        t.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask t
 
         Assert.True(( cnt = 1 ))
         Assert.True(( cnt1 = 1 ))
@@ -657,8 +651,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
 
         t.NotifyTerminate false
 
-        t.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask t
 
         Assert.True(( cnt1 = 1 ))
 
@@ -699,8 +692,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
         let pc_dummy = new PrivateCaller( select_task )
         let select_ModeParameter = pc_dummy.GetField( "m_ModeParameter" ) :?> ModeParameter
 
-        select_task.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask select_task
         Assert.True(( cnt1 = 1 ))
         Assert.True(( cnt2 = 1 ))
         Assert.True(( select_ModeParameter.BlockLength = 0x00AABBCCUL ))
@@ -749,8 +741,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
         media_stub.p_GetBlockCount <- ( fun () -> 0xAABBUL )
         media_stub.p_GetWriteProtect <- ( fun () -> false )
 
-        sense_task.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask sense_task
         Assert.True(( cnt1 = 1 ))
         Assert.True(( cnt2 = 1 ))
 
@@ -775,8 +766,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
                 Assert.Fail __LINE__
         )
 
-        sense_task.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask sense_task
         Assert.True(( cnt1 = 1 ))
 
 
@@ -908,8 +898,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
         )
         ilu.p_NotifyTerminateTask <- ( fun _ -> cnt1 <- cnt1 + 1 )
 
-        stask.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask stask
         Assert.True(( cnt1 = 1 ))
         Assert.True(( cnt2 = 1 ))
 
@@ -954,8 +943,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
                 Assert.Fail __LINE__
         )
 
-        sense_task.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask sense_task
         Assert.True(( cnt1 = 1 ))
 
     [<Fact>]
@@ -979,8 +967,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
                 Assert.Fail __LINE__
         )
 
-        stask.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask stask
         Assert.True(( cnt1 = 1 ))
 
     [<Fact>]
@@ -1020,8 +1007,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
         )
         ilu.p_NotifyTerminateTask <- ( fun _ -> cnt1 <- cnt1 + 1 )
 
-        stask.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask stask
         Assert.True(( cnt1 = 1 ))
         Assert.True(( cnt2 = 1 ))
 
@@ -1043,8 +1029,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
             | _ ->
                 Assert.Fail __LINE__
         )
-        stask.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask stask
         Assert.True(( cnt1 = 1 ))
 
     [<Fact>]
@@ -1082,8 +1067,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
             cnt1 <- cnt1 + 1
         )
 
-        stask.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask stask
         Assert.True(( cnt1 = 1 ))
         Assert.True(( cnt2 = 1 ))
 
@@ -1113,8 +1097,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
         )
         ilu.p_NotifyTerminateTask <- ( fun _ -> cnt1 <- cnt1 + 1 )
 
-        stask.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask stask
         Assert.True(( cnt1 = 1 ))
         Assert.True(( cnt2 = 1 ))
 
@@ -1143,8 +1126,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
 
         ilu.p_NotifyTerminateTask <- ( fun _ -> cnt1 <- cnt1 + 1 )
 
-        stask.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask stask
         Assert.True(( cnt1 = 1 ))
         Assert.True(( cnt2 = 1 ))
 
@@ -1193,8 +1175,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
         ilu.p_NotifyTerminateTask <- ( fun _ -> cnt1 <- cnt1 + 1 )
         ilu.p_LUN <- ( fun () -> lun_me.zero )
 
-        stask.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask stask
         Assert.True(( cnt1 = 1 ))
         Assert.True(( cnt2 = 1 ))
 

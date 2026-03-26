@@ -29,21 +29,6 @@ open Haruka.IODataTypes
 //=============================================================================
 // Type definition
 
-/// SCSI Task status value definition.
-[<NoComparison>]
-type TaskStatus =
-    /// Dormant(S0 or S1)
-    | TASK_STAT_Dormant of IBlockDeviceTask
-
-    /// Running( equals S2:Enabled state )
-    | TASK_STAT_Running of IBlockDeviceTask
-
-    static member getTask ( arg : TaskStatus ) =
-        match arg with
-        | TASK_STAT_Dormant( x )
-        | TASK_STAT_Running( x ) ->
-            x
-
 /// BlockDevice type
 [<Struct>]
 type BlockDeviceType =
@@ -58,15 +43,6 @@ type LUResetStatus =
     | Valid
     /// This LU has already been reset and is no longer available.
     | Discarded
-
-[<NoComparison>]
-type TaskSet = {
-    /// Task queue of task set.
-    Queue : ImmutableArray< TaskStatus >;
-
-    /// ACA status
-    ACA : ( ITNexus * SCSIACAException ) voption;
-}
 
 //=============================================================================
 // Class implementation
@@ -715,10 +691,21 @@ type BlockDeviceLU
                 else
                     builder.Add itr
 
+            let nextACA =
+                match oldTaskSet.ACA with
+                | ValueNone ->
+                    ValueNone
+                | ValueSome( acaNexus, _ ) ->
+                    let s = itn |> Array.exists ( fun itr -> ITNexus.Equals( itr, acaNexus ) )
+                    if s || abortAllACATask then
+                        ValueNone
+                    else
+                        oldTaskSet.ACA
+
             // Replace the contents of the task queue
             m_TaskSet <- {
-                oldTaskSet with
-                    Queue = builder.DrainToImmutable()
+                Queue = builder.DrainToImmutable();
+                ACA = nextACA;
             }
 
             // At the end of the task that called this method, the "StartExecutableSCSITasks" method is executed
@@ -1080,12 +1067,13 @@ type BlockDeviceLU
         )
 #endif
 
-        let builder = ImmutableArray.CreateBuilder< TaskStatus >( Capacity = curTS.Queue.Length )
-
+        let qBuilder = ImmutableArray.CreateBuilder< TaskStatus >( Capacity = curTS.Queue.Length )
+        let tsUpdatorBuilder = ImmutableArray.CreateBuilder< TaskSet -> TaskSet >( Capacity = curTS.Queue.Length )
         if curTS.ACA.IsNone then
             // If ACA is not established, SIMPLE, ORDERED, HEAD OF QUEUE task is executable.
             let mutable ss = true   // If true, SIMPLE task can be execute.
             let mutable os = true   // If true, ORDERD task can be execute.
+
             for itr in curTS.Queue do
                 match itr with
                 | TASK_STAT_Dormant( x ) when x.TaskType = BlockDeviceTaskType.ScsiTask ->
@@ -1095,12 +1083,14 @@ type BlockDeviceLU
                         // If SIMPLE tasks at the top of the queue is in dormant state, that tasks is executed.
                         let nextTaskStat =
                             if ss then
-                                this.RunSCSITask x
+                                let struct( f, u ) = this.RunSCSITask x
+                                tsUpdatorBuilder.Add u
+                                f
                             else
                                 itr
 
                         // next SIMPLE task is executable, too.
-                        builder.Add nextTaskStat
+                        qBuilder.Add nextTaskStat
                         ss <- true && ss
                         os <- false
 
@@ -1108,52 +1098,57 @@ type BlockDeviceLU
                         // If an ORDERD task at the top of the queue is in dormant state, that tasks is executed.
                         let nextTaskStat =
                             if os then
-                                this.RunSCSITask x
+                                let struct( f, u ) = this.RunSCSITask x
+                                tsUpdatorBuilder.Add u
+                                f
                             else
                                 itr
 
                         // next SIMPLE or ORDERD task can not execute.
-                        builder.Add nextTaskStat
+                        qBuilder.Add nextTaskStat
                         ss <- false
                         os <- false
 
                     | _ ->
                         // If HEAD OF QUEUE or ACA task is in dormant state, that tasks is executed.
-                        let nexttaskStat = this.RunSCSITask x
+                        let struct( nextTaskStat, u ) = this.RunSCSITask x
+                        tsUpdatorBuilder.Add u
 
                         // next SIMPLE or ORDERD task can not execute.
-                        builder.Add nexttaskStat
+                        qBuilder.Add nextTaskStat
                         ss <- false
                         os <- false
 
                 | TASK_STAT_Dormant( x ) ->
                     // Internal task is always executable.
                     // Whether the next SIMPLE or ORDERD task is executable takes over the previous situation. 
-                    this.RunSCSITask x |> builder.Add
+                    let struct( f, u ) = this.RunSCSITask x
+                    tsUpdatorBuilder.Add u
+                    qBuilder.Add f
 
                 | TASK_STAT_Running( x ) when x.TaskType = BlockDeviceTaskType.ScsiTask ->
                     match x.SCSICommand.ATTR with
                     | TaskATTRCd.TAGLESS_TASK
                     | TaskATTRCd.SIMPLE_TASK ->
                         // next SIMPLE task is executable, too.
-                        builder.Add itr
+                        qBuilder.Add itr
                         ss <- true && ss
                         os <- false
 
                     | TaskATTRCd.ORDERED_TASK ->
                         // next SIMPLE or ORDERD task can not execute.
-                        builder.Add itr
+                        qBuilder.Add itr
                         ss <- false
                         os <- false
 
                     | _ ->
                         // next SIMPLE or ORDERD task can not execute.
-                        builder.Add itr
+                        qBuilder.Add itr
                         ss <- false
                         os <- false
 
                 | TASK_STAT_Running( _ ) ->
-                    builder.Add itr
+                    qBuilder.Add itr
 
         else
             // If ACA is established, only ACA task is executable.
@@ -1163,16 +1158,21 @@ type BlockDeviceLU
                     // Only ACA task or ACA non compliant task can be run.
                     // (* If taskItr is internal task, its ACANoncompliant flag value is always true.
                     //    And, internal task is always executable. )
-                    this.RunSCSITask x
-                    |> builder.Add
+                    let struct( f, u ) = this.RunSCSITask x
+                    tsUpdatorBuilder.Add u
+                    qBuilder.Add f
                 | _ ->
-                    builder.Add itr
+                    qBuilder.Add itr
 
         // replace containts of the task queue
-        {
+        let nextTS = {
             curTS with
-                Queue = builder.DrainToImmutable()
+                Queue = qBuilder.DrainToImmutable()
         }
+
+        // Update task queue
+        tsUpdatorBuilder.DrainToImmutable()
+        |> Seq.fold ( fun s f -> f s ) nextTS
 
     /// <summary>
     ///  Execute specified task.
@@ -1186,7 +1186,7 @@ type BlockDeviceLU
     /// <remarks>
     ///   Call this method in critical section at task set lock.
     /// </remarks>
-    member private this.RunSCSITask ( bdTask : IBlockDeviceTask ) : TaskStatus =
+    member private this.RunSCSITask ( bdTask : IBlockDeviceTask ) : struct( TaskStatus * ( TaskSet -> TaskSet ) ) =
         let cmdSource = bdTask.Source
         let loginfo = struct ( m_ObjID, ValueSome( cmdSource ), ValueSome( bdTask.InitiatorTaskTag ), ValueSome( m_LUN ) )
         HLogger.Trace( LogID.V_SCSI_TASK_STARTED, fun g -> g.Gen1( loginfo, bdTask.DescString ) )
@@ -1213,15 +1213,17 @@ type BlockDeviceLU
             bdTask.ReleasePooledBuffer()
 
             // Execute SendErrorStatusTask
-            m_ExecuteQueue.Enqueue( errTask.Execute() )
-            TASK_STAT_Running( errTask )
+            let struct( taskF, updateF ) = errTask.Execute()
+            m_ExecuteQueue.Enqueue( taskF )
+            TASK_STAT_Running( errTask ), updateF
         else
             // Check Unit Attention status
             match this.CheckUnitAttentionStatus bdTask with
             | ValueNone ->
                 // Execute this task
-                m_ExecuteQueue.Enqueue( bdTask.Execute() )
-                TaskStatus.TASK_STAT_Running( bdTask )
+                let struct( taskF, updateF ) = bdTask.Execute()
+                m_ExecuteQueue.Enqueue( taskF )
+                TaskStatus.TASK_STAT_Running( bdTask ), updateF
 
             | ValueSome ex ->
                 // Unit attention exist
@@ -1243,8 +1245,9 @@ type BlockDeviceLU
                 bdTask.ReleasePooledBuffer()
 
                 // Execute SendErrorStatusTask
-                m_ExecuteQueue.Enqueue( errTask.Execute() )
-                TASK_STAT_Running( errTask )
+                let struct( taskF, updateF ) = errTask.Execute()
+                m_ExecuteQueue.Enqueue( taskF )
+                TASK_STAT_Running( errTask ), updateF
 
     /// <summary>
     ///  Handle SCSIACAException

@@ -66,6 +66,10 @@ type SendErrorStatusTest_Test () =
             ) :> IBlockDeviceTask
         t, lu
 
+    let RunTask ( t : IBlockDeviceTask ) : unit =
+        let struct( rf, _ ) = t.Execute()
+        rf() |> Functions.RunTaskSynchronously
+
     do
         let lock = GlbFunc.LogParamUpdateLock()
         HLogger.SetLogParameters( 100u, 100u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
@@ -114,8 +118,7 @@ type SendErrorStatusTest_Test () =
             cnt1 <- cnt1 + 1
         )
 
-        t.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask t
         Assert.True(( cnt = 1 ))
         Assert.True(( cnt1 = 1 ))
 
@@ -144,8 +147,7 @@ type SendErrorStatusTest_Test () =
         )
 
         t.NotifyTerminate false
-        t.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask t
         Assert.True(( cnt = 0 ))
         Assert.True(( cnt1 = 1 ))
 
@@ -241,8 +243,7 @@ type SendErrorStatusTest_Test () =
             cnt1 <- cnt1 + 1
         )
 
-        t.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask t
         Assert.True(( cnt = 1 ))
         Assert.True(( cnt1 = 1 ))
 
@@ -290,7 +291,6 @@ type SendErrorStatusTest_Test () =
                 Assert.Fail __LINE__
         )
 
-        t.Execute()()
-        |> Functions.RunTaskSynchronously
+        RunTask t
         Assert.True(( cnt = 1 ))
         Assert.True(( cnt1 = 1 ))

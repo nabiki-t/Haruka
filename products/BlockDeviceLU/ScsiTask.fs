@@ -134,7 +134,7 @@ type ScsiTask
             this.GetCDB()
 
         /// Execute this SCSI task.
-        override this.Execute() : unit -> Task<unit> =
+        override this.Execute() : struct ( ( unit -> Task<unit> ) * ( TaskSet -> TaskSet ) ) =
             this.Execute()
 
         /// Get task description string.
@@ -190,7 +190,7 @@ type ScsiTask
         ValueSome m_CDB
 
     /// Execute this SCSI task.
-    member this.Execute() : unit -> Task<unit> =
+    member this.Execute() : struct ( ( unit -> Task<unit> ) * ( TaskSet -> TaskSet ) ) =
         // ****************************************************************
         // This method is called in critical section of BlockDeviceLU task set lock.
         // And returned task workflow is executed in asyncnously.
@@ -253,7 +253,7 @@ type ScsiTask
                             errmsg
                         )
                     m_LU.NotifyTerminateTaskWithException this ex
-                }
+                }, id
 
         | Inquiry                                   // SPC-3 6.4 INQUIRY command
             ->
@@ -264,7 +264,7 @@ type ScsiTask
                     with
                     | _ as x ->
                         m_LU.NotifyTerminateTaskWithException this x
-                }
+                }, id
 
         | ModeSelect                                // SPC-3 6.7 MODE SELECT(6), 6.8 MODE SELECT(10) command
             ->
@@ -275,7 +275,7 @@ type ScsiTask
                     with
                     | _ as x ->
                         m_LU.NotifyTerminateTaskWithException this x
-                }
+                }, id
 
         | ModeSense                                 // SPC-3 6.9 MODE SENSE(6), 6.10 MODE SENSE(10) command
             ->
@@ -286,7 +286,7 @@ type ScsiTask
                     with
                     | _ as x ->
                         m_LU.NotifyTerminateTaskWithException this x
-                }
+                }, id
 
         | PersistentReserveIn                       // SPC-3 6.11 PERSISTENT RESERVE IN command
             ->
@@ -297,7 +297,7 @@ type ScsiTask
                     with
                     | _ as x ->
                         m_LU.NotifyTerminateTaskWithException this x
-                }
+                }, id
 
         | PersistentReserveOut                      // SPC-3 6.12 PERSISTENT RESERVE OUT command
             -> 
@@ -313,7 +313,7 @@ type ScsiTask
                     with
                     | _ as x ->
                         m_LU.NotifyTerminateTaskWithException this x
-                }
+                }, id
 
         | ReportLUNs                                // SPC-3 6.21 REPORT LUNS command
             ->
@@ -324,7 +324,7 @@ type ScsiTask
                     with
                     | _ as x ->
                         m_LU.NotifyTerminateTaskWithException this x
-                }
+                }, id
 
         | ReportSupportedOperationCodes             // SPC-3 6.23 REPORT SUPPORTED OPERATION CODES command
             ->
@@ -335,7 +335,7 @@ type ScsiTask
                     with
                     | _ as x ->
                         m_LU.NotifyTerminateTaskWithException this x
-                }
+                }, id
 
         | ReportSupportedTaskManagementFunctions    // SPC-3 6.24 REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS command
             ->
@@ -346,7 +346,7 @@ type ScsiTask
                     with
                     | _ as x ->
                         m_LU.NotifyTerminateTaskWithException this x
-                }
+                }, id
 
         | RequestSense                              // SPC-3 6.27 REQUEST SENSE command
             ->
@@ -357,7 +357,7 @@ type ScsiTask
                     with
                     | _ as x ->
                         m_LU.NotifyTerminateTaskWithException this x
-                }
+                }, id
 
         | TestUnitReady                             // SPC-3 6.33 TEST UNIT READY command
             ->
@@ -368,7 +368,7 @@ type ScsiTask
                     with
                     | _ as x ->
                         m_LU.NotifyTerminateTaskWithException this x
-                }
+                }, id
 
         | FormatUnit                                // SBC-2 5.2 FORMAT UNIT command
             ->
@@ -379,7 +379,7 @@ type ScsiTask
                     with
                     | _ as x ->
                         m_LU.NotifyTerminateTaskWithException this x
-                }
+                }, id
 
         | Read                                      // SBC-2 5.5 READ(6), 5.6 READ(10), 5.7 READ(12), 5.8 READ(16), 5.9 READ(32) command
             ->
@@ -390,7 +390,7 @@ type ScsiTask
                     with
                     | _ as x ->
                         m_LU.NotifyTerminateTaskWithException this x
-                }
+                }, id
 
         | ReadCapacity                              // SBC-2 5.10 READ CAPACITY(10), 5.11 READ CAPACITY(16) command
             ->
@@ -401,7 +401,7 @@ type ScsiTask
                     with
                     | _ as x ->
                         m_LU.NotifyTerminateTaskWithException this x
-                }
+                }, id
 
         | SynchronizeCache                          // SBC-2 5.18 SYNCHRONIZE CACHE(10), 5.19 SYNCHRONIZE CACHE(16) command
             ->
@@ -412,7 +412,7 @@ type ScsiTask
                     with
                     | _ as x ->
                         m_LU.NotifyTerminateTaskWithException this x
-                }
+                }, id
 
         | Write                                     // SBC-2 5.24 WRITE(6), 5.25 WRITE(10), 5.26 WRITE(12), 5.27 WRITE(16), 5.28 WRITE(32) command
             ->
@@ -423,7 +423,7 @@ type ScsiTask
                     with
                     | _ as x ->
                         m_LU.NotifyTerminateTaskWithException this x
-                }
+                }, id
 
     /// Get task description string.
     member _.GetDescString() : string =
@@ -849,7 +849,7 @@ type ScsiTask
     /// <remarks>
     ///  m_CDB muast be PersistentReserveOutCDB.
     /// </remarks>
-    member private this.Execute_PersistentReserveOut() : unit -> Task<unit> =
+    member private this.Execute_PersistentReserveOut() : struct ( ( unit -> Task<unit> ) * ( TaskSet -> TaskSet ) ) =
         assert( m_CDB.Type = PersistentReserveOut )
         assert( match m_CDB with | :? PersistentReserveOutCDB -> true | _ -> false )
         let cdb = m_CDB :?> PersistentReserveOutCDB
@@ -891,27 +891,27 @@ type ScsiTask
             }
 
         try
-            let statcd =
+            let statcd, updatefunc =
                 match cdb.ServiceAction with
                 | 0x00uy -> // REGISTER
-                    m_PRManager.Register m_Source m_ITT cdb.PRType cdb.ParameterListLength parameterList
+                    ( m_PRManager.Register m_Source m_ITT cdb.PRType cdb.ParameterListLength parameterList ), id
                 | 0x01uy -> // RESERVE
-                    m_PRManager.Reserve m_Source m_ITT cdb.PRType cdb.ParameterListLength parameterList
+                    ( m_PRManager.Reserve m_Source m_ITT cdb.PRType cdb.ParameterListLength parameterList ), id
                 | 0x02uy -> // RELEASE
-                    m_PRManager.Release m_Source m_ITT cdb.PRType cdb.ParameterListLength parameterList
+                    ( m_PRManager.Release m_Source m_ITT cdb.PRType cdb.ParameterListLength parameterList ), id
                 | 0x03uy -> // CLEAR
-                    m_PRManager.Clear m_Source m_ITT cdb.PRType cdb.ParameterListLength parameterList
+                    ( m_PRManager.Clear m_Source m_ITT cdb.PRType cdb.ParameterListLength parameterList ), id
                 | 0x04uy -> // PREEMPT
-                    m_PRManager.Preempt m_Source m_ITT cdb.PRType cdb.ParameterListLength parameterList
+                    ( m_PRManager.Preempt m_Source m_ITT cdb.PRType cdb.ParameterListLength parameterList ), id
                 | 0x05uy -> // PREEMPT AND ABORT
                     let struct( statCD, itn, prType, resvKey ) = m_PRManager.PreemptAndAbort m_Source m_ITT cdb.PRType cdb.ParameterListLength parameterList
                     let abortAllACATasks = PR_TYPE.isAllRegistrants prType && resvKey = resvkey_me.zero
                     m_LU.AbortTasksFromSpecifiedITNexus this itn abortAllACATasks
-                    statCD
+                    statCD, id
                 | 0x06uy -> // REGISTER AND IGNORE EXISTING KEY
-                    m_PRManager.RegisterAndIgnoreExistingKey m_Source m_ITT cdb.PRType cdb.ParameterListLength parameterList
+                    ( m_PRManager.RegisterAndIgnoreExistingKey m_Source m_ITT cdb.PRType cdb.ParameterListLength parameterList ), id
                 | 0x07uy -> // REGISTER AND MOVE
-                    m_PRManager.RegisterAndMove m_Source m_ITT cdb.PRType cdb.ParameterListLength parameterList
+                    ( m_PRManager.RegisterAndMove m_Source m_ITT cdb.PRType cdb.ParameterListLength parameterList ), id
                 | _ ->
                     let errmsg = sprintf "Invalie SERVICE ACTION value(%d), in PERSISTENT RESERVE OUT command CDB." cdb.ServiceAction
                     HLogger.ACAException( m_LogInfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
@@ -921,12 +921,12 @@ type ScsiTask
                         errmsg
                     )
             parameterList.Return()
-            retresultfunc statcd
+            ( retresultfunc statcd ), updatefunc
         with
         | _ as x ->
             fun () -> task {
                 m_LU.NotifyTerminateTaskWithException this x
-            }
+            }, id
 
     /// <summary>
     ///  Execute PRE-FETCH command.

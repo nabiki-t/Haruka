@@ -114,7 +114,7 @@ type ScsiTaskForDummyDevice
             base.GetCDB()
 
         /// Execute this SCSI task.
-        override this.Execute() : unit -> Task<unit> =
+        override this.Execute() : struct( ( unit -> Task<unit> ) * ( TaskSet -> TaskSet ) ) =
 
             // ****************************************************************
             // This method is called in critical section of BlockDeviceLU task set lock.
@@ -182,7 +182,7 @@ type ScsiTaskForDummyDevice
                                 errmsg
                             )
                         m_LU.NotifyTerminateTaskWithException this ex
-                    }
+                    }, id
 
             | Inquiry                                   // SPC-3 6.4 INQUIRY command
                 ->
@@ -193,7 +193,7 @@ type ScsiTaskForDummyDevice
                         with
                         | _ as x ->
                             m_LU.NotifyTerminateTaskWithException this x
-                    }
+                    }, id
 
             | ModeSelect                                // SPC-3 6.7 MODE SELECT(6), 6.8 MODE SELECT(10) command
             | ModeSense                                 // SPC-3 6.9 MODE SENSE(6), 6.10 MODE SENSE(10) command
@@ -213,7 +213,7 @@ type ScsiTaskForDummyDevice
                 HLogger.ACAException( m_LogInfo, SenseKeyCd.NOT_READY, ASCCd.MEDIUM_NOT_PRESENT, msg )
                 let ex = SCSIACAException ( m_Source, true, SenseKeyCd.NOT_READY, ASCCd.MEDIUM_NOT_PRESENT, msg )
                 m_LU.NotifyTerminateTaskWithException this ex
-                fun () -> Task.FromResult()
+                ( fun () -> Task.FromResult() ), id
 
             | SynchronizeCache  ->                      // SBC-2 5.18 SYNCHRONIZE CACHE(10), 5.19 SYNCHRONIZE CACHE(16) command
 
@@ -233,7 +233,7 @@ type ScsiTaskForDummyDevice
                     0u
                     ResponseFenceNeedsFlag.R_Mode
                 m_LU.NotifyTerminateTask this
-                fun () -> Task.FromResult()
+                ( fun () -> Task.FromResult() ), id
 
             | ReportSupportedOperationCodes             // SPC-3 6.23 REPORT SUPPORTED OPERATION CODES command
                 ->
@@ -244,7 +244,7 @@ type ScsiTaskForDummyDevice
                         with
                         | _ as x ->
                             m_LU.NotifyTerminateTaskWithException this x
-                    }
+                    }, id
 
             | ReportSupportedTaskManagementFunctions    // SPC-3 6.24 REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS command
                 ->

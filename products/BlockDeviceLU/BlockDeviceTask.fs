@@ -14,6 +14,7 @@ namespace Haruka.BlockDeviceLU
 
 open System.Threading.Tasks
 open System.Runtime.CompilerServices
+open System.Collections.Immutable
 open Haruka.Constants
 open Haruka.Commons
 
@@ -59,7 +60,7 @@ type IBlockDeviceTask =
     /// Notice that this method returns a function ( unit -> task ), not a task object.
     /// Returned procedure must be run in asynchronously.
     /// </remarks>
-    abstract Execute : unit -> ( unit -> Task<unit> )
+    abstract Execute : unit -> struct ( ( unit -> Task<unit> ) * ( TaskSet -> TaskSet ) )
 
     /// Get task description string.
     abstract DescString : string
@@ -73,3 +74,25 @@ type IBlockDeviceTask =
 
     /// Release PooledBuffer
     abstract ReleasePooledBuffer : unit -> unit
+
+/// SCSI Task status value definition.
+and [<NoComparison>] TaskStatus =
+    /// Dormant(S0 or S1)
+    | TASK_STAT_Dormant of IBlockDeviceTask
+
+    /// Running( equals S2:Enabled state )
+    | TASK_STAT_Running of IBlockDeviceTask
+
+    static member getTask ( arg : TaskStatus ) =
+        match arg with
+        | TASK_STAT_Dormant( x )
+        | TASK_STAT_Running( x ) ->
+            x
+
+and [<NoComparison>] TaskSet = {
+    /// Task queue of task set.
+    Queue : ImmutableArray< TaskStatus >;
+
+    /// ACA status
+    ACA : ( ITNexus * SCSIACAException ) voption;
+}
