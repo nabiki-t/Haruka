@@ -808,7 +808,6 @@ type public CInternalLU_Stub() =
     let mutable f_OptimalTransferLength : ( unit -> BLKCNT32_T ) option = None
     let mutable f_NotifyTerminateTask : ( IBlockDeviceTask -> unit ) option = None
     let mutable f_NotifyTerminateTaskWithException : ( IBlockDeviceTask -> Exception -> unit ) option = None
-    let mutable f_AbortTasksFromSpecifiedITNexus : ( IBlockDeviceTask -> ITNexus[] -> bool -> unit ) option = None
     let mutable f_NotifyReadBytesCount : ( DateTime -> int64 -> unit ) option = None
     let mutable f_NotifyWrittenBytesCount : ( DateTime -> int64 -> unit ) option = None
     let mutable f_NotifyReadTickCount : ( DateTime -> int64 -> unit ) option = None
@@ -824,7 +823,6 @@ type public CInternalLU_Stub() =
     member _.p_OptimalTransferLength with set v = f_OptimalTransferLength <- Some( v )
     member _.p_NotifyTerminateTask with set v = f_NotifyTerminateTask <- Some( v )
     member _.p_NotifyTerminateTaskWithException with set v = f_NotifyTerminateTaskWithException <- Some( v )
-    member _.p_AbortTasksFromSpecifiedITNexus with set v = f_AbortTasksFromSpecifiedITNexus <- Some( v )
     member _.p_NotifyReadBytesCount with set v = f_NotifyReadBytesCount <- Some( v )
     member _.p_NotifyWrittenBytesCount with set v = f_NotifyWrittenBytesCount <- Some( v )
     member _.p_NotifyReadTickCount with set v = f_NotifyReadTickCount <- Some( v )
@@ -849,8 +847,6 @@ type public CInternalLU_Stub() =
             f_NotifyTerminateTask.Value argTask
         override _.NotifyTerminateTaskWithException ( argTask : IBlockDeviceTask ) ( ex : Exception ) : unit =
             f_NotifyTerminateTaskWithException.Value argTask ex
-        override _.AbortTasksFromSpecifiedITNexus ( self : IBlockDeviceTask ) ( itn : ITNexus[] ) ( abortAllACATask : bool ) =
-            f_AbortTasksFromSpecifiedITNexus.Value self itn abortAllACATask
         override _.NotifyReadBytesCount ( d : DateTime ) ( cnt : int64 ) =
             f_NotifyReadBytesCount.Value d cnt
         override _.NotifyWrittenBytesCount ( d : DateTime ) ( cnt : int64 ) =
@@ -875,3 +871,47 @@ type ICDB_Stub =
         member this.NACA = this.m_NACA
         member this.LINK = this.m_LINK
         member _.DescriptString = ""
+
+type public CBlockDeviceTask_Stub() =
+
+    let mutable f_GetTaskType : ( unit -> BlockDeviceTaskType ) option = None
+    let mutable f_GetSource : ( unit -> CommandSourceInfo ) option = None
+    let mutable f_GetInitiatorTaskTag : ( unit -> ITT_T ) option = None
+    let mutable f_GetSCSICommand : ( unit -> SCSICommandPDU ) option = None
+    let mutable f_GetReceivedDataLength : ( unit -> uint ) option = None
+    let mutable f_GetCDB : ( unit -> ICDB voption ) option = None
+    let mutable f_Execute : ( unit -> struct ( ( unit -> Task<unit> ) * ( TaskSet -> TaskSet ) ) ) option = None
+    let mutable f_GetDescString : ( unit -> string ) option = None
+    let mutable f_NotifyTerminate : ( bool -> unit ) option = None
+    let mutable f_GetACANoncompliant : ( unit -> bool ) option = None
+    let mutable f_ReleasePooledBuffer : ( unit -> unit ) option = Some( id )
+
+    member val dummy : obj = box () with get, set
+    member _.p_GetTaskType with set v = f_GetTaskType <- Some( v )
+    member _.p_GetSource with set v = f_GetSource <- Some v
+    member _.p_GetInitiatorTaskTag with set v = f_GetInitiatorTaskTag <- Some v
+    member _.p_GetSCSICommand with set v = f_GetSCSICommand <- Some v
+    member _.p_GetReceivedDataLength with set v = f_GetReceivedDataLength <- Some v
+    member _.p_GetCDB with set v = f_GetCDB <- Some v
+    member _.p_Execute with set v = f_Execute <- Some v
+    member _.p_GetDescString with set v = f_GetDescString <- Some v
+    member _.p_NotifyTerminate with set v = f_NotifyTerminate <- Some v
+    member _.p_GetACANoncompliant with set v = f_GetACANoncompliant <- Some v
+    member _.p_ReleasePooledBuffer with set v = f_ReleasePooledBuffer <- Some v
+
+    interface IBlockDeviceTask with
+        override _.TaskType : BlockDeviceTaskType = f_GetTaskType.Value()
+        override _.Source : CommandSourceInfo = f_GetSource.Value()
+        override _.InitiatorTaskTag : ITT_T = f_GetInitiatorTaskTag.Value()
+        override _.SCSICommand : SCSICommandPDU = f_GetSCSICommand.Value()
+        override _.ReceivedDataLength : uint = f_GetReceivedDataLength.Value()
+        override _.CDB : ICDB voption = f_GetCDB.Value()
+        override _.Execute() : struct ( ( unit -> Task<unit> ) * ( TaskSet -> TaskSet ) ) = f_Execute.Value()
+        override _.DescString : string =
+            if f_GetDescString.IsSome then
+                f_GetDescString.Value()
+            else
+                ""
+        override _.NotifyTerminate ( v : bool ) : unit = f_NotifyTerminate.Value( v )
+        override _.ACANoncompliant : bool = f_GetACANoncompliant.Value()
+        override _.ReleasePooledBuffer() : unit = f_ReleasePooledBuffer.Value()

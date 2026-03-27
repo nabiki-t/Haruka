@@ -4670,18 +4670,10 @@ type ScsiTask_Test () =
         )
         ilu.p_LUN <- ( fun () -> lun_me.zero )
         ilu.p_EstablishUnitAttention <- ( fun _ _ -> () )
-        ilu.p_AbortTasksFromSpecifiedITNexus <- ( fun taskObj itn abortAllACATasks ->
-            cnt3 <- cnt3 + 1
-            Assert.True(( taskObj = scsiTask ))
-            Assert.True(( itn.Length = 1 ))
-            Assert.True(( itn.[0] = initITN2 ))
-            Assert.True(( not abortAllACATasks ))
-        )
 
         RunTask scsiTask
         Assert.True(( cnt1 = 1 ))
         Assert.True(( cnt2 = 1 ))
-        Assert.True(( cnt3 = 1 ))
 
         let prinfo2 = ( pc2.GetField( "m_Locker" ) :?> OptimisticLock< PRInfoRec > ).obj
         Assert.True(( prinfo2.m_PRGeneration = 1u ))
@@ -4693,3 +4685,211 @@ type ScsiTask_Test () =
         GlbFunc.WaitForFileUpdateByHash fname initPRFileHash
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
+
+    [<Fact>]
+    member _.AbortTasksFromSpecifiedITNexus_001() =
+        let s = { OperationCode = 00uy; Control = 0uy; }
+        let testTask, ilu = createDefScsiTask defaultSCSICommandPDU s [] false
+        let queue1 = {
+            Queue = ImmutableArray<BDTaskStat>.Empty.Add( BDTaskStat.TASK_STAT_Running testTask );
+            ACA = ValueNone;
+        }
+        let sourceITN : ITNexus[] = [||]
+        let pc = new PrivateCaller( testTask :?> ScsiTask )
+        let queue2 = pc.Invoke( "AbortTasksFromSpecifiedITNexus", queue1, sourceITN, PR_TYPE.NO_RESERVATION, resvkey_me.zero ) :?> TaskSet
+
+        Assert.True(( queue2.Queue.Length = 1 ))
+
+    static member AbortTasksFromSpecifiedITNexus_002_data : obj[][] = [|
+        [| PR_TYPE.NO_RESERVATION;                    1UL; 0; 4; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   1UL; 0; 4; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  1UL; 0; 4; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  1UL; 0; 4; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   1UL; 0; 4; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; 1UL; 0; 4; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  1UL; 0; 4; |]
+        [| PR_TYPE.NO_RESERVATION;                    0UL; 0; 4; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   0UL; 0; 4; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  0UL; 0; 4; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  0UL; 0; 4; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   0UL; 1; 3; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; 0UL; 0; 4; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  0UL; 1; 3; |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "AbortTasksFromSpecifiedITNexus_002_data" )>]
+    member _.AbortTasksFromSpecifiedITNexus_002 ( prtype : PR_TYPE ) ( resvkey : uint64 ) ( exp5 : int ) ( expql : int ) =
+        let s = { OperationCode = 00uy; Control = 0uy; }
+        let self, ilu = createDefScsiTask defaultSCSICommandPDU s [] false
+        let itn1 = ITNexus( "INIT1", isid_me.zero, "TARG1", tpgt_me.fromPrim 0us );
+        let itn2 = ITNexus( "INIT2", isid_me.zero, "TARG2", tpgt_me.fromPrim 0us );
+        let itn3 = ITNexus( "INIT3", isid_me.zero, "TARG3", tpgt_me.fromPrim 0us );
+        let itn4 = ITNexus( "INIT4", isid_me.zero, "TARG4", tpgt_me.fromPrim 0us );
+        let source1 = { self.Source with I_TNexus = itn1 }
+        let source2 = { self.Source with I_TNexus = itn2 }
+        let source3 = { self.Source with I_TNexus = itn3 }
+        let source4 = { self.Source with I_TNexus = itn4 }
+        let vcnt = Array.zeroCreate<int> 6
+
+        let testTasks = [|
+            yield BDTaskStat.TASK_STAT_Running( self )
+
+            yield
+                BDTaskStat.TASK_STAT_Running(
+                    new CBlockDeviceTask_Stub(
+                        p_GetSource = ( fun () -> source1 ),
+                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
+                        p_GetTaskType = ( fun () -> BlockDeviceTaskType.InternalTask ),
+                        p_NotifyTerminate = ( fun _ -> vcnt.[1] <- vcnt.[1] + 1 )
+                    )
+                )
+
+            yield
+                BDTaskStat.TASK_STAT_Running(
+                    new CBlockDeviceTask_Stub(
+                        p_GetSource = ( fun () -> source2 ),
+                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
+                        p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
+                        p_GetSCSICommand = ( fun () -> defaultSCSICommandPDU ),
+                        p_NotifyTerminate = ( fun _ -> vcnt.[2] <- vcnt.[2] + 1 )
+                    )
+                )
+
+            yield
+                BDTaskStat.TASK_STAT_Running(
+                    new CBlockDeviceTask_Stub(
+                        p_GetSource = ( fun () -> source3 ),
+                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
+                        p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
+                        p_GetSCSICommand = ( fun () -> { defaultSCSICommandPDU with ATTR = TaskATTRCd.ACA_TASK } ),
+                        p_NotifyTerminate = ( fun _ -> vcnt.[3] <- vcnt.[3] + 1 )
+                    )
+                )
+
+            yield
+                BDTaskStat.TASK_STAT_Running(
+                    new CBlockDeviceTask_Stub(
+                        p_GetSource = ( fun () -> source4 ),
+                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
+                        p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
+                        p_GetSCSICommand = ( fun () -> defaultSCSICommandPDU ),
+                        p_NotifyTerminate = ( fun _ -> vcnt.[4] <- vcnt.[4] + 1 )
+                    )
+                )
+
+            yield
+                BDTaskStat.TASK_STAT_Running(
+                    new CBlockDeviceTask_Stub(
+                        p_GetSource = ( fun () -> source4 ),
+                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
+                        p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
+                        p_GetSCSICommand = ( fun () -> { defaultSCSICommandPDU with ATTR = TaskATTRCd.ACA_TASK } ),
+                        p_NotifyTerminate = ( fun _ -> vcnt.[5] <- vcnt.[5] + 1 )
+                    )
+                )
+        |]
+
+        let queue1 = {
+            Queue = testTasks.ToImmutableArray();
+            ACA = ValueNone;
+        }
+        let sourceITN : ITNexus[] = [| self.Source.I_TNexus; itn1; itn2; itn3; |]
+        let pc = new PrivateCaller( self :?> ScsiTask )
+        let queue2 = pc.Invoke( "AbortTasksFromSpecifiedITNexus", queue1, sourceITN, prtype, resvkey_me.fromPrim resvkey ) :?> TaskSet
+
+        Assert.True(( vcnt.[0] = 0 ))
+        Assert.True(( vcnt.[1] = 0 ))
+        Assert.True(( vcnt.[2] = 1 ))
+        Assert.True(( vcnt.[3] = 1 ))
+        Assert.True(( vcnt.[4] = 0 ))
+        Assert.True(( vcnt.[5] = exp5 ))
+
+        Assert.True(( queue2.Queue.Length = expql ))
+        Assert.True(( ValueOption.isNone queue2.ACA ))
+
+    static member AbortTasksFromSpecifiedITNexus_003_data : obj[][] = [|
+        [| PR_TYPE.NO_RESERVATION;                    1UL; true; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   1UL; true; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  1UL; true; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  1UL; true; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   1UL; true; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; 1UL; true; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  1UL; true; |]
+        [| PR_TYPE.NO_RESERVATION;                    0UL; true; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   0UL; true; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  0UL; true; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  0UL; true; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   0UL; false;|]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; 0UL; true; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  0UL; false;|]
+    |]
+
+    [<Theory>]
+    [<MemberData( "AbortTasksFromSpecifiedITNexus_003_data" )>]
+    member _.AbortTasksFromSpecifiedITNexus_003 ( prtype : PR_TYPE ) ( resvkey : uint64 ) ( expr : bool ) =
+        let s = { OperationCode = 00uy; Control = 0uy; }
+        let self, ilu = createDefScsiTask defaultSCSICommandPDU s [] false
+        let itn1 = ITNexus( "INIT1", isid_me.zero, "TARG1", tpgt_me.fromPrim 0us );
+        let acaExp = SCSIACAException( self.Source, true, SenseKeyCd.NO_SENSE, ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT, "" )
+        let queue1 = {
+            Queue = ImmutableArray.Empty;
+            ACA = ValueSome( itn1, acaExp );
+        }
+        let sourceITN : ITNexus[] = [| |]
+        let pc = new PrivateCaller( self :?> ScsiTask )
+        let queue2 = pc.Invoke( "AbortTasksFromSpecifiedITNexus", queue1, sourceITN, prtype, resvkey_me.fromPrim resvkey ) :?> TaskSet
+
+        Assert.True(( ( ValueOption.isSome queue2.ACA ) = expr ))
+
+    [<Theory>]
+    [<MemberData( "AbortTasksFromSpecifiedITNexus_003_data" )>]
+    member _.AbortTasksFromSpecifiedITNexus_004 ( prtype : PR_TYPE ) ( resvkey : uint64 ) ( expr : bool ) =
+        let s = { OperationCode = 00uy; Control = 0uy; }
+        let self, ilu = createDefScsiTask defaultSCSICommandPDU s [] false
+        let itn1 = ITNexus( "INIT1", isid_me.zero, "TARG1", tpgt_me.fromPrim 0us );
+        let itn2 = ITNexus( "INIT2", isid_me.zero, "TARG2", tpgt_me.fromPrim 0us );
+        let acaExp = SCSIACAException( self.Source, true, SenseKeyCd.NO_SENSE, ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT, "" )
+        let queue1 = {
+            Queue = ImmutableArray.Empty;
+            ACA = ValueSome( itn1, acaExp );
+        }
+        let sourceITN : ITNexus[] = [| itn2 |]
+        let pc = new PrivateCaller( self :?> ScsiTask )
+        let queue2 = pc.Invoke( "AbortTasksFromSpecifiedITNexus", queue1, sourceITN, prtype, resvkey_me.fromPrim resvkey ) :?> TaskSet
+
+        Assert.True(( ( ValueOption.isSome queue2.ACA ) = expr ))
+
+    static member AbortTasksFromSpecifiedITNexus_005_data : obj[][] = [|
+        [| PR_TYPE.NO_RESERVATION;                    1UL; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   1UL; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  1UL; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  1UL; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   1UL; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; 1UL; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  1UL; |]
+        [| PR_TYPE.NO_RESERVATION;                    0UL; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   0UL; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  0UL; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  0UL; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   0UL; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; 0UL; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  0UL; |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "AbortTasksFromSpecifiedITNexus_005_data" )>]
+    member _.AbortTasksFromSpecifiedITNexus_005 ( prtype : PR_TYPE ) ( resvkey : uint64 ) =
+        let s = { OperationCode = 00uy; Control = 0uy; }
+        let self, ilu = createDefScsiTask defaultSCSICommandPDU s [] false
+        let itn1 = ITNexus( "INIT1", isid_me.zero, "TARG1", tpgt_me.fromPrim 0us );
+        let acaExp = SCSIACAException( self.Source, true, SenseKeyCd.NO_SENSE, ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT, "" )
+        let queue1 = {
+            Queue = ImmutableArray.Empty;
+            ACA = ValueSome( itn1, acaExp );
+        }
+        let sourceITN : ITNexus[] = [| itn1 |]
+        let pc = new PrivateCaller( self :?> ScsiTask )
+        let queue2 = pc.Invoke( "AbortTasksFromSpecifiedITNexus", queue1, sourceITN, prtype, resvkey_me.fromPrim resvkey ) :?> TaskSet
+
+        Assert.True(( ValueOption.isNone queue2.ACA ))

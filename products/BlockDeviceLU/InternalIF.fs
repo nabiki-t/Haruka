@@ -104,21 +104,6 @@ type IInternalLU =
 
     // ------------------------------------------------------------------------
     /// <summary>
-    ///  Abort tasks from specified I_T Nesus.
-    /// </summary>
-    /// <param name="self">
-    ///  Task that occurs this request.
-    /// </param>
-    /// <param name="itn">
-    ///  The source I_T nexus of the task to abort.
-    /// </param>
-    /// <param name="abortAllACATask">
-    ///  Whether to terminate all ACA tasks.
-    /// </param>
-    abstract AbortTasksFromSpecifiedITNexus : self:IBlockDeviceTask -> itn:ITNexus[] -> abortAllACATask:bool -> unit
-
-    // ------------------------------------------------------------------------
-    /// <summary>
     ///  Notification of number of bytes read to calculate usage statistics.
     /// </summary>
     /// <param name="d">

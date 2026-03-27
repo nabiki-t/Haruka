@@ -76,14 +76,14 @@ type IBlockDeviceTask =
     abstract ReleasePooledBuffer : unit -> unit
 
 /// SCSI Task status value definition.
-and [<NoComparison>] TaskStatus =
+and [<NoComparison>] BDTaskStat =
     /// Dormant(S0 or S1)
     | TASK_STAT_Dormant of IBlockDeviceTask
 
     /// Running( equals S2:Enabled state )
     | TASK_STAT_Running of IBlockDeviceTask
 
-    static member getTask ( arg : TaskStatus ) =
+    static member getTask ( arg : BDTaskStat ) =
         match arg with
         | TASK_STAT_Dormant( x )
         | TASK_STAT_Running( x ) ->
@@ -91,7 +91,7 @@ and [<NoComparison>] TaskStatus =
 
 and [<NoComparison>] TaskSet = {
     /// Task queue of task set.
-    Queue : ImmutableArray< TaskStatus >;
+    Queue : ImmutableArray< BDTaskStat >;
 
     /// ACA status
     ACA : ( ITNexus * SCSIACAException ) voption;

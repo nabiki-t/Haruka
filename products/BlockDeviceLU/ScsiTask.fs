@@ -19,6 +19,7 @@ open System.Threading.Tasks
 open System.Diagnostics
 open System.Buffers
 open System.Collections.Generic
+open System.Collections.Immutable
 
 open Haruka.Constants
 open Haruka.Commons
@@ -905,9 +906,7 @@ type ScsiTask
                     ( m_PRManager.Preempt m_Source m_ITT cdb.PRType cdb.ParameterListLength parameterList ), id
                 | 0x05uy -> // PREEMPT AND ABORT
                     let struct( statCD, itn, prType, resvKey ) = m_PRManager.PreemptAndAbort m_Source m_ITT cdb.PRType cdb.ParameterListLength parameterList
-                    let abortAllACATasks = PR_TYPE.isAllRegistrants prType && resvKey = resvkey_me.zero
-                    m_LU.AbortTasksFromSpecifiedITNexus this itn abortAllACATasks
-                    statCD, id
+                    statCD, ( fun o -> this.AbortTasksFromSpecifiedITNexus o itn prType resvKey )
                 | 0x06uy -> // REGISTER AND IGNORE EXISTING KEY
                     ( m_PRManager.RegisterAndIgnoreExistingKey m_Source m_ITT cdb.PRType cdb.ParameterListLength parameterList ), id
                 | 0x07uy -> // REGISTER AND MOVE
@@ -927,6 +926,58 @@ type ScsiTask
             fun () -> task {
                 m_LU.NotifyTerminateTaskWithException this x
             }, id
+
+    // ------------------------------------------------------------------------
+    /// <summary>
+    ///  Abort tasks from specified I_T Nesus.
+    /// </summary>
+    /// <param name="oldTaskSet">
+    ///  Task set.
+    /// </param>
+    /// <param name="itn">
+    ///  The source I_T nexus of the task to abort.
+    /// </param>
+    /// <param name="prType">
+    ///  preempted reservation type.
+    /// </param>
+    /// <param name="resvKey">
+    ///  Service action reservation key value specified in PREEMPT AND ABORT service action.
+    /// </param>
+    member private this.AbortTasksFromSpecifiedITNexus ( oldTaskSet : TaskSet ) ( itn : ITNexus[] ) ( prType : PR_TYPE ) ( resvKey : RESVKEY_T ) : TaskSet =
+
+        let loginfo = struct ( m_ObjID, ValueSome( m_Source ), ValueSome( m_ITT ), ValueSome( m_LUN ) )
+        let builder = ImmutableArray.CreateBuilder< BDTaskStat >( Capacity = oldTaskSet.Queue.Length )
+        let abortAllACATask = PR_TYPE.isAllRegistrants prType && resvKey = resvkey_me.zero
+
+        for itr in oldTaskSet.Queue do
+            let t = BDTaskStat.getTask itr
+            let wj = itn |> Array.exists ( fun itr -> ITNexus.Equals( itr, t.Source.I_TNexus ) )
+            if ( Functions.IsSame t this |> not ) && ( t.TaskType = BlockDeviceTaskType.ScsiTask ) &&
+                ( ( abortAllACATask && t.SCSICommand.ATTR = TaskATTRCd.ACA_TASK ) || wj ) then
+                    // Notify removed tasks to termination
+                    // this process must be performed synchronously
+                    HLogger.Trace( LogID.I_TASK_NOTIFY_TERMINATE, fun g -> g.Gen2( loginfo, t.InitiatorTaskTag, t.DescString ) )
+                    t.NotifyTerminate false
+            else
+                builder.Add itr
+
+        let nextACA =
+            match oldTaskSet.ACA with
+            | ValueNone ->
+                ValueNone
+            | ValueSome( acaNexus, _ ) ->
+                let s = itn |> Array.exists ( fun itr -> ITNexus.Equals( itr, acaNexus ) )
+                if s || abortAllACATask then
+                    ValueNone
+                else
+                    oldTaskSet.ACA
+
+        // Replace the contents of the task queue
+        {
+            Queue = builder.DrainToImmutable();
+            ACA = nextACA;
+        }
+
 
     /// <summary>
     ///  Execute PRE-FETCH command.

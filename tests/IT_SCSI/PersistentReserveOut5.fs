@@ -13,6 +13,7 @@ namespace Haruka.Test.IT.SCSI
 
 open System
 open System.IO
+open System.Text.RegularExpressions
 open System.Threading.Tasks
 
 open Xunit
@@ -207,6 +208,21 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             res.Return()
         }
 
+    // Get a list of tasks that are stalled by the debug media wait action.
+    let GetStuckTasks() : ( string * TSIH_T * ITT_T ) array =
+        let rx = Regex( "^ *([^ ]*) *\( *TSIH *= *([0-9]*) *, *ITT *= *([0-9]*) *\) *$" )
+        m_ClientProc.RunCommandGetResp "task list" "MD> "
+        |> Array.choose( fun itr ->
+            let m = rx.Match itr
+            if not m.Success then
+                None
+            else
+                let method = m.Groups.[1].Value |> _.ToUpperInvariant()
+                let tsih = m.Groups.[2].Value |> UInt16.Parse |> tsih_me.fromPrim
+                let itt = m.Groups.[3].Value |> UInt32.Parse |> itt_me.fromPrim
+                Some( method, tsih, itt )
+        )
+
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
 
@@ -223,7 +239,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
     member _.PreemptAndAbort_NotAllRegistrants_001 ( prtype : PR_TYPE ) =
         task {
             //m_ClientProc.RunCommand "add trap /e Read /a Wait" "Trap added" "MD> "
-            m_ClientProc.RunCommand "add trap /e TestUnitReady /a ACA /slba 10 /elba 20" "Trap added" "MD> "
+            m_ClientProc.RunCommand "add trap /e TestUnitReady /a ACA" "Trap added" "MD> "
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! r3 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
@@ -259,6 +275,85 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
 
             do! r1.Close()
             do! r2.Close()
+            do! r3.Close()
+            m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
+        }
+
+    [<Theory>]
+    [<MemberData( "PreemptAndAbort_NotAllRegistrants_001_data" )>]
+    member _.PreemptAndAbort_NotAllRegistrants_002 ( prtype : PR_TYPE ) =
+        task {
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a Wait" "Trap added" "MD> "
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a ACA" "Trap added" "MD> "
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r3 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let itn_r3 = r3.ITNexus
+
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+            do! PR_Register r3 g_LUN1 g_ResvKey3
+
+            // reserve
+            if prtype <> PR_TYPE.NO_RESERVATION then
+                let! itt_pr_out1 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype g_ResvKey1
+                let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+                ()
+
+            // send ORDERED 1 task from r1
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+
+            // Confirm that ORDERED 1 task is stuck.
+            do! Task.Delay 10
+            while ( ( GetStuckTasks() ).Length < 1 ) do
+                do! Task.Delay 10
+            let tasks = GetStuckTasks()
+            Assert.True(( tasks.Length = 1 ))
+
+            // send SIMPLE 1 task from r1
+            let! _ = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+
+            // Wait until above task is queued.
+            do! Task.Delay 100
+
+            // Resume execution of ORDERED 1 task. ACA status is established.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            let! res_tur1 = r1.WaitSCSIResponse itt_read1
+            Assert.True(( res_tur1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // preempt ( not ACA TASK, preempt for r1 )
+            let! itt_pr_out2 = r3.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey3 g_ResvKey1
+            let! _ = r3.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // check UA
+            do! Check_UA_Established r1 g_LUN1 ASCCd.REGISTRATIONS_PREEMPTED
+
+            // The command is executable.
+            // ( The ACA has been cleared. Abobe SIMPLE 1 task is aborted. )
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! res_read1 = r1.WaitSCSIResponseGoodStatus itt_read1
+            res_read1.Return()
+
+            let! itt_read2 = r3.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! res_read2 = r3.WaitSCSIResponseGoodStatus itt_read2
+            res_read2.Return()
+
+            // r3 preempts r1's reservation
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            let fsd1 = fstat1.FullStatusDescriptor
+            Assert.True(( fsd1.Length = 1 ))
+            Assert.True(( fsd1.[0].iSCSIName = itn_r3.InitiatorPortName ))
+            Assert.True(( fsd1.[0].ReservationKey = g_ResvKey3 ))
+            Assert.True(( fsd1.[0].RelativeTargetPortIdentifier = 1us ))
+            if prtype <> PR_TYPE.NO_RESERVATION then
+                Assert.True(( fsd1.[0].ReservationHolder ))
+                Assert.True(( fsd1.[0].Type = PR_TYPE.toNumericValue PR_TYPE.WRITE_EXCLUSIVE ))
+            else
+                Assert.False(( fsd1.[0].ReservationHolder ))
+                Assert.True(( fsd1.[0].Type = PR_TYPE.toNumericValue PR_TYPE.NO_RESERVATION ))
+
+
+            do! PR_Unregister r3 g_LUN1 g_ResvKey3
+
+            do! r1.Close()
             do! r3.Close()
             m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
         }

@@ -86,7 +86,7 @@ type BlockDeviceLU
 
     /// the Task set.
     let mutable m_TaskSet = {
-        Queue = ImmutableArray< TaskStatus >.Empty;
+        Queue = ImmutableArray< BDTaskStat >.Empty;
         ACA = ValueNone;
     }
 
@@ -174,9 +174,9 @@ type BlockDeviceLU
                     try
                         // Remove the tasks that will be terminated from the task queue.
                         let oldTaskSet = m_TaskSet
-                        let builder = ImmutableArray.CreateBuilder< TaskStatus >( Capacity = oldTaskSet.Queue.Length )
+                        let builder = ImmutableArray.CreateBuilder< BDTaskStat >( Capacity = oldTaskSet.Queue.Length )
                         for itr in oldTaskSet.Queue do
-                            let t = TaskStatus.getTask itr
+                            let t = BDTaskStat.getTask itr
                             if t.TaskType = BlockDeviceTaskType.ScsiTask && t.InitiatorTaskTag = referencedTaskTag then
                                 // Notify removed tasks to termination
                                 HLogger.Trace( LogID.I_TASK_NOTIFY_TERMINATE, fun g -> g.Gen2( loginfo, referencedTaskTag, t.DescString ) )
@@ -225,9 +225,9 @@ type BlockDeviceLU
                     try
                         // Remove the tasks that will be terminated from the task queue.
                         let oldTaskSet = m_TaskSet
-                        let builder = ImmutableArray.CreateBuilder< TaskStatus >( Capacity = oldTaskSet.Queue.Length )
+                        let builder = ImmutableArray.CreateBuilder< BDTaskStat >( Capacity = oldTaskSet.Queue.Length )
                         for itr in oldTaskSet.Queue do
-                            let t = TaskStatus.getTask itr
+                            let t = BDTaskStat.getTask itr
                             if t.TaskType = BlockDeviceTaskType.ScsiTask && ITNexus.Equals( t.Source.I_TNexus, source.I_TNexus ) then
                                 // Notify removed tasks to termination
                                 HLogger.Trace( LogID.I_TASK_NOTIFY_TERMINATE, fun g -> g.Gen2( loginfo, t.InitiatorTaskTag, t.DescString ) )
@@ -275,9 +275,9 @@ type BlockDeviceLU
                     try
                         // Remove ACA tasks from the task queue.
                         let oldTaskSet = m_TaskSet
-                        let builder = ImmutableArray.CreateBuilder< TaskStatus >( Capacity = oldTaskSet.Queue.Length )
+                        let builder = ImmutableArray.CreateBuilder< BDTaskStat >( Capacity = oldTaskSet.Queue.Length )
                         for itr in oldTaskSet.Queue do
-                            let t = TaskStatus.getTask itr
+                            let t = BDTaskStat.getTask itr
                             if t.TaskType = BlockDeviceTaskType.ScsiTask && ITNexus.Equals( t.Source.I_TNexus, source.I_TNexus ) && t.SCSICommand.ATTR = TaskATTRCd.ACA_TASK then
                                 // Notify removed tasks to termination
                                 HLogger.Trace( LogID.I_TASK_NOTIFY_TERMINATE, fun g -> g.Gen2( loginfo, t.InitiatorTaskTag, t.DescString ) )
@@ -333,14 +333,14 @@ type BlockDeviceLU
 
                         // Terminate all of task in the task queue
                         for itr in oldTaskSet.Queue do
-                            let t = TaskStatus.getTask itr
+                            let t = BDTaskStat.getTask itr
                             HLogger.Trace( LogID.I_TASK_NOTIFY_TERMINATE, fun g -> g.Gen2( loginfo, t.InitiatorTaskTag, t.DescString ) )
                             t.NotifyTerminate ( ITNexus.Equals( t.Source.I_TNexus, source.I_TNexus ) |> not )
 
                         // Remove all of tasks from the task queue.
                         m_TaskSet <- {
                             oldTaskSet with
-                                Queue = ImmutableArray< TaskStatus >.Empty
+                                Queue = ImmutableArray< BDTaskStat >.Empty
                         }
 
                         // return response
@@ -385,14 +385,14 @@ type BlockDeviceLU
 
                         // Terminate all of task in the task queue
                         for itr in oldTaskSet.Queue do
-                            let t = TaskStatus.getTask itr
+                            let t = BDTaskStat.getTask itr
                             HLogger.Trace( LogID.I_TASK_NOTIFY_TERMINATE, fun g -> g.Gen2( loginfo, t.InitiatorTaskTag, t.DescString ) )
                             let f = ( not fromI ) || ( ITNexus.Equals( t.Source.I_TNexus, source.Value.I_TNexus ) |> not )
                             t.NotifyTerminate f
 
                         m_TaskSet <- {
                             // Remove all of tasks from the task queue.
-                            Queue = ImmutableArray< TaskStatus >.Empty;
+                            Queue = ImmutableArray< BDTaskStat >.Empty;
                             // Clear ACA state.
                             ACA = ValueNone;
                         }
@@ -549,7 +549,7 @@ type BlockDeviceLU
             let q = m_TaskSet.Queue
             let rec loop ( cnt : int ) ( sum : int ) =
                 if cnt < q.Length then
-                    let t = TaskStatus.getTask q.[ cnt ]
+                    let t = BDTaskStat.getTask q.[ cnt ]
                     let nsum =
                         if t.Source.TSIH = tsih then
                             sum + 1
@@ -636,7 +636,7 @@ type BlockDeviceLU
                         let oldTaskSet = m_TaskSet
                         let isExist =
                             oldTaskSet.Queue
-                            |> Seq.tryFind ( fun itr ->  Functions.IsSame ( TaskStatus.getTask itr ) argTask )
+                            |> Seq.tryFind ( fun itr ->  Functions.IsSame ( BDTaskStat.getTask itr ) argTask )
                             |> Option.isSome
                         if not isExist then
                             // Ignore this notification.
@@ -666,52 +666,6 @@ type BlockDeviceLU
                     HLogger.UnexpectedException( fun g -> g.GenExp( loginfo, x ) )
                     this.NotifyLUReset argTask.Source argTask.InitiatorTaskTag
             )
-
-
-        // ------------------------------------------------------------------------
-        //  Abort tasks from specified I_T Nesus.
-        override _.AbortTasksFromSpecifiedITNexus ( self : IBlockDeviceTask ) ( itn : ITNexus[] ) ( abortAllACATask : bool ) : unit =
-            // ****************************************************************
-            // This method is called in critical section of BlockDeviceLU task set lock.
-            // ****************************************************************
-
-            let loginfo = struct ( m_ObjID, ValueSome( self.Source ), ValueSome( self.InitiatorTaskTag ), ValueSome( m_LUN ) )
-            let oldTaskSet = m_TaskSet
-            let builder = ImmutableArray.CreateBuilder< TaskStatus >( Capacity = oldTaskSet.Queue.Length )
-
-            for itr in oldTaskSet.Queue do
-                let t = TaskStatus.getTask itr
-                let wj = itn |> Array.exists ( fun itr -> ITNexus.Equals( itr, t.Source.I_TNexus ) )
-                if ( Functions.IsSame t self |> not ) && ( t.TaskType = BlockDeviceTaskType.ScsiTask ) &&
-                    ( ( abortAllACATask && t.SCSICommand.ATTR = TaskATTRCd.ACA_TASK ) || wj ) then
-                        // Notify removed tasks to termination
-                        // this process must be performed synchronously
-                        HLogger.Trace( LogID.I_TASK_NOTIFY_TERMINATE, fun g -> g.Gen2( loginfo, t.InitiatorTaskTag, t.DescString ) )
-                        t.NotifyTerminate false
-                else
-                    builder.Add itr
-
-            let nextACA =
-                match oldTaskSet.ACA with
-                | ValueNone ->
-                    ValueNone
-                | ValueSome( acaNexus, _ ) ->
-                    let s = itn |> Array.exists ( fun itr -> ITNexus.Equals( itr, acaNexus ) )
-                    if s || abortAllACATask then
-                        ValueNone
-                    else
-                        oldTaskSet.ACA
-
-            // Replace the contents of the task queue
-            m_TaskSet <- {
-                Queue = builder.DrainToImmutable();
-                ACA = nextACA;
-            }
-
-            // At the end of the task that called this method, the "StartExecutableSCSITasks" method is executed
-            // in the "NotifyTerminateTask" or "NotifyTerminateTaskWithException" method.
-            // Therefore, there is no need to call the StartExecutableSCSITasks method within this function.
-
 
         // ------------------------------------------------------------------------
         //  Notification of number of bytes read to calculate usage statistics.
@@ -757,10 +711,10 @@ type BlockDeviceLU
     /// <remarks>
     ///   Call this method in critical section at task set lock.
     /// </remarks>
-    static member private FindQueueByITT ( q : ImmutableArray< TaskStatus > ) ( source : CommandSourceInfo ) ( itt : ITT_T ) : int =
+    static member private FindQueueByITT ( q : ImmutableArray< BDTaskStat > ) ( source : CommandSourceInfo ) ( itt : ITT_T ) : int =
         let rec loop ( cnt : int ) : int =
             if cnt < q.Length then
-                let t1 = q.[ cnt ] |> TaskStatus.getTask
+                let t1 = q.[ cnt ] |> BDTaskStat.getTask
                 if itt = t1.InitiatorTaskTag && ITNexus.Equals( t1.Source.I_TNexus, source.I_TNexus )  then
                     cnt
                 else
@@ -979,7 +933,7 @@ type BlockDeviceLU
 
         this.CheckOverlappedTask curTS.Queue source ( t.InitiatorTaskTag )
 
-        let builder = ImmutableArray.CreateBuilder< TaskStatus >( Capacity = curTS.Queue.Length + 1 )
+        let builder = ImmutableArray.CreateBuilder< BDTaskStat >( Capacity = curTS.Queue.Length + 1 )
         for i in curTS.Queue do
             builder.Add i
         builder.Add( TASK_STAT_Dormant( t ) )
@@ -1006,7 +960,7 @@ type BlockDeviceLU
     /// <remarks>
     ///   Call this method in critical section at task set lock.
     /// </remarks>
-    member private _.CheckOverlappedTask ( argQ : ImmutableArray< TaskStatus > ) ( source : CommandSourceInfo ) ( itt : ITT_T ) : unit =
+    member private _.CheckOverlappedTask ( argQ : ImmutableArray< BDTaskStat > ) ( source : CommandSourceInfo ) ( itt : ITT_T ) : unit =
         if ( BlockDeviceLU.FindQueueByITT argQ source itt ) <> -1 then
             // ACA estblished
             let loginfo = struct ( m_ObjID, ValueSome( source ), ValueSome( itt ), ValueSome( m_LUN ) )
@@ -1037,10 +991,10 @@ type BlockDeviceLU
     /// <remarks>
     ///   Call this method in critical section at task set lock.
     /// </remarks>
-    member private _.CheckDuplicateACATask ( argQ : ImmutableArray< TaskStatus > ) : bool =
+    member private _.CheckDuplicateACATask ( argQ : ImmutableArray< BDTaskStat > ) : bool =
         let rec loop ( cnt : int ) =
             if cnt < argQ.Length then
-                let t = TaskStatus.getTask argQ.[ cnt ]
+                let t = BDTaskStat.getTask argQ.[ cnt ]
                 if t.TaskType = BlockDeviceTaskType.ScsiTask && t.SCSICommand.ATTR = TaskATTRCd.ACA_TASK then
                     true
                 else
@@ -1067,7 +1021,7 @@ type BlockDeviceLU
         )
 #endif
 
-        let qBuilder = ImmutableArray.CreateBuilder< TaskStatus >( Capacity = curTS.Queue.Length )
+        let qBuilder = ImmutableArray.CreateBuilder< BDTaskStat >( Capacity = curTS.Queue.Length )
         let tsUpdatorBuilder = ImmutableArray.CreateBuilder< TaskSet -> TaskSet >( Capacity = curTS.Queue.Length )
         if curTS.ACA.IsNone then
             // If ACA is not established, SIMPLE, ORDERED, HEAD OF QUEUE task is executable.
@@ -1186,7 +1140,7 @@ type BlockDeviceLU
     /// <remarks>
     ///   Call this method in critical section at task set lock.
     /// </remarks>
-    member private this.RunSCSITask ( bdTask : IBlockDeviceTask ) : struct( TaskStatus * ( TaskSet -> TaskSet ) ) =
+    member private this.RunSCSITask ( bdTask : IBlockDeviceTask ) : struct( BDTaskStat * ( TaskSet -> TaskSet ) ) =
         let cmdSource = bdTask.Source
         let loginfo = struct ( m_ObjID, ValueSome( cmdSource ), ValueSome( bdTask.InitiatorTaskTag ), ValueSome( m_LUN ) )
         HLogger.Trace( LogID.V_SCSI_TASK_STARTED, fun g -> g.Gen1( loginfo, bdTask.DescString ) )
@@ -1223,7 +1177,7 @@ type BlockDeviceLU
                 // Execute this task
                 let struct( taskF, updateF ) = bdTask.Execute()
                 m_ExecuteQueue.Enqueue( taskF )
-                TaskStatus.TASK_STAT_Running( bdTask ), updateF
+                BDTaskStat.TASK_STAT_Running( bdTask ), updateF
 
             | ValueSome ex ->
                 // Unit attention exist
@@ -1481,9 +1435,9 @@ type BlockDeviceLU
     ///   Call this method in critical section at task set lock.
     /// </remarks>
     member private _.DeleteTask ( deltask : IBlockDeviceTask ) ( curTS : TaskSet ) : TaskSet =
-        let builder = ImmutableArray.CreateBuilder< TaskStatus >( Capacity = curTS.Queue.Length )
+        let builder = ImmutableArray.CreateBuilder< BDTaskStat >( Capacity = curTS.Queue.Length )
         for itr in curTS.Queue do
-            let wr = TaskStatus.getTask itr
+            let wr = BDTaskStat.getTask itr
             if Functions.IsSame wr deltask |> not then
                 builder.Add itr
 
@@ -1517,7 +1471,7 @@ type BlockDeviceLU
 
             // Notify LU reset to all tasks.
             for itr in oldTaskSet.Queue do
-                let t = TaskStatus.getTask itr
+                let t = BDTaskStat.getTask itr
                 HLogger.Trace( LogID.I_TASK_NOTIFY_TERMINATE, fun g -> g.Gen2( loginfo, t.InitiatorTaskTag, t.DescString ) )
                 try
                     t.NotifyTerminate ( ITNexus.Equals( t.Source.I_TNexus, source.I_TNexus ) |> not )
@@ -1527,7 +1481,7 @@ type BlockDeviceLU
                     HLogger.IgnoreException( fun g -> g.GenExp( loginfo, e ) )
 
             m_TaskSet <- {
-                Queue = ImmutableArray< TaskStatus >.Empty;
+                Queue = ImmutableArray< BDTaskStat >.Empty;
                 ACA = ValueNone;
             }
 

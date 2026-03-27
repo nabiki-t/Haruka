@@ -29,50 +29,6 @@ open Haruka.Test
 //=============================================================================
 // Class implementation
 
-type public CBlockDeviceTask_Stub() =
-
-    let mutable f_GetTaskType : ( unit -> BlockDeviceTaskType ) option = None
-    let mutable f_GetSource : ( unit -> CommandSourceInfo ) option = None
-    let mutable f_GetInitiatorTaskTag : ( unit -> ITT_T ) option = None
-    let mutable f_GetSCSICommand : ( unit -> SCSICommandPDU ) option = None
-    let mutable f_GetReceivedDataLength : ( unit -> uint ) option = None
-    let mutable f_GetCDB : ( unit -> ICDB voption ) option = None
-    let mutable f_Execute : ( unit -> struct ( ( unit -> Task<unit> ) * ( TaskSet -> TaskSet ) ) ) option = None
-    let mutable f_GetDescString : ( unit -> string ) option = None
-    let mutable f_NotifyTerminate : ( bool -> unit ) option = None
-    let mutable f_GetACANoncompliant : ( unit -> bool ) option = None
-    let mutable f_ReleasePooledBuffer : ( unit -> unit ) option = Some( id )
-
-    member val dummy : obj = box () with get, set
-    member _.p_GetTaskType with set v = f_GetTaskType <- Some( v )
-    member _.p_GetSource with set v = f_GetSource <- Some v
-    member _.p_GetInitiatorTaskTag with set v = f_GetInitiatorTaskTag <- Some v
-    member _.p_GetSCSICommand with set v = f_GetSCSICommand <- Some v
-    member _.p_GetReceivedDataLength with set v = f_GetReceivedDataLength <- Some v
-    member _.p_GetCDB with set v = f_GetCDB <- Some v
-    member _.p_Execute with set v = f_Execute <- Some v
-    member _.p_GetDescString with set v = f_GetDescString <- Some v
-    member _.p_NotifyTerminate with set v = f_NotifyTerminate <- Some v
-    member _.p_GetACANoncompliant with set v = f_GetACANoncompliant <- Some v
-    member _.p_ReleasePooledBuffer with set v = f_ReleasePooledBuffer <- Some v
-
-    interface IBlockDeviceTask with
-        override _.TaskType : BlockDeviceTaskType = f_GetTaskType.Value()
-        override _.Source : CommandSourceInfo = f_GetSource.Value()
-        override _.InitiatorTaskTag : ITT_T = f_GetInitiatorTaskTag.Value()
-        override _.SCSICommand : SCSICommandPDU = f_GetSCSICommand.Value()
-        override _.ReceivedDataLength : uint = f_GetReceivedDataLength.Value()
-        override _.CDB : ICDB voption = f_GetCDB.Value()
-        override _.Execute() : struct ( ( unit -> Task<unit> ) * ( TaskSet -> TaskSet ) ) = f_Execute.Value()
-        override _.DescString : string =
-            if f_GetDescString.IsSome then
-                f_GetDescString.Value()
-            else
-                ""
-        override _.NotifyTerminate ( v : bool ) : unit = f_NotifyTerminate.Value( v )
-        override _.ACANoncompliant : bool = f_GetACANoncompliant.Value()
-        override _.ReleasePooledBuffer() : unit = f_ReleasePooledBuffer.Value()
-
 type BlockDeviceLU_Test () =
 
     ///////////////////////////////////////////////////////////////////////////
@@ -261,7 +217,7 @@ type BlockDeviceLU_Test () =
             Queue =
                 let w =
                     tasks
-                    |> Seq.map ( fun itr -> TaskStatus.TASK_STAT_Running( itr :> IBlockDeviceTask ) )
+                    |> Seq.map ( fun itr -> BDTaskStat.TASK_STAT_Running( itr :> IBlockDeviceTask ) )
                 w.ToImmutableArray()
             ACA = ValueNone
         }
@@ -279,8 +235,8 @@ type BlockDeviceLU_Test () =
 
         let queue2 = pc.GetField( "m_TaskSet" ) :?> TaskSet
 
-        Assert.True(( ( TaskStatus.getTask queue2.Queue.[0] ) = tasks.[1] ))
-        Assert.True(( ( TaskStatus.getTask queue2.Queue.[1] ) = tasks.[3] ))
+        Assert.True(( ( BDTaskStat.getTask queue2.Queue.[0] ) = tasks.[1] ))
+        Assert.True(( ( BDTaskStat.getTask queue2.Queue.[1] ) = tasks.[3] ))
         Assert.True(( queue2.Queue.Length = 2 ))
 
     [<Fact>]
@@ -300,7 +256,7 @@ type BlockDeviceLU_Test () =
         )
 
         let task1 =
-            TaskStatus.TASK_STAT_Running (
+            BDTaskStat.TASK_STAT_Running (
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -317,7 +273,7 @@ type BlockDeviceLU_Test () =
                 )
             )
         let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty.Add task1;
+            Queue = ImmutableArray< BDTaskStat >.Empty.Add task1;
             ACA = ValueNone;
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -358,7 +314,7 @@ type BlockDeviceLU_Test () =
         let sema3 = new SemaphoreSlim( 0 )
 
         let testTask =
-            TaskStatus.TASK_STAT_Running(
+            BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -385,7 +341,7 @@ type BlockDeviceLU_Test () =
                 )
             )
         let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty.Add testTask;
+            Queue = ImmutableArray< BDTaskStat >.Empty.Add testTask;
             ACA = ValueNone;
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -448,7 +404,7 @@ type BlockDeviceLU_Test () =
             )
         let testTasks = [| 
             for i = 0 to 15 do
-                yield TaskStatus.TASK_STAT_Running( testTask )
+                yield BDTaskStat.TASK_STAT_Running( testTask )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -490,7 +446,7 @@ type BlockDeviceLU_Test () =
         )
 
         let testTasks1 = [|
-            TaskStatus.TASK_STAT_Dormant(
+            BDTaskStat.TASK_STAT_Dormant(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 5u ),
@@ -572,7 +528,7 @@ type BlockDeviceLU_Test () =
 
         let cnt = Array.zeroCreate<int> 10
         let tasks = [|
-            TaskStatus.TASK_STAT_Running(
+            BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -592,7 +548,7 @@ type BlockDeviceLU_Test () =
                     p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
                 )
             );
-            TaskStatus.TASK_STAT_Running(
+            BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -603,7 +559,7 @@ type BlockDeviceLU_Test () =
                     p_GetSource = ( fun () -> source )
                 )
             );
-            TaskStatus.TASK_STAT_Running(
+            BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.InternalTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -613,7 +569,7 @@ type BlockDeviceLU_Test () =
                     p_GetSource = ( fun () -> source )
                 )
             );
-            TaskStatus.TASK_STAT_Running(
+            BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -624,7 +580,7 @@ type BlockDeviceLU_Test () =
                     p_GetSource = ( fun () -> source )
                 )
             );
-            TaskStatus.TASK_STAT_Running(
+            BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.InternalTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -662,9 +618,9 @@ type BlockDeviceLU_Test () =
         Assert.True(( cnt.[4] = 0 ))
 
         let m_TaskSet = pc.GetField( "m_TaskSet" ) :?> TaskSet
-        Assert.True(( ( TaskStatus.getTask m_TaskSet.Queue.[0] ) = ( TaskStatus.getTask tasks.[0] ) ))
-        Assert.True(( ( TaskStatus.getTask m_TaskSet.Queue.[1] ) = ( TaskStatus.getTask tasks.[2] ) ))
-        Assert.True(( ( TaskStatus.getTask m_TaskSet.Queue.[2] ) = ( TaskStatus.getTask tasks.[4] ) ))
+        Assert.True(( ( BDTaskStat.getTask m_TaskSet.Queue.[0] ) = ( BDTaskStat.getTask tasks.[0] ) ))
+        Assert.True(( ( BDTaskStat.getTask m_TaskSet.Queue.[1] ) = ( BDTaskStat.getTask tasks.[2] ) ))
+        Assert.True(( ( BDTaskStat.getTask m_TaskSet.Queue.[2] ) = ( BDTaskStat.getTask tasks.[4] ) ))
         Assert.True(( m_TaskSet.Queue.Length = 3 ))
 
     [<Fact>]
@@ -684,7 +640,7 @@ type BlockDeviceLU_Test () =
         )
 
         let testTask =
-            TaskStatus.TASK_STAT_Running(
+            BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -699,7 +655,7 @@ type BlockDeviceLU_Test () =
                 )
             )
         let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty.Add testTask;
+            Queue = ImmutableArray< BDTaskStat >.Empty.Add testTask;
             ACA = ValueNone;
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -742,7 +698,7 @@ type BlockDeviceLU_Test () =
         let sema4 = new SemaphoreSlim( 0 )
 
         let testTasks = [|
-            TaskStatus.TASK_STAT_Running(
+            BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -757,7 +713,7 @@ type BlockDeviceLU_Test () =
                     p_GetSource = ( fun () -> source )
                 )
             );
-            TaskStatus.TASK_STAT_Running(
+            BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -847,7 +803,7 @@ type BlockDeviceLU_Test () =
             )
         let testTasks = [|
             for i = 0 to 15 do
-                yield TaskStatus.TASK_STAT_Running( testTask )
+                yield BDTaskStat.TASK_STAT_Running( testTask )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -889,7 +845,7 @@ type BlockDeviceLU_Test () =
         )
 
         let testTasks1 = [|
-            TaskStatus.TASK_STAT_Dormant(
+            BDTaskStat.TASK_STAT_Dormant(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -1026,7 +982,7 @@ type BlockDeviceLU_Test () =
             );
         |]
         let testTasks2 = [|
-            for itr in testTasks1 -> TaskStatus.TASK_STAT_Running( itr )
+            for itr in testTasks1 -> BDTaskStat.TASK_STAT_Running( itr )
         |]
         let queue1 = {
             Queue = testTasks2.ToImmutableArray();
@@ -1047,9 +1003,9 @@ type BlockDeviceLU_Test () =
         Assert.True(( cnt.[3] = 0 ))
 
         let m_TaskSet = pc.GetField( "m_TaskSet" ) :?> TaskSet
-        Assert.True(( ( TaskStatus.getTask m_TaskSet.Queue.[0] ) = testTasks1.[0] ))
-        Assert.True(( ( TaskStatus.getTask m_TaskSet.Queue.[1] ) = testTasks1.[2] ))
-        Assert.True(( ( TaskStatus.getTask m_TaskSet.Queue.[2] ) = testTasks1.[3] ))
+        Assert.True(( ( BDTaskStat.getTask m_TaskSet.Queue.[0] ) = testTasks1.[0] ))
+        Assert.True(( ( BDTaskStat.getTask m_TaskSet.Queue.[1] ) = testTasks1.[2] ))
+        Assert.True(( ( BDTaskStat.getTask m_TaskSet.Queue.[2] ) = testTasks1.[3] ))
         Assert.True(( m_TaskSet.Queue.Length = 3 ))
         let waca = m_TaskSet.ACA
         Assert.True( waca.IsNone )
@@ -1072,7 +1028,7 @@ type BlockDeviceLU_Test () =
         )
 
         let testTask =
-            TaskStatus.TASK_STAT_Running(
+            BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -1088,7 +1044,7 @@ type BlockDeviceLU_Test () =
                 )
             )
         let queue1 = {
-            Queue = ImmutableArray<TaskStatus>.Empty.Add testTask;
+            Queue = ImmutableArray<BDTaskStat>.Empty.Add testTask;
             ACA = ValueNone;
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -1131,7 +1087,7 @@ type BlockDeviceLU_Test () =
         let sema4 = new SemaphoreSlim( 0 )
 
         let testTasks = [|
-            TaskStatus.TASK_STAT_Running(
+            BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -1147,7 +1103,7 @@ type BlockDeviceLU_Test () =
                     p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK )
                 )
             );
-            TaskStatus.TASK_STAT_Running(
+            BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -1239,7 +1195,7 @@ type BlockDeviceLU_Test () =
             )
         let testTasks = [|
             for i = 0 to 15 do
-                yield TaskStatus.TASK_STAT_Running( testTask )
+                yield BDTaskStat.TASK_STAT_Running( testTask )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -1281,7 +1237,7 @@ type BlockDeviceLU_Test () =
         )
 
         let testTasks1 = [|
-            TaskStatus.TASK_STAT_Dormant(
+            BDTaskStat.TASK_STAT_Dormant(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -1421,10 +1377,10 @@ type BlockDeviceLU_Test () =
             );
         |]
         let testTasks2 = [|
-            TaskStatus.TASK_STAT_Running( testTasks1.[0] )
-            TaskStatus.TASK_STAT_Dormant( testTasks1.[1] )
-            TaskStatus.TASK_STAT_Running( testTasks1.[2] )
-            TaskStatus.TASK_STAT_Dormant( testTasks1.[3] )
+            BDTaskStat.TASK_STAT_Running( testTasks1.[0] )
+            BDTaskStat.TASK_STAT_Dormant( testTasks1.[1] )
+            BDTaskStat.TASK_STAT_Running( testTasks1.[2] )
+            BDTaskStat.TASK_STAT_Dormant( testTasks1.[3] )
         |]
         let queue1 = {
             Queue = testTasks2.ToImmutableArray();
@@ -1461,7 +1417,7 @@ type BlockDeviceLU_Test () =
         )
 
         let testTask =
-            TaskStatus.TASK_STAT_Running(
+            BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -1476,7 +1432,7 @@ type BlockDeviceLU_Test () =
                 )
             )
         let queue1 = {
-            Queue = ImmutableArray<TaskStatus>.Empty.Add testTask;
+            Queue = ImmutableArray<BDTaskStat>.Empty.Add testTask;
             ACA = ValueNone;
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -1519,7 +1475,7 @@ type BlockDeviceLU_Test () =
         let sema4 = new SemaphoreSlim( 0 )
 
         let testTask = [|
-            TaskStatus.TASK_STAT_Running(
+            BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -1534,7 +1490,7 @@ type BlockDeviceLU_Test () =
                     p_GetSource = ( fun () -> source )
                 )
             );
-            TaskStatus.TASK_STAT_Running(
+            BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -1624,7 +1580,7 @@ type BlockDeviceLU_Test () =
             )
         let testTasks = [|
             for i = 0 to 15 do
-                yield TaskStatus.TASK_STAT_Running( testTask )
+                yield BDTaskStat.TASK_STAT_Running( testTask )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -1747,10 +1703,10 @@ type BlockDeviceLU_Test () =
             );
         |]
         let testTasks1 = [|
-            TaskStatus.TASK_STAT_Running( testTasks1.[0] )
-            TaskStatus.TASK_STAT_Dormant( testTasks1.[1] )
-            TaskStatus.TASK_STAT_Running( testTasks1.[2] )
-            TaskStatus.TASK_STAT_Dormant( testTasks1.[3] )
+            BDTaskStat.TASK_STAT_Running( testTasks1.[0] )
+            BDTaskStat.TASK_STAT_Dormant( testTasks1.[1] )
+            BDTaskStat.TASK_STAT_Running( testTasks1.[2] )
+            BDTaskStat.TASK_STAT_Dormant( testTasks1.[3] )
         |]
         let queue1 = {
             Queue = testTasks1.ToImmutableArray();
@@ -1812,7 +1768,7 @@ type BlockDeviceLU_Test () =
         )
 
         let testTask =
-            TaskStatus.TASK_STAT_Running(
+            BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -1825,7 +1781,7 @@ type BlockDeviceLU_Test () =
                 )
             )
         let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty.Add testTask;
+            Queue = ImmutableArray< BDTaskStat >.Empty.Add testTask;
             ACA = ValueNone;
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -1868,7 +1824,7 @@ type BlockDeviceLU_Test () =
         let sema4 = new SemaphoreSlim( 0 )
 
         let testTasks = [|
-            TaskStatus.TASK_STAT_Running(
+            BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -1881,7 +1837,7 @@ type BlockDeviceLU_Test () =
                     p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
                 )
             );
-            TaskStatus.TASK_STAT_Running(
+            BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -1976,7 +1932,7 @@ type BlockDeviceLU_Test () =
             )
         let testTasks = [|
             for i = 0 to 15 do
-                yield TaskStatus.TASK_STAT_Running( testTask )
+                yield BDTaskStat.TASK_STAT_Running( testTask )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -2055,7 +2011,7 @@ type BlockDeviceLU_Test () =
         let sema4 = new SemaphoreSlim( 0 )
 
         let testTasks = [|
-            TaskStatus.TASK_STAT_Running(
+            BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
@@ -2120,7 +2076,7 @@ type BlockDeviceLU_Test () =
             )
         let testTasks = [|
             for i = 0 to 15 do
-                yield TaskStatus.TASK_STAT_Running( testTask )
+                yield BDTaskStat.TASK_STAT_Running( testTask )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -2176,7 +2132,7 @@ type BlockDeviceLU_Test () =
                 )
             )
         let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty.Add( TaskStatus.TASK_STAT_Running( testTask ) );
+            Queue = ImmutableArray< BDTaskStat >.Empty.Add( BDTaskStat.TASK_STAT_Running( testTask ) );
             ACA = ValueNone;
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -2253,7 +2209,7 @@ type BlockDeviceLU_Test () =
             )
         let testTasks = [|
             for i = 0 to 15 do
-                TaskStatus.TASK_STAT_Running( testTask )
+                BDTaskStat.TASK_STAT_Running( testTask )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -2297,7 +2253,7 @@ type BlockDeviceLU_Test () =
         |]
         let testTasks2 = [|
             for i = 0 to 15 do
-                yield TaskStatus.TASK_STAT_Running( testTasks1.[i] )
+                yield BDTaskStat.TASK_STAT_Running( testTasks1.[i] )
         |]
 
         for j = 0 to 15 do
@@ -2312,10 +2268,10 @@ type BlockDeviceLU_Test () =
             Assert.True(( queue2.Queue.Length = 15 ))
             for i = 0 to 14 do
                 if i < j then
-                    let witt = ( TaskStatus.getTask  queue2.Queue.[i] ).InitiatorTaskTag
+                    let witt = ( BDTaskStat.getTask  queue2.Queue.[i] ).InitiatorTaskTag
                     Assert.True(( witt = itt_me.fromPrim ( uint i ) ))
                 if i >= j then
-                    let witt = ( TaskStatus.getTask queue2.Queue.[i] ).InitiatorTaskTag
+                    let witt = ( BDTaskStat.getTask queue2.Queue.[i] ).InitiatorTaskTag
                     Assert.True(( witt = itt_me.fromPrim ( uint i + 1u ) ))
 
     [<Fact>]
@@ -2330,7 +2286,7 @@ type BlockDeviceLU_Test () =
         |]
         let testTasks2 = [|
             for i = 0 to 15 do
-                yield TaskStatus.TASK_STAT_Running( testTasks1.[i] )
+                yield BDTaskStat.TASK_STAT_Running( testTasks1.[i] )
         |]
         let queue1 = {
             Queue = testTasks2.ToImmutableArray();
@@ -2348,7 +2304,7 @@ type BlockDeviceLU_Test () =
 
         Assert.True(( queue2.Queue.Length = 16 ))
         for i = 0 to 15 do
-            Assert.True(( ( TaskStatus.getTask queue2.Queue.[i] ) = testTasks1.[i] ))
+            Assert.True(( ( BDTaskStat.getTask queue2.Queue.[i] ) = testTasks1.[i] ))
 
     [<Fact>]
     member this.DeleteTask_003() =
@@ -2357,7 +2313,7 @@ type BlockDeviceLU_Test () =
         let pc = new PrivateCaller( lu )
 
         let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
+            Queue = ImmutableArray< BDTaskStat >.Empty;
             ACA = ValueNone;
         }
         let wtask =
@@ -2781,8 +2737,8 @@ type BlockDeviceLU_Test () =
         taskStub_2.p_ReleasePooledBuffer <- id
 
         let testTask = [|
-            yield TaskStatus.TASK_STAT_Dormant( taskStub_1 :> IBlockDeviceTask );
-            yield TaskStatus.TASK_STAT_Dormant( taskStub_2 :> IBlockDeviceTask );
+            yield BDTaskStat.TASK_STAT_Dormant( taskStub_1 :> IBlockDeviceTask );
+            yield BDTaskStat.TASK_STAT_Dormant( taskStub_2 :> IBlockDeviceTask );
         |]
         let queue1 = {
             Queue = testTask.ToImmutableArray();
@@ -2825,7 +2781,7 @@ type BlockDeviceLU_Test () =
                 let dt = new CBlockDeviceTask_Stub()
                 dt.p_GetSource <- ( fun () -> source )
                 dt.p_GetInitiatorTaskTag <- ( fun () -> itt_me.fromPrim 1u )
-                yield TaskStatus.TASK_STAT_Dormant( dt :> IBlockDeviceTask )
+                yield BDTaskStat.TASK_STAT_Dormant( dt :> IBlockDeviceTask )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -2833,7 +2789,7 @@ type BlockDeviceLU_Test () =
         }
         pc.SetField( "m_TaskSet", queue1 )
 
-        inlu.NotifyTerminateTaskWithException ( TaskStatus.getTask testTasks.[0] ) ( new Exception() )
+        inlu.NotifyTerminateTaskWithException ( BDTaskStat.getTask testTasks.[0] ) ( new Exception() )
 
         Assert.True(( sema1.Wait 100000 ))
         Assert.True(( cnt1 = 1 ))
@@ -2869,7 +2825,7 @@ type BlockDeviceLU_Test () =
                     ( fun () -> Task.FromResult() ), id
                 )
                 dt.p_ReleasePooledBuffer <- id
-                yield TaskStatus.TASK_STAT_Dormant( dt :> IBlockDeviceTask )
+                yield BDTaskStat.TASK_STAT_Dormant( dt :> IBlockDeviceTask )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -2885,7 +2841,7 @@ type BlockDeviceLU_Test () =
         w.Wait()
 
         let ex = new SCSIACAException ( source, true, SenseKeyCd.ABORTED_COMMAND, ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT, "" )
-        inlu.NotifyTerminateTaskWithException ( TaskStatus.getTask testTasks.[0] ) ex
+        inlu.NotifyTerminateTaskWithException ( BDTaskStat.getTask testTasks.[0] ) ex
 
         w.Wait()
 
@@ -2911,7 +2867,7 @@ type BlockDeviceLU_Test () =
             dt1.p_GetTaskType <- ( fun () -> BlockDeviceTaskType.ScsiTask )
             dt1.p_GetCDB <- ( fun () -> ValueSome cdb )
             dt1.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
-            yield TaskStatus.TASK_STAT_Running( dt1 :> IBlockDeviceTask )
+            yield BDTaskStat.TASK_STAT_Running( dt1 :> IBlockDeviceTask )
 
             let dt2 = new CBlockDeviceTask_Stub()
             dt2.p_GetSource <- ( fun () -> source )
@@ -2923,7 +2879,7 @@ type BlockDeviceLU_Test () =
                 raise <| SCSIACAException ( source, true, SenseKeyCd.ABORTED_COMMAND, ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT, "" )
                 ( fun () -> Task.FromResult() ), id
             )
-            yield TaskStatus.TASK_STAT_Dormant( dt2 :> IBlockDeviceTask )
+            yield BDTaskStat.TASK_STAT_Dormant( dt2 :> IBlockDeviceTask )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -2944,313 +2900,13 @@ type BlockDeviceLU_Test () =
         ( source.ProtocolService :?> CProtocolService_Stub ).p_SendSCSIResponse <- ( fun _ _ _ _ _ _ _ _ _ _ -> () )
 
         let ex = new SCSIACAException ( source, true, SenseKeyCd.ABORTED_COMMAND, ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT, "" )
-        inlu.NotifyTerminateTaskWithException ( TaskStatus.getTask testTasks.[0] ) ex
+        inlu.NotifyTerminateTaskWithException ( BDTaskStat.getTask testTasks.[0] ) ex
 
         Assert.True(( sema1.Wait 100000 ))
         Assert.True(( cnt1 = 1 ))
 
         Assert.True(( sema2.Wait 100000 ))
         Assert.True(( cnt2 = 1 ))
-
-    [<Fact>]
-    member this.AbortTasksFromSpecifiedITNexus_001() =
-        let media, sm, lu = this.createBlockDevice()
-        let source = BlockDeviceLU_Test.cmdSource()
-        let pc = new PrivateCaller( lu )
-        let inlu = lu :> IInternalLU
-
-        let testTask =
-            let dt1 = new CBlockDeviceTask_Stub()
-            dt1.p_GetSource <- ( fun () -> source )
-            dt1.p_GetInitiatorTaskTag <- ( fun () -> itt_me.fromPrim 1u )
-            TaskStatus.TASK_STAT_Running( dt1 :> IBlockDeviceTask )
-
-        let queue1 = {
-            Queue = ImmutableArray<TaskStatus>.Empty.Add( testTask );
-            ACA = ValueNone;
-        }
-        pc.SetField( "m_TaskSet", queue1 )
-
-        inlu.AbortTasksFromSpecifiedITNexus ( TaskStatus.getTask testTask ) [| source.I_TNexus |] true
-
-        let m_TaskSet = pc.GetField( "m_TaskSet" ) :?> TaskSet
-        Assert.True(( m_TaskSet.Queue.Length = 1 ))
-
-
-    [<Fact>]
-    member this.AbortTasksFromSpecifiedITNexus_002() =
-        let media, sm, lu = this.createBlockDevice()
-        let pc = new PrivateCaller( lu )
-        let inlu = lu :> IInternalLU
-        let itn1 = ITNexus( "INIT1", isid_me.zero, "TARG1", tpgt_me.fromPrim 0us );
-        let itn2 = ITNexus( "INIT2", isid_me.zero, "TARG2", tpgt_me.fromPrim 0us );
-        let itn3 = ITNexus( "INIT3", isid_me.zero, "TARG3", tpgt_me.fromPrim 0us );
-        let itn4 = ITNexus( "INIT4", isid_me.zero, "TARG4", tpgt_me.fromPrim 0us );
-        let source1 = { BlockDeviceLU_Test.cmdSource() with I_TNexus = itn1 }
-        let source2 = { BlockDeviceLU_Test.cmdSource() with I_TNexus = itn2 }
-        let source3 = { BlockDeviceLU_Test.cmdSource() with I_TNexus = itn3 }
-        let source4 = { BlockDeviceLU_Test.cmdSource() with I_TNexus = itn4 }
-        let vcnt = Array.zeroCreate<int> 6
-
-        let self = new CBlockDeviceTask_Stub(
-            p_GetSource = ( fun () -> source1 ),
-            p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
-            p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
-            p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
-        )
-
-        let testTasks = [|
-            yield TaskStatus.TASK_STAT_Running( self :> IBlockDeviceTask )
-
-            yield
-                TaskStatus.TASK_STAT_Running(
-                    new CBlockDeviceTask_Stub(
-                        p_GetSource = ( fun () -> source1 ),
-                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
-                        p_GetTaskType = ( fun () -> BlockDeviceTaskType.InternalTask ),
-                        p_NotifyTerminate = ( fun _ -> vcnt.[1] <- vcnt.[1] + 1 )
-                    )
-                )
-
-            yield
-                TaskStatus.TASK_STAT_Running(
-                    new CBlockDeviceTask_Stub(
-                        p_GetSource = ( fun () -> source2 ),
-                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
-                        p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
-                        p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK ),
-                        p_NotifyTerminate = ( fun _ -> vcnt.[2] <- vcnt.[2] + 1 )
-                    )
-                )
-
-            yield
-                TaskStatus.TASK_STAT_Running(
-                    new CBlockDeviceTask_Stub(
-                        p_GetSource = ( fun () -> source3 ),
-                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
-                        p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
-                        p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK ),
-                        p_NotifyTerminate = ( fun _ -> vcnt.[3] <- vcnt.[3] + 1 )
-                    )
-                )
-
-            yield
-                TaskStatus.TASK_STAT_Running(
-                    new CBlockDeviceTask_Stub(
-                        p_GetSource = ( fun () -> source4 ),
-                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
-                        p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
-                        p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK ),
-                        p_NotifyTerminate = ( fun _ -> vcnt.[4] <- vcnt.[4] + 1 )
-                    )
-                )
-
-            yield
-                TaskStatus.TASK_STAT_Running(
-                    new CBlockDeviceTask_Stub(
-                        p_GetSource = ( fun () -> source4 ),
-                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
-                        p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
-                        p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK ),
-                        p_NotifyTerminate = ( fun _ -> vcnt.[5] <- vcnt.[5] + 1 )
-                    )
-                )
-        |]
-        let queue1 = {
-            Queue = testTasks.ToImmutableArray();
-            ACA = ValueNone;
-        }
-        pc.SetField( "m_TaskSet", queue1 )
-
-        inlu.AbortTasksFromSpecifiedITNexus self [| itn1; itn2; itn3 |] false
-
-        Assert.True(( vcnt.[0] = 0 ))
-        Assert.True(( vcnt.[1] = 0 ))
-        Assert.True(( vcnt.[2] = 1 ))
-        Assert.True(( vcnt.[3] = 1 ))
-        Assert.True(( vcnt.[4] = 0 ))
-        Assert.True(( vcnt.[5] = 0 ))
-
-    [<Fact>]
-    member this.AbortTasksFromSpecifiedITNexus_003() =
-        let media, sm, lu = this.createBlockDevice()
-        let pc = new PrivateCaller( lu )
-        let inlu = lu :> IInternalLU
-        let itn1 = ITNexus( "INIT1", isid_me.zero, "TARG1", tpgt_me.fromPrim 0us );
-        let itn2 = ITNexus( "INIT2", isid_me.zero, "TARG2", tpgt_me.fromPrim 0us );
-        let itn3 = ITNexus( "INIT3", isid_me.zero, "TARG3", tpgt_me.fromPrim 0us );
-        let itn4 = ITNexus( "INIT4", isid_me.zero, "TARG4", tpgt_me.fromPrim 0us );
-        let source1 = { BlockDeviceLU_Test.cmdSource() with I_TNexus = itn1 }
-        let source2 = { BlockDeviceLU_Test.cmdSource() with I_TNexus = itn2 }
-        let source3 = { BlockDeviceLU_Test.cmdSource() with I_TNexus = itn3 }
-        let source4 = { BlockDeviceLU_Test.cmdSource() with I_TNexus = itn4 }
-        let vcnt = Array.zeroCreate<int> 6
-
-        let self = new CBlockDeviceTask_Stub(
-            p_GetSource = ( fun () -> source1 ),
-            p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
-            p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
-            p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
-        )
-        let testTasks = [|
-            yield TaskStatus.TASK_STAT_Running( self :> IBlockDeviceTask )
-
-            yield
-                TaskStatus.TASK_STAT_Running(
-                    new CBlockDeviceTask_Stub(
-                        p_GetSource = ( fun () -> source1 ),
-                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
-                        p_GetTaskType = ( fun () -> BlockDeviceTaskType.InternalTask ),
-                        p_NotifyTerminate = ( fun _ -> vcnt.[1] <- vcnt.[1] + 1 )
-                    )
-                )
-
-            yield
-                TaskStatus.TASK_STAT_Running(
-                    new CBlockDeviceTask_Stub(
-                        p_GetSource = ( fun () -> source2 ),
-                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
-                        p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
-                        p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK ),
-                        p_NotifyTerminate = ( fun _ -> vcnt.[2] <- vcnt.[2] + 1 )
-                    )
-                )
-
-            yield
-                TaskStatus.TASK_STAT_Running(
-                    new CBlockDeviceTask_Stub(
-                        p_GetSource = ( fun () -> source3 ),
-                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
-                        p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
-                        p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK ),
-                        p_NotifyTerminate = ( fun _ -> vcnt.[3] <- vcnt.[3] + 1 )
-                    )
-                )
-
-            yield
-                TaskStatus.TASK_STAT_Running(
-                    new CBlockDeviceTask_Stub(
-                        p_GetSource = ( fun () -> source4 ),
-                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
-                        p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
-                        p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK ),
-                        p_NotifyTerminate = ( fun _ -> vcnt.[4] <- vcnt.[4] + 1 )
-                    )
-                )
-
-            yield
-                TaskStatus.TASK_STAT_Running(
-                    new CBlockDeviceTask_Stub(
-                        p_GetSource = ( fun () -> source4 ),
-                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
-                        p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
-                        p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK ),
-                        p_NotifyTerminate = ( fun _ -> vcnt.[5] <- vcnt.[5] + 1 )
-                    )
-                )
-        |]
-        let queue1 = {
-            Queue = testTasks.ToImmutableArray();
-            ACA = ValueNone;
-        }
-        pc.SetField( "m_TaskSet", queue1 )
-
-        inlu.AbortTasksFromSpecifiedITNexus self [| itn1; itn2; itn3 |] true
-
-        Assert.True(( vcnt.[0] = 0 ))
-        Assert.True(( vcnt.[1] = 0 ))
-        Assert.True(( vcnt.[2] = 1 ))
-        Assert.True(( vcnt.[3] = 1 ))
-        Assert.True(( vcnt.[4] = 0 ))
-        Assert.True(( vcnt.[5] = 1 ))
-
-    [<Fact>]
-    member this.AbortTasksFromSpecifiedITNexus_004() =
-        let media, sm, lu = this.createBlockDevice()
-        let pc = new PrivateCaller( lu )
-        let inlu = lu :> IInternalLU
-        let itn1 = ITNexus( "INIT1", isid_me.zero, "TARG1", tpgt_me.fromPrim 0us );
-        let itn2 = ITNexus( "INIT2", isid_me.zero, "TARG2", tpgt_me.fromPrim 0us );
-        let itn3 = ITNexus( "INIT3", isid_me.zero, "TARG3", tpgt_me.fromPrim 0us );
-        let itn4 = ITNexus( "INIT4", isid_me.zero, "TARG4", tpgt_me.fromPrim 0us );
-        let source1 = { BlockDeviceLU_Test.cmdSource() with I_TNexus = itn1 }
-        let source2 = { BlockDeviceLU_Test.cmdSource() with I_TNexus = itn2 }
-        let source3 = { BlockDeviceLU_Test.cmdSource() with I_TNexus = itn3 }
-        let source4 = { BlockDeviceLU_Test.cmdSource() with I_TNexus = itn4 }
-        let vcnt = Array.zeroCreate<int> 6
-
-        let self = new CBlockDeviceTask_Stub(
-            p_GetSource = ( fun () -> source1 ),
-            p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
-            p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
-            p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
-        )
-        let testTasks = [|
-            yield TaskStatus.TASK_STAT_Running( self :> IBlockDeviceTask )
-            yield
-                TaskStatus.TASK_STAT_Running(
-                    new CBlockDeviceTask_Stub(
-                        p_GetSource = ( fun () -> source1 ),
-                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
-                        p_GetTaskType = ( fun () -> BlockDeviceTaskType.InternalTask ),
-                        p_NotifyTerminate = ( fun _ -> vcnt.[1] <- vcnt.[1] + 1 )
-                    )
-                )
-            yield
-                TaskStatus.TASK_STAT_Running(
-                    new CBlockDeviceTask_Stub(
-                        p_GetSource = ( fun () -> source2 ),
-                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
-                        p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
-                        p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK ),
-                        p_NotifyTerminate = ( fun _ -> vcnt.[2] <- vcnt.[2] + 1 )
-                    )
-                )
-            yield
-                TaskStatus.TASK_STAT_Running(
-                    new CBlockDeviceTask_Stub(
-                        p_GetSource = ( fun () -> source3 ),
-                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
-                        p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
-                        p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK ),
-                        p_NotifyTerminate = ( fun _ -> vcnt.[3] <- vcnt.[3] + 1 )
-                    )
-                )
-            yield
-                TaskStatus.TASK_STAT_Running(
-                    new CBlockDeviceTask_Stub(
-                        p_GetSource = ( fun () -> source4 ),
-                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
-                        p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
-                        p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK ),
-                        p_NotifyTerminate = ( fun _ -> vcnt.[4] <- vcnt.[4] + 1 )
-                    )
-                )
-            yield
-                TaskStatus.TASK_STAT_Running(
-                    new CBlockDeviceTask_Stub(
-                        p_GetSource = ( fun () -> source4 ),
-                        p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
-                        p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
-                        p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK ),
-                        p_NotifyTerminate = ( fun _ -> vcnt.[5] <- vcnt.[5] + 1 )
-                    )
-                )
-        |]
-        let queue1 = {
-            Queue = testTasks.ToImmutableArray();
-            ACA = ValueNone;
-        }
-        pc.SetField( "m_TaskSet", queue1 )
-
-        inlu.AbortTasksFromSpecifiedITNexus self Array.empty false
-
-        Assert.True(( vcnt.[0] = 0 ))
-        Assert.True(( vcnt.[1] = 0 ))
-        Assert.True(( vcnt.[2] = 0 ))
-        Assert.True(( vcnt.[3] = 0 ))
-        Assert.True(( vcnt.[4] = 0 ))
-        Assert.True(( vcnt.[5] = 0 ))
 
     [<Fact>]
     member _.FindQueueByITT_001() =
@@ -3260,37 +2916,37 @@ type BlockDeviceLU_Test () =
         let src2 = { BlockDeviceLU_Test.cmdSource() with I_TNexus = itn2 }
         let testTasks =
             [|
-                TaskStatus.TASK_STAT_Running(
+                BDTaskStat.TASK_STAT_Running(
                     new CBlockDeviceTask_Stub(
                         p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
                         p_GetSource = ( fun () -> src1 )
                     ) :> IBlockDeviceTask
                 );
-                TaskStatus.TASK_STAT_Running(
+                BDTaskStat.TASK_STAT_Running(
                     new CBlockDeviceTask_Stub(
                         p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
                         p_GetSource = ( fun () -> src1 )
                     ) :> IBlockDeviceTask
                 );
-                TaskStatus.TASK_STAT_Running(
+                BDTaskStat.TASK_STAT_Running(
                     new CBlockDeviceTask_Stub(
                         p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 2u ),
                         p_GetSource = ( fun () -> src1 )
                     ) :> IBlockDeviceTask
                 );
-                TaskStatus.TASK_STAT_Running(
+                BDTaskStat.TASK_STAT_Running(
                     new CBlockDeviceTask_Stub(
                         p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 3u ),
                         p_GetSource = ( fun () -> src1 )
                     ) :> IBlockDeviceTask
                 );
-                TaskStatus.TASK_STAT_Running(
+                BDTaskStat.TASK_STAT_Running(
                     new CBlockDeviceTask_Stub(
                         p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 4u ),
                         p_GetSource = ( fun () -> src1 )
                     ) :> IBlockDeviceTask
                 );
-                TaskStatus.TASK_STAT_Running(
+                BDTaskStat.TASK_STAT_Running(
                     new CBlockDeviceTask_Stub(
                         p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 5u ),
                         p_GetSource = ( fun () -> src2 )
@@ -3317,7 +2973,7 @@ type BlockDeviceLU_Test () =
 
     [<Fact>]
     member _.FindQueueByITT_002() =
-        let tasks = ImmutableArray< TaskStatus >.Empty
+        let tasks = ImmutableArray< BDTaskStat >.Empty
         let source = BlockDeviceLU_Test.cmdSource()
         let r1 =
             PrivateCaller.Invoke< BlockDeviceLU >( "FindQueueByITT", [| tasks :> obj; source :> obj; ( itt_me.fromPrim 0u ) :> obj; |] ) :?> int
@@ -3328,7 +2984,7 @@ type BlockDeviceLU_Test () =
         let media, sm, lu = this.createBlockDevice()
         let source = BlockDeviceLU_Test.cmdSource()
         let pc = new PrivateCaller( lu )
-        pc.Invoke( "CheckOverlappedTask", ImmutableArray< TaskStatus >.Empty, source, itt_me.fromPrim 0u ) |> ignore
+        pc.Invoke( "CheckOverlappedTask", ImmutableArray< BDTaskStat >.Empty, source, itt_me.fromPrim 0u ) |> ignore
 
     [<Fact>]
     member this.CheckOverlappedTask_002() =
@@ -3340,7 +2996,7 @@ type BlockDeviceLU_Test () =
         let testTasks = [|
             for i = 0 to 15 do
                 yield
-                    TaskStatus.TASK_STAT_Running(
+                    BDTaskStat.TASK_STAT_Running(
                         new CBlockDeviceTask_Stub(
                             p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim ( uint i ) ),
                             p_GetTaskType = ( fun () -> BlockDeviceTaskType.InternalTask ),
@@ -3374,7 +3030,7 @@ type BlockDeviceLU_Test () =
         let testTasks = [|
             for i = 0 to 15 do
                 yield
-                    TaskStatus.TASK_STAT_Running(
+                    BDTaskStat.TASK_STAT_Running(
                         new CBlockDeviceTask_Stub(
                             p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim ( uint i ) ),
                             p_GetTaskType = ( fun () -> BlockDeviceTaskType.InternalTask ),
@@ -3393,7 +3049,7 @@ type BlockDeviceLU_Test () =
     member this.CheckDuplicateACATask_001() =
         let media, sm, lu = this.createBlockDevice()
         let pc = new PrivateCaller( lu )
-        Assert.False( pc.Invoke( "CheckDuplicateACATask", ImmutableArray< TaskStatus >.Empty ) :?> bool )
+        Assert.False( pc.Invoke( "CheckDuplicateACATask", ImmutableArray< BDTaskStat >.Empty ) :?> bool )
 
     [<Fact>]
     member this.CheckDuplicateACATask_002() =
@@ -3402,14 +3058,14 @@ type BlockDeviceLU_Test () =
         let testTasks = [|
             for i = 0 to 15 do
                 yield
-                    TaskStatus.TASK_STAT_Running(
+                    BDTaskStat.TASK_STAT_Running(
                         new CBlockDeviceTask_Stub(
                             p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                             p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
                         ) :> IBlockDeviceTask
                     )
             yield
-                TaskStatus.TASK_STAT_Running(
+                BDTaskStat.TASK_STAT_Running(
                     new CBlockDeviceTask_Stub(
                         p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                         p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK )
@@ -3425,7 +3081,7 @@ type BlockDeviceLU_Test () =
         let testTasks = [|
             for i = 0 to 15 do
                 yield
-                    TaskStatus.TASK_STAT_Running(
+                    BDTaskStat.TASK_STAT_Running(
                         new CBlockDeviceTask_Stub(
                             p_GetTaskType = ( fun () -> BlockDeviceTaskType.InternalTask )
                         ) :> IBlockDeviceTask
@@ -3441,7 +3097,7 @@ type BlockDeviceLU_Test () =
         let testTasks = [|
             for i = 0 to 15 do
                 yield
-                    TaskStatus.TASK_STAT_Running(
+                    BDTaskStat.TASK_STAT_Running(
                         new CBlockDeviceTask_Stub(
                             p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                             p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
@@ -3463,7 +3119,7 @@ type BlockDeviceLU_Test () =
             { BlockDeviceLU_Test.defaultDataOutPDU with DataSegment = PooledBuffer.Rent 30 };
         ]
         let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
+            Queue = ImmutableArray< BDTaskStat >.Empty;
             ACA = ValueSome( 
                 source.I_TNexus,
                 BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
@@ -3473,8 +3129,8 @@ type BlockDeviceLU_Test () =
             pc.Invoke( "AddNewScsiTaskToQueue", source :> obj, scsiCmd :> obj, cdb :> obj, scsiData :> obj, queue1 ) :?> TaskSet
 
         Assert.True(( queue2.Queue.Length = 1 ))
-        Assert.True(( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask ))
-        let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
+        Assert.True(( ( BDTaskStat.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask ))
+        let wt = ( BDTaskStat.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
         Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 60u ))
 
         let pc_task = new PrivateCaller( wt )
@@ -3496,7 +3152,7 @@ type BlockDeviceLU_Test () =
         ]
 
         let testTask =
-            TaskStatus.TASK_STAT_Running(
+            BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
                     p_GetSCSICommand = ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK ),
@@ -3505,7 +3161,7 @@ type BlockDeviceLU_Test () =
                 ) :> IBlockDeviceTask
             )
         let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty.Add testTask;
+            Queue = ImmutableArray< BDTaskStat >.Empty.Add testTask;
             ACA = ValueSome( 
                 source.I_TNexus,
                 BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
@@ -3516,8 +3172,8 @@ type BlockDeviceLU_Test () =
             pc.Invoke( "AddNewScsiTaskToQueue", source :> obj, scsiCmd :> obj, cdb :> obj, scsiData :> obj, queue1 ) :?> TaskSet
 
         Assert.True(( queue2.Queue.Length = 2 ))
-        Assert.True( ( TaskStatus.getTask queue2.Queue.[1] ).TaskType = BlockDeviceTaskType.InternalTask )
-        let wt = ( TaskStatus.getTask queue2.Queue.[1] ) :?> SendErrorStatusTask
+        Assert.True( ( BDTaskStat.getTask queue2.Queue.[1] ).TaskType = BlockDeviceTaskType.InternalTask )
+        let wt = ( BDTaskStat.getTask queue2.Queue.[1] ) :?> SendErrorStatusTask
         Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 30u ))
 
         let pc_task = new PrivateCaller( wt )
@@ -3542,7 +3198,7 @@ type BlockDeviceLU_Test () =
         ]
 
         let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
+            Queue = ImmutableArray< BDTaskStat >.Empty;
             ACA = ValueSome( 
                 source.I_TNexus,
                 BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
@@ -3553,8 +3209,8 @@ type BlockDeviceLU_Test () =
             pc.Invoke( "AddNewScsiTaskToQueue", source :> obj, scsiCmd :> obj, cdb :> obj, scsiData :> obj, queue1 ) :?> TaskSet
 
         Assert.True(( queue2.Queue.Length = 1 ))
-        Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.ScsiTask )
-        let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> ScsiTask
+        Assert.True( ( BDTaskStat.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.ScsiTask )
+        let wt = ( BDTaskStat.getTask queue2.Queue.[0] ) :?> ScsiTask
         Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 30u ))
         let pc_task = new PrivateCaller( wt )
         let resultpdu = pc_task.GetField( "m_Command" ) :?> SCSICommandPDU
@@ -3573,7 +3229,7 @@ type BlockDeviceLU_Test () =
         ]
 
         let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
+            Queue = ImmutableArray< BDTaskStat >.Empty;
             ACA = ValueSome( 
                 new ITNexus( "INIT2", isid_me.fromElem 1uy 2uy 3us 4uy 5us, "TARG6", tpgt_me.fromPrim 7us ),
                 BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
@@ -3584,8 +3240,8 @@ type BlockDeviceLU_Test () =
             pc.Invoke( "AddNewScsiTaskToQueue", source :> obj, scsiCmd :> obj, cdb :> obj, scsiData :> obj, queue1 ) :?> TaskSet
 
         Assert.True(( queue2.Queue.Length = 1 ))
-        Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
-        let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
+        Assert.True( ( BDTaskStat.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
+        let wt = ( BDTaskStat.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
         Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 35u ))
         let pc_task = new PrivateCaller( wt )
         let status = pc_task.GetField( "m_StatCode" ) :?> ScsiCmdStatCd
@@ -3605,7 +3261,7 @@ type BlockDeviceLU_Test () =
         ]
 
         let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
+            Queue = ImmutableArray< BDTaskStat >.Empty;
             ACA = ValueSome( 
                 new ITNexus( "INIT2", isid_me.fromElem 1uy 2uy 3us 4uy 5us, "TARG6", tpgt_me.fromPrim 7us ),
                 BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
@@ -3616,8 +3272,8 @@ type BlockDeviceLU_Test () =
             pc.Invoke( "AddNewScsiTaskToQueue", source :> obj, scsiCmd :> obj, cdb :> obj, scsiData :> obj, queue1 ) :?> TaskSet
 
         Assert.True(( queue2.Queue.Length = 1 ))
-        Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
-        let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
+        Assert.True( ( BDTaskStat.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
+        let wt = ( BDTaskStat.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
         Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 25u ))
         let pc_task = new PrivateCaller( wt )
         let status = pc_task.GetField( "m_StatCode" ) :?> ScsiCmdStatCd
@@ -3638,7 +3294,7 @@ type BlockDeviceLU_Test () =
         ]
 
         let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
+            Queue = ImmutableArray< BDTaskStat >.Empty;
             ACA = ValueSome( 
                 new ITNexus( "INIT2", isid_me.fromElem 1uy 2uy 3us 4uy 5us, "TARG6", tpgt_me.fromPrim 7us ),
                 BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
@@ -3649,8 +3305,8 @@ type BlockDeviceLU_Test () =
             pc.Invoke( "AddNewScsiTaskToQueue", source :> obj, scsiCmd :> obj, cdb :> obj, scsiData :> obj, queue1 ) :?> TaskSet
 
         Assert.True(( queue2.Queue.Length = 1 ))
-        Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
-        let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
+        Assert.True( ( BDTaskStat.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
+        let wt = ( BDTaskStat.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
         Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 30u ))
         let pc_task = new PrivateCaller( wt )
         let status = pc_task.GetField( "m_StatCode" ) :?> ScsiCmdStatCd
@@ -3667,7 +3323,7 @@ type BlockDeviceLU_Test () =
         let cdb = { OperationCode = 0uy; Control = 0x00uy }
         let scsiData : SCSIDataOutPDU list = []
         let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
+            Queue = ImmutableArray< BDTaskStat >.Empty;
             ACA = ValueNone;
         }
 
@@ -3695,7 +3351,7 @@ type BlockDeviceLU_Test () =
             { BlockDeviceLU_Test.defaultDataOutPDU with DataSegment = PooledBuffer.Rent 20 };
         ]
         let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
+            Queue = ImmutableArray< BDTaskStat >.Empty;
             ACA = ValueNone;
         }
 
@@ -3703,8 +3359,8 @@ type BlockDeviceLU_Test () =
             pc.Invoke( "AddNewScsiTaskToQueue", source :> obj, scsiCmd :> obj, cdb :> obj, scsiData :> obj, queue1 ) :?> TaskSet
 
         Assert.True(( queue2.Queue.Length = 1 ))
-        Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.ScsiTask )
-        let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> ScsiTask
+        Assert.True( ( BDTaskStat.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.ScsiTask )
+        let wt = ( BDTaskStat.getTask queue2.Queue.[0] ) :?> ScsiTask
         Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 30u ))
         let pc_task = new PrivateCaller( wt )
         let resultpdu = pc_task.GetField( "m_Command" ) :?> SCSICommandPDU
@@ -3716,14 +3372,14 @@ type BlockDeviceLU_Test () =
         let source = BlockDeviceLU_Test.cmdSource()
         let pc = new PrivateCaller( lu )
         let testTask =
-            TaskStatus.TASK_STAT_Running(
+            BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 0u ),
                     p_GetSource = ( fun () -> source )
                 )
             )
         let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty.Add testTask;
+            Queue = ImmutableArray< BDTaskStat >.Empty.Add testTask;
             ACA = ValueNone;
         }
         let scsiCmd = {
@@ -3761,7 +3417,7 @@ type BlockDeviceLU_Test () =
             cnt3 <- cnt3 + 1
         )
         let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
+            Queue = ImmutableArray< BDTaskStat >.Empty;
             ACA = ValueNone;
         }        
         try
@@ -3789,7 +3445,7 @@ type BlockDeviceLU_Test () =
         )
         
         let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
+            Queue = ImmutableArray< BDTaskStat >.Empty;
             ACA = ValueNone;
         }
         let queue2 =
@@ -3797,8 +3453,8 @@ type BlockDeviceLU_Test () =
 
         // send raised exception to the initiator
         Assert.True(( queue2.Queue.Length = 1 ))
-        Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
-        let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
+        Assert.True( ( BDTaskStat.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
+        let wt = ( BDTaskStat.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
         Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 99u ))
         let pcwt = new PrivateCaller( wt )
         Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.BUSY ))
@@ -3844,7 +3500,7 @@ type BlockDeviceLU_Test () =
         let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand taskAttr
 
         let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
+            Queue = ImmutableArray< BDTaskStat >.Empty;
             ACA = ValueNone;
         }
 
@@ -3866,8 +3522,8 @@ type BlockDeviceLU_Test () =
             Assert.True( waca.IsNone )
 
         Assert.True(( queue2.Queue.Length = 1 ))
-        Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
-        let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
+        Assert.True( ( BDTaskStat.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
+        let wt = ( BDTaskStat.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
         Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 98u ))
         let pcwt = new PrivateCaller( wt )
         Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.CHECK_CONDITION ))
@@ -3917,7 +3573,7 @@ type BlockDeviceLU_Test () =
         let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand taskAttr
 
         let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
+            Queue = ImmutableArray< BDTaskStat >.Empty;
             ACA = ValueSome( 
                 source.I_TNexus,
                 BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ABORTED_COMMAND ASCCd.ACK_NAK_TIMEOUT
@@ -3949,8 +3605,8 @@ type BlockDeviceLU_Test () =
             Assert.True(( queue2.ACA = queue1.ACA ))
 
         Assert.True(( queue2.Queue.Length = 1 ))
-        Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
-        let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
+        Assert.True( ( BDTaskStat.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
+        let wt = ( BDTaskStat.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
         Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 30u ))
         let pcwt = new PrivateCaller( wt )
 
@@ -3978,7 +3634,7 @@ type BlockDeviceLU_Test () =
         let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK    // ACA task failed
 
         let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
+            Queue = ImmutableArray< BDTaskStat >.Empty;
             ACA = ValueSome( 
                 new ITNexus( "INIT_2", isid_me.fromElem 1uy 2uy 3us 4uy 5us, "TARG_6", tpgt_me.fromPrim 7us ),
                 BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ABORTED_COMMAND ASCCd.ACK_NAK_TIMEOUT
@@ -4003,7 +3659,7 @@ type BlockDeviceLU_Test () =
         let scsiCmd = BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.HEAD_OF_QUEUE_TASK    // Normal task failed
 
         let queue1 = {
-            Queue = ImmutableArray< TaskStatus >.Empty;
+            Queue = ImmutableArray< BDTaskStat >.Empty;
             ACA = ValueSome( 
                 new ITNexus( "INIT_2", isid_me.fromElem 1uy 2uy 3us 4uy 5us, "TARG_6", tpgt_me.fromPrim 7us ),
                 BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ABORTED_COMMAND ASCCd.ACK_NAK_TIMEOUT
@@ -4023,8 +3679,8 @@ type BlockDeviceLU_Test () =
         Assert.True( waca.IsSome )
         Assert.True(( queue2.ACA = queue1.ACA ))
         Assert.True(( queue2.Queue.Length = 1 ))
-        Assert.True( ( TaskStatus.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
-        let wt = ( TaskStatus.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
+        Assert.True( ( BDTaskStat.getTask queue2.Queue.[0] ).TaskType = BlockDeviceTaskType.InternalTask )
+        let wt = ( BDTaskStat.getTask queue2.Queue.[0] ) :?> SendErrorStatusTask
         Assert.True(( ( wt :> IBlockDeviceTask ).ReceivedDataLength = 0u ))
         let pcwt = new PrivateCaller( wt )
         Assert.True(( ( pcwt.GetField( "m_StatCode" ) :?> ScsiCmdStatCd ) = ScsiCmdStatCd.TASK_ABORTED ))
@@ -4062,7 +3718,7 @@ type BlockDeviceLU_Test () =
 
         m_TaskSetQueue.Enqueue( fun () ->
             let struct( nextStat, updateF ) =
-                pc.Invoke( "RunSCSITask", taskStub ) :?> struct( TaskStatus * ( TaskSet -> TaskSet ) )
+                pc.Invoke( "RunSCSITask", taskStub ) :?> struct( BDTaskStat * ( TaskSet -> TaskSet ) )
             match nextStat with
             | TASK_STAT_Dormant( _ ) ->
                 Assert.Fail __LINE__
@@ -4102,7 +3758,7 @@ type BlockDeviceLU_Test () =
 
         m_TaskSetQueue.Enqueue( fun () ->
             let struct( nextStat, updateF ) =
-                pc.Invoke( "RunSCSITask", taskStub ) :?> struct( TaskStatus * ( TaskSet -> TaskSet ) )
+                pc.Invoke( "RunSCSITask", taskStub ) :?> struct( BDTaskStat * ( TaskSet -> TaskSet ) )
             match nextStat with
             | TASK_STAT_Dormant( _ ) ->
                 Assert.Fail __LINE__
@@ -4153,7 +3809,7 @@ type BlockDeviceLU_Test () =
 
         m_TaskSetQueue.Enqueue( fun () ->
             let struct( nextStat, _ ) =
-                pc.Invoke( "RunSCSITask", taskStub ) :?> struct( TaskStatus * ( TaskSet -> TaskSet ) )
+                pc.Invoke( "RunSCSITask", taskStub ) :?> struct( BDTaskStat * ( TaskSet -> TaskSet ) )
 
             match nextStat with
             | TASK_STAT_Dormant( _ ) ->
@@ -4212,7 +3868,7 @@ type BlockDeviceLU_Test () =
         taskStub.p_GetReceivedDataLength <- ( fun () -> 0u )
 
         let queue1 = {
-            Queue = ImmutableArray<TaskStatus>.Empty.Add( TaskStatus.TASK_STAT_Dormant( taskStub :> IBlockDeviceTask ) );
+            Queue = ImmutableArray<BDTaskStat>.Empty.Add( BDTaskStat.TASK_STAT_Dormant( taskStub :> IBlockDeviceTask ) );
             ACA = ValueNone;
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -4228,7 +3884,7 @@ type BlockDeviceLU_Test () =
         task {
             m_TaskSetQueue.Enqueue( fun () ->
                 let struct( nextStat, updateF ) =
-                    pc.Invoke( "RunSCSITask", taskStub ) :?> struct( TaskStatus * ( TaskSet -> TaskSet ) )
+                    pc.Invoke( "RunSCSITask", taskStub ) :?> struct( BDTaskStat * ( TaskSet -> TaskSet ) )
 
                 match nextStat with
                 | TASK_STAT_Dormant( _ ) ->
@@ -4237,7 +3893,7 @@ type BlockDeviceLU_Test () =
                     Assert.True(( x.TaskType = BlockDeviceTaskType.ScsiTask ))
 
                 let queue2 = {
-                    Queue = ImmutableArray<TaskStatus>.Empty.Add( nextStat );
+                    Queue = ImmutableArray<BDTaskStat>.Empty.Add( nextStat );
                     ACA = ValueNone;
                 }
                 pc.SetField( "m_TaskSet", queue2 )
@@ -4257,7 +3913,7 @@ type BlockDeviceLU_Test () =
 
             Assert.True(( m_TaskSet.Queue.Length > 0 ))
             match m_TaskSet.Queue.[0] with
-            | TaskStatus.TASK_STAT_Running( x ) ->
+            | BDTaskStat.TASK_STAT_Running( x ) ->
                 Assert.True(( x.TaskType = BlockDeviceTaskType.InternalTask ))
             | _ ->
                 Assert.Fail __LINE__
@@ -4300,7 +3956,7 @@ type BlockDeviceLU_Test () =
             Assert.False( flg )
         )
         let queue1 = {
-            Queue = ImmutableArray<TaskStatus>.Empty.Add( TaskStatus.TASK_STAT_Dormant( taskStub :> IBlockDeviceTask ) );
+            Queue = ImmutableArray<BDTaskStat>.Empty.Add( BDTaskStat.TASK_STAT_Dormant( taskStub :> IBlockDeviceTask ) );
             ACA = ValueNone;
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -4317,7 +3973,7 @@ type BlockDeviceLU_Test () =
 
         m_TaskSetQueue.Enqueue( fun () ->
             let struct( nextStat, updateF ) =
-                pc.Invoke( "RunSCSITask", taskStub ) :?> struct( TaskStatus * ( TaskSet -> TaskSet ) )
+                pc.Invoke( "RunSCSITask", taskStub ) :?> struct( BDTaskStat * ( TaskSet -> TaskSet ) )
             match nextStat with
             | TASK_STAT_Dormant( _ ) ->
                 Assert.Fail __LINE__
@@ -4325,7 +3981,7 @@ type BlockDeviceLU_Test () =
                 Assert.True(( x.TaskType = BlockDeviceTaskType.ScsiTask ))
 
             let queue2 = {
-                Queue = ImmutableArray<TaskStatus>.Empty.Add( nextStat );
+                Queue = ImmutableArray<BDTaskStat>.Empty.Add( nextStat );
                 ACA = ValueNone;
             }
             pc.SetField( "m_TaskSet", queue2 )
@@ -4378,7 +4034,7 @@ type BlockDeviceLU_Test () =
         )
 
         let queue1 = {
-            Queue = ImmutableArray<TaskStatus>.Empty.Add( TaskStatus.TASK_STAT_Dormant( taskStub :> IBlockDeviceTask ) );
+            Queue = ImmutableArray<BDTaskStat>.Empty.Add( BDTaskStat.TASK_STAT_Dormant( taskStub :> IBlockDeviceTask ) );
             ACA = ValueNone;
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -4395,7 +4051,7 @@ type BlockDeviceLU_Test () =
 
         m_TaskSetQueue.Enqueue( fun () ->
             let struct( nextStat, updateF ) =
-                pc.Invoke( "RunSCSITask", taskStub ) :?> struct( TaskStatus * ( TaskSet -> TaskSet ) )
+                pc.Invoke( "RunSCSITask", taskStub ) :?> struct( BDTaskStat * ( TaskSet -> TaskSet ) )
             match nextStat with
             | TASK_STAT_Dormant( _ ) ->
                 Assert.Fail __LINE__
@@ -4403,7 +4059,7 @@ type BlockDeviceLU_Test () =
                 Assert.True(( x.TaskType = BlockDeviceTaskType.InternalTask ))
 
             let queue2 = {
-                Queue = ImmutableArray<TaskStatus>.Empty.Add( nextStat );
+                Queue = ImmutableArray<BDTaskStat>.Empty.Add( nextStat );
                 ACA = ValueNone;
             }
             pc.SetField( "m_TaskSet", queue2 )
@@ -4453,7 +4109,7 @@ type BlockDeviceLU_Test () =
                 m_TaskSetQueue.Enqueue( fun () ->
                     let m_TaskSet = pc.GetField( "m_TaskSet" ) :?> TaskSet
                     let queue2 = {
-                        Queue = m_TaskSet.Queue.Add( TaskStatus.TASK_STAT_Dormant( task2 ) );
+                        Queue = m_TaskSet.Queue.Add( BDTaskStat.TASK_STAT_Dormant( task2 ) );
                         ACA = ValueNone;
                     }
                     pc.SetField( "m_TaskSet", queue2 )
@@ -4469,14 +4125,14 @@ type BlockDeviceLU_Test () =
         task1.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
 
         let queue1 = {
-            Queue = ImmutableArray<TaskStatus>.Empty.Add( TaskStatus.TASK_STAT_Dormant( task1 :> IBlockDeviceTask ) );
+            Queue = ImmutableArray<BDTaskStat>.Empty.Add( BDTaskStat.TASK_STAT_Dormant( task1 :> IBlockDeviceTask ) );
             ACA = ValueNone;
         }
         pc.SetField( "m_TaskSet", queue1 )
 
         m_TaskSetQueue.Enqueue( fun () ->
             let struct( nextStat, updateF ) =
-                pc.Invoke( "RunSCSITask", task1 ) :?> struct( TaskStatus * ( TaskSet -> TaskSet ) )
+                pc.Invoke( "RunSCSITask", task1 ) :?> struct( BDTaskStat * ( TaskSet -> TaskSet ) )
             match nextStat with
             | TASK_STAT_Dormant( _ ) ->
                 Assert.Fail __LINE__
@@ -4484,7 +4140,7 @@ type BlockDeviceLU_Test () =
                 Assert.True(( x = task1 ))
 
             let queue3 = {
-                Queue = ImmutableArray<TaskStatus>.Empty.Add( nextStat );
+                Queue = ImmutableArray<BDTaskStat>.Empty.Add( nextStat );
                 ACA = ValueNone;
             }
             pc.SetField( "m_TaskSet", queue3 )
@@ -4527,7 +4183,7 @@ type BlockDeviceLU_Test () =
 
         let taskDummyV = [|
             for i = 0 to 15 do
-                yield TaskStatus.TASK_STAT_Running( taskdummy )
+                yield BDTaskStat.TASK_STAT_Running( taskdummy )
         |]
 
         let task1 = new CBlockDeviceTask_Stub()
@@ -4549,14 +4205,14 @@ type BlockDeviceLU_Test () =
         task1.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK )
 
         let queue1 = {
-            Queue = taskDummyV.ToImmutableArray().Add( TaskStatus.TASK_STAT_Dormant( task1 ) );
+            Queue = taskDummyV.ToImmutableArray().Add( BDTaskStat.TASK_STAT_Dormant( task1 ) );
             ACA = ValueNone;
         }
         pc.SetField( "m_TaskSet", queue1 )
 
         m_TaskSetQueue.Enqueue( fun () ->
             let struct( nextStat, updateF ) =
-                pc.Invoke( "RunSCSITask", task1 ) :?> struct( TaskStatus * ( TaskSet -> TaskSet ) )
+                pc.Invoke( "RunSCSITask", task1 ) :?> struct( BDTaskStat * ( TaskSet -> TaskSet ) )
 
             match nextStat with
             | TASK_STAT_Dormant( _ ) ->
@@ -4610,7 +4266,7 @@ type BlockDeviceLU_Test () =
                         m_TaskSetQueue.Enqueue( fun () ->
                             let m_TaskSet = pc.GetField( "m_TaskSet" ) :?> TaskSet
                             let queue2 = {
-                                Queue = m_TaskSet.Queue.Add( TaskStatus.TASK_STAT_Dormant( task1() ) )
+                                Queue = m_TaskSet.Queue.Add( BDTaskStat.TASK_STAT_Dormant( task1() ) )
                                 ACA = ValueNone;
                             }
                             pc.SetField( "m_TaskSet", queue2 )
@@ -4631,14 +4287,14 @@ type BlockDeviceLU_Test () =
 
         let testTask1 = task1()
         let queue1 = {
-            Queue = ImmutableArray<TaskStatus>.Empty.Add( TaskStatus.TASK_STAT_Dormant( testTask1 ) );
+            Queue = ImmutableArray<BDTaskStat>.Empty.Add( BDTaskStat.TASK_STAT_Dormant( testTask1 ) );
             ACA = ValueNone;
         }
         pc.SetField( "m_TaskSet", queue1 )
 
         m_TaskSetQueue.Enqueue( fun () ->
             let struct( nextStat, updateF ) =
-                pc.Invoke( "RunSCSITask", testTask1 ) :?> struct( TaskStatus * ( TaskSet -> TaskSet ) )
+                pc.Invoke( "RunSCSITask", testTask1 ) :?> struct( BDTaskStat * ( TaskSet -> TaskSet ) )
             match nextStat with
             | TASK_STAT_Dormant( _ ) ->
                 Assert.Fail __LINE__
@@ -4646,7 +4302,7 @@ type BlockDeviceLU_Test () =
                 Assert.True(( x.TaskType = BlockDeviceTaskType.ScsiTask ))
 
             let queue1 = {
-                Queue = ImmutableArray<TaskStatus>.Empty.Add( nextStat );
+                Queue = ImmutableArray<BDTaskStat>.Empty.Add( nextStat );
                 ACA = ValueNone;
             }
             pc.SetField( "m_TaskSet", queue1 )
@@ -4673,7 +4329,7 @@ type BlockDeviceLU_Test () =
         let sema1 = new SemaphoreSlim( 0 )
 
         let queue1 = {
-            Queue = ImmutableArray<TaskStatus>.Empty;
+            Queue = ImmutableArray<BDTaskStat>.Empty;
             ACA = ValueSome( 
                 source.I_TNexus,
                 BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
@@ -4716,7 +4372,7 @@ type BlockDeviceLU_Test () =
         task1.p_GetACANoncompliant <- ( fun () -> true )   // InternalTask always must return true.
 
         let queue1 = {
-            Queue = ImmutableArray<TaskStatus>.Empty.Add( TaskStatus.TASK_STAT_Dormant( task1 ) );
+            Queue = ImmutableArray<BDTaskStat>.Empty.Add( BDTaskStat.TASK_STAT_Dormant( task1 ) );
             ACA = ValueSome(
                 source.I_TNexus,
                 BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
@@ -4765,7 +4421,7 @@ type BlockDeviceLU_Test () =
         task1.p_GetACANoncompliant <- ( fun () -> false )
 
         let queue1 = {
-            Queue = ImmutableArray<TaskStatus>.Empty.Add( TaskStatus.TASK_STAT_Dormant( task1 ) );
+            Queue = ImmutableArray<BDTaskStat>.Empty.Add( BDTaskStat.TASK_STAT_Dormant( task1 ) );
             ACA = ValueSome(
                 source.I_TNexus,
                 BlockDeviceLU_Test.defSCSIACAException ValueNone ScsiCmdStatCd.CHECK_CONDITION SenseKeyCd.ILLEGAL_REQUEST ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT
@@ -4799,7 +4455,7 @@ type BlockDeviceLU_Test () =
         let w = new SemaphoreSlim( 0 )
 
         let testTasks = [|
-            yield TaskStatus.TASK_STAT_Running(
+            yield BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetSource = ( fun () -> source ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
@@ -4813,7 +4469,7 @@ type BlockDeviceLU_Test () =
                     p_GetACANoncompliant = ( fun () -> false )
                 ) :> IBlockDeviceTask
             );
-            yield TaskStatus.TASK_STAT_Running(
+            yield BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetSource = ( fun () -> source ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
@@ -4841,7 +4497,7 @@ type BlockDeviceLU_Test () =
                     }, id
                 )
                 task3.p_GetACANoncompliant <- ( fun () -> true )   // InternalTask always must return true.
-                yield TaskStatus.TASK_STAT_Dormant( task3 )
+                yield BDTaskStat.TASK_STAT_Dormant( task3 )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -4886,7 +4542,7 @@ type BlockDeviceLU_Test () =
         let w = new SemaphoreSlim( 0 )
 
         let testTasks = [|
-            yield TaskStatus.TASK_STAT_Running(
+            yield BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetSource = ( fun () -> source ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
@@ -4900,7 +4556,7 @@ type BlockDeviceLU_Test () =
                     p_GetACANoncompliant = ( fun () -> false )
                 ) :> IBlockDeviceTask
             );
-            yield TaskStatus.TASK_STAT_Running(
+            yield BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
                     p_GetSource = ( fun () -> source ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
@@ -4930,7 +4586,7 @@ type BlockDeviceLU_Test () =
                 )
                 task3.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ACA_TASK )
                 task3.p_GetACANoncompliant <- ( fun () -> false )
-                yield TaskStatus.TASK_STAT_Dormant( task3 )
+                yield BDTaskStat.TASK_STAT_Dormant( task3 )
         |]
 
         let queue1 = {
@@ -4977,7 +4633,7 @@ type BlockDeviceLU_Test () =
         let w = new SemaphoreSlim( 0 )
 
         let testTasks = [|
-            yield TaskStatus.TASK_STAT_Dormant(
+            yield BDTaskStat.TASK_STAT_Dormant(
                 new CBlockDeviceTask_Stub(
                     p_GetSource = ( fun () -> source ),
                     p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim 1u ),
@@ -5007,7 +4663,7 @@ type BlockDeviceLU_Test () =
                     w.Release() |> ignore
                 }, id
             )
-            yield TaskStatus.TASK_STAT_Dormant( task2 )
+            yield BDTaskStat.TASK_STAT_Dormant( task2 )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -5065,8 +4721,8 @@ type BlockDeviceLU_Test () =
         task2.p_GetACANoncompliant <- ( fun () -> false )
 
         let testTasks = [|
-            yield TaskStatus.TASK_STAT_Dormant( task1 )
-            yield TaskStatus.TASK_STAT_Dormant( task2 )
+            yield BDTaskStat.TASK_STAT_Dormant( task1 )
+            yield BDTaskStat.TASK_STAT_Dormant( task2 )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -5124,8 +4780,8 @@ type BlockDeviceLU_Test () =
         task2.p_GetACANoncompliant <- ( fun () -> false )
 
         let testTasks = [|
-            yield TaskStatus.TASK_STAT_Dormant( task1 )
-            yield TaskStatus.TASK_STAT_Dormant( task2 )
+            yield BDTaskStat.TASK_STAT_Dormant( task1 )
+            yield BDTaskStat.TASK_STAT_Dormant( task2 )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -5183,8 +4839,8 @@ type BlockDeviceLU_Test () =
         task2.p_GetACANoncompliant <- ( fun () -> false )
 
         let testTasks = [|
-            yield TaskStatus.TASK_STAT_Dormant( task1 )
-            yield TaskStatus.TASK_STAT_Dormant( task2 )
+            yield BDTaskStat.TASK_STAT_Dormant( task1 )
+            yield BDTaskStat.TASK_STAT_Dormant( task2 )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -5208,7 +4864,7 @@ type BlockDeviceLU_Test () =
         let _, _, lu = this.createBlockDevice()
         let pc = new PrivateCaller( lu )
         let queue1 = {
-            Queue = ImmutableArray<TaskStatus>.Empty;
+            Queue = ImmutableArray<BDTaskStat>.Empty;
             ACA = ValueNone;
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -5247,7 +4903,7 @@ type BlockDeviceLU_Test () =
         task1.p_GetACANoncompliant <- ( fun () -> false )
 
         let queue1 = {
-            Queue = ImmutableArray<TaskStatus>.Empty.Add( TaskStatus.TASK_STAT_Dormant( task1 ) )
+            Queue = ImmutableArray<BDTaskStat>.Empty.Add( BDTaskStat.TASK_STAT_Dormant( task1 ) )
             ACA = ValueNone;
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -5292,7 +4948,7 @@ type BlockDeviceLU_Test () =
         task1.p_GetACANoncompliant <- ( fun () -> true )
 
         let queue1 = {
-            Queue = ImmutableArray<TaskStatus>.Empty.Add( TaskStatus.TASK_STAT_Dormant( task1 ) )
+            Queue = ImmutableArray<BDTaskStat>.Empty.Add( BDTaskStat.TASK_STAT_Dormant( task1 ) )
             ACA = ValueNone;
         }
         pc.SetField( "m_TaskSet", queue1 )
@@ -5514,9 +5170,9 @@ type BlockDeviceLU_Test () =
         task3.p_GetACANoncompliant <- ( fun () -> false )
 
         let testTasks = [|
-            yield TaskStatus.TASK_STAT_Dormant( task1 )
-            yield TaskStatus.TASK_STAT_Dormant( task2 )
-            yield TaskStatus.TASK_STAT_Dormant( task3 )
+            yield BDTaskStat.TASK_STAT_Dormant( task1 )
+            yield BDTaskStat.TASK_STAT_Dormant( task2 )
+            yield BDTaskStat.TASK_STAT_Dormant( task3 )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -5530,52 +5186,52 @@ type BlockDeviceLU_Test () =
             let queue3 =
                 if task1flg then
                     match queue2.Queue.[0] with
-                    | TaskStatus.TASK_STAT_Dormant( _ ) ->
+                    | BDTaskStat.TASK_STAT_Dormant( _ ) ->
                         Assert.Fail __LINE__
                     | _ -> ()
                     queue2
                 else
                     match queue2.Queue.[0] with
-                    | TaskStatus.TASK_STAT_Running( _ ) ->
+                    | BDTaskStat.TASK_STAT_Running( _ ) ->
                         Assert.Fail __LINE__
                     | _ -> ()
                     {
                         queue2 with
-                            Queue = queue2.Queue.SetItem ( 0, TaskStatus.TASK_STAT_Running( task1 ) )
+                            Queue = queue2.Queue.SetItem ( 0, BDTaskStat.TASK_STAT_Running( task1 ) )
                     }
 
             let queue4 =
                 if task2flg then
                     match queue3.Queue.[1] with
-                    | TaskStatus.TASK_STAT_Dormant( _ ) ->
+                    | BDTaskStat.TASK_STAT_Dormant( _ ) ->
                         Assert.Fail __LINE__
                     | _ -> ()
                     queue3
                 else
                     match queue3.Queue.[1] with
-                    | TaskStatus.TASK_STAT_Running( _ ) ->
+                    | BDTaskStat.TASK_STAT_Running( _ ) ->
                         Assert.Fail __LINE__
                     | _ -> ()
                     {
                         queue3 with
-                            Queue = queue3.Queue.SetItem( 1, TaskStatus.TASK_STAT_Running( task2 ) )
+                            Queue = queue3.Queue.SetItem( 1, BDTaskStat.TASK_STAT_Running( task2 ) )
                     }
 
             let queue5 =
                 if task3flg then
                     match queue4.Queue.[2] with
-                    | TaskStatus.TASK_STAT_Dormant( _ ) ->
+                    | BDTaskStat.TASK_STAT_Dormant( _ ) ->
                         Assert.Fail __LINE__
                     | _ -> ()
                     queue4
                 else
                     match queue4.Queue.[2] with
-                    | TaskStatus.TASK_STAT_Running( _ ) ->
+                    | BDTaskStat.TASK_STAT_Running( _ ) ->
                         Assert.Fail __LINE__
                     | _ -> ()
                     {
                         queue4 with
-                            Queue = queue4.Queue.SetItem( 2, TaskStatus.TASK_STAT_Running( task3 ) )
+                            Queue = queue4.Queue.SetItem( 2, BDTaskStat.TASK_STAT_Running( task3 ) )
                     }
 
             pc.SetField( "m_TaskSet", queue5 )
@@ -5799,9 +5455,9 @@ type BlockDeviceLU_Test () =
         task3.p_GetACANoncompliant <- ( fun () -> false )
 
         let testTasks = [|
-            yield TaskStatus.TASK_STAT_Running( task1 )
-            yield TaskStatus.TASK_STAT_Dormant( task2 )
-            yield TaskStatus.TASK_STAT_Dormant( task3 )
+            yield BDTaskStat.TASK_STAT_Running( task1 )
+            yield BDTaskStat.TASK_STAT_Dormant( task2 )
+            yield BDTaskStat.TASK_STAT_Dormant( task3 )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -5815,35 +5471,35 @@ type BlockDeviceLU_Test () =
             let queue3 =
                 if task2flg then
                     match queue2.Queue.[1] with
-                    | TaskStatus.TASK_STAT_Dormant( _ ) ->
+                    | BDTaskStat.TASK_STAT_Dormant( _ ) ->
                         Assert.Fail __LINE__
                     | _ -> ()
                     queue2
                 else
                     match queue2.Queue.[1] with
-                    | TaskStatus.TASK_STAT_Running( _ ) ->
+                    | BDTaskStat.TASK_STAT_Running( _ ) ->
                         Assert.Fail __LINE__
                     | _ -> ()
                     {
                         queue2 with
-                            Queue = queue2.Queue.SetItem ( 1, TaskStatus.TASK_STAT_Running( task2 ) )
+                            Queue = queue2.Queue.SetItem ( 1, BDTaskStat.TASK_STAT_Running( task2 ) )
                     }
 
             let queue4 =
                 if task3flg then
                     match queue3.Queue.[2] with
-                    | TaskStatus.TASK_STAT_Dormant( _ ) ->
+                    | BDTaskStat.TASK_STAT_Dormant( _ ) ->
                         Assert.Fail __LINE__
                     | _ -> ()
                     queue3
                 else
                     match queue3.Queue.[2] with
-                    | TaskStatus.TASK_STAT_Running( _ ) ->
+                    | BDTaskStat.TASK_STAT_Running( _ ) ->
                         Assert.Fail __LINE__
                     | _ -> ()
                     {
                         queue3 with
-                            Queue = queue3.Queue.SetItem ( 2, TaskStatus.TASK_STAT_Running( task3 ) )
+                            Queue = queue3.Queue.SetItem ( 2, BDTaskStat.TASK_STAT_Running( task3 ) )
                     }
 
             pc.SetField( "m_TaskSet", queue4 )
@@ -6115,12 +5771,12 @@ type BlockDeviceLU_Test () =
         )
 
         let testTasks = [|
-            yield TaskStatus.TASK_STAT_Dormant( task1 )
-            yield TaskStatus.TASK_STAT_Dormant( task_int_1 )
-            yield TaskStatus.TASK_STAT_Dormant( task2 )
-            yield TaskStatus.TASK_STAT_Dormant( task_int_2 )
-            yield TaskStatus.TASK_STAT_Dormant( task3 )
-            yield TaskStatus.TASK_STAT_Dormant( task_int_3 )
+            yield BDTaskStat.TASK_STAT_Dormant( task1 )
+            yield BDTaskStat.TASK_STAT_Dormant( task_int_1 )
+            yield BDTaskStat.TASK_STAT_Dormant( task2 )
+            yield BDTaskStat.TASK_STAT_Dormant( task_int_2 )
+            yield BDTaskStat.TASK_STAT_Dormant( task3 )
+            yield BDTaskStat.TASK_STAT_Dormant( task_int_3 )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -6134,66 +5790,66 @@ type BlockDeviceLU_Test () =
             let queue3 =
                 if task1flg then
                     match queue2.Queue.[0] with
-                    | TaskStatus.TASK_STAT_Dormant( _ ) ->
+                    | BDTaskStat.TASK_STAT_Dormant( _ ) ->
                         Assert.Fail __LINE__
                     | _ -> ()
                     queue2
                 else
                     match queue2.Queue.[0] with
-                    | TaskStatus.TASK_STAT_Running( _ ) ->
+                    | BDTaskStat.TASK_STAT_Running( _ ) ->
                         Assert.Fail __LINE__
                     | _ -> ()
                     {
                         queue2 with
-                            Queue = queue2.Queue.SetItem ( 0, TaskStatus.TASK_STAT_Running( task1 ) )
+                            Queue = queue2.Queue.SetItem ( 0, BDTaskStat.TASK_STAT_Running( task1 ) )
                     }
 
             match queue3.Queue.[1] with
-            | TaskStatus.TASK_STAT_Dormant( _ ) ->
+            | BDTaskStat.TASK_STAT_Dormant( _ ) ->
                 Assert.Fail __LINE__
             | _ -> ()
 
             let queue4 =
                 if task2flg then
                     match queue3.Queue.[2] with
-                    | TaskStatus.TASK_STAT_Dormant( _ ) ->
+                    | BDTaskStat.TASK_STAT_Dormant( _ ) ->
                         Assert.Fail __LINE__
                     | _ -> ()
                     queue3
                 else
                     match queue3.Queue.[2] with
-                    | TaskStatus.TASK_STAT_Running( _ ) ->
+                    | BDTaskStat.TASK_STAT_Running( _ ) ->
                         Assert.Fail __LINE__
                     | _ -> ()
                     {
                         queue3 with
-                            Queue = queue3.Queue.SetItem ( 2, TaskStatus.TASK_STAT_Running( task2 ) )
+                            Queue = queue3.Queue.SetItem ( 2, BDTaskStat.TASK_STAT_Running( task2 ) )
                     }
 
             match queue4.Queue.[3] with
-            | TaskStatus.TASK_STAT_Dormant( _ ) ->
+            | BDTaskStat.TASK_STAT_Dormant( _ ) ->
                 Assert.Fail __LINE__
             | _ -> ()
 
             let queue5 =
                 if task3flg then
                     match queue4.Queue.[4] with
-                    | TaskStatus.TASK_STAT_Dormant( _ ) ->
+                    | BDTaskStat.TASK_STAT_Dormant( _ ) ->
                         Assert.Fail __LINE__
                     | _ -> ()
                     queue4
                 else
                     match queue4.Queue.[4] with
-                    | TaskStatus.TASK_STAT_Running( _ ) ->
+                    | BDTaskStat.TASK_STAT_Running( _ ) ->
                         Assert.Fail __LINE__
                     | _ -> ()
                     {
                         queue4 with
-                            Queue = queue4.Queue.SetItem ( 4, TaskStatus.TASK_STAT_Running( task3 ) )
+                            Queue = queue4.Queue.SetItem ( 4, BDTaskStat.TASK_STAT_Running( task3 ) )
                     }
 
             match queue5.Queue.[5] with
-            | TaskStatus.TASK_STAT_Dormant( _ ) ->
+            | BDTaskStat.TASK_STAT_Dormant( _ ) ->
                 Assert.Fail __LINE__
             | _ -> ()
 
@@ -6259,7 +5915,7 @@ type BlockDeviceLU_Test () =
                             w1.Release() |> ignore
                     }, id
                 )
-                yield TaskStatus.TASK_STAT_Dormant( task1 )
+                yield BDTaskStat.TASK_STAT_Dormant( task1 )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -6272,7 +5928,7 @@ type BlockDeviceLU_Test () =
 
             for i = 0 to 15 do
                 match queue2.Queue.[i] with
-                | TaskStatus.TASK_STAT_Dormant( _ ) ->
+                | BDTaskStat.TASK_STAT_Dormant( _ ) ->
                     Assert.Fail __LINE__
                 | _ -> ()
 
@@ -6321,7 +5977,7 @@ type BlockDeviceLU_Test () =
                 )
                 task1.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand attr )
                 task1.p_GetACANoncompliant <- ( fun () -> false )
-                yield TaskStatus.TASK_STAT_Dormant( task1 )
+                yield BDTaskStat.TASK_STAT_Dormant( task1 )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -6334,7 +5990,7 @@ type BlockDeviceLU_Test () =
 
             for i = 0 to 15 do
                 match queue2.Queue.[i] with
-                | TaskStatus.TASK_STAT_Dormant( _ ) ->
+                | BDTaskStat.TASK_STAT_Dormant( _ ) ->
                     Assert.Fail __LINE__
                 | _ -> ()
 
@@ -6386,7 +6042,7 @@ type BlockDeviceLU_Test () =
                 )
                 task1.p_GetSCSICommand <- ( fun () -> BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.ORDERED_TASK )
                 task1.p_GetACANoncompliant <- ( fun () -> false )
-                yield TaskStatus.TASK_STAT_Dormant( task1 )
+                yield BDTaskStat.TASK_STAT_Dormant( task1 )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -6400,13 +6056,13 @@ type BlockDeviceLU_Test () =
             let queue2 = pc.Invoke( "StartExecutableSCSITasks", queue1 ) :?> TaskSet
 
             match queue2.Queue.[0] with
-            | TaskStatus.TASK_STAT_Dormant( _ ) ->
+            | BDTaskStat.TASK_STAT_Dormant( _ ) ->
                 Assert.Fail __LINE__
             | _ -> ()
 
             for i = 1 to 15 do
                 match queue2.Queue.[i] with
-                | TaskStatus.TASK_STAT_Running( _ ) ->
+                | BDTaskStat.TASK_STAT_Running( _ ) ->
                     Assert.Fail __LINE__
                 | _ -> ()
 
@@ -6500,7 +6156,7 @@ type BlockDeviceLU_Test () =
 
         let testTasks = [|
             for i = 0 to 15 do
-                yield TaskStatus.TASK_STAT_Running( task1 )
+                yield BDTaskStat.TASK_STAT_Running( task1 )
         |]
         let queue1 = {
             Queue = testTasks.ToImmutableArray();
@@ -6557,12 +6213,12 @@ type BlockDeviceLU_Test () =
         let pc = new PrivateCaller( lu )
 
         let testTasks = [|
-            yield TaskStatus.TASK_STAT_Dormant(
+            yield BDTaskStat.TASK_STAT_Dormant(
                 new CBlockDeviceTask_Stub(
                     p_GetSource = ( fun () -> { source with TSIH = tsih_me.fromPrim 0us } )
                 )
             );
-            yield TaskStatus.TASK_STAT_Dormant(
+            yield BDTaskStat.TASK_STAT_Dormant(
                 new CBlockDeviceTask_Stub(
                     p_GetSource = ( fun () -> { source with TSIH = tsih_me.fromPrim 1us } )
                 )
