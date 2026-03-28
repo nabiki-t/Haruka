@@ -155,7 +155,7 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
     }
 
     let GetSortedISID ( cnt : int ) =
-        Array.init 2 ( fun _ -> GlbFunc.newISID() )
+        Array.init cnt ( fun _ -> GlbFunc.newISID() )
         |> Array.sortBy isid_me.toPrim
 
     // Get the file name for the Persistent Reservation.

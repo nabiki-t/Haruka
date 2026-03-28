@@ -156,7 +156,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
     }
 
     let GetSortedISID ( cnt : int ) =
-        Array.init 2 ( fun _ -> GlbFunc.newISID() )
+        Array.init cnt ( fun _ -> GlbFunc.newISID() )
         |> Array.sortBy isid_me.toPrim
 
     // Get the file name for the Persistent Reservation.
@@ -227,16 +227,23 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
     // Test cases
 
     static member PreemptAndAbort_NotAllRegistrants_001_data : obj[][] = [|
-        [| PR_TYPE.NO_RESERVATION;                    |]
-        [| PR_TYPE.WRITE_EXCLUSIVE;                   |]
-        [| PR_TYPE.EXCLUSIVE_ACCESS;                  |]
-        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |]
-        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |]
+        [| PR_TYPE.NO_RESERVATION;                    TaskATTRCd.SIMPLE_TASK; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   TaskATTRCd.SIMPLE_TASK; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  TaskATTRCd.SIMPLE_TASK; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  TaskATTRCd.SIMPLE_TASK; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; TaskATTRCd.SIMPLE_TASK; |]
+        [| PR_TYPE.NO_RESERVATION;                    TaskATTRCd.ACA_TASK;    |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   TaskATTRCd.ACA_TASK;    |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  TaskATTRCd.ACA_TASK;    |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  TaskATTRCd.ACA_TASK;    |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; TaskATTRCd.ACA_TASK;    |]
     |]
 
+    // PERSISTENT RESERVE OUT command with PREEMPT AND ABORT serviceaction is received from non-failed I_T Nexus.
+    // attempt to preempt a non-failed I_T Nexus
     [<Theory>]
     [<MemberData( "PreemptAndAbort_NotAllRegistrants_001_data" )>]
-    member _.PreemptAndAbort_NotAllRegistrants_001 ( prtype : PR_TYPE ) =
+    member _.PreemptAndAbort_NotAllRegistrants_001 ( prtype : PR_TYPE ) ( taskattr : TaskATTRCd ) =
         task {
             //m_ClientProc.RunCommand "add trap /e Read /a Wait" "Trap added" "MD> "
             m_ClientProc.RunCommand "add trap /e TestUnitReady /a ACA" "Trap added" "MD> "
@@ -254,15 +261,21 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
                 ()
 
-            // ACA established
+            // ACA established ( r3 is failed IT nexus )
             let! itt_tur1 = r3.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
             let! res_tur1 = r3.WaitSCSIResponse itt_tur1
             Assert.True(( res_tur1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
-            // preempt
-            let! itt_pr_out2 = r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey2
+            // PREEMPT AND ABORT
+            // When attempting to preempt a non-failed I_T Nexus, it must follow the SAM-2 ACA criteria.
+            let! itt_pr_out2 = r1.Send_PROut_PREEMPT_AND_ABORT taskattr g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey2
             let! res_pr_out2 = r1.WaitSCSIResponse itt_pr_out2
             Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+
+            // ACA remains established.
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! res_read1 = r1.WaitSCSIResponse itt_read1
+            Assert.True(( res_read1.Status = ScsiCmdStatCd.ACA_ACTIVE ))
 
             // clear ACA
             let! itt_tmf1 = r3.SendTMFRequest_ClearACA BitI.F g_LUN1
@@ -279,9 +292,96 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
         }
 
+    static member PreemptAndAbort_NotAllRegistrants_002_data : obj[][] = [|
+        [| PR_TYPE.NO_RESERVATION;                    TaskATTRCd.SIMPLE_TASK; ScsiCmdStatCd.ACA_ACTIVE; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   TaskATTRCd.SIMPLE_TASK; ScsiCmdStatCd.ACA_ACTIVE; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  TaskATTRCd.SIMPLE_TASK; ScsiCmdStatCd.ACA_ACTIVE; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  TaskATTRCd.SIMPLE_TASK; ScsiCmdStatCd.ACA_ACTIVE; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; TaskATTRCd.SIMPLE_TASK; ScsiCmdStatCd.ACA_ACTIVE; |]
+        [| PR_TYPE.NO_RESERVATION;                    TaskATTRCd.ACA_TASK;    ScsiCmdStatCd.GOOD;       |]  // r2のタスクが中断されることを確認したい
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   TaskATTRCd.ACA_TASK;    ScsiCmdStatCd.GOOD;       |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  TaskATTRCd.ACA_TASK;    ScsiCmdStatCd.GOOD;       |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  TaskATTRCd.ACA_TASK;    ScsiCmdStatCd.GOOD;       |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; TaskATTRCd.ACA_TASK;    ScsiCmdStatCd.GOOD;       |]
+    |]
+
+    // PERSISTENT RESERVE OUT command with PREEMPT AND ABORT serviceaction is received from failed I_T Nexus.
+    // attempt to preempt a non-failed I_T Nexus
     [<Theory>]
-    [<MemberData( "PreemptAndAbort_NotAllRegistrants_001_data" )>]
-    member _.PreemptAndAbort_NotAllRegistrants_002 ( prtype : PR_TYPE ) =
+    [<MemberData( "PreemptAndAbort_NotAllRegistrants_002_data" )>]
+    member _.PreemptAndAbort_NotAllRegistrants_002 ( prtype : PR_TYPE ) ( taskattr : TaskATTRCd ) ( expr : ScsiCmdStatCd ) =
+        task {
+            //m_ClientProc.RunCommand "add trap /e Read /a Wait" "Trap added" "MD> "
+            m_ClientProc.RunCommand "add trap /e TestUnitReady /a ACA" "Trap added" "MD> "
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r3 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+            do! PR_Register r2 g_LUN1 g_ResvKey2
+            do! PR_Register r3 g_LUN1 g_ResvKey3
+
+            // reserve
+            if prtype <> PR_TYPE.NO_RESERVATION then
+                let! itt_pr_out1 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype g_ResvKey1
+                let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+                ()
+
+            // ACA established ( r3 is failed IT nexus )
+            let! itt_tur1 = r3.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! res_tur1 = r3.WaitSCSIResponse itt_tur1
+            Assert.True(( res_tur1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // PREEMPT AND ABORT
+            // When attempting to preempt a non-failed I_T Nexus, it must follow the SAM-2 ACA criteria.
+            let! itt_pr_out2 = r3.Send_PROut_PREEMPT_AND_ABORT taskattr g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey3 g_ResvKey2
+            let! res_pr_out2 = r3.WaitSCSIResponse itt_pr_out2
+            Assert.True(( res_pr_out2.Status = expr ))
+
+            // ACA remains established.
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! res_read1 = r1.WaitSCSIResponse itt_read1
+            Assert.True(( res_read1.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+
+            // clear ACA
+            let! itt_tmf1 = r3.SendTMFRequest_ClearACA BitI.F g_LUN1
+            let! res_tmf1 = r3.WaitTMFResponse itt_tmf1
+            Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            if expr = ScsiCmdStatCd.GOOD then
+                let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+                Assert.True(( fstat1.FullStatusDescriptor.Length = 2 ))
+                do! PR_Unregister r3 g_LUN1 g_ResvKey3
+                do! PR_Unregister r1 g_LUN1 g_ResvKey1
+            else
+                let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+                Assert.True(( fstat1.FullStatusDescriptor.Length = 3 ))
+                do! PR_Unregister r3 g_LUN1 g_ResvKey3
+                do! PR_Unregister r2 g_LUN1 g_ResvKey2
+                do! PR_Unregister r1 g_LUN1 g_ResvKey1
+
+            do! r1.Close()
+            do! r2.Close()
+            do! r3.Close()
+            m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
+        }
+
+    static member PreemptAndAbort_NotAllRegistrants_003_data : obj[][] = [|
+        [| PR_TYPE.NO_RESERVATION;                    TaskATTRCd.HEAD_OF_QUEUE_TASK; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   TaskATTRCd.HEAD_OF_QUEUE_TASK; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  TaskATTRCd.HEAD_OF_QUEUE_TASK; |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  TaskATTRCd.HEAD_OF_QUEUE_TASK; |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; TaskATTRCd.HEAD_OF_QUEUE_TASK; |]
+        [| PR_TYPE.NO_RESERVATION;                    TaskATTRCd.ACA_TASK;           |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   TaskATTRCd.ACA_TASK;           |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  TaskATTRCd.ACA_TASK;           |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  TaskATTRCd.ACA_TASK;           |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; TaskATTRCd.ACA_TASK;           |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "PreemptAndAbort_NotAllRegistrants_003_data" )>]
+    member _.PreemptAndAbort_NotAllRegistrants_003 ( prtype : PR_TYPE ) ( taskattr : TaskATTRCd ) =
         task {
             m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a Wait" "Trap added" "MD> "
             m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a ACA" "Trap added" "MD> "
@@ -319,8 +419,8 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             let! res_tur1 = r1.WaitSCSIResponse itt_read1
             Assert.True(( res_tur1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
-            // preempt ( not ACA TASK, preempt for r1 )
-            let! itt_pr_out2 = r3.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey3 g_ResvKey1
+            // PREEMPT AND ABORT 
+            let! itt_pr_out2 = r3.Send_PROut_PREEMPT_AND_ABORT taskattr g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey3 g_ResvKey1
             let! _ = r3.WaitSCSIResponseGoodStatus itt_pr_out2
 
             // check UA
