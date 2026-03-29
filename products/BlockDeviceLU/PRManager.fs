@@ -218,11 +218,20 @@ type PRManager(
         else
             let pr = m_Locker.obj
             let fitnRegved, fitnResvKey = pr.m_Registrations.TryGetValue faultITNexus
-            if PR_TYPE.isAllRegistrants pr.m_Type || not fitnRegved then
-                // If reservation type is all registrants, or fault I_T Nexus is not registered,
-                // the task is must executed in ACA compliant.
+            if PR_TYPE.isAllRegistrants pr.m_Type then
+                // SAM-2 5.9.1.5.1, SPC-3 5.6.10.5 e)
+                // If all registrants type reservation exists, execution is permitted unconditionally.
+                // SPC-3 does not contain any provision prohibiting execution in this case.
+                // Therefore, it should be interpreted that execution is permitted even if faulted I_T Nexus is not registered,
+                // or if an attempt is not made to preempt the faulted I_T Nexus.
+                true
+            elif not fitnRegved then
+                // SPC-3 5.6.10.5 a)
+                // If a faulted I_T Nexus is not registered, preemption for that I_T Nexus is not possible,
+                // and therefore execution is not permitted.
                 false
             else
+                // SAM-2 5.9.1.5.1, SPC-3 5.6.10.5 a) B)
                 let wcdb = cdb :?> PersistentReserveOutCDB
                 let parameterList = SCSIDataOutPDU.AppendParamList cmdPduData data ( int wcdb.ParameterListLength )
                 let basicParam = PRManager.paramDataToBasicParameterList source m_ObjID lun itt wcdb.ParameterListLength parameterList

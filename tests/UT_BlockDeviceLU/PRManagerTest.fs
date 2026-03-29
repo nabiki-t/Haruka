@@ -2698,15 +2698,24 @@ type PRManager_Test1 () =
         GlbFunc.DeleteFile fname
         GlbFunc.DeleteDir pDirName
             
-    [<Fact>]
-    member this.decideACANoncompliant_004() =
+    static member decideACANoncompliant_004_data : obj[][] = [|
+        [| NO_RESERVATION;                    false; |];
+        [| WRITE_EXCLUSIVE;                   true;  |];
+        [| EXCLUSIVE_ACCESS;                  true;  |];
+        [| WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  true;  |];
+        [| EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; true;  |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "decideACANoncompliant_004_data" )>]
+    member this.decideACANoncompliant_004 ( prtype : PR_TYPE ) ( holder : bool  ) =
         let pDirName = this.CreateTestDir()
         let fname = Functions.AppendPathName pDirName "decideACANoncompliant_004.txt"
 
         GlbFunc.writeDefaultPRFile
-            WRITE_EXCLUSIVE
+            prtype
             [|
-                new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 3us 4uy 5us, "target001", tpgt_me.fromPrim 6us ), resvkey_me.fromPrim 7UL, true;
+                new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 3us 4uy 5us, "target001", tpgt_me.fromPrim 6us ), resvkey_me.fromPrim 7UL, holder;
             |]
             fname
         let k = new HKiller() :> IKiller
@@ -2745,25 +2754,25 @@ type PRManager_Test1 () =
         GlbFunc.DeleteDir pDirName
 
     static member decideACANoncompliant_005_data : obj[][] = [|
-        [| NO_RESERVATION;                    false; true;  |];
-        [| WRITE_EXCLUSIVE;                   true;  true;  |];
-        [| EXCLUSIVE_ACCESS;                  true;  true;  |];
-        [| WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  true;  true;  |];
-        [| EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; true;  true;  |];
-        [| WRITE_EXCLUSIVE_ALL_REGISTRANTS;   false; false; |];
-        [| EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  false; false; |];
+        [| NO_RESERVATION;                    false; |];
+        [| WRITE_EXCLUSIVE;                   true;  |];
+        [| EXCLUSIVE_ACCESS;                  true;  |];
+        [| WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  true;  |];
+        [| EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; true;  |];
+        //[| WRITE_EXCLUSIVE_ALL_REGISTRANTS;   false; false; |];
+        //[| EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  false; false; |];
     |]
 
     [<Theory>]
     [<MemberData( "decideACANoncompliant_005_data" )>]
-    member this.decideACANoncompliant_005 ( prtype : PR_TYPE ) ( holder : bool  ) ( exresult : bool ) =
+    member this.decideACANoncompliant_005 ( prtype : PR_TYPE ) ( holder : bool  ) =
         let pDirName = this.CreateTestDir()
         let fname = Functions.AppendPathName pDirName "decideACANoncompliant_005.txt"
 
         GlbFunc.writeDefaultPRFile
             prtype
             [|
-                new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 3us 4uy 5us, "target001", tpgt_me.fromPrim 6us ), resvkey_me.fromPrim 99UL, holder;
+                new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 3us 4uy 5us, "target001", tpgt_me.fromPrim 6us ), resvkey_me.fromPrim 0x63UL, holder;
             |]
             fname
         let k = new HKiller() :> IKiller
@@ -2796,7 +2805,108 @@ type PRManager_Test1 () =
             ByteCount = 0u;
         }
         let r = pm.decideACANoncompliant PRManager_Test1.defaultSource lun_me.zero ( itt_me.fromPrim 0u ) cdb PooledBuffer.Empty [ data ] faultI_TNexus
-        Assert.True(( r = exresult ))
+        Assert.True(( r ))
+        k.NoticeTerminate()
+
+        GlbFunc.DeleteFile fname
+        GlbFunc.DeleteDir pDirName
+
+    static member decideACANoncompliant_006_data : obj[][] = [|
+        [| WRITE_EXCLUSIVE_ALL_REGISTRANTS;  |];
+        [| EXCLUSIVE_ACCESS_ALL_REGISTRANTS; |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "decideACANoncompliant_006_data" )>]
+    member this.decideACANoncompliant_006 ( prtype : PR_TYPE ) =
+        let pDirName = this.CreateTestDir()
+        let fname = Functions.AppendPathName pDirName "decideACANoncompliant_005.txt"
+
+        GlbFunc.writeDefaultPRFile
+            prtype
+            [|
+                new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 3us 4uy 5us, "target001", tpgt_me.fromPrim 6us ), resvkey_me.fromPrim 0x63UL, false;
+            |]
+            fname
+        let k = new HKiller() :> IKiller
+        let pm = new PRManager( new CStatus_Stub(), new CInternalLU_Stub(), lun_me.zero, fname, k )
+        let faultI_TNexus = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 3us 4uy 5us, "target001", tpgt_me.fromPrim 6us );
+        let cdb = {
+            OperationCode = 0x5Fuy;
+            ServiceAction = 0x05uy;   // PREEMPT AND ABORT
+            Scope = 0uy;
+            PRType = PR_TYPE.WRITE_EXCLUSIVE;
+            ParameterListLength = 24u;
+            Control = 0uy;
+        }
+        let data = {
+            F = true;
+            LUN = lun_me.zero;
+            InitiatorTaskTag = itt_me.fromPrim 0u;
+            TargetTransferTag = ttt_me.fromPrim 0u;
+            ExpStatSN = statsn_me.zero;
+            DataSN = datasn_me.zero;
+            BufferOffset = 0u;
+            DataSegment = [|
+                0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; // RESERVATION KEY
+                0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x01uy; // SERVICE ACTION RESERVATION KEY
+                0x00uy; 0x00uy; 0x00uy; 0x00uy;                                 // Obsolute
+                0x00uy; // SPEC_I_PT, ALL_TG_PT, APTPL
+                0x00uy; // Reserved
+                0x00uy; 0x00uy; // Obsolute
+            |] |> PooledBuffer.Rent;
+            ByteCount = 0u;
+        }
+        let r = pm.decideACANoncompliant PRManager_Test1.defaultSource lun_me.zero ( itt_me.fromPrim 0u ) cdb PooledBuffer.Empty [ data ] faultI_TNexus
+        Assert.True(( r ))
+        k.NoticeTerminate()
+
+        GlbFunc.DeleteFile fname
+        GlbFunc.DeleteDir pDirName
+
+    [<Theory>]
+    [<MemberData( "decideACANoncompliant_006_data" )>]
+    member this.decideACANoncompliant_007 ( prtype : PR_TYPE ) =
+        let pDirName = this.CreateTestDir()
+        let fname = Functions.AppendPathName pDirName "decideACANoncompliant_005.txt"
+
+        GlbFunc.writeDefaultPRFile
+            prtype
+            [|
+                new ITNexus( "initiator999", isid_me.fromElem ( 1uy <<< 6 ) 2uy 3us 4uy 5us, "target999", tpgt_me.fromPrim 6us ), resvkey_me.fromPrim 0x63UL, false;
+            |]
+            fname
+        let k = new HKiller() :> IKiller
+        let pm = new PRManager( new CStatus_Stub(), new CInternalLU_Stub(), lun_me.zero, fname, k )
+        let faultI_TNexus = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 3us 4uy 5us, "target001", tpgt_me.fromPrim 6us );
+        let cdb = {
+            OperationCode = 0x5Fuy;
+            ServiceAction = 0x05uy;   // PREEMPT AND ABORT
+            Scope = 0uy;
+            PRType = PR_TYPE.WRITE_EXCLUSIVE;
+            ParameterListLength = 24u;
+            Control = 0uy;
+        }
+        let data = {
+            F = true;
+            LUN = lun_me.zero;
+            InitiatorTaskTag = itt_me.fromPrim 0u;
+            TargetTransferTag = ttt_me.fromPrim 0u;
+            ExpStatSN = statsn_me.zero;
+            DataSN = datasn_me.zero;
+            BufferOffset = 0u;
+            DataSegment = [|
+                0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; // RESERVATION KEY
+                0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x01uy; // SERVICE ACTION RESERVATION KEY
+                0x00uy; 0x00uy; 0x00uy; 0x00uy;                                 // Obsolute
+                0x00uy; // SPEC_I_PT, ALL_TG_PT, APTPL
+                0x00uy; // Reserved
+                0x00uy; 0x00uy; // Obsolute
+            |] |> PooledBuffer.Rent;
+            ByteCount = 0u;
+        }
+        let r = pm.decideACANoncompliant PRManager_Test1.defaultSource lun_me.zero ( itt_me.fromPrim 0u ) cdb PooledBuffer.Empty [ data ] faultI_TNexus
+        Assert.True(( r ))
         k.NoticeTerminate()
 
         GlbFunc.DeleteFile fname
