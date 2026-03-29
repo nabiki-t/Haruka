@@ -372,11 +372,11 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
         [| PR_TYPE.EXCLUSIVE_ACCESS;                  TaskATTRCd.HEAD_OF_QUEUE_TASK; |]
         [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  TaskATTRCd.HEAD_OF_QUEUE_TASK; |]
         [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; TaskATTRCd.HEAD_OF_QUEUE_TASK; |]
-        [| PR_TYPE.NO_RESERVATION;                    TaskATTRCd.ACA_TASK;           |]
-        [| PR_TYPE.WRITE_EXCLUSIVE;                   TaskATTRCd.ACA_TASK;           |]
-        [| PR_TYPE.EXCLUSIVE_ACCESS;                  TaskATTRCd.ACA_TASK;           |]
-        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  TaskATTRCd.ACA_TASK;           |]
-        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; TaskATTRCd.ACA_TASK;           |]
+        //[| PR_TYPE.NO_RESERVATION;                    TaskATTRCd.ACA_TASK;           |]
+        //[| PR_TYPE.WRITE_EXCLUSIVE;                   TaskATTRCd.ACA_TASK;           |]
+        //[| PR_TYPE.EXCLUSIVE_ACCESS;                  TaskATTRCd.ACA_TASK;           |]
+        //[| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  TaskATTRCd.ACA_TASK;           |]
+        //[| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; TaskATTRCd.ACA_TASK;           |]
     |]
 
     [<Theory>]
@@ -452,6 +452,98 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
 
 
             do! PR_Unregister r3 g_LUN1 g_ResvKey3
+
+            do! r1.Close()
+            do! r3.Close()
+            m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
+        }        
+
+    static member PreemptAndAbort_NotAllRegistrants_004_data : obj[][] = [|
+        [| PR_TYPE.NO_RESERVATION;                    |]
+        [| PR_TYPE.WRITE_EXCLUSIVE;                   |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS;                  |]
+        [| PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |]
+        [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "PreemptAndAbort_NotAllRegistrants_004_data" )>]
+    member _.PreemptAndAbort_NotAllRegistrants_004 ( prtype : PR_TYPE ) =
+        task {
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a Wait" "Trap added" "MD> "
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a ACA" "Trap added" "MD> "
+
+            let isids = GetSortedISID 2
+            let! r1 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = isids.[0] } m_defaultConnParam
+            let! r3 = SCSI_Initiator.CreateWithISID { m_defaultSessParam with ISID = isids.[1] } m_defaultConnParam
+            let itn_r1 = r1.ITNexus
+            let itn_r3 = r3.ITNexus
+
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+            do! PR_Register r3 g_LUN1 g_ResvKey3
+
+            // reserve
+            if prtype <> PR_TYPE.NO_RESERVATION then
+                let! itt_pr_out1 = r1.Send_PROut_RESERVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype g_ResvKey1
+                let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+                ()
+
+            // send ORDERED 1 task from r1
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+
+            // Confirm that ORDERED 1 task is stuck.
+            do! Task.Delay 10
+            while ( ( GetStuckTasks() ).Length < 1 ) do
+                do! Task.Delay 10
+            let tasks = GetStuckTasks()
+            Assert.True(( tasks.Length = 1 ))
+
+            // send SIMPLE 1 task from r1
+            let! _ = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+
+            // Wait until above task is queued.
+            do! Task.Delay 100
+
+            // Resume execution of ORDERED 1 task. ACA status is established.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            let! res_tur1 = r1.WaitSCSIResponse itt_read1
+            Assert.True(( res_tur1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // PREEMPT AND ABORT 
+            let! itt_pr_out2 = r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.ACA_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // The command is executable.
+            // ( The ACA has been cleared. Abobe SIMPLE 1 task is aborted. )
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! res_read1 = r1.WaitSCSIResponseGoodStatus itt_read1
+            res_read1.Return()
+
+            let! itt_read2 = r3.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            let! res_read2 = r3.WaitSCSIResponseGoodStatus itt_read2
+            res_read2.Return()
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            let fsd1 = fstat1.FullStatusDescriptor |> Array.sortBy _.iSCSIName
+            if prtype =PR_TYPE.NO_RESERVATION then
+                Assert.True(( fsd1.Length = 1 ))
+                Assert.True(( fsd1.[0].iSCSIName = itn_r3.InitiatorPortName ))
+                Assert.True(( fsd1.[0].ReservationKey = g_ResvKey3 ))
+                Assert.False(( fsd1.[0].ReservationHolder ))
+                Assert.True(( fsd1.[0].Type = PR_TYPE.toNumericValue PR_TYPE.NO_RESERVATION ))
+                do! PR_Unregister r3 g_LUN1 g_ResvKey3
+            else
+                Assert.True(( fsd1.Length = 2 ))
+                Assert.True(( fsd1.[0].iSCSIName = itn_r1.InitiatorPortName ))
+                Assert.True(( fsd1.[0].ReservationKey = g_ResvKey1 ))
+                Assert.True(( fsd1.[0].ReservationHolder ))
+                Assert.True(( fsd1.[0].Type = PR_TYPE.toNumericValue PR_TYPE.WRITE_EXCLUSIVE ))
+                Assert.True(( fsd1.[1].iSCSIName = itn_r3.InitiatorPortName ))
+                Assert.True(( fsd1.[1].ReservationKey = g_ResvKey3 ))
+                Assert.False(( fsd1.[1].ReservationHolder ))
+                Assert.True(( fsd1.[1].Type = PR_TYPE.toNumericValue PR_TYPE.NO_RESERVATION ))
+                do! PR_Unregister r3 g_LUN1 g_ResvKey3
+                do! PR_Unregister r1 g_LUN1 g_ResvKey1
 
             do! r1.Close()
             do! r3.Close()

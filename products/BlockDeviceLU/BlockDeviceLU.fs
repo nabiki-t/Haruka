@@ -838,79 +838,78 @@ type BlockDeviceLU
                             new ScsiTaskForDummyDevice( m_StatusMaster, source, command, cdb, data, this, m_Media, m_ModeParameter, m_PRManager, false )
                 
                 // this task was received from not fault initiator port.
+
+                elif command.ATTR = TaskATTRCd.ACA_TASK then
+                    // ACA task is terminated in ACA ACTIVE status
+                    // (The conditions in SAM-2 5.9.1.5.1 and SPC-3 5.6.10.5 do not apply when the command is sent with the ACA task attribute.)
+                    HLogger.Trace(
+                        LogID.E_TASK_IRREGAL_TERMINATED,
+                        fun g -> g.Gen2(
+                            loginfo,
+                            Constants.getSenseKeyNameFromValue SenseKeyCd.ILLEGAL_REQUEST,
+                            "In this LU, ACA was established, ACA task received from non fault initiator is terminated in ACA ACTIVE status."
+                        )
+                    )
+
+                    // The data segment is no longer used.
+                    // Also, there will be no opportunity to release it after this, so it will be returned here.
+                    let recvDataLen = BlockDeviceLU.ReturnDataSegment command data
+
+                    // Insert a task that send ACA active status to task queue.
+                    new SendErrorStatusTask(
+                        m_StatusMaster,
+                        source,
+                        { command with DataSegment = PooledBuffer.Empty },  // for safety
+                        recvDataLen,
+                        this,
+                        m_ModeParameter.D_SENSE,
+                        iScsiSvcRespCd.COMMAND_COMPLETE,
+                        ScsiCmdStatCd.ACA_ACTIVE
+                    )
+
+                elif m_PRManager.decideACANoncompliant source m_LUN itt cdb command.DataSegment data faultITN then
+                    // This task can also be run when ACA is established, without following SAM-2 specifications.( reffer SAM-2 5.9.1.5.1, SPC-3 5.6.10.5 )
+                    match m_DeviceType with
+                    | BDT_Normal ->
+                        new ScsiTask( m_StatusMaster, source, command, cdb, data, this, m_Media, m_ModeParameter, m_PRManager, true )
+                    | BDT_Dummy ->
+                        new ScsiTaskForDummyDevice( m_StatusMaster, source, command, cdb, data, this, m_Media, m_ModeParameter, m_PRManager, true )
+
+                elif cdb.NACA then
+                    // The data segment is no longer used.
+                    // Also, there will be no opportunity to release it after this, so it will be returned here.
+                    let recvDataLen = BlockDeviceLU.ReturnDataSegment command data
+
+                    // Insert a task that send ACA active status to task queue.
+                    new SendErrorStatusTask(
+                        m_StatusMaster,
+                        source,
+                        { command with DataSegment = PooledBuffer.Empty },  // for safety
+                        recvDataLen,
+                        this,
+                        m_ModeParameter.D_SENSE,
+                        iScsiSvcRespCd.COMMAND_COMPLETE,
+                        ScsiCmdStatCd.ACA_ACTIVE
+                    )
+
                 else
-                    let r = m_PRManager.decideACANoncompliant source m_LUN itt cdb command.DataSegment data faultITN
-                    if r then
-                        // This task can also be run when ACA is established, without following SAM-2 specifications.( reffer SPC-3 5.6.10.5 )
-                        match m_DeviceType with
-                        | BDT_Normal ->
-                            new ScsiTask( m_StatusMaster, source, command, cdb, data, this, m_Media, m_ModeParameter, m_PRManager, true )
-                        | BDT_Dummy ->
-                            new ScsiTaskForDummyDevice( m_StatusMaster, source, command, cdb, data, this, m_Media, m_ModeParameter, m_PRManager, true )
+                    // The data segment is no longer used.
+                    // Also, there will be no opportunity to release it after this, so it will be returned here.
+                    let recvDataLen = BlockDeviceLU.ReturnDataSegment command data
 
-
-                    elif command.ATTR = TaskATTRCd.ACA_TASK then
-                        // ACA task is terminated in ACA ACTIVE status
-                        HLogger.Trace(
-                            LogID.E_TASK_IRREGAL_TERMINATED,
-                            fun g -> g.Gen2(
-                                loginfo,
-                                Constants.getSenseKeyNameFromValue SenseKeyCd.ILLEGAL_REQUEST,
-                                "In this LU, ACA was established, ACA task received from non fault initiator is terminated in ACA ACTIVE status."
-                            )
-                        )
-
-                        // The data segment is no longer used.
-                        // Also, there will be no opportunity to release it after this, so it will be returned here.
-                        let recvDataLen = BlockDeviceLU.ReturnDataSegment command data
-
-                        // Insert a task that send ACA active status to task queue.
-                        new SendErrorStatusTask(
-                            m_StatusMaster,
-                            source,
-                            { command with DataSegment = PooledBuffer.Empty },  // for safety
-                            recvDataLen,
-                            this,
-                            m_ModeParameter.D_SENSE,
-                            iScsiSvcRespCd.COMMAND_COMPLETE,
-                            ScsiCmdStatCd.ACA_ACTIVE
-                        )
-
-                    elif cdb.NACA then
-                        // The data segment is no longer used.
-                        // Also, there will be no opportunity to release it after this, so it will be returned here.
-                        let recvDataLen = BlockDeviceLU.ReturnDataSegment command data
-
-                        // Insert a task that send ACA active status to task queue.
-                        new SendErrorStatusTask(
-                            m_StatusMaster,
-                            source,
-                            { command with DataSegment = PooledBuffer.Empty },  // for safety
-                            recvDataLen,
-                            this,
-                            m_ModeParameter.D_SENSE,
-                            iScsiSvcRespCd.COMMAND_COMPLETE,
-                            ScsiCmdStatCd.ACA_ACTIVE
-                        )
-
-                    else
-                        // The data segment is no longer used.
-                        // Also, there will be no opportunity to release it after this, so it will be returned here.
-                        let recvDataLen = BlockDeviceLU.ReturnDataSegment command data
-
-                        // Insert a task that send BUSY status to task queue.
-                        // UA_INTLCK_CTRL is 10b. 
-                        // When task is terminated in BUSY, LU shall not establish unit attention condition and not clear any existed unit attention condition.
-                        new SendErrorStatusTask(
-                            m_StatusMaster,
-                            source,
-                            { command with DataSegment = PooledBuffer.Empty },  // for safety
-                            recvDataLen,
-                            this,
-                            m_ModeParameter.D_SENSE,
-                            iScsiSvcRespCd.COMMAND_COMPLETE,
-                            ScsiCmdStatCd.BUSY
-                        )
+                    // Insert a task that send BUSY status to task queue.
+                    // UA_INTLCK_CTRL is 10b. 
+                    // When task is terminated in BUSY, LU shall not establish unit attention condition and not clear any existed unit attention condition.
+                    new SendErrorStatusTask(
+                        m_StatusMaster,
+                        source,
+                        { command with DataSegment = PooledBuffer.Empty },  // for safety
+                        recvDataLen,
+                        this,
+                        m_ModeParameter.D_SENSE,
+                        iScsiSvcRespCd.COMMAND_COMPLETE,
+                        ScsiCmdStatCd.BUSY
+                    )
  
             | ValueNone ->
                 // If ACA was not established, non ACA tasks can be ran.
