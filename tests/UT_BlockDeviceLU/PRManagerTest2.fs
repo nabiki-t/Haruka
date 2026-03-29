@@ -2061,10 +2061,11 @@ type PRManager_Test2 () =
 
         let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.EXCLUSIVE_ACCESS parambuf.uCount parambuf
         Assert.True(( stat = ScsiCmdStatCd.GOOD ))
-        Assert.True(( rITN.Length = 3 ))
+        Assert.True(( rITN.Length = 4 ))
         Assert.True(( rITN.[0] = initITN1 ))
-        Assert.True(( rITN.[1] = initITN3 ))
-        Assert.True(( rITN.[2] = initITN4 ))
+        Assert.True(( rITN.[1] = initITN2 ))
+        Assert.True(( rITN.[2] = initITN3 ))
+        Assert.True(( rITN.[3] = initITN4 ))
         Assert.True(( prType = PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS ))
         Assert.True(( saResvKey = resvkey_me.fromPrim 0x0000000000000000UL ))
 
@@ -2371,10 +2372,11 @@ type PRManager_Test2 () =
 
         let struct( stat, rITN, prType, saResvKey ) = pm.PreemptAndAbort source ( itt_me.fromPrim 0u ) PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY parambuf.uCount parambuf
         Assert.True(( stat = ScsiCmdStatCd.GOOD ))
-        Assert.True(( rITN.Length = 3 ))
+        Assert.True(( rITN.Length = 4 ))
         Assert.True(( rITN.[0] = initITN1 ))
-        Assert.True(( rITN.[1] = initITN3 ))
-        Assert.True(( rITN.[2] = initITN4 ))
+        Assert.True(( rITN.[1] = initITN2 ))
+        Assert.True(( rITN.[2] = initITN3 ))
+        Assert.True(( rITN.[3] = initITN4 ))
         Assert.True(( prType = PR_TYPE.EXCLUSIVE_ACCESS ))
         Assert.True(( saResvKey = resvkey_me.fromPrim 0x1111111111111111UL ))
 

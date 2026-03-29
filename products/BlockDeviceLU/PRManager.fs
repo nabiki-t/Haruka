@@ -1568,7 +1568,7 @@ type PRManager(
                     // SERVICE ACTION RESERVATION KEY フィールドに設定された値がいかなる予約キーとも一致しなかった場合は、
                     // デバイスサーバは RESERVATION CONFLICT ステータスを返さなければならない。
 
-                    // Search delete target entry
+                    // Search delete target entry. (Including command source I_T nexus.)
                     let delentry =
                         oldVal.m_Registrations
                         |> Seq.filter ( _.Value >> (=) basicParam.ServiceActionReservationKey )
@@ -1618,19 +1618,24 @@ type PRManager(
                         )
 
                 | 3 ->
-                    // 5.6.10.4.3
+                    // SPC-3 5.6.10.4.3
                     // PERSISTENT RESERVE OUT コマンドで使用された I_T ネクサスを除く、全ての内容が削除されなければならない。
                     // 新しい TYPE と SCOPE を使用し、剥奪を試みる I_T ネクサスのために永続予約を確立する。
                     // 永続予約もしくは登録を喪失した全ての I_T ネクサスに関係するイニシエータポートに対して、
                     // 追加センスコード REGISTRATIONS PREEMPTED を設定したユニット警告状態を確立する。
 
-                    // Prepare UA target initiator port name
-                    let delentry =
+                    // The preempted I_T Nexus will be reported, including the command source I_T Nexus.
+                    let preempred_itn =
                         oldVal.m_Registrations
                         |> Seq.map _.Key
-                        |> Seq.filter ( fun itr -> ITNexus.Equals( itr, source.I_TNexus ) |> not )
                         |> Seq.sortWith ITNexus.Compare
                         |> Seq.toArray
+
+                    // Prepare UA target initiator port name
+                    // UA will not be established for the command source I_T Nexus.
+                    let delentry =
+                        preempred_itn
+                        |> Array.filter ( fun itr -> ITNexus.Equals( itr, source.I_TNexus ) |> not )
 
                     let uaList =
                         delentry
@@ -1645,25 +1650,30 @@ type PRManager(
                             m_PRGeneration = oldVal.m_PRGeneration + 1u;
                             m_Registrations = ImmutableDictionary< ITNexus, RESVKEY_T >.Empty.Add( source.I_TNexus, basicParam.ReservationKey );
                         },
-                        struct ( ScsiCmdStatCd.GOOD, "", delentry, oldVal.m_Type, basicParam.ServiceActionReservationKey, uaList )
+                        struct ( ScsiCmdStatCd.GOOD, "", preempred_itn, oldVal.m_Type, basicParam.ServiceActionReservationKey, uaList )
                     )
 
                 | 4 ->
-                    // 5.6.10.4.3
+                    // SPC-3 5.6.10.4.3
                     // PERSISTENT RESERVE OUT コマンドで使用されている I_T ネクサスを除く、
                     // SERVICE ACTION RESERVATION KEY フィールドにより識別される全ての I_T ネクサスについて登録を削除する。
                     // SCOPE と TYPE フィールドの内容を使用し、剥奪を試みる I_T ネクサスのために永続予約を確立する。
                     // 永続予約もしくは登録を喪失した全ての I_T ネクサスに関係するイニシエータポートに対
                     // して、追加センスコード REGISTRATIONS PREEMPTED を設定したユニット警告状態を確立する。
 
-                    // Search delete target entry
-                    let delentry =
+                    // I_T Nexus that should be reported has been preempted.
+                    // If an attempt is made to preempt the I_T Nexus that sent the command,
+                    // it will report itself as one of the preempted I_T Nexuses.
+                    let preempred_itn =
                         oldVal.m_Registrations
-                        |> Seq.filter ( fun itr -> ITNexus.Equals( itr.Key, source.I_TNexus ) |> not )
-                        |> Seq.filter ( _.Value >> (=) basicParam.ServiceActionReservationKey )
-                        |> Seq.map _.Key
+                        |> Seq.choose ( fun itr -> if itr.Value = basicParam.ServiceActionReservationKey then Some itr.Key else None )
                         |> Seq.sortWith ITNexus.Compare
                         |> Seq.toArray
+
+                    // Delete target entry
+                    let delentry =
+                        preempred_itn
+                        |> Array.filter ( fun itr -> ITNexus.Equals( itr, source.I_TNexus ) |> not )
 
                     // Delete entry ( the entry that holds reservation is deleted in this point )
                     let nextRegist =
@@ -1694,7 +1704,7 @@ type PRManager(
                             m_PRGeneration = oldVal.m_PRGeneration + 1u;
                             m_Registrations = nextRegist;
                         },
-                        struct ( ScsiCmdStatCd.GOOD, "", delentry, oldVal.m_Type, basicParam.ServiceActionReservationKey, uaList )
+                        struct ( ScsiCmdStatCd.GOOD, "", preempred_itn, oldVal.m_Type, basicParam.ServiceActionReservationKey, uaList )
                     )
 
                 | _ ->
