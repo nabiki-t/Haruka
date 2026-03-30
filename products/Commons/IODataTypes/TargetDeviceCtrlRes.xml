@@ -193,6 +193,10 @@
             <item name='AdditionalSenseCode' constraint='unsignedShort' />
             <item name='IsCurrent' constraint='boolean' />
           </item>
+		  <item name='TaskDescriptions' mincount='0' maxcount='BDLU_MAX_TASKSET_SIZE' >
+			  <item name='Status' constraint='string' />
+			  <item name='Description' constraint='string' />
+		  </item>
         </item>
       </item>
 

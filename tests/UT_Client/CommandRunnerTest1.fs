@@ -2486,6 +2486,7 @@ type CommandRunner_Test1() =
                 ReadTickCount = [];
                 WriteTickCount = [];
                 ACAStatus = None;
+                TaskDescriptions = [];
             }
         } )
 

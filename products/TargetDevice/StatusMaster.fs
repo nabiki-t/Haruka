@@ -1215,6 +1215,16 @@ type StatusMaster(
                                         AdditionalSenseCode = uint16 asc;
                                         IsCurrent = isCurrent;
                                     }
+                            TaskDescriptions =
+                                rLU.TaskDescStrings
+                                |> Seq.map ( fun struct( s, d ) ->
+                                    {
+                                        Status = s;
+                                        Description = d;
+                                    } : TargetDeviceCtrlRes.T_TaskDescriptions
+                                )
+                                |> Seq.truncate ( int Constants.BDLU_MAX_TASKSET_SIZE )
+                                |> Seq.toList
                         }
                     }
                 else
@@ -1245,6 +1255,7 @@ type StatusMaster(
                                 ReadTickCount = [];
                                 WriteTickCount = [];
                                 ACAStatus = None;
+                                TaskDescriptions = [];
                             }
                         }
             let res2 : TargetDeviceCtrlRes.T_TargetDeviceCtrlRes =

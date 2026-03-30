@@ -3370,6 +3370,13 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                         this.Output 2 ( sprintf "Current : %b" lustat.ACAStatus.Value.IsCurrent )
                         this.Output 1 ( sprintf "}" )
 
+                    if lustat.TaskDescriptions.Length = 0 then
+                        this.Output 1 "Tasks : None"
+                    else
+                        this.Output 1 "Tasks : "
+                        for itr in lustat.TaskDescriptions do
+                            this.Output 2 ( sprintf "%s : %s" itr.Status itr.Description )
+
                     this.Output 1 "Usage( Time, Read Bytes/s, Written Bytes/s, Avg Read Sec, Avg Write Sec )"
                     let usageseq =
                         Functions.PairByIndex

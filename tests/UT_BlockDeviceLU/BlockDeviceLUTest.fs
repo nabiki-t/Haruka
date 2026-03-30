@@ -6202,6 +6202,39 @@ type BlockDeviceLU_Test () =
         Assert.True(( cnt2 = 1 ))
 
     [<Fact>]
+    member this.TaskDescStrings_001() =
+        let _, _, lu = this.createBlockDevice()
+        Assert.True(( ( lu :> ILU ).TaskDescStrings = [||] ))
+
+    [<Fact>]
+    member this.TaskDescStrings_002() =
+        let _, _, lu = this.createBlockDevice()
+        let source = BlockDeviceLU_Test.cmdSource()
+        let pc = new PrivateCaller( lu )
+        let testTasks = [|
+            yield BDTaskStat.TASK_STAT_Dormant(
+                new CBlockDeviceTask_Stub(
+                    p_GetDescString = ( fun () -> "task1" )
+                )
+            );
+            yield BDTaskStat.TASK_STAT_Running(
+                new CBlockDeviceTask_Stub(
+                    p_GetDescString = ( fun () -> "task2" )
+                )
+            );
+        |]
+        let queue1 = {
+            Queue = testTasks.ToImmutableArray();
+            ACA = ValueNone;
+        }
+        pc.SetField( "m_TaskSet", queue1 )
+        let t = ( lu :> ILU ).TaskDescStrings
+        Assert.True(( t.Length = 2 ))
+        Assert.True(( t.[0] = struct( "Dormant", "task1" ) ))
+        Assert.True(( t.[1] = struct( "Running", "task2" ) ))
+        
+
+    [<Fact>]
     member this.GetTaskQueueUsage_001() =
         let media, sm, lu = this.createBlockDevice()
         Assert.True(( 0 = ( lu :> ILU ).GetTaskQueueUsage( tsih_me.fromPrim 0us ) ))

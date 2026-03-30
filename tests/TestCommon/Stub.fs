@@ -471,6 +471,7 @@ type public CLU_Stub() =
     let mutable f_GetReadTickCount : ( unit -> ResCountResult array ) option = None
     let mutable f_GetWriteTickCount : ( unit -> ResCountResult array ) option = None
     let mutable f_ACAStatus : ( unit -> struct( ITNexus * ScsiCmdStatCd * SenseKeyCd * ASCCd * bool ) voption ) option = None
+    let mutable f_TaskDescStrings : ( unit -> struct ( string * string )[] ) option = None
     let mutable f_GetMedia : ( unit -> IMedia ) option = None
     let mutable f_GetTaskQueueUsage : ( TSIH_T -> int ) option = None
 
@@ -488,6 +489,7 @@ type public CLU_Stub() =
     member _.p_GetReadTickCount with set v = f_GetReadTickCount <- Some( v )
     member _.p_GetWriteTickCount with set v = f_GetWriteTickCount <- Some( v )
     member _.p_ACAStatus with set v = f_ACAStatus <- Some( v )
+    member _.p_TaskDescStrings with set v = f_TaskDescStrings <- Some( v )
     member _.p_GetMedia with set v = f_GetMedia <- Some( v )
     member _.p_GetTaskQueueUsage with set v = f_GetTaskQueueUsage <- Some( v )
 
@@ -518,6 +520,8 @@ type public CLU_Stub() =
             f_GetWriteTickCount.Value ()
         override _.ACAStatus =
             f_ACAStatus.Value ()
+        override _.TaskDescStrings =
+            f_TaskDescStrings.Value ()
         override _.GetMedia() =
             f_GetMedia.Value()
         override _.GetTaskQueueUsage ( tsih : TSIH_T ) : int =

@@ -161,6 +161,7 @@ and [<NoComparison>]T_LUStatus_Success = {
     ReadTickCount : T_RESCOUNTER list;
     WriteTickCount : T_RESCOUNTER list;
     ACAStatus : T_ACAStatus option;
+    TaskDescriptions : T_TaskDescriptions list;
 }
 
 and [<NoComparison>]T_ACAStatus = {
@@ -169,6 +170,11 @@ and [<NoComparison>]T_ACAStatus = {
     SenseKey : uint8;
     AdditionalSenseCode : uint16;
     IsCurrent : bool;
+}
+
+and [<NoComparison>]T_TaskDescriptions = {
+    Status : string;
+    Description : string;
 }
 
 and [<NoComparison>]T_LUResetResult = {
@@ -644,6 +650,22 @@ type ReaderWriter() =
                       </xsd:element>
                       <xsd:element name='IsCurrent' >
                         <xsd:simpleType><xsd:restriction base='xsd:boolean' /></xsd:simpleType>
+                      </xsd:element>
+                    </xsd:sequence></xsd:complexType>
+                  </xsd:element>
+                  <xsd:element name='TaskDescriptions' minOccurs='0' maxOccurs='64' >
+                    <xsd:complexType><xsd:sequence>
+                      <xsd:element name='Status' >
+                        <xsd:simpleType>
+                          <xsd:restriction base='xsd:string'>
+                          </xsd:restriction>
+                        </xsd:simpleType>
+                      </xsd:element>
+                      <xsd:element name='Description' >
+                        <xsd:simpleType>
+                          <xsd:restriction base='xsd:string'>
+                          </xsd:restriction>
+                        </xsd:simpleType>
                       </xsd:element>
                     </xsd:sequence></xsd:complexType>
                   </xsd:element>
@@ -1331,6 +1353,11 @@ type ReaderWriter() =
                     None
                 else
                     Some( ReaderWriter.Read_T_ACAStatus subElem );
+            TaskDescriptions =
+                elem.Elements()
+                |> Seq.filter ( fun itr -> itr.Name = XName.Get "TaskDescriptions" )
+                |> Seq.map ( fun itr -> ReaderWriter.Read_T_TaskDescriptions itr )
+                |> Seq.toList
         }
 
     /// <summary>
@@ -1354,6 +1381,23 @@ type ReaderWriter() =
                 UInt16.Parse( elem.Element( XName.Get "AdditionalSenseCode" ).Value );
             IsCurrent =
                 Boolean.Parse( elem.Element( XName.Get "IsCurrent" ).Value );
+        }
+
+    /// <summary>
+    ///  Read T_TaskDescriptions data from XML document.
+    /// </summary>
+    /// <param name="elem">
+    ///  Loaded XML document.
+    /// </param>
+    /// <returns>
+    ///  parsed T_TaskDescriptions data structure.
+    /// </returns>
+    static member private Read_T_TaskDescriptions ( elem : XElement ) : T_TaskDescriptions = 
+        {
+            Status =
+                elem.Element( XName.Get "Status" ).Value;
+            Description =
+                elem.Element( XName.Get "Description" ).Value;
         }
 
     /// <summary>
@@ -2238,6 +2282,10 @@ type ReaderWriter() =
                 yield! ReaderWriter.T_RESCOUNTER_toString ( indent + 1 ) indentStep ( itr ) "WriteTickCount"
             if elem.ACAStatus.IsSome then
                 yield! ReaderWriter.T_ACAStatus_toString ( indent + 1 ) indentStep ( elem.ACAStatus.Value ) "ACAStatus"
+            if elem.TaskDescriptions.Length < 0 || elem.TaskDescriptions.Length > 64 then 
+                raise <| ConfRWException( "Element count restriction error. TaskDescriptions" )
+            for itr in elem.TaskDescriptions do
+                yield! ReaderWriter.T_TaskDescriptions_toString ( indent + 1 ) indentStep itr "TaskDescriptions"
             yield sprintf "%s</%s>" indentStr elemName
         }
 
@@ -2269,6 +2317,34 @@ type ReaderWriter() =
             yield sprintf "%s%s<SenseKey>%d</SenseKey>" singleIndent indentStr (elem.SenseKey)
             yield sprintf "%s%s<AdditionalSenseCode>%d</AdditionalSenseCode>" singleIndent indentStr (elem.AdditionalSenseCode)
             yield sprintf "%s%s<IsCurrent>%b</IsCurrent>" singleIndent indentStr (elem.IsCurrent)
+            yield sprintf "%s</%s>" indentStr elemName
+        }
+
+    /// <summary>
+    ///  Write T_TaskDescriptions data structure to configuration file.
+    /// </summary>
+    /// <param name="indent">
+    ///  Indent space count.
+    /// </param>
+    /// <param name="indentStep">
+    ///  Indent step count.
+    /// </param>
+    /// <param name="elem">
+    ///  Data structure for output.
+    /// </param>
+    /// <param name="elemName">
+    ///  XML tag name for the data.
+    /// </param>
+    /// <returns>
+    ///  Array of the generated string.
+    /// </returns>
+    static member private T_TaskDescriptions_toString ( indent : int ) ( indentStep : int ) ( elem : T_TaskDescriptions ) ( elemName : string ) : seq<string> = 
+        let indentStr = String.replicate ( indent * indentStep ) " "
+        let singleIndent = String.replicate ( indentStep ) " "
+        seq {
+            yield sprintf "%s<%s>" indentStr elemName
+            yield sprintf "%s%s<Status>%s</Status>" singleIndent indentStr ( ReaderWriter.xmlEncode(elem.Status) )
+            yield sprintf "%s%s<Description>%s</Description>" singleIndent indentStr ( ReaderWriter.xmlEncode(elem.Description) )
             yield sprintf "%s</%s>" indentStr elemName
         }
 

@@ -539,6 +539,20 @@ type BlockDeviceLU
                 ValueSome struct( it, e.Status, e.SenseKey, e.ASC, e.IsCurrent )
 
         // ------------------------------------------------------------------------
+        // Retrieve information about the tasks present in the task set.
+        override _.TaskDescStrings : struct ( string * string )[] =
+            let q = m_TaskSet.Queue
+            q
+            |> Seq.map ( fun itr ->
+                match itr with
+                | TASK_STAT_Dormant( x ) ->
+                    struct( "Dormant", x.DescString )
+                | TASK_STAT_Running( x ) ->
+                    struct( "Running", x.DescString )
+            )
+            |> Seq.toArray
+
+        // ------------------------------------------------------------------------
         // Get media object.
         override _.GetMedia() : IMedia =
             m_Media

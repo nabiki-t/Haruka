@@ -830,6 +830,12 @@ type ILU =
 
     // ------------------------------------------------------------------------
     /// <summary>
+    ///   Retrieve information about the tasks present in the task set.
+    /// </summary>
+    abstract TaskDescStrings : struct ( string * string )[]
+
+    // ------------------------------------------------------------------------
+    /// <summary>
     ///   Get media object.
     /// </summary>
     abstract GetMedia : unit -> IMedia

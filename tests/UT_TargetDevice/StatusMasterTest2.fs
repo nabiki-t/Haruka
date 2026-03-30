@@ -2739,7 +2739,8 @@ type StatusMaster_Test2 () =
                             p_GetWrittenBytesCount = ( fun () -> [| { Time = DateTime(); Value = 2L; Count = 1L; } |] ),
                             p_GetReadTickCount = ( fun () -> [| { Time = DateTime(); Value = 3L; Count = 1L; } |] ),
                             p_GetWriteTickCount = ( fun () -> [| { Time = DateTime(); Value = 4L; Count = 1L; } |] ),
-                            p_ACAStatus = ( fun () ->  ValueSome ( itn1, ScsiCmdStatCd.CHECK_CONDITION, SenseKeyCd.NOT_READY, ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT, true ) )
+                            p_ACAStatus = ( fun () ->  ValueSome ( itn1, ScsiCmdStatCd.CHECK_CONDITION, SenseKeyCd.NOT_READY, ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT, true ) ),
+                            p_TaskDescStrings = ( fun () -> [||] )
                         ) :> ILU
                     )
                     lu1.Force() |> ignore

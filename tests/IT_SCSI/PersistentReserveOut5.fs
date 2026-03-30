@@ -348,6 +348,24 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 Some( method, tsih, itt )
         )
 
+    let GetTaskSetStatus() : ( string * string ) [] =
+        let rx = Regex( "^ *(Running|Dormant) : (.*)$" )
+        m_ClientProc.RunCommand "unselect" "" "LU> "
+        let stat = m_ClientProc.RunCommandGetResp "LUSTATUS" "LU> "
+        m_ClientProc.RunCommand "select 0" "" "MD> "
+        stat
+        |> Array.choose( fun itr ->
+            let m = rx.Match itr
+            if not m.Success then
+                None
+            else
+                Some( m.Groups.[1].Value, m.Groups.[2].Value )
+        )
+
+    let GetDormantTaskCount() : int =
+        GetTaskSetStatus()
+        |> Array.sumBy ( fun ( s, _ ) -> if s = "Dormant" then 1 else 0 )
+ 
     // Clear ACA
     let ClearACA ( r : SCSI_Initiator ) ( lun : LUN_T ) : Task<unit> =
         task {
@@ -367,6 +385,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
         [| PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |]
     |]
 
+    // The persistent reservation is not an all registrants type.
     // The faulted I_T nexus attempts to preempt itself in the ACA task.
     [<Theory>]
     [<MemberData( "A11_B1_C1_001_data" )>]
@@ -389,9 +408,9 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Confirm that ORDERED 1 task is stuck.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 1 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
             let tasks = GetStuckTasks()
             Assert.True(( tasks.Length = 1 ))
 
@@ -402,7 +421,9 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             let! itt_read3 = r3.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Wait until above task is queued.
-            do! Task.Delay 100
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 2 ) do
+                do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
@@ -455,6 +476,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
         }
 
+    // The persistent reservation is not an all registrants type.
     // The non-faulted I_T nexus performs a preemption to the faulted I_T nexus in the ACA task.
     [<Theory>]
     [<MemberData( "A11_B1_C1_001_data" )>]
@@ -477,9 +499,9 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Confirm that ORDERED 1 task is stuck.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 1 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
             let tasks = GetStuckTasks()
             Assert.True(( tasks.Length = 1 ))
 
@@ -490,7 +512,9 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             let! itt_tur2 = r3.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
 
             // Wait until above task is queued.
-            do! Task.Delay 100
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 2 ) do
+                do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
@@ -523,6 +547,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
         }
 
+    // The persistent reservation is not an all registrants type.
     // The faulted I_T nexus attempts to preempt itself in the non-ACA task.
     [<Theory>]
     [<MemberData( "A11_B1_C1_001_data" )>]
@@ -545,9 +570,9 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Confirm that ORDERED 1 task is stuck.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 1 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
             let tasks = GetStuckTasks()
             Assert.True(( tasks.Length = 1 ))
 
@@ -558,7 +583,9 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             let! itt_tur2 = r3.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
 
             // Wait until above task is queued.
-            do! Task.Delay 100
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 2 ) do
+                do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
@@ -589,7 +616,88 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             do! r1.Close()
             do! r3.Close()
             m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
-        } 
+        }
+
+    // The persistent reservation is not an all registrants type.
+    // The non-faulted I_T nexus performs a preemption to the faulted I_T nexus in the non ACA task.
+    [<Theory>]
+    [<MemberData( "A11_B1_C1_001_data" )>]
+    member _.A11_B2_C2_001 ( prtype : PR_TYPE ) =
+        task {
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a Wait" "Trap added" "MD> "
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a ACA" "Trap added" "MD> "
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r3 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let itn_r3 = r3.ITNexus
+
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+            do! PR_Register r3 g_LUN1 g_ResvKey3
+            if prtype <> PR_TYPE.NO_RESERVATION then
+                do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
+
+            // send ORDERED 1 task from r1
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+
+            // Confirm that ORDERED 1 task is stuck.
+            do! Task.Delay 5
+            while ( ( GetStuckTasks() ).Length < 1 ) do
+                do! Task.Delay 5
+            let tasks = GetStuckTasks()
+            Assert.True(( tasks.Length = 1 ))
+
+            // send SIMPLE 1 task from r1
+            let! _ = r1.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+
+            // send SIMPLE 2 task from r3
+            let! itt_tur2 = r3.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+
+            // Wait until above task is queued.
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 2 ) do
+                do! Task.Delay 5
+
+            // Resume execution of ORDERED 1 task. ACA status is established.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            let! res_read1 = r1.WaitSCSIResponse itt_read1
+            Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // PREEMPT AND ABORT (Succeed)
+            let! itt_pr_out1 = r3.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey3 g_ResvKey1
+            let! _ = r3.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            // UA is established for r1
+            do! Check_UA_Established r1 g_LUN1 ASCCd.REGISTRATIONS_PREEMPTED
+
+            // The command is executable.
+            // ( The ACA has been cleared. Above SIMPLE 1 task is aborted. )
+            let! itt_tur3 = r1.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_tur3
+
+            // Above SIMPLE 2 task is executed.
+            let! _ = r3.WaitSCSIResponseGoodStatus itt_tur2
+
+            // The command is executable.
+            let! itt_tur4 = r3.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! _ = r3.WaitSCSIResponseGoodStatus itt_tur4
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            let fsd1 = fstat1.FullStatusDescriptor
+            Assert.True(( fsd1.Length = 1 ))
+            Assert.True(( fsd1.[0].iSCSIName = itn_r3.InitiatorPortName ))
+            Assert.True(( fsd1.[0].ReservationKey = g_ResvKey3 ))
+            if prtype = PR_TYPE.NO_RESERVATION then
+                Assert.False(( fsd1.[0].ReservationHolder ))
+                Assert.True(( fsd1.[0].Type = PR_TYPE.toNumericValue PR_TYPE.NO_RESERVATION ))
+            else
+                Assert.True(( fsd1.[0].ReservationHolder ))
+                Assert.True(( fsd1.[0].Type = PR_TYPE.toNumericValue PR_TYPE.WRITE_EXCLUSIVE ))
+
+            do! PR_Unregister r3 g_LUN1 g_ResvKey3
+            do! r1.Close()
+            do! r3.Close()
+            m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
+        }
+
 (*
     static member PreemptAndAbort_NotAllRegistrants_001_data : obj[][] = [|
         [| PR_TYPE.NO_RESERVATION;                    TaskATTRCd.SIMPLE_TASK; |]

@@ -3566,6 +3566,7 @@ type CtrlConnection_Test3() =
                             ReadTickCount = [ { Time = DateTime(); Value = 0L; Count = 1L; } ];
                             WriteTickCount = [];
                             ACAStatus = None;
+                            TaskDescriptions = [];
                         })
                     }
 
@@ -3618,6 +3619,7 @@ type CtrlConnection_Test3() =
                             ReadTickCount = [];
                             WriteTickCount = [];
                             ACAStatus = None;
+                            TaskDescriptions = [];
                         })
                     }
 

@@ -4522,6 +4522,7 @@ type CommandRunner_Test3() =
                 ReadTickCount = [];
                 WriteTickCount = [];
                 ACAStatus = None;
+                TaskDescriptions = [];
             }
         } )
 
@@ -4565,6 +4566,7 @@ type CommandRunner_Test3() =
                     AdditionalSenseCode = uint16 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT;
                     IsCurrent = true;
                 };
+                TaskDescriptions = [];
             }
         } )
 
