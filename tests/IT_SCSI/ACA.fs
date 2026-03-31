@@ -270,6 +270,24 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                 ()
         }
 
+    let GetTaskSetStatus() : ( string * string ) [] =
+        let rx = Regex( "^ *(Running|Dormant) : (.*)$" )
+        m_ClientProc.RunCommand "unselect" "" "LU> "
+        let stat = m_ClientProc.RunCommandGetResp "LUSTATUS" "LU> "
+        m_ClientProc.RunCommand "select 0" "" "MD> "
+        stat
+        |> Array.choose( fun itr ->
+            let m = rx.Match itr
+            if not m.Success then
+                None
+            else
+                Some( m.Groups.[1].Value, m.Groups.[2].Value )
+        )
+
+    let GetDormantTaskCount() : int =
+        GetTaskSetStatus()
+        |> Array.sumBy ( fun ( s, _ ) -> if s = "Dormant" then 1 else 0 )
+
 
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
@@ -428,7 +446,10 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let! itt_s2_r2 = r2.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 1u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Just in case, wait until the simple task is queued
-            do! Task.Delay 100
+            // Wait until above task is queued.
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 2 ) do
+                do! Task.Delay 5
 
             // Write request 3 at session 1 ( Overtake SIMPLE tasks )
             let! itt_s1_w3 = r1.Send_Write10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize writeData3 NACA.T

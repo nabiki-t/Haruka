@@ -157,6 +157,23 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 Some( method, tsih, itt )
         )
 
+    let GetTaskSetStatus() : ( string * string ) [] =
+        let rx = Regex( "^ *(Running|Dormant) : (.*)$" )
+        m_ClientProc.RunCommand "unselect" "" "LU> "
+        let stat = m_ClientProc.RunCommandGetResp "LUSTATUS" "LU> "
+        m_ClientProc.RunCommand "select 0" "" "MD> "
+        stat
+        |> Array.choose( fun itr ->
+            let m = rx.Match itr
+            if not m.Success then
+                None
+            else
+                Some( m.Groups.[1].Value, m.Groups.[2].Value )
+        )
+
+    let GetDormantTaskCount() : int =
+        GetTaskSetStatus()
+        |> Array.sumBy ( fun ( s, _ ) -> if s = "Dormant" then 1 else 0 )
 
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
@@ -249,15 +266,17 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             let! itt_r1 = r.Send_Read10 at1 g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Confirm that the task 1 is stuck.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 1 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
 
             // Submit second task.
             let! itt_r2 = r.Send_Read10 at2 g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Wait until the task 2 is queued.
-            do! Task.Delay 100
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 1 ) do
+                do! Task.Delay 5
 
             // Only the task 1 is running.
             let tasks = GetStuckTasks()
@@ -305,29 +324,33 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             let! itt_r1 = r.Send_Read10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Confirm that the HEAD OF QUEUE 1 task is stuck.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 1 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
 
             // Submit a SIMPLE 2 task.
             let! itt_r2 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Wait until the SIMPLE 2 task is queued.
-            do! Task.Delay 100
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 1 ) do
+                do! Task.Delay 5
 
             // Submit a HEAD OF QUEUE 3 task.
             let! itt_r3 = r.Send_Read10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Confirm that the HEAD OF QUEUE 3 task is stuck.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 2 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
 
             // Submit a SIMPLE 4 task.
             let! itt_r4 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Wait until the SIMPLE 4 task is queued.
-            do! Task.Delay 100
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 2 ) do
+                do! Task.Delay 5
 
             // Only two HEAD OF QUEUE tasks are running.
             let tasks = GetStuckTasks()
@@ -343,9 +366,9 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             result_r1.Return()
 
             // Confirm that the SIMPLE 2 task is stuck.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 2 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
 
             // The HEAD OF QUEUE 3 and SIMPLE 2 tasks are run simultaneously.
             let tasks = GetStuckTasks()
@@ -361,9 +384,9 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             result_r3.Return()
 
             // Confirm that the SIMPLE 4 task is stuck.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 2 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
 
             // The SIMPLE 2 and SIMPLE 4 tasks are run simultaneously.
             let tasks = GetStuckTasks()
@@ -400,29 +423,33 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             let! itt_r1 = r.Send_Read10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Confirm that the HEAD OF QUEUE 1 task is stuck.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 1 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
 
             // Submit a SIMPLE 2 task.
             let! itt_r2 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Wait until the SIMPLE 2 task is queued.
-            do! Task.Delay 100
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 1 ) do
+                do! Task.Delay 5
 
             // Submit a HEAD OF QUEUE 3 task.
             let! itt_r3 = r.Send_Read10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Confirm that the HEAD OF QUEUE 3 task is stuck.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 2 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
 
             // Submit a SIMPLE 4 task.
             let! itt_r4 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Wait until the SIMPLE 4 task is queued.
-            do! Task.Delay 100
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 2 ) do
+                do! Task.Delay 5
 
             // Only two HEAD OF QUEUE tasks are running.
             let tasks = GetStuckTasks()
@@ -491,15 +518,17 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             let! itt_r2 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Confirm that above two tasks are stuck.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 2 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
 
             // Submit ORDERED task.
             let! itt_r3 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Wait until the task 2 is queued.
-            do! Task.Delay 100
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 1 ) do
+                do! Task.Delay 5
 
             // Only the SIMPLE tasks are running.
             let tasks = GetStuckTasks()
@@ -524,10 +553,9 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             result_r2.Return()
 
             // The ORDERED task is executed.
-            do! Task.Delay 100
-            let tasks = GetStuckTasks()
-            Assert.True(( tasks.Length = 1 ))
-            Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r3 ) ) tasks ))
+            do! Task.Delay 5
+            while ( GetStuckTasks() <> [| ( "READ", r.TSIH, itt_r3 ) |] ) do
+                do! Task.Delay 5
 
             // Resume execution of the ORDERED task.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
@@ -553,16 +581,18 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             let! itt_r1 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Confirm that ORDERED task is stuck.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 1 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
 
             // Submit two SIMPLE tasks.
             let! itt_r2 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
             let! itt_r3 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Wait until the two SIMPLE tasks are queued.
-            do! Task.Delay 100
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 2 ) do
+                do! Task.Delay 5
 
             // Only the ORDERED task is running.
             let tasks = GetStuckTasks()
@@ -575,9 +605,9 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             result_r1.Return()
 
             // Wait for two SIMPLE tasks to be executed
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 2 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
             let tasks = GetStuckTasks()
             Assert.True(( tasks.Length = 2 ))
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r2 ) ) tasks ))
@@ -610,21 +640,25 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             let! itt_r1 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Confirm that SIMPLE task is stuck.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 1 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
 
             // Submit a ORDERED tasks.
             let! itt_r2 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Wait until the ORDERED task is queued.
-            do! Task.Delay 100
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 1 ) do
+                do! Task.Delay 5
 
             // Submit a SIMPLE task.
             let! itt_r3 = r.Send_Read10 simpleatt g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Wait until the SIMPLE task is queued.
-            do! Task.Delay 100
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 2 ) do
+                do! Task.Delay 5
 
             // abort the ORDERD task
             let cmdsn = r.GetCmdSN itt_r2
@@ -667,23 +701,25 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             let! itt_r1 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Confirm that ORDERED 1 task is stuck.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 1 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
 
             // Submit a ORDERED 2 tasks.
             let! itt_r2 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Wait until the ORDERED task is queued.
-            do! Task.Delay 100
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 1 ) do
+                do! Task.Delay 5
 
             // Submit a HOQ task.
             let! itt_r3 = r.Send_Read10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Confirm that HOQ task is stuck.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 2 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
 
             // ORDERED1 and HOQ tasks are executed simultaneously.
             let tasks = GetStuckTasks()
@@ -729,6 +765,16 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
     // If the ORDERED1 task finishes first, the ORDERED2 task and the HOQ task will be executed simultaneously.
     [<Fact>]
     member _.Ordered_Ordered_HOQ_002 () =
+
+        let rec Wait_Order_2_task ( r : SCSI_Initiator ) ( itt_r2 : ITT_T ) ( itt_r3 : ITT_T ) =
+            let tasks = GetStuckTasks()
+            let e1 = tasks.Length = 2
+            let e2 = Array.exists( (=) ( "READ", r.TSIH, itt_r2 ) ) tasks
+            let e3 = Array.exists( (=) ( "READ", r.TSIH, itt_r3 ) ) tasks
+            if not( e1 && e2 && e3 ) then
+                System.Threading.Thread.Sleep 5
+                Wait_Order_2_task r itt_r2 itt_r3
+
         task {
             let! r = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
@@ -738,15 +784,17 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             let! itt_r1 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Confirm that ORDERED 1 task is stuck.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 1 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
 
             // Submit a ORDERED 2 tasks.
             let! itt_r2 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Wait until the ORDERED 2 task is queued.
-            do! Task.Delay 100
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 1 ) do
+                do! Task.Delay 5
 
             // Submit a HOQ task.
             let! itt_r3 = r.Send_Read10 TaskATTRCd.HEAD_OF_QUEUE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
@@ -768,11 +816,8 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             result_r1.Return()
 
             // ORDERED2 task is executed
-            do! Task.Delay 100
-            let tasks = GetStuckTasks()
-            Assert.True(( tasks.Length = 2 ))
-            Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r2 ) ) tasks ))
-            Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r3 ) ) tasks ))
+            do! Task.Delay 5
+            Wait_Order_2_task r itt_r2 itt_r3
 
             // Resume execution of HOQ and ORDERED 2 task.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
@@ -852,9 +897,9 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             let! itt_r1 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Confirm that ORDERED 1 task is stuck.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 1 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
             let tasks = GetStuckTasks()
             Assert.True(( tasks.Length = 1 ))
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r1 ) ) tasks ))
@@ -863,7 +908,9 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             let! itt_r2 = r.Send_Read10 att g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Wait until above task is queued.
-            do! Task.Delay 100
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 1 ) do
+                do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
@@ -871,17 +918,17 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( result_r1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
             // Task execution is not resumed.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length >= 1 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
 
             // Submit ACA task.
             let! itt_r4 = r.Send_Read10 TaskATTRCd.ACA_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // ACA task is executed.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 1 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
             let tasks = GetStuckTasks()
             Assert.True(( tasks.Length = 1 ))
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r4 ) ) tasks ))
@@ -897,9 +944,9 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( resp_tmf = TaskMgrResCd.FUNCTION_COMPLETE ))
 
             // Confirm that SIMPLE or ORDERED task is executed.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 1 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
             let tasks = GetStuckTasks()
             Assert.True(( tasks.Length = 1 ))
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r2 ) ) tasks ))
@@ -929,9 +976,9 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             let! itt_r1 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Confirm that ORDERED 1 task is stuck.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 1 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
             let tasks = GetStuckTasks()
             Assert.True(( tasks.Length = 1 ))
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r1 ) ) tasks ))
@@ -940,7 +987,9 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             let! itt_r2 = r.Send_Read10 att g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Wait until above task is queued.
-            do! Task.Delay 100
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 1 ) do
+                do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
@@ -948,23 +997,23 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( result_r1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
             // Task execution is not resumed.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length >= 1 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
 
             // Clear ACA by failing the CA task.
             let! itt_r3 = r.Send_Read10 TaskATTRCd.ACA_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.F
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 1 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
             m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
             let! result_r3 = r.WaitSCSIResponse itt_r3
             Assert.True(( result_r3.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
             // Confirm that SIMPLE or ORDERED task is executed.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 1 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
             let tasks = GetStuckTasks()
             Assert.True(( tasks.Length = 1 ))
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r2 ) ) tasks ))
@@ -992,15 +1041,17 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             let! itt_r2 = r.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Confirm that above two tasks are stuck.
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 2 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
 
             // Submit ORDERED task.
             let! itt_r3 = r.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Wait until above task is queued.
-            do! Task.Delay 100
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 1 ) do
+                do! Task.Delay 5
 
             // The ORDERED tasks will not be executed
             let tasks = GetStuckTasks()
@@ -1030,9 +1081,9 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             result_r2.Return()
 
             // The ORDERED task is executed
-            do! Task.Delay 10
+            do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 1 ) do
-                do! Task.Delay 10
+                do! Task.Delay 5
             let tasks = GetStuckTasks()
             Assert.True(( tasks.Length = 1 ))
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r3 ) ) tasks ))
