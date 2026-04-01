@@ -114,9 +114,8 @@ The persistent reservation is an all registrants type
    The status will not change.
    reffer SAM-2 5.9.1.4
  A23-B2-C2 : The non-faulted I_T nexus performs a preemption in the non-ACA task and SERVICE ACTION RESERVATION KEY<>0(No corresponding I_T Nexus exists).
-   Task execution      : Execute (Execute tasks under special rules)
-   Tasks to be aborted : All tasks sent from I_T Nexus that are subject to preemption.
-   ACA to be cleared   : ACA related to I_T Nexus that is subject to preemption.
+   Task execution      : The task is executed according to the special rules and terminated with a RESERVATION CONFLICT.
+   The status will not change.
    reffer SAM-2 5.9.1.5.1, SAM-2 5.9.1.5.2 Table 30, SPC-3 5.6.10.4.4
 *)
 
@@ -1039,8 +1038,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
 
             do! PR_Register r1 g_LUN1 g_ResvKey1
             do! PR_Register r2 g_LUN1 g_ResvKey2
-            if prtype <> PR_TYPE.NO_RESERVATION then
-                do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
+            do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
 
             let! fstat1 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat1.FullStatusDescriptor.Length = 2 ))
@@ -1064,7 +1062,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
             // PREEMPT AND ABORT ( Terinated with ACA ACTIVE )
-            let! itt_pr_out2 = r2.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.ACA_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 resvkey_me.zero
+            let! itt_pr_out2 = r2.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.ACA_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey2 resvkey_me.zero
             let! res_pr_out2 = r2.WaitSCSIResponse itt_pr_out2
             Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.ACA_ACTIVE ))
 
@@ -1105,8 +1103,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
 
             do! PR_Register r1 g_LUN1 g_ResvKey1
             do! PR_Register r2 g_LUN1 g_ResvKey2
-            if prtype <> PR_TYPE.NO_RESERVATION then
-                do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
+            do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
 
             let! fstat1 = PR_ReadFullStatus r1 g_LUN1
             Assert.True(( fstat1.FullStatusDescriptor.Length = 2 ))
@@ -1157,3 +1154,588 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             do! r2.Close()
             m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
         }
+
+    // The persistent reservation is an all registrants type
+    // The non-faulted I_T nexus performs a preemption in the non-ACA task and SERVICE ACTION RESERVATION KEY=0.
+    [<Theory>]
+    [<MemberData( "A21_B1_C1_001_data" )>]
+    member _.A21_B2_C2_001 ( prtype : PR_TYPE ) =
+        task {
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a Wait" "Trap added" "MD> "
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a ACA" "Trap added" "MD> "
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let itn_r2 = r2.ITNexus
+
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+            do! PR_Register r2 g_LUN1 g_ResvKey2
+            do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
+
+            // send ORDERED 1 task from r1, and wait that task is stuck
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            do! WaitTaskStucked 1
+
+            // send SIMPLE 1, SIMPLE 2 task from r1, r2
+            let! _ = r1.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! _ = r2.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+
+            // Wait until above task is queued.
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 2 ) do
+                do! Task.Delay 5
+
+            // Resume execution of ORDERED 1 task. ACA status is established.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            let! res_read1 = r1.WaitSCSIResponse itt_read1
+            Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // PREEMPT AND ABORT (Succeed)
+            let! itt_pr_out2 = r2.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey2 resvkey_me.zero
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // UA is established for r2
+            do! Check_UA_Established r1 g_LUN1 ASCCd.REGISTRATIONS_PREEMPTED
+
+            // The command is executable.
+            let! itt_tur3 = r1.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_tur3
+            let! itt_tur4 = r2.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_tur4
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            let fsd1 = fstat1.FullStatusDescriptor
+            Assert.True(( fsd1.Length = 1 ))
+            Assert.True(( fsd1.[0].iSCSIName = itn_r2.InitiatorPortName ))
+            Assert.True(( fsd1.[0].ReservationKey = g_ResvKey2 ))
+            Assert.True(( fsd1.[0].ReservationHolder ))
+            Assert.True(( fsd1.[0].Type = PR_TYPE.toNumericValue PR_TYPE.WRITE_EXCLUSIVE ))
+            do! PR_Unregister r2 g_LUN1 g_ResvKey2
+
+            do! r1.Close()
+            do! r2.Close()
+            m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
+        }
+
+    // The persistent reservation is an all registrants type
+    // The faulted I_T nexus performs a preemption in the ACA task and SERVICE ACTION RESERVATION KEY<>0(Corresponding I_T Nexus exists).
+    [<Theory>]
+    [<MemberData( "A21_B1_C1_001_data" )>]
+    member _.A22_B1_C1_001 ( prtype : PR_TYPE ) =
+        task {
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a Wait" "Trap added" "MD> "
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a ACA" "Trap added" "MD> "
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let itn_r1 = r1.ITNexus
+
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+            do! PR_Register r2 g_LUN1 g_ResvKey2
+            do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
+
+            // send ORDERED 1 task from r1, and wait that task is stuck
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            do! WaitTaskStucked 1
+
+            // send SIMPLE 1, SIMPLE 2 task from r1, r2
+            let! itt_tur1 = r1.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! _ = r2.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+
+            // Wait until above task is queued.
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 2 ) do
+                do! Task.Delay 5
+
+            // Resume execution of ORDERED 1 task. ACA status is established.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            let! res_read1 = r1.WaitSCSIResponse itt_read1
+            Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // PREEMPT AND ABORT (Succeed)
+            let! itt_pr_out2 = r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.ACA_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey2
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // ACA (for r1) still remains
+            let! itt_tur3 = r1.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! res_tur3 = r1.WaitSCSIResponse itt_tur3
+            Assert.True(( res_tur3.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+
+            // clear ACA ( The execution of the SIMPLE 1 tasks will resume. )
+            do! ClearACA r1 g_LUN1
+
+            // UA is established for r2
+            do! Check_UA_Established r2 g_LUN1 ASCCd.REGISTRATIONS_PREEMPTED
+
+            // receive SIMPLE 1 task response
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_tur1
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            let fsd1 = fstat1.FullStatusDescriptor
+            Assert.True(( fsd1.Length = 1 ))
+            Assert.True(( fsd1.[0].iSCSIName = itn_r1.InitiatorPortName ))
+            Assert.True(( fsd1.[0].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd1.[0].ReservationHolder ))
+            Assert.True(( fsd1.[0].Type = PR_TYPE.toNumericValue prtype ))
+            do! PR_Unregister r1 g_LUN1 g_ResvKey1
+
+            do! r1.Close()
+            do! r2.Close()
+            m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
+        }
+
+    // The persistent reservation is an all registrants type
+    // The faulted I_T nexus performs a preemption in the ACA task and SERVICE ACTION RESERVATION KEY<>0(Corresponding I_T Nexus exists).
+    [<Theory>]
+    [<MemberData( "A21_B1_C1_001_data" )>]
+    member _.A22_B1_C1_002 ( prtype : PR_TYPE ) =
+        task {
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a Wait" "Trap added" "MD> "
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a ACA" "Trap added" "MD> "
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let itn_r2 = r2.ITNexus
+
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+            do! PR_Register r2 g_LUN1 g_ResvKey2
+            do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
+
+            // send ORDERED 1 task from r1, and wait that task is stuck
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            do! WaitTaskStucked 1
+
+            // send SIMPLE 1, SIMPLE 2 task from r1, r2
+            let! _ = r1.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! itt_tur2 = r2.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+
+            // Wait until above task is queued.
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 2 ) do
+                do! Task.Delay 5
+
+            // Resume execution of ORDERED 1 task. ACA status is established.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            let! res_read1 = r1.WaitSCSIResponse itt_read1
+            Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // PREEMPT AND ABORT (Succeed)
+            let! itt_pr_out2 = r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.ACA_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // receive SIMPLE 2 task response
+            // ( Executing PREEMPT AND ABORT will resume the SIMPLE 2 task. )
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_tur2
+
+            // ACA (for r1) is cleared
+            let! itt_tur3 = r1.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_tur3
+
+            let! fstat1 = PR_ReadFullStatus r2 g_LUN1
+            let fsd1 = fstat1.FullStatusDescriptor
+            Assert.True(( fsd1.Length = 1 ))
+            Assert.True(( fsd1.[0].iSCSIName = itn_r2.InitiatorPortName ))
+            Assert.True(( fsd1.[0].ReservationKey = g_ResvKey2 ))
+            Assert.True(( fsd1.[0].ReservationHolder ))
+            Assert.True(( fsd1.[0].Type = PR_TYPE.toNumericValue prtype ))
+            do! PR_Unregister r2 g_LUN1 g_ResvKey2
+
+            do! r1.Close()
+            do! r2.Close()
+            m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
+        }
+
+    static member A22_B1_C2_001_data : obj[][] = [|
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS; 1UL |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;  1UL |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS; 2UL |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;  2UL |];
+        [| PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS; 3UL |];
+        [| PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;  3UL |];
+    |]
+
+    // The persistent reservation is an all registrants type
+    // A22_B1_C2 : The non-faulted I_T nexus performs a preemption in the ACA task and SERVICE ACTION RESERVATION KEY<>0(Corresponding I_T Nexus exists).
+    // A23_B1_C2 : The non-faulted I_T nexus performs a preemption in the ACA task and SERVICE ACTION RESERVATION KEY<>0(No corresponding I_T Nexus exists).
+    [<Theory>]
+    [<MemberData( "A22_B1_C2_001_data" )>]
+    member _.A22_B1_C2_A23_B1_C2_001 ( prtype : PR_TYPE ) ( saresvkey : uint64 ) =
+        task {
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a Wait" "Trap added" "MD> "
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a ACA" "Trap added" "MD> "
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+            do! PR_Register r2 g_LUN1 g_ResvKey2
+            do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 2 ))
+
+            // send ORDERED 1 task from r1, and wait that task is stuck
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            do! WaitTaskStucked 1
+
+            // send SIMPLE 1, SIMPLE 2 tasks from r1, r2
+            let! itt_tur1 = r1.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! itt_tur2 = r2.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+
+            // Wait until above task is queued.
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 2 ) do
+                do! Task.Delay 5
+
+            // Resume execution of ORDERED 1 task. ACA status is established.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            let! res_read1 = r1.WaitSCSIResponse itt_read1
+            Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // PREEMPT AND ABORT ( Terinated with ACA ACTIVE )
+            let! itt_pr_out2 = r2.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.ACA_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey2 ( resvkey_me.fromPrim saresvkey )
+            let! res_pr_out2 = r2.WaitSCSIResponse itt_pr_out2
+            Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+
+            // ACA remains
+            let! itt_tur4 = r1.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! res_tur4 = r1.WaitSCSIResponse itt_tur4
+            Assert.True(( res_tur4.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+
+            // clear ACA ( The execution of the SIMPLE 1, SIMPLE 2 tasks will resume. )
+            do! ClearACA r1 g_LUN1
+
+            // Receive SIMPLE 1, SIMPLE 2 responses
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_tur1
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_tur2
+
+            // There is no change to the reservation status.
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1 = fstat2 ))
+
+            do! PR_Unregister r2 g_LUN1 g_ResvKey2
+            do! PR_Unregister r1 g_LUN1 g_ResvKey1
+
+            do! r1.Close()
+            do! r2.Close()
+            m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
+        }
+
+    // The persistent reservation is an all registrants type
+    // A22_B2_C1 : The faulted I_T nexus performs a preemption in the non-ACA task and SERVICE ACTION RESERVATION KEY<>0(Corresponding I_T Nexus exists).
+    // A23_B2_C1 : The faulted I_T nexus performs a preemption in the non-ACA task and SERVICE ACTION RESERVATION KEY<>0(No corresponding I_T Nexus exists).
+    [<Theory>]
+    [<MemberData( "A22_B1_C2_001_data" )>]
+    member _.A22_B2_C1_A23_B2_C1_001 ( prtype : PR_TYPE ) ( saresvkey : uint64 ) =
+        task {
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a Wait" "Trap added" "MD> "
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a ACA" "Trap added" "MD> "
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+            do! PR_Register r2 g_LUN1 g_ResvKey2
+            do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 2 ))
+
+            // send ORDERED 1 task from r1, and wait that task is stuck
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            do! WaitTaskStucked 1
+
+            // send SIMPLE 1, SIMPLE 2 tasks from r1, r2
+            let! itt_tur1 = r1.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! itt_tur2 = r2.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+
+            // Wait until above task is queued.
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 2 ) do
+                do! Task.Delay 5
+
+            // Resume execution of ORDERED 1 task. ACA status is established.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            let! res_read1 = r1.WaitSCSIResponse itt_read1
+            Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // PREEMPT AND ABORT ( Terinated with ACA ACTIVE )
+            let! itt_pr_out2 = r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey2 ( resvkey_me.fromPrim saresvkey )
+            let! res_pr_out2 = r1.WaitSCSIResponse itt_pr_out2
+            Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+
+            // ACA remains
+            let! itt_tur4 = r1.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! res_tur4 = r1.WaitSCSIResponse itt_tur4
+            Assert.True(( res_tur4.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+
+            // clear ACA ( The execution of the SIMPLE 1, SIMPLE 2 tasks will resume. )
+            do! ClearACA r1 g_LUN1
+
+            // Receive SIMPLE 1, SIMPLE 2 responses
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_tur1
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_tur2
+
+            // There is no change to the reservation status.
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1 = fstat2 ))
+
+            do! PR_Unregister r2 g_LUN1 g_ResvKey2
+            do! PR_Unregister r1 g_LUN1 g_ResvKey1
+
+            do! r1.Close()
+            do! r2.Close()
+            m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
+        }
+
+    // The persistent reservation is an all registrants type
+    // The non-faulted I_T nexus performs a preemption in the non-ACA task and SERVICE ACTION RESERVATION KEY<>0(Corresponding I_T Nexus exists).
+    [<Theory>]
+    [<MemberData( "A21_B1_C1_001_data" )>]
+    member _.A22_B2_C2_001 ( prtype : PR_TYPE ) =
+        task {
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a Wait" "Trap added" "MD> "
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a ACA" "Trap added" "MD> "
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let itn_r2 = r2.ITNexus
+
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+            do! PR_Register r2 g_LUN1 g_ResvKey2
+            do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
+
+            // send ORDERED 1 task from r1, and wait that task is stuck
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            do! WaitTaskStucked 1
+
+            // send SIMPLE 1, SIMPLE 2 task from r1, r2
+            let! _ = r1.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! itt_tur2 = r2.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+
+            // Wait until above task is queued.
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 2 ) do
+                do! Task.Delay 5
+
+            // Resume execution of ORDERED 1 task. ACA status is established.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            let! res_read1 = r1.WaitSCSIResponse itt_read1
+            Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // PREEMPT AND ABORT (Succeed)
+            let! itt_pr_out2 = r2.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey2 g_ResvKey1
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // receive SIMPLE 2 task response
+            // ( Executing PREEMPT AND ABORT will resume the SIMPLE 2 task. )
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_tur2
+
+            // UA is established for r1
+            do! Check_UA_Established r1 g_LUN1 ASCCd.REGISTRATIONS_PREEMPTED
+
+            // ACA (for r1) is cleared
+            let! itt_tur3 = r1.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_tur3
+
+            let! fstat1 = PR_ReadFullStatus r2 g_LUN1
+            let fsd1 = fstat1.FullStatusDescriptor
+            Assert.True(( fsd1.Length = 1 ))
+            Assert.True(( fsd1.[0].iSCSIName = itn_r2.InitiatorPortName ))
+            Assert.True(( fsd1.[0].ReservationKey = g_ResvKey2 ))
+            Assert.True(( fsd1.[0].ReservationHolder ))
+            Assert.True(( fsd1.[0].Type = PR_TYPE.toNumericValue prtype ))
+            do! PR_Unregister r2 g_LUN1 g_ResvKey2
+
+            do! r1.Close()
+            do! r2.Close()
+            m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
+        }
+
+    // The persistent reservation is an all registrants type
+    // The non-faulted I_T nexus performs a preemption in the non-ACA task and SERVICE ACTION RESERVATION KEY<>0(Corresponding I_T Nexus exists).
+    [<Theory>]
+    [<MemberData( "A21_B1_C1_001_data" )>]
+    member _.A22_B2_C2_002 ( prtype : PR_TYPE ) =
+        task {
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a Wait" "Trap added" "MD> "
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a ACA" "Trap added" "MD> "
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let itn_r1 = r1.ITNexus
+
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+            do! PR_Register r2 g_LUN1 g_ResvKey2
+            do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
+
+            // send ORDERED 1 task from r1, and wait that task is stuck
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            do! WaitTaskStucked 1
+
+            // send SIMPLE 1, SIMPLE 2 task from r1, r2
+            let! itt_tur1 = r1.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! _ = r2.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+
+            // Wait until above task is queued.
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 2 ) do
+                do! Task.Delay 5
+
+            // Resume execution of ORDERED 1 task. ACA status is established.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            let! res_read1 = r1.WaitSCSIResponse itt_read1
+            Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // PREEMPT AND ABORT (Succeed)
+            let! itt_pr_out2 = r2.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey2 g_ResvKey2
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            // ACA (for r1) still remains
+            let! itt_tur3 = r1.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! res_tur3 = r1.WaitSCSIResponse itt_tur3
+            Assert.True(( res_tur3.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+
+            // clear ACA ( The execution of the SIMPLE 1 tasks will resume. )
+            do! ClearACA r1 g_LUN1
+
+            // receive SIMPLE 1 task response
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_tur1
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            let fsd1 = fstat1.FullStatusDescriptor
+            Assert.True(( fsd1.Length = 1 ))
+            Assert.True(( fsd1.[0].iSCSIName = itn_r1.InitiatorPortName ))
+            Assert.True(( fsd1.[0].ReservationKey = g_ResvKey1 ))
+            Assert.True(( fsd1.[0].ReservationHolder ))
+            Assert.True(( fsd1.[0].Type = PR_TYPE.toNumericValue prtype ))
+            do! PR_Unregister r1 g_LUN1 g_ResvKey1
+
+            do! r1.Close()
+            do! r2.Close()
+            m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
+        }
+
+    // The persistent reservation is an all registrants type
+    // The faulted I_T nexus performs a preemption in the ACA task and SERVICE ACTION RESERVATION KEY<>0(No corresponding I_T Nexus exists.).
+    [<Theory>]
+    [<MemberData( "A21_B1_C1_001_data" )>]
+    member _.A23_B1_C1_001 ( prtype : PR_TYPE ) =
+        task {
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a Wait" "Trap added" "MD> "
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a ACA" "Trap added" "MD> "
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+            do! PR_Register r2 g_LUN1 g_ResvKey2
+            do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 2 ))
+
+            // send ORDERED 1 task from r1, and wait that task is stuck
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            do! WaitTaskStucked 1
+
+            // send SIMPLE 1, SIMPLE 2 task from r1, r2
+            let! itt_tur1 = r1.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! itt_tur2 = r2.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+
+            // Wait until above task is queued.
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 2 ) do
+                do! Task.Delay 5
+
+            // Resume execution of ORDERED 1 task. ACA status is established.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            let! res_read1 = r1.WaitSCSIResponse itt_read1
+            Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // PREEMPT AND ABORT (Failed)
+            let! itt_pr_out2 = r1.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.ACA_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 g_ResvKey3
+            let! res_pr_out2 = r1.WaitSCSIResponse itt_pr_out2
+            Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
+
+            // ACA (for r1) still remains
+            let! itt_tur3 = r1.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! res_tur3 = r1.WaitSCSIResponse itt_tur3
+            Assert.True(( res_tur3.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+
+            // clear ACA ( The execution of the SIMPLE 1 tasks will resume. )
+            do! ClearACA r1 g_LUN1
+
+            // Receive SIMPLE 1, SIMPLE 2 responses
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_tur1
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_tur2
+
+            // There is no change to the reservation status.
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1 = fstat2 ))
+
+            do! PR_Unregister r2 g_LUN1 g_ResvKey2
+            do! PR_Unregister r1 g_LUN1 g_ResvKey1
+
+            do! r1.Close()
+            do! r2.Close()
+            m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
+        }
+        
+    // The persistent reservation is an all registrants type
+    // The The non-faulted I_T nexus performs a preemption in the non-ACA task and SERVICE ACTION RESERVATION KEY<>0(No corresponding I_T Nexus exists).
+    [<Theory>]
+    [<MemberData( "A21_B1_C1_001_data" )>]
+    member _.A23_B2_C2_002 ( prtype : PR_TYPE ) =
+        task {
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a Wait" "Trap added" "MD> "
+            m_ClientProc.RunCommand "add trap /e Read /slba 10 /elba 20 /a ACA" "Trap added" "MD> "
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+            do! PR_Register r2 g_LUN1 g_ResvKey2
+            do! PR_Reserve r1 g_LUN1 prtype g_ResvKey1
+
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1.FullStatusDescriptor.Length = 2 ))
+
+            // send ORDERED 1 task from r1, and wait that task is stuck
+            let! itt_read1 = r1.Send_Read10 TaskATTRCd.ORDERED_TASK g_LUN1 ( blkcnt_me.ofUInt32 10u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
+            do! WaitTaskStucked 1
+
+            // send SIMPLE 1, SIMPLE 2 task from r1, r2
+            let! itt_tur1 = r1.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! itt_tur2 = r2.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+
+            // Wait until above task is queued.
+            do! Task.Delay 5
+            while ( GetDormantTaskCount() < 2 ) do
+                do! Task.Delay 5
+
+            // Resume execution of ORDERED 1 task. ACA status is established.
+            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            let! res_read1 = r1.WaitSCSIResponse itt_read1
+            Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            // PREEMPT AND ABORT (Failed)
+            let! itt_pr_out2 = r2.Send_PROut_PREEMPT_AND_ABORT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey2 g_ResvKey3
+            let! res_pr_out2 = r2.WaitSCSIResponse itt_pr_out2
+            Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.RESERVATION_CONFLICT ))
+
+            // ACA (for r1) still remains
+            let! itt_tur3 = r1.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! res_tur3 = r1.WaitSCSIResponse itt_tur3
+            Assert.True(( res_tur3.Status = ScsiCmdStatCd.ACA_ACTIVE ))
+
+            // clear ACA ( The execution of the SIMPLE 1 tasks will resume. )
+            do! ClearACA r1 g_LUN1
+
+            // Receive SIMPLE 1, SIMPLE 2 responses
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_tur1
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_tur2
+
+            // There is no change to the reservation status.
+            let! fstat2 = PR_ReadFullStatus r1 g_LUN1
+            Assert.True(( fstat1 = fstat2 ))
+
+            do! PR_Unregister r2 g_LUN1 g_ResvKey2
+            do! PR_Unregister r1 g_LUN1 g_ResvKey1
+
+            do! r1.Close()
+            do! r2.Close()
+            m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
+        }
+
