@@ -1034,11 +1034,14 @@ type PRManager(
 
                 // If There is no reservation, this command terminated in CHECK CONDITION
                 if oldVal.m_Type = PR_TYPE.NO_RESERVATION then
-                    // return CHECK CONDITION status
-                    let msg = "PERSISTENT RESERVE OUT command with REGISTER AND MOVE service action was received, and there is no reservation."
-                    HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, msg )
-                    raise <| SCSIACAException ( source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, msg )
-                    struct( oldVal, struct( ScsiCmdStatCd.CHECK_CONDITION, "" ) )
+                    if srcRegved then
+                        let msg = "Request was received from unregistered I_T Nexus."
+                        struct( oldVal, struct( ScsiCmdStatCd.RESERVATION_CONFLICT, msg ) )
+                    else
+                        let msg = "PERSISTENT RESERVE OUT command with REGISTER AND MOVE service action was received, and there is no reservation."
+                        HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, msg )
+                        raise <| SCSIACAException ( source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, msg )
+                        struct( oldVal, struct( ScsiCmdStatCd.CHECK_CONDITION, "" ) )
 
                 elif not srcRegved then
                     let msg = "Request was received from unregistered I_T Nexus, but reservation is already existed."

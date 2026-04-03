@@ -1291,6 +1291,65 @@ type PRManager_Test3 () =
         let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us )
         let initITN4 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target001", tpgt_me.fromPrim 1us )
         GlbFunc.writeDefaultPRFile
+            PR_TYPE.NO_RESERVATION
+            [|
+                initITN1, resvkey_me.fromPrim 0x1111111111111111UL, false;
+                initITN2, resvkey_me.fromPrim 0x2222222222222222UL, false;
+                initITN3, resvkey_me.fromPrim 0x3333333333333333UL, false;
+                initITN4, resvkey_me.fromPrim 0x4444444444444444UL, false;
+            |]
+            fname
+        let k, luStub, pm = this.CreateDefaultPM fname NO_RESERVATION 4
+        let param = [|
+            0x55uy; 0x55uy; 0x55uy; 0x55uy; // RESERVATION KEY 
+            0x55uy; 0x55uy; 0x55uy; 0x55uy;
+            0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // SERVICE ACTION RESERVATION KEY
+            0xEEuy; 0xEEuy; 0xEEuy; 0xEEuy;
+            0x00uy;                         // Reserved
+            0x00uy;                         // UNREG(0), APTPL(0)
+            0x00uy; 0x00uy;                 // RELATIVE TARGET PORT IDENTIFIER
+            0x00uy; 0x00uy; 0x00uy; 0x24uy; // TRANSPORTID PARAMETER DATA LENGTH
+
+            // TransportID
+            0x45uy;                         // FORMAT CODE, PROTOCOL IDENTIFIER
+            0x00uy;                         // Reserved
+            0x00uy; 0x20uy;                 // ADDITIONAL LENGTH
+            yield! Encoding.UTF8.GetBytes "initiator001"
+            yield! Encoding.UTF8.GetBytes ",i,0x"
+            yield! Encoding.UTF8.GetBytes "420003040005"
+            0x00uy; 0x00uy; 0x00uy;
+        |]
+        let source = {
+            defaultSource with
+                I_TNexus = initITN2;    // registared
+        }
+        let v = pm.RegisterAndMove source ( itt_me.fromPrim 0u ) NO_RESERVATION ( uint32 param.Length ) ( PooledBuffer.Rent param )
+        Assert.True(( v = ScsiCmdStatCd.RESERVATION_CONFLICT ))
+
+        let prinfo = PRManager_Test2.GetPRInfoRec pm
+        Assert.True(( prinfo.m_APTPL ))
+        Assert.True(( prinfo.m_Type = PR_TYPE.NO_RESERVATION ))
+        Assert.True(( prinfo.m_PRGeneration = 0u ))
+        Assert.True(( prinfo.m_Registrations.Count = 4 ))
+        Assert.True(( prinfo.m_Registrations.Item( initITN1 ) = resvkey_me.fromPrim 0x1111111111111111UL ))
+        Assert.True(( prinfo.m_Registrations.Item( initITN2 ) = resvkey_me.fromPrim 0x2222222222222222UL ))
+        Assert.True(( prinfo.m_Registrations.Item( initITN3 ) = resvkey_me.fromPrim 0x3333333333333333UL ))
+        Assert.True(( prinfo.m_Registrations.Item( initITN4 ) = resvkey_me.fromPrim 0x4444444444444444UL ))
+        Assert.True(( prinfo.m_Holder.IsNone ))
+
+        GlbFunc.DeleteFile fname
+        k.NoticeTerminate()
+        GlbFunc.DeleteDir pDirName
+
+    [<Fact>]
+    member this.RegisterAndMove_004() =
+        let pDirName = this.CreateTestDir()
+        let fname = Functions.AppendPathName pDirName "RegisterAndMove_004.txt"
+        let initITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
+        let initITN2 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us )
+        let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us )
+        let initITN4 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target001", tpgt_me.fromPrim 1us )
+        GlbFunc.writeDefaultPRFile
             PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY
             [|
                 initITN1, resvkey_me.fromPrim 0x1111111111111111UL, false;
@@ -1340,9 +1399,9 @@ type PRManager_Test3 () =
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
-    member this.RegisterAndMove_004() =
+    member this.RegisterAndMove_005() =
         let pDirName = this.CreateTestDir()
-        let fname = Functions.AppendPathName pDirName "RegisterAndMove_004.txt"
+        let fname = Functions.AppendPathName pDirName "RegisterAndMove_005.txt"
         let initITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
         let initITN2 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us )
         let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us )
@@ -1403,9 +1462,9 @@ type PRManager_Test3 () =
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
-    member this.RegisterAndMove_005() =
+    member this.RegisterAndMove_006() =
         let pDirName = this.CreateTestDir()
-        let fname = Functions.AppendPathName pDirName "RegisterAndMove_005.txt"
+        let fname = Functions.AppendPathName pDirName "RegisterAndMove_006.txt"
         let initITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
         let initITN2 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us )
         let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us )
@@ -1464,9 +1523,9 @@ type PRManager_Test3 () =
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
-    member this.RegisterAndMove_006() =
+    member this.RegisterAndMove_007() =
         let pDirName = this.CreateTestDir()
-        let fname = Functions.AppendPathName pDirName "RegisterAndMove_006.txt"
+        let fname = Functions.AppendPathName pDirName "RegisterAndMove_007.txt"
         let initITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
         let initITN2 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us )
         let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us )
@@ -1525,9 +1584,9 @@ type PRManager_Test3 () =
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
-    member this.RegisterAndMove_007() =
+    member this.RegisterAndMove_008() =
         let pDirName = this.CreateTestDir()
-        let fname = Functions.AppendPathName pDirName "RegisterAndMove_007.txt"
+        let fname = Functions.AppendPathName pDirName "RegisterAndMove_008.txt"
         let initITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
         let initITN2 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us )
         let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us )
@@ -1590,9 +1649,9 @@ type PRManager_Test3 () =
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
-    member this.RegisterAndMove_008() =
+    member this.RegisterAndMove_009() =
         let pDirName = this.CreateTestDir()
-        let fname = Functions.AppendPathName pDirName "RegisterAndMove_008.txt"
+        let fname = Functions.AppendPathName pDirName "RegisterAndMove_009.txt"
         let initITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
         let initITN2 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us )
         let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us )
@@ -1655,9 +1714,9 @@ type PRManager_Test3 () =
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
-    member this.RegisterAndMove_009() =
+    member this.RegisterAndMove_010() =
         let pDirName = this.CreateTestDir()
-        let fname = Functions.AppendPathName pDirName "RegisterAndMove_009.txt"
+        let fname = Functions.AppendPathName pDirName "RegisterAndMove_010.txt"
         let initITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
         let initITN2 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us )
         let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us )
@@ -1719,9 +1778,9 @@ type PRManager_Test3 () =
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
-    member this.RegisterAndMove_010() =
+    member this.RegisterAndMove_011() =
         let pDirName = this.CreateTestDir()
-        let fname = Functions.AppendPathName pDirName "RegisterAndMove_010.txt"
+        let fname = Functions.AppendPathName pDirName "RegisterAndMove_011.txt"
         let initITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
         let initITN2 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us )
         let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us )
@@ -1784,9 +1843,9 @@ type PRManager_Test3 () =
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
-    member this.RegisterAndMove_011() =
+    member this.RegisterAndMove_012() =
         let pDirName = this.CreateTestDir()
-        let fname = Functions.AppendPathName pDirName "RegisterAndMove_011.txt"
+        let fname = Functions.AppendPathName pDirName "RegisterAndMove_012.txt"
         let initITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
         let initITN2 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us )
         let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us )
@@ -1848,9 +1907,9 @@ type PRManager_Test3 () =
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
-    member this.RegisterAndMove_012() =
+    member this.RegisterAndMove_013() =
         let pDirName = this.CreateTestDir()
-        let fname = Functions.AppendPathName pDirName "RegisterAndMove_012.txt"
+        let fname = Functions.AppendPathName pDirName "RegisterAndMove_013.txt"
         let initITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
         let initITN2 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us )
         let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us )
@@ -1909,9 +1968,9 @@ type PRManager_Test3 () =
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
-    member this.RegisterAndMove_013() =
+    member this.RegisterAndMove_014() =
         let pDirName = this.CreateTestDir()
-        let fname = Functions.AppendPathName pDirName "RegisterAndMove_013.txt"
+        let fname = Functions.AppendPathName pDirName "RegisterAndMove_014.txt"
         let initITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
         let initITN2 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us )
         let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us )
@@ -1969,9 +2028,9 @@ type PRManager_Test3 () =
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
-    member this.RegisterAndMove_014() =
+    member this.RegisterAndMove_015() =
         let pDirName = this.CreateTestDir()
-        let fname = Functions.AppendPathName pDirName "RegisterAndMove_014.txt"
+        let fname = Functions.AppendPathName pDirName "RegisterAndMove_015.txt"
         let initITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
         let initITN2 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us )
         let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target000", tpgt_me.fromPrim 0us )
@@ -2028,9 +2087,9 @@ type PRManager_Test3 () =
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
-    member this.RegisterAndMove_015() =
+    member this.RegisterAndMove_016() =
         let pDirName = this.CreateTestDir()
-        let fname = Functions.AppendPathName pDirName "RegisterAndMove_015.txt"
+        let fname = Functions.AppendPathName pDirName "RegisterAndMove_016.txt"
         let initITN1 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
         let initITN2 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us )
         let initITN3 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 2uy 2us 2uy 2us, "target002", tpgt_me.fromPrim 0us )
@@ -2101,9 +2160,9 @@ type PRManager_Test3 () =
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
-    member this.RegisterAndMove_016() =
+    member this.RegisterAndMove_017() =
         let pDirName = this.CreateTestDir()
-        let fname = Functions.AppendPathName pDirName "RegisterAndMove_016.txt"
+        let fname = Functions.AppendPathName pDirName "RegisterAndMove_017.txt"
         let initITN1 = new ITNexus( "initiator00001", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
         GlbFunc.writeDefaultPRFile
             PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY
