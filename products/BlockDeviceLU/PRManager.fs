@@ -1047,15 +1047,6 @@ type PRManager(
                     let msg = "Request was received from unregistered I_T Nexus, but reservation is already existed."
                     struct( oldVal, struct( ScsiCmdStatCd.RESERVATION_CONFLICT, msg ) )
 
-                elif PR_TYPE.isAllRegistrants oldVal.m_Type then
-                    let msg = sprintf "It will be established reservation is %s." ( PR_TYPE.toStringName oldVal.m_Type )
-                    struct( oldVal, struct( ScsiCmdStatCd.RESERVATION_CONFLICT, msg ) )
-
-                elif not( ITNexus.Equals( source.I_TNexus, oldVal.m_Holder.Value ) ) then
-                    // Source I_T Nexus was registered, but it does not have reservation.
-                    let msg = "Request was received from registered I_T Nexus, but it does not have the reservation."
-                    struct( oldVal, struct( ScsiCmdStatCd.RESERVATION_CONFLICT, msg ) )
-
                 elif moveParam.ReservationKey <> srcResvKey then
                     // Reservation Key mismatch
                     let msg = "Request was received from the I_T Nexus that holds reservation, but reservation key mismatch."
@@ -1067,6 +1058,15 @@ type PRManager(
                     HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, msg )
                     raise <| SCSIACAException ( source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, msg )
                     struct( oldVal, struct( ScsiCmdStatCd.CHECK_CONDITION, "" ) )
+
+                elif PR_TYPE.isAllRegistrants oldVal.m_Type then
+                    let msg = sprintf "It will be established reservation is %s." ( PR_TYPE.toStringName oldVal.m_Type )
+                    struct( oldVal, struct( ScsiCmdStatCd.RESERVATION_CONFLICT, msg ) )
+
+                elif not( ITNexus.Equals( source.I_TNexus, oldVal.m_Holder.Value ) ) then
+                    // Source I_T Nexus was registered, but it does not have reservation.
+                    let msg = "Request was received from registered I_T Nexus, but it does not have the reservation."
+                    struct( oldVal, struct( ScsiCmdStatCd.RESERVATION_CONFLICT, msg ) )
 
                 else
                     // check TransportID specifies source I_T Nexus or not

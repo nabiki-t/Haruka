@@ -18,6 +18,7 @@
     <Compile Include="PersistentReserveOut4.fs" />
     <Compile Include="PersistentReserveOut5.fs" />
     <Compile Include="PersistentReserveOut6.fs" />
+    <Compile Include="PersistentReserveIn.fs" />
     <Compile Include="Queueing.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
