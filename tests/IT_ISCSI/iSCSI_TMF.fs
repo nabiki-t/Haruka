@@ -15,6 +15,7 @@ open System
 open System.IO
 open System.Net
 open System.Threading.Tasks
+open System.Text.RegularExpressions
 
 open Xunit
 
@@ -74,16 +75,6 @@ type iSCSI_TMF_Fixture() =
         client.RunCommand "validate" "All configurations are vlidated" "T > "
         client.RunCommand "publish" "All configurations are uploaded to the controller" "T > "
         client.RunCommand "start" "Started" "T > "
-        client.RunCommand "select 0" "" "LU> "
-        client.RunCommand "select 0" "" "MD> "
-        client.RunCommand "add trap /e Format /a Delay /ms 800" "Trap added." "MD> "
-        client.RunCommand "unselect" "" "LU> "
-        client.RunCommand "unselect" "" "T > "
-        client.RunCommand "select 1" "" "LU> "
-        client.RunCommand "select 0" "" "MD> "
-        client.RunCommand "add trap /e Format /a Delay /ms 800" "Trap added." "MD> "
-        client.RunCommand "unselect" "" "LU> "
-        client.RunCommand "unselect" "" "T > "
 
     // Start controller and client
     let m_Controller, m_Client =
@@ -191,6 +182,62 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             }
         Functions.loopAsyncWithState loop ( ValueNone, 1, 0 )
 
+    // Get a list of tasks that are stalled by the debug media wait action.
+    let GetStuckTasks ( lu : int ) : ( string * TSIH_T * ITT_T ) array =
+        let rx = Regex( "^ *([^ ]*) *\( *TSIH *= *([0-9]*) *, *ITT *= *([0-9]*) *\) *$" )
+        m_ClientProc.RunCommand ( sprintf "select %d" lu ) "" "LU> "
+        m_ClientProc.RunCommand "select 0" "" "MD> "
+        let r =
+            m_ClientProc.RunCommandGetResp "task list" "MD> "
+            |> Array.choose( fun itr ->
+                let m = rx.Match itr
+                if not m.Success then
+                    None
+                else
+                    let method = m.Groups.[1].Value |> _.ToUpperInvariant()
+                    let tsih = m.Groups.[2].Value |> UInt16.Parse |> tsih_me.fromPrim
+                    let itt = m.Groups.[3].Value |> UInt32.Parse |> itt_me.fromPrim
+                    Some( method, tsih, itt )
+            )
+        m_ClientProc.RunCommand "unselect" "" "LU> "
+        m_ClientProc.RunCommand "unselect" "" "T > "
+        r
+
+    let SetDebugTrap ( lu : int ) : unit =
+        m_ClientProc.RunCommand ( sprintf "select %d" lu ) "" "LU> "
+        m_ClientProc.RunCommand "select 0" "" "MD> "
+        m_ClientProc.RunCommand "add trap /e Format /a Wait" "Trap added." "MD> "
+        m_ClientProc.RunCommand "unselect" "" "LU> "
+        m_ClientProc.RunCommand "unselect" "" "T > "
+
+    let ClearDebugTrap ( lu : int ) : unit =
+        m_ClientProc.RunCommand ( sprintf "select %d" lu ) "" "LU> "
+        m_ClientProc.RunCommand "select 0" "" "MD> "
+        m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
+        m_ClientProc.RunCommand "unselect" "" "LU> "
+        m_ClientProc.RunCommand "unselect" "" "T > "
+
+    let GetTaskSetStatus ( lu : int ) : ( string * string ) [] =
+        let rx = Regex( "^ *(Running|Dormant) : (.*)$" )
+        m_ClientProc.RunCommand ( sprintf "select %d" lu ) "" "LU> "
+        let stat = m_ClientProc.RunCommandGetResp "LUSTATUS" "LU> "
+        m_ClientProc.RunCommand "unselect" "" "T > "
+        stat
+        |> Array.choose( fun itr ->
+            let m = rx.Match itr
+            if not m.Success then
+                None
+            else
+                Some( m.Groups.[1].Value, m.Groups.[2].Value )
+        )
+
+    let ResumeStackedTask ( lu : int ) ( tsih : TSIH_T ) ( itt : ITT_T ) : unit =
+        m_ClientProc.RunCommand ( sprintf "select %d" lu ) "" "LU> "
+        m_ClientProc.RunCommand "select 0" "" "MD> "
+        m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" tsih itt ) "Task(" "MD> "
+        m_ClientProc.RunCommand "unselect" "" "LU> "
+        m_ClientProc.RunCommand "unselect" "" "T > "
+
 
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
@@ -254,42 +301,51 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
     // abort a task that is in the SCSI task set.
     [<Fact>]
     member _.TMF_AbortTask_003 () =
-
         task{
+            SetDebugTrap 0
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Send SCSI format command
             let formatCDB = GenScsiCDB.FormatUnit FMTPINFO.F RTO_REQ.F LONGLIST.F FMTDATA.F CMPLIST.F 0uy NACA.T LINK.F
             let! ittFormat, cmdSNFormat = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 0u formatCDB PooledBuffer.Empty 0u
 
-            // Send Abort Task TMF request for SCSI write command
+            // Wait until the above task gets stuck
+            do! Task.Delay 5
+            while ( ( GetStuckTasks 0 ).Length < 1 ) do
+                do! Task.Delay 5
+
+            // Send Abort Task TMF request for SCSI format command
             let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.ABORT_TASK g_LUN1 ittFormat ( ValueSome cmdSNFormat ) datasn_me.zero
 
             // receive TMF response
             let! tmfPDU = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
             Assert.True(( tmfPDU.InitiatorTaskTag = ittTMF ))
             Assert.True(( tmfPDU.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
-
-            // Wait for a response from the SCSI Format command.
-            do! Task.Delay 600
+            Assert.True(( ( GetTaskSetStatus 0 ).Length = 0 ))
 
             // SCSI read
             let! readData1 = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
             Assert.True(( readData1.Length = int m_MediaBlockSize ))
 
             do! r1.CloseSession g_CID0 BitI.F
+            ClearDebugTrap 0
         }
 
     // abort a task that is in the SCSI task set.
     [<Fact>]
     member _.TMF_AbortTask_004 () =
-
         task{
+            SetDebugTrap 0
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Send SCSI format command ( Immidiate command )
             let formatCDB = GenScsiCDB.FormatUnit FMTPINFO.F RTO_REQ.F LONGLIST.F FMTDATA.F CMPLIST.F 0uy NACA.T LINK.F
             let! ittFormat, _ = r1.SendSCSICommandPDU g_CID0 BitI.T BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 0u formatCDB PooledBuffer.Empty 0u
+
+            // Wait until the above task gets stuck
+            do! Task.Delay 5
+            while ( ( GetStuckTasks 0 ).Length < 1 ) do
+                do! Task.Delay 5
 
             // Send Abort Task TMF request for SCSI write command
             let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.ABORT_TASK g_LUN1 ittFormat ValueNone datasn_me.zero
@@ -298,15 +354,14 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             let! tmfPDU = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
             Assert.True(( tmfPDU.InitiatorTaskTag = ittTMF ))
             Assert.True(( tmfPDU.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
-
-            // Wait for a response from the SCSI Format command.
-            do! Task.Delay 600
+            Assert.True(( ( GetTaskSetStatus 0 ).Length = 0 ))
 
             // SCSI read
             let! readData1 = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
             Assert.True(( readData1.Length = int m_MediaBlockSize ))
 
             do! r1.CloseSession g_CID0 BitI.F
+            ClearDebugTrap 0
         }
 
     // abort TMF task itself.
@@ -422,8 +477,9 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
     // abort a task that is in the SCSI task set.
     [<Fact>]
     member _.TMF_AbortTaskSet_002 () =
-
         task{
+            SetDebugTrap 0
+            SetDebugTrap 1
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
             let! r2 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam { m_defaultConnParam with CID = g_CID1 }
 
@@ -438,7 +494,11 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             let formatCDB_lu2 = GenScsiCDB.FormatUnit FMTPINFO.F RTO_REQ.F LONGLIST.F FMTDATA.F CMPLIST.F 0uy NACA.T LINK.F
             let! ittFormat_s1l2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN2 0u formatCDB_lu2 PooledBuffer.Empty 0u
 
-            do! Task.Delay 50
+            do! Task.Delay 5
+            while ( ( GetStuckTasks 0 ).Length < 2 ) do
+                do! Task.Delay 5
+            while ( ( GetStuckTasks 1 ).Length < 1 ) do
+                do! Task.Delay 5
 
             // Send Abort Task Set TMF request from session to LU 1
             let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.ABORT_TASK_SET g_LUN1 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
@@ -454,12 +514,14 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
 
             // Receive SCSI Response from LU 1
+            ResumeStackedTask 0 r2.Params.TSIH ittFormat_s2l1
             let! scsiRespPdu_s2 = r2.ReceiveSpecific<SCSIResponsePDU> g_CID1
             Assert.True(( scsiRespPdu_s2.InitiatorTaskTag = ittFormat_s2l1 ))
             Assert.True(( scsiRespPdu_s2.Status = ScsiCmdStatCd.GOOD ))
             Assert.True(( scsiRespPdu_s2.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
 
             // Receive SCSI Response from LU 2
+            ResumeStackedTask 1 r1.Params.TSIH ittFormat_s1l2
             let! scsiRespPdu_s1 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
             Assert.True(( scsiRespPdu_s1.InitiatorTaskTag = ittFormat_s1l2 ))
             Assert.True(( scsiRespPdu_s1.Status = ScsiCmdStatCd.GOOD ))
@@ -475,6 +537,8 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             do! r1.CloseSession g_CID0 BitI.F
             do! r2.CloseSession g_CID1 BitI.F
+            ClearDebugTrap 0
+            ClearDebugTrap 1
         }
 
     // abort an aca task that is in the iSCSI task queue.
@@ -552,8 +616,9 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
     // abort ac ACA task that is in the SCSI task set.
     [<Fact>]
     member _.TMF_ClearACA_002 () =
-
         task{
+            SetDebugTrap 0
+            SetDebugTrap 1
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
             let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
 
@@ -585,7 +650,11 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             let formatCDB_lu2 = GenScsiCDB.FormatUnit FMTPINFO.F RTO_REQ.F LONGLIST.F FMTDATA.F CMPLIST.F 0uy NACA.T LINK.F
             let! ittFormat_lu2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.ACA_TASK g_LUN2 0u formatCDB_lu2 PooledBuffer.Empty 0u
 
-            do! Task.Delay 50
+            do! Task.Delay 5
+            while ( ( GetStuckTasks 0 ).Length < 1 ) do
+                do! Task.Delay 5
+            while ( ( GetStuckTasks 1 ).Length < 1 ) do
+                do! Task.Delay 5
 
             // Send Clear ACA TMF request to LU 1
             let! ittTMF_lu1, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.CLEAR_ACA g_LUN1 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
@@ -601,6 +670,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
 
             // Receive SCSI Response from LU 2
+            ResumeStackedTask 1 r1.Params.TSIH ittFormat_lu2
             let! formatRespPdu_lu2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
             Assert.True(( formatRespPdu_lu2.InitiatorTaskTag = ittFormat_lu2 ))
             Assert.True(( formatRespPdu_lu2.Status = ScsiCmdStatCd.GOOD ))
@@ -624,6 +694,8 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             do! r1.CloseSession g_CID0 BitI.F
             sendData.Return()
+            ClearDebugTrap 0
+            ClearDebugTrap 1
         }
 
     // abort a task that is in the iSCSI task queue.
@@ -676,8 +748,9 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
     // abort tasks that is in the SCSI task set.
     [<Fact>]
     member _.TMF_ClearTaskSet_002 () =
-
         task{
+            SetDebugTrap 0
+            SetDebugTrap 1
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
             let! r2 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
             let formatCDB = GenScsiCDB.FormatUnit FMTPINFO.F RTO_REQ.F LONGLIST.F FMTDATA.F CMPLIST.F 0uy NACA.T LINK.F
@@ -691,7 +764,11 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             // Send SCSI format command to LU 2
             let! ittFormat_s1l2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN2 0u formatCDB PooledBuffer.Empty 0u
 
-            do! Task.Delay 50
+            do! Task.Delay 5
+            while ( ( GetStuckTasks 0 ).Length < 2 ) do
+                do! Task.Delay 5
+            while ( ( GetStuckTasks 1 ).Length < 1 ) do
+                do! Task.Delay 5
 
             // Send Clear Task Set TMF request to LU 1
             let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.CLEAR_TASK_SET g_LUN1 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
@@ -707,12 +784,14 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
 
             // Receive SCSI Response from LU 1 on session 2
+            ResumeStackedTask 0 r2.Params.TSIH ittFormat_s2l1
             let! scsiRespPdu_s2 = r2.ReceiveSpecific<SCSIResponsePDU> g_CID0
             Assert.True(( scsiRespPdu_s2.InitiatorTaskTag = ittFormat_s2l1 ))
             Assert.True(( scsiRespPdu_s2.Status = ScsiCmdStatCd.TASK_ABORTED ))
             Assert.True(( scsiRespPdu_s2.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
 
             // Receive SCSI Response from LU 2
+            ResumeStackedTask 1 r1.Params.TSIH ittFormat_s1l2
             let! scsiRespPdu_s1 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
             Assert.True(( scsiRespPdu_s1.InitiatorTaskTag = ittFormat_s1l2 ))
             Assert.True(( scsiRespPdu_s1.Status = ScsiCmdStatCd.GOOD ))
@@ -732,6 +811,8 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             do! r1.CloseSession g_CID0 BitI.F
             do! r2.CloseSession g_CID0 BitI.F
+            ClearDebugTrap 0
+            ClearDebugTrap 1
         }
 
     // abort tasks that is in the iSCSI task queue.
@@ -779,19 +860,14 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             Assert.True(( readData2.Length = int m_MediaBlockSize ))
 
             do! r1.CloseSession g_CID0 BitI.F
-
-            m_ClientProc.RunCommand "select 0" "" "LU> "
-            m_ClientProc.RunCommand "select 0" "" "MD> "
-            m_ClientProc.RunCommand "add trap /e Format /a Delay /ms 800" "Trap added." "MD> "
-            m_ClientProc.RunCommand "unselect" "" "LU> "
-            m_ClientProc.RunCommand "unselect" "" "T > "
         }
 
     // abort tasks that is in the SCSI task set.
     [<Fact>]
     member _.TMF_LogicalUnitReset_002 () =
-
         task{
+            SetDebugTrap 0
+            SetDebugTrap 1
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
             let! r2 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
             let formatCDB = GenScsiCDB.FormatUnit FMTPINFO.F RTO_REQ.F LONGLIST.F FMTDATA.F CMPLIST.F 0uy NACA.T LINK.F
@@ -805,7 +881,11 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             // Send SCSI format command to LU 2
             let! ittFormat_s1l2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN2 0u formatCDB PooledBuffer.Empty 0u
 
-            do! Task.Delay 50
+            do! Task.Delay 5
+            while ( ( GetStuckTasks 0 ).Length < 2 ) do
+                do! Task.Delay 5
+            while ( ( GetStuckTasks 1 ).Length < 1 ) do
+                do! Task.Delay 5
 
             // Send Logical Unit Reset TMF request to LU 1
             let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.LOGICAL_UNIT_RESET g_LUN1 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
@@ -827,6 +907,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             Assert.True(( scsiRespPdu_s2.Response = iScsiSvcRespCd.COMMAND_COMPLETE ))
 
             // Receive SCSI Response from LU 2
+            ResumeStackedTask 1 r1.Params.TSIH ittFormat_s1l2
             let! scsiRespPdu_s1 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
             Assert.True(( scsiRespPdu_s1.InitiatorTaskTag = ittFormat_s1l2 ))
             Assert.True(( scsiRespPdu_s1.Status = ScsiCmdStatCd.GOOD ))
@@ -846,12 +927,8 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             do! r1.CloseSession g_CID0 BitI.F
             do! r2.CloseSession g_CID0 BitI.F
-
-            m_ClientProc.RunCommand "select 0" "" "LU> "
-            m_ClientProc.RunCommand "select 0" "" "MD> "
-            m_ClientProc.RunCommand "add trap /e Format /a Delay /ms 800" "Trap added." "MD> "
-            m_ClientProc.RunCommand "unselect" "" "LU> "
-            m_ClientProc.RunCommand "unselect" "" "T > "
+            ClearDebugTrap 0
+            ClearDebugTrap 1
         }
 
     // Perform LU reset on LUN 0.
@@ -860,8 +937,9 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
     [<InlineData( TaskMgrReqCd.TARGET_WARM_RESET )>]    // The result will be the same
     [<InlineData( TaskMgrReqCd.TARGET_COLD_RESET )>]    // The result will be the same
     member _.TMF_LogicalUnitReset_003 ( tmr : TaskMgrReqCd ) =
-
         task{
+            SetDebugTrap 0
+            SetDebugTrap 1
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
             let! r2 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
             let formatCDB = GenScsiCDB.FormatUnit FMTPINFO.F RTO_REQ.F LONGLIST.F FMTDATA.F CMPLIST.F 0uy NACA.T LINK.F
@@ -872,7 +950,11 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             // Send SCSI format command to LU 2 on session 2
             let! _ = r2.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN2 0u formatCDB PooledBuffer.Empty 0u
 
-            do! Task.Delay 50
+            do! Task.Delay 5
+            while ( ( GetStuckTasks 0 ).Length < 1 ) do
+                do! Task.Delay 5
+            while ( ( GetStuckTasks 1 ).Length < 1 ) do
+                do! Task.Delay 5
 
             // Send Logical Unit Reset TMF request to LU 0
             let! _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T tmr g_LUN0 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
@@ -907,18 +989,6 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             Assert.True(( readData_s1l2.Length = int m_MediaBlockSize ))
 
             do! r3.CloseSession g_CID0 BitI.F
-
-            m_ClientProc.RunCommand "select 0" "" "LU> "
-            m_ClientProc.RunCommand "select 0" "" "MD> "
-            m_ClientProc.RunCommand "add trap /e Format /a Delay /ms 800" "Trap added." "MD> "
-            m_ClientProc.RunCommand "unselect" "" "LU> "
-            m_ClientProc.RunCommand "unselect" "" "T > "
-
-            m_ClientProc.RunCommand "select 1" "" "LU> "
-            m_ClientProc.RunCommand "select 0" "" "MD> "
-            m_ClientProc.RunCommand "add trap /e Format /a Delay /ms 800" "Trap added." "MD> "
-            m_ClientProc.RunCommand "unselect" "" "LU> "
-            m_ClientProc.RunCommand "unselect" "" "T > "
         }
 
     [<Theory>]
@@ -979,18 +1049,6 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             sendData.Return()
             do! r1.CloseSession g_CID0 BitI.F
-
-            m_ClientProc.RunCommand "select 0" "" "LU> "
-            m_ClientProc.RunCommand "select 0" "" "MD> "
-            m_ClientProc.RunCommand "add trap /e Format /a Delay /ms 800" "Trap added." "MD> "
-            m_ClientProc.RunCommand "unselect" "" "LU> "
-            m_ClientProc.RunCommand "unselect" "" "T > "
-
-            m_ClientProc.RunCommand "select 1" "" "LU> "
-            m_ClientProc.RunCommand "select 0" "" "MD> "
-            m_ClientProc.RunCommand "add trap /e Format /a Delay /ms 800" "Trap added." "MD> "
-            m_ClientProc.RunCommand "unselect" "" "LU> "
-            m_ClientProc.RunCommand "unselect" "" "T > "
         }
 
     [<Theory>]
@@ -998,6 +1056,8 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
     [<InlineData( TaskMgrReqCd.TARGET_COLD_RESET )>]
     member _.TMF_TargetReset_002 ( tmr : TaskMgrReqCd ) =
         task{
+            SetDebugTrap 0
+            SetDebugTrap 1
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
             let! r2 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
             let formatCDB = GenScsiCDB.FormatUnit FMTPINFO.F RTO_REQ.F LONGLIST.F FMTDATA.F CMPLIST.F 0uy NACA.T LINK.F
@@ -1010,7 +1070,11 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             let! ittFormat_s2l1, _ = r2.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN1 0u formatCDB PooledBuffer.Empty 0u
             let! ittFormat_s2l2, _ = r2.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.F TaskATTRCd.SIMPLE_TASK g_LUN2 0u formatCDB PooledBuffer.Empty 0u
 
-            do! Task.Delay 50
+            do! Task.Delay 5
+            while ( ( GetStuckTasks 0 ).Length < 2 ) do
+                do! Task.Delay 5
+            while ( ( GetStuckTasks 1 ).Length < 2 ) do
+                do! Task.Delay 5
 
             // Send Target Reset TMF request
             let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T tmr g_LUN2 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
@@ -1050,19 +1114,6 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             do! r1.CloseSession g_CID0 BitI.F
             do! r2.CloseSession g_CID0 BitI.F
-
-            m_ClientProc.RunCommand "select 0" "" "LU> "
-            m_ClientProc.RunCommand "select 0" "" "MD> "
-            m_ClientProc.RunCommand "add trap /e Format /a Delay /ms 800" "Trap added." "MD> "
-            m_ClientProc.RunCommand "unselect" "" "LU> "
-            m_ClientProc.RunCommand "unselect" "" "T > "
-
-            m_ClientProc.RunCommand "select 1" "" "LU> "
-            m_ClientProc.RunCommand "select 0" "" "MD> "
-            m_ClientProc.RunCommand "add trap /e Format /a Delay /ms 800" "Trap added." "MD> "
-            m_ClientProc.RunCommand "unselect" "" "LU> "
-            m_ClientProc.RunCommand "unselect" "" "T > "
-
         }
 
     [<Theory>]
