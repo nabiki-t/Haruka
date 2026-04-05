@@ -201,18 +201,21 @@ type SCSI_PersistentReserveIn( fx : SCSI_PersistentReserveIn_Fixture ) =
             do! r1.Close()
         }
 
-    [<Fact>]
-    member _.ReadKeys_002 () =
+    [<Theory>]
+    [<InlineData( 0UL )>]
+    [<InlineData( 1UL )>]
+    member _.ReadKeys_002 ( arglun : uint64 ) =
         task {
+            let lun = lun_me.fromPrim arglun
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! r2 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target2" } m_defaultConnParam
             let! r3 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
-            do! PR_Register r1 g_LUN1 g_ResvKey1
-            do! PR_Register r2 g_LUN1 g_ResvKey2
-            do! PR_Register r3 g_LUN1 g_ResvKey1
+            do! PR_Register r1 lun g_ResvKey1
+            do! PR_Register r2 lun g_ResvKey2
+            do! PR_Register r3 lun g_ResvKey1
 
-            let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T 
+            let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 0uy 256us NACA.T 
             let! res_pr_in1 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in1
             let v = res_pr_in1.ReservationKey |> Array.sort
             Assert.True(( v.Length = 3 ))
@@ -220,11 +223,11 @@ type SCSI_PersistentReserveIn( fx : SCSI_PersistentReserveIn_Fixture ) =
             Assert.True(( v.[1] = g_ResvKey1 ))
             Assert.True(( v.[2] = g_ResvKey2 ))
 
-            let! itt_pr_in2 = r2.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T 
+            let! itt_pr_in2 = r2.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 0uy 256us NACA.T 
             let! res_pr_in2 = r2.Wait_PersistentReserveIn_ReadKey itt_pr_in2
             Assert.True(( res_pr_in1 = res_pr_in2 ))
 
-            let! itt_pr_in3 = r3.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T 
+            let! itt_pr_in3 = r3.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 0uy 256us NACA.T 
             let! res_pr_in3 = r3.Wait_PersistentReserveIn_ReadKey itt_pr_in3
             Assert.True(( res_pr_in1 = res_pr_in3 ))
 
@@ -232,16 +235,23 @@ type SCSI_PersistentReserveIn( fx : SCSI_PersistentReserveIn_Fixture ) =
             let! res_pr_in4 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in4
             Assert.True(( res_pr_in4.ReservationKey.Length = 0 ))
 
-            do! PR_Unregister r3 g_LUN1 g_ResvKey1
-            do! PR_Unregister r2 g_LUN1 g_ResvKey2
-            do! PR_Unregister r1 g_LUN1 g_ResvKey1
+            do! PR_Unregister r3 lun g_ResvKey1
+            do! PR_Unregister r2 lun g_ResvKey2
+            do! PR_Unregister r1 lun g_ResvKey1
             do! r1.Close()
             do! r2.Close()
             do! r3.Close()
         }
 
-    [<Fact>]
-    member _.ReadKeys_003 () =
+    [<Theory>]
+    [<InlineData( 0us,  false, 0u,  0 )>]
+    [<InlineData( 4us,  true,  0u,  0 )>]
+    [<InlineData( 8us,  true,  16u, 0 )>]
+    [<InlineData( 12us, true,  16u, 0 )>]
+    [<InlineData( 16us, true,  16u, 1 )>]
+    [<InlineData( 20us, true,  16u, 1 )>]
+    [<InlineData( 24us, true,  16u, 2 )>]
+    member _.ReadKeys_003 ( len : uint16 ) ( prg : bool ) ( al : uint32 ) ( cnt : int ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
@@ -251,50 +261,171 @@ type SCSI_PersistentReserveIn( fx : SCSI_PersistentReserveIn_Fixture ) =
             let! itt_pr_in1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256us NACA.T 
             let! res_pr_in1 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in1
 
-            let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 4us NACA.T 
+            let! itt_pr_in2 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy len NACA.T 
             let! res_pr_in2 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in2
-            Assert.True(( res_pr_in2.PersistentReservationsGeneration = res_pr_in1.PersistentReservationsGeneration ))
-            Assert.True(( res_pr_in2.AdditionalLength = 0u ))
-            let v2 = res_pr_in2.ReservationKey |> Array.sort
-            Assert.True(( v2.Length = 0 ))
-
-            let! itt_pr_in3 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 8us NACA.T 
-            let! res_pr_in3 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in3
-            Assert.True(( res_pr_in3.PersistentReservationsGeneration = res_pr_in1.PersistentReservationsGeneration ))
-            Assert.True(( res_pr_in3.AdditionalLength = 16u ))
-            let v3 = res_pr_in3.ReservationKey |> Array.sort
-            Assert.True(( v3.Length = 0 ))
-
-            let! itt_pr_in4 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 12us NACA.T 
-            let! res_pr_in4 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in4
-            Assert.True(( res_pr_in4.PersistentReservationsGeneration = res_pr_in1.PersistentReservationsGeneration ))
-            Assert.True(( res_pr_in4.AdditionalLength = 16u ))
-            let v4 = res_pr_in4.ReservationKey |> Array.sort
-            Assert.True(( v4.Length = 0 ))
-
-            let! itt_pr_in5 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 16us NACA.T 
-            let! res_pr_in5 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in5
-            Assert.True(( res_pr_in5.PersistentReservationsGeneration = res_pr_in1.PersistentReservationsGeneration ))
-            Assert.True(( res_pr_in5.AdditionalLength = 16u ))
-            let v5 = res_pr_in5.ReservationKey |> Array.sort
-            Assert.True(( v5.Length = 1 ))
-
-            let! itt_pr_in6 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 20us NACA.T 
-            let! res_pr_in6 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in6
-            Assert.True(( res_pr_in6.PersistentReservationsGeneration = res_pr_in1.PersistentReservationsGeneration ))
-            Assert.True(( res_pr_in6.AdditionalLength = 16u ))
-            let v6 = res_pr_in6.ReservationKey |> Array.sort
-            Assert.True(( v6.Length = 1 ))
-
-            let! itt_pr_in7 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 24us NACA.T 
-            let! res_pr_in7 = r1.Wait_PersistentReserveIn_ReadKey itt_pr_in7
-            Assert.True(( res_pr_in7.PersistentReservationsGeneration = res_pr_in1.PersistentReservationsGeneration ))
-            Assert.True(( res_pr_in7.AdditionalLength = 16u ))
-            let v7 = res_pr_in7.ReservationKey |> Array.sort
-            Assert.True(( v7.Length = 2 ))
+            if prg then
+                Assert.True(( res_pr_in2.PersistentReservationsGeneration = res_pr_in1.PersistentReservationsGeneration ))
+            else
+                Assert.False(( res_pr_in2.PersistentReservationsGeneration = res_pr_in1.PersistentReservationsGeneration ))
+            Assert.True(( res_pr_in2.AdditionalLength = al ))
+            Assert.True(( res_pr_in2.ReservationKey.Length = cnt ))
 
             do! PR_Unregister r2 g_LUN1 g_ResvKey2
             do! PR_Unregister r1 g_LUN1 g_ResvKey1
             do! r1.Close()
             do! r2.Close()
         }
+
+    [<Theory>]
+    [<InlineData( 0UL, true,  false, false )>]
+    [<InlineData( 0UL, false, false, false )>]
+    [<InlineData( 1UL, true,  true,  true  )>]
+    [<InlineData( 1UL, false, true,  false )>]
+    member _.ReportCapabilities_001 ( arglun : uint64 ) ( arg_aptpl : bool ) ( arg_ptpl_c : bool ) ( arg_ptpl_a : bool )  =
+        task {
+            let lun = lun_me.fromPrim arglun
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F ( APTPL.ofBool arg_aptpl ) [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            let! itt1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 2uy 256us NACA.T 
+            let! res1 = r1.Wait_PersistentReserveIn_ReportCapabilities itt1
+            Assert.True(( res1.Length = 8us ))
+            Assert.True(( res1.CompatibleReservationHandling = false ))
+            Assert.True(( res1.SpecifyInitiatorPortCapable = true ))
+            Assert.True(( res1.AllTargetPortsCapable = true ))
+            Assert.True(( res1.PersistThroughPowerLossCapable = arg_ptpl_c ))
+            Assert.True(( res1.TypeMaskValid = true ))
+            Assert.True(( res1.PersistThroughPowerLossActivated = arg_ptpl_a ))
+            Assert.True(( res1.WriteExclusive_AllRegistrants = true ))
+            Assert.True(( res1.ExclusiveAccess_RegistrantsOnly = true ))
+            Assert.True(( res1.WriteExclusive_RegistrantsOnly = true ))
+            Assert.True(( res1.ExclusiveAccess = true ))
+            Assert.True(( res1.WriteExclusive = true ))
+            Assert.True(( res1.ExclusiveAccess_AllRegistrants = true ))
+
+            do! PR_Unregister r1 lun g_ResvKey1
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( 0us, 0us )>]
+    [<InlineData( 1us, 0us )>]
+    [<InlineData( 2us, 8us )>]
+    member _.ReportCapabilities_002 ( al : uint16 ) ( len : uint16 ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 2uy al NACA.T 
+            let! res1 = r1.Wait_PersistentReserveIn_ReportCapabilities itt1
+            Assert.True(( res1.Length = len ))
+
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( 0UL )>]
+    [<InlineData( 1UL )>]
+    member _.ReadReservation_001 ( arglun : uint64 ) =
+        task {
+            let lun = lun_me.fromPrim arglun
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 1uy 256us NACA.T 
+            let! res1 = r1.Wait_PersistentReserveIn_ReadReservation itt1
+            Assert.True(( res1.AdditionalLength = 0u ))
+
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( 0UL )>]
+    [<InlineData( 1UL )>]
+    member _.ReadReservation_002 ( arglun : uint64 ) =
+        task {
+            let lun = lun_me.fromPrim arglun
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            do! PR_Register r1 lun g_ResvKey1
+
+            let! itt1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 1uy 256us NACA.T 
+            let! res1 = r1.Wait_PersistentReserveIn_ReadReservation itt1
+            Assert.True(( res1.AdditionalLength = 0u ))
+
+            do! PR_Unregister r1 lun g_ResvKey1
+            do! r1.Close()
+        }
+
+    static member ReadReservation_003_data : obj[][] = [|
+        [| 0UL; PR_TYPE.WRITE_EXCLUSIVE;                   |]
+        [| 0UL; PR_TYPE.EXCLUSIVE_ACCESS;                  |]
+        [| 0UL; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |]
+        [| 0UL; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   |]
+        [| 0UL; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |]
+        [| 0UL; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  |]
+        [| 1UL; PR_TYPE.WRITE_EXCLUSIVE;                   |]
+        [| 1UL; PR_TYPE.EXCLUSIVE_ACCESS;                  |]
+        [| 1UL; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |]
+        [| 1UL; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   |]
+        [| 1UL; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |]
+        [| 1UL; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "ReadReservation_003_data" )>]
+    member _.ReadReservation_003 ( arglun : uint64 ) ( prtype : PR_TYPE ) =
+        task {
+            let lun = lun_me.fromPrim arglun
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            do! PR_Register r1 lun g_ResvKey1
+            do! PR_Reserve r1 lun prtype g_ResvKey1
+
+            let! itt1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 1uy 256us NACA.T 
+            let! res1 = r1.Wait_PersistentReserveIn_ReadReservation itt1
+            Assert.True(( res1.AdditionalLength = 0x10u ))
+            if PR_TYPE.isAllRegistrants prtype then
+                Assert.True(( res1.ReservationKey = resvkey_me.zero ))
+            else
+                Assert.True(( res1.ReservationKey = g_ResvKey1 ))
+            Assert.True(( res1.Scope = 0uy ))
+            Assert.True(( res1.Type = PR_TYPE.toNumericValue prtype ))
+
+            do! PR_Unregister r1 lun g_ResvKey1
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.ReadReservation_004 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+            do! PR_Reserve r1 g_LUN1 PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1
+
+            let! itt1 = r2.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 1uy 256us NACA.T 
+            let! res1 = r2.Wait_PersistentReserveIn_ReadReservation itt1
+            Assert.True(( res1.AdditionalLength = 0x10u ))
+            Assert.True(( res1.ReservationKey = g_ResvKey1 ))
+            Assert.True(( res1.Scope = 0uy ))
+            Assert.True(( res1.Type = PR_TYPE.toNumericValue PR_TYPE.WRITE_EXCLUSIVE ))
+
+            do! PR_Unregister r1 g_LUN1 g_ResvKey1
+            do! r2.Close()
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.ReadReservation_005 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+            do! PR_Reserve r1 g_LUN1 PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1
+
+            let! itt1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN2 1uy 256us NACA.T 
+            let! res1 = r1.Wait_PersistentReserveIn_ReadReservation itt1
+            Assert.True(( res1.AdditionalLength = 0x0u ))
+
+            do! PR_Unregister r1 g_LUN1 g_ResvKey1
+            do! r1.Close()
+        }
+
