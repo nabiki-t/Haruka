@@ -3581,14 +3581,14 @@ type PRManager_Test1 () =
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
-    member this.ReportCapabilities_001() =
+    member _.ReportCapabilities_001() =
         let k = new HKiller() :> IKiller
         let pm = new PRManager( new CStatus_Stub(), new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero ), lun_me.zero, "", k )
         let v = pm.ReportCapabilities PRManager_Test1.defaultSource ( itt_me.fromPrim 0u )
         let ans = [|
             0x00uy; 0x08uy; // LENGTH
-            0x0Duy;         // CRH, SPI_C, ATP_, PTPL_C
-            0x80uy;         // TMV, PTPL_A
+            0x0Cuy;         // CRH, SPI_C, ATP_, PTPL_C(=0)
+            0x80uy;         // TMV, PTPL_A(=0)
             0xEAuy; 0x01uy; // PERSISTENT RESERVATION TYPE MASK
             0x00uy; 0x00uy; // Reserved
         |]
@@ -3596,9 +3596,43 @@ type PRManager_Test1 () =
         k.NoticeTerminate()
 
     [<Fact>]
-    member this.ReportCapabilities_002() =
+    member _.ReportCapabilities_002() =
+        let k = new HKiller() :> IKiller
+        let sm = new CStatus_Stub(
+            p_GetTargetFromLUN = ( fun _ -> [] ),
+            p_GetITNexusFromLUN = ( fun _ -> [||] )
+        )
+        let pm = new PRManager( sm, new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero ), lun_me.zero, "", k )
+
+        // set APTPL to 1
+        let param = [|
+            0x00uy; 0x00uy; 0x00uy; 0x00uy; // RESERVATION KEY 
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;
+            0x00uy; 0x00uy; 0x00uy; 0x00uy; // SERVICE ACTION RESERVATION KEY  
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;
+            0x00uy; 0x00uy; 0x00uy; 0x00uy; // Obsolute
+            0x01uy;                         // SPEC_I_PT(0), ALL_TG_PT(0), APTPL(1)
+            0x00uy;                         // Reserved
+            0x00uy; 0x00uy;                 // Obsolute
+        |]
+        let r1 = pm.Register PRManager_Test1.defaultSource ( itt_me.fromPrim 1u ) PR_TYPE.WRITE_EXCLUSIVE ( uint32 param.Length ) ( PooledBuffer.Rent param )
+        Assert.True(( r1 = ScsiCmdStatCd.GOOD ))
+
+        let v = pm.ReportCapabilities PRManager_Test1.defaultSource ( itt_me.fromPrim 0u ) 
+        let ans = [|
+            0x00uy; 0x08uy; // LENGTH
+            0x0Cuy;         // CRH, SPI_C, ATP_, PTPL_C(=0)
+            0x80uy;         // TMV, PTPL_A(=0)
+            0xEAuy; 0x01uy; // PERSISTENT RESERVATION TYPE MASK
+            0x00uy; 0x00uy; // Reserved
+        |]
+        Assert.True(( v = ans ))
+        k.NoticeTerminate()
+
+    [<Fact>]
+    member this.ReportCapabilities_003() =
         let pDirName = this.CreateTestDir()
-        let fname = Functions.AppendPathName pDirName "ReportCapabilities_002.txt"
+        let fname = Functions.AppendPathName pDirName "ReportCapabilities_003.txt"
 
         GlbFunc.writeDefaultPRFile
             EXCLUSIVE_ACCESS_ALL_REGISTRANTS
@@ -3611,8 +3645,8 @@ type PRManager_Test1 () =
         let v = pm.ReportCapabilities PRManager_Test1.defaultSource ( itt_me.fromPrim 0u )
         let ans = [|
             0x00uy; 0x08uy; // LENGTH
-            0x0Duy;         // CRH, SPI_C, ATP_, PTPL_C
-            0x81uy;         // TMV, PTPL_A
+            0x0Duy;         // CRH, SPI_C, ATP_, PTPL_C(=1)
+            0x81uy;         // TMV, PTPL_A(=1)
             0xEAuy; 0x01uy; // PERSISTENT RESERVATION TYPE MASK
             0x00uy; 0x00uy; // Reserved
         |]
@@ -3620,6 +3654,25 @@ type PRManager_Test1 () =
         k.NoticeTerminate()
 
         GlbFunc.DeleteFile fname
+        GlbFunc.DeleteDir pDirName
+
+    [<Fact>]
+    member this.ReportCapabilities_004() =
+        let pDirName = this.CreateTestDir()
+        let fname = Functions.AppendPathName pDirName "ReportCapabilities_004.txt"
+
+        let k = new HKiller() :> IKiller
+        let pm = new PRManager( new CStatus_Stub(), new CInternalLU_Stub( p_LUN = fun () -> lun_me.zero ), lun_me.zero, fname, k )
+        let v = pm.ReportCapabilities PRManager_Test1.defaultSource ( itt_me.fromPrim 0u )
+        let ans = [|
+            0x00uy; 0x08uy; // LENGTH
+            0x0Duy;         // CRH, SPI_C, ATP_, PTPL_C(=1)
+            0x80uy;         // TMV, PTPL_A(=0)
+            0xEAuy; 0x01uy; // PERSISTENT RESERVATION TYPE MASK
+            0x00uy; 0x00uy; // Reserved
+        |]
+        Assert.True(( v = ans ))
+        k.NoticeTerminate()
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]

@@ -4018,7 +4018,7 @@ type ScsiTask_Test () =
             Assert.True(( stat = ScsiCmdStatCd.GOOD ))
             let v = [|
                 0x00uy; 0x08uy;                 // LENGTH
-                0x0Duy;                         // CRH, SPI_C, ATP_C, PTPL_C
+                0x0Cuy;                         // CRH, SPI_C, ATP_C, PTPL_C
                 0x80uy;                         // TMV, PTPL_A
                 0xEAuy; 0x01uy;                 // PERSISTENT RESERVATION TYPE MASK
                 0x00uy; 0x00uy;                 // Reserved

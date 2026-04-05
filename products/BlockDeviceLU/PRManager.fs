@@ -527,14 +527,17 @@ type PRManager(
     /// Returned parameter data for REPORT CAPABILITIES service action of PERSISTENT RESERVE IN command.
     /// </returns>
     member _.ReportCapabilities ( source : CommandSourceInfo ) ( itt : ITT_T ) : byte[] =
+        let pr = m_Locker.obj
         [|
             // LENGTH
             yield 0x00uy;
             yield 0x08uy;
-            // CRH(0), SPI_C(1), ATP_C(1), PTPL_C(1)
-            yield 0x0Duy;
+            if m_FileName.Length > 0 then
+                yield 0x0Duy;   // CRH(0), SPI_C(1), ATP_C(1), PTPL_C(1)
+            else
+                yield 0x0Cuy;   // CRH(0), SPI_C(1), ATP_C(1), PTPL_C(0)
             // TMV(1), PTPL_A
-            if File.Exists m_FileName then
+            if pr.m_APTPL && m_FileName.Length > 0 then
                 yield 0x81uy;
             else
                 yield 0x80uy;
