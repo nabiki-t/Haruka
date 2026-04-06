@@ -159,6 +159,10 @@ type SCSI_PersistentReserveIn( fx : SCSI_PersistentReserveIn_Fixture ) =
         MaxRecvDataSegmentLength_T = Constants.NEGOPARAM_DEF_MaxRecvDataSegmentLength;
     }
 
+    let GetSortedISID ( cnt : int ) =
+        Array.init cnt ( fun _ -> GlbFunc.newISID() )
+        |> Array.sortBy isid_me.toPrim
+
     let PR_ReadFullStatus ( r : SCSI_Initiator ) ( lun : LUN_T ) : Task<PR_ReadFullStatus> =
         task {
             let! itt_pr_in1 = r.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 3uy 512us NACA.T
@@ -426,6 +430,143 @@ type SCSI_PersistentReserveIn( fx : SCSI_PersistentReserveIn_Fixture ) =
             Assert.True(( res1.AdditionalLength = 0x0u ))
 
             do! PR_Unregister r1 g_LUN1 g_ResvKey1
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( 0us, false, 0u, 0UL )>]
+    [<InlineData( 4us, true, 0u, 0UL )>]
+    [<InlineData( 8us, true, 0x10u, 0UL )>]
+    [<InlineData( 12us, true, 0x10u, 0UL )>]
+    [<InlineData( 16us, true, 0x10u, 1UL )>]
+    member _.ReadReservation_006 ( all : uint16 ) ( prg : bool ) ( adl : uint32 ) ( rk : uint64 ) =
+        task {
+            let resk = resvkey_me.fromPrim rk
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+            do! PR_Reserve r1 g_LUN1 PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1
+            let! fstat1 = PR_ReadFullStatus r1 g_LUN1
+
+            let! itt1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 1uy all NACA.T 
+            let! res1 = r1.Wait_PersistentReserveIn_ReadReservation itt1
+            if prg then
+                Assert.True(( res1.PersistentReservationsGeneration = fstat1.PersistentReservationsGeneration ))
+            else
+                Assert.True(( res1.PersistentReservationsGeneration = 0u ))
+            Assert.True(( res1.AdditionalLength = adl ))
+            Assert.True(( res1.ReservationKey = resk ))
+
+            do! PR_Unregister r1 g_LUN1 g_ResvKey1
+            do! r1.Close()
+        }
+        
+    [<Theory>]
+    [<InlineData( 0UL )>]
+    [<InlineData( 1UL )>]
+    member _.ReadFullStatus_001 ( arglun : uint64 ) =
+        task {
+            let lun = lun_me.fromPrim arglun
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 3uy 256us NACA.T 
+            let! res1 = r1.Wait_PersistentReserveIn_ReadFullStatus itt1
+            Assert.True(( res1.AdditionalLength = 0u ))
+            Assert.True(( res1.FullStatusDescriptor.Length = 0 ))
+
+            do! r1.Close()
+        }
+        
+    static member ReadFullStatus_002_data : obj[][] = [|
+        [| 0UL; PR_TYPE.WRITE_EXCLUSIVE;                   |]
+        [| 0UL; PR_TYPE.EXCLUSIVE_ACCESS;                  |]
+        [| 0UL; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |]
+        [| 0UL; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |]
+        [| 1UL; PR_TYPE.WRITE_EXCLUSIVE;                   |]
+        [| 1UL; PR_TYPE.EXCLUSIVE_ACCESS;                  |]
+        [| 1UL; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |]
+        [| 1UL; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "ReadFullStatus_002_data" )>]
+    member _.ReadFullStatus_002 ( arglun : uint64 ) ( prtype : PR_TYPE ) =
+        task {
+            let lun = lun_me.fromPrim arglun
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let itn_r1 = r1.ITNexus
+            do! PR_Register r1 lun g_ResvKey1
+            do! PR_Reserve r1 lun prtype g_ResvKey1
+
+            let! itt1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 3uy 256us NACA.T 
+            let! res1 = r1.Wait_PersistentReserveIn_ReadFullStatus itt1
+            Assert.True(( res1.FullStatusDescriptor.Length = 1 ))
+            let v = res1.FullStatusDescriptor
+            Assert.True(( v.[0].ReservationKey = g_ResvKey1 ))
+            Assert.False(( v.[0].AllTargetPorts ))
+            Assert.True(( v.[0].ReservationHolder ))
+            Assert.True(( v.[0].Scope = 0uy ))
+            Assert.True(( v.[0].Type = PR_TYPE.toNumericValue prtype ))
+            Assert.True(( v.[0].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( v.[0].FormatCode = 1uy ))
+            Assert.True(( v.[0].ProtocalIdentifier = 5uy ))
+            Assert.True(( v.[0].iSCSIName = itn_r1.InitiatorPortName ))
+
+            do! PR_Unregister r1 lun g_ResvKey1
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<MemberData( "ReadFullStatus_002_data" )>]
+    member _.ReadFullStatus_003 ( arglun : uint64 ) ( prtype : PR_TYPE ) =
+        task {
+            let lun = lun_me.fromPrim arglun
+            let isids = GetSortedISID 2
+            let param1 = {
+                m_defaultSessParam with
+                    TargetName = "iqn.2020-05.example.com:target1";
+                    ISID = isids.[0];
+            }
+            let param2 = {
+                m_defaultSessParam with
+                    TargetName = "iqn.2020-05.example.com:target2";
+                    ISID = isids.[1];
+            }
+            let! r1 = SCSI_Initiator.CreateWithISID param1 m_defaultConnParam
+            let! r2 = SCSI_Initiator.CreateWithISID param2 m_defaultConnParam
+            let itn_r1 = r1.ITNexus
+            let itn_r2 = r2.ITNexus
+
+            do! PR_Register r1 lun g_ResvKey1
+            do! PR_Register r2 lun g_ResvKey2
+            do! PR_Reserve r1 lun prtype g_ResvKey1
+
+            let! itt1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK lun 3uy 256us NACA.T 
+            let! res1 = r1.Wait_PersistentReserveIn_ReadFullStatus itt1
+            Assert.True(( res1.FullStatusDescriptor.Length = 2 ))
+            let v = res1.FullStatusDescriptor |> Array.sortBy _.iSCSIName
+
+            Assert.True(( v.[0].ReservationKey = g_ResvKey1 ))
+            Assert.False(( v.[0].AllTargetPorts ))
+            Assert.True(( v.[0].ReservationHolder ))
+            Assert.True(( v.[0].Scope = 0uy ))
+            Assert.True(( v.[0].Type = PR_TYPE.toNumericValue prtype ))
+            Assert.True(( v.[0].RelativeTargetPortIdentifier = 1us ))
+            Assert.True(( v.[0].FormatCode = 1uy ))
+            Assert.True(( v.[0].ProtocalIdentifier = 5uy ))
+            Assert.True(( v.[0].iSCSIName = itn_r1.InitiatorPortName ))
+
+            Assert.True(( v.[1].ReservationKey = g_ResvKey2 ))
+            Assert.False(( v.[1].AllTargetPorts ))
+            Assert.False(( v.[1].ReservationHolder ))
+            Assert.True(( v.[1].Scope = 0uy ))
+            Assert.True(( v.[1].Type = PR_TYPE.toNumericValue PR_TYPE.NO_RESERVATION ))
+            Assert.True(( v.[1].RelativeTargetPortIdentifier = 2us ))
+            Assert.True(( v.[1].FormatCode = 1uy ))
+            Assert.True(( v.[1].ProtocalIdentifier = 5uy ))
+            Assert.True(( v.[1].iSCSIName = itn_r2.InitiatorPortName ))
+
+            do! PR_Unregister r2 lun g_ResvKey2
+            do! PR_Unregister r1 lun g_ResvKey1
             do! r1.Close()
         }
 
