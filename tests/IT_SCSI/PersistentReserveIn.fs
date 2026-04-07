@@ -190,6 +190,13 @@ type SCSI_PersistentReserveIn( fx : SCSI_PersistentReserveIn_Fixture ) =
             ()
         }
 
+    let ClearACA ( r : SCSI_Initiator ) ( lun : LUN_T ) : Task<unit> =
+        task {
+            let! itt_tmf1 = r.SendTMFRequest_ClearACA BitI.F lun
+            let! res_tmf1 = r.WaitTMFResponse itt_tmf1
+            Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
+        }
+
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
 
@@ -480,11 +487,15 @@ type SCSI_PersistentReserveIn( fx : SCSI_PersistentReserveIn_Fixture ) =
         [| 0UL; PR_TYPE.WRITE_EXCLUSIVE;                   |]
         [| 0UL; PR_TYPE.EXCLUSIVE_ACCESS;                  |]
         [| 0UL; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |]
+        [| 0UL; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   |]
         [| 0UL; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |]
+        [| 0UL; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  |]
         [| 1UL; PR_TYPE.WRITE_EXCLUSIVE;                   |]
         [| 1UL; PR_TYPE.EXCLUSIVE_ACCESS;                  |]
         [| 1UL; PR_TYPE.WRITE_EXCLUSIVE_REGISTRANTS_ONLY;  |]
+        [| 1UL; PR_TYPE.WRITE_EXCLUSIVE_ALL_REGISTRANTS;   |]
         [| 1UL; PR_TYPE.EXCLUSIVE_ACCESS_REGISTRANTS_ONLY; |]
+        [| 1UL; PR_TYPE.EXCLUSIVE_ACCESS_ALL_REGISTRANTS;  |]
     |]
 
     [<Theory>]
@@ -557,16 +568,118 @@ type SCSI_PersistentReserveIn( fx : SCSI_PersistentReserveIn_Fixture ) =
 
             Assert.True(( v.[1].ReservationKey = g_ResvKey2 ))
             Assert.False(( v.[1].AllTargetPorts ))
-            Assert.False(( v.[1].ReservationHolder ))
             Assert.True(( v.[1].Scope = 0uy ))
-            Assert.True(( v.[1].Type = PR_TYPE.toNumericValue PR_TYPE.NO_RESERVATION ))
             Assert.True(( v.[1].RelativeTargetPortIdentifier = 2us ))
             Assert.True(( v.[1].FormatCode = 1uy ))
             Assert.True(( v.[1].ProtocalIdentifier = 5uy ))
             Assert.True(( v.[1].iSCSIName = itn_r2.InitiatorPortName ))
 
+            if PR_TYPE.isAllRegistrants prtype then
+                Assert.True(( v.[1].ReservationHolder ))
+                Assert.True(( v.[1].Type = PR_TYPE.toNumericValue prtype ))
+            else
+                Assert.False(( v.[1].ReservationHolder ))
+                Assert.True(( v.[1].Type = PR_TYPE.toNumericValue PR_TYPE.NO_RESERVATION ))
+
             do! PR_Unregister r2 lun g_ResvKey2
             do! PR_Unregister r1 lun g_ResvKey1
             do! r1.Close()
         }
+        
+    [<Fact>]
+    member _.ReadFullStatus_004 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            do! PR_Register r1 g_LUN0 g_ResvKey1
+
+            let! itt1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 3uy 256us NACA.T 
+            let! res1 = r1.Wait_PersistentReserveIn_ReadFullStatus itt1
+            Assert.True(( res1.AdditionalLength = 0u ))
+            Assert.True(( res1.FullStatusDescriptor.Length = 0 ))
+
+            do! PR_Unregister r1 g_LUN0 g_ResvKey1
+            do! r1.Close()
+        }
+        
+    [<Fact>]
+    member _.ReadFullStatus_005 () =
+        task {
+            let rk999 = resvkey_me.fromPrim 999UL
+            for i = 1 to 240 do
+                let param1 = {
+                    m_defaultSessParam with
+                        InitiatorName = String.replicate Constants.ISCSI_TEXT_MAX_ISCSI_NAME_LENGTH "a";
+                }
+                let! r1 = SCSI_Initiator.Create param1 m_defaultConnParam
+                do! PR_Register r1 g_LUN1 ( resvkey_me.fromPrim ( uint64 i ) )
+                do! r1.Close()
+
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 3uy 65535us NACA.T 
+            let! res1 = r1.Wait_PersistentReserveIn_ReadFullStatus itt1
+            Assert.True(( res1.FullStatusDescriptor.Length = 240 ))
+            do! r1.Close()
+
+            let param2 = {
+                m_defaultSessParam with
+                    InitiatorName = String.replicate 198 "a";
+            }
+            let! r2 = SCSI_Initiator.Create param2 m_defaultConnParam
+            do! PR_Register r2 g_LUN1 rk999
+            let! itt2 = r2.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 3uy 65535us NACA.T 
+            let! res2 = r2.Wait_PersistentReserveIn_ReadFullStatus itt2
+            Assert.True(( res2.FullStatusDescriptor.Length = 241 ))
+            do! PR_Unregister r2 g_LUN1 rk999
+            do! r2.Close()
+
+            let param3 = {
+                m_defaultSessParam with
+                    InitiatorName = String.replicate 199 "a";
+            }
+            let! r3 = SCSI_Initiator.Create param3 m_defaultConnParam
+            do! PR_Register r3 g_LUN1 rk999
+            let! itt3 = r3.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 3uy 65535us NACA.T 
+            let! res3 = r3.WaitSCSIResponse itt3
+            Assert.True(( res3.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            do! ClearACA r3 g_LUN1
+            let! itt_pr_out1 = r3.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T rk999
+            let! _ = r3.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            let! fsta1 = PR_ReadFullStatus r3 g_LUN1
+            Assert.True(( fsta1.FullStatusDescriptor.Length = 0 ))
+
+            do! r3.Close()
+        }
+        
+    [<Theory>]
+    [<InlineData( 0us,  false, false, 0, 0UL )>]
+    [<InlineData( 4us,  true,  false, 0, 0UL )>]
+    [<InlineData( 8us,  true,  true,  0, 0UL )>]
+    [<InlineData( 12us, true,  true,  1, 0UL )>]
+    [<InlineData( 16us, true,  true,  1, 1UL )>]
+    member _.ReadFullStatus_006 ( acl : uint16 ) ( expPRG : bool ) ( expADL : bool ) ( expFDCnt : int ) ( expRESVK : uint64 ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            do! PR_Register r1 g_LUN1 g_ResvKey1
+
+            let! itt1 = r1.Send_PersistentReserveIn TaskATTRCd.SIMPLE_TASK g_LUN1 3uy acl NACA.T 
+            let! res1 = r1.Wait_PersistentReserveIn_ReadFullStatus itt1
+            if expPRG then
+                Assert.True(( res1.PersistentReservationsGeneration > 0u ))
+            else
+                Assert.True(( res1.PersistentReservationsGeneration = 0u ))
+            if expADL then
+                Assert.True(( res1.AdditionalLength > 0u ))
+            else
+                Assert.True(( res1.AdditionalLength = 0u ))
+            Assert.True(( res1.FullStatusDescriptor.Length = expFDCnt ))
+
+            if expFDCnt > 0 then
+                let v = res1.FullStatusDescriptor
+                Assert.True(( v.[0].ReservationKey = resvkey_me.fromPrim expRESVK ))
+
+            do! PR_Unregister r1 g_LUN1 g_ResvKey1
+        }
+            
 
