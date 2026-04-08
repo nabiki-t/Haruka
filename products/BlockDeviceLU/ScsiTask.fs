@@ -522,7 +522,7 @@ type ScsiTask
                             yield 0x08uy;   // PIV(0) ASSOCIATION(00b) IDENTIFIER TYPE(8h)
                             yield 0x00uy;   // Reserved
                             let luNameBytesData = 
-                                sprintf "%s,L,0x%016X" ( sessParam.TargetConf.TargetName ) ( lun_me.toPrim m_LUN )
+                                sprintf "%s,L,0x%s" ( sessParam.TargetConf.TargetName ) ( lun_me.toBytes_NewVec m_LUN |> Convert.ToHexString )
                                 |> Encoding.UTF8.GetBytes
                                 |> Functions.PadBytesArray 4 256
                             yield byte( luNameBytesData.Length );   // IDENTIFIER LENGTH

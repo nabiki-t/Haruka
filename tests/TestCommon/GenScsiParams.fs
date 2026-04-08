@@ -104,7 +104,8 @@ type DeviceIdentifierDesc = {
     Association : byte;
     IdentifierType : byte;
     IdentifierLength : byte;
-    Identifier : string;
+    IdentifierStr : string;
+    IdentifierBin : byte[];
 }
 
 /// Device Identifier VPD page data format that is returned for INQUIRY.
@@ -535,24 +536,31 @@ type GenScsiParams() =
                 let rec loop ( s : int ) ( acc : DeviceIdentifierDesc list ) =
                     if pv.Length >= s + 4 then
                         let wIdentifierLength = int ( pv.Array.[ s + 3 ] )
+                        let wCodeSet = pv.Array.[ s ] &&& 0x0Fuy
                         let r = {
                             ProtocolIdentifier = ( pv.Array.[ s ] >>> 4 ) &&& 0x0fuy;
-                            CodeSet = ( pv.Array.[ s ] >>> 4 ) &&& 0x0Fuy;
+                            CodeSet = wCodeSet;
                             ProtocolIdentifierValid = Functions.CheckBitflag pv.Array.[ s + 1 ] 0x80uy;
                             Association = ( pv.Array.[ s + 1 ] >>> 4 ) &&& 0x03uy;
                             IdentifierType = pv.Array.[ s + 1 ] &&& 0x0Fuy;
                             IdentifierLength = byte wIdentifierLength;
-                            Identifier = 
-                                if pv.Length > s + 4 && wIdentifierLength > 0 then
+                            IdentifierStr = 
+                                if pv.Length > s + 4 && wIdentifierLength > 0 && ( wCodeSet = 2uy || wCodeSet = 3uy ) then
                                     let e = min ( pv.Length - 1 ) ( s + 4 + wIdentifierLength - 1 )
                                     pv.Array.[ s + 4 .. e ]
                                     |> Array.takeWhile ( (<) 0uy )
                                     |> Encoding.UTF8.GetString
                                 else
                                     "";
+                            IdentifierBin = 
+                                if pv.Length > s + 4 && wIdentifierLength > 0 && wCodeSet = 1uy then
+                                    let e = min ( pv.Length - 1 ) ( s + 4 + wIdentifierLength - 1 )
+                                    pv.Array.[ s + 4 .. e ]
+                                else
+                                    [||];
                         }
                         if wIdentifierLength > 0 then
-                            loop ( s + wIdentifierLength ) ( r :: acc )
+                            loop ( s + wIdentifierLength + 4 ) ( r :: acc )
                         else
                             r :: acc
                     else

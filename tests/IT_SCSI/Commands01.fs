@@ -40,6 +40,7 @@ type SCSI_Commands01_Fixture() =
         // Target device, Target group
         client.RunCommand "create" "Created" "CR> "
         client.RunCommand "select 0" "" "TD> "
+        client.RunCommand "set Name targetDevice001" "" "TD> "
         client.RunCommand "set ID TD_00000063" "" "TD> "
         client.RunCommand "set loglevel VERBOSE" "" "TD> "
         client.RunCommand "create targetgroup" "Created" "TD> "
@@ -178,7 +179,10 @@ type SCSI_Commands01( fx : SCSI_Commands01_Fixture ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! itt = r1.Send_Inquiry TaskATTRCd.SIMPLE_TASK g_LUN1 EVPD.F 0uy 5us NACA.T
-            let! res = r1.Wait_Inquiry_Standerd itt
+            let! r = r1.WaitSCSIResponseGoodStatus itt
+            Assert.True(( r.Length = 5 ))
+            let res = GenScsiParams.Inquiry_Standerd r
+            r.Return()
             Assert.True(( res.PeripheraQualifier = 0uy ))
             Assert.True(( res.PeripheralDeviceType = 0uy ))
             Assert.False(( res.RemovableMedium ))
@@ -202,5 +206,273 @@ type SCSI_Commands01( fx : SCSI_Commands01_Fixture ) =
             Assert.True(( res.ProduceIdentification = "" ))
             Assert.True(( res.ProductRevisionLevel = "" ))
             Assert.True(( res.VersionDescriptor.Length = 0 ))
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.Inquiry_Standard_004 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_Inquiry TaskATTRCd.SIMPLE_TASK g_LUN1 EVPD.F 0uy 96us NACA.T
+            let! r = r1.WaitSCSIResponseGoodStatus itt
+            Assert.True(( r.Length = 96 ))
+            let res = GenScsiParams.Inquiry_Standerd r
+            r.Return()
+            Assert.True(( res.PeripheraQualifier = 0uy ))
+            Assert.True(( res.PeripheralDeviceType = 0uy ))
+            Assert.False(( res.RemovableMedium ))
+            Assert.True(( res.Version = 5uy ))
+            Assert.True(( res.NormalACASupported ))
+            Assert.False(( res.HierarchicalSupported ))
+            Assert.True(( res.RsponseDataFormat = 2uy ))
+            Assert.True(( res.AdditionalLength > 0uy ))
+            Assert.False(( res.SCCSupported ))
+            Assert.False(( res.AccessControlsCoordinator ))
+            Assert.True(( res.TargetPortGroupSupport = 0uy ))
+            Assert.False(( res.ThirdPartyCopy ))
+            Assert.False(( res.Protect ))
+            Assert.False(( res.BQueue ))
+            Assert.True(( res.CmdQueue ))
+            Assert.False(( res.EnclosureServices ))
+            Assert.True(( res.MultiPort ))
+            Assert.False(( res.MediumChanger ))
+            Assert.False(( res.LinkedCommand ))
+            Assert.True(( res.T10VendorIdentification = "" ))
+            Assert.True(( res.ProduceIdentification <> "" ))
+            Assert.True(( res.ProductRevisionLevel <> "" ))
+            Assert.True(( res.VersionDescriptor.Length = 8 ))
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.Inquiry_UnitSerialNumber_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_Inquiry TaskATTRCd.SIMPLE_TASK g_LUN1 EVPD.T 0x80uy 0us NACA.T
+            let! res = r1.WaitSCSIResponseGoodStatus itt
+            Assert.True(( res.Length = 0 ))
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.Inquiry_UnitSerialNumber_002 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_Inquiry TaskATTRCd.SIMPLE_TASK g_LUN1 EVPD.T 0x80uy 4us NACA.T
+            let! r = r1.WaitSCSIResponseGoodStatus itt
+            Assert.True(( r.Length = 4 ))
+            let res = GenScsiParams.Inquiry_UnitSerialNumberVPD r
+            r.Return()
+            Assert.True(( res.PeripheraQualifier = 0uy ))
+            Assert.True(( res.PeripheralDeviceType = 0uy ))
+            Assert.True(( res.PageLength > 0uy ))
+            Assert.True(( res.ProductSerialNumber = "" ))
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.Inquiry_UnitSerialNumber_003 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_Inquiry TaskATTRCd.SIMPLE_TASK g_LUN1 EVPD.T 0x80uy 8us NACA.T
+            let! r = r1.WaitSCSIResponseGoodStatus itt
+            Assert.True(( r.Length = 8 ))
+            let res = GenScsiParams.Inquiry_UnitSerialNumberVPD r
+            r.Return()
+            Assert.True(( res.PeripheraQualifier = 0uy ))
+            Assert.True(( res.PeripheralDeviceType = 0uy ))
+            Assert.True(( res.PageCode = 0x80uy ))
+            Assert.True(( res.PageLength > 0uy ))
+            Assert.True(( res.ProductSerialNumber <> "" ))
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.Inquiry_DeviceIdentification_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_Inquiry TaskATTRCd.SIMPLE_TASK g_LUN1 EVPD.T 0x83uy 0us NACA.T
+            let! res = r1.WaitSCSIResponseGoodStatus itt
+            Assert.True(( res.Length = 0 ))
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.Inquiry_DeviceIdentification_002 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_Inquiry TaskATTRCd.SIMPLE_TASK g_LUN1 EVPD.T 0x83uy 4us NACA.T
+            let! r = r1.WaitSCSIResponseGoodStatus itt
+            Assert.True(( r.Length = 4 ))
+            let res = GenScsiParams.Inquiry_DeviceIdentifierVPD r
+            Assert.True(( res.PeripheraQualifier = 0uy ))
+            Assert.True(( res.PeripheralDeviceType = 0uy ))
+            Assert.True(( res.PageCode = 0x83uy ))
+            Assert.True(( res.PageLength > 0uy ))
+            Assert.True(( res.IdentifierDescriptor.Length = 0 ))
+            r.Return()
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.Inquiry_DeviceIdentification_003 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_Inquiry TaskATTRCd.SIMPLE_TASK g_LUN1 EVPD.T 0x83uy 256us NACA.T
+            let! r = r1.WaitSCSIResponseGoodStatus itt
+            let res = GenScsiParams.Inquiry_DeviceIdentifierVPD r
+            r.Return()
+            Assert.True(( res.PeripheraQualifier = 0uy ))
+            Assert.True(( res.PeripheralDeviceType = 0uy ))
+            Assert.True(( res.PageCode = 0x83uy ))
+            Assert.True(( res.PageLength > 0uy ))
+            Assert.True(( res.IdentifierDescriptor.Length = 4 ))
+            let v = res.IdentifierDescriptor
+
+            // logical unit
+            Assert.True(( v.[0].ProtocolIdentifier = 0uy ))
+            Assert.True(( v.[0].CodeSet = 3uy ))
+            Assert.False(( v.[0].ProtocolIdentifierValid ))
+            Assert.True(( v.[0].Association = 0uy ))
+            Assert.True(( v.[0].IdentifierType = 8uy ))
+            let expIdentifier =
+                let lunstr = lun_me.toBytes_NewVec g_LUN1 |> Convert.ToHexString
+                r1.ITNexus.TargetName + ",L,0x" + lunstr
+            Assert.True(( v.[0].IdentifierStr = expIdentifier ))
+
+            // target port
+            Assert.True(( v.[1].ProtocolIdentifier = 5uy ))
+            Assert.True(( v.[1].CodeSet = 3uy ))
+            Assert.True(( v.[1].ProtocolIdentifierValid ))
+            Assert.True(( v.[1].Association = 1uy ))
+            Assert.True(( v.[1].IdentifierType = 8uy ))
+            Assert.True(( v.[1].IdentifierStr = r1.ITNexus.TargetPortName ))
+
+            // Relative target port identifier
+            Assert.True(( v.[2].ProtocolIdentifier = 5uy ))
+            Assert.True(( v.[2].CodeSet = 1uy ))
+            Assert.True(( v.[2].ProtocolIdentifierValid ))
+            Assert.True(( v.[2].Association = 1uy ))
+            Assert.True(( v.[2].IdentifierType = 4uy ))
+            Assert.True(( v.[2].IdentifierBin = [| 0uy; 0uy; 0uy; 1uy |] ))
+
+            // SCSI target device
+            Assert.True(( v.[3].ProtocolIdentifier = 5uy ))
+            Assert.True(( v.[3].CodeSet = 3uy ))
+            Assert.True(( v.[3].ProtocolIdentifierValid ))
+            Assert.True(( v.[3].Association = 2uy ))
+            Assert.True(( v.[3].IdentifierType = 8uy ))
+            Assert.True(( v.[3].IdentifierStr = "targetDevice001" ))
+
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.Inquiry_Extended_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_Inquiry TaskATTRCd.SIMPLE_TASK g_LUN1 EVPD.T 0x86uy 0us NACA.T
+            let! res = r1.WaitSCSIResponseGoodStatus itt
+            Assert.True(( res.Length = 0 ))
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.Inquiry_Extended_002 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_Inquiry TaskATTRCd.SIMPLE_TASK g_LUN1 EVPD.T 0x86uy 4us NACA.T
+            let! r = r1.WaitSCSIResponseGoodStatus itt
+            Assert.True(( r.Length = 4 ))
+            let res = GenScsiParams.Inquiry_ExtendedInquiryDataVPD r
+            Assert.True(( res.PeripheraQualifier = 0uy ))
+            Assert.True(( res.PeripheralDeviceType = 0uy ))
+            Assert.True(( res.PageCode = 0x86uy ))
+            Assert.True(( res.PageLength = 0x3Cuy ))
+            Assert.False(( res.ReferenceTagOwnership ))
+            Assert.False(( res.GuardCheck ))
+            Assert.False(( res.ApplicationTagCheck ))
+            Assert.False(( res.ReferenceTagCheck ))
+            Assert.False(( res.GroupingFunctionSupported ))
+            Assert.False(( res.PrioritySupported ))
+            Assert.False(( res.HeadOfQueueSupported ))
+            Assert.False(( res.OrderedSupported ))
+            Assert.False(( res.SimpleSupported ))
+            Assert.False(( res.NonVolatileSupported ))
+            Assert.False(( res.VolatileSupported ))
+            r.Return()
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.Inquiry_Extended_003 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_Inquiry TaskATTRCd.SIMPLE_TASK g_LUN1 EVPD.T 0x86uy 64us NACA.T
+            let! r = r1.WaitSCSIResponseGoodStatus itt
+            Assert.True(( r.Length = 64 ))
+            let res = GenScsiParams.Inquiry_ExtendedInquiryDataVPD r
+            Assert.True(( res.PeripheraQualifier = 0uy ))
+            Assert.True(( res.PeripheralDeviceType = 0uy ))
+            Assert.True(( res.PageCode = 0x86uy ))
+            Assert.True(( res.PageLength = 0x3Cuy ))
+            Assert.False(( res.ReferenceTagOwnership ))
+            Assert.False(( res.GuardCheck ))
+            Assert.False(( res.ApplicationTagCheck ))
+            Assert.False(( res.ReferenceTagCheck ))
+            Assert.False(( res.GroupingFunctionSupported ))
+            Assert.False(( res.PrioritySupported ))
+            Assert.True(( res.HeadOfQueueSupported ))
+            Assert.True(( res.OrderedSupported ))
+            Assert.True(( res.SimpleSupported ))
+            Assert.False(( res.NonVolatileSupported ))
+            Assert.False(( res.VolatileSupported ))
+            r.Return()
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.Inquiry_BlockLimits_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_Inquiry TaskATTRCd.SIMPLE_TASK g_LUN1 EVPD.T 0xB0uy 0us NACA.T
+            let! res = r1.WaitSCSIResponseGoodStatus itt
+            Assert.True(( res.Length = 0 ))
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.Inquiry_BlockLimits_002 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_Inquiry TaskATTRCd.SIMPLE_TASK g_LUN1 EVPD.T 0xB0uy 4us NACA.T
+            let! r = r1.WaitSCSIResponseGoodStatus itt
+            Assert.True(( r.Length = 4 ))
+            let res = GenScsiParams.Inquiry_BlockLimitVPD r
+            Assert.True(( res.PeripheraQualifier = 0uy ))
+            Assert.True(( res.PeripheralDeviceType = 0uy ))
+            Assert.True(( res.PageCode = 0xB0uy ))
+            Assert.True(( res.PageLength = 0x0Cuy ))
+            Assert.True(( res.OptimalTransferLengthGramularity = blkcnt_me.zero16 ))
+            Assert.True(( res.MaximumTransferLength = blkcnt_me.zero32 ))
+            Assert.True(( res.OptimalTransferLength = blkcnt_me.zero32 ))
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.Inquiry_BlockLimits_003 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_Inquiry TaskATTRCd.SIMPLE_TASK g_LUN1 EVPD.T 0xB0uy 16us NACA.T
+            let! r = r1.WaitSCSIResponseGoodStatus itt
+            Assert.True(( r.Length = 16 ))
+            let res = GenScsiParams.Inquiry_BlockLimitVPD r
+            Assert.True(( res.PeripheraQualifier = 0uy ))
+            Assert.True(( res.PeripheralDeviceType = 0uy ))
+            Assert.True(( res.PageCode = 0xB0uy ))
+            Assert.True(( res.PageLength = 0x0Cuy ))
+            Assert.True(( blkcnt_me.toUInt16 res.OptimalTransferLengthGramularity > 0us ))
+            Assert.True(( res.MaximumTransferLength = blkcnt_me.zero32 ))
+            Assert.True(( blkcnt_me.toUInt32 res.OptimalTransferLength > 0u ))
             do! r1.Close()
         }
