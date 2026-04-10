@@ -813,7 +813,7 @@ type GenScsiParams() =
                     0uy;
             SupportedVPGPages =
                 if pv.Length > 4 then
-                    pv.Array.[ 4 .. ]
+                    pv.Array.[ 4 .. pv.Length - 1 ]
                 else
                     [||];
         }

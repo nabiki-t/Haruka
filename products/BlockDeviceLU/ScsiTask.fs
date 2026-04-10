@@ -607,7 +607,7 @@ type ScsiTask
                 | 0xB1uy ->
                     //  Block Device Characteristics VPD page
                     [|
-                        yield 0x0Cuy;   // PERIPHERAL QUALIFIER(0b) PERIPHERAL DEVICE TYPE(0Ch)
+                        yield 0x00uy;   // PERIPHERAL QUALIFIER(0b) PERIPHERAL DEVICE TYPE(00h)
                         yield 0xB1uy;   // PAGE CODE(0xB1)
                         yield 0x00uy;   // PAGE LENGTH(0x003C)
                         yield 0x3Cuy;   // PAGE LENGTH
