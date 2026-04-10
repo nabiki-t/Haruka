@@ -458,6 +458,11 @@ type BlockDeviceLU
                             Error x
                     try
                         let cdb2 = Result.defaultWith raise cdb
+                        if cdb2.LINK then
+                            let errmsg = "Linked command is not supported."
+                            HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
+                            raise <| SCSIACAException ( source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
+
                         m_TaskSet <-
                             m_TaskSet
                             |> this.AddNewScsiTaskToQueue source command cdb2 data

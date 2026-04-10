@@ -6202,6 +6202,31 @@ type BlockDeviceLU_Test () =
         Assert.True(( cnt2 = 1 ))
 
     [<Fact>]
+    member this.SCSICommand_005() =
+        let media, sm, lu = this.createBlockDevice()
+        let source = BlockDeviceLU_Test.cmdSource()
+        let scsicmd = {
+            BlockDeviceLU_Test.defaultSCSICommand TaskATTRCd.SIMPLE_TASK with
+                ScsiCDB = [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x01uy; |]
+        }
+        let scsidata : SCSIDataOutPDU list = []
+        let w = new SemaphoreSlim( 0 )
+        let mutable cnt1 = 0
+
+        ( source.ProtocolService :?> CProtocolService_Stub ).p_SendSCSIResponse <- ( fun _ _ _ _ resp stat senseData resData _ _ ->
+            Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
+            Assert.True(( stat = ScsiCmdStatCd.CHECK_CONDITION ))
+            cnt1 <- cnt1 + 1
+            w.Release() |> ignore
+        )
+
+        ( lu :> ILU ).SCSICommand source scsicmd scsidata
+
+        w.Wait()
+        Assert.True(( cnt1 = 1 ))
+
+
+    [<Fact>]
     member this.TaskDescStrings_001() =
         let _, _, lu = this.createBlockDevice()
         Assert.True(( ( lu :> ILU ).TaskDescStrings = [||] ))
