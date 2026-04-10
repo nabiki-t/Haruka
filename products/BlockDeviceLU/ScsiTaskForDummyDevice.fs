@@ -74,9 +74,6 @@ type ScsiTaskForDummyDevice
     /// Hash value identify this instance
     let m_ObjID = base.GetObjID()
 
-    /// original ScsiTask object
-//    let m_ScsiTask = new ScsiTask( m_StatusMaster, m_Source, m_Command, m_CDB, m_DataOut, m_LU, m_Media, m_ModeParameter, m_PRManager, m_ACANoncompliant )
-
     /// Log Information
     let m_LogInfo = struct ( m_ObjID, ValueSome m_Source, ValueSome m_Command.InitiatorTaskTag, ValueSome m_Command.LUN )
 
@@ -309,7 +306,7 @@ type ScsiTaskForDummyDevice
 
                         let sessParam = m_Source.ProtocolService.SessionParameter
 
-                        // DISCRIPTOR 2 ( target port )
+                        // DISCRIPTOR 1 ( target port )
                         let dec2 = [|
                             yield 0x53uy;   // PROTOCOL IDENTIFIER(5h)  CODE SET(3h)
                             yield 0x98uy;   // PIV(1) ASSOCIATION(01b) IDENTIFIER TYPE(8h)
@@ -328,7 +325,7 @@ type ScsiTaskForDummyDevice
                             yield 0xA8uy;   // PIV(1) ASSOCIATION(10b) IDENTIFIER TYPE(8h)
                             yield 0x00uy;   // Reserved
                             let targetNameBytesData = 
-                                sessParam.TargetConf.TargetName
+                                m_StatusMaster.DeviceName
                                 |> Encoding.UTF8.GetBytes
                                 |> Functions.PadBytesArray 4 256
                             yield byte( targetNameBytesData.Length );   // IDENTIFIER LENGTH

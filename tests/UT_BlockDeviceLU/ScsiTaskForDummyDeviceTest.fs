@@ -96,6 +96,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
             p_GetBlockCount = ( fun () -> 512UL )
         )
         let stat = new CStatus_Stub(
+            p_GetDeviceName = ( fun _ -> "targetdevice001" ),
             p_GetTargetFromLUN = ( fun lun ->
                 [
                     {
@@ -306,9 +307,9 @@ type ScsiTaskForDummyDeviceTest_Test () =
             let v = [|
                 0x0Cuy; // PERIPHERAL QUALIFIER, PERIPHERAL DEVICE TYPE
                 0x83uy; // PAGE CODE
-                0x00uy; 0x28uy; // PAGE LENGTH
+                0x00uy; 0x2Cuy; // PAGE LENGTH
 
-                // DISCRIPTOR 2 ( 24 bytes )
+                // DISCRIPTOR 1 ( 24 bytes )
                 0x53uy; // PROTOCOL IDENTIFIER(5h)  CODE SET(3h)
                 0x98uy; // PIV(1) ASSOCIATION(01b) IDENTIFIER TYPE(8h)
                 0x00uy; // Reserved
@@ -319,12 +320,12 @@ type ScsiTaskForDummyDeviceTest_Test () =
                 ( byte str2.Length ); // IDENTIFIER LENGTH
                 yield! str2;
 
-                // DISCRIPTOR 3 ( 16 bytes )
+                // DISCRIPTOR 2 ( 16 bytes )
                 0x53uy; // PROTOCOL IDENTIFIER(5h)  CODE SET(3h)
                 0xA8uy; // PIV(1) ASSOCIATION(10b) IDENTIFIER TYPE(8h)
                 0x00uy; // Reserved
                 let str3 = 
-                    ( "targetname0" )
+                    ( "targetdevice001" )
                     |> Encoding.UTF8.GetBytes
                     |> Functions.PadBytesArray 4 256
                 ( byte str3.Length ); // IDENTIFIER LENGTH
