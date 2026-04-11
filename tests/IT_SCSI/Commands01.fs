@@ -689,6 +689,23 @@ type SCSI_Commands01( fx : SCSI_Commands01_Fixture ) =
             do! r2.Close()
         }
 
+    [<Theory>]
+    [<InlineData( 0UL )>]
+    [<InlineData( 1UL )>]
+    member _.Inquiry_LINK_001 ( lu : uint64 ) =
+        task {
+            let lun = lun_me.fromPrim lu
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let cdb = GenScsiCDB.Inquiry EVPD.F 0x00uy 256us NACA.T LINK.T
+            let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK lun cdb PooledBuffer.Empty 256u
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            do! ClearACA r1 lun
+
+            do! r1.Close()
+        }
+
     static member PreFetch10_001_data : obj[][] = [|
         [| true;  0u;                     0us;                            true;  |]
         [| true;  0u;                     1us;                            true;  |]
@@ -717,6 +734,22 @@ type SCSI_Commands01( fx : SCSI_Commands01_Fixture ) =
             do! r1.Close()
         }
 
+    [<Theory>]
+    [<InlineData( 0UL )>]
+    [<InlineData( 1UL  )>]
+    member _.PreFetch10_LINK_001 ( lu : uint64 ) =
+        task {
+            let lun = lun_me.fromPrim lu
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let cdb = GenScsiCDB.PreFetch10 IMMED.T blkcnt_me.zero32 0uy blkcnt_me.zero16 NACA.T LINK.T
+            let! itt_pf1 = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK lun cdb PooledBuffer.Empty 0u
+            let! res_pf1 = r1.WaitSCSIResponse itt_pf1
+            Assert.True(( res_pf1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            do! ClearACA r1 lun
+
+            do! r1.Close()
+        }
     static member PreFetch16_001_data : obj[][] = [|
         [| true;  0UL;                            0u;                     0uy; true;  |]
         [| true;  0UL;                            1u;                     0uy; true;  |]
@@ -748,6 +781,23 @@ type SCSI_Commands01( fx : SCSI_Commands01_Fixture ) =
         }
 
     [<Theory>]
+    [<InlineData( 0UL )>]
+    [<InlineData( 1UL )>]
+    member _.PreFetch16_LINK_001 ( lu : uint64 ) =
+        task {
+            let lun = lun_me.fromPrim lu
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let cdb = GenScsiCDB.PreFetch16 IMMED.T blkcnt_me.zero64 0uy blkcnt_me.zero32 NACA.T LINK.T
+            let! itt_pf1 = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK lun cdb PooledBuffer.Empty 0u
+            let! res_pf1 = r1.WaitSCSIResponse itt_pf1
+            Assert.True(( res_pf1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            do! ClearACA r1 lun
+
+            do! r1.Close()
+        }
+
+    [<Theory>]
     [<InlineData( 0UL, false )>]
     [<InlineData( 1UL, true  )>]
     member _.TestUnitReady_001 ( lu : uint64 ) ( exp : bool ) =
@@ -761,6 +811,21 @@ type SCSI_Commands01( fx : SCSI_Commands01_Fixture ) =
             else
                 Assert.True(( res_tur1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
                 do! ClearACA r1 lun
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( 0UL )>]
+    [<InlineData( 1UL )>]
+    member _.TestUnitReady_LINK_001 ( lu : uint64 ) =
+        task {
+            let lun = lun_me.fromPrim lu
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let cdb = GenScsiCDB.TestUnitReady NACA.T LINK.T
+            let! itt_tur1 =  r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK lun cdb PooledBuffer.Empty 0u
+            let! res_tur1 = r1.WaitSCSIResponse itt_tur1
+            Assert.True(( res_tur1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            do! ClearACA r1 lun
             do! r1.Close()
         }
 
@@ -780,5 +845,43 @@ type SCSI_Commands01( fx : SCSI_Commands01_Fixture ) =
             let cdb = GenScsiCDB.FormatUnit FMTPINFO.T RTO_REQ.T LONGLIST.T FMTDATA.T CMPLIST.T 1uy NACA.T LINK.F
             let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
             let! _ = r1.WaitSCSIResponseGoodStatus itt
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( 0UL )>]
+    [<InlineData( 1UL )>]
+    member _.FormatUnit_LINK_001 ( lu : uint64 ) =
+        task {
+            let lun = lun_me.fromPrim lu
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let cdb = GenScsiCDB.FormatUnit FMTPINFO.F RTO_REQ.F LONGLIST.F FMTDATA.F CMPLIST.F 0uy NACA.T LINK.T
+            let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK lun cdb PooledBuffer.Empty 0u
+            let! res_tur1 = r1.WaitSCSIResponse itt
+            Assert.True(( res_tur1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            do! ClearACA r1 lun
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.ReadCapacity10_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_ReadCapacity10 TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! blockCount, blockSize = r1.Wait_ReadCapacity10 itt
+            Assert.True(( blockCount = m_MediaBlockCount - 1u ))
+            Assert.True(( blockSize = Blocksize.toUInt32 m_MediaBlockSize ))
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.ReadCapacity10_LINK_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let cdb = GenScsiCDB.ReadCapacity10 blkcnt_me.zero32 PMI.F NACA.T LINK.T
+            let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 8u
+            let! res_tur1 = r1.WaitSCSIResponse itt
+            Assert.True(( res_tur1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            do! ClearACA r1 g_LUN1
             do! r1.Close()
         }

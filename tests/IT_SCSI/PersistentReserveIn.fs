@@ -680,6 +680,20 @@ type SCSI_PersistentReserveIn( fx : SCSI_PersistentReserveIn_Fixture ) =
                 Assert.True(( v.[0].ReservationKey = resvkey_me.fromPrim expRESVK ))
 
             do! PR_Unregister r1 g_LUN1 g_ResvKey1
+            do! r1.Close()
         }
-            
-
+        
+    [<Theory>]
+    [<InlineData( 0UL )>]
+    [<InlineData( 1UL )>]
+    member _.PersistentReserveIn_LINK_001 ( lu : uint64 ) =
+        task {
+            let lun = lun_me.fromPrim lu
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let cdb = GenScsiCDB.PersistentReserveIn 0uy 0us NACA.T LINK.T
+            let! itt1 = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK lun cdb PooledBuffer.Empty 0u
+            let! res1 = r1.WaitSCSIResponse itt1
+            Assert.True(( res1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            do! ClearACA r1 lun
+            do! r1.Close()
+        }

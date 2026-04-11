@@ -809,10 +809,6 @@ type ScsiTaskForDummyDeviceTest_Test () =
             SupportedOperationCodeConst.CdbUsageData_TEST_UNIT_READY :> obj;
         |]
         [|
-            0x01uy :> obj;  0x25uy :> obj; 0x00us :> obj;
-            SupportedOperationCodeConst.CdbUsageData_READ_CAPACITY_10 :> obj;
-        |]
-        [|
             0x01uy :> obj;  0x35uy :> obj; 0x00us :> obj;
             SupportedOperationCodeConst.CdbUsageData_SYNCHRONIZE_CACHE_10 :> obj;
         |]
@@ -847,10 +843,6 @@ type ScsiTaskForDummyDeviceTest_Test () =
         [|
             0x02uy :> obj;  0x5Fuy :> obj; 0x08us :> obj;   // PERSISTENT RESERVE OUT, unknown service action
             [| 0x00uy; 0x01uy; 0x00uy; 0x00uy; |] :> obj;
-        |]
-        [|
-            0x02uy :> obj;  0x9Euy :> obj; 0x10us :> obj;   // READ CAPACITY(16)
-            SupportedOperationCodeConst.CdbUsageData_READ_CAPACITY_16 :> obj;
         |]
         [|
             0x02uy :> obj;  0x9Euy :> obj; 0x00us :> obj;   // READ CAPACITY(16), unknown service action
@@ -906,7 +898,6 @@ type ScsiTaskForDummyDeviceTest_Test () =
     [<Theory>]
     [<InlineData( 0x01uy, 0x5Euy, "REQUESTED OPERATION CODE 0x5E" )>]    // PERSISTENT RESERVE IN
     [<InlineData( 0x01uy, 0x5Fuy, "REQUESTED OPERATION CODE 0x5F" )>]    // PERSISTENT RESERVE OUT
-    [<InlineData( 0x01uy, 0x9Euy, "REQUESTED OPERATION CODE 0x9E" )>]    // READ CAPACITY(16)
     [<InlineData( 0x01uy, 0xA3uy, "REQUESTED OPERATION CODE 0xA3" )>]    // REPORT SUPPORTED OPERATION CODES / REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS
     [<InlineData( 0x02uy, 0x12uy, "REQUESTED OPERATION CODE 0x12" )>]    // INQUIRY
     [<InlineData( 0x02uy, 0x15uy, "REQUESTED OPERATION CODE 0x15" )>]    // MODE SELECT(6)
@@ -916,7 +907,6 @@ type ScsiTaskForDummyDeviceTest_Test () =
     [<InlineData( 0x02uy, 0xA0uy, "REQUESTED OPERATION CODE 0xA0" )>]    // REPORT LUNS
     [<InlineData( 0x02uy, 0x03uy, "REQUESTED OPERATION CODE 0x03" )>]    // REQUEST SENSE
     [<InlineData( 0x02uy, 0x00uy, "REQUESTED OPERATION CODE 0x00" )>]    // TEST UNIT READY
-    [<InlineData( 0x02uy, 0x25uy, "REQUESTED OPERATION CODE 0x25" )>]    // READ CAPACITY(10)
     [<InlineData( 0x02uy, 0x35uy, "REQUESTED OPERATION CODE 0x35" )>]    // SYNCHRONIZE CACHE(10)
     [<InlineData( 0x02uy, 0x91uy, "REQUESTED OPERATION CODE 0x91" )>]    // SYNCHRONIZE CACHE(16)
     [<InlineData( 0x03uy, 0x00uy, "Invalie REPORTING OPTIONS field value" )>]    // unknown REPORTING OPTIONS
@@ -1032,45 +1022,6 @@ type ScsiTaskForDummyDeviceTest_Test () =
         )
         RunTask stask
         Assert.True(( cnt1 = 1 ))
-
-    [<Fact>]
-    member _.ReadCapacity_001() =
-        let mutable cnt1 = 0
-        let mutable cnt2 = 0
-        let cdb : ReadCapacityCDB = {
-            OperationCode = 0x25uy;
-            ServiceAction = 0x00uy;
-            LogicalBlockAddress = blkcnt_me.ofUInt64 0UL;
-            PMI = false;
-            AllocationLength = 0x10u;
-            Control = 0uy;
-        }
-        let stask, ilu = createDefScsiTaskForDummyDevice defaultSCSICommandPDU cdb [] false
-        let psStub = stask.Source.ProtocolService :?> CProtocolService_Stub
-        let mediaStub = ( stask :?> ScsiTask ).Media :?> CMedia_Stub
-
-        psStub.p_SendSCSIResponse <- ( fun _ _ _ _ resp stat _ indata alloclen _ ->
-            cnt2 <- cnt2 + 1
-            Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
-            Assert.True(( stat = ScsiCmdStatCd.GOOD ))
-            let v = [|
-                0x00uy; 0x00uy; 0xAAuy; 0xBAuy; // RETURNED LOGICAL BLOCK ADDRESS
-                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH IN BYTE
-            |]
-            Assert.True(( PooledBuffer.ValueEqualsWithArray indata v ))
-            Assert.True(( alloclen = 0x10u ))
-        )
-        mediaStub.p_ReadCapacity <- ( fun itt source ->
-            Assert.True(( itt = itt_me.fromPrim 0u ))
-            0xAABBUL
-        )
-        ilu.p_NotifyTerminateTask <- ( fun argTask ->
-            cnt1 <- cnt1 + 1
-        )
-
-        RunTask stask
-        Assert.True(( cnt1 = 1 ))
-        Assert.True(( cnt2 = 1 ))
 
     [<Fact>]
     member _.SynchronizeCache_001() =

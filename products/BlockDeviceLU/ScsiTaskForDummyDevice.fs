@@ -165,6 +165,7 @@ type ScsiTaskForDummyDevice
             | XDWrite                                   // SBC-2 5.40 XDWRITE(10), 5.41 XDWRITE(32) command
             | XDWriteRead                               // SBC-2 5.42 XDWRITEREAD(10), 5.43 XDWRITEREAD(32) command
             | XPWrite                                   // SBC-2 5.44 XPWRITE(10), 5.45 XPWRITE(32) command
+            | ReadCapacity                              // SBC-2 5.10 READ CAPACITY(10), 5.11 READ CAPACITY(16) command
                 ->
                     fun () -> task {
                         let errmsg =
@@ -198,7 +199,6 @@ type ScsiTaskForDummyDevice
             | PersistentReserveOut                      // SPC-3 6.12 PERSISTENT RESERVE OUT command
             | ReportLUNs                                // SPC-3 6.21 REPORT LUNS command
             | RequestSense                              // SPC-3 6.27 REQUEST SENSE command
-            | ReadCapacity                              // SBC-2 5.10 READ CAPACITY(10), 5.11 READ CAPACITY(16) command
                 ->
                     base.Execute()
 
@@ -493,12 +493,10 @@ type ScsiTaskForDummyDevice
                 | 0xA0uy -> SupportedOperationCodeConst.CdbUsageData_REPORT_LUNS
                 | 0x03uy -> SupportedOperationCodeConst.CdbUsageData_REQUEST_SENSE
                 | 0x00uy -> SupportedOperationCodeConst.CdbUsageData_TEST_UNIT_READY
-                | 0x25uy -> SupportedOperationCodeConst.CdbUsageData_READ_CAPACITY_10
                 | 0x35uy -> SupportedOperationCodeConst.CdbUsageData_SYNCHRONIZE_CACHE_10
                 | 0x91uy -> SupportedOperationCodeConst.CdbUsageData_SYNCHRONIZE_CACHE_16
                 | 0x5Euy    // PERSISTENT RESERVE IN
                 | 0x5Fuy    // PERSISTENT RESERVE OUT
-                | 0x9Euy    // READ CAPACITY(16)
                 | 0xA3uy -> // REPORT SUPPORTED OPERATION CODES / REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS
                     let errmsg = sprintf "REQUESTED OPERATION CODE 0x%02X has a SERVICE ACTION field." cdb.RequestedOperationCode
                     HLogger.ACAException( m_LogInfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
@@ -533,12 +531,6 @@ type ScsiTaskForDummyDevice
                     else
                         HLogger.Trace( LogID.W_INVALID_CDB_VALUE, fun g -> g.Gen1( m_LogInfo, sa_errmsg ) )
                         [| 0x00uy; 0x01uy; 0x00uy; 0x00uy; |]
-                | 0x9Euy -> // READ CAPACITY(16)
-                    if 0x10us = cdb.RequestedServiceAction then
-                        SupportedOperationCodeConst.CdbUsageData_READ_CAPACITY_16
-                    else
-                        HLogger.Trace( LogID.W_INVALID_CDB_VALUE, fun g -> g.Gen1( m_LogInfo, sa_errmsg ) )
-                        [| 0x00uy; 0x01uy; 0x00uy; 0x00uy; |]
                 | 0xA3uy -> // REPORT SUPPORTED OPERATION CODES / REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS
                     if cdb.RequestedServiceAction = 0x0Cus then
                         SupportedOperationCodeConst.CdbUsageData_REPORT_SUPPORTED_OPERATION_CODES
@@ -555,7 +547,6 @@ type ScsiTaskForDummyDevice
                 | 0xA0uy    // REPORT LUNS
                 | 0x03uy    // REQUEST SENSE
                 | 0x00uy    // TEST UNIT READY
-                | 0x25uy    // READ CAPACITY(10)
                 | 0x35uy    // SYNCHRONIZE CACHE(10)
                 | 0x91uy -> // SYNCHRONIZE CACHE(16)
                     let errmsg = sprintf "REQUESTED OPERATION CODE 0x%02X has not a SERVICE ACTION field." cdb.RequestedOperationCode

@@ -796,3 +796,30 @@ type SCSI_PersistentReserveOut6( fx : SCSI_PersistentReserveOut6_Fixture ) =
 
             do! r1.Close()
         }
+
+    [<Fact>]
+    member _.PR_Out_LINK_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let param : Haruka.BlockDeviceLU.BasicParameterList = {
+                ReservationKey = resvkey_me.zero;
+                ServiceActionReservationKey = g_ResvKey1;
+                SPEC_I_PT = false;
+                ALL_TG_PT = false;
+                APTPL = false;
+                TransportID = [||];
+            }
+
+            let paramBytes = GenScsiParams.PersistentReserveOut_BasicParameterList param
+            let cdb = GenScsiCDB.PersistentReserveOut 0uy 0uy PR_TYPE.EXCLUSIVE_ACCESS paramBytes.uLength NACA.T LINK.T
+            let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb paramBytes paramBytes.uLength
+            paramBytes.Return()
+
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            do! ClearACA r1 g_LUN1
+
+            do! r1.Close()
+        }
+

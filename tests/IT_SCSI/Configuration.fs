@@ -415,6 +415,8 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
         [|  0x0UL; 11; [| 0xA8uy; |];         |]  // READ(12)
         [|  0x0UL; 15; [| 0x88uy; |];         |]  // READ(16)
         [|  0x0UL;  1; [| 0x7Fuy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x18uy; 0x00uy; 0x09uy; |];         |]  // READ(32)
+        [|  0x0UL;  9; [| 0x25uy; |];         |]  // READ CAPACITY(10)
+        [|  0x0UL; 15; [| 0x9Euy; 0x10uy |];  |]  // READ CAPACITY(16)
         [|  0x0UL;  9; [| 0x37uy; |];         |]  // READ DEFECT DATA(10)
         [|  0x0UL; 11; [| 0xB7uy; |];         |]  // READ DEFECT DATA(12)
         [|  0x0UL;  9; [| 0x3Euy; |];         |]  // READ LONG(10)
