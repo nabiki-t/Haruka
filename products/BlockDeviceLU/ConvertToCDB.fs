@@ -467,16 +467,6 @@ type ConvertToCDB() =
                 errmsg
             )
 
-        if ( r.AllocationLength < 16u ) then
-            let errmsg = sprintf "In REPORT LUNs CDB, ALLOCATION LENGTH value(%d) is too short." r.AllocationLength
-            HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
-            raise <| SCSIACAException (
-                ValueSome ( Functions.CheckBitflag r.Control 0x04uy ),
-                source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
-                { CommandData = true; BPV = true; BitPointer = 7uy; FieldPointer = 6us },
-                errmsg
-            )
-
         r :> ICDB
 
     // ------------------------------------------------------------------------

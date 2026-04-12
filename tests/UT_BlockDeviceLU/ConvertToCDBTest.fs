@@ -508,24 +508,6 @@ type ConvertToCDB_Test () =
     member _.ConvertScsiCommandPDUToReportLUNsCDB_0802() =
         let command : SCSICommandPDU = {
             defaultScsiCommand with
-                ScsiCDB = [| 0xA0uy; 0x00uy; 0x02uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x03uy; 0x00uy; 0x00uy |];
-        }
-        try
-            ConvertToCDB.ConvertScsiCommandPDUToCDB defaultSource ( objidx_me.NewID() ) command |> ignore
-            Assert.Fail __LINE__
-        with
-        | :? SCSIACAException as x ->
-            Assert.True( ( cid_me.fromPrim 2us = x.CommandSource.CID ) )
-            Assert.True( ( concnt_me.fromPrim 2 = x.CommandSource.ConCounter ) )
-            Assert.True( ( ScsiCmdStatCd.CHECK_CONDITION = x.Status ) )
-            Assert.True( ( SenseKeyCd.ILLEGAL_REQUEST = x.SenseKey ) )
-            Assert.True( ( ASCCd.INVALID_FIELD_IN_CDB = x.ASC ) )
-            Assert.True( ( x.Message.Contains( "In REPORT LUNs CDB, ALLOCATION LENGTH value" ) ) )
-
-    [<Fact>]
-    member _.ConvertScsiCommandPDUToReportLUNsCDB_0803() =
-        let command : SCSICommandPDU = {
-            defaultScsiCommand with
                 ScsiCDB = [| 0xA0uy; 0x00uy; 0x02uy; 0x00uy; 0x00uy; 0x00uy; 0xABuy; 0xCDuy; 0xEFuy; 0xAAuy; 0x00uy; 0xBBuy |];
         }
         let cdb = ConvertToCDB.ConvertScsiCommandPDUToCDB defaultSource ( objidx_me.NewID() ) command

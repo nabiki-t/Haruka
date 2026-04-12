@@ -48,17 +48,30 @@ type SCSI_Commands01_Fixture() =
         client.RunCommand ( sprintf "create networkportal /a ::1 /p %d" m_iSCSIPortNo ) "Created" "TD> "
         client.RunCommand "select 0" "" "TG> "
 
-        // Target, LU
+        // Target1, LU1
         client.RunCommand "create /n iqn.2020-05.example.com:target1" "Created" "TG> "
         client.RunCommand "select 0" "" "T > "
         client.RunCommand "set ID 1" "" "T > "
         client.RunCommand "create /l 1" "Created" "T > "
         client.RunCommand "select 0" "" "LU> "
         client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
+        client.RunCommand "unselect" "" "T > "
+        client.RunCommand "unselect" "" "TG> "
 
-        client.RunCommand "validate" "All configurations are vlidated" "LU> "
-        client.RunCommand "publish" "All configurations are uploaded to the controller" "LU> "
-        client.RunCommand "start" "Started" "LU> "
+        // Target2, LU2 ... LU255
+        client.RunCommand "create /n iqn.2020-05.example.com:target2" "Created" "TG> "
+        client.RunCommand "select 1" "" "T > "
+        client.RunCommand "set ID 2" "" "T > "
+        for i = 2 to Constants.MAX_LOGICALUNIT_COUNT_IN_TD do
+            client.RunCommand ( sprintf "create /l %d" i ) "Created" "T > "
+            client.RunCommand ( sprintf "select %d" ( i - 2 ) ) "" "LU> "
+            client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
+            client.RunCommand "unselect" "" "T > "
+        client.RunCommand "unselect" "" "TG> "
+
+        client.RunCommand "validate" "All configurations are vlidated" "TG> "
+        client.RunCommand "publish" "All configurations are uploaded to the controller" "TG> "
+        client.RunCommand "start" "Started" "TG> "
 
     let m_WorkPath = Functions.AppendPathName ( Path.GetTempPath() ) ( Guid.NewGuid().ToString( "N" ) )
 
@@ -750,6 +763,7 @@ type SCSI_Commands01( fx : SCSI_Commands01_Fixture ) =
 
             do! r1.Close()
         }
+
     static member PreFetch16_001_data : obj[][] = [|
         [| true;  0UL;                            0u;                     0uy; true;  |]
         [| true;  0UL;                            1u;                     0uy; true;  |]
@@ -882,6 +896,140 @@ type SCSI_Commands01( fx : SCSI_Commands01_Fixture ) =
             let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 8u
             let! res_tur1 = r1.WaitSCSIResponse itt
             Assert.True(( res_tur1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            do! ClearACA r1 g_LUN1
+            do! r1.Close()
+        }
+
+    static member ReadCapacity16_001_data : obj[][] = [|
+        [| 0u; 0; 0UL; 0u |]
+        [| 4u; 4; 0UL; 0u |]
+        [| 8u; 8; uint64 m_MediaBlockCount - 1UL; 0u |]
+        [| 12u; 12; uint64 m_MediaBlockCount - 1UL; Blocksize.toUInt32 m_MediaBlockSize |]
+        [| 32u; 32; uint64 m_MediaBlockCount - 1UL; Blocksize.toUInt32 m_MediaBlockSize |]
+        [| 64u; 32; uint64 m_MediaBlockCount - 1UL; Blocksize.toUInt32 m_MediaBlockSize |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "ReadCapacity16_001_data" )>]
+    member _.ReadCapacity16_001 ( allen : uint32 ) ( retlen : int ) ( blkcnt : uint64 ) ( blksize : uint32 ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_ReadCapacity16 TaskATTRCd.SIMPLE_TASK g_LUN1 allen NACA.T
+            let! res = r1.WaitSCSIResponseGoodStatus itt
+            Assert.True(( res.Length = retlen ))
+            let para = GenScsiParams.ReadCapacity16 res
+            Assert.True(( para.ReturnedLogicalBlockAddress = blkcnt ))
+            Assert.True(( para.BlockLengthInBytes = blksize ))
+            Assert.False(( para.ProtectionEnable ))
+            Assert.False(( para.ReferenceTagOwnEnable ))
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.ReadCapacity16_LINK_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let cdb = GenScsiCDB.ReadCapacity16 blkcnt_me.zero64 256u PMI.F NACA.T LINK.T
+            let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 256u
+            let! res_tur1 = r1.WaitSCSIResponse itt
+            Assert.True(( res_tur1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            do! ClearACA r1 g_LUN1
+            do! r1.Close()
+        }
+
+    static member ReportLUNs_001_data : obj[][] = [|
+        [| 0uy; 0u;   0u;  [||] |]
+        [| 0uy; 8u;   16u; [||] |]
+        [| 0uy; 16u;  16u; [| lun_me.fromPrim 0UL; |] |]
+        [| 0uy; 24u;  16u; [| lun_me.fromPrim 0UL; lun_me.fromPrim 1UL |] |]
+        [| 0uy; 256u; 16u; [| lun_me.fromPrim 0UL; lun_me.fromPrim 1UL |] |]
+        [| 1uy; 256u; 0u;  [||] |]
+        [| 2uy; 256u; 16u; [| lun_me.fromPrim 0UL; lun_me.fromPrim 1UL |] |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "ReportLUNs_001_data" )>]
+    member _.ReportLUNs_001 ( report : byte ) ( allen : uint32 ) ( exlen : uint32 ) ( exluns : LUN_T[] ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_ReportLUNs TaskATTRCd.SIMPLE_TASK g_LUN1 report allen NACA.T
+            let! listLength, luns = r1.Wait_ReportLUNs itt
+            Assert.True(( listLength = exlen ))
+            Assert.True(( luns = exluns ))
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.ReportLUNs_UnknownReportType_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_ReportLUNs TaskATTRCd.SIMPLE_TASK g_LUN1 3uy 256u NACA.T
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            do! ClearACA r1 g_LUN1
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.ReportLUNs_UA_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            let! itt_pr_out2 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T resvkey_me.zero g_ResvKey2 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            let! itt_pr_out3 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T g_ResvKey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
+
+            let! itt_rl1 = r2.Send_ReportLUNs TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 256u NACA.T
+            let! _, luns = r2.Wait_ReportLUNs itt_rl1
+            Assert.True(( luns.Length = 2 ))
+
+            let! itt_tur1 = r2.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
+            let! res_tur1 = r2.WaitSCSIResponse itt_tur1
+            Assert.True(( res_tur1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            Assert.True(( res_tur1.Sense.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))
+            Assert.True(( res_tur1.Sense.Value.ASC = ASCCd.RESERVATIONS_PREEMPTED ))
+
+            do! r1.Close()
+            do! r2.Close()
+        }
+
+    [<Fact>]
+    member _.ReportLUNs_LUN0_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_ReportLUNs TaskATTRCd.SIMPLE_TASK g_LUN0 2uy 256u NACA.T
+            let! listLength, luns = r1.Wait_ReportLUNs itt
+            Assert.True(( listLength = 16u ))
+            Assert.True(( luns = [| lun_me.fromPrim 0UL; lun_me.fromPrim 1UL |] ))
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.ReportLUNs_LUN0_002 () =
+        task {
+            let param = { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target2" }
+            let! r1 = SCSI_Initiator.Create param m_defaultConnParam
+            let! itt = r1.Send_ReportLUNs TaskATTRCd.SIMPLE_TASK g_LUN0 2uy 2048u NACA.T
+            let! listLength, luns = r1.Wait_ReportLUNs itt
+            Assert.True(( listLength = 2040u ))
+            Assert.True(( luns.Length = 255 ))
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.ReportLUNs_LINK_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let cdb = GenScsiCDB.ReportLUNs 0uy 256u NACA.T LINK.T
+            let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 256u
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
             do! ClearACA r1 g_LUN1
             do! r1.Close()
         }

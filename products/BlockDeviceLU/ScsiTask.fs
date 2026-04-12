@@ -1032,16 +1032,6 @@ type ScsiTask
         assert( match m_CDB with | :? ReportLUNsCDB -> true | _ -> false )
         let cdb = m_CDB :?> ReportLUNsCDB
 
-        // Check allocation length value
-        if cdb.AllocationLength < 16u then
-            let errmsg = sprintf "Invalie allocation length value(%d), in REPORT LUNS command CDB, must be over than or equals 16 bytes." cdb.AllocationLength
-            HLogger.ACAException( m_LogInfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
-            raise <| SCSIACAException (
-                m_Source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
-                { CommandData = true; BPV = true; BitPointer = 7uy; FieldPointer = 6us },
-                errmsg
-            )
-
         let luns =
             // Check specified LU is well known LU or not.
             match cdb.SelectReport with

@@ -1133,30 +1133,6 @@ type ScsiTask_Test () =
         let mutable cnt1 = 0
         let cdb = {
             OperationCode = 0x0Auy;
-            SelectReport = 0x00uy;
-            AllocationLength = 15u;
-            Control = 0uy;
-        }
-        let sense_task, ilu = createDefScsiTask defaultSCSICommandPDU cdb [] false
-        ilu.p_NotifyTerminateTaskWithException <- ( fun argTask argEx ->
-            cnt1 <- cnt1 + 1
-            match argEx with
-            | :? SCSIACAException as x ->
-                Assert.True(( x.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-                Assert.True(( x.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-                Assert.True(( x.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
-            | _ ->
-                Assert.Fail __LINE__
-        )
-
-        RunTask sense_task
-        Assert.True(( cnt1 = 1 ))
-
-    [<Fact>]
-    member _.ReportLUNs_002() =
-        let mutable cnt1 = 0
-        let cdb = {
-            OperationCode = 0x0Auy;
             SelectReport = 0x03uy;
             AllocationLength = 16u;
             Control = 0uy;
@@ -1184,7 +1160,7 @@ type ScsiTask_Test () =
         Assert.True(( cnt1 = 1 ))
 
     [<Fact>]
-    member _.ReportLUNs_003() =
+    member _.ReportLUNs_002() =
         let mutable cnt1 = 0
         let mutable cnt2 = 0
         let cdb = {
@@ -1228,7 +1204,7 @@ type ScsiTask_Test () =
         Assert.True(( cnt2 = 1 ))
 
     [<Fact>]
-    member _.ReportLUNs_004() =
+    member _.ReportLUNs_003() =
         let mutable cnt1 = 0
         let mutable cnt2 = 0
         let cdb = {
@@ -1257,7 +1233,7 @@ type ScsiTask_Test () =
         Assert.True(( cnt2 = 0 ))
 
     [<Fact>]
-    member _.ReportLUNs_005() =
+    member _.ReportLUNs_004() =
         let mutable cnt1 = 0
         let mutable cnt2 = 0
         let cdb = {
@@ -1294,7 +1270,7 @@ type ScsiTask_Test () =
         Assert.True(( cnt2 = 1 ))
 
     [<Fact>]
-    member _.ReportLUNs_006() =
+    member _.ReportLUNs_005() =
         let mutable cnt1 = 0
         let mutable cnt2 = 0
         let cdb = {
