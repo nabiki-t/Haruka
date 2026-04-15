@@ -160,6 +160,10 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
     // Test cases
 
     [<Theory>]
+    [<InlineData( 0UL, 0uy, 0 )>]
+    [<InlineData( 0UL, 4uy, 4 )>]
+    [<InlineData( 0UL, 12uy, 12 )>]
+    [<InlineData( 0UL, 255uy, 56 )>]
     [<InlineData( 1UL, 0uy, 0 )>]
     [<InlineData( 1UL, 4uy, 4 )>]
     [<InlineData( 1UL, 12uy, 12 )>]
@@ -179,18 +183,25 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
                 Assert.True(( r.BlockDescriptorLength > 0uy ))
 
             if res.Length >= 12 then
-                Assert.True(( ( r.Block.Value.BlockCount |> blkcnt_me.toUInt64 ) > 0UL ))
-                Assert.True(( r.Block.Value.BlockLength > 0u ))
-
+                Assert.True(( r.Block.IsSome ))
+                if lu = 0UL then
+                    Assert.True(( ( r.Block.Value.BlockCount |> blkcnt_me.toUInt64 ) = 0UL ))
+                    Assert.True(( r.Block.Value.BlockLength = 0u ))
+                else
+                    Assert.True(( ( r.Block.Value.BlockCount |> blkcnt_me.toUInt64 ) > 0UL ))
+                    Assert.True(( r.Block.Value.BlockLength > 0u ))
             res.Return()
             do! r1.Close()
         }
 
-    [<Fact>]
-    member _.ModeSense6_DBD_001 () =
+    [<Theory>]
+    [<InlineData( 0UL )>]
+    [<InlineData( 1UL )>]
+    member _.ModeSense6_DBD_001 ( lu : uint64 ) =
         task {
+            let lun = lun_me.fromPrim lu
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-            let! itt = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK g_LUN1 DBD.T 0uy 0x3Fuy 0uy 255uy NACA.T
+            let! itt = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK lun DBD.T 0uy 0x3Fuy 0uy 255uy NACA.T
             let! res = r1.WaitSCSIResponseGoodStatus itt
             let r = GenScsiParams.ModeSense6 res
             Assert.True(( r.Block.IsNone ))
@@ -270,19 +281,88 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
         }
 
     [<Theory>]
-    [<InlineData( 0uy, 0x00uy )>]
-    [<InlineData( 0uy, 0xFFuy )>]
-    [<InlineData( 3uy, 0x00uy )>]
-    [<InlineData( 3uy, 0xFFuy )>]
-    member _.ModeSense6_CacheModePage_Current_001 ( pc : byte ) ( subpage : byte ) =
+    [<InlineData( 0UL, 0uy, 0x00uy )>]
+    [<InlineData( 0UL, 0uy, 0xFFuy )>]
+    [<InlineData( 0UL, 3uy, 0x00uy )>]
+    [<InlineData( 0UL, 3uy, 0xFFuy )>]
+    [<InlineData( 1UL, 0uy, 0x00uy )>]
+    [<InlineData( 1UL, 0uy, 0xFFuy )>]
+    [<InlineData( 1UL, 3uy, 0x00uy )>]
+    [<InlineData( 1UL, 3uy, 0xFFuy )>]
+    member _.ModeSense6_CacheModePage_Current_001 ( lu : uint64 ) ( pc : byte ) ( subpage : byte ) =
         task {
+            let lun = lun_me.fromPrim lu
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-            let! itt = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK g_LUN1 DBD.F pc 0x08uy subpage 255uy NACA.T
+            let! itt = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK lun DBD.F pc 0x08uy subpage 255uy NACA.T
             let! res = r1.Wait_ModeSense6 itt
             Assert.True(( res.Block.IsSome ))
             Assert.True(( res.Control.IsNone ))
             Assert.True(( res.Cache.IsSome ))
             Assert.True(( res.Cache.Value.PageLength = 0x12uy ))
             Assert.True(( res.InformationalExceptionsControl.IsNone ))
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( 0UL, 0uy, 0x00uy )>]
+    [<InlineData( 0UL, 0uy, 0xFFuy )>]
+    [<InlineData( 0UL, 3uy, 0x00uy )>]
+    [<InlineData( 0UL, 3uy, 0xFFuy )>]
+    [<InlineData( 1UL, 0uy, 0x00uy )>]
+    [<InlineData( 1UL, 0uy, 0xFFuy )>]
+    [<InlineData( 1UL, 3uy, 0x00uy )>]
+    [<InlineData( 1UL, 3uy, 0xFFuy )>]
+    member _.ModeSense6_ControlModePage_Current_001 ( lu : uint64 ) ( pc : byte ) ( subpage : byte ) =
+        task {
+            let lun = lun_me.fromPrim lu
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt1 = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK lun DBD.F pc 0x0Auy subpage 255uy NACA.T
+            let! res1 = r1.Wait_ModeSense6 itt1
+            Assert.True(( res1.Block.IsSome ))
+            Assert.True(( res1.Control.IsSome ))
+            Assert.True(( res1.Control.Value.PageLength = 0x0Auy ))
+            Assert.True(( res1.Cache.IsNone ))
+            Assert.True(( res1.InformationalExceptionsControl.IsNone ))
+
+            let param1 = {
+                res1 with
+                    Control = Some {
+                        res1.Control.Value with
+                            DescriptorFormatSenseData = not res1.Control.Value.DescriptorFormatSenseData;
+                            SoftwareWriteProtect = not res1.Control.Value.SoftwareWriteProtect;
+                    }
+            }
+            let! itt2 = r1.Send_ModeSelect6 TaskATTRCd.SIMPLE_TASK lun PF.T SP.F param1 NACA.T
+            let! _ = r1.WaitSCSIResponseGoodStatus itt2
+
+            let! itt3 = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK lun DBD.F pc 0x0Auy subpage 255uy NACA.T
+            let! res3 = r1.Wait_ModeSense6 itt3
+            Assert.True(( res3.Control.Value.DescriptorFormatSenseData = param1.Control.Value.DescriptorFormatSenseData ))
+            Assert.True(( res3.Control.Value.SoftwareWriteProtect = param1.Control.Value.SoftwareWriteProtect ))
+
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( 0UL, 0uy, 0x00uy )>]
+    [<InlineData( 0UL, 0uy, 0xFFuy )>]
+    [<InlineData( 0UL, 3uy, 0x00uy )>]
+    [<InlineData( 0UL, 3uy, 0xFFuy )>]
+    [<InlineData( 1UL, 0uy, 0x00uy )>]
+    [<InlineData( 1UL, 0uy, 0xFFuy )>]
+    [<InlineData( 1UL, 3uy, 0x00uy )>]
+    [<InlineData( 1UL, 3uy, 0xFFuy )>]
+    member _.ModeSense6_InformationalExceptionsControlModePage_Current_001 ( lu : uint64 ) ( pc : byte ) ( subpage : byte ) =
+        task {
+            let lun = lun_me.fromPrim lu
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK lun DBD.F pc 0x1Cuy subpage 255uy NACA.T
+            let! res = r1.Wait_ModeSense6 itt
+            Assert.True(( res.Block.IsSome ))
+            Assert.True(( res.Control.IsNone ))
+            Assert.True(( res.Cache.IsNone ))
+            Assert.True(( res.InformationalExceptionsControl.IsSome ))
+            Assert.True(( res.InformationalExceptionsControl.Value.PageLength = 0x0Auy ))
             do! r1.Close()
         }
