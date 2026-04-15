@@ -28,11 +28,25 @@ open Haruka.Constants
 open Haruka.Commons
 
 //=============================================================================
+// Type definition
+
+/// BlockDevice type
+[<Struct>]
+type BlockDeviceType =
+    /// Normal block device LU
+    | BDT_Normal
+    /// Dummy device for REPORT LUNS well known LU
+    | BDT_Dummy
+
+//=============================================================================
 // Class implementation
 
 /// <summary>
 ///  ModeParameter class. This class holds and management mode parameter values.
 /// </summary>
+/// <param name="m_DeviceType">
+///  Specify the type of this LU.
+/// </param>
 /// <param name="m_Media">
 ///  Refelense of the Media object.
 /// </param>
@@ -41,6 +55,7 @@ open Haruka.Commons
 /// </param>
 type ModeParameter
     (
+        m_DeviceType : BlockDeviceType,
         m_Media : IMedia,
         m_LUN : LUN_T
     ) =
@@ -55,7 +70,15 @@ type ModeParameter
     // Mode parameter block descriptors
 
     /// BLOCK LENGTH
-    let mutable m_BlockLength = Constants.MEDIA_BLOCK_SIZE
+    let m_BlockLength =
+        match m_DeviceType with
+        | BlockDeviceType.BDT_Normal ->
+            Constants.MEDIA_BLOCK_SIZE
+        | BlockDeviceType.BDT_Dummy ->
+            0UL
+
+    // Block count
+    let m_BlockCount = m_Media.BlockCount
 
     // ========================================================================
     // Cache mode page
@@ -459,8 +482,25 @@ type ModeParameter
             )
 
         if blockDescriptorLength > 0 then
+            let blockCount = ( Functions.NetworkBytesToUInt32_InPooledBuffer v 4 ) &&& 0x00FFFFFFu
+            if uint64 blockCount <> m_BlockCount then
+                let errmsg = "Invalid NUMBER OF BLOCKS value in block descriptor. An attempt was made to change constant value."
+                HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST, errmsg )
+                raise <| SCSIACAException (
+                    source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST,
+                    { CommandData = false; BPV = true; BitPointer = 7uy; FieldPointer = uint16 4 },
+                    errmsg
+                )
+
             let blockLength = ( Functions.NetworkBytesToUInt32_InPooledBuffer v 8 ) &&& 0x00FFFFFFu
-            m_BlockLength <- uint64 blockLength
+            if uint64 blockLength <> m_BlockLength then
+                let errmsg = "Invalid BLOCK LENGTH value in block descriptor. An attempt was made to change constant value."
+                HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST, errmsg )
+                raise <| SCSIACAException (
+                    source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST,
+                    { CommandData = false; BPV = true; BitPointer = 7uy; FieldPointer = uint16 8 },
+                    errmsg
+                )
 
         // If PF bit is 0( following data is vendor specific ), following data is ignored.
         if pf && blockDescriptorLength + 4 < parameterLength then
@@ -643,12 +683,47 @@ type ModeParameter
                 errmsg
             )
 
-        if blockDescriptorLength > 0 then
-            m_BlockLength <-
-                if blockDescriptorLength = 8 then
-                    uint64 ( ( Functions.NetworkBytesToUInt32_InPooledBuffer v 12 ) &&& 0x00FFFFFFu )
-                else
-                    uint64 ( Functions.NetworkBytesToUInt32_InPooledBuffer v 20 )
+        if blockDescriptorLength = 8 then
+            let blockCount = uint64 ( Functions.NetworkBytesToUInt32_InPooledBuffer v 8 )
+            if uint64 blockCount <> m_BlockCount then
+                let errmsg = "Invalid NUMBER OF BLOCKS value in block descriptor. An attempt was made to change constant value."
+                HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST, errmsg )
+                raise <| SCSIACAException (
+                    source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST,
+                    { CommandData = false; BPV = true; BitPointer = 7uy; FieldPointer = uint16 8 },
+                    errmsg
+                )
+
+            let blockLength = uint64 ( ( Functions.NetworkBytesToUInt32_InPooledBuffer v 12 ) &&& 0x00FFFFFFu )
+            if uint64 blockLength <> m_BlockLength then
+                let errmsg = "Invalid BLOCK LENGTH value in block descriptor. An attempt was made to change constant value."
+                HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST, errmsg )
+                raise <| SCSIACAException (
+                    source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST,
+                    { CommandData = false; BPV = true; BitPointer = 7uy; FieldPointer = uint16 12 },
+                    errmsg
+                )
+
+        if blockDescriptorLength = 16 then
+            let blockCount = Functions.NetworkBytesToUInt64_InPooledBuffer v 8
+            if uint64 blockCount <> m_BlockCount then
+                let errmsg = "Invalid NUMBER OF BLOCKS value in block descriptor. An attempt was made to change constant value."
+                HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST, errmsg )
+                raise <| SCSIACAException (
+                    source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST,
+                    { CommandData = false; BPV = true; BitPointer = 7uy; FieldPointer = uint16 8 },
+                    errmsg
+                )
+
+            let blockLength = uint64 ( Functions.NetworkBytesToUInt32_InPooledBuffer v 20 )
+            if uint64 blockLength <> m_BlockLength then
+                let errmsg = "Invalid BLOCK LENGTH value in block descriptor. An attempt was made to change constant value."
+                HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST, errmsg )
+                raise <| SCSIACAException (
+                    source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST,
+                    { CommandData = false; BPV = true; BitPointer = 7uy; FieldPointer = uint16 20 },
+                    errmsg
+                )
 
         // If PF bit is 0( following data is vendor specific ), following data is ignored.
         if pf && blockDescriptorLength + 8 < parameterLength then
@@ -704,7 +779,7 @@ type ModeParameter
     member this.Sense10 ( llbaa : bool ) ( dbd : bool ) ( pageCode : byte ) ( subPageCode : byte ) ( pc : byte ) ( source : CommandSourceInfo ) ( itt : ITT_T ) : byte[] =
         let loginfo = struct ( m_ObjID, ValueSome source, ValueSome itt, ValueSome m_LUN )
 
-        let mediumType = 0uy         // Block Device(0h)
+        let mediumType = 0uy         // Block Device(0h), for storage array device, device specific parameter is reserved(0h). 
         let deviceSpecificParameter = this.GetDeviceSpecificParameter()
         let modeParameterBlockDescriptor : byte[] =
             if not dbd then
@@ -788,45 +863,58 @@ type ModeParameter
     ///  Get device specific parameter bytes array.
     /// </summary>
     member private _.GetDeviceSpecificParameter() : byte =
-        // WP : （write protect)
-        let wp =
-            if m_Media.WriteProtect || m_SWP then
-                0x80uy
-            else
-                0x00uy
-        let dpofua = Functions.SetBitflag m_DPOFUA 0x10uy
-        wp ||| dpofua
+        match m_DeviceType with
+        | BlockDeviceType.BDT_Normal ->
+            // WP : （write protect)
+            let wp =
+                if m_Media.WriteProtect || m_SWP then
+                    0x80uy
+                else
+                    0x00uy
+            let dpofua = Functions.SetBitflag m_DPOFUA 0x10uy
+            wp ||| dpofua
+        | BlockDeviceType.BDT_Dummy ->
+            // For storage array device, device specific parameter is reserved.
+            0uy
 
     /// <summary>
     ///  Get short LBA mode parameter block descriptor bytes array.
     /// </summary>
     member private _.GetShortLBAModeParamterBlockDescriptor() : byte[] =
-        let bc =
-            let w = m_Media.BlockCount
-            if w > 0xFFFFFFFFUL then
-                0xFFFFFFFFu
-            else
-                uint32 w
-        let bl = uint32 m_BlockLength
-        [|
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 bc );
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( bl &&& 0x00FFFFFFu );
-        |]
+        match m_DeviceType with
+        | BlockDeviceType.BDT_Normal ->
+            let bc =
+                let w = m_BlockCount
+                if w > 0xFFFFFFFFUL then
+                    0xFFFFFFFFu
+                else
+                    uint32 w
+            let bl = uint32 m_BlockLength
+            [|
+                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 bc );
+                yield! Functions.UInt32ToNetworkBytes_NewVec ( bl &&& 0x00FFFFFFu );
+            |]
+        | BlockDeviceType.BDT_Dummy ->
+            Array.zeroCreate<byte> 8
 
     /// <summary>
     ///  Get long LBA mode parameter block descriptor bytes array.
     /// </summary>
     member private _.GetLongLBAModeParamterBlockDescriptor() : byte[] =
-        let bc = m_Media.BlockCount
-        let bl = uint32 m_BlockLength
-        [|
-            yield! Functions.UInt64ToNetworkBytes_NewVec bc;
-            0x00uy;
-            0x00uy;
-            0x00uy;
-            0x00uy;
-            yield! Functions.UInt32ToNetworkBytes_NewVec bl;
-        |]
+        match m_DeviceType with
+        | BlockDeviceType.BDT_Normal ->
+            let bc = m_BlockCount
+            let bl = uint32 m_BlockLength
+            [|
+                yield! Functions.UInt64ToNetworkBytes_NewVec bc;
+                0x00uy;
+                0x00uy;
+                0x00uy;
+                0x00uy;
+                yield! Functions.UInt32ToNetworkBytes_NewVec bl;
+            |]
+        | BlockDeviceType.BDT_Dummy ->
+            Array.zeroCreate<byte> 16
 
     /// <summary>
     ///  Get current value of cache mode page bytes array.

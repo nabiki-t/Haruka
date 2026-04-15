@@ -158,6 +158,9 @@ type PRManager_Test1 () =
     }
 
     static member defaultTaskObj ( cdb : ICDB ) ( pm : PRManager ) =
+        let media = CMedia_Stub(
+            p_GetBlockCount = ( fun _ -> 512UL )
+        )
         new ScsiTask(
             new CStatus_Stub(),
             PRManager_Test1.defaultSource,
@@ -180,9 +183,10 @@ type PRManager_Test1 () =
             cdb,
             [],
             new CInternalLU_Stub(),
-            new CMedia_Stub(),
+            media,
             new ModeParameter(
-                new CMedia_Stub(),
+                BlockDeviceType.BDT_Normal,
+                media,
                 lun_me.zero
             ),
             pm,

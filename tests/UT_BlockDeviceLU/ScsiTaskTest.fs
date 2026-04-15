@@ -143,6 +143,7 @@ type ScsiTask_Test () =
                 lu,
                 media,
                 new ModeParameter(
+                    BlockDeviceType.BDT_Normal,
                     media,
                     lun_me.zero
                 ),
@@ -773,8 +774,8 @@ type ScsiTask_Test () =
                     DataSegment =
                         let v = [|
                             0x00uy; 0x00uy; 0x00uy; 0x08uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER, BLOCK DESCRIPTOR LENGTH
-                            0x11uy; 0x22uy; 0x33uy; 0x44uy; // NUMBER OF BLOCKS
-                            0x00uy; 0xAAuy; 0xBBuy; 0xCCuy; // BLOCK LENGTH
+                            0x00uy; 0x00uy; 0x02uy; 0x00uy; // NUMBER OF BLOCKS
+                            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
                             0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // Dummy buffer
                         |]
                         PooledBuffer.Rent( v, 12 )
@@ -798,7 +799,6 @@ type ScsiTask_Test () =
         RunTask select_task
         Assert.True(( cnt1 = 1 ))
         Assert.True(( cnt2 = 1 ))
-        Assert.True(( select_ModeParameter.BlockLength = 0x00AABBCCUL ))
 
     [<Fact>]
     member _.ModeSelect_002() =
@@ -817,7 +817,7 @@ type ScsiTask_Test () =
                     let v = [|
                         0x00uy; 0x00uy; 0x00uy; 0x00uy;
                         0x01uy; 0x00uy; 0x00uy; 0x10uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
-                        0x11uy; 0x22uy; 0x33uy; 0x44uy; // NUMBER OF BLOCKS
+                        0x00uy; 0x00uy; 0x00uy; 0x00uy; // NUMBER OF BLOCKS
                         0xAAuy; 0xAAuy;                 // dummy buffer
                     |]
                     PooledBuffer.Rent( v, 12 )
@@ -828,9 +828,9 @@ type ScsiTask_Test () =
                     BufferOffset = 12u;
                     DataSegment = 
                         let v = [|
-                            0x11uy; 0x22uy; 0x33uy; 0x44uy;
+                            0x00uy; 0x00uy; 0x02uy; 0x00uy;
                             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-                            0xFFuy; 0xEEuy; 0xDDuy; 0xCCuy; // BLOCK LENGTH
+                            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
                             0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // dummy buffer
                         |]
                         PooledBuffer.Rent( v, 12 )
@@ -848,12 +848,10 @@ type ScsiTask_Test () =
             cnt2 <- cnt2 + 1
         )
         let pc = new PrivateCaller( select_task )
-        let select_ModeParameter = pc.GetField( "m_ModeParameter" ) :?> ModeParameter
 
         RunTask select_task
         Assert.True(( cnt1 = 1 ))
         Assert.True(( cnt2 = 1 ))
-        Assert.True(( select_ModeParameter.BlockLength = 0xFFEEDDCCUL ))
 
     [<Fact>]
     member _.ModeSelect_003() =
@@ -871,8 +869,8 @@ type ScsiTask_Test () =
                 defaultSCSIDataOutPDU with
                     DataSegment = [|
                         0x00uy; 0x00uy; 0x00uy; 0x08uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER, BLOCK DESCRIPTOR LENGTH
-                        0x11uy; 0x22uy; 0x33uy; 0x44uy; // NUMBER OF BLOCKS
-                        0x00uy; 0xAAuy; 0xBBuy; 0xCCuy; // BLOCK LENGTH
+                        0x00uy; 0x00uy; 0x02uy; 0x00uy; // NUMBER OF BLOCKS
+                        yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
                     |] |> PooledBuffer.Rent
             }
         ]
@@ -891,7 +889,6 @@ type ScsiTask_Test () =
         RunTask select_task
         Assert.True(( cnt1 = 0 ))
         Assert.True(( cnt2 = 1 ))
-        Assert.True(( select_ModeParameter.BlockLength = 0x00AABBCCUL ))
 
     [<Fact>]
     member _.ModeSelect_004() =
@@ -909,8 +906,8 @@ type ScsiTask_Test () =
                 defaultSCSIDataOutPDU with
                     DataSegment = [|
                         0x00uy; 0x00uy; 0x00uy; 0x08uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER, BLOCK DESCRIPTOR LENGTH
-                        0x11uy; 0x22uy; 0x33uy; 0x44uy; // NUMBER OF BLOCKS
-                        0x00uy; 0xAAuy; 0xBBuy; 0xCCuy; // BLOCK LENGTH
+                        0x00uy; 0x00uy; 0x02uy; 0x00uy; // NUMBER OF BLOCKS
+                        yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
                     |] |> PooledBuffer.Rent
             }
         ]
@@ -969,7 +966,7 @@ type ScsiTask_Test () =
             Assert.True(( stat = ScsiCmdStatCd.GOOD ))
             let v = [|
                 0x17uy; 0x00uy; 0x00uy; 0x08uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER, BLOCK DESCRIPTOR LENGTH
-                0x00uy; 0x00uy; 0xAAuy; 0xBBuy; // BLOCK COUNT
+                0x00uy; 0x00uy; 0x02uy; 0x00uy; // BLOCK COUNT
                 yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
                 0x0Auy;                         // PS, SPF, PAGE CODE
                 0x0Auy;                         // PAGE LENGTH
@@ -1020,8 +1017,8 @@ type ScsiTask_Test () =
             let v = [|
                 0x00uy; 0x22uy; 0x00uy; 0x00uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
                 0x01uy; 0x00uy; 0x00uy; 0x10uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
-                0x88uy; 0x99uy; 0xAAuy; 0xBBuy; // BLOCK COUNT
-                0xCCuy; 0xDDuy; 0xEEuy; 0xFFuy;
+                0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
+                0x00uy; 0x00uy; 0x02uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
                 yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
 

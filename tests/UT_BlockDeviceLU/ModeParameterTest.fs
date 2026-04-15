@@ -19,6 +19,7 @@ open Haruka.Constants
 open Haruka.Commons
 open Haruka.BlockDeviceLU
 open Haruka.Test
+open System.Text
 
 //=============================================================================
 // Class implementation
@@ -44,8 +45,19 @@ type ModeParameter_Test () =
 
     static member initialMP ( initWP : bool ) =
         new ModeParameter(
+            BlockDeviceType.BDT_Normal,
             new CMedia_Stub(
                 p_GetBlockCount = ( fun _ -> 1024UL ),
+                p_GetWriteProtect = ( fun _ -> initWP )
+            ),
+            lun_me.zero
+        )
+
+    static member initialMPDummyDevice ( initWP : bool ) =
+        new ModeParameter(
+            BlockDeviceType.BDT_Dummy,
+            new CMedia_Stub(
+                p_GetBlockCount = ( fun _ -> 0UL ),
                 p_GetWriteProtect = ( fun _ -> initWP )
             ),
             lun_me.zero
@@ -62,6 +74,8 @@ type ModeParameter_Test () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalie parameter list length", msg )
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
 
     [<Fact>]
@@ -73,6 +87,8 @@ type ModeParameter_Test () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalie parameter list length", msg )
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
 
     [<Fact>]
@@ -84,6 +100,8 @@ type ModeParameter_Test () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalie parameter list length", msg )
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
 
     [<Fact>]
@@ -95,6 +113,8 @@ type ModeParameter_Test () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalie parameter list length", msg )
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
 
     [<Fact>]
@@ -106,6 +126,8 @@ type ModeParameter_Test () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalid MEDIUM TYPE value", msg )
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
 
     [<Fact>]
@@ -117,6 +139,8 @@ type ModeParameter_Test () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalid BLOCK DESCRIPTOR LENGTH value", msg )
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
 
     [<Fact>]
@@ -128,6 +152,8 @@ type ModeParameter_Test () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalid BLOCK DESCRIPTOR LENGTH value", msg )
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
 
     [<Fact>]
@@ -136,14 +162,39 @@ type ModeParameter_Test () =
         let v =
             [|
                 0uy; 0uy; 0uy; 8uy;
-                0x11uy; 0x22uy; 0x33uy; 0x44uy; // NUMBER OF BLOCKS
+                0x00uy; 0x00uy; 0x04uy; 0x00uy; // NUMBER OF BLOCKS
                 0x00uy; 0xAAuy; 0xBBuy; 0xCCuy; // BLOCK LENGTH
             |]
             |> PooledBuffer.Rent
         Assert.True(( mp.BlockLength = Constants.MEDIA_BLOCK_SIZE ))
-        mp.Select6 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+        try
+            mp.Select6 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+            Assert.Fail __LINE__
+        with
+        | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalid BLOCK LENGTH value", msg )
+            Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
+        Assert.True(( mp.BlockLength = Constants.MEDIA_BLOCK_SIZE ))
 
-        Assert.True(( mp.BlockLength = 0x0000000000AABBCCUL ))
+    [<Fact>]
+    member _.Select6_008_1() =
+        let mp = ModeParameter_Test.initialMP false
+        let v =
+            [|
+                0uy; 0uy; 0uy; 8uy;
+                0x00uy; 0x00uy; 0xFFuy; 0xFFuy; // NUMBER OF BLOCKS
+                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
+            |]
+            |> PooledBuffer.Rent
+        try
+            mp.Select6 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+            Assert.Fail __LINE__
+        with
+        | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalid NUMBER OF BLOCKS value", msg )
+            Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
 
     [<Fact>]
     member _.Select6_009() =
@@ -168,6 +219,8 @@ type ModeParameter_Test () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Unsupported page code value", msg )
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
 
     [<Fact>]
@@ -253,8 +306,8 @@ type ModeParameter_Test () =
         let v =
             [|
                 0uy; 0uy; 0uy; 8uy;
-                0x11uy; 0x22uy; 0x33uy; 0x44uy; // NUMBER OF BLOCKS
-                0x00uy; 0xAAuy; 0xBBuy; 0xCCuy; // BLOCK LENGTH
+                0x00uy; 0x00uy; 0x04uy; 0x00uy; // NUMBER OF BLOCKS
+                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
                 yield! ( pc.Invoke( "GetInformationalExceptionsControlModePage_Current" ) :?> byte[] )
                 yield! ( pc.Invoke( "GetControlModePage_Current" ) :?> byte[] )
             |]
@@ -267,8 +320,8 @@ type ModeParameter_Test () =
         let v =
             [|
                 0uy; 0uy; 0uy; 8uy;
-                0x11uy; 0x22uy; 0x33uy; 0x44uy; // NUMBER OF BLOCKS
-                0x00uy; 0xAAuy; 0xBBuy; 0xCCuy; // BLOCK LENGTH
+                0x00uy; 0x00uy; 0x04uy; 0x00uy; // NUMBER OF BLOCKS
+                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
                 0x00uy; 0x00uy; 0x00uy;
             |]
             |> PooledBuffer.Rent
@@ -280,14 +333,13 @@ type ModeParameter_Test () =
         let v =
             [|
                 0x00uy; 0x00uy; 0x00uy; 0x08uy;
-                0x11uy; 0x22uy; 0x33uy; 0x44uy; // NUMBER OF BLOCKS
-                0x00uy; 0xAAuy; 0xBBuy; 0xCCuy; // BLOCK LENGTH
+                0x00uy; 0x00uy; 0x04uy; 0x00uy; // NUMBER OF BLOCKS
+                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
                 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // dummy buffer
             |]
         let v2 = PooledBuffer.Rent( v, v.Length - 4 )
         Assert.True(( mp.BlockLength = Constants.MEDIA_BLOCK_SIZE ))
         mp.Select6 v2 v2.Count true true cmdSource ( itt_me.fromPrim 0u )
-        Assert.True(( mp.BlockLength = 0x0000000000AABBCCUL ))
 
     [<Fact>]
     member _.ReadCacheModePageByteData_001() =
@@ -557,6 +609,8 @@ type ModeParameter_Test () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalie parameter list length", msg )
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
 
     [<Fact>]
@@ -568,6 +622,8 @@ type ModeParameter_Test () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalie parameter list length", msg )
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
 
     [<Fact>]
@@ -579,6 +635,8 @@ type ModeParameter_Test () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalie parameter list length", msg )
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
 
     [<Fact>]
@@ -590,6 +648,8 @@ type ModeParameter_Test () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalie parameter list length", msg )
             Assert.True(( x.SenseData.ASC = ASCCd.PARAMETER_LIST_LENGTH_ERROR ))
 
     [<Fact>]
@@ -601,6 +661,8 @@ type ModeParameter_Test () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalid MEDIUM TYPE value", msg )
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
 
     [<Fact>]
@@ -612,6 +674,8 @@ type ModeParameter_Test () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalid BLOCK DESCRIPTOR LENGTH value", msg )
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
 
     [<Fact>]
@@ -623,6 +687,8 @@ type ModeParameter_Test () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalid BLOCK DESCRIPTOR LENGTH value", msg )
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
 
     [<Fact>]
@@ -641,6 +707,8 @@ type ModeParameter_Test () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalid BLOCK DESCRIPTOR LENGTH value", msg )
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
 
     [<Fact>]
@@ -661,25 +729,52 @@ type ModeParameter_Test () =
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalid BLOCK DESCRIPTOR LENGTH value", msg )
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
 
     [<Fact>]
-    member _.Select10_010() =
+    member _.Select10_010_1() =
         let mp = ModeParameter_Test.initialMP false
         let v =
             [|
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
                 0x11uy; 0x22uy; 0x33uy; 0x44uy; // NUMBER OF BLOCKS
-                0x00uy; 0xAAuy; 0xBBuy; 0xCCuy; // BLOCK LENGTH
+                0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK LENGTH
             |]
             |> PooledBuffer.Rent
-        Assert.True(( mp.BlockLength = Constants.MEDIA_BLOCK_SIZE ))
-        mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
-        Assert.True(( mp.BlockLength = 0x0000000000AABBCCUL ))
+        try
+            mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+            Assert.Fail __LINE__
+        with
+        | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalid NUMBER OF BLOCKS value", msg )
+            Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
 
     [<Fact>]
-    member _.Select10_011() =
+    member _.Select10_010_2() =
+        let mp = ModeParameter_Test.initialMP false
+        let v =
+            [|
+                0x00uy; 0x00uy; 0x00uy; 0x00uy;
+                0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
+                0x00uy; 0x00uy; 0x04uy; 0x00uy; // NUMBER OF BLOCKS
+                0x00uy; 0x00uy; 0x22uy; 0x11uy; // BLOCK LENGTH
+            |]
+            |> PooledBuffer.Rent
+        try
+            mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+            Assert.Fail __LINE__
+        with
+        | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalid BLOCK LENGTH value", msg )
+            Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
+
+    [<Fact>]
+    member _.Select10_011_1() =
         let mp = ModeParameter_Test.initialMP false
         let v =
             [|
@@ -688,12 +783,39 @@ type ModeParameter_Test () =
                 0x11uy; 0x22uy; 0x33uy; 0x44uy; // NUMBER OF BLOCKS
                 0x11uy; 0x22uy; 0x33uy; 0x44uy;
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-                0xFFuy; 0xEEuy; 0xDDuy; 0xCCuy; // BLOCK LENGTH
+                0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK LENGTH
             |]
             |> PooledBuffer.Rent
-        Assert.True(( mp.BlockLength = Constants.MEDIA_BLOCK_SIZE ))
-        mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
-        Assert.True(( mp.BlockLength = 0x00000000FFEEDDCCUL ))
+        try
+            mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+            Assert.Fail __LINE__
+        with
+        | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalid NUMBER OF BLOCKS value", msg )
+            Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
+
+    [<Fact>]
+    member _.Select10_011_2() =
+        let mp = ModeParameter_Test.initialMP false
+        let v =
+            [|
+                0x00uy; 0x00uy; 0x00uy; 0x00uy;
+                0x01uy; 0x00uy; 0x00uy; 0x10uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
+                0x00uy; 0x00uy; 0x00uy; 0x00uy; // NUMBER OF BLOCKS
+                0x00uy; 0x00uy; 0x04uy; 0x00uy;
+                0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
+                0x11uy; 0x11uy; 0x11uy; 0x11uy; // BLOCK LENGTH
+            |]
+            |> PooledBuffer.Rent
+        try
+            mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+            Assert.Fail __LINE__
+        with
+        | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Invalid BLOCK LENGTH value", msg )
+            Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
 
     [<Fact>]
     member _.Select10_012() =
@@ -798,8 +920,8 @@ type ModeParameter_Test () =
             [|
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x08uy;
-                0x11uy; 0x22uy; 0x33uy; 0x44uy; // NUMBER OF BLOCKS
-                0x00uy; 0xAAuy; 0xBBuy; 0xCCuy; // BLOCK LENGTH
+                0x00uy; 0x00uy; 0x04uy; 0x00uy; // NUMBER OF BLOCKS
+                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
                 yield! ( pc.Invoke( "GetInformationalExceptionsControlModePage_Current" ) :?> byte[] )
                 yield! ( pc.Invoke( "GetControlModePage_Current" ) :?> byte[] )
             |]
@@ -814,8 +936,8 @@ type ModeParameter_Test () =
             [|
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x08uy;
-                0x11uy; 0x22uy; 0x33uy; 0x44uy; // NUMBER OF BLOCKS
-                0x00uy; 0xAAuy; 0xBBuy; 0xCCuy; // BLOCK LENGTH
+                0x00uy; 0x00uy; 0x04uy; 0x00uy; // NUMBER OF BLOCKS
+                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
                 yield! ( pc.Invoke( "GetCacheModePage_Current" ) :?> byte[] )
                 yield! ( pc.Invoke( "GetInformationalExceptionsControlModePage_Current" ) :?> byte[] )
                 yield! ( pc.Invoke( "GetControlModePage_Current" ) :?> byte[] )
@@ -830,8 +952,8 @@ type ModeParameter_Test () =
             [|
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x08uy;
-                0x11uy; 0x22uy; 0x33uy; 0x44uy; // NUMBER OF BLOCKS
-                0x00uy; 0xAAuy; 0xBBuy; 0xCCuy; // BLOCK LENGTH
+                0x00uy; 0x00uy; 0x04uy; 0x00uy; // NUMBER OF BLOCKS
+                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
                 0x00uy; 0x00uy; 0x00uy;
             |]
             |> PooledBuffer.Rent
@@ -844,14 +966,13 @@ type ModeParameter_Test () =
             [|
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
-                0x11uy; 0x22uy; 0x33uy; 0x44uy; // NUMBER OF BLOCKS
-                0x00uy; 0xAAuy; 0xBBuy; 0xCCuy; // BLOCK LENGTH
+                0x00uy; 0x00uy; 0x04uy; 0x00uy; // NUMBER OF BLOCKS
+                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
                 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // dummy buffer
             |]
         let v2 = PooledBuffer.Rent( v, v.Length - 4 )
         Assert.True(( mp.BlockLength = Constants.MEDIA_BLOCK_SIZE ))
         mp.Select10 v2 v2.Count true true cmdSource ( itt_me.fromPrim 0u )
-        Assert.True(( mp.BlockLength = 0x0000000000AABBCCUL ))
 
     [<Fact>]
     member _.Sense6_001() =
@@ -1475,7 +1596,32 @@ type ModeParameter_Test () =
             0x00uy; 0x22uy; 0x00uy; 0x80uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
             0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
+
+            0x08uy;                         // PS, SPF, PAGE CODE
+            0x12uy;                         // PAGE LENGTH
+            0x00uy;                         // IC,ABPF,CAP,DISC,SIZE,WCE,MF,RCD
+            0x00uy;                         // DEMAND READ RETENTION PRIORITY, WRITE RETENTION PRIORITY
+            0x00uy; 0x00uy;                 // DISABLE PRE-FETCH TRANSFER LENGTH
+            0x00uy; 0x00uy;                 // MINIMUM PRE-FETCH
+            0x00uy; 0x00uy;                 // MAXIMUM PRE-FETCH
+            0x00uy; 0x00uy;                 // MAXIMUM PRE-FETCH CEILING
+            0x00uy;                         // FSW,LBCSS,DRA,NV_DIS
+            0x00uy;                         // NUMBER OF CACHE SEGMENTS
+            0x00uy; 0x00uy;                 // CACHE SEGMENT SIZE
+            0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
+        |]
+        Assert.True(( v1 = v2 ))
+
+    [<Fact>]
+    member _.Sense10_001_1() =
+        let mp = ModeParameter_Test.initialMPDummyDevice true
+        let v1 = mp.Sense10 false false 0x08uy 0x00uy 0x00uy cmdSource ( itt_me.fromPrim 0u )
+        let v2 = [|
+            0x00uy; 0x22uy; 0x00uy; 0x00uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
+            0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
+            0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
+            0x00uy; 0x00uy; 0x00uy; 0x00uy  // BLOCK LENGTH
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -1524,7 +1670,34 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
+
+            0x08uy;                         // PS, SPF, PAGE CODE
+            0x12uy;                         // PAGE LENGTH
+            0x00uy;                         // IC,ABPF,CAP,DISC,SIZE,WCE,MF,RCD
+            0x00uy;                         // DEMAND READ RETENTION PRIORITY, WRITE RETENTION PRIORITY
+            0x00uy; 0x00uy;                 // DISABLE PRE-FETCH TRANSFER LENGTH
+            0x00uy; 0x00uy;                 // MINIMUM PRE-FETCH
+            0x00uy; 0x00uy;                 // MAXIMUM PRE-FETCH
+            0x00uy; 0x00uy;                 // MAXIMUM PRE-FETCH CEILING
+            0x00uy;                         // FSW,LBCSS,DRA,NV_DIS
+            0x00uy;                         // NUMBER OF CACHE SEGMENTS
+            0x00uy; 0x00uy;                 // CACHE SEGMENT SIZE
+            0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
+        |]
+        Assert.True(( v1 = v2 ))
+
+    [<Fact>]
+    member _.Sense10_003_1() =
+        let mp = ModeParameter_Test.initialMPDummyDevice true
+        let v1 = mp.Sense10 true false 0x08uy 0x00uy 0x00uy cmdSource ( itt_me.fromPrim 0u )
+        let v2 = [|
+            0x00uy; 0x2Auy; 0x00uy; 0x00uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
+            0x01uy; 0x00uy; 0x00uy; 0x10uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
+            0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;
+            0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
+            0x00uy; 0x00uy; 0x00uy; 0x00uy  // BLOCK LENGTH
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -1574,7 +1747,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -1599,7 +1772,7 @@ type ModeParameter_Test () =
             0x00uy; 0x1Auy; 0x00uy; 0x80uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
             0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
             0x0Auy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x04uy;                         // TST, TMF_ONLY, D_SENSE, GLTSD, RLEC
@@ -1641,7 +1814,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
             0x0Auy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x04uy;                         // TST, TMF_ONLY, D_SENSE, GLTSD, RLEC
@@ -1683,7 +1856,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
             0x0Auy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x04uy;                         // TST, TMF_ONLY, D_SENSE, GLTSD, RLEC
@@ -1706,7 +1879,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
             0x1Cuy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x39uy;                         // PERF, EBF, EWASC, DEXCPT, TEST, LOGERR
@@ -1724,7 +1897,7 @@ type ModeParameter_Test () =
             0x00uy; 0x1Auy; 0x00uy; 0x80uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
             0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
             0x1Cuy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x39uy;                         // PERF, EBF, EWASC, DEXCPT, TEST, LOGERR
@@ -1760,7 +1933,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -1802,7 +1975,7 @@ type ModeParameter_Test () =
             0x00uy; 0x3Auy; 0x00uy; 0x80uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
             0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -2339,7 +2512,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
             0x1Cuy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x39uy;                         // PERF, EBF, EWASC, DEXCPT, TEST, LOGERR
@@ -2357,7 +2530,7 @@ type ModeParameter_Test () =
             0x00uy; 0x1Auy; 0x00uy; 0x80uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
             0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
             0x1Cuy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x39uy;                         // PERF, EBF, EWASC, DEXCPT, TEST, LOGERR
@@ -2547,8 +2720,8 @@ type ModeParameter_Test () =
         Assert.False(( mp.SWP ))
         let v = [|
             0x00uy; 0x00uy; 0x00uy; 0x08uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER, BLOCK DESCRIPTOR LENGTH
-            0x11uy; 0x22uy; 0x33uy; 0x44uy; // NUMBER OF BLOCKS
-            0x00uy; 0xAAuy; 0xBBuy; 0xCCuy; // BLOCK LENGTH
+            0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
 
             0x1Cuy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
@@ -2585,7 +2758,6 @@ type ModeParameter_Test () =
         let v2 = PooledBuffer.Rent( v, v.Length - 4 )
         mp.Select6 v2 v2.Count true true cmdSource ( itt_me.fromPrim 0u )
 
-        Assert.True(( mp.BlockLength = 0x00AABBCCUL ))
         Assert.False(( mp.D_SENSE ))
         Assert.True(( mp.SWP ))
 
@@ -2593,7 +2765,7 @@ type ModeParameter_Test () =
         let v2 = [|
             0x37uy; 0x00uy; 0x80uy; 0x08uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            0x00uy; 0xAAuy; 0xBBuy; 0xCCuy; // BLOCK LENGTH
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -2637,9 +2809,9 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
             0x01uy; 0x00uy; 0x00uy; 0x10uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // NUMBER OF BLOCKS
-            0x11uy; 0x22uy; 0x33uy; 0x44uy;
+            0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            0x12uy; 0x34uy; 0x56uy; 0x78uy; // BLOCK LENGTH
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
 
             0x1Cuy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
@@ -2676,7 +2848,6 @@ type ModeParameter_Test () =
         let v2 = PooledBuffer.Rent( v, v.Length - 4 )
         mp.Select10 v2 v2.Count true true cmdSource ( itt_me.fromPrim 0u )
 
-        Assert.True(( mp.BlockLength = 0x12345678UL ))
         Assert.False(( mp.D_SENSE ))
         Assert.True(( mp.SWP ))
 
@@ -2687,7 +2858,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            0x12uy; 0x34uy; 0x56uy; 0x78uy; // BLOCK LENGTH
+            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH

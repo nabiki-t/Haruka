@@ -93,7 +93,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
 
     let createDefScsiTaskWithPRManager ( cmd : SCSICommandPDU ) ( cdb : ICDB ) ( data : SCSIDataOutPDU list ) ( acaNoncompliant : bool ) ( prFName : string ) =
         let media = new CMedia_Stub(
-            p_GetBlockCount = ( fun () -> 512UL )
+            p_GetBlockCount = ( fun () -> 0UL )
         )
         let stat = new CStatus_Stub(
             p_GetDeviceName = ( fun _ -> "targetdevice001" ),
@@ -145,6 +145,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
                 lu,
                 media,
                 new ModeParameter(
+                    BlockDeviceType.BDT_Dummy,
                     media,
                     lun_me.zero
                 ),
@@ -673,8 +674,8 @@ type ScsiTaskForDummyDeviceTest_Test () =
                     DataSegment =
                         let v = [|
                             0x00uy; 0x00uy; 0x00uy; 0x08uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER, BLOCK DESCRIPTOR LENGTH
-                            0x11uy; 0x22uy; 0x33uy; 0x44uy; // NUMBER OF BLOCKS
-                            0x00uy; 0xAAuy; 0xBBuy; 0xCCuy; // BLOCK LENGTH
+                            0x00uy; 0x00uy; 0x00uy; 0x00uy; // NUMBER OF BLOCKS
+                            0x00uy; 0x00uy; 0x00uy; 0x00uy  // BLOCK LENGTH
                             0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // Dummy buffer
                         |]
                         PooledBuffer.Rent( v, 12 )
@@ -691,12 +692,10 @@ type ScsiTaskForDummyDeviceTest_Test () =
         ilu.p_NotifyTerminateTask <- ( fun _ ->  cnt2 <- cnt2 + 1 )
 
         let pc_dummy = new PrivateCaller( select_task )
-        let select_ModeParameter = pc_dummy.GetField( "m_ModeParameter" ) :?> ModeParameter
 
         RunTask select_task
         Assert.True(( cnt1 = 1 ))
         Assert.True(( cnt2 = 1 ))
-        Assert.True(( select_ModeParameter.BlockLength = 0x00AABBCCUL ))
 
     [<Fact>]
     member _.ModeSense_001() =
@@ -721,8 +720,8 @@ type ScsiTaskForDummyDeviceTest_Test () =
             Assert.True(( stat = ScsiCmdStatCd.GOOD ))
             let v = [|
                 0x17uy; 0x00uy; 0x00uy; 0x08uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER, BLOCK DESCRIPTOR LENGTH
-                0x00uy; 0x00uy; 0xAAuy; 0xBBuy; // BLOCK COUNT
-                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
+                0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
+                0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK LENGTH
                 0x0Auy;                         // PS, SPF, PAGE CODE
                 0x0Auy;                         // PAGE LENGTH
                 0x04uy;                         // TST, TMF_ONLY, D_SENSE, GLTSD, RLEC
@@ -739,7 +738,6 @@ type ScsiTaskForDummyDeviceTest_Test () =
         ilu.p_NotifyTerminateTask <- ( fun _ -> cnt1 <- cnt1 + 1 )
 
         let media_stub = ( sense_task :?> ScsiTask ).Media :?> CMedia_Stub
-        media_stub.p_GetBlockCount <- ( fun () -> 0xAABBUL )
         media_stub.p_GetWriteProtect <- ( fun () -> false )
 
         RunTask sense_task
@@ -751,8 +749,8 @@ type ScsiTaskForDummyDeviceTest_Test () =
         let mutable cnt1 = 0
         let cdb = {
             OperationCode = 0x0Auy;
-            SelectReport = 0x00uy;
-            AllocationLength = 15u;
+            SelectReport = 0x03uy;
+            AllocationLength = 0u;
             Control = 0uy;
         }
         let sense_task, ilu = createDefScsiTaskForDummyDevice defaultSCSICommandPDU cdb [] false

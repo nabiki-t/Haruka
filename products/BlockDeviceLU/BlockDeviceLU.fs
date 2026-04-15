@@ -29,14 +29,6 @@ open Haruka.IODataTypes
 //=============================================================================
 // Type definition
 
-/// BlockDevice type
-[<Struct>]
-type BlockDeviceType =
-    /// Normal block device LU
-    | BDT_Normal
-    /// Dummy device for REPORT LUNS well known LU
-    | BDT_Dummy
-
 /// Indicates whether the LU has been reset.
 type LUResetStatus =
     /// No reset has occurred and it is available
@@ -104,7 +96,7 @@ type BlockDeviceLU
             m_TargetGroupKiller
 
     /// Mode parameter values.
-    let m_ModeParameter = new ModeParameter( m_Media, m_LUN )
+    let m_ModeParameter = new ModeParameter( m_DeviceType, m_Media, m_LUN )
 
     // Persistent Reservation save file name
     let m_PRSaveFileName =
