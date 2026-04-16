@@ -1171,7 +1171,7 @@ type GenScsiParams() =
                 }
                 |> Some
             else
-                let wPageLength = pv.Array.[ p + 1 ]
+                let wPageLength = pv.Array.[ p + 1 ] + 2uy
                 if wPageLength > 0uy then
                     loop ( p + int wPageLength )
                 else
@@ -1221,7 +1221,7 @@ type GenScsiParams() =
                 }
                 |> Some
             else
-                let wPageLength = pv.Array.[ p + 1 ]
+                let wPageLength = pv.Array.[ p + 1 ] + 2uy
                 if wPageLength > 0uy then
                     loop ( p + int wPageLength )
                 else
@@ -1260,7 +1260,7 @@ type GenScsiParams() =
                 }
                 |> Some
             else
-                let wPageLength = pv.Array.[ p + 1 ]
+                let wPageLength = pv.Array.[ p + 1 ] + 2uy
                 if wPageLength > 0uy then
                     loop ( p + int wPageLength )
                 else

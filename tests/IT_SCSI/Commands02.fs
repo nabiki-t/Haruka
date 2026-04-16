@@ -283,13 +283,21 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
     [<Theory>]
     [<InlineData( 0UL, 0uy, 0x00uy )>]
     [<InlineData( 0UL, 0uy, 0xFFuy )>]
+    [<InlineData( 0UL, 1uy, 0x00uy )>]
+    [<InlineData( 0UL, 1uy, 0xFFuy )>]
+    [<InlineData( 0UL, 2uy, 0x00uy )>]
+    [<InlineData( 0UL, 2uy, 0xFFuy )>]
     [<InlineData( 0UL, 3uy, 0x00uy )>]
     [<InlineData( 0UL, 3uy, 0xFFuy )>]
     [<InlineData( 1UL, 0uy, 0x00uy )>]
     [<InlineData( 1UL, 0uy, 0xFFuy )>]
+    [<InlineData( 1UL, 1uy, 0x00uy )>]
+    [<InlineData( 1UL, 1uy, 0xFFuy )>]
+    [<InlineData( 1UL, 2uy, 0x00uy )>]
+    [<InlineData( 1UL, 2uy, 0xFFuy )>]
     [<InlineData( 1UL, 3uy, 0x00uy )>]
     [<InlineData( 1UL, 3uy, 0xFFuy )>]
-    member _.ModeSense6_CacheModePage_Current_001 ( lu : uint64 ) ( pc : byte ) ( subpage : byte ) =
+    member _.ModeSense6_CacheModePage_001 ( lu : uint64 ) ( pc : byte ) ( subpage : byte ) =
         task {
             let lun = lun_me.fromPrim lu
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
@@ -345,15 +353,48 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
         }
 
     [<Theory>]
+    [<InlineData( 0UL, 1uy, 0x00uy )>]
+    [<InlineData( 0UL, 1uy, 0xFFuy )>]
+    [<InlineData( 0UL, 2uy, 0x00uy )>]
+    [<InlineData( 0UL, 2uy, 0xFFuy )>]
+    [<InlineData( 1UL, 1uy, 0x00uy )>]
+    [<InlineData( 1UL, 1uy, 0xFFuy )>]
+    [<InlineData( 1UL, 2uy, 0x00uy )>]
+    [<InlineData( 1UL, 2uy, 0xFFuy )>]
+    member _.ModeSense6_ControlModePage_002 ( lu : uint64 ) ( pc : byte ) ( subpage : byte ) =
+        task {
+            let lun = lun_me.fromPrim lu
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt1 = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK lun DBD.F pc 0x0Auy subpage 255uy NACA.T
+            let! res1 = r1.Wait_ModeSense6 itt1
+            Assert.True(( res1.Block.IsSome ))
+            Assert.True(( res1.Control.IsSome ))
+            Assert.True(( res1.Control.Value.PageLength = 0x0Auy ))
+            Assert.True(( res1.Cache.IsNone ))
+            Assert.True(( res1.InformationalExceptionsControl.IsNone ))
+
+            do! r1.Close()
+        }
+
+    [<Theory>]
     [<InlineData( 0UL, 0uy, 0x00uy )>]
     [<InlineData( 0UL, 0uy, 0xFFuy )>]
+    [<InlineData( 0UL, 1uy, 0x00uy )>]
+    [<InlineData( 0UL, 1uy, 0xFFuy )>]
+    [<InlineData( 0UL, 2uy, 0x00uy )>]
+    [<InlineData( 0UL, 2uy, 0xFFuy )>]
     [<InlineData( 0UL, 3uy, 0x00uy )>]
     [<InlineData( 0UL, 3uy, 0xFFuy )>]
     [<InlineData( 1UL, 0uy, 0x00uy )>]
     [<InlineData( 1UL, 0uy, 0xFFuy )>]
+    [<InlineData( 1UL, 1uy, 0x00uy )>]
+    [<InlineData( 1UL, 1uy, 0xFFuy )>]
+    [<InlineData( 1UL, 2uy, 0x00uy )>]
+    [<InlineData( 1UL, 2uy, 0xFFuy )>]
     [<InlineData( 1UL, 3uy, 0x00uy )>]
     [<InlineData( 1UL, 3uy, 0xFFuy )>]
-    member _.ModeSense6_InformationalExceptionsControlModePage_Current_001 ( lu : uint64 ) ( pc : byte ) ( subpage : byte ) =
+    member _.ModeSense6_InformationalExceptionsControlModePage_001 ( lu : uint64 ) ( pc : byte ) ( subpage : byte ) =
         task {
             let lun = lun_me.fromPrim lu
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
@@ -364,5 +405,81 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
             Assert.True(( res.Cache.IsNone ))
             Assert.True(( res.InformationalExceptionsControl.IsSome ))
             Assert.True(( res.InformationalExceptionsControl.Value.PageLength = 0x0Auy ))
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( 0UL, 0uy, 0x00uy )>]
+    [<InlineData( 0UL, 0uy, 0xFFuy )>]
+    [<InlineData( 0UL, 1uy, 0x00uy )>]
+    [<InlineData( 0UL, 1uy, 0xFFuy )>]
+    [<InlineData( 0UL, 2uy, 0x00uy )>]
+    [<InlineData( 0UL, 2uy, 0xFFuy )>]
+    [<InlineData( 0UL, 3uy, 0x00uy )>]
+    [<InlineData( 0UL, 3uy, 0xFFuy )>]
+    [<InlineData( 1UL, 0uy, 0x00uy )>]
+    [<InlineData( 1UL, 0uy, 0xFFuy )>]
+    [<InlineData( 1UL, 1uy, 0x00uy )>]
+    [<InlineData( 1UL, 1uy, 0xFFuy )>]
+    [<InlineData( 1UL, 2uy, 0x00uy )>]
+    [<InlineData( 1UL, 2uy, 0xFFuy )>]
+    [<InlineData( 1UL, 3uy, 0x00uy )>]
+    [<InlineData( 1UL, 3uy, 0xFFuy )>]
+    member _.ModeSense6_AllPages_001 ( lu : uint64 ) ( pc : byte ) ( subpage : byte ) =
+        task {
+            let lun = lun_me.fromPrim lu
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK lun DBD.F pc 0x3Fuy subpage 255uy NACA.T
+            let! res = r1.Wait_ModeSense6 itt
+            Assert.True(( res.Block.IsSome ))
+            Assert.True(( res.Control.IsSome ))
+            Assert.True(( res.Control.Value.PageLength = 0x0Auy ))
+            Assert.True(( res.Cache.IsSome ))
+            Assert.True(( res.Cache.Value.PageLength = 0x12uy ))
+            Assert.True(( res.InformationalExceptionsControl.IsSome ))
+            Assert.True(( res.InformationalExceptionsControl.Value.PageLength = 0x0Auy ))
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( 0UL, false, 0us, 0 )>]
+    [<InlineData( 0UL, false, 8us, 8 )>]
+    [<InlineData( 0UL, false, 16us, 16 )>]
+    [<InlineData( 0UL, false, 255us, 60 )>]
+    [<InlineData( 0UL, true,  0us, 0 )>]
+    [<InlineData( 0UL, true,  8us, 8 )>]
+    [<InlineData( 0UL, true,  24us, 24 )>]
+    [<InlineData( 0UL, true,  255us, 68 )>]
+    [<InlineData( 1UL, false, 0us, 0 )>]
+    [<InlineData( 1UL, false, 8us, 8 )>]
+    [<InlineData( 1UL, false, 16us, 16 )>]
+    [<InlineData( 1UL, false, 255us, 60 )>]
+    [<InlineData( 1UL, true,  0us, 0 )>]
+    [<InlineData( 1UL, true,  8us, 8 )>]
+    [<InlineData( 1UL, true,  24us, 24 )>]
+    [<InlineData( 1UL, true,  255us, 68 )>]
+    member _.ModeSense10_001 ( lu : uint64 ) ( llbaa : bool ) ( allen : uint16 ) ( explen : int ) =
+        task {
+            let lun = lun_me.fromPrim lu
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun ( LLBAA.ofBool llbaa ) DBD.F 0uy 0x3Fuy 0uy allen NACA.T
+            let! res = r1.WaitSCSIResponseGoodStatus itt
+            Assert.True(( res.Length = explen ))
+
+            let r = GenScsiParams.ModeSense10 res
+            if res.Length >= 8 then
+                Assert.True(( r.ModeDataLength > 0us ))
+                Assert.True(( r.MediumType = 0uy ))
+                Assert.True(( r.BlockDescriptorLength > 0us ))
+
+            if res.Length >= 16 then
+                Assert.True(( r.Block.IsSome ))
+                if lu = 0UL then
+                    Assert.True(( ( r.Block.Value.BlockCount |> blkcnt_me.toUInt64 ) = 0UL ))
+                    Assert.True(( r.Block.Value.BlockLength = 0u ))
+                else
+                    Assert.True(( ( r.Block.Value.BlockCount |> blkcnt_me.toUInt64 ) > 0UL ))
+                    Assert.True(( r.Block.Value.BlockLength > 0u ))
+            res.Return()
             do! r1.Close()
         }

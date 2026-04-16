@@ -487,7 +487,7 @@ type GenScsiCDB() =
     static member ModeSense10 ( argLLBAA : LLBAA ) ( argDBD : DBD ) ( argPC : byte ) ( argPageCode : byte ) ( argSubPageCode : byte ) ( argAllocationLength : uint16 ) ( argNACA : NACA ) ( argLINK : LINK ) : byte[] =
         [|
             0x5Auy;                                                                             // OPERATION CODE
-            ( Functions.SetBitflag ( LLBAA.toBool argLLBAA ) 0x01uy ) |||                       // LLBAA
+            ( Functions.SetBitflag ( LLBAA.toBool argLLBAA ) 0x10uy ) |||                       // LLBAA
                 ( Functions.SetBitflag ( DBD.toBool argDBD ) 0x08uy );                          // DBD
             ( ( argPC &&& 0x03uy ) <<< 6 ) |||                                                  // PC
                 ( argPageCode &&& 0x3Fuy );                                                     // PAGE CODE
