@@ -349,6 +349,10 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
             Assert.True(( res3.Control.Value.DescriptorFormatSenseData = param1.Control.Value.DescriptorFormatSenseData ))
             Assert.True(( res3.Control.Value.SoftwareWriteProtect = param1.Control.Value.SoftwareWriteProtect ))
 
+            let! itt4 = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun LLBAA.T DBD.F pc 0x0Auy subpage 255us NACA.T
+            let! res4 = r1.Wait_ModeSense10 itt4
+            Assert.True(( res3.Control.Value = res4.Control.Value ))
+
             do! r1.Close()
         }
 
@@ -481,5 +485,322 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
                     Assert.True(( ( r.Block.Value.BlockCount |> blkcnt_me.toUInt64 ) > 0UL ))
                     Assert.True(( r.Block.Value.BlockLength > 0u ))
             res.Return()
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( 0UL, true  )>]
+    [<InlineData( 0UL, false )>]
+    [<InlineData( 1UL, true  )>]
+    [<InlineData( 1UL, false )>]
+    member _.ModeSense10_DBD_001 ( lu : uint64 ) ( llbaa : bool ) =
+        task {
+            let lun = lun_me.fromPrim lu
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun ( LLBAA.ofBool llbaa ) DBD.T 0uy 0x3Fuy 0uy 255us NACA.T
+            let! res = r1.WaitSCSIResponseGoodStatus itt
+            let r = GenScsiParams.ModeSense10 res
+            Assert.True(( r.Block.IsNone ))
+            res.Return()
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( 0uy, 0x00uy, 0x00uy )>]
+    [<InlineData( 0uy, 0x07uy, 0x00uy )>]
+    [<InlineData( 0uy, 0x09uy, 0x00uy )>]
+    [<InlineData( 0uy, 0x0Buy, 0x00uy )>]
+    [<InlineData( 0uy, 0x1Buy, 0x00uy )>]
+    [<InlineData( 0uy, 0x1Duy, 0x00uy )>]
+    [<InlineData( 0uy, 0x3Euy, 0x00uy )>]
+    [<InlineData( 1uy, 0x00uy, 0x00uy )>]
+    [<InlineData( 1uy, 0x07uy, 0x00uy )>]
+    [<InlineData( 1uy, 0x09uy, 0x00uy )>]
+    [<InlineData( 1uy, 0x0Buy, 0x00uy )>]
+    [<InlineData( 1uy, 0x1Buy, 0x00uy )>]
+    [<InlineData( 1uy, 0x1Duy, 0x00uy )>]
+    [<InlineData( 1uy, 0x3Euy, 0x00uy )>]
+    [<InlineData( 2uy, 0x00uy, 0x00uy )>]
+    [<InlineData( 2uy, 0x07uy, 0x00uy )>]
+    [<InlineData( 2uy, 0x09uy, 0x00uy )>]
+    [<InlineData( 2uy, 0x0Buy, 0x00uy )>]
+    [<InlineData( 2uy, 0x1Buy, 0x00uy )>]
+    [<InlineData( 2uy, 0x1Duy, 0x00uy )>]
+    [<InlineData( 2uy, 0x3Euy, 0x00uy )>]
+    [<InlineData( 3uy, 0x00uy, 0x00uy )>]
+    [<InlineData( 3uy, 0x07uy, 0x00uy )>]
+    [<InlineData( 3uy, 0x09uy, 0x00uy )>]
+    [<InlineData( 3uy, 0x0Buy, 0x00uy )>]
+    [<InlineData( 3uy, 0x1Buy, 0x00uy )>]
+    [<InlineData( 3uy, 0x1Duy, 0x00uy )>]
+    [<InlineData( 3uy, 0x3Euy, 0x00uy )>]
+    [<InlineData( 0uy, 0x08uy, 0x01uy )>]
+    [<InlineData( 0uy, 0x08uy, 0xFEuy )>]
+    [<InlineData( 0uy, 0x0Auy, 0x01uy )>]
+    [<InlineData( 0uy, 0x0Auy, 0xFEuy )>]
+    [<InlineData( 0uy, 0x1Cuy, 0x01uy )>]
+    [<InlineData( 0uy, 0x1Cuy, 0xFEuy )>]
+    [<InlineData( 0uy, 0x3Fuy, 0x01uy )>]
+    [<InlineData( 0uy, 0x3Fuy, 0xFEuy )>]
+    [<InlineData( 1uy, 0x08uy, 0x01uy )>]
+    [<InlineData( 1uy, 0x08uy, 0xFEuy )>]
+    [<InlineData( 1uy, 0x0Auy, 0x01uy )>]
+    [<InlineData( 1uy, 0x0Auy, 0xFEuy )>]
+    [<InlineData( 1uy, 0x1Cuy, 0x01uy )>]
+    [<InlineData( 1uy, 0x1Cuy, 0xFEuy )>]
+    [<InlineData( 1uy, 0x3Fuy, 0x01uy )>]
+    [<InlineData( 1uy, 0x3Fuy, 0xFEuy )>]
+    [<InlineData( 2uy, 0x08uy, 0x01uy )>]
+    [<InlineData( 2uy, 0x08uy, 0xFEuy )>]
+    [<InlineData( 2uy, 0x0Auy, 0x01uy )>]
+    [<InlineData( 2uy, 0x0Auy, 0xFEuy )>]
+    [<InlineData( 2uy, 0x1Cuy, 0x01uy )>]
+    [<InlineData( 2uy, 0x1Cuy, 0xFEuy )>]
+    [<InlineData( 2uy, 0x3Fuy, 0x01uy )>]
+    [<InlineData( 2uy, 0x3Fuy, 0xFEuy )>]
+    [<InlineData( 3uy, 0x08uy, 0x01uy )>]
+    [<InlineData( 3uy, 0x08uy, 0xFEuy )>]
+    [<InlineData( 3uy, 0x0Auy, 0x01uy )>]
+    [<InlineData( 3uy, 0x0Auy, 0xFEuy )>]
+    [<InlineData( 3uy, 0x1Cuy, 0x01uy )>]
+    [<InlineData( 3uy, 0x1Cuy, 0xFEuy )>]
+    [<InlineData( 3uy, 0x3Fuy, 0x01uy )>]
+    [<InlineData( 3uy, 0x3Fuy, 0xFEuy )>]
+    member _.ModeSense10_UnsupportedPaceCode_001 ( pc : byte ) ( page : byte ) ( subpage : byte ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK g_LUN1 LLBAA.T DBD.F pc page subpage 255us NACA.T
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            do! ClearACA r1 g_LUN1
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( true,  0UL, 0uy, 0x00uy )>]
+    [<InlineData( true,  0UL, 0uy, 0xFFuy )>]
+    [<InlineData( true,  0UL, 1uy, 0x00uy )>]
+    [<InlineData( true,  0UL, 1uy, 0xFFuy )>]
+    [<InlineData( true,  0UL, 2uy, 0x00uy )>]
+    [<InlineData( true,  0UL, 2uy, 0xFFuy )>]
+    [<InlineData( true,  0UL, 3uy, 0x00uy )>]
+    [<InlineData( true,  0UL, 3uy, 0xFFuy )>]
+    [<InlineData( true,  1UL, 0uy, 0x00uy )>]
+    [<InlineData( true,  1UL, 0uy, 0xFFuy )>]
+    [<InlineData( true,  1UL, 1uy, 0x00uy )>]
+    [<InlineData( true,  1UL, 1uy, 0xFFuy )>]
+    [<InlineData( true,  1UL, 2uy, 0x00uy )>]
+    [<InlineData( true,  1UL, 2uy, 0xFFuy )>]
+    [<InlineData( true,  1UL, 3uy, 0x00uy )>]
+    [<InlineData( true,  1UL, 3uy, 0xFFuy )>]
+    [<InlineData( false, 0UL, 0uy, 0x00uy )>]
+    [<InlineData( false, 0UL, 0uy, 0xFFuy )>]
+    [<InlineData( false, 0UL, 1uy, 0x00uy )>]
+    [<InlineData( false, 0UL, 1uy, 0xFFuy )>]
+    [<InlineData( false, 0UL, 2uy, 0x00uy )>]
+    [<InlineData( false, 0UL, 2uy, 0xFFuy )>]
+    [<InlineData( false, 0UL, 3uy, 0x00uy )>]
+    [<InlineData( false, 0UL, 3uy, 0xFFuy )>]
+    [<InlineData( false, 1UL, 0uy, 0x00uy )>]
+    [<InlineData( false, 1UL, 0uy, 0xFFuy )>]
+    [<InlineData( false, 1UL, 1uy, 0x00uy )>]
+    [<InlineData( false, 1UL, 1uy, 0xFFuy )>]
+    [<InlineData( false, 1UL, 2uy, 0x00uy )>]
+    [<InlineData( false, 1UL, 2uy, 0xFFuy )>]
+    [<InlineData( false, 1UL, 3uy, 0x00uy )>]
+    [<InlineData( false, 1UL, 3uy, 0xFFuy )>]
+    member _.ModeSense10_CacheModePage_001 ( llbaa : bool ) ( lu : uint64 ) ( pc : byte ) ( subpage : byte ) =
+        task {
+            let lun = lun_me.fromPrim lu
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun ( LLBAA.ofBool llbaa ) DBD.F pc 0x08uy subpage 255us NACA.T
+            let! res = r1.Wait_ModeSense10 itt
+            Assert.True(( res.Block.IsSome ))
+            Assert.True(( res.Control.IsNone ))
+            Assert.True(( res.Cache.IsSome ))
+            Assert.True(( res.Cache.Value.PageLength = 0x12uy ))
+            Assert.True(( res.InformationalExceptionsControl.IsNone ))
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( true,  0UL, 0uy, 0x00uy )>]
+    [<InlineData( true,  0UL, 0uy, 0xFFuy )>]
+    [<InlineData( true,  0UL, 3uy, 0x00uy )>]
+    [<InlineData( true,  0UL, 3uy, 0xFFuy )>]
+    [<InlineData( true,  1UL, 0uy, 0x00uy )>]
+    [<InlineData( true,  1UL, 0uy, 0xFFuy )>]
+    [<InlineData( true,  1UL, 3uy, 0x00uy )>]
+    [<InlineData( true,  1UL, 3uy, 0xFFuy )>]
+    [<InlineData( false, 0UL, 0uy, 0x00uy )>]
+    [<InlineData( false, 0UL, 0uy, 0xFFuy )>]
+    [<InlineData( false, 0UL, 3uy, 0x00uy )>]
+    [<InlineData( false, 0UL, 3uy, 0xFFuy )>]
+    [<InlineData( false, 1UL, 0uy, 0x00uy )>]
+    [<InlineData( false, 1UL, 0uy, 0xFFuy )>]
+    [<InlineData( false, 1UL, 3uy, 0x00uy )>]
+    [<InlineData( false, 1UL, 3uy, 0xFFuy )>]
+    member _.ModeSense10_ControlModePage_Current_001 ( llbaa : bool ) ( lu : uint64 ) ( pc : byte ) ( subpage : byte ) =
+        task {
+            let lun = lun_me.fromPrim lu
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt1 = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun ( LLBAA.ofBool llbaa ) DBD.F pc 0x0Auy subpage 255us NACA.T
+            let! res1 = r1.Wait_ModeSense10 itt1
+            Assert.True(( res1.Block.IsSome ))
+            Assert.True(( res1.Control.IsSome ))
+            Assert.True(( res1.Control.Value.PageLength = 0x0Auy ))
+            Assert.True(( res1.Cache.IsNone ))
+            Assert.True(( res1.InformationalExceptionsControl.IsNone ))
+
+            let param1 = {
+                res1 with
+                    Control = Some {
+                        res1.Control.Value with
+                            DescriptorFormatSenseData = not res1.Control.Value.DescriptorFormatSenseData;
+                            SoftwareWriteProtect = not res1.Control.Value.SoftwareWriteProtect;
+                    }
+            }
+            let! itt2 = r1.Send_ModeSelect10 TaskATTRCd.SIMPLE_TASK lun PF.T SP.F param1 NACA.T
+            let! _ = r1.WaitSCSIResponseGoodStatus itt2
+
+            let! itt3 = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun ( LLBAA.ofBool llbaa ) DBD.F pc 0x0Auy subpage 255us NACA.T
+            let! res3 = r1.Wait_ModeSense10 itt3
+            Assert.True(( res3.Control.Value.DescriptorFormatSenseData = param1.Control.Value.DescriptorFormatSenseData ))
+            Assert.True(( res3.Control.Value.SoftwareWriteProtect = param1.Control.Value.SoftwareWriteProtect ))
+
+            let! itt4 = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK lun DBD.F pc 0x0Auy subpage 255uy NACA.T
+            let! res4 = r1.Wait_ModeSense6 itt4
+            Assert.True(( res3.Control.Value = res4.Control.Value ))
+
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( true,  0UL, 1uy, 0x00uy )>]
+    [<InlineData( true,  0UL, 1uy, 0xFFuy )>]
+    [<InlineData( true,  0UL, 2uy, 0x00uy )>]
+    [<InlineData( true,  0UL, 2uy, 0xFFuy )>]
+    [<InlineData( true,  1UL, 1uy, 0x00uy )>]
+    [<InlineData( true,  1UL, 1uy, 0xFFuy )>]
+    [<InlineData( true,  1UL, 2uy, 0x00uy )>]
+    [<InlineData( true,  1UL, 2uy, 0xFFuy )>]
+    [<InlineData( false, 0UL, 1uy, 0x00uy )>]
+    [<InlineData( false, 0UL, 1uy, 0xFFuy )>]
+    [<InlineData( false, 0UL, 2uy, 0x00uy )>]
+    [<InlineData( false, 0UL, 2uy, 0xFFuy )>]
+    [<InlineData( false, 1UL, 1uy, 0x00uy )>]
+    [<InlineData( false, 1UL, 1uy, 0xFFuy )>]
+    [<InlineData( false, 1UL, 2uy, 0x00uy )>]
+    [<InlineData( false, 1UL, 2uy, 0xFFuy )>]
+    member _.ModeSense10_ControlModePage_002 ( llbaa : bool ) ( lu : uint64 ) ( pc : byte ) ( subpage : byte ) =
+        task {
+            let lun = lun_me.fromPrim lu
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt1 = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun ( LLBAA.ofBool llbaa ) DBD.F pc 0x0Auy subpage 255us NACA.T
+            let! res1 = r1.Wait_ModeSense10 itt1
+            Assert.True(( res1.Block.IsSome ))
+            Assert.True(( res1.Control.IsSome ))
+            Assert.True(( res1.Control.Value.PageLength = 0x0Auy ))
+            Assert.True(( res1.Cache.IsNone ))
+            Assert.True(( res1.InformationalExceptionsControl.IsNone ))
+
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( true,  0UL, 0uy, 0x00uy )>]
+    [<InlineData( true,  0UL, 0uy, 0xFFuy )>]
+    [<InlineData( true,  0UL, 1uy, 0x00uy )>]
+    [<InlineData( true,  0UL, 1uy, 0xFFuy )>]
+    [<InlineData( true,  0UL, 2uy, 0x00uy )>]
+    [<InlineData( true,  0UL, 2uy, 0xFFuy )>]
+    [<InlineData( true,  0UL, 3uy, 0x00uy )>]
+    [<InlineData( true,  0UL, 3uy, 0xFFuy )>]
+    [<InlineData( true,  1UL, 0uy, 0x00uy )>]
+    [<InlineData( true,  1UL, 0uy, 0xFFuy )>]
+    [<InlineData( true,  1UL, 1uy, 0x00uy )>]
+    [<InlineData( true,  1UL, 1uy, 0xFFuy )>]
+    [<InlineData( true,  1UL, 2uy, 0x00uy )>]
+    [<InlineData( true,  1UL, 2uy, 0xFFuy )>]
+    [<InlineData( true,  1UL, 3uy, 0x00uy )>]
+    [<InlineData( true,  1UL, 3uy, 0xFFuy )>]
+    [<InlineData( false, 0UL, 0uy, 0x00uy )>]
+    [<InlineData( false, 0UL, 0uy, 0xFFuy )>]
+    [<InlineData( false, 0UL, 1uy, 0x00uy )>]
+    [<InlineData( false, 0UL, 1uy, 0xFFuy )>]
+    [<InlineData( false, 0UL, 2uy, 0x00uy )>]
+    [<InlineData( false, 0UL, 2uy, 0xFFuy )>]
+    [<InlineData( false, 0UL, 3uy, 0x00uy )>]
+    [<InlineData( false, 0UL, 3uy, 0xFFuy )>]
+    [<InlineData( false, 1UL, 0uy, 0x00uy )>]
+    [<InlineData( false, 1UL, 0uy, 0xFFuy )>]
+    [<InlineData( false, 1UL, 1uy, 0x00uy )>]
+    [<InlineData( false, 1UL, 1uy, 0xFFuy )>]
+    [<InlineData( false, 1UL, 2uy, 0x00uy )>]
+    [<InlineData( false, 1UL, 2uy, 0xFFuy )>]
+    [<InlineData( false, 1UL, 3uy, 0x00uy )>]
+    [<InlineData( false, 1UL, 3uy, 0xFFuy )>]
+    member _.ModeSense10_InformationalExceptionsControlModePage_001 ( llbaa : bool ) ( lu : uint64 ) ( pc : byte ) ( subpage : byte ) =
+        task {
+            let lun = lun_me.fromPrim lu
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun ( LLBAA.ofBool llbaa ) DBD.F pc 0x1Cuy subpage 255us NACA.T
+            let! res = r1.Wait_ModeSense10 itt
+            Assert.True(( res.Block.IsSome ))
+            Assert.True(( res.Control.IsNone ))
+            Assert.True(( res.Cache.IsNone ))
+            Assert.True(( res.InformationalExceptionsControl.IsSome ))
+            Assert.True(( res.InformationalExceptionsControl.Value.PageLength = 0x0Auy ))
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( true,  0UL, 0uy, 0x00uy )>]
+    [<InlineData( true,  0UL, 0uy, 0xFFuy )>]
+    [<InlineData( true,  0UL, 1uy, 0x00uy )>]
+    [<InlineData( true,  0UL, 1uy, 0xFFuy )>]
+    [<InlineData( true,  0UL, 2uy, 0x00uy )>]
+    [<InlineData( true,  0UL, 2uy, 0xFFuy )>]
+    [<InlineData( true,  0UL, 3uy, 0x00uy )>]
+    [<InlineData( true,  0UL, 3uy, 0xFFuy )>]
+    [<InlineData( true,  1UL, 0uy, 0x00uy )>]
+    [<InlineData( true,  1UL, 0uy, 0xFFuy )>]
+    [<InlineData( true,  1UL, 1uy, 0x00uy )>]
+    [<InlineData( true,  1UL, 1uy, 0xFFuy )>]
+    [<InlineData( true,  1UL, 2uy, 0x00uy )>]
+    [<InlineData( true,  1UL, 2uy, 0xFFuy )>]
+    [<InlineData( true,  1UL, 3uy, 0x00uy )>]
+    [<InlineData( true,  1UL, 3uy, 0xFFuy )>]
+    [<InlineData( false, 0UL, 0uy, 0x00uy )>]
+    [<InlineData( false, 0UL, 0uy, 0xFFuy )>]
+    [<InlineData( false, 0UL, 1uy, 0x00uy )>]
+    [<InlineData( false, 0UL, 1uy, 0xFFuy )>]
+    [<InlineData( false, 0UL, 2uy, 0x00uy )>]
+    [<InlineData( false, 0UL, 2uy, 0xFFuy )>]
+    [<InlineData( false, 0UL, 3uy, 0x00uy )>]
+    [<InlineData( false, 0UL, 3uy, 0xFFuy )>]
+    [<InlineData( false, 1UL, 0uy, 0x00uy )>]
+    [<InlineData( false, 1UL, 0uy, 0xFFuy )>]
+    [<InlineData( false, 1UL, 1uy, 0x00uy )>]
+    [<InlineData( false, 1UL, 1uy, 0xFFuy )>]
+    [<InlineData( false, 1UL, 2uy, 0x00uy )>]
+    [<InlineData( false, 1UL, 2uy, 0xFFuy )>]
+    [<InlineData( false, 1UL, 3uy, 0x00uy )>]
+    [<InlineData( false, 1UL, 3uy, 0xFFuy )>]
+    member _.ModeSense10_AllPages_001 ( llbaa : bool ) ( lu : uint64 ) ( pc : byte ) ( subpage : byte ) =
+        task {
+            let lun = lun_me.fromPrim lu
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun ( LLBAA.ofBool llbaa ) DBD.F pc 0x3Fuy subpage 255us NACA.T
+            let! res = r1.Wait_ModeSense10 itt
+            Assert.True(( res.Block.IsSome ))
+            Assert.True(( res.Control.IsSome ))
+            Assert.True(( res.Control.Value.PageLength = 0x0Auy ))
+            Assert.True(( res.Cache.IsSome ))
+            Assert.True(( res.Cache.Value.PageLength = 0x12uy ))
+            Assert.True(( res.InformationalExceptionsControl.IsSome ))
+            Assert.True(( res.InformationalExceptionsControl.Value.PageLength = 0x0Auy ))
             do! r1.Close()
         }
