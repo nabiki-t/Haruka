@@ -984,6 +984,7 @@ type GenScsiParams() =
             yield 0x00uy;
             yield 0x00uy;
             yield 0x00uy;
+            yield 0x00uy;
         |]
 
     /// <summary>
