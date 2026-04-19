@@ -312,46 +312,65 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
         }
 
     [<Theory>]
-    [<InlineData( 0UL, 0uy, 0x00uy )>]
-    [<InlineData( 0UL, 0uy, 0xFFuy )>]
-    [<InlineData( 0UL, 3uy, 0x00uy )>]
-    [<InlineData( 0UL, 3uy, 0xFFuy )>]
-    [<InlineData( 1UL, 0uy, 0x00uy )>]
-    [<InlineData( 1UL, 0uy, 0xFFuy )>]
-    [<InlineData( 1UL, 3uy, 0x00uy )>]
-    [<InlineData( 1UL, 3uy, 0xFFuy )>]
-    member _.ModeSense6_ControlModePage_Current_001 ( lu : uint64 ) ( pc : byte ) ( subpage : byte ) =
+    [<InlineData( 0UL, 0x00uy )>]
+    [<InlineData( 0UL, 0xFFuy )>]
+    [<InlineData( 1UL, 0x00uy )>]
+    [<InlineData( 1UL, 0xFFuy )>]
+    member _.ModeSense6_ControlModePage_Current_001 ( lu : uint64 ) ( subpage : byte ) =
         task {
             let lun = lun_me.fromPrim lu
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
-            let! itt1 = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK lun DBD.F pc 0x0Auy subpage 255uy NACA.T
+            // Initialize to default values
+            let! itt1 = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK lun DBD.F 0x2uy 0x0Auy subpage 255uy NACA.T
             let! res1 = r1.Wait_ModeSense6 itt1
-            Assert.True(( res1.Block.IsSome ))
-            Assert.True(( res1.Control.IsSome ))
-            Assert.True(( res1.Control.Value.PageLength = 0x0Auy ))
-            Assert.True(( res1.Cache.IsNone ))
-            Assert.True(( res1.InformationalExceptionsControl.IsNone ))
 
-            let param1 = {
-                res1 with
-                    Control = Some {
-                        res1.Control.Value with
-                            DescriptorFormatSenseData = not res1.Control.Value.DescriptorFormatSenseData;
-                            SoftwareWriteProtect = not res1.Control.Value.SoftwareWriteProtect;
-                    }
-            }
-            let! itt2 = r1.Send_ModeSelect6 TaskATTRCd.SIMPLE_TASK lun PF.T SP.F param1 NACA.T
+            let! itt2 = r1.Send_ModeSelect6 TaskATTRCd.SIMPLE_TASK lun PF.T SP.F res1 NACA.T
             let! _ = r1.WaitSCSIResponseGoodStatus itt2
 
-            let! itt3 = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK lun DBD.F pc 0x0Auy subpage 255uy NACA.T
+            // Get the current value
+            let! itt3 = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK lun DBD.F 0x0uy 0x0Auy subpage 255uy NACA.T
             let! res3 = r1.Wait_ModeSense6 itt3
-            Assert.True(( res3.Control.Value.DescriptorFormatSenseData = param1.Control.Value.DescriptorFormatSenseData ))
-            Assert.True(( res3.Control.Value.SoftwareWriteProtect = param1.Control.Value.SoftwareWriteProtect ))
+            Assert.True(( res3.Block.IsSome ))
+            Assert.True(( res3.Control.IsSome ))
+            Assert.True(( res3.Control.Value.PageLength = 0x0Auy ))
+            Assert.True(( res3.Cache.IsNone ))
+            Assert.True(( res3.InformationalExceptionsControl.IsNone ))
 
-            let! itt4 = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun LLBAA.T DBD.F pc 0x0Auy subpage 255us NACA.T
-            let! res4 = r1.Wait_ModeSense10 itt4
-            Assert.True(( res3.Control.Value = res4.Control.Value ))
+            // Update the current value
+            let param1 = {
+                res3 with
+                    Control = Some {
+                        res3.Control.Value with
+                            DescriptorFormatSenseData = not res3.Control.Value.DescriptorFormatSenseData;
+                            SoftwareWriteProtect = not res3.Control.Value.SoftwareWriteProtect;
+                    }
+            }
+            let! itt4 = r1.Send_ModeSelect6 TaskATTRCd.SIMPLE_TASK lun PF.T SP.F param1 NACA.T
+            let! _ = r1.WaitSCSIResponseGoodStatus itt4
+
+            // Confirm that the current value has been updated.
+            let! itt5 = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK lun DBD.F 0x0uy 0x0Auy subpage 255uy NACA.T
+            let! res5 = r1.Wait_ModeSense6 itt5
+            Assert.True(( res5.Control.Value.DescriptorFormatSenseData = param1.Control.Value.DescriptorFormatSenseData ))
+            Assert.True(( res5.Control.Value.SoftwareWriteProtect = param1.Control.Value.SoftwareWriteProtect ))
+
+            // Verify that the same value is obtained using the MODE SENSE(6) command.
+            let! itt6 = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun LLBAA.T DBD.F 0x0uy 0x0Auy subpage 255us NACA.T
+            let! res6 = r1.Wait_ModeSense10 itt6
+            Assert.True(( res5.Control.Value = res6.Control.Value ))
+
+            // Verify that the default values ​​have not been changed.
+            let! itt7 = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK lun DBD.F 0x2uy 0x0Auy subpage 255uy NACA.T
+            let! res7 = r1.Wait_ModeSense6 itt7
+            Assert.True(( res7.Control.Value.DescriptorFormatSenseData <> param1.Control.Value.DescriptorFormatSenseData ))
+            Assert.True(( res7.Control.Value.SoftwareWriteProtect <> param1.Control.Value.SoftwareWriteProtect ))
+
+            // Verify that the saced values ​​have not been changed.
+            let! itt8 = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK lun DBD.F 0x3uy 0x0Auy subpage 255uy NACA.T
+            let! res8 = r1.Wait_ModeSense6 itt8
+            Assert.True(( res8.Control.Value.DescriptorFormatSenseData <> param1.Control.Value.DescriptorFormatSenseData ))
+            Assert.True(( res8.Control.Value.SoftwareWriteProtect <> param1.Control.Value.SoftwareWriteProtect ))
 
             do! r1.Close()
         }
@@ -361,10 +380,14 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
     [<InlineData( 0UL, 1uy, 0xFFuy )>]
     [<InlineData( 0UL, 2uy, 0x00uy )>]
     [<InlineData( 0UL, 2uy, 0xFFuy )>]
+    [<InlineData( 0UL, 3uy, 0x00uy )>]
+    [<InlineData( 0UL, 3uy, 0xFFuy )>]
     [<InlineData( 1UL, 1uy, 0x00uy )>]
     [<InlineData( 1UL, 1uy, 0xFFuy )>]
     [<InlineData( 1UL, 2uy, 0x00uy )>]
     [<InlineData( 1UL, 2uy, 0xFFuy )>]
+    [<InlineData( 1UL, 3uy, 0x00uy )>]
+    [<InlineData( 1UL, 3uy, 0xFFuy )>]
     member _.ModeSense6_ControlModePage_002 ( lu : uint64 ) ( pc : byte ) ( subpage : byte ) =
         task {
             let lun = lun_me.fromPrim lu
@@ -641,54 +664,70 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
         }
 
     [<Theory>]
-    [<InlineData( true,  0UL, 0uy, 0x00uy )>]
-    [<InlineData( true,  0UL, 0uy, 0xFFuy )>]
-    [<InlineData( true,  0UL, 3uy, 0x00uy )>]
-    [<InlineData( true,  0UL, 3uy, 0xFFuy )>]
-    [<InlineData( true,  1UL, 0uy, 0x00uy )>]
-    [<InlineData( true,  1UL, 0uy, 0xFFuy )>]
-    [<InlineData( true,  1UL, 3uy, 0x00uy )>]
-    [<InlineData( true,  1UL, 3uy, 0xFFuy )>]
-    [<InlineData( false, 0UL, 0uy, 0x00uy )>]
-    [<InlineData( false, 0UL, 0uy, 0xFFuy )>]
-    [<InlineData( false, 0UL, 3uy, 0x00uy )>]
-    [<InlineData( false, 0UL, 3uy, 0xFFuy )>]
-    [<InlineData( false, 1UL, 0uy, 0x00uy )>]
-    [<InlineData( false, 1UL, 0uy, 0xFFuy )>]
-    [<InlineData( false, 1UL, 3uy, 0x00uy )>]
-    [<InlineData( false, 1UL, 3uy, 0xFFuy )>]
-    member _.ModeSense10_ControlModePage_Current_001 ( llbaa : bool ) ( lu : uint64 ) ( pc : byte ) ( subpage : byte ) =
+    [<InlineData( true,  0UL, 0x00uy )>]
+    [<InlineData( true,  0UL, 0xFFuy )>]
+    [<InlineData( true,  1UL, 0x00uy )>]
+    [<InlineData( true,  1UL, 0xFFuy )>]
+    [<InlineData( false, 0UL, 0x00uy )>]
+    [<InlineData( false, 0UL, 0xFFuy )>]
+    [<InlineData( false, 1UL, 0x00uy )>]
+    [<InlineData( false, 1UL, 0xFFuy )>]
+    member _.ModeSense10_ControlModePage_Current_001 ( llbaa : bool ) ( lu : uint64 ) ( subpage : byte ) =
         task {
             let lun = lun_me.fromPrim lu
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
-            let! itt1 = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun ( LLBAA.ofBool llbaa ) DBD.F pc 0x0Auy subpage 255us NACA.T
+            // Initialize to default values
+            let! itt1 = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun ( LLBAA.ofBool llbaa ) DBD.F 0x2uy 0x0Auy subpage 255us NACA.T
             let! res1 = r1.Wait_ModeSense10 itt1
-            Assert.True(( res1.Block.IsSome ))
-            Assert.True(( res1.Control.IsSome ))
-            Assert.True(( res1.Control.Value.PageLength = 0x0Auy ))
-            Assert.True(( res1.Cache.IsNone ))
-            Assert.True(( res1.InformationalExceptionsControl.IsNone ))
 
-            let param1 = {
-                res1 with
-                    Control = Some {
-                        res1.Control.Value with
-                            DescriptorFormatSenseData = not res1.Control.Value.DescriptorFormatSenseData;
-                            SoftwareWriteProtect = not res1.Control.Value.SoftwareWriteProtect;
-                    }
-            }
-            let! itt2 = r1.Send_ModeSelect10 TaskATTRCd.SIMPLE_TASK lun PF.T SP.F param1 NACA.T
+            let! itt2 = r1.Send_ModeSelect10 TaskATTRCd.SIMPLE_TASK lun PF.T SP.F res1 NACA.T
             let! _ = r1.WaitSCSIResponseGoodStatus itt2
 
-            let! itt3 = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun ( LLBAA.ofBool llbaa ) DBD.F pc 0x0Auy subpage 255us NACA.T
+            // Get the current value
+            let! itt3 = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun ( LLBAA.ofBool llbaa ) DBD.F 0x0uy 0x0Auy subpage 255us NACA.T
             let! res3 = r1.Wait_ModeSense10 itt3
-            Assert.True(( res3.Control.Value.DescriptorFormatSenseData = param1.Control.Value.DescriptorFormatSenseData ))
-            Assert.True(( res3.Control.Value.SoftwareWriteProtect = param1.Control.Value.SoftwareWriteProtect ))
+            Assert.True(( res3.Block.IsSome ))
+            Assert.True(( res3.Control.IsSome ))
+            Assert.True(( res3.Control.Value.PageLength = 0x0Auy ))
+            Assert.True(( res3.Cache.IsNone ))
+            Assert.True(( res3.InformationalExceptionsControl.IsNone ))
+            Assert.True(( res1 = res3 ))
 
-            let! itt4 = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK lun DBD.F pc 0x0Auy subpage 255uy NACA.T
-            let! res4 = r1.Wait_ModeSense6 itt4
-            Assert.True(( res3.Control.Value = res4.Control.Value ))
+            // Update the current value
+            let param1 = {
+                res3 with
+                    Control = Some {
+                        res3.Control.Value with
+                            DescriptorFormatSenseData = not res3.Control.Value.DescriptorFormatSenseData;
+                            SoftwareWriteProtect = not res3.Control.Value.SoftwareWriteProtect;
+                    }
+            }
+            let! itt4 = r1.Send_ModeSelect10 TaskATTRCd.SIMPLE_TASK lun PF.T SP.F param1 NACA.T
+            let! _ = r1.WaitSCSIResponseGoodStatus itt4
+
+            // Confirm that the current value has been updated.
+            let! itt5 = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun ( LLBAA.ofBool llbaa ) DBD.F 0x0uy 0x0Auy subpage 255us NACA.T
+            let! res5 = r1.Wait_ModeSense10 itt5
+            Assert.True(( res5.Control.Value.DescriptorFormatSenseData = param1.Control.Value.DescriptorFormatSenseData ))
+            Assert.True(( res5.Control.Value.SoftwareWriteProtect = param1.Control.Value.SoftwareWriteProtect ))
+
+            // Verify that the same value is obtained using the MODE SENSE(6) command.
+            let! itt6 = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK lun DBD.F 0x0uy 0x0Auy subpage 255uy NACA.T
+            let! res6 = r1.Wait_ModeSense6 itt6
+            Assert.True(( res5.Control.Value = res6.Control.Value ))
+
+            // Verify that the default values ​​have not been changed.
+            let! itt7 = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun ( LLBAA.ofBool llbaa ) DBD.F 0x2uy 0x0Auy subpage 255us NACA.T
+            let! res7 = r1.Wait_ModeSense10 itt7
+            Assert.True(( res7.Control.Value.DescriptorFormatSenseData <> param1.Control.Value.DescriptorFormatSenseData ))
+            Assert.True(( res7.Control.Value.SoftwareWriteProtect <> param1.Control.Value.SoftwareWriteProtect ))
+
+            // Verify that the saced values ​​have not been changed.
+            let! itt8 = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun ( LLBAA.ofBool llbaa ) DBD.F 0x3uy 0x0Auy subpage 255us NACA.T
+            let! res8 = r1.Wait_ModeSense10 itt8
+            Assert.True(( res8.Control.Value.DescriptorFormatSenseData <> param1.Control.Value.DescriptorFormatSenseData ))
+            Assert.True(( res8.Control.Value.SoftwareWriteProtect <> param1.Control.Value.SoftwareWriteProtect ))
 
             do! r1.Close()
         }
@@ -698,18 +737,26 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
     [<InlineData( true,  0UL, 1uy, 0xFFuy )>]
     [<InlineData( true,  0UL, 2uy, 0x00uy )>]
     [<InlineData( true,  0UL, 2uy, 0xFFuy )>]
+    [<InlineData( true,  0UL, 3uy, 0x00uy )>]
+    [<InlineData( true,  0UL, 3uy, 0xFFuy )>]
     [<InlineData( true,  1UL, 1uy, 0x00uy )>]
     [<InlineData( true,  1UL, 1uy, 0xFFuy )>]
     [<InlineData( true,  1UL, 2uy, 0x00uy )>]
     [<InlineData( true,  1UL, 2uy, 0xFFuy )>]
+    [<InlineData( true,  1UL, 3uy, 0x00uy )>]
+    [<InlineData( true,  1UL, 3uy, 0xFFuy )>]
     [<InlineData( false, 0UL, 1uy, 0x00uy )>]
     [<InlineData( false, 0UL, 1uy, 0xFFuy )>]
     [<InlineData( false, 0UL, 2uy, 0x00uy )>]
     [<InlineData( false, 0UL, 2uy, 0xFFuy )>]
+    [<InlineData( false, 0UL, 3uy, 0x00uy )>]
+    [<InlineData( false, 0UL, 3uy, 0xFFuy )>]
     [<InlineData( false, 1UL, 1uy, 0x00uy )>]
     [<InlineData( false, 1UL, 1uy, 0xFFuy )>]
     [<InlineData( false, 1UL, 2uy, 0x00uy )>]
     [<InlineData( false, 1UL, 2uy, 0xFFuy )>]
+    [<InlineData( false, 1UL, 3uy, 0x00uy )>]
+    [<InlineData( false, 1UL, 3uy, 0xFFuy )>]
     member _.ModeSense10_ControlModePage_002 ( llbaa : bool ) ( lu : uint64 ) ( pc : byte ) ( subpage : byte ) =
         task {
             let lun = lun_me.fromPrim lu

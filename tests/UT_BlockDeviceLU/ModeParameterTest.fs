@@ -2763,7 +2763,7 @@ type ModeParameter_Test () =
 
         let v1 = mp.Sense6 false 0x3Fuy 0x00uy 0x00uy cmdSource ( itt_me.fromPrim 0u )
         let v2 = [|
-            0x37uy; 0x00uy; 0x80uy; 0x08uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER, BLOCK DESCRIPTOR LENGTH
+            0x37uy; 0x00uy; 0x00uy; 0x08uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
             yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
 
@@ -2853,7 +2853,7 @@ type ModeParameter_Test () =
 
         let v1 = mp.Sense10 true false 0x3Fuy 0x00uy 0x00uy cmdSource ( itt_me.fromPrim 0u )
         let v2 = [|
-            0x00uy; 0x42uy; 0x00uy; 0x80uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
+            0x00uy; 0x42uy; 0x00uy; 0x00uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
             0x01uy; 0x00uy; 0x00uy; 0x10uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;

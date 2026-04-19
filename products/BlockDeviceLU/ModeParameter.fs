@@ -563,13 +563,13 @@ type ModeParameter
                 Array.empty
 
         let modePage =
-            if ( pc = 0x00uy || pc = 0x03uy ) && pageCode = 0x08uy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
+            if pc = 0x00uy && pageCode = 0x08uy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
                 this.GetCacheModePage_Current()
-            elif ( pc = 0x00uy || pc = 0x03uy ) && pageCode = 0x0Auy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
+            elif pc = 0x00uy && pageCode = 0x0Auy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
                 this.GetControlModePage_Current()
-            elif ( pc = 0x00uy || pc = 0x03uy ) && pageCode = 0x1Cuy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
+            elif pc = 0x00uy && pageCode = 0x1Cuy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
                 this.GetInformationalExceptionsControlModePage_Current()
-            elif ( pc = 0x00uy || pc = 0x03uy ) && pageCode = 0x3Fuy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
+            elif pc = 0x00uy && pageCode = 0x3Fuy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
                 [|
                     yield! this.GetCacheModePage_Current();
                     yield! this.GetControlModePage_Current();
@@ -587,13 +587,13 @@ type ModeParameter
                     yield! this.GetControlModePage_Changeable();
                     yield! this.GetInformationalExceptionsControlModePage_Changeable();
                 |]
-            elif pc = 0x02uy && pageCode = 0x08uy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
+            elif ( pc = 0x02uy || pc = 0x03uy ) && pageCode = 0x08uy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
                 this.GetCacheModePage_Default()
-            elif pc = 0x02uy && pageCode = 0x0Auy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
+            elif ( pc = 0x02uy || pc = 0x03uy ) && pageCode = 0x0Auy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
                 this.GetControlModePage_Default()
-            elif pc = 0x02uy && pageCode = 0x1Cuy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
+            elif ( pc = 0x02uy || pc = 0x03uy ) && pageCode = 0x1Cuy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
                 this.GetInformationalExceptionsControlModePage_Default()
-            elif pc = 0x02uy && pageCode = 0x3Fuy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
+            elif ( pc = 0x02uy || pc = 0x03uy ) && pageCode = 0x3Fuy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
                 [|
                     yield! this.GetCacheModePage_Default();
                     yield! this.GetControlModePage_Default();
@@ -791,13 +791,13 @@ type ModeParameter
                 Array.empty
 
         let modePage =
-            if ( pc = 0x00uy || pc = 0x03uy ) && pageCode = 0x08uy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
+            if pc = 0x00uy && pageCode = 0x08uy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
                 this.GetCacheModePage_Current()
-            elif ( pc = 0x00uy || pc = 0x03uy ) && pageCode = 0x0Auy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
+            elif pc = 0x00uy && pageCode = 0x0Auy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
                 this.GetControlModePage_Current()
-            elif ( pc = 0x00uy || pc = 0x03uy ) && pageCode = 0x1Cuy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
+            elif pc = 0x00uy && pageCode = 0x1Cuy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
                 this.GetInformationalExceptionsControlModePage_Current()
-            elif ( pc = 0x00uy || pc = 0x03uy ) && pageCode = 0x3Fuy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
+            elif pc = 0x00uy && pageCode = 0x3Fuy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
                 [|
                     yield! this.GetCacheModePage_Current();
                     yield! this.GetControlModePage_Current();
@@ -815,13 +815,13 @@ type ModeParameter
                     yield! this.GetControlModePage_Changeable();
                     yield! this.GetInformationalExceptionsControlModePage_Changeable();
                 |]
-            elif pc = 0x02uy && pageCode = 0x08uy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
+            elif ( pc = 0x02uy || pc = 0x03uy ) && pageCode = 0x08uy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
                 this.GetCacheModePage_Default()
-            elif pc = 0x02uy && pageCode = 0x0Auy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
+            elif ( pc = 0x02uy || pc = 0x03uy ) && pageCode = 0x0Auy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
                 this.GetControlModePage_Default()
-            elif pc = 0x02uy && pageCode = 0x1Cuy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
+            elif ( pc = 0x02uy || pc = 0x03uy ) && pageCode = 0x1Cuy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
                 this.GetInformationalExceptionsControlModePage_Default()
-            elif pc = 0x02uy && pageCode = 0x3Fuy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
+            elif ( pc = 0x02uy || pc = 0x03uy ) && pageCode = 0x3Fuy && ( subPageCode = 0x00uy || subPageCode = 0xFFuy ) then
                 [|
                     yield! this.GetCacheModePage_Default();
                     yield! this.GetControlModePage_Default();
@@ -867,7 +867,7 @@ type ModeParameter
         | BlockDeviceType.BDT_Normal ->
             // WP : （write protect)
             let wp =
-                if m_Media.WriteProtect || m_SWP then
+                if m_Media.WriteProtect then
                     0x80uy
                 else
                     0x00uy
