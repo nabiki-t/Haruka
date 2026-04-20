@@ -321,7 +321,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                             DescriptorFormatSenseData = false
                     })
             }
-            let! itt_mselect = r.Send_ModeSelect10 TaskATTRCd.SIMPLE_TASK lun PF.T SP.T param NACA.T
+            let! itt_mselect = r.Send_ModeSelect10 TaskATTRCd.SIMPLE_TASK lun PF.T SP.F param NACA.T
             let! _ = r.WaitSCSIResponseGoodStatus itt_mselect
 
             // raise ACA
@@ -369,7 +369,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
                             DescriptorFormatSenseData = true
                     })
             }
-            let! itt_mselect = r.Send_ModeSelect10 TaskATTRCd.SIMPLE_TASK lun PF.T SP.T param NACA.T
+            let! itt_mselect = r.Send_ModeSelect10 TaskATTRCd.SIMPLE_TASK lun PF.T SP.F param NACA.T
             let! _ = r.WaitSCSIResponseGoodStatus itt_mselect
 
             // raise ACA

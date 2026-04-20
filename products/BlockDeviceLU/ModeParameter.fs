@@ -450,6 +450,15 @@ type ModeParameter
     member this.Select6 ( v : PooledBuffer ) ( parameterLength : int ) ( pf : bool ) ( sp : bool ) ( source : CommandSourceInfo ) ( itt : ITT_T ) : unit =
         let loginfo = struct ( m_ObjID, ValueSome source, ValueSome itt, ValueSome m_LUN )
 
+        if sp then
+            let errmsg = "Saving Mode Parameters is not supported, in MODE SELECT(6) command CDB."
+            HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.PARAMETER_LIST_LENGTH_ERROR, errmsg )
+            raise <| SCSIACAException (
+                source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
+                { CommandData = true; BPV = true; BitPointer = 0uy; FieldPointer = 1us },
+                errmsg
+            )
+
         if v.Count < 4 || parameterLength < 4 || v.Count < parameterLength then
             // Parameter list length error
             let errmsg = sprintf "Invalie parameter list length(%d), in MODE SELECT(6) command CDB." v.Count
@@ -648,6 +657,15 @@ type ModeParameter
     /// </param>
     member this.Select10 ( v: PooledBuffer ) ( parameterLength : int ) ( pf : bool ) ( sp : bool ) ( source : CommandSourceInfo ) ( itt : ITT_T ) : unit =
         let loginfo = struct ( m_ObjID, ValueSome source, ValueSome itt, ValueSome m_LUN )
+
+        if sp then
+            let errmsg = "Saving Mode Parameters is not supported, in MODE SELECT(10) command CDB."
+            HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.PARAMETER_LIST_LENGTH_ERROR, errmsg )
+            raise <| SCSIACAException (
+                source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB,
+                { CommandData = true; BPV = true; BitPointer = 0uy; FieldPointer = 1us },
+                errmsg
+            )
 
         if v.Count < 8 || parameterLength < 8 || v.Count < parameterLength then
             // Parameter list length error

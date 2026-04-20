@@ -764,7 +764,7 @@ type ScsiTask_Test () =
         let select_cdb = {
             OperationCode = 0x15uy;
             PF = true;
-            SP = true;
+            SP = false;
             ParameterListLength = 12us;
             Control = 0uy;
         }
@@ -807,7 +807,7 @@ type ScsiTask_Test () =
         let select_cdb = {
             OperationCode = 0x55uy;
             PF = true;
-            SP = true;
+            SP = false;
             ParameterListLength = 24us;
             Control = 0uy;
         }
@@ -860,7 +860,7 @@ type ScsiTask_Test () =
         let select_cdb = {
             OperationCode = 0x15uy;
             PF = true;
-            SP = true;
+            SP = false;
             ParameterListLength = 12us;
             Control = 0uy;
         }
@@ -897,7 +897,7 @@ type ScsiTask_Test () =
         let select_cdb = {
             OperationCode = 0x15uy;
             PF = true;
-            SP = true;
+            SP = false;
             ParameterListLength = 12us;
             Control = 0uy;
         }

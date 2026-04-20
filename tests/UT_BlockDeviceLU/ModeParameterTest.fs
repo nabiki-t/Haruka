@@ -67,10 +67,23 @@ type ModeParameter_Test () =
     // Test cases
 
     [<Fact>]
-    member _.Select6_001() =
+    member _.Select6_001_1() =
         let mp = ModeParameter_Test.initialMP false
         try
-            mp.Select6 PooledBuffer.Empty 0 true true cmdSource ( itt_me.fromPrim 0u )
+            let v = PooledBuffer.RentAndInit 4
+            mp.Select6 v 4 true true cmdSource ( itt_me.fromPrim 0u )
+            Assert.Fail __LINE__
+        with
+        | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Saving Mode Parameters is not supported", msg )
+            Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+
+    [<Fact>]
+    member _.Select6_001_2() =
+        let mp = ModeParameter_Test.initialMP false
+        try
+            mp.Select6 PooledBuffer.Empty 0 true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -83,7 +96,7 @@ type ModeParameter_Test () =
         let mp = ModeParameter_Test.initialMP false
         try
             let v = PooledBuffer.RentAndInit 3
-            mp.Select6 v 3 true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select6 v 3 true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -96,7 +109,7 @@ type ModeParameter_Test () =
         let mp = ModeParameter_Test.initialMP false
         try
             let v = PooledBuffer.RentAndInit 4
-            mp.Select6 v 3 true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select6 v 3 true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -109,7 +122,7 @@ type ModeParameter_Test () =
         let mp = ModeParameter_Test.initialMP false
         try
             let v = PooledBuffer.RentAndInit 4
-            mp.Select6 v 5 true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select6 v 5 true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -122,7 +135,7 @@ type ModeParameter_Test () =
         let mp = ModeParameter_Test.initialMP false
         let v = [| 0uy; 1uy; 0uy; 0uy; |] |> PooledBuffer.Rent
         try
-            mp.Select6 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select6 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -135,7 +148,7 @@ type ModeParameter_Test () =
         let mp = ModeParameter_Test.initialMP false
         let v = [| 0uy; 0uy; 0uy; 1uy; |] |> PooledBuffer.Rent
         try
-            mp.Select6 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select6 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -148,7 +161,7 @@ type ModeParameter_Test () =
         let mp = ModeParameter_Test.initialMP false
         let v = [| 0uy; 0uy; 0uy; 1uy; 0uy; 0uy; |] |> PooledBuffer.Rent
         try
-            mp.Select6 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select6 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -168,7 +181,7 @@ type ModeParameter_Test () =
             |> PooledBuffer.Rent
         Assert.True(( mp.BlockLength = Constants.MEDIA_BLOCK_SIZE ))
         try
-            mp.Select6 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select6 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -188,7 +201,7 @@ type ModeParameter_Test () =
             |]
             |> PooledBuffer.Rent
         try
-            mp.Select6 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select6 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -204,7 +217,7 @@ type ModeParameter_Test () =
                 0uy; 0uy; 0uy; 0uy;
             |]
             |> PooledBuffer.Rent
-        mp.Select6 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select6 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.Select6_010() =
@@ -215,7 +228,7 @@ type ModeParameter_Test () =
             |]
             |> PooledBuffer.Rent
         try
-            mp.Select6 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select6 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -233,7 +246,7 @@ type ModeParameter_Test () =
                 yield! ( pc.Invoke( "GetCacheModePage_Current" ) :?> byte[] )
             |]
             |> PooledBuffer.Rent
-        mp.Select6 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select6 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.Select6_012() =
@@ -245,7 +258,7 @@ type ModeParameter_Test () =
                 yield! ( pc.Invoke( "GetControlModePage_Current" ) :?> byte[] )
             |]
             |> PooledBuffer.Rent
-        mp.Select6 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select6 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.Select6_013() =
@@ -257,7 +270,7 @@ type ModeParameter_Test () =
                 yield! ( pc.Invoke( "GetInformationalExceptionsControlModePage_Current" ) :?> byte[] )
             |]
             |> PooledBuffer.Rent
-        mp.Select6 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select6 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.Select6_014() =
@@ -270,7 +283,7 @@ type ModeParameter_Test () =
                 yield! ( pc.Invoke( "GetControlModePage_Current" ) :?> byte[] )
             |]
             |> PooledBuffer.Rent
-        mp.Select6 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select6 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.Select6_015() =
@@ -283,7 +296,7 @@ type ModeParameter_Test () =
                 yield! ( pc.Invoke( "GetInformationalExceptionsControlModePage_Current" ) :?> byte[] )
             |]
             |> PooledBuffer.Rent
-        mp.Select6 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select6 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.Select6_016() =
@@ -297,7 +310,7 @@ type ModeParameter_Test () =
                 yield! ( pc.Invoke( "GetInformationalExceptionsControlModePage_Current" ) :?> byte[] )
             |]
             |> PooledBuffer.Rent
-        mp.Select6 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select6 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.Select6_017() =
@@ -312,7 +325,7 @@ type ModeParameter_Test () =
                 yield! ( pc.Invoke( "GetControlModePage_Current" ) :?> byte[] )
             |]
             |> PooledBuffer.Rent
-        mp.Select6 v 36 true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select6 v 36 true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.Select6_018() =
@@ -325,7 +338,7 @@ type ModeParameter_Test () =
                 0x00uy; 0x00uy; 0x00uy;
             |]
             |> PooledBuffer.Rent
-        mp.Select6 v 15 false true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select6 v 15 false false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.Select6_019() =
@@ -339,7 +352,7 @@ type ModeParameter_Test () =
             |]
         let v2 = PooledBuffer.Rent( v, v.Length - 4 )
         Assert.True(( mp.BlockLength = Constants.MEDIA_BLOCK_SIZE ))
-        mp.Select6 v2 v2.Count true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select6 v2 v2.Count true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.ReadCacheModePageByteData_001() =
@@ -355,7 +368,7 @@ type ModeParameter_Test () =
             |]
             |> PooledBuffer.Rent
         try
-            mp.Select6 v 23 true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select6 v 23 true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -375,7 +388,7 @@ type ModeParameter_Test () =
             |]
             |> PooledBuffer.Rent
         try
-            mp.Select6 v 24 true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select6 v 24 true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -395,7 +408,7 @@ type ModeParameter_Test () =
             |]
             |> PooledBuffer.Rent
         try
-            mp.Select6 v 24 true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select6 v 24 true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -414,7 +427,7 @@ type ModeParameter_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; 
             |]
             |> PooledBuffer.Rent
-        mp.Select6 v 24 true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select6 v 24 true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.ReadCacheModePageByteData_005() =
@@ -431,7 +444,7 @@ type ModeParameter_Test () =
             |]
         let v2 = PooledBuffer.Rent( v, v.Length - 4 )
         try
-            mp.Select6 v2 24 true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select6 v2 24 true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -449,7 +462,7 @@ type ModeParameter_Test () =
             |]
             |> PooledBuffer.Rent
         try
-            mp.Select6 v 15 true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select6 v 15 true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -467,7 +480,7 @@ type ModeParameter_Test () =
             |]
             |> PooledBuffer.Rent
         try
-            mp.Select6 v 16 true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select6 v 16 true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -486,7 +499,7 @@ type ModeParameter_Test () =
             |> PooledBuffer.Rent
         Assert.True( mp.D_SENSE )
         Assert.False( mp.SWP )
-        mp.Select6 v 16 true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select6 v 16 true false cmdSource ( itt_me.fromPrim 0u )
 
         Assert.False( mp.D_SENSE )
         Assert.True( mp.SWP )
@@ -505,7 +518,7 @@ type ModeParameter_Test () =
         Assert.True( mp.D_SENSE )
         Assert.False( mp.SWP )
         try
-            mp.Select6 v 16 true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select6 v 16 true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -529,7 +542,7 @@ type ModeParameter_Test () =
             PooledBuffer.Rent( v, v.Length - 4 )
         Assert.True( mp.D_SENSE )
         Assert.False( mp.SWP )
-        mp.Select6 v2 16 true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select6 v2 16 true false cmdSource ( itt_me.fromPrim 0u )
         Assert.False( mp.D_SENSE )
         Assert.True( mp.SWP )
 
@@ -545,7 +558,7 @@ type ModeParameter_Test () =
             |]
             |> PooledBuffer.Rent
         try
-            mp.Select6 v 15 true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select6 v 15 true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -563,7 +576,7 @@ type ModeParameter_Test () =
             |]
             |> PooledBuffer.Rent
         try
-            mp.Select6 v 16 true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select6 v 16 true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -580,7 +593,7 @@ type ModeParameter_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
             |]
             |> PooledBuffer.Rent
-        mp.Select6 v 16 true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select6 v 16 true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.ReadInformationalExceptionsControlModePageByteData_004() =
@@ -595,17 +608,30 @@ type ModeParameter_Test () =
             |]
         let v2 = PooledBuffer.Rent( v, v.Length - 4 )
         try
-            mp.Select6 v2 16 true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select6 v2 16 true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
 
     [<Fact>]
-    member _.Select10_001() =
+    member _.Select10_001_1() =
         let mp = ModeParameter_Test.initialMP false
         try
-            mp.Select10 PooledBuffer.Empty 0 true true cmdSource ( itt_me.fromPrim 0u )
+            let v = PooledBuffer.RentAndInit 8
+            mp.Select10 v 8 true true cmdSource ( itt_me.fromPrim 0u )
+            Assert.Fail __LINE__
+        with
+        | :? SCSIACAException as x ->
+            let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
+            Assert.StartsWith( "Saving Mode Parameters is not supported", msg )
+            Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+
+    [<Fact>]
+    member _.Select10_001_2() =
+        let mp = ModeParameter_Test.initialMP false
+        try
+            mp.Select10 PooledBuffer.Empty 0 true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -618,7 +644,7 @@ type ModeParameter_Test () =
         let mp = ModeParameter_Test.initialMP false
         try
             let v = PooledBuffer.RentAndInit 7
-            mp.Select10 v 7 true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select10 v 7 true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -631,7 +657,7 @@ type ModeParameter_Test () =
         let mp = ModeParameter_Test.initialMP false
         try
             let v = PooledBuffer.RentAndInit 8
-            mp.Select10 v 7 true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select10 v 7 true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -644,7 +670,7 @@ type ModeParameter_Test () =
         let mp = ModeParameter_Test.initialMP false
         try
             let v = PooledBuffer.RentAndInit 8
-            mp.Select10 v 9 true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select10 v 9 true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -657,7 +683,7 @@ type ModeParameter_Test () =
         let mp = ModeParameter_Test.initialMP false
         let v = [| 0uy; 0uy; 1uy; 0uy; 0uy; 0uy; 0uy; 0uy; |] |> PooledBuffer.Rent
         try
-            mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select10 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -670,7 +696,7 @@ type ModeParameter_Test () =
         let mp = ModeParameter_Test.initialMP false
         let v = [| 0uy; 0uy; 0uy; 0uy; 0uy; 0uy; 0uy; 1uy; |] |> PooledBuffer.Rent
         try
-            mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select10 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -683,7 +709,7 @@ type ModeParameter_Test () =
         let mp = ModeParameter_Test.initialMP false
         let v = [| 0uy; 0uy; 0uy; 0uy; 0uy; 0uy; 0uy; 1uy; 0uy; 0uy; |] |> PooledBuffer.Rent
         try
-            mp.Select10 v 9 true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select10 v 9 true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -703,7 +729,7 @@ type ModeParameter_Test () =
             |]
             |> PooledBuffer.Rent
         try
-            mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select10 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -725,7 +751,7 @@ type ModeParameter_Test () =
             |]
             |> PooledBuffer.Rent
         try
-            mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select10 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -745,7 +771,7 @@ type ModeParameter_Test () =
             |]
             |> PooledBuffer.Rent
         try
-            mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select10 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -765,7 +791,7 @@ type ModeParameter_Test () =
             |]
             |> PooledBuffer.Rent
         try
-            mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select10 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -787,7 +813,7 @@ type ModeParameter_Test () =
             |]
             |> PooledBuffer.Rent
         try
-            mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select10 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -809,7 +835,7 @@ type ModeParameter_Test () =
             |]
             |> PooledBuffer.Rent
         try
-            mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select10 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -826,7 +852,7 @@ type ModeParameter_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
             |]
             |> PooledBuffer.Rent
-        mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select10 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.Select10_013() =
@@ -839,7 +865,7 @@ type ModeParameter_Test () =
             |]
             |> PooledBuffer.Rent
         try
-            mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+            mp.Select10 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
         with
         | :? SCSIACAException as x ->
@@ -856,7 +882,7 @@ type ModeParameter_Test () =
                 yield! ( pc.Invoke( "GetCacheModePage_Current" ) :?> byte[] )
             |]
             |> PooledBuffer.Rent
-        mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select10 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.Select10_015() =
@@ -869,7 +895,7 @@ type ModeParameter_Test () =
                 yield! ( pc.Invoke( "GetControlModePage_Current" ) :?> byte[] )
             |]
             |> PooledBuffer.Rent
-        mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select10 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.Select10_016() =
@@ -882,7 +908,7 @@ type ModeParameter_Test () =
                 yield! ( pc.Invoke( "GetInformationalExceptionsControlModePage_Current" ) :?> byte[] )
             |]
             |> PooledBuffer.Rent
-        mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select10 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.Select10_017() =
@@ -896,7 +922,7 @@ type ModeParameter_Test () =
                 yield! ( pc.Invoke( "GetControlModePage_Current" ) :?> byte[] )
             |]
             |> PooledBuffer.Rent
-        mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select10 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.Select10_018() =
@@ -910,7 +936,7 @@ type ModeParameter_Test () =
                 yield! ( pc.Invoke( "GetInformationalExceptionsControlModePage_Current" ) :?> byte[] )
             |]
             |> PooledBuffer.Rent
-        mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select10 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.Select10_019() =
@@ -926,7 +952,7 @@ type ModeParameter_Test () =
                 yield! ( pc.Invoke( "GetControlModePage_Current" ) :?> byte[] )
             |]
             |> PooledBuffer.Rent
-        mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select10 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.Select10_020() =
@@ -943,7 +969,7 @@ type ModeParameter_Test () =
                 yield! ( pc.Invoke( "GetControlModePage_Current" ) :?> byte[] )
             |]
             |> PooledBuffer.Rent
-        mp.Select10 v v.Count true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select10 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.Select10_021() =
@@ -957,7 +983,7 @@ type ModeParameter_Test () =
                 0x00uy; 0x00uy; 0x00uy;
             |]
             |> PooledBuffer.Rent
-        mp.Select10 v v.Count false true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select10 v v.Count false false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.Select10_022() =
@@ -972,7 +998,7 @@ type ModeParameter_Test () =
             |]
         let v2 = PooledBuffer.Rent( v, v.Length - 4 )
         Assert.True(( mp.BlockLength = Constants.MEDIA_BLOCK_SIZE ))
-        mp.Select10 v2 v2.Count true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select10 v2 v2.Count true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
     member _.Sense6_001() =
@@ -2756,7 +2782,7 @@ type ModeParameter_Test () =
             0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // dummy buffer
         |]
         let v2 = PooledBuffer.Rent( v, v.Length - 4 )
-        mp.Select6 v2 v2.Count true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select6 v2 v2.Count true false cmdSource ( itt_me.fromPrim 0u )
 
         Assert.False(( mp.D_SENSE ))
         Assert.True(( mp.SWP ))
@@ -2846,7 +2872,7 @@ type ModeParameter_Test () =
             0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // dummy buffer
         |]
         let v2 = PooledBuffer.Rent( v, v.Length - 4 )
-        mp.Select10 v2 v2.Count true true cmdSource ( itt_me.fromPrim 0u )
+        mp.Select10 v2 v2.Count true false cmdSource ( itt_me.fromPrim 0u )
 
         Assert.False(( mp.D_SENSE ))
         Assert.True(( mp.SWP ))

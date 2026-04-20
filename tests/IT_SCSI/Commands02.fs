@@ -13,6 +13,7 @@ namespace Haruka.Test.IT.SCSI
 
 open System
 open System.IO
+open System.Text
 open System.Text.RegularExpressions
 open System.Threading.Tasks
 
@@ -898,7 +899,7 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
             let! mp1 = r1.Wait_ModeSense6 itt_sense1
 
             let paramBytes = GenScsiParams.ModeSelect6 mp1
-            let cdb = GenScsiCDB.ModeSelect6 PF.T SP.T ( byte paramBytes.Length ) NACA.T LINK.F
+            let cdb = GenScsiCDB.ModeSelect6 PF.T SP.F ( byte paramBytes.Length ) NACA.T LINK.F
             let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK lun cdb paramBytes paramBytes.uLength
             let! _ = r1.WaitSCSIResponseGoodStatus itt_select
             paramBytes.Return()
@@ -924,7 +925,7 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
 
             let paramBytes1 = GenScsiParams.ModeSelect6 mp1
             let paramBytes2 = PooledBuffer.Rent( paramBytes1.Array.[ 0 .. paramlen - 1 ] )
-            let cdb = GenScsiCDB.ModeSelect6 PF.T SP.T ( byte paramBytes2.Length ) NACA.T LINK.F
+            let cdb = GenScsiCDB.ModeSelect6 PF.T SP.F ( byte paramBytes2.Length ) NACA.T LINK.F
             let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb paramBytes2 paramBytes2.uLength
 
             let! res = r1.WaitSCSIResponse itt_select
@@ -932,6 +933,7 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
                 Assert.True(( res.Status = ScsiCmdStatCd.GOOD ))
             else
                 Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+                Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
                 do! ClearACA r1 g_LUN1
 
             do! r1.Close()
@@ -957,10 +959,12 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
             }
 
             let paramBytes1 = GenScsiParams.ModeSelect6 mp2
-            let cdb = GenScsiCDB.ModeSelect6 PF.T SP.T ( byte paramBytes1.Length ) NACA.T LINK.F
+            let cdb = GenScsiCDB.ModeSelect6 PF.T SP.F ( byte paramBytes1.Length ) NACA.T LINK.F
             let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb paramBytes1 paramBytes1.uLength
             let! res = r1.WaitSCSIResponse itt_select
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
             do! ClearACA r1 g_LUN1
 
             do! r1.Close()
@@ -986,7 +990,7 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
 
             let paramBytes1 = GenScsiParams.ModeSelect6 mp2
             let paramBytes2 = PooledBuffer.Rent( paramBytes1.Array.[ 0 .. paramlen - 1 ] )
-            let cdb = GenScsiCDB.ModeSelect6 PF.T SP.T ( byte paramBytes2.Length ) NACA.T LINK.F
+            let cdb = GenScsiCDB.ModeSelect6 PF.T SP.F ( byte paramBytes2.Length ) NACA.T LINK.F
             let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb paramBytes2 paramBytes2.uLength
 
             let! res = r1.WaitSCSIResponse itt_select
@@ -1033,7 +1037,7 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
             }
 
             let paramBytes1 = GenScsiParams.ModeSelect6 mp2
-            let cdb = GenScsiCDB.ModeSelect6 PF.T SP.T ( byte paramBytes1.Length ) NACA.T LINK.F
+            let cdb = GenScsiCDB.ModeSelect6 PF.T SP.F ( byte paramBytes1.Length ) NACA.T LINK.F
             let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb paramBytes1 paramBytes1.uLength
             let! res = r1.WaitSCSIResponse itt_select
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
@@ -1062,7 +1066,7 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
 
             let paramBytes1 = GenScsiParams.ModeSelect6 mp2
             let paramBytes2 = PooledBuffer.Rent( paramBytes1.Array.[ 0 .. paramlen - 1 ] )
-            let cdb = GenScsiCDB.ModeSelect6 PF.T SP.T ( byte paramBytes2.Length ) NACA.T LINK.F
+            let cdb = GenScsiCDB.ModeSelect6 PF.T SP.F ( byte paramBytes2.Length ) NACA.T LINK.F
             let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb paramBytes2 paramBytes2.uLength
 
             let! res = r1.WaitSCSIResponse itt_select
@@ -1110,7 +1114,7 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
             }
 
             let paramBytes1 = GenScsiParams.ModeSelect6 mp2
-            let cdb = GenScsiCDB.ModeSelect6 PF.T SP.T ( byte paramBytes1.Length ) NACA.T LINK.F
+            let cdb = GenScsiCDB.ModeSelect6 PF.T SP.F ( byte paramBytes1.Length ) NACA.T LINK.F
             let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb paramBytes1 paramBytes1.uLength
 
             let! res = r1.WaitSCSIResponse itt_select
@@ -1140,7 +1144,7 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
 
             let paramBytes1 = GenScsiParams.ModeSelect6 mp2
             let paramBytes2 = PooledBuffer.Rent( paramBytes1.Array.[ 0 .. paramlen - 1 ] )
-            let cdb = GenScsiCDB.ModeSelect6 PF.T SP.T ( byte paramBytes2.Length ) NACA.T LINK.F
+            let cdb = GenScsiCDB.ModeSelect6 PF.T SP.F ( byte paramBytes2.Length ) NACA.T LINK.F
             let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb paramBytes2 paramBytes2.uLength
 
             let! res = r1.WaitSCSIResponse itt_select
@@ -1181,7 +1185,301 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
             }
 
             let paramBytes1 = GenScsiParams.ModeSelect6 mp2
-            let cdb = GenScsiCDB.ModeSelect6 PF.T SP.T ( byte paramBytes1.Length ) NACA.T LINK.F
+            let cdb = GenScsiCDB.ModeSelect6 PF.T SP.F ( byte paramBytes1.Length ) NACA.T LINK.F
+            let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb paramBytes1 paramBytes1.uLength
+            let! res = r1.WaitSCSIResponse itt_select
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            do! ClearACA r1 g_LUN1
+
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.ModeSelect6_SP_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt_sense1 = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK g_LUN1 DBD.F 0x00uy 0x3Fuy 0x00uy 255uy NACA.T
+            let! mp1 = r1.Wait_ModeSense6 itt_sense1
+
+            let mp2 = {
+                mp1 with
+                    Control = Some {
+                        mp1.Control.Value with
+                            DescriptorFormatSenseData = not mp1.Control.Value.DescriptorFormatSenseData;
+                            SoftwareWriteProtect = not mp1.Control.Value.SoftwareWriteProtect;
+                    }
+            }
+
+            let! itt = r1.Send_ModeSelect6 TaskATTRCd.SIMPLE_TASK g_LUN1 PF.T SP.T mp2 NACA.T
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+            let msg = res.Sense.Value.VendorSpecific.Value.VendorSpecific |> System.Text.Encoding.UTF8.GetString
+            Assert.StartsWith( "Saving Mode Parameters is not supported", msg )
+            do! ClearACA r1 g_LUN1
+
+            let! itt_sense2 = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK g_LUN1 DBD.F 0x00uy 0x3Fuy 0x00uy 255uy NACA.T
+            let! mp3 = r1.Wait_ModeSense6 itt_sense2
+            Assert.True(( mp3 = mp1 ))
+
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.ModeSelect6_PF_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt_sense1 = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK g_LUN1 DBD.F 0x00uy 0x3Fuy 0x00uy 255uy NACA.T
+            let! mp1 = r1.Wait_ModeSense6 itt_sense1
+
+            let mp2 = {
+                mp1 with
+                    Control = Some {
+                        mp1.Control.Value with
+                            DescriptorFormatSenseData = not mp1.Control.Value.DescriptorFormatSenseData;
+                            SoftwareWriteProtect = not mp1.Control.Value.SoftwareWriteProtect;
+                    }
+            }
+            let! itt = r1.Send_ModeSelect6 TaskATTRCd.SIMPLE_TASK g_LUN1 PF.F SP.F mp2 NACA.T
+            let! _ = r1.WaitSCSIResponseGoodStatus itt
+
+            let! itt_sense2 = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK g_LUN1 DBD.F 0x00uy 0x3Fuy 0x00uy 255uy NACA.T
+            let! mp3 = r1.Wait_ModeSense6 itt_sense2
+            Assert.True(( mp3 = mp1 ))
+
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.ModeSelect6_LINK_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt_sense1 = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK g_LUN1 DBD.F 0x00uy 0x3Fuy 0x00uy 255uy NACA.T
+            let! mp1 = r1.Wait_ModeSense6 itt_sense1
+
+            let paramBytes1 = GenScsiParams.ModeSelect6 mp1
+            let cdb = GenScsiCDB.ModeSelect6 PF.T SP.F ( byte paramBytes1.Length ) NACA.T LINK.T
+            let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb paramBytes1 paramBytes1.uLength
+            let! res = r1.WaitSCSIResponse itt_select
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+            do! ClearACA r1 g_LUN1
+
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.ModeSelect6_UnsupportedPage_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt_sense1 = r1.Send_ModeSense6 TaskATTRCd.SIMPLE_TASK g_LUN1 DBD.F 0x00uy 0x3Fuy 0x00uy 255uy NACA.T
+            let! mp1 = r1.Wait_ModeSense6 itt_sense1
+
+            let modePages =
+                [|
+                    0x02uy;         // PS, SPF(0), PAGE CODE(02)
+                    0x0Euy;         // PAGE LENGTH
+                    0x00uy;         // BUFFER FULL RATION
+                    0x00uy;         // BUFFER EMPTY RATION
+                    0x00uy; 0x00uy; // BUS INACTIVITY LIMIT
+                    0x00uy; 0x00uy; // DISCONNECT TIME LIMIT
+                    0x00uy; 0x00uy; // CONNECT TIME LIMIT
+                    0x00uy; 0x00uy; // MAXIMUM BURST SIZE
+                    0x00uy;         // EMDP, FAIR ARBITRATION, DIMM DTDC
+                    0x0uy;          // Reserved
+                    0x00uy; 0x00uy; // FIRST BURST SIZE
+                |];
+
+            let modeDataLength = 3uy + ( byte modePages.Length );
+            let header = [|
+                yield modeDataLength;
+                yield mp1.MediumType;
+                yield ( Functions.SetBitflag mp1.WriteProtect 0x80uy ) |||
+                        ( Functions.SetBitflag mp1.DisablePageOut_ForceUnitAccess 0x10uy );
+                yield 0x00uy;
+            |]
+            let modePageData = [|
+                yield! header;
+                yield! modePages;
+            |]
+            let paramBytes1 = PooledBuffer.Rent modePageData
+            let cdb = GenScsiCDB.ModeSelect6 PF.T SP.F ( byte paramBytes1.Length ) NACA.T LINK.F
+            let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb paramBytes1 paramBytes1.uLength
+            let! res = r1.WaitSCSIResponse itt_select
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
+            let msg = res.Sense.Value.VendorSpecific.Value.VendorSpecific |> System.Text.Encoding.UTF8.GetString
+            Assert.StartsWith( "Unsupported page code value", msg )
+
+            do! ClearACA r1 g_LUN1
+
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( 0UL )>]
+    [<InlineData( 1UL )>]
+    member _.ModeSelect10_001 ( lu : uint64 ) =
+        task {
+            let lun = lun_me.fromPrim lu
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt_sense1 = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun LLBAA.T DBD.F 0x00uy 0x3Fuy 0x00uy 255us NACA.T
+            let! mp1 = r1.Wait_ModeSense10 itt_sense1
+
+            let paramBytes = GenScsiParams.ModeSelect10 mp1
+            let cdb = GenScsiCDB.ModeSelect10 PF.T SP.F ( uint16 paramBytes.Length ) NACA.T LINK.F
+            let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK lun cdb paramBytes paramBytes.uLength
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_select
+            paramBytes.Return()
+
+            let! itt_sense2 = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK lun LLBAA.T DBD.F 0x00uy 0x3Fuy 0x00uy 255us NACA.T
+            let! mp2 = r1.Wait_ModeSense10 itt_sense2
+            Assert.True(( mp2 = mp1 ))
+
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( false, 0,  false )>]
+    [<InlineData( false, 8,  false )>]
+    [<InlineData( false, 15, false )>]
+    [<InlineData( false, 16, true  )>]
+    [<InlineData( true,  23, false )>]
+    [<InlineData( true,  24, true  )>]
+    member _.ModeSelect10_Block_InvalidLength_001 ( longlba : bool ) ( paramlen : int ) ( exp : bool ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt_sense1 = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK g_LUN1 LLBAA.T DBD.F 0x00uy 0x3Fuy 0x00uy 255us NACA.T
+            let! mp1 = r1.Wait_ModeSense10 itt_sense1
+
+            let mp2 = {
+                mp1 with
+                    LongLBA = longlba;
+            }
+            let paramBytes1 = GenScsiParams.ModeSelect10 mp2
+            let paramBytes2 = PooledBuffer.Rent( paramBytes1.Array.[ 0 .. paramlen - 1 ] )
+            let cdb = GenScsiCDB.ModeSelect10 PF.T SP.F ( uint16 paramBytes2.Length ) NACA.T LINK.F
+            let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb paramBytes2 paramBytes2.uLength
+
+            let! res = r1.WaitSCSIResponse itt_select
+            if exp then
+                Assert.True(( res.Status = ScsiCmdStatCd.GOOD ))
+            else
+                Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+                Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+                do! ClearACA r1 g_LUN1
+
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.ModeSelect10_Block_InvalidUpdate_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt_sense1 = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK g_LUN1 LLBAA.T DBD.F 0x00uy 0x3Fuy 0x00uy 255us NACA.T
+            let! mp1 = r1.Wait_ModeSense10 itt_sense1
+            let mp2 = {
+                mp1 with
+                    Block = Some {
+                        mp1.Block.Value with
+                            BlockCount = blkcnt_me.ofUInt64 1UL;
+                            BlockLength = 1u;
+                    };
+                    Control = None;
+                    Cache = None;
+                    InformationalExceptionsControl = None;
+            }
+
+            let paramBytes1 = GenScsiParams.ModeSelect10 mp2
+            let cdb = GenScsiCDB.ModeSelect10 PF.T SP.F ( uint16 paramBytes1.Length ) NACA.T LINK.F
+            let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb paramBytes1 paramBytes1.uLength
+            let! res = r1.WaitSCSIResponse itt_select
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
+            do! ClearACA r1 g_LUN1
+
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( 8,  true  )>]
+    [<InlineData( 9,  false )>]
+    [<InlineData( 19, false )>]
+    [<InlineData( 20, true  )>]
+    member _.ModeSelect10_Control_InvalidLength_001 ( paramlen : int ) ( exp : bool ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt_sense1 = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK g_LUN1 LLBAA.T DBD.F 0x00uy 0x3Fuy 0x00uy 255us NACA.T
+            let! mp1 = r1.Wait_ModeSense10 itt_sense1
+            let mp2 = {
+                mp1 with
+                    Block = None;
+                    Cache = None;
+                    InformationalExceptionsControl = None;
+            }
+
+            let paramBytes1 = GenScsiParams.ModeSelect10 mp2
+            let paramBytes2 = PooledBuffer.Rent( paramBytes1.Array.[ 0 .. paramlen - 1 ] )
+            let cdb = GenScsiCDB.ModeSelect10 PF.T SP.F ( uint16 paramBytes2.Length ) NACA.T LINK.F
+            let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb paramBytes2 paramBytes2.uLength
+
+            let! res = r1.WaitSCSIResponse itt_select
+            if exp then
+                Assert.True(( res.Status = ScsiCmdStatCd.GOOD ))
+            else
+                Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+                do! ClearACA r1 g_LUN1
+
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.ModeSelect10_Control_InvalidUpdate_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt_sense1 = r1.Send_ModeSense10 TaskATTRCd.SIMPLE_TASK g_LUN1 LLBAA.T DBD.F 0x00uy 0x3Fuy 0x00uy 255us NACA.T
+            let! mp1 = r1.Wait_ModeSense10 itt_sense1
+            let cv = mp1.Control.Value
+            let mp2 = {
+                mp1 with
+                    Block = None;
+                    Control = Some {
+                        cv with
+                            TaskSetType = ~~~ cv.TaskSetType;
+                            AllowTaskManagementFunctionOnly = not cv.AllowTaskManagementFunctionOnly;
+                            DescriptorFormatSenseData = not cv.DescriptorFormatSenseData;
+                            GlobalLoggingTargetSaveDisable = not cv.GlobalLoggingTargetSaveDisable;
+                            ReportLogExceptionCondition = not cv.ReportLogExceptionCondition;
+                            QueueAlgorithmModifier = ~~~ cv.QueueAlgorithmModifier;
+                            QueueErrorManagement = ~~~ cv.QueueErrorManagement;
+                            ReportACheck = not cv.ReportACheck;
+                            UnitAttentionInterlocksControl = ~~~ cv.UnitAttentionInterlocksControl;
+                            SoftwareWriteProtect = not cv.SoftwareWriteProtect;
+                            ApplicationTagOwner = not cv.ApplicationTagOwner;
+                            TaskAbortedStatus = not cv.TaskAbortedStatus;
+                            AutoLoadMode = ~~~ cv.AutoLoadMode;
+                            BusyTimeOutPeriod = ~~~ cv.BusyTimeOutPeriod;
+                            ExtendedSelfTestCompletionTime = ~~~ cv.ExtendedSelfTestCompletionTime;
+                    }
+                    Cache = None;
+                    InformationalExceptionsControl = None;
+            }
+
+            let paramBytes1 = GenScsiParams.ModeSelect10 mp2
+            let cdb = GenScsiCDB.ModeSelect10 PF.T SP.F ( uint16 paramBytes1.Length ) NACA.T LINK.F
             let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb paramBytes1 paramBytes1.uLength
             let! res = r1.WaitSCSIResponse itt_select
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))

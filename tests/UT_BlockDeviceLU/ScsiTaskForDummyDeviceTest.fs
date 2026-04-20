@@ -664,7 +664,7 @@ type ScsiTaskForDummyDeviceTest_Test () =
         let select_cdb = {
             OperationCode = 0x15uy;
             PF = true;
-            SP = true;
+            SP = false;
             ParameterListLength = 12us;
             Control = 0uy;
         }
