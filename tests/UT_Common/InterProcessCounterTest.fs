@@ -145,8 +145,7 @@ type InterProcessCounterTest() =
         let filePath = Path.Combine( Path.GetTempPath(), name )
         let counter = InterProcessCounter( name )
 
-        let maxValue = UInt64.MaxValue
-        File.WriteAllText( filePath, maxValue.ToString() )
+        File.WriteAllBytes( filePath, BitConverter.GetBytes UInt64.MaxValue )
 
         Assert.True( 0UL = counter.Next() )
         Assert.True( 1UL = counter.Next() )

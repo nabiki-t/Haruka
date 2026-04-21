@@ -1,6 +1,6 @@
 //=============================================================================
 // Haruka Software Storage.
-// InterProcessCounter.fs : GImplement a global counter across the entire system.
+// InterProcessCounter.fs : Implement a global counter across the entire system.
 //
 
 //=============================================================================
@@ -60,14 +60,19 @@ type InterProcessCounter( m_Name : string ) =
     member _.Next() : uint64 =
         safeWait( m_Mutex )
         try
-            let currentVal =
+            use f = File.Open( m_FileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None )
+            let buf = Array.zeroCreate<byte> 8
+            let currentVal = 
                 try
-                    let s = File.ReadAllText( m_FileName )
-                    uint64 s
+                    f.ReadExactly( buf )
+                    BitConverter.ToUInt64 buf
                 with
-                | _ -> 0UL
+                | _ ->
+                    0UL
             let nextVal = currentVal + 1UL
-            File.WriteAllText( m_FileName, string nextVal )
+            f.Seek( 0L, SeekOrigin.Begin ) |> ignore
+            BitConverter.TryWriteBytes( buf, nextVal ) |> ignore
+            f.Write( buf )
             nextVal
         finally
             m_Mutex.ReleaseMutex()
