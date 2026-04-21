@@ -42,11 +42,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\products\Commons\Commons.fsproj" />
-    <ProjectReference Include="..\..\products\Constants\Constants.fsproj" />
-    <ProjectReference Include="..\..\products\Controller\Controller.fsproj" />
-    <ProjectReference Include="..\..\products\TargetDevice\TargetDevice.fsproj" />
-    <ProjectReference Include="..\TestCommon\TestCommon.fsproj" />
+    <ProjectReference Include="../../products/Commons/Commons.fsproj" />
+    <ProjectReference Include="../../products/Constants/Constants.fsproj" />
+    <ProjectReference Include="../../products/Controller/Controller.fsproj" />
+    <ProjectReference Include="../../products/TargetDevice/TargetDevice.fsproj" />
+    <ProjectReference Include="../TestCommon/TestCommon.fsproj" />
   </ItemGroup>
 
 </Project>

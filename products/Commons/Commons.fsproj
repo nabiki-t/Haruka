@@ -25,32 +25,32 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="IODataTypes\HarukaCtrlConf.fs" />
-    <Compile Include="IODataTypes\TargetDeviceConf.fs" />
-    <Compile Include="IODataTypes\TargetGroupConf.fs" />
-    <Compile Include="IODataTypes\HarukaCtrlerCtrlReq.fs" />
-    <Compile Include="IODataTypes\HarukaCtrlerCtrlRes.fs" />
-    <Compile Include="IODataTypes\TargetDeviceCtrlReq.fs" />
-    <Compile Include="IODataTypes\TargetDeviceCtrlRes.fs" />
-    <Compile Include="IODataTypes\MediaCtrlReq.fs" />
-    <Compile Include="IODataTypes\MediaCtrlRes.fs" />
-    <Compile Include="IODataTypes\PersistentReservation.fs" />
-    <Compile Include="IODataTypes\StringTableFormat.fs" />
-    <Compile Include="IODataTypes\InitMediaMessage.fs" />
-    <Compile Include="IODataTypes\TempExport.fs" />
-    <Content Include="IODataTypes\HarukaCtrlConf.xml" />
-    <Content Include="IODataTypes\TargetDeviceConf.xml" />
-    <Content Include="IODataTypes\TargetGroupConf.xml" />
-    <Content Include="IODataTypes\HarukaCtrlerCtrlReq.xml" />
-    <Content Include="IODataTypes\HarukaCtrlerCtrlRes.xml" />
-    <Content Include="IODataTypes\TargetDeviceCtrlReq.xml" />
-    <Content Include="IODataTypes\TargetDeviceCtrlRes.xml" />
-    <Content Include="IODataTypes\MediaCtrlReq.xml" />
-    <Content Include="IODataTypes\MediaCtrlRes.xml" />
-    <Content Include="IODataTypes\PersistentReservation.xml" />
-    <Content Include="IODataTypes\StringTableFormat.xml" />
-    <Content Include="IODataTypes\InitMediaMessage.xml" />
-    <Content Include="IODataTypes\TempExport.xml" />
+    <Compile Include="IODataTypes/HarukaCtrlConf.fs" />
+    <Compile Include="IODataTypes/TargetDeviceConf.fs" />
+    <Compile Include="IODataTypes/TargetGroupConf.fs" />
+    <Compile Include="IODataTypes/HarukaCtrlerCtrlReq.fs" />
+    <Compile Include="IODataTypes/HarukaCtrlerCtrlRes.fs" />
+    <Compile Include="IODataTypes/TargetDeviceCtrlReq.fs" />
+    <Compile Include="IODataTypes/TargetDeviceCtrlRes.fs" />
+    <Compile Include="IODataTypes/MediaCtrlReq.fs" />
+    <Compile Include="IODataTypes/MediaCtrlRes.fs" />
+    <Compile Include="IODataTypes/PersistentReservation.fs" />
+    <Compile Include="IODataTypes/StringTableFormat.fs" />
+    <Compile Include="IODataTypes/InitMediaMessage.fs" />
+    <Compile Include="IODataTypes/TempExport.fs" />
+    <Content Include="IODataTypes/HarukaCtrlConf.xml" />
+    <Content Include="IODataTypes/TargetDeviceConf.xml" />
+    <Content Include="IODataTypes/TargetGroupConf.xml" />
+    <Content Include="IODataTypes/HarukaCtrlerCtrlReq.xml" />
+    <Content Include="IODataTypes/HarukaCtrlerCtrlRes.xml" />
+    <Content Include="IODataTypes/TargetDeviceCtrlReq.xml" />
+    <Content Include="IODataTypes/TargetDeviceCtrlRes.xml" />
+    <Content Include="IODataTypes/MediaCtrlReq.xml" />
+    <Content Include="IODataTypes/MediaCtrlRes.xml" />
+    <Content Include="IODataTypes/PersistentReservation.xml" />
+    <Content Include="IODataTypes/StringTableFormat.xml" />
+    <Content Include="IODataTypes/InitMediaMessage.xml" />
+    <Content Include="IODataTypes/TempExport.xml" />
     <Compile Include="PooledBuffer.fs" />
     <Compile Include="OptimisticLock.fs" />
     <Compile Include="WorkingQueue.fs" />
@@ -65,15 +65,16 @@
     <Compile Include="StringTable.fs" />
     <Compile Include="CommandParser.fs" />
     <Compile Include="Killer.fs" />
+    <Compile Include="InterProcessCounter.fs" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Constants\Constants.fsproj" />
-    <ProjectReference Include="..\GenConfRW\GenConfRW.fsproj" />
+    <ProjectReference Include="../Constants/Constants.fsproj" />
+    <ProjectReference Include="../GenConfRW/GenConfRW.fsproj" />
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="CoreCompile">
-    <Exec Command="dotnet run --no-build --project ..\GenConfRW -c $(Configuration) ./IODataTypes" />
+    <Exec Command="dotnet run --no-build --project ../GenConfRW -c $(Configuration) ./IODataTypes" />
   </Target>
 
 </Project>

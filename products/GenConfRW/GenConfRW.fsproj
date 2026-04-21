@@ -29,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Constants\Constants.fsproj" />
+    <ProjectReference Include="../Constants/Constants.fsproj" />
   </ItemGroup>
 
 </Project>

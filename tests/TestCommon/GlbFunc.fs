@@ -40,22 +40,13 @@ type TestException( argMsg : string ) =
 type GlbFunc() =
 
     /// MemoryMappedFile used to generate unique TCP port numbers.
-    static let portCounter = MemoryMappedFile.CreateOrOpen( "12999bce-b69b-4072-9852-52dbf49a879b", 4L )
-
-    /// Semaphore used to synchronize access to the portCounter.
-    static let portCounterLock = new Semaphore( 1, 1, "046779a0-d380-4c75-b08d-d0efe86617bf" )
+    static let portCounter = InterProcessCounter( "12999bce-b69b-4072-9852-52dbf49a879b" )
 
     /// MemoryMappedFile used to generate unique Target Device IDs.
-    static let dgIdenCounter = MemoryMappedFile.CreateOrOpen( "224cd616-b225-485c-b20a-8150ae7def37", 4L )
-
-    /// Semaphore used to synchronize access to the dgIdenCounter.
-    static let dgIdenCounterLock = new Semaphore( 1, 1, "4cc34935-908a-41ab-951d-d21824b10697" )
+    static let dgIdenCounter = InterProcessCounter( "224cd616-b225-485c-b20a-8150ae7def37" )
 
     /// MemoryMappedFile used to generate unique Initiator ISID.
-    static let isidCounter = MemoryMappedFile.CreateOrOpen( "4c816d62-8c97-4b31-a867-3c17af26ce4b", 8L )
-
-    /// Semaphore used to synchronize access to the isidCounter.
-    static let isidCounterLock = new Semaphore( 1, 1, "1f84649a-c023-45c7-bdd0-45d72b0ba22a" )
+    static let isidCounter = InterProcessCounter( "4c816d62-8c97-4b31-a867-3c17af26ce4b" )
 
     /// Gets the name of the directory in which the currently running program is stored.
     static let currentExeDir =
@@ -109,26 +100,17 @@ type GlbFunc() =
 
     /// Get the next TCP port number to use.
     static member nextTcpPortNo() : int =
-        use a = portCounter.CreateViewAccessor()
-        portCounterLock.WaitOne() |> ignore
-        let v = a.Read<int>( 0L )
-        let portNum = ( v % 22768 ) + 10000
-        let v2 = ( v + 1 ) % 22768
-        a.Write( 0L, v2 )
-        a.Dispose()
-        portCounterLock.Release() |> ignore
-        portNum
+        let v = portCounter.Next()
+        let portNum = v % 22768UL + 10000UL
+        portNum |> int
+
 
     /// Get the next Target Device ID to use.    
     static member newTargetDeviceID() : TDID_T =
-        use a = dgIdenCounter.CreateViewAccessor()
-        dgIdenCounterLock.WaitOne() |> ignore
-        let v = a.Read<uint32>( 0L )
-        let v2 = if v = 0u then 1u else v
-        a.Write( 0L, v2 + 1u )
-        a.Dispose()
-        dgIdenCounterLock.Release() |> ignore
-        tdid_me.fromPrim v2
+        let v = dgIdenCounter.Next()
+        let v2 = if v = 0UL then dgIdenCounter.Next() else v
+        tdid_me.fromPrim ( uint32 v2 )
+
 
     /// Get the next Target Group ID to use.
     static member newTargetGroupID() : TGID_T =
@@ -138,13 +120,8 @@ type GlbFunc() =
 
     ///Get the next ISID to use.
     static member newISID() : ISID_T =
-        use a = isidCounter.CreateViewAccessor()
-        isidCounterLock.WaitOne() |> ignore
-        let v = a.Read<uint64>( 0L )
-        let v2 = if v = 0UL then 1UL else v
-        a.Write( 0L, v2 + 1UL )
-        a.Dispose()
-        isidCounterLock.Release() |> ignore
+        let v = isidCounter.Next()
+        let v2 = if v = 0UL then dgIdenCounter.Next() else v
         isid_me.fromPrim v2
 
     /// <summary>

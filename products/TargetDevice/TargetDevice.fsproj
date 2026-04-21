@@ -46,10 +46,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BlockDeviceLU\BlockDeviceLU.fsproj" />
-    <ProjectReference Include="..\Commons\Commons.fsproj" />
-    <ProjectReference Include="..\Constants\Constants.fsproj" />
-    <ProjectReference Include="..\SimpleMedia\SimpleMedia.fsproj" />
+    <ProjectReference Include="../BlockDeviceLU/BlockDeviceLU.fsproj" />
+    <ProjectReference Include="../Commons/Commons.fsproj" />
+    <ProjectReference Include="../Constants/Constants.fsproj" />
+    <ProjectReference Include="../SimpleMedia/SimpleMedia.fsproj" />
   </ItemGroup>
 
 </Project>

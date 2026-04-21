@@ -60,10 +60,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\products\Client\Client.fsproj" />
-    <ProjectReference Include="..\..\products\Controller\Controller.fsproj" />
-    <ProjectReference Include="..\..\products\TargetDevice\TargetDevice.fsproj" />
-    <ProjectReference Include="..\TestCommon\TestCommon.fsproj" />
+    <ProjectReference Include="../../products/Client/Client.fsproj" />
+    <ProjectReference Include="../../products/Controller/Controller.fsproj" />
+    <ProjectReference Include="../../products/TargetDevice/TargetDevice.fsproj" />
+    <ProjectReference Include="../TestCommon/TestCommon.fsproj" />
   </ItemGroup>
 
 </Project>

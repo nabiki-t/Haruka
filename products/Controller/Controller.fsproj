@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="Resource\Controller_en-US.xml">
+    <None Include="Resource/Controller_en-US.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="Controller.exe.config">
@@ -36,8 +36,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Commons\Commons.fsproj" />
-    <ProjectReference Include="..\Constants\Constants.fsproj" />
+    <ProjectReference Include="../Commons/Commons.fsproj" />
+    <ProjectReference Include="../Constants/Constants.fsproj" />
   </ItemGroup>
 
 </Project>

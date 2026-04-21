@@ -31,7 +31,7 @@ type CKillerTestStub() =
 // Class implementation
 
 type HKiller_Test () =
-
+    
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
 
