@@ -57,6 +57,7 @@
     <Compile Include="CommandParserTest.fs" />
     <Compile Include="KillerTest.fs" />
     <Compile Include="InterProcessCounterTest.fs" />
+    <Compile Include="RWLockTest.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
 

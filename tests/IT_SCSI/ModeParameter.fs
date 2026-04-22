@@ -111,8 +111,8 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
     let m_WorkPath = fx.WorkPath
     let m_InitName = "iqn.2020-05.example.com:initiator"
 
-    static let m_MediaSize = SCSI_Commands01_Fixture.MediaSize
-    static let m_MediaBlockSize = SCSI_Commands01_Fixture.MediaBlockSize
+    static let m_MediaSize = SCSI_ModeParameter_Fixture.MediaSize
+    static let m_MediaBlockSize = SCSI_ModeParameter_Fixture.MediaBlockSize
     static let m_MediaBlockCount = m_MediaSize / ( Blocksize.toUInt32 m_MediaBlockSize )
 
     // default session parameters

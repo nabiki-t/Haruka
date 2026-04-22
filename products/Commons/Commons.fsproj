@@ -66,6 +66,7 @@
     <Compile Include="CommandParser.fs" />
     <Compile Include="Killer.fs" />
     <Compile Include="InterProcessCounter.fs" />
+    <Compile Include="RWLock.fs" />
   </ItemGroup>
 
   <ItemGroup>

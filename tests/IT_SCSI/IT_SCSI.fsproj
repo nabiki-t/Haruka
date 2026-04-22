@@ -19,8 +19,9 @@
     <Compile Include="PersistentReserveOut5.fs" />
     <Compile Include="PersistentReserveOut6.fs" />
     <Compile Include="PersistentReserveIn.fs" />
-    <Compile Include="Commands01.fs" />
     <Compile Include="ModeParameter.fs" />
+    <Compile Include="Commands01.fs" />
+    <Compile Include="Commands02.fs" />
     <Compile Include="Queueing.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
