@@ -371,7 +371,7 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
     // Check the operation codes supported
     [<Theory>]
     [<InlineData( 0UL, 26 )>]
-    [<InlineData( 1UL, 39 )>]
+    [<InlineData( 1UL, 37 )>]
     member _.GetOpcode_001 ( argLUN : uint64 ) ( exp : int ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam1 m_defaultConnParam1

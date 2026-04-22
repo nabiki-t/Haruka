@@ -1126,8 +1126,7 @@ type ScsiTask
                 | 0x5Euy    // PERSISTENT RESERVE IN
                 | 0x5Fuy    // PERSISTENT RESERVE OUT
                 | 0x9Euy    // READ CAPACITY(16)
-                | 0xA3uy    // REPORT SUPPORTED OPERATION CODES / REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS
-                | 0x7Fuy -> // READ(32) / WRITE(32)
+                | 0xA3uy -> // REPORT SUPPORTED OPERATION CODES / REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS
                     let errmsg = sprintf "REQUESTED OPERATION CODE 0x%02X has a SERVICE ACTION field." cdb.RequestedOperationCode
                     HLogger.ACAException( m_LogInfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
                     raise <| SCSIACAException (
@@ -1172,14 +1171,6 @@ type ScsiTask
                         SupportedOperationCodeConst.CdbUsageData_REPORT_SUPPORTED_OPERATION_CODES
                     elif cdb.RequestedServiceAction = 0x0Dus then
                         SupportedOperationCodeConst.CdbUsageData_REPORT_SUPPORTED_TASK_MANAGEMENT_FUNCTIONS
-                    else
-                        HLogger.Trace( LogID.W_INVALID_CDB_VALUE, fun g -> g.Gen1( m_LogInfo, sa_errmsg ) )
-                        [| 0x00uy; 0x01uy; 0x00uy; 0x00uy; |]
-                | 0x7Fuy -> // READ(32) / WRITE(32)
-                    if cdb.RequestedServiceAction = 0x0009us then
-                        SupportedOperationCodeConst.CdbUsageData_READ_32
-                    elif cdb.RequestedServiceAction = 0x000Bus then
-                        SupportedOperationCodeConst.CdbUsageData_WRITE_32
                     else
                         HLogger.Trace( LogID.W_INVALID_CDB_VALUE, fun g -> g.Gen1( m_LogInfo, sa_errmsg ) )
                         [| 0x00uy; 0x01uy; 0x00uy; 0x00uy; |]

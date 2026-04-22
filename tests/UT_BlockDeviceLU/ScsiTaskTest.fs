@@ -1399,7 +1399,6 @@ type ScsiTask_Test () =
     [<InlineData( 0x5Euy )>]    // PERSISTENT RESERVE IN
     [<InlineData( 0x5Fuy )>]    // PERSISTENT RESERVE OUT
     [<InlineData( 0xA3uy )>]    // REPORT SUPPORTED OPERATION CODES / REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS
-    [<InlineData( 0x7Fuy )>]    // READ(32) / WRITE(32)
     member _.ReportSupportedOperationCodes_003 ( opCode : byte ) =
         let mutable cnt1 = 0
         let cdb = {
@@ -1660,96 +1659,6 @@ type ScsiTask_Test () =
             ReportingOptions = 0x02uy;
             RequestedOperationCode = 0xA3uy;    // REPORT SUPPORTED OPERATION CODES / REPORT SUPPORTED TASK MANAGEMENT FUNCTIONS
             RequestedServiceAction = 0x01us;
-            AllocationLength = 16u;
-            Control = 0x00uy;
-        }
-        let stask, ilu = createDefScsiTask defaultSCSICommandPDU cdb [] false
-        let psStub = stask.Source.ProtocolService :?> CProtocolService_Stub
-        psStub.p_SendSCSIResponse <- ( fun _ _ _ _ resp stat _ indata alloclen _ ->
-            cnt2 <- cnt2 + 1
-            Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
-            Assert.True(( stat = ScsiCmdStatCd.GOOD ))
-            Assert.True(( PooledBuffer.ValueEqualsWithArray indata [| 0x00uy; 0x01uy; 0x00uy; 0x00uy; |] ))
-            Assert.True(( alloclen = 0x10u ))
-        )
-        ilu.p_NotifyTerminateTask <- ( fun argTask ->
-            cnt1 <- cnt1 + 1
-        )
-
-        RunTask stask
-        Assert.True(( cnt1 = 1 ))
-        Assert.True(( cnt2 = 1 ))
-
-    [<Fact>]
-    member _.ReportSupportedOperationCodes_012() =
-        let mutable cnt1 = 0
-        let mutable cnt2 = 0
-        let cdb = {
-            OperationCode = 0xA3uy;
-            ServiceAction = 0x00uy;
-            ReportingOptions = 0x02uy;
-            RequestedOperationCode = 0x7Fuy;    // READ(32) / WRITE(32)
-            RequestedServiceAction = 0x0009us;
-            AllocationLength = 16u;
-            Control = 0x00uy;
-        }
-        let stask, ilu = createDefScsiTask defaultSCSICommandPDU cdb [] false
-        let psStub = stask.Source.ProtocolService :?> CProtocolService_Stub
-        psStub.p_SendSCSIResponse <- ( fun _ _ _ _ resp stat _ indata alloclen _ ->
-            cnt2 <- cnt2 + 1
-            Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
-            Assert.True(( stat = ScsiCmdStatCd.GOOD ))
-            Assert.True(( PooledBuffer.ValueEqualsWithArray indata SupportedOperationCodeConst.CdbUsageData_READ_32 ))
-            Assert.True(( alloclen = 0x10u ))
-        )
-        ilu.p_NotifyTerminateTask <- ( fun argTask ->
-            cnt1 <- cnt1 + 1
-        )
-
-        RunTask stask
-        Assert.True(( cnt1 = 1 ))
-        Assert.True(( cnt2 = 1 ))
-
-    [<Fact>]
-    member _.ReportSupportedOperationCodes_013() =
-        let mutable cnt1 = 0
-        let mutable cnt2 = 0
-        let cdb = {
-            OperationCode = 0xA3uy;
-            ServiceAction = 0x00uy;
-            ReportingOptions = 0x02uy;
-            RequestedOperationCode = 0x7Fuy;    // READ(32) / WRITE(32)
-            RequestedServiceAction = 0x000Bus;
-            AllocationLength = 16u;
-            Control = 0x00uy;
-        }
-        let stask, ilu = createDefScsiTask defaultSCSICommandPDU cdb [] false
-        let psStub = stask.Source.ProtocolService :?> CProtocolService_Stub
-        psStub.p_SendSCSIResponse <- ( fun _ _ _ _ resp stat _ indata alloclen _ ->
-            cnt2 <- cnt2 + 1
-            Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
-            Assert.True(( stat = ScsiCmdStatCd.GOOD ))
-            Assert.True(( PooledBuffer.ValueEqualsWithArray indata SupportedOperationCodeConst.CdbUsageData_WRITE_32 ))
-            Assert.True(( alloclen = 0x10u ))
-        )
-        ilu.p_NotifyTerminateTask <- ( fun argTask ->
-            cnt1 <- cnt1 + 1
-        )
-
-        RunTask stask
-        Assert.True(( cnt1 = 1 ))
-        Assert.True(( cnt2 = 1 ))
-
-    [<Fact>]
-    member _.ReportSupportedOperationCodes_014() =
-        let mutable cnt1 = 0
-        let mutable cnt2 = 0
-        let cdb = {
-            OperationCode = 0xA3uy;
-            ServiceAction = 0x00uy;
-            ReportingOptions = 0x02uy;
-            RequestedOperationCode = 0x7Fuy;    // READ(32) / WRITE(32)
-            RequestedServiceAction = 0x0000us;
             AllocationLength = 16u;
             Control = 0x00uy;
         }

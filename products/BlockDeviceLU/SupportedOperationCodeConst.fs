@@ -281,15 +281,6 @@ type SupportedOperationCodeConst() =
             0x00uy; 0x10uy; // CDB LENGTH
         |]
 
-    static let SupportedOperationCommands_READ_32 =
-        [|
-            0x7Fuy;         // READ(32)
-            0x00uy;         // Reserved
-            0x00uy; 0x09uy; // Service Action(0009h)
-            0x00uy; 0x01uy; // Reserved, SERVACTV
-            0x00uy; 0x20uy; // CDB LENGTH
-        |]
-
     static let SupportedOperationCommands_READ_CAPACITY_10 =
         [|
             0x25uy;         // READ CAPACITY(10)
@@ -362,20 +353,11 @@ type SupportedOperationCodeConst() =
             0x00uy; 0x10uy; // CDB LENGTH
         |]
 
-    static let SupportedOperationCommands_WRITE_32 =
-        [|
-            0x7Fuy;         // WRITE(32)
-            0x00uy;         // Reserved
-            0x00uy; 0x0Buy; // Service Action(000Bh)
-            0x00uy; 0x01uy; // Reserved, SERVACTV
-            0x00uy; 0x20uy; // CDB LENGTH
-        |]
-
     /// Supported OPERATION CODE and SERVICE ACTION list value,
     /// that is used when REPORTING OPTIONS value is 000b.
     static member SupportedAllOperationCommands : byte[] =
         [|
-            yield! Functions.Int32ToNetworkBytes_NewVec 312;    // 39 * 8
+            yield! Functions.Int32ToNetworkBytes_NewVec 312;    // 37 * 8
             yield! SupportedOperationCommands_INQUIRY
             yield! SupportedOperationCommands_MODE_SELECT_6
             yield! SupportedOperationCommands_MODE_SELECT_10
@@ -405,7 +387,6 @@ type SupportedOperationCodeConst() =
             yield! SupportedOperationCommands_READ_10
             yield! SupportedOperationCommands_READ_12
             yield! SupportedOperationCommands_READ_16
-            yield! SupportedOperationCommands_READ_32
             yield! SupportedOperationCommands_READ_CAPACITY_10
             yield! SupportedOperationCommands_READ_CAPACITY_16
             yield! SupportedOperationCommands_SYNCHRONIZE_CACHE_10
@@ -414,7 +395,6 @@ type SupportedOperationCodeConst() =
             yield! SupportedOperationCommands_WRITE_10
             yield! SupportedOperationCommands_WRITE_12
             yield! SupportedOperationCommands_WRITE_16
-            yield! SupportedOperationCommands_WRITE_32
         |]
 
     /// Supported OPERATION CODE and SERVICE ACTION list value,
@@ -686,34 +666,6 @@ type SupportedOperationCodeConst() =
             0x04uy;         // CONTROL
         |]
 
-    /// one_command parameter data for READ(32) CDB.
-    /// That is used when REPORTING OPTIONS value is 001b or 010b.
-    static member CdbUsageData_READ_32 : byte[] =
-        [|
-            0x00uy;         // Reserved
-            0x03uy;         // SUPPORT
-            0x00uy; 0x20uy; // CDB SIZE
-            0x7Fuy;         // OPERATION CODE ( following is in  CDB USAGE DATA field )
-            0x04uy;         // CONTROL
-            0x00uy; 0x00uy; // Reserved
-            0x00uy; 0x00uy; // Reserved
-            0x00uy;         // GROUP NUMBER
-            0xFFuy;         // ADDITIONAL CDB LENGTH
-            0x00uy; 0x09uy; // SERVICE ACTION
-            0x00uy;         // RDPROTECT, DPO, FUA, FUA_NV
-            0x00uy;         // Reserved
-            0xFFuy; 0xFFuy; // LOGICAL BLOCK ADDRESS
-            0xFFuy; 0xFFuy; // LOGICAL BLOCK ADDRESS
-            0xFFuy; 0xFFuy; // LOGICAL BLOCK ADDRESS
-            0xFFuy; 0xFFuy; // LOGICAL BLOCK ADDRESS
-            0x00uy; 0x00uy; // EXPECTED INITIAL LOGICAL BLOCK REFERENCE TAG
-            0x00uy; 0x00uy; // EXPECTED INITIAL LOGICAL BLOCK REFERENCE TAG
-            0x00uy; 0x00uy; // EXPECTED LOGICAL BLOCK APPLICATION TAG
-            0x00uy; 0x00uy; // LOGICAL BLOCK APPLICATION TAG MASK
-            0xFFuy; 0xFFuy; // TRANSFER LENGTH
-            0xFFuy; 0xFFuy; // TRANSFER LENGTH
-        |]
-
     /// one_command parameter data for READ CAPACITY(10) CDB.
     /// That is used when REPORTING OPTIONS value is 001b or 010b.
     static member CdbUsageData_READ_CAPACITY_10 : byte[] =
@@ -850,69 +802,6 @@ type SupportedOperationCodeConst() =
             0x04uy;         // CONTROL
         |]
 
-    /// one_command parameter data for WRITE(32) CDB.
-    /// That is used when REPORTING OPTIONS value is 001b or 010b.
-    static member CdbUsageData_WRITE_32 : byte[] =
-        [|
-            0x00uy;         // Reserved
-            0x03uy;         // SUPPORT
-            0x00uy; 0x20uy; // CDB SIZE
-            0x7Fuy;         // OPERATION CODE ( following is in  CDB USAGE DATA field )
-            0x04uy;         // CONTROL
-            0x00uy; 0x00uy; // Reserved
-            0x00uy; 0x00uy; // Reserved
-            0x00uy;         // GROUP NUMBER
-            0xFFuy;         // ADDITIONAL CDB LENGTH
-            0x00uy; 0x0Buy; // SERVICE ACTION
-            0x00uy;         // WRPROTECT, DPO, FUA, FUA_NV
-            0x00uy;         // Reserved
-            0xFFuy; 0xFFuy; // LOGICAL BLOCK ADDRESS
-            0xFFuy; 0xFFuy; // LOGICAL BLOCK ADDRESS
-            0xFFuy; 0xFFuy; // LOGICAL BLOCK ADDRESS
-            0xFFuy; 0xFFuy; // LOGICAL BLOCK ADDRESS
-            0x00uy; 0x00uy; // EXPECTED INITIAL LOGICAL BLOCK REFERENCE TAG
-            0x00uy; 0x00uy; // EXPECTED INITIAL LOGICAL BLOCK REFERENCE TAG
-            0x00uy; 0x00uy; // EXPECTED LOGICAL BLOCK APPLICATION TAG
-            0x00uy; 0x00uy; // LOGICAL BLOCK APPLICATION TAG MASK
-            0xFFuy; 0xFFuy; // TRANSFER LENGTH
-            0xFFuy; 0xFFuy; // TRANSFER LENGTH
-        |]
-(*
-    /// one_command parameter data for WRITE SAME(10).
-    /// That is used when REPORTING OPTIONS value is 001b or 010b.
-    static member CdbUsageData_WRITE_SAME_10 : byte[] =
-        [|
-            0x00uy;         // Reserved
-            0x03uy;         // SUPPORT
-            0x00uy; 0x0Auy; // CDB SIZE
-            0x41uy;         // OPERATION CODE ( following is in  CDB USAGE DATA field )
-            0xE6uy;         // WRPROTECT, LBDATA
-            0xFFuy; 0xFFuy; // LOGICAL BLOCK ADDRESS
-            0xFFuy; 0xFFuy; // LOGICAL BLOCK ADDRESS
-            0x00uy;         // GROUP NUMBER 
-            0xFFuy; 0xFFuy; // NUMBER OF BLOCKES
-            0x04uy;         // CONTROL
-        |]
-
-    /// one_command parameter data for WRITE SAME(16).
-    /// That is used when REPORTING OPTIONS value is 001b or 010b.
-    static member CdbUsageData_WRITE_SAME_16 : byte[] =
-        [|
-            0x00uy;         // Reserved
-            0x03uy;         // SUPPORT
-            0x00uy; 0x10uy; // CDB SIZE
-            0x93uy;         // OPERATION CODE ( following is in  CDB USAGE DATA field )
-            0xE6uy;         // WRPROTECT, LBDATA
-            0xFFuy; 0xFFuy; // LOGICAL BLOCK ADDRESS
-            0xFFuy; 0xFFuy; // LOGICAL BLOCK ADDRESS
-            0xFFuy; 0xFFuy; // LOGICAL BLOCK ADDRESS
-            0xFFuy; 0xFFuy; // LOGICAL BLOCK ADDRESS
-            0xFFuy; 0xFFuy; // NUMBER OF BLOCKES
-            0xFFuy; 0xFFuy; // NUMBER OF BLOCKES
-            0x00uy;         // GROUP NUMBER
-            0x04uy;         // CONTROL
-        |]
-*)
     /// <summary>
     ///  one_command parameter data for PERSISTENT RESERVE IN CDB.
     ///  That is used when REPORTING OPTIONS value is 001b or 010b.
