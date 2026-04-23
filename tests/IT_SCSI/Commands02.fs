@@ -181,3 +181,144 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
 
             do! r1.Close()
         }
+
+    [<Fact>]
+    member _.ReportSupportedOperationCodes_OneCommand_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt1 = r1.Send_ReportSupportedOperationCodes TaskATTRCd.SIMPLE_TASK g_LUN1 0uy 0uy 0us 1024u NACA.T
+            let! opcodes = r1.Wait_ReportSupportedOperationCodes_AllCommand itt1
+
+            for itr in opcodes.Descs do
+                let! itt2 =
+                    if itr.ServiceActionValid then
+                        r1.Send_ReportSupportedOperationCodes TaskATTRCd.SIMPLE_TASK g_LUN1 2uy itr.OperationCode itr.ServiceAction 1024u NACA.T
+                    else
+                        r1.Send_ReportSupportedOperationCodes TaskATTRCd.SIMPLE_TASK g_LUN1 1uy itr.OperationCode 0us 1024u NACA.T
+                let! res = r1.Wait_ReportSupportedOperationCodes_OneCommand itt2
+                Assert.True(( res.Support = 3uy ))
+
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.ReportSupportedOperationCodes_OneCommand_UnsupportedOpCode_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            // unknown operation code
+            let! itt1 = r1.Send_ReportSupportedOperationCodes TaskATTRCd.SIMPLE_TASK g_LUN1 1uy 0xFFuy 0us 1024u NACA.T
+            let! res = r1.Wait_ReportSupportedOperationCodes_OneCommand itt1
+            Assert.True(( res.Support = 1uy ))
+
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.ReportSupportedOperationCodes_OneCommand_UnsupportedOpCode_002 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            // operation code that has service action ( 0x5Euy : PERSISTENT RESERVE IN )
+            let! itt1 = r1.Send_ReportSupportedOperationCodes TaskATTRCd.SIMPLE_TASK g_LUN1 1uy 0x5Euy 0us 1024u NACA.T
+            let! res = r1.WaitSCSIResponse itt1
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            do! ClearACA r1 g_LUN1
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.ReportSupportedOperationCodes_OneCommand_UnsupportedOpCode_003 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            // unknown operation code
+            let! itt1 = r1.Send_ReportSupportedOperationCodes TaskATTRCd.SIMPLE_TASK g_LUN1 2uy 0xFFuy 0us 1024u NACA.T
+            let! res = r1.Wait_ReportSupportedOperationCodes_OneCommand itt1
+            Assert.True(( res.Support = 1uy ))
+
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.ReportSupportedOperationCodes_OneCommand_UnsupportedOpCode_004 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            // operation code that has no service action ( 0x12uy : INQUIRY )
+            let! itt1 = r1.Send_ReportSupportedOperationCodes TaskATTRCd.SIMPLE_TASK g_LUN1 2uy 0x12uy 0us 1024u NACA.T
+            let! res = r1.WaitSCSIResponse itt1
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            do! ClearACA r1 g_LUN1
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.ReportSupportedOperationCodes_LINK_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let cdb = GenScsiCDB.ReportSupportedOperationCodes 0uy 0uy 0us 1024u NACA.T LINK.T
+            let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 1024u
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            do! ClearACA r1 g_LUN1
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( 0u )>]
+    [<InlineData( 3u )>]
+    member _.ReportSupportedTaskManagementFunctions_001 ( allen : uint32 ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt1 = r1.Send_ReportSupportedTaskManagementFunctions TaskATTRCd.SIMPLE_TASK g_LUN1 allen NACA.T
+            let! res = r1.WaitSCSIResponse itt1
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+
+            do! ClearACA r1 g_LUN1
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( 0UL )>]
+    [<InlineData( 1UL )>]
+    member _.ReportSupportedTaskManagementFunctions_002 ( lu : uint64 ) =
+        task {
+            let lun = lun_me.fromPrim lu
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt1 = r1.Send_ReportSupportedTaskManagementFunctions TaskATTRCd.SIMPLE_TASK lun 4u NACA.T
+            let! res = r1.Wait_ReportSupportedTaskManagementFunctions itt1
+            Assert.True(( res.AbortTaskSupported ))
+            Assert.True(( res.AbortTaskSetSupported ))
+            Assert.True(( res.ClearACASupported ))
+            Assert.True(( res.ClearTaskSetSupported ))
+            Assert.True(( res.LUResetSupported ))
+            Assert.False(( res.QueryTaskSupported ))
+            Assert.False(( res.TargetResetSupported ))
+            Assert.False(( res.WakeupSupported ))
+
+            do! ClearACA r1 g_LUN1
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.ReportSupportedTaskManagementFunctions_003 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let cdb = GenScsiCDB.ReportSupportedTaskManagementFunctions 1024u NACA.T LINK.T
+            let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 1024u
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            do! ClearACA r1 g_LUN1
+            do! r1.Close()
+        }
+
+
+

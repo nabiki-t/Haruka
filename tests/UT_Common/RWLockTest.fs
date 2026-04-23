@@ -829,3 +829,1309 @@ type RWLockTest() =
         |> Async.Ignore
         |> Async.RunSynchronously
 
+    [<Fact>]
+    member _.R1_W2_W3_F1_F2_F3() =
+        let l = RWLock()
+        let br =
+            [| 3; 2; 1; 2; 3; |]
+            |> Array.map ( fun itr -> new Barrier( itr ) )
+        [|
+            async {
+                do! l.RLock() |> Async.AwaitTask
+
+                br.[0].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 0 ) )
+                br.[0].SignalAndWait()
+
+                do! wait( fun () -> l.WWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[1].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 1 ) )
+                br.[1].SignalAndWait()
+
+                do! wait( fun () -> l.WWaiter <> 2 ) |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 2 ) )
+                br.[2].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 1 ) )
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                br.[1].SignalAndWait()
+                br.[1].SignalAndWait()
+
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+            };
+        |]
+        |> Async.Parallel
+        |> Async.Ignore
+        |> Async.RunSynchronously
+
+    [<Fact>]
+    member _.R1_W2_F1_R3_F2_F3() =
+        let l = RWLock()
+        let br =
+            [| 3; 2; 3; 2; 3; |]
+            |> Array.map ( fun itr -> new Barrier( itr ) )
+        [|
+            async {
+                do! l.RLock() |> Async.AwaitTask
+
+                br.[0].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 0 ) )
+                br.[0].SignalAndWait()
+
+                do! wait( fun () -> l.WWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[1].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 1 ) )
+                br.[1].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[2].SignalAndWait()
+
+                do! wait( fun () -> l.RWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 1, 0 ) )
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 0 ) )
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                br.[1].SignalAndWait()
+                br.[1].SignalAndWait()
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                do! l.RLock() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+            };
+        |]
+        |> Async.Parallel
+        |> Async.Ignore
+        |> Async.RunSynchronously
+
+    [<Fact>]
+    member _.R1_W2_F1_W3_F2_F3() =
+        let l = RWLock()
+        let br =
+            [| 3; 2; 3; 2; 3; |]
+            |> Array.map ( fun itr -> new Barrier( itr ) )
+        [|
+            async {
+                do! l.RLock() |> Async.AwaitTask
+
+                br.[0].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 0 ) )
+                br.[0].SignalAndWait()
+
+                do! wait( fun () -> l.WWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[1].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 1 ) )
+                br.[1].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[2].SignalAndWait()
+
+                do! wait( fun () -> l.WWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 1 ) )
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                br.[1].SignalAndWait()
+                br.[1].SignalAndWait()
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+            };
+        |]
+        |> Async.Parallel
+        |> Async.Ignore
+        |> Async.RunSynchronously
+
+    [<Fact>]
+    member _.R1_W2_F1_F2_R3_F3() =
+        let l = RWLock()
+        let br =
+            [| 3; 2; 3; 3; 3; |]
+            |> Array.map ( fun itr -> new Barrier( itr ) )
+        [|
+            async {
+                do! l.RLock() |> Async.AwaitTask
+
+                br.[0].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 0 ) )
+                br.[0].SignalAndWait()
+
+                do! wait( fun () -> l.WWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[1].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 1 ) )
+                br.[1].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[2].SignalAndWait()
+
+                br.[3].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 0 ) )
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                br.[1].SignalAndWait()
+                br.[1].SignalAndWait()
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                do! l.RLock() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+            };
+        |]
+        |> Async.Parallel
+        |> Async.Ignore
+        |> Async.RunSynchronously
+
+    [<Fact>]
+    member _.R1_W2_F1_F2_W3_F3() =
+        let l = RWLock()
+        let br =
+            [| 3; 2; 3; 3; 3; |]
+            |> Array.map ( fun itr -> new Barrier( itr ) )
+        [|
+            async {
+                do! l.RLock() |> Async.AwaitTask
+
+                br.[0].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 0 ) )
+                br.[0].SignalAndWait()
+
+                do! wait( fun () -> l.WWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[1].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 1 ) )
+                br.[1].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[2].SignalAndWait()
+
+                br.[3].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                br.[1].SignalAndWait()
+                br.[1].SignalAndWait()
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+            };
+        |]
+        |> Async.Parallel
+        |> Async.Ignore
+        |> Async.RunSynchronously
+
+    [<Fact>]
+    member _.W1_R2_R3_F1_F2_F3() =
+        let l = RWLock()
+        let br =
+            [| 3; 2; 1; 3; 3; |]
+            |> Array.map ( fun itr -> new Barrier( itr ) )
+        [|
+            async {
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[0].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[0].SignalAndWait()
+
+                do! wait( fun () -> l.RWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[1].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 1, 0 ) )
+                br.[1].SignalAndWait()
+
+                do! wait( fun () -> l.RWaiter <> 2 ) |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 2, 0 ) )
+                br.[2].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                Assert.True( l.Stat = ( 2, 0, 0, 0 ) )
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 0 ) )
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                do! l.RLock() |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                br.[1].SignalAndWait()
+                br.[1].SignalAndWait()
+
+                do! l.RLock() |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+            };
+        |]
+        |> Async.Parallel
+        |> Async.Ignore
+        |> Async.RunSynchronously
+
+    [<Fact>]
+    member _.W1_R2_W3_F1_F3_F2() =
+        let l = RWLock()
+        let br =
+            [| 3; 2; 1; 2; 3; |]
+            |> Array.map ( fun itr -> new Barrier( itr ) )
+        [|
+            async {
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[0].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[0].SignalAndWait()
+
+                do! wait( fun () -> l.RWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[1].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 1, 0 ) )
+                br.[1].SignalAndWait()
+
+                do! wait( fun () -> l.WWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 1, 1 ) )
+                br.[2].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 1, 0 ) )
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 0 ) )
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                do! l.RLock() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                br.[1].SignalAndWait()
+                br.[1].SignalAndWait()
+
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+            };
+        |]
+        |> Async.Parallel
+        |> Async.Ignore
+        |> Async.RunSynchronously
+
+    [<Fact>]
+    member _.W1_R2_F1_R3_F2_F3() =
+        let l = RWLock()
+        let br =
+            [| 3; 2; 3; 3; 3; |]
+            |> Array.map ( fun itr -> new Barrier( itr ) )
+        [|
+            async {
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[0].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[0].SignalAndWait()
+
+                do! wait( fun () -> l.RWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[1].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 1, 0 ) )
+                br.[1].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 0 ) )
+                br.[2].SignalAndWait()
+
+                br.[3].SignalAndWait()
+                Assert.True( l.Stat = ( 2, 0, 0, 0 ) )
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 0 ) )
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                do! l.RLock() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                br.[1].SignalAndWait()
+                br.[1].SignalAndWait()
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                do! l.RLock() |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+            };
+        |]
+        |> Async.Parallel
+        |> Async.Ignore
+        |> Async.RunSynchronously
+
+    [<Fact>]
+    member _.W1_R2_F1_W3_F2_F3() =
+        let l = RWLock()
+        let br =
+            [| 3; 2; 3; 2; 3; |]
+            |> Array.map ( fun itr -> new Barrier( itr ) )
+        [|
+            async {
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[0].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[0].SignalAndWait()
+
+                do! wait( fun () -> l.RWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[1].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 1, 0 ) )
+                br.[1].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 0 ) )
+                br.[2].SignalAndWait()
+
+                do! wait( fun () -> l.WWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 1 ) )
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                do! l.RLock() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                br.[1].SignalAndWait()
+                br.[1].SignalAndWait()
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+            };
+        |]
+        |> Async.Parallel
+        |> Async.Ignore
+        |> Async.RunSynchronously
+
+    [<Fact>]
+    member _.W1_R2_F1_F2_R3_F3() =
+        let l = RWLock()
+        let br =
+            [| 3; 2; 3; 3; 3; |]
+            |> Array.map ( fun itr -> new Barrier( itr ) )
+        [|
+            async {
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[0].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[0].SignalAndWait()
+
+                do! wait( fun () -> l.RWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[1].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 1, 0 ) )
+                br.[1].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 0 ) )
+                br.[2].SignalAndWait()
+
+                br.[3].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 0 ) )
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                do! l.RLock() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                br.[1].SignalAndWait()
+                br.[1].SignalAndWait()
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                do! l.RLock() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+            };
+        |]
+        |> Async.Parallel
+        |> Async.Ignore
+        |> Async.RunSynchronously
+
+    [<Fact>]
+    member _.W1_R2_F1_F2_W3_F3() =
+        let l = RWLock()
+        let br =
+            [| 3; 2; 3; 3; 3; |]
+            |> Array.map ( fun itr -> new Barrier( itr ) )
+        [|
+            async {
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[0].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[0].SignalAndWait()
+
+                do! wait( fun () -> l.RWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[1].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 1, 0 ) )
+                br.[1].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 0 ) )
+                br.[2].SignalAndWait()
+
+                br.[3].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                do! l.RLock() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                br.[1].SignalAndWait()
+                br.[1].SignalAndWait()
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+            };
+        |]
+        |> Async.Parallel
+        |> Async.Ignore
+        |> Async.RunSynchronously
+
+    [<Fact>]
+    member _.W1_W2_R3_F1_F2_F3() =
+        let l = RWLock()
+        let br =
+            [| 3; 2; 1; 2; 3; |]
+            |> Array.map ( fun itr -> new Barrier( itr ) )
+        [|
+            async {
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[0].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[0].SignalAndWait()
+
+                do! wait( fun () -> l.WWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[1].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 1 ) )
+                br.[1].SignalAndWait()
+
+                do! wait( fun () -> l.RWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 1, 1 ) )
+                br.[2].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 1, 0 ) )
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 0 ) )
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                br.[1].SignalAndWait()
+                br.[1].SignalAndWait()
+
+                do! l.RLock() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+            };
+        |]
+        |> Async.Parallel
+        |> Async.Ignore
+        |> Async.RunSynchronously
+
+    [<Fact>]
+    member _.W1_W2_W3_F1_F2_F3() =
+        let l = RWLock()
+        let br =
+            [| 3; 2; 1; 2; 3; |]
+            |> Array.map ( fun itr -> new Barrier( itr ) )
+        [|
+            async {
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[0].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[0].SignalAndWait()
+
+                do! wait( fun () -> l.WWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[1].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 1 ) )
+                br.[1].SignalAndWait()
+
+                do! wait( fun () -> l.WWaiter <> 2 ) |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 2 ) )
+                br.[2].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 1 ) )
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                br.[1].SignalAndWait()
+                br.[1].SignalAndWait()
+
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+            };
+        |]
+        |> Async.Parallel
+        |> Async.Ignore
+        |> Async.RunSynchronously
+
+    [<Fact>]
+    member _.W1_W2_F1_R3_F2_F3() =
+        let l = RWLock()
+        let br =
+            [| 3; 2; 3; 2; 3; |]
+            |> Array.map ( fun itr -> new Barrier( itr ) )
+        [|
+            async {
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[0].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[0].SignalAndWait()
+
+                do! wait( fun () -> l.WWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[1].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 1 ) )
+                br.[1].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[2].SignalAndWait()
+
+                do! wait( fun () -> l.RWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 1, 0 ) )
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 0 ) )
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                br.[1].SignalAndWait()
+                br.[1].SignalAndWait()
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                do! l.RLock() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+            };
+        |]
+        |> Async.Parallel
+        |> Async.Ignore
+        |> Async.RunSynchronously
+
+    [<Fact>]
+    member _.W1_W2_F1_W3_F2_F3() =
+        let l = RWLock()
+        let br =
+            [| 3; 2; 3; 2; 3; |]
+            |> Array.map ( fun itr -> new Barrier( itr ) )
+        [|
+            async {
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[0].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[0].SignalAndWait()
+
+                do! wait( fun () -> l.WWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[1].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 1 ) )
+                br.[1].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[2].SignalAndWait()
+
+                do! wait( fun () -> l.WWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 1 ) )
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                br.[1].SignalAndWait()
+                br.[1].SignalAndWait()
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+            };
+        |]
+        |> Async.Parallel
+        |> Async.Ignore
+        |> Async.RunSynchronously
+
+    [<Fact>]
+    member _.W1_W2_F1_F2_R3_F3() =
+        let l = RWLock()
+        let br =
+            [| 3; 2; 3; 3; 3; |]
+            |> Array.map ( fun itr -> new Barrier( itr ) )
+        [|
+            async {
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[0].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[0].SignalAndWait()
+
+                do! wait( fun () -> l.WWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[1].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 1 ) )
+                br.[1].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[2].SignalAndWait()
+
+                br.[3].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                Assert.True( l.Stat = ( 1, 0, 0, 0 ) )
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                br.[1].SignalAndWait()
+                br.[1].SignalAndWait()
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                do! l.RLock() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+            };
+        |]
+        |> Async.Parallel
+        |> Async.Ignore
+        |> Async.RunSynchronously
+
+    [<Fact>]
+    member _.W1_W2_F1_F2_W3_F3() =
+        let l = RWLock()
+        let br =
+            [| 3; 2; 3; 3; 3; |]
+            |> Array.map ( fun itr -> new Barrier( itr ) )
+        [|
+            async {
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[0].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[0].SignalAndWait()
+
+                do! wait( fun () -> l.WWaiter <> 1 ) |> Async.AwaitTask
+
+                br.[1].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 1 ) )
+                br.[1].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[2].SignalAndWait()
+
+                br.[3].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                Assert.True( l.Stat = ( 0, 1, 0, 0 ) )
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+            };
+
+            async {
+                br.[0].SignalAndWait()
+                br.[0].SignalAndWait()
+
+                br.[1].SignalAndWait()
+                br.[1].SignalAndWait()
+
+                br.[2].SignalAndWait()
+                br.[2].SignalAndWait()
+
+                br.[3].SignalAndWait()
+                br.[3].SignalAndWait()
+
+                do! l.WLock() |> Async.AwaitTask
+
+                br.[4].SignalAndWait()
+                br.[4].SignalAndWait()
+
+                do! l.Release() |> Async.AwaitTask
+                Assert.True( l.Stat = ( 0, 0, 0, 0 ) )
+            };
+        |]
+        |> Async.Parallel
+        |> Async.Ignore
+        |> Async.RunSynchronously
+
