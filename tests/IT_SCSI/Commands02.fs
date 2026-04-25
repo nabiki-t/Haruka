@@ -409,15 +409,76 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
             do! r1.Close()
         }
 
-    [<Fact>]
-    member _.RequestSense_001 () =
+    [<Theory>]
+    [<InlineData( 0UL )>]
+    [<InlineData( 1UL )>]
+    member _.RequestSense_001 ( lu : uint64 ) =
         task {
+            let lun = lun_me.fromPrim lu
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-            let! itt = r1.Send_RequestSense TaskATTRCd.SIMPLE_TASK g_LUN1 DESC.F 255uy NACA.T
+            let! itt = r1.Send_RequestSense TaskATTRCd.SIMPLE_TASK lun DESC.F 255uy NACA.T
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.GOOD ))
             let senseData = ParseSenseData.Parse res.ResData.Array
             Assert.True(( senseData.Value.SenseKey = SenseKeyCd.NO_SENSE ))
             Assert.True(( senseData.Value.ASC = ASCCd.NO_ADDITIONAL_SENSE_INFORMATION ))
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( 0UL, 0uy, true  )>]
+    [<InlineData( 0UL, 4uy, true  )>]
+    [<InlineData( 0UL, 8uy, true  )>]
+    [<InlineData( 0UL, 0uy, false )>]
+    [<InlineData( 0UL, 4uy, false )>]
+    [<InlineData( 0UL, 8uy, false )>]
+    [<InlineData( 1UL, 0uy, true  )>]
+    [<InlineData( 1UL, 4uy, true  )>]
+    [<InlineData( 1UL, 8uy, true  )>]
+    [<InlineData( 1UL, 0uy, false )>]
+    [<InlineData( 1UL, 4uy, false )>]
+    [<InlineData( 1UL, 8uy, false )>]
+    member _.RequestSense_002 ( lu : uint64 ) ( allen : byte ) ( desc  : bool ) =
+        task {
+            let lun = lun_me.fromPrim lu
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt_pr_out1 = r1.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T resvkey_me.zero g_ResvKey1 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out1
+
+            let! itt_pr_out2 = r2.Send_PROut_REGISTER TaskATTRCd.SIMPLE_TASK lun NACA.T resvkey_me.zero g_ResvKey2 SPEC_I_PT.F ALL_TG_PT.F APTPL.T [||]
+            let! _ = r2.WaitSCSIResponseGoodStatus itt_pr_out2
+
+            let! itt_pr_out3 = r1.Send_PROut_CLEAR TaskATTRCd.SIMPLE_TASK lun NACA.T g_ResvKey1
+            let! _ = r1.WaitSCSIResponseGoodStatus itt_pr_out3
+
+            let! itt = r1.Send_RequestSense TaskATTRCd.SIMPLE_TASK lun ( DESC.ofBool desc ) allen NACA.T
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.GOOD ))
+            Assert.True(( res.ResData.Length = int allen ))
+
+            let! itt = r1.Send_RequestSense TaskATTRCd.SIMPLE_TASK lun DESC.F 255uy NACA.T
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.GOOD ))
+            let senseData = ParseSenseData.Parse res.ResData.Array
+            Assert.True(( senseData.Value.SenseKey = SenseKeyCd.NO_SENSE ))
+            Assert.True(( senseData.Value.ASC = ASCCd.NO_ADDITIONAL_SENSE_INFORMATION ))
+
+            do! r1.Close()
+            do! r2.Close()
+        }
+
+    [<Fact>]
+    member _.RequestSense_LINK_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let cdb = GenScsiCDB.RequestSense DESC.F 255uy NACA.T LINK.T
+            let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 255u
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+
+            do! ClearACA r1 g_LUN1
             do! r1.Close()
         }
