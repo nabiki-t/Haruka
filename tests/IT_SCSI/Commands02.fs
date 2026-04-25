@@ -304,7 +304,6 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
             Assert.False(( res.TargetResetSupported ))
             Assert.False(( res.WakeupSupported ))
 
-            do! ClearACA r1 g_LUN1
             do! r1.Close()
         }
 
@@ -320,5 +319,105 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
             do! r1.Close()
         }
 
+    static member SynchronizeCache10_001_data : obj[][] = [|
+        [| 0u;                                0us;                                true;  |];
+        [| 0u;                                uint16 m_MediaBlockCount;           true;  |];
+        [| 0u;                                ( uint16 m_MediaBlockCount ) + 1us; false; |];
+        [| ( uint32 m_MediaBlockCount ) - 1u; 1us;                                true;  |];
+        [| ( uint32 m_MediaBlockCount ) - 1u; 2us;                                false; |];
+        [| ( uint32 m_MediaBlockCount );      0us;                                true;  |];
+        [| ( uint32 m_MediaBlockCount );      1us;                                false; |];
+        [| ( uint32 m_MediaBlockCount ) + 1u; 0xFFFFus;                           false; |];
+        [| 0xFFFFFFFFu;                       0x0001us;                           false; |];
+        [| 0xFFFFFFFFu;                       0xFFFFus;                           false; |];
+    |]
 
+    [<Theory>]
+    [<MemberData( "SynchronizeCache10_001_data" )>]
+    member _.SynchronizeCache10_001 ( s : uint32 ) ( l : uint16 ) ( exp : bool ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt1 = r1.Send_SynchronizeCache10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 s ) ( blkcnt_me.ofUInt16 l ) NACA.T
 
+            if exp then
+                let! _ = r1.WaitSCSIResponseGoodStatus itt1
+                ()
+            else
+                let! res = r1.WaitSCSIResponse itt1
+                Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+                Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+                Assert.True(( res.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
+                do! ClearACA r1 g_LUN1
+
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.SynchronizeCache10_LINK_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let cdb = GenScsiCDB.SynchronizeCache10 SYNC_NV.F IMMED.F blkcnt_me.zero32 0uy blkcnt_me.zero16 NACA.T LINK.T
+            let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            do! ClearACA r1 g_LUN1
+            do! r1.Close()
+        }
+
+    static member SynchronizeCache16_001_data : obj[][] = [|
+        [| 0UL;                                0u;                                true;  |];
+        [| 0UL;                                uint32 m_MediaBlockCount;          true;  |];
+        [| 0UL;                                ( uint32 m_MediaBlockCount ) + 1u; false; |];
+        [| ( uint64 m_MediaBlockCount ) - 1UL; 1u;                                true;  |];
+        [| ( uint64 m_MediaBlockCount ) - 1UL; 2u;                                false; |];
+        [| ( uint64 m_MediaBlockCount );       0u;                                true;  |];
+        [| ( uint64 m_MediaBlockCount );       1u;                                false; |];
+        [| ( uint64 m_MediaBlockCount ) + 1UL; 0xFFFFFFFFu;                       false; |];
+        [| 0xFFFFFFFFFFFFFFFFUL;               0x00000001u;                       false; |];
+        [| 0xFFFFFFFFFFFFFFFFUL;               0xFFFFFFFFu;                       false; |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "SynchronizeCache16_001_data" )>]
+    member _.SynchronizeCache16_001 ( s : uint64 ) ( l : uint32 ) ( exp : bool ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt1 = r1.Send_SynchronizeCache16 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt64 s ) ( blkcnt_me.ofUInt32 l ) NACA.T
+
+            if exp then
+                let! _ = r1.WaitSCSIResponseGoodStatus itt1
+                ()
+            else
+                let! res = r1.WaitSCSIResponse itt1
+                Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+                Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+                Assert.True(( res.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
+                do! ClearACA r1 g_LUN1
+
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.SynchronizeCache16_LINK_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let cdb = GenScsiCDB.SynchronizeCache16 SYNC_NV.F IMMED.F blkcnt_me.zero64 0uy blkcnt_me.zero32 NACA.T LINK.T
+            let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            do! ClearACA r1 g_LUN1
+            do! r1.Close()
+        }
+
+    [<Fact>]
+    member _.RequestSense_001 () =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.Send_RequestSense TaskATTRCd.SIMPLE_TASK g_LUN1 DESC.F 255uy NACA.T
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.GOOD ))
+            let senseData = ParseSenseData.Parse res.ResData.Array
+            Assert.True(( senseData.Value.SenseKey = SenseKeyCd.NO_SENSE ))
+            Assert.True(( senseData.Value.ASC = ASCCd.NO_ADDITIONAL_SENSE_INFORMATION ))
+            do! r1.Close()
+        }
