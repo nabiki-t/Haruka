@@ -315,7 +315,8 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
 
                 m_OutBuffer.Update( fun old ->
                     if old.ContainsKey itt |> not then
-                        old.Add( itt, param )
+                        let param2 = PooledBuffer.Rent( param, param.Length )
+                        old.Add( itt, param2 )
                     else
                         old // Unexpedted
                 )
