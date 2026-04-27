@@ -166,6 +166,22 @@ type SCSI_Read( fx : SCSI_Read_Fixture ) =
             Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
         }
 
+    let FillData ( r : SCSI_Initiator ) ( lun : LUN_T ) : Task< PooledBuffer > =
+        task {
+            let buf = PooledBuffer.Rent( int m_MediaSize )
+            Random.Shared.NextBytes buf.ArraySegment
+            let! itt = r.Send_Write10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize buf NACA.T
+            let! _ = r.WaitSCSIResponseGoodStatus itt
+            return buf
+        }
+
+    let ReadAllData ( r : SCSI_Initiator ) ( lun : LUN_T ) : Task< PooledBuffer > =
+        task {
+            let trlen = blkcnt_me.ofUInt16 ( uint16 m_MediaBlockCount )
+            let! itt = r.Send_Read10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize trlen NACA.T
+            return! r.WaitSCSIResponseGoodStatus itt
+        }
+
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
 
@@ -197,9 +213,13 @@ type SCSI_Read( fx : SCSI_Read_Fixture ) =
         }
         
     static member Read6_002_data : obj[][] = [|
-        [| m_MediaBlockCount - 1u; 2uy; |]
-        [| m_MediaBlockCount;      1uy; |]
-        [| m_MediaBlockCount + 1u; 0uy; |]
+        [| m_MediaBlockCount - 1u; 2uy;    |]
+        [| m_MediaBlockCount;      1uy;    |]
+        [| m_MediaBlockCount + 1u; 0uy;    |]
+        [| m_MediaBlockCount;      0xFFuy; |]
+        [| 0xFFFFFFFFu;            0uy;    |]
+        [| 0xFFFFFFFFu;            1uy;    |]
+        [| 0xFFFFFFFFu;            0xFFuy; |]
     |]
 
     [<Theory>]
@@ -213,21 +233,6 @@ type SCSI_Read( fx : SCSI_Read_Fixture ) =
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
             Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
             Assert.True(( res.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
-
-            do! ClearACA r1 g_LUN1
-            do! r1.Close()
-        }
-
-    [<Fact>]
-    member _.Read6_LINK_001 () =
-        task {
-            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-
-            let cdb = GenScsiCDB.Read6 blkcnt_me.zero32 blkcnt_me.zero8 NACA.T LINK.T
-            let edtl = Blocksize.toUInt32 m_MediaBlockSize * 256u
-            let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty edtl
-            let! res = r1.WaitSCSIResponse itt
-            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
             do! ClearACA r1 g_LUN1
             do! r1.Close()
@@ -262,9 +267,13 @@ type SCSI_Read( fx : SCSI_Read_Fixture ) =
         }
         
     static member Read10_002_data : obj[][] = [|
-        [| m_MediaBlockCount - 1u; 2us; |]
-        [| m_MediaBlockCount;      1us; |]
-        [| m_MediaBlockCount + 1u; 0us; |]
+        [| m_MediaBlockCount - 1u; 2us;      |]
+        [| m_MediaBlockCount;      1us;      |]
+        [| m_MediaBlockCount + 1u; 0us;      |]
+        [| m_MediaBlockCount;      0xFFFFus; |]
+        [| 0xFFFFFFFFu;            0x0us;    |]
+        [| 0xFFFFFFFFu;            0x1us;    |]
+        [| 0xFFFFFFFFu;            0xFFFFus; |]
     |]
 
     [<Theory>]
@@ -283,17 +292,268 @@ type SCSI_Read( fx : SCSI_Read_Fixture ) =
             do! r1.Close()
         }
 
-    [<Fact>]
-    member _.Read10_LINK_001 () =
+    [<Theory>]
+    [<InlineData( 1uy, false, false, false )>]
+    [<InlineData( 0uy, true,  false, false )>]
+    [<InlineData( 0uy, false, true,  false )>]
+    [<InlineData( 0uy, false, false, true  )>]
+    member _.Read10_003 ( rdp : byte ) ( dpo : bool ) ( fua : bool ) ( fuanv : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
-            let cdb = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy blkcnt_me.zero16 NACA.T LINK.T
+            let cdb = GenScsiCDB.Read10 rdp ( DPO.ofBool dpo ) ( FUA.ofBool fua ) ( FUA_NV.ofBool fuanv ) blkcnt_me.zero32 0uy blkcnt_me.zero16 NACA.T LINK.T
             let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+            
+            do! ClearACA r1 g_LUN1
+            do! r1.Close()
+        }
+
+    static member Read12_001_data : obj[][] = [|
+        [| 0u;                     0u;   0u;   0u;                     |]
+        [| 0u;                     1u;   1u;   0u;                     |]
+        [| 0u;                     255u; 255u; 0u;                     |]
+        [| m_MediaBlockCount - 1u; 1u;   1u;   m_MediaBlockCount - 1u; |]
+        [| m_MediaBlockCount;      0u;   0u;   0u;                     |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "Read12_001_data" )>]
+    member _.Read12_001 ( lba : uint32 ) ( transLen : uint32 ) ( exBlockCnt : uint32 ) ( exStartBlkPos : uint32 ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt_read = r1.Send_Read12 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 lba ) m_MediaBlockSize ( blkcnt_me.ofUInt32 transLen ) NACA.T
+            let! readData = r1.WaitSCSIResponseGoodStatus itt_read
+
+            let exBytesLen = Blocksize.toUInt32 m_MediaBlockSize * exBlockCnt
+            Assert.True(( readData.uLength = exBytesLen ))
+            
+            let exStartBytesPos = Blocksize.toUInt32 m_MediaBlockSize * exStartBlkPos
+            for i = 0 to int exBytesLen - 1 do
+                Assert.True(( m_FilledData.[ int exStartBytesPos + i ] = readData.Array.[ i ] ))
+            
+            readData.Return()
+            do! r1.Close()
+        }
+        
+    static member Read12_002_data : obj[][] = [|
+        [| m_MediaBlockCount - 1u; 2u;          |]
+        [| m_MediaBlockCount;      1u;          |]
+        [| m_MediaBlockCount + 1u; 0u;          |]
+        [| m_MediaBlockCount;      0xFFFFFFFFu; |]
+        [| 0xFFFFFFFFu;            0u;          |]
+        [| 0xFFFFFFFFu;            1u;          |]
+        [| 0xFFFFFFFFu;            0xFFFFFFFFu; |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "Read12_002_data" )>]
+    member _.Read12_002 ( lba : uint32 ) ( transLen : uint32 ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let cdb = GenScsiCDB.Read12 0uy DPO.F FUA.F FUA_NV.F ( blkcnt_me.ofUInt32 lba ) 0uy ( blkcnt_me.ofUInt32 transLen ) NACA.T LINK.F
+            let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
 
             do! ClearACA r1 g_LUN1
             do! r1.Close()
         }
 
+    [<Theory>]
+    [<InlineData( 1uy, false, false, false )>]
+    [<InlineData( 0uy, true,  false, false )>]
+    [<InlineData( 0uy, false, true,  false )>]
+    [<InlineData( 0uy, false, false, true  )>]
+    member _.Read12_003 ( rdp : byte ) ( dpo : bool ) ( fua : bool ) ( fuanv : bool ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let cdb = GenScsiCDB.Read12 rdp ( DPO.ofBool dpo ) ( FUA.ofBool fua ) ( FUA_NV.ofBool fuanv ) blkcnt_me.zero32 0uy blkcnt_me.zero32 NACA.T LINK.T
+            let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+            
+            do! ClearACA r1 g_LUN1
+            do! r1.Close()
+        }
+
+    static member Read16_001_data : obj[][] = [|
+        [| 0UL;                            0u;   0u;   0u;                     |]
+        [| 0UL;                            1u;   1u;   0u;                     |]
+        [| 0u;                             255u; 255u; 0u;                     |]
+        [| uint64 m_MediaBlockCount - 1UL; 1u;   1u;   m_MediaBlockCount - 1u; |]
+        [| uint64 m_MediaBlockCount;       0u;   0u;   0u;                     |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "Read16_001_data" )>]
+    member _.Read16_001 ( lba : uint64 ) ( transLen : uint32 ) ( exBlockCnt : uint32 ) ( exStartBlkPos : uint32 ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let! itt_read = r1.Send_Read16 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt64 lba ) m_MediaBlockSize ( blkcnt_me.ofUInt32 transLen ) NACA.T
+            let! readData = r1.WaitSCSIResponseGoodStatus itt_read
+
+            let exBytesLen = Blocksize.toUInt32 m_MediaBlockSize * exBlockCnt
+            Assert.True(( readData.uLength = exBytesLen ))
+            
+            let exStartBytesPos = Blocksize.toUInt32 m_MediaBlockSize * exStartBlkPos
+            for i = 0 to int exBytesLen - 1 do
+                Assert.True(( m_FilledData.[ int exStartBytesPos + i ] = readData.Array.[ i ] ))
+            
+            readData.Return()
+            do! r1.Close()
+        }
+        
+    static member Read16_002_data : obj[][] = [|
+        [| uint64 m_MediaBlockCount - 1UL;  2u;          |]
+        [| uint64 m_MediaBlockCount;        1u;          |]
+        [| uint64 m_MediaBlockCount + 1UL;  0u;          |]
+        [| uint64 m_MediaBlockCount;        0xFFFFFFFFu; |]
+        [| 0xFFFFFFFFFFFFFFFFUL;            0u;          |]
+        [| 0xFFFFFFFFFFFFFFFFUL;            1u;          |]
+        [| 0xFFFFFFFFFFFFFFFFUL;            0xFFFFFFFFu; |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "Read16_002_data" )>]
+    member _.Read16_002 ( lba : uint64 ) ( transLen : uint32 ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let cdb = GenScsiCDB.Read16 0uy DPO.F FUA.F FUA_NV.F ( blkcnt_me.ofUInt64 lba ) 0uy ( blkcnt_me.ofUInt32 transLen ) NACA.T LINK.F
+            let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
+
+            do! ClearACA r1 g_LUN1
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( 1uy, false, false, false )>]
+    [<InlineData( 0uy, true,  false, false )>]
+    [<InlineData( 0uy, false, true,  false )>]
+    [<InlineData( 0uy, false, false, true  )>]
+    member _.Read16_003 ( rdp : byte ) ( dpo : bool ) ( fua : bool ) ( fuanv : bool ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let cdb = GenScsiCDB.Read16 rdp ( DPO.ofBool dpo ) ( FUA.ofBool fua ) ( FUA_NV.ofBool fuanv ) blkcnt_me.zero64 0uy blkcnt_me.zero32 NACA.T LINK.T
+            let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+            
+            do! ClearACA r1 g_LUN1
+            do! r1.Close()
+        }
+
+    static member Read_LINK_001_data : obj[][] = [|
+        [| GenScsiCDB.Read6 blkcnt_me.zero32 blkcnt_me.zero8 NACA.T LINK.T |]
+        [| GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy blkcnt_me.zero16 NACA.T LINK.T |]
+        [| GenScsiCDB.Read12 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy blkcnt_me.zero32 NACA.T LINK.T |]
+        [| GenScsiCDB.Read16 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero64 0uy blkcnt_me.zero32 NACA.T LINK.T |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "Read_LINK_001_data" )>]
+    member _.Read_LINK_001 ( cdb : byte[] ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+            let msg = res.Sense.Value.VendorSpecific.Value.VendorSpecific |> System.Text.Encoding.UTF8.GetString
+            Assert.StartsWith( "Linked command is not supported", msg )
+            do! ClearACA r1 g_LUN1
+            do! r1.Close()
+        }
+
+    static member Write6_001_data : obj[][] = [|
+        [| 0u;                     0uy;   |]
+        [| 0u;                     1uy;   |]
+        [| 0u;                     255uy; |]
+        [| m_MediaBlockCount - 1u; 1uy;   |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "Write6_001_data" )>]
+    member _.Write6_001 ( lba : uint32 ) ( transLen : byte ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! filledData = FillData r1 g_LUN1
+
+            let blockSizeInt = int ( Blocksize.toUInt32 m_MediaBlockSize )
+            let transByteCount =
+                if transLen = 0uy then
+                    256 * blockSizeInt
+                else
+                    int transLen * blockSizeInt
+            let buf =  PooledBuffer.Rent transByteCount
+            Random.Shared.NextBytes buf.ArraySegment
+
+            let! itt = r1.Send_Write6 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 lba ) m_MediaBlockSize buf NACA.T
+            let! _ = r1.WaitSCSIResponseGoodStatus itt
+
+            let! mediaData = ReadAllData r1 g_LUN1
+            let expData = Array.zeroCreate filledData.Length
+            Array.blit filledData.Array 0 expData 0 expData.Length
+            Array.blit buf.Array 0 expData ( int lba * blockSizeInt ) buf.Length
+            
+            for i = 0 to mediaData.Length - 1 do
+                Assert.True(( mediaData.Array.[ i ] = expData.[ i ] ))
+            
+            mediaData.Return()
+            filledData.Return()
+            do! r1.Close()
+        }
+        
+    static member Write6_002_data : obj[][] = [|
+        [| m_MediaBlockCount - 1u; 2uy;    |]
+        [| m_MediaBlockCount;      1uy;    |]
+        [| m_MediaBlockCount + 1u; 0uy;    |]
+        [| m_MediaBlockCount;      0xFFuy; |]
+        [| 0xFFFFFFFFu;            0uy;    |]
+        [| 0xFFFFFFFFu;            1uy;    |]
+        [| 0xFFFFFFFFu;            0xFFuy; |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "Write6_002_data" )>]
+    member _.Write6_002 ( lba : uint32 ) ( transLen : byte ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let blockSizeInt = int ( Blocksize.toUInt32 m_MediaBlockSize )
+            let transByteCount =
+                if transLen = 0uy then
+                    256 * blockSizeInt
+                else
+                    int transLen * blockSizeInt
+            let buf =  PooledBuffer.Rent transByteCount
+
+            let! itt = r1.Send_Write6 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 lba ) m_MediaBlockSize buf NACA.T
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
+
+            do! ClearACA r1 g_LUN1
+            do! r1.Close()
+        }
