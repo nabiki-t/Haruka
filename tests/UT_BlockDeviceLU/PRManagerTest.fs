@@ -146,7 +146,7 @@ type PRManager_Test1 () =
     do
         let lock = GlbFunc.LogParamUpdateLock()
         HLogger.SetLogParameters( 100u, 100u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
-        lock.Release() |> ignore
+        lock.ReleaseMutex() |> ignore
 
     static member defaultSource =  {
         I_TNexus = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us );

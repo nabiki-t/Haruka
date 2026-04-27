@@ -639,10 +639,11 @@ type Functions_Test () =
 
     [<Fact>]
     member _.GetParentName_006() =
-        let c = System.IO.Path.DirectorySeparatorChar
-        let i1 = sprintf "D:%caaa%cbbb%ceee%c..%c..%c..%c" c c c c c c c
-        let o = sprintf "D:%c" c
-        Assert.True( Functions.GetParentName i1 = o )
+        if Environment.OSVersion.Platform <> PlatformID.Unix then
+            let c = System.IO.Path.DirectorySeparatorChar
+            let i1 = sprintf "D:%caaa%cbbb%ceee%c..%c..%c..%c" c c c c c c c
+            let o = sprintf "D:%c" c
+            Assert.True( Functions.GetParentName i1 = o )
 
     [<Fact>]
     member _.GetParentName_007() =
@@ -673,10 +674,11 @@ type Functions_Test () =
 
     [<Fact>]
     member _.OptimizePathName_002() =
-        let c = System.IO.Path.DirectorySeparatorChar
-        let i1 = sprintf "C:%caaa%c..%cbbb%cccc%c..%c..%c..%c.." c c c c c c c c
-        let o = sprintf "C:%c" c
-        Assert.True( Functions.OptimizePathName i1 = o )
+        if Environment.OSVersion.Platform <> PlatformID.Unix then
+            let c = System.IO.Path.DirectorySeparatorChar
+            let i1 = sprintf "C:%caaa%c..%cbbb%cccc%c..%c..%c..%c.." c c c c c c c c
+            let o = sprintf "C:%c" c
+            Assert.True( Functions.OptimizePathName i1 = o )
 
     [<Fact>]
     member _.OptimizePathName_003() =

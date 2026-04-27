@@ -440,9 +440,12 @@ type GlbFunc() =
     /// <returns>
     ///   A Semaphore that can be used to synchronize access to the log parameters.
     /// </returns>
-    static member LogParamUpdateLock() : Semaphore =
-        let lock = new Semaphore( 1, 1, "12bd8dc3-0be8-4803-bb8e-9bd27bd00c35" )
-        lock.WaitOne() |> ignore
+    static member LogParamUpdateLock() : Mutex =
+        let lock = new Mutex( false, "12bd8dc3-0be8-4803-bb8e-9bd27bd00c35" )
+        try
+            lock.WaitOne() |> ignore
+        with :? AbandonedMutexException ->
+            ()
         lock
 
     /// <summary>

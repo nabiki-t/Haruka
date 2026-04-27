@@ -33,7 +33,7 @@ type LogAggregator_Test1 () =
     do
         let lock = GlbFunc.LogParamUpdateLock()
         HLogger.SetLogParameters( 100u, 100u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
-        lock.Release() |> ignore
+        lock.ReleaseMutex() |> ignore
 
     static member CreateTestDir ( caseName : string ) =
         let w1 = Functions.AppendPathName ( Path.GetTempPath() ) "LogAggregator_Test_" + caseName

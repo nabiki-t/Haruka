@@ -68,7 +68,7 @@ type StatusMaster_Test2 () =
     do
         let lock = GlbFunc.LogParamUpdateLock()
         HLogger.SetLogParameters( 100u, 100u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
-        lock.Release() |> ignore
+        lock.ReleaseMutex() |> ignore
 
 //    member _.GetTestFileName( fn : string ) =
 //        Functions.AppendPathName ( Path.GetTempPath() ) fn
@@ -1126,7 +1126,7 @@ type StatusMaster_Test2 () =
                     Assert.True(( lv = LogLevel.LOGLEVEL_VERBOSE ))
                 finally
                     HLogger.SetLogParameters( 10000u, 10000u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
-                    lock.Release() |> ignore
+                    lock.ReleaseMutex() |> ignore
 
                 GlbFunc.AllDispose [ rq_out; rq_in; rs_out; rs_in; ]
             };
@@ -1189,7 +1189,7 @@ type StatusMaster_Test2 () =
                     Assert.True(( lv = LogLevel.LOGLEVEL_INFO ))
                 finally
                     HLogger.SetLogParameters( 10000u, 10000u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
-                    lock.Release() |> ignore
+                    lock.ReleaseMutex() |> ignore
 
                 GlbFunc.AllDispose [ rq_out; rq_in; rs_out; rs_in; ]
             };
@@ -1245,7 +1245,7 @@ type StatusMaster_Test2 () =
                         Assert.Fail __LINE__
                 finally
                     HLogger.SetLogParameters( 10000u, 10000u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
-                    lock.Release() |> ignore
+                    lock.ReleaseMutex() |> ignore
 
                 GlbFunc.AllDispose [ rq_out; rq_in; rs_out; rs_in; ]
             };

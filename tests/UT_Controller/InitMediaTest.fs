@@ -34,7 +34,7 @@ type InitMedia_Test () =
     do
         let lock = GlbFunc.LogParamUpdateLock()
         HLogger.SetLogParameters( 100u, 100u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
-        lock.Release() |> ignore
+        lock.ReleaseMutex() |> ignore
 
     static member Init ( caseName : string ) =
         let dname = Functions.AppendPathName ( Path.GetTempPath() ) "InitMedia_Test_" + caseName

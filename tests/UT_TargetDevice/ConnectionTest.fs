@@ -36,7 +36,7 @@ type Connection_Test () =
     do
         let lock = GlbFunc.LogParamUpdateLock()
         HLogger.SetLogParameters( 100000u, 200000u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
-        lock.Release() |> ignore
+        lock.ReleaseMutex() |> ignore
 
     static member defaultNopOUTPDUValues = {
         I = true;

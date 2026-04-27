@@ -37,7 +37,7 @@ type BlockDeviceLU_Test () =
     do
         let lock = GlbFunc.LogParamUpdateLock()
         HLogger.SetLogParameters( 100u, 100u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
-        lock.Release() |> ignore
+        lock.ReleaseMutex() |> ignore
 
     member _.GetTestFileName( fn : string ) =
         sprintf "%s%c%s" ( Path.GetTempPath() ) Path.DirectorySeparatorChar fn

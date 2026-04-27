@@ -75,7 +75,7 @@ type Controller_Test2 () =
     do
         let lock = GlbFunc.LogParamUpdateLock()
         HLogger.SetLogParameters( 100u, 100u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
-        lock.Release() |> ignore
+        lock.ReleaseMutex() |> ignore
 
     static member DeleteDir ( dname : string ) =
         Functions.loopAsync ( fun () -> task {

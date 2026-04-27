@@ -76,7 +76,7 @@ type StatusMaster_Test1 () =
     do
         let lock = GlbFunc.LogParamUpdateLock()
         HLogger.SetLogParameters( 100u, 100u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
-        lock.Release() |> ignore
+        lock.ReleaseMutex() |> ignore
 
     static member defaultConParam =
         {
@@ -217,7 +217,7 @@ type StatusMaster_Test1 () =
             // set initial log parameters
             HLogger.SetLogParameters( Constants.LOGPARAM_DEF_SOFTLIMIT, Constants.LOGPARAM_DEF_HARDLIMIT, 0u, LogLevel.LOGLEVEL_OFF, stderr )
         finally
-            lock.Release() |> ignore
+            lock.ReleaseMutex() |> ignore
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName0
