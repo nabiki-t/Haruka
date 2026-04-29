@@ -107,21 +107,6 @@ type SCSI_Read_Fixture() =
         MaxRecvDataSegmentLength_T = Constants.NEGOPARAM_DEF_MaxRecvDataSegmentLength;
     }
 
-    // Write random data to media.
-    let m_FilledData =
-        let buf = PooledBuffer.Rent( int m_MediaSize )
-        Random.Shared.NextBytes buf.ArraySegment
-        task {
-            let! r = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-            let! itt = r.Send_Write10 TaskATTRCd.SIMPLE_TASK ( lun_me.fromPrim 1UL ) blkcnt_me.zero32 m_MediaBlockSize buf NACA.T
-            let! _ = r.WaitSCSIResponseGoodStatus itt
-            do! r.Close()
-        }
-        |> Functions.RunTaskSynchronously
-        let rdata = buf.GetPartialBytes 0 buf.Length
-        buf.Return()
-        rdata
-
     interface IDisposable with
         member _.Dispose (): unit =
             m_Client.Kill()
@@ -134,7 +119,6 @@ type SCSI_Read_Fixture() =
     member _.WorkPath = m_WorkPath
     member _.DefaultSessParam = m_defaultSessParam
     member _.DefaultConnParam = m_defaultConnParam
-    member _.FilledData = m_FilledData
 
     static member MediaSize = m_MediaSize
     static member MediaBlockSize = m_MediaBlockSize
@@ -153,7 +137,6 @@ type SCSI_Read( fx : SCSI_Read_Fixture ) =
     let m_WorkPath = fx.WorkPath
     let m_defaultSessParam = fx.DefaultSessParam
     let m_defaultConnParam = fx.DefaultConnParam
-    let m_FilledData = fx.FilledData
 
     static let m_MediaSize = SCSI_Read_Fixture.MediaSize
     static let m_MediaBlockSize = SCSI_Read_Fixture.MediaBlockSize
@@ -197,6 +180,7 @@ type SCSI_Read( fx : SCSI_Read_Fixture ) =
     member _.Read6_001 ( lba : uint32 ) ( transLen : byte ) ( exBlockCnt : uint32 ) ( exStartBlkPos : uint32 ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! filledData = FillData r1 g_LUN1
 
             let! itt_read = r1.Send_Read6 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 lba ) m_MediaBlockSize ( blkcnt_me.ofUInt8 transLen ) NACA.T
             let! readData = r1.WaitSCSIResponseGoodStatus itt_read
@@ -206,7 +190,7 @@ type SCSI_Read( fx : SCSI_Read_Fixture ) =
             
             let exStartBytesPos = Blocksize.toUInt32 m_MediaBlockSize * exStartBlkPos
             for i = 0 to int exBytesLen - 1 do
-                Assert.True(( m_FilledData.[ int exStartBytesPos + i ] = readData.Array.[ i ] ))
+                Assert.True(( filledData.[ int exStartBytesPos + i ] = readData.Array.[ i ] ))
             
             readData.Return()
             do! r1.Close()
@@ -251,6 +235,7 @@ type SCSI_Read( fx : SCSI_Read_Fixture ) =
     member _.Read10_001 ( lba : uint32 ) ( transLen : uint16 ) ( exBlockCnt : uint32 ) ( exStartBlkPos : uint32 ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! filledData = FillData r1 g_LUN1
 
             let! itt_read = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 lba ) m_MediaBlockSize ( blkcnt_me.ofUInt16 transLen ) NACA.T
             let! readData = r1.WaitSCSIResponseGoodStatus itt_read
@@ -260,7 +245,7 @@ type SCSI_Read( fx : SCSI_Read_Fixture ) =
             
             let exStartBytesPos = Blocksize.toUInt32 m_MediaBlockSize * exStartBlkPos
             for i = 0 to int exBytesLen - 1 do
-                Assert.True(( m_FilledData.[ int exStartBytesPos + i ] = readData.Array.[ i ] ))
+                Assert.True(( filledData.[ int exStartBytesPos + i ] = readData.Array.[ i ] ))
             
             readData.Return()
             do! r1.Close()
@@ -325,6 +310,7 @@ type SCSI_Read( fx : SCSI_Read_Fixture ) =
     member _.Read12_001 ( lba : uint32 ) ( transLen : uint32 ) ( exBlockCnt : uint32 ) ( exStartBlkPos : uint32 ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! filledData = FillData r1 g_LUN1
 
             let! itt_read = r1.Send_Read12 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 lba ) m_MediaBlockSize ( blkcnt_me.ofUInt32 transLen ) NACA.T
             let! readData = r1.WaitSCSIResponseGoodStatus itt_read
@@ -334,7 +320,7 @@ type SCSI_Read( fx : SCSI_Read_Fixture ) =
             
             let exStartBytesPos = Blocksize.toUInt32 m_MediaBlockSize * exStartBlkPos
             for i = 0 to int exBytesLen - 1 do
-                Assert.True(( m_FilledData.[ int exStartBytesPos + i ] = readData.Array.[ i ] ))
+                Assert.True(( filledData.[ int exStartBytesPos + i ] = readData.Array.[ i ] ))
             
             readData.Return()
             do! r1.Close()
@@ -400,6 +386,7 @@ type SCSI_Read( fx : SCSI_Read_Fixture ) =
     member _.Read16_001 ( lba : uint64 ) ( transLen : uint32 ) ( exBlockCnt : uint32 ) ( exStartBlkPos : uint32 ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! filledData = FillData r1 g_LUN1
 
             let! itt_read = r1.Send_Read16 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt64 lba ) m_MediaBlockSize ( blkcnt_me.ofUInt32 transLen ) NACA.T
             let! readData = r1.WaitSCSIResponseGoodStatus itt_read
@@ -409,7 +396,7 @@ type SCSI_Read( fx : SCSI_Read_Fixture ) =
             
             let exStartBytesPos = Blocksize.toUInt32 m_MediaBlockSize * exStartBlkPos
             for i = 0 to int exBytesLen - 1 do
-                Assert.True(( m_FilledData.[ int exStartBytesPos + i ] = readData.Array.[ i ] ))
+                Assert.True(( filledData.[ int exStartBytesPos + i ] = readData.Array.[ i ] ))
             
             readData.Return()
             do! r1.Close()
@@ -555,5 +542,126 @@ type SCSI_Read( fx : SCSI_Read_Fixture ) =
             Assert.True(( res.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
 
             do! ClearACA r1 g_LUN1
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( 2, 1uy )>]
+    [<InlineData( 1, 2uy )>]
+    member _.Write6_003 ( dlen : int ) ( cdblen : byte ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! filledData = FillData r1 g_LUN1
+
+            let blockSizeInt = int ( Blocksize.toUInt32 m_MediaBlockSize )
+            let transByteCount = dlen * blockSizeInt
+            let buf =  PooledBuffer.Rent transByteCount
+
+            let cdb = GenScsiCDB.Write6 blkcnt_me.zero32 ( blkcnt_me.ofUInt8 cdblen ) NACA.T LINK.F
+            let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb buf buf.uLength
+            let! _ = r1.WaitSCSIResponseGoodStatus itt
+
+            let! mediaData = ReadAllData r1 g_LUN1
+            let expData = Array.zeroCreate filledData.Length
+            Array.blit filledData.Array 0 expData 0 expData.Length
+            Array.blit buf.Array 0 expData 0 blockSizeInt
+            
+            for i = 0 to mediaData.Length - 1 do
+                Assert.True(( mediaData.Array.[ i ] = expData.[ i ] ))
+            
+            mediaData.Return()
+            filledData.Return()
+            do! r1.Close()
+        }
+
+    static member Write10_001_data : obj[][] = [|
+        [| 0u;                     0us; |]
+        [| 0u;                     1us; |]
+        [| 0u;                     255u |]
+        [| m_MediaBlockCount - 1u; 1us; |]
+        [| m_MediaBlockCount;      0us; |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "Write10_001_data" )>]
+    member _.Write10_001 ( lba : uint32 ) ( transLen : uint16 )  =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! filledData = FillData r1 g_LUN1
+
+            let blockSizeInt = int ( Blocksize.toUInt32 m_MediaBlockSize )
+            let transByteCount = int transLen * blockSizeInt
+            let buf =  PooledBuffer.Rent transByteCount
+            Random.Shared.NextBytes buf.ArraySegment
+
+            let! itt = r1.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 lba ) m_MediaBlockSize buf NACA.T
+            let! _ = r1.WaitSCSIResponseGoodStatus itt
+
+            let! mediaData = ReadAllData r1 g_LUN1
+            let expData = Array.zeroCreate filledData.Length
+            Array.blit filledData.Array 0 expData 0 expData.Length
+            Array.blit buf.Array 0 expData ( int lba * blockSizeInt ) buf.Length
+            
+            for i = 0 to mediaData.Length - 1 do
+                Assert.True(( mediaData.Array.[ i ] = expData.[ i ] ))
+            
+            mediaData.Return()
+            filledData.Return()
+            do! r1.Close()
+        }
+        
+    static member Write10_002_data : obj[][] = [|
+        [| m_MediaBlockCount - 1u; 2us;      |]
+        [| m_MediaBlockCount;      1us;      |]
+        [| m_MediaBlockCount + 1u; 0us;      |]
+        [| m_MediaBlockCount;      0xFFFFus; |]
+        [| 0xFFFFFFFFu;            0x0us;    |]
+        [| 0xFFFFFFFFu;            0x1us;    |]
+        [| 0xFFFFFFFFu;            0xFFFFus; |]
+    |]
+
+    [<Theory>]
+    [<MemberData( "Write10_002_data" )>]
+    member _.Write10_002 ( lba : uint32 ) ( transLen : uint16 ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            let cdb = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F ( blkcnt_me.ofUInt32 lba ) 0uy ( blkcnt_me.ofUInt16 transLen ) NACA.T LINK.F
+            let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
+            let! res = r1.WaitSCSIResponse itt
+            Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
+            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
+
+            do! ClearACA r1 g_LUN1
+            do! r1.Close()
+        }
+
+    [<Theory>]
+    [<InlineData( 2, 1uy )>]
+    [<InlineData( 1, 2uy )>]
+    member _.Write10_003 ( dlen : int ) ( cdblen : uint16 ) =
+        task {
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+            let! filledData = FillData r1 g_LUN1
+
+            let blockSizeInt = int ( Blocksize.toUInt32 m_MediaBlockSize )
+            let transByteCount = dlen * blockSizeInt
+            let buf =  PooledBuffer.Rent transByteCount
+
+            let cdb = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 cdblen ) NACA.T LINK.F
+            let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb buf buf.uLength
+            let! _ = r1.WaitSCSIResponseGoodStatus itt
+
+            let! mediaData = ReadAllData r1 g_LUN1
+            let expData = Array.zeroCreate filledData.Length
+            Array.blit filledData.Array 0 expData 0 expData.Length
+            Array.blit buf.Array 0 expData 0 blockSizeInt
+            
+            for i = 0 to mediaData.Length - 1 do
+                Assert.True(( mediaData.Array.[ i ] = expData.[ i ] ))
+            
+            mediaData.Return()
+            filledData.Return()
             do! r1.Close()
         }
