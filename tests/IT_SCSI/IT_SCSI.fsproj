@@ -23,7 +23,7 @@
     <Compile Include="Commands01.fs" />
     <Compile Include="Commands02.fs" />
     <Compile Include="Queueing.fs" />
-    <Compile Include="Read.fs" />
+    <Compile Include="ReadWrite.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
 
