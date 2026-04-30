@@ -161,6 +161,9 @@ type TextKeyValues =
         /// SessionType. See RFC 3720 12.21
         SessionType : TextValueType<string>;
 
+        /// TaskReporting. See RFC 5048 9.1
+        TaskReporting : TextValueType<TaskReporting[]>;
+
         /// UnknownKeys holds unknown key name received from the initiator.
         /// It is used to responde "NotUnderstood" values.
         UnknownKeys : string[];
@@ -202,6 +205,7 @@ type TextKeyValues =
             DataSequenceInOrder = ISV_Missing;
             ErrorRecoveryLevel = ISV_Missing;
             SessionType = ISV_Missing;
+            TaskReporting = ISV_Missing;
             UnknownKeys = Array.empty;
         }
 
@@ -252,6 +256,7 @@ type TextKeyValuesStatus =
         NegoStat_DataSequenceInOrder : NegoStatusValue;
         NegoStat_ErrorRecoveryLevel : NegoStatusValue;
         NegoStat_SessionType : NegoStatusValue;
+        NegoStat_TaskReporting : NegoStatusValue;
         NegoStat_UnknownKeys : NegoStatusValue;
     }
 
@@ -291,6 +296,7 @@ type TextKeyValuesStatus =
             NegoStat_DataSequenceInOrder = NegoStatusValue.NSV_Negotiated;
             NegoStat_ErrorRecoveryLevel = NegoStatusValue.NSV_Negotiated;
             NegoStat_SessionType = NegoStatusValue.NSV_Negotiated;
+            NegoStat_TaskReporting = NegoStatusValue.NSV_Negotiated;
             NegoStat_UnknownKeys = NegoStatusValue.NSV_Negotiated;
         }
 
@@ -1233,6 +1239,15 @@ type IscsiTextEncode() =
                     recTKV with
                         SessionType = ws;
                 }
+        elif String.Equals( keyName, "TaskReporting", StringComparison.Ordinal ) then {
+            recTKV with
+                TaskReporting = 
+                    tranceDataType (
+                        IscsiTextEncode.ListOfValuesBytes2Strings
+                        >> ValueOption.get
+                        >> Array.map ( TaskReporting.fromStringValue )
+                    )
+            }
         else {
             recTKV with
                 UnknownKeys = Array.append recTKV.UnknownKeys [| keyName |]
@@ -1426,6 +1441,18 @@ type IscsiTextEncode() =
             if s.NegoStat_SessionType &&& NegoStatusValue.NSG_WaitSend = NegoStatusValue.NSG_WaitSend then
                 yield! tvtToByte v.SessionType "SessionType" IscsiTextEncode.String2TextValueBytes
         
+            if s.NegoStat_TaskReporting &&& NegoStatusValue.NSG_WaitSend = NegoStatusValue.NSG_WaitSend then
+                yield! tvtToByte v.TaskReporting "TaskReporting" ( fun x -> 
+                    let w =
+                        x |>
+                        Array.collect (
+                            TaskReporting.toStringName
+                            >> sprintf "%s,"
+                            >> Encoding.GetEncoding( "utf-8" ).GetBytes
+                        )
+                    w.[ 0 .. w.Length - 2 ]
+                )
+
             if s.NegoStat_UnknownKeys &&& NegoStatusValue.NSG_WaitSend = NegoStatusValue.NSG_WaitSend then
                 for i = 0 to v.UnknownKeys.Length - 1 do
                     yield! ( Encoding.UTF8.GetBytes v.UnknownKeys.[i] )
@@ -1478,6 +1505,7 @@ type IscsiTextEncode() =
         f k.NegoStat_DataSequenceInOrder &&
         f k.NegoStat_ErrorRecoveryLevel &&
         f k.NegoStat_SessionType &&
+        f k.NegoStat_TaskReporting &&
         f k.NegoStat_UnknownKeys
 
 
@@ -1521,6 +1549,7 @@ type IscsiTextEncode() =
         k.DataSequenceInOrder.HasValue ||
         k.ErrorRecoveryLevel.HasValue ||
         k.SessionType.HasValue ||
+        k.TaskReporting.HasValue ||
         k.UnknownKeys.Length > 0
 
     // ----------------------------------------------------------------------------
@@ -1689,6 +1718,9 @@ type IscsiTextEncode() =
             IscsiTextEncode.margeTextValueType standpoint ikv.ErrorRecoveryLevel tkv.ErrorRecoveryLevel stat.NegoStat_ErrorRecoveryLevel min
         let next_SessionType, next_SessionTypeStat =
             IscsiTextEncode.margeTextValueType standpoint ikv.SessionType tkv.SessionType stat.NegoStat_SessionType ( fun i t -> i ) // always initiator value is used
+        let next_TaskReporting, next_TaskReportingStat =
+            IscsiTextEncode.margeTextValueType standpoint ikv.TaskReporting tkv.TaskReporting stat.NegoStat_TaskReporting IscsiTextEncode.arrayAnd
+
         let next_UnknownKeys, next_UnknownKeysStat =
             match standpoint with
             | Standpoint.Target ->
@@ -1734,6 +1766,7 @@ type IscsiTextEncode() =
                 DataSequenceInOrder = next_DataSequenceInOrder;
                 ErrorRecoveryLevel = next_ErrorRecoveryLevel;
                 SessionType = next_SessionType;
+                TaskReporting = next_TaskReporting;
                 UnknownKeys = next_UnknownKeys;
             },
             {
@@ -1766,6 +1799,7 @@ type IscsiTextEncode() =
                 NegoStat_DataSequenceInOrder = next_DataSequenceInOrderStat;
                 NegoStat_ErrorRecoveryLevel = next_ErrorRecoveryLevelStat;
                 NegoStat_SessionType = next_SessionTypeStat;
+                NegoStat_TaskReporting = next_TaskReportingStat;
                 NegoStat_UnknownKeys = next_UnknownKeysStat;
             }
         )
@@ -1811,5 +1845,6 @@ type IscsiTextEncode() =
             NegoStat_DataSequenceInOrder = s.NegoStat_DataSequenceInOrder &&& ~~~ NegoStatusValue.NSG_WaitSend;
             NegoStat_ErrorRecoveryLevel = s.NegoStat_ErrorRecoveryLevel &&& ~~~ NegoStatusValue.NSG_WaitSend;
             NegoStat_SessionType = s.NegoStat_SessionType &&& ~~~ NegoStatusValue.NSG_WaitSend;
+            NegoStat_TaskReporting = s.NegoStat_TaskReporting &&& ~~~ NegoStatusValue.NSG_WaitSend;
             NegoStat_UnknownKeys = s.NegoStat_UnknownKeys &&& ~~~ NegoStatusValue.NSG_WaitSend;
         }

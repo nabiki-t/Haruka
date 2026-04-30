@@ -57,6 +57,7 @@ type IscsiTextEncode1_Test () =
             NegoStat_DataSequenceInOrder = v;
             NegoStat_ErrorRecoveryLevel = v;
             NegoStat_SessionType = v;
+            NegoStat_TaskReporting = v;
             NegoStat_UnknownKeys = v;
         }
 
@@ -4318,6 +4319,7 @@ type IscsiTextEncode1_Test () =
                     DataSequenceInOrder = TextValueType.Value( false );
                     ErrorRecoveryLevel = TextValueType.Value( 1uy );
                     SessionType = TextValueType.Value( "Discovery" );
+                    TaskReporting = TextValueType.Value( [| TaskReporting.TR_RFC3720; TaskReporting.TR_ResponseFence; TaskReporting.TR_FastAbort; |] );
                     UnknownKeys = [| "XXX"; "YYY"; "ZZZ" |];
                 }
                 {
@@ -4380,6 +4382,8 @@ type IscsiTextEncode1_Test () =
                     yield! Encoding.UTF8.GetBytes "ErrorRecoveryLevel=1";
                     yield 0uy;
                     yield! Encoding.UTF8.GetBytes "SessionType=Discovery";
+                    yield 0uy;
+                    yield! Encoding.UTF8.GetBytes "TaskReporting=RFC3720,ResponseFence,FastAbort";
                     yield 0uy;
                     yield! Encoding.UTF8.GetBytes "XXX=NotUnderstood";
                     yield 0uy;
@@ -4495,6 +4499,7 @@ type IscsiTextEncode1_Test () =
                         DefaultTime2Retain = TextValueType.Value( 101us );
                         DataPDUInOrder = TextValueType.Value( true );
                         ErrorRecoveryLevel = TextValueType.Value( 1uy );
+                        TaskReporting = TextValueType.Value( [| TaskReporting.TR_RFC3720; TaskReporting.TR_FastAbort; |] );
                         UnknownKeys = [| "XXX"; "YYY"; "ZZZ" |];
                 }
                 {
@@ -4513,6 +4518,7 @@ type IscsiTextEncode1_Test () =
                         NegoStat_DefaultTime2Retain = NegoStatusValue.NSG_WaitSend;
                         NegoStat_DataPDUInOrder = NegoStatusValue.NSG_WaitSend;
                         NegoStat_ErrorRecoveryLevel = NegoStatusValue.NSG_WaitSend;
+                        NegoStat_TaskReporting = NegoStatusValue.NSG_WaitSend;
                         NegoStat_UnknownKeys = NegoStatusValue.NSG_WaitSend;
                 }
         let t1 = [|
@@ -4543,6 +4549,8 @@ type IscsiTextEncode1_Test () =
                     yield! Encoding.UTF8.GetBytes "DataPDUInOrder=Yes";
                     yield 0uy;
                     yield! Encoding.UTF8.GetBytes "ErrorRecoveryLevel=1";
+                    yield 0uy;
+                    yield! Encoding.UTF8.GetBytes "TaskReporting=RFC3720,FastAbort";
                     yield 0uy;
                     yield! Encoding.UTF8.GetBytes "XXX=NotUnderstood";
                     yield 0uy;
@@ -4587,6 +4595,7 @@ type IscsiTextEncode1_Test () =
                     DataSequenceInOrder = TextValueType.ISV_Missing;
                     ErrorRecoveryLevel = TextValueType.ISV_Missing;
                     SessionType = TextValueType.ISV_Missing;
+                    TaskReporting = TextValueType.ISV_Missing;
                     UnknownKeys = [| |];
                 }
                 {
@@ -4631,6 +4640,7 @@ type IscsiTextEncode1_Test () =
                     DataSequenceInOrder = TextValueType.ISV_NotUnderstood;
                     ErrorRecoveryLevel = TextValueType.ISV_NotUnderstood;
                     SessionType = TextValueType.ISV_NotUnderstood;
+                    TaskReporting = TextValueType.ISV_NotUnderstood;
                     UnknownKeys = [| |];
                 }
                 {
@@ -4694,6 +4704,8 @@ type IscsiTextEncode1_Test () =
                     yield 0uy;
                     yield! Encoding.UTF8.GetBytes "SessionType=NotUnderstood";
                     yield 0uy;
+                    yield! Encoding.UTF8.GetBytes "TaskReporting=NotUnderstood";
+                    yield 0uy;
                 |]
         Assert.True <| ( r1 = t1 )
 
@@ -4731,6 +4743,7 @@ type IscsiTextEncode1_Test () =
                     DataSequenceInOrder = TextValueType.ISV_Irrelevant;
                     ErrorRecoveryLevel = TextValueType.ISV_Irrelevant;
                     SessionType = TextValueType.ISV_Irrelevant;
+                    TaskReporting = TextValueType.ISV_Irrelevant;
                     UnknownKeys = [| |];
                 }
                 {
@@ -4794,6 +4807,8 @@ type IscsiTextEncode1_Test () =
                     yield 0uy;
                     yield! Encoding.UTF8.GetBytes "SessionType=Irrelevant";
                     yield 0uy;
+                    yield! Encoding.UTF8.GetBytes "TaskReporting=Irrelevant";
+                    yield 0uy;
                 |]
         Assert.True <| ( r1 = t1 )
 
@@ -4831,6 +4846,7 @@ type IscsiTextEncode1_Test () =
                     DataSequenceInOrder = TextValueType.ISV_Reject;
                     ErrorRecoveryLevel = TextValueType.ISV_Reject;
                     SessionType = TextValueType.ISV_Reject;
+                    TaskReporting = TextValueType.ISV_Reject;
                     UnknownKeys = [| |];
                 }
                 {
@@ -4892,6 +4908,8 @@ type IscsiTextEncode1_Test () =
                     yield! Encoding.UTF8.GetBytes "ErrorRecoveryLevel=Reject";
                     yield 0uy;
                     yield! Encoding.UTF8.GetBytes "SessionType=Reject";
+                    yield 0uy;
+                    yield! Encoding.UTF8.GetBytes "TaskReporting=Reject";
                     yield 0uy;
                 |]
         Assert.True <| ( r1 = t1 )

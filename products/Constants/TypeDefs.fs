@@ -119,6 +119,37 @@ type DigestType =
         | "NotUnderstood" -> DigestType.DST_NotUnderstood
         | _ -> DigestType.DST_NotUnderstood
 
+/// <summary>
+/// used in ISCSINegoParam.TaskReporting value
+/// </summary>
+[<Struct; IsReadOnly>]
+type TaskReporting =
+    | TR_RFC3720
+    | TR_ResponseFence
+    | TR_FastAbort
+    | TR_NotUnderstood
+
+    /// <summary>
+    /// Get string name value corresponging to TaskReporting value.
+    /// </summary>
+    static member toStringName : ( TaskReporting -> string ) =
+        function
+        | TaskReporting.TR_RFC3720  -> "RFC3720"
+        | TaskReporting.TR_ResponseFence  -> "ResponseFence"
+        | TaskReporting.TR_FastAbort  -> "FastAbort"
+        | TaskReporting.TR_NotUnderstood  -> "NotUnderstood"
+
+    /// <summary>
+    /// Get TaskReporting value corresponging to specified string value. If argument is unexpected string, NotUnderstood is returned.
+    /// </summary>
+    static member fromStringValue : ( string -> TaskReporting ) =
+        function
+        | "RFC3720"  -> TaskReporting.TR_RFC3720
+        | "ResponseFence"  -> TaskReporting.TR_ResponseFence
+        | "FastAbort"  -> TaskReporting.TR_FastAbort
+        | "NotUnderstood"  -> TaskReporting.TR_NotUnderstood
+        | _ -> TaskReporting.TR_NotUnderstood
+
 
 /// <summary>
 /// used in ISCSINegoParam.AuthMethod value( Login phase, security negotiation stage only )
