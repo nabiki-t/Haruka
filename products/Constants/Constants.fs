@@ -1438,7 +1438,14 @@ module Constants =
 
     /// Haruka controller program file name.
     let CONTROLLER_EXE_NAME : string =
-        "Controller.exe"
+        match Environment.OSVersion.Platform with
+        | PlatformID.Win32S
+        | PlatformID.Win32Windows
+        | PlatformID.Win32NT
+        | PlatformID.WinCE ->
+            "Controller.exe"
+        | _ ->
+            "Controller"
 
     /// Haruka controller configuration file name
     let CONTROLLER_CONF_FILE_NAME : string =
@@ -1474,11 +1481,18 @@ module Constants =
 
     /// Target device program file name.
     let TARGET_DEVICE_EXE_NAME : string =
-        "TargetDevice.exe"
+        match Environment.OSVersion.Platform with
+        | PlatformID.Win32S
+        | PlatformID.Win32Windows
+        | PlatformID.Win32NT
+        | PlatformID.WinCE ->
+            "TargetDevice.exe"
+        | _ ->
+            "TargetDevice"
 
     /// Target device program file name.
     let MEDIA_CREATION_EXE_NAME : string =
-        "Controller.exe"
+        CONTROLLER_EXE_NAME
 
     /// Target group configuration file prefix.
     let TARGET_GRP_CONFIG_FILE_PREFIX : string =

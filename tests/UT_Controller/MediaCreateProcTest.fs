@@ -37,10 +37,7 @@ type MediaCreateProc_Test () =
         HLogger.SetLogParameters( 100u, 100u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
         lock.ReleaseMutex() |> ignore
 
-    static let m_Stub_ExePath = 
-        let curExeName = System.Reflection.Assembly.GetEntryAssembly()
-        let curExeDir = Path.GetDirectoryName curExeName.Location
-        Functions.AppendPathName curExeDir "TestCommon.exe"
+    static let m_Stub_ExePath = GlbFunc.testCommonExePath
 
     static member Init ( caseName : string ) =
         let dname = Functions.AppendPathName ( Path.GetTempPath() ) "MediaCreateProc_Test_" + caseName

@@ -63,11 +63,33 @@ type GlbFunc() =
 
     /// The full pathname of the Controller.exe file.
     static member controllerExePath : string = 
-        Functions.AppendPathName currentExeDir "Controller.exe"
+        Functions.AppendPathName currentExeDir Constants.CONTROLLER_EXE_NAME
 
     /// The full pathname of the Client.exe file.
-    static member clientExePath : string = 
-        Functions.AppendPathName currentExeDir "Client.exe"
+    static member clientExePath : string =
+        let exename =
+            match Environment.OSVersion.Platform with
+            | PlatformID.Win32S
+            | PlatformID.Win32Windows
+            | PlatformID.Win32NT
+            | PlatformID.WinCE ->
+                "Client.exe"
+            | _ ->
+                "Client"
+        Functions.AppendPathName currentExeDir exename
+
+    /// The full pathname of the Client.exe file.
+    static member testCommonExePath : string = 
+        let exename =
+            match Environment.OSVersion.Platform with
+            | PlatformID.Win32S
+            | PlatformID.Win32Windows
+            | PlatformID.Win32NT
+            | PlatformID.WinCE ->
+                "TestCommon.exe"
+            | _ ->
+                "TestCommon"
+        Functions.AppendPathName currentExeDir exename
 
     /// The environment variable name to be given when starting TestCommon.exe.
     /// Specify what processing it should act as a stub for.

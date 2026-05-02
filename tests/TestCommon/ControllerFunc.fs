@@ -60,10 +60,6 @@ type ControllerFunc() =
 
     /// Start Haruka controller and client process.
     static member StartHarukaController( workPath : string ) ( controllPortNo : int ) : ( Process * ClientProc ) =
-        let testCommonExeName = 
-            let curExeName = System.Reflection.Assembly.GetEntryAssembly()
-            let curExeDir = Path.GetDirectoryName curExeName.Location
-            Functions.AppendPathName curExeDir "TestCommon.exe"
 
         // Initialize Haruka configuration directory
         ControllerFunc.InitializeConfigDir workPath controllPortNo
@@ -72,7 +68,7 @@ type ControllerFunc() =
         Environment.SetEnvironmentVariable( GlbFunc.STUB_PROC_TYPE, "ControllerStarter" )
         let ctrlProc2 = new Process(
             StartInfo = ProcessStartInfo(
-                FileName = testCommonExeName,
+                FileName = GlbFunc.testCommonExePath,
                 Arguments = "\"" + workPath + "\"",
                 CreateNoWindow = false,
                 RedirectStandardError = false,
