@@ -64,7 +64,7 @@ type ResponseFenceRec = {
 // Class implementation
 
 /// Implementing iSCSI Response Fence (defined in RFC5048 3.3) mechanism.
-type ResponseFence() =
+type ResponseFence( m_IsNeedRF : bool ) =
 
     let m_Stat = OptimisticLock< ResponseFenceRec > ({
         m_Tick = Environment.TickCount64;
@@ -172,13 +172,16 @@ type ResponseFence() =
             argTask()
 
         | ResponseFenceNeedsFlag.R_Mode ->
-            // Need R-Mode lock at response fence.
-            this.NormalLock argTask
+            if m_IsNeedRF then
+                this.NormalLock argTask // Need R-Mode lock at response fence.
+            else
+                argTask()               // Run task immidiatly without response fence lock
 
         | ResponseFenceNeedsFlag.W_Mode ->
-            // Need W-Mode lock at response fence.
-            this.RFLock argTask
-
+            if m_IsNeedRF then
+                this.RFLock argTask     // Need W-Mode lock at response fence.
+            else
+                argTask()               // Run task immidiatly without response fence lock
 
     /// <summary>
     ///  Free the acquired lock.

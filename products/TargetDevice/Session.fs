@@ -143,7 +143,11 @@ type Session
         new TaskRouter( m_StatusMaster, this :> ISession, m_I_TNexus, m_TSIH, m_sessionParameter, m_Killer ) :> IProtocolService
 
     /// response fence lock object.
-    let m_RespFense = new ResponseFence()
+    let m_RespFense =
+        let needRF =
+            m_sessionParameter.TaskReporting.[0] = TaskReportingType.TR_ResponseFence ||
+            m_sessionParameter.TaskReporting.[0] = TaskReportingType.TR_FastAbort
+        new ResponseFence( needRF )
 
     /// TTT generator
     let mutable m_TTTGen = 0u

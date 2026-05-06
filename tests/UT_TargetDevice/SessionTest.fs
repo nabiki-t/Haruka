@@ -6935,7 +6935,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
 
     [<Fact>]
     member _.StatSNAckChecker_001() =
-        let fense = ResponseFence()
+        let fense = ResponseFence( true )
         let conns = OptimisticLock< ImmutableDictionary< CID_T, CIDInfo > >( ImmutableDictionary.Empty )
         let sess = CSession_Stub(
             p_IsAlive = ( fun () -> false )
@@ -6947,7 +6947,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
     [<Fact>]
     member _.StatSNAckChecker_002() =
         let mutable cnt1 = 0
-        let fense = ResponseFence()
+        let fense = ResponseFence( true )
         let conns = OptimisticLock< ImmutableDictionary< CID_T, CIDInfo > >( ImmutableDictionary.Empty )
         let sess = CSession_Stub(
             p_IsAlive = ( fun () ->
@@ -6963,7 +6963,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
     [<Fact>]
     member _.StatSNAckChecker_003() =
         let mutable cnt1 = 0
-        let fense = ResponseFence()
+        let fense = ResponseFence( true )
         let conns = OptimisticLock< ImmutableDictionary< CID_T, CIDInfo > >( ImmutableDictionary.Empty )
         let sess = CSession_Stub(
             p_IsAlive = ( fun () ->
@@ -6986,7 +6986,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
     [<Fact>]
     member _.StatSNAckChecker_004() =
         let mutable cnt1 = 0
-        let fense = ResponseFence()
+        let fense = ResponseFence( true )
         let conns = OptimisticLock< ImmutableDictionary< CID_T, CIDInfo > >( ImmutableDictionary.Empty )
         let sess = CSession_Stub(
             p_IsAlive = ( fun () ->
@@ -7011,7 +7011,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
         let mutable cnt1 = 0
         let mutable cnt2 = 0
         let sche = [| 0L; 50L; 101L; 150L; 2576L; 3000L; |]
-        let fense = ResponseFence()
+        let fense = ResponseFence( true )
         let conns =
             [|
                 (
