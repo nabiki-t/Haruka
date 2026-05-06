@@ -256,6 +256,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
         DataPDUInOrder = false;
         DataSequenceInOrder = false;
         ErrorRecoveryLevel = 1uy;
+        TaskReporting = TaskReportingType.TR_ResponseFence;
     }
 
     // default connection parameters

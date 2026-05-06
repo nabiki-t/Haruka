@@ -58,6 +58,7 @@ type IscsiTaskScsiCommand_Test () =
             DataPDUInOrder = true;
             DataSequenceInOrder = true;
             ErrorRecoveryLevel = 0uy;
+            TaskReporting = [| TaskReportingType.TR_ResponseFence;|];
     }
 
     static member defaultScsiCommandPDUValues = {

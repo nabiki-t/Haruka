@@ -226,6 +226,7 @@ type ConfigurationMaster( m_WorkDirPath : string, killer : IKiller ) as this =
                 DataPDUInOrder = false;
                 DataSequenceInOrder = false;
                 ErrorRecoveryLevel = 1uy;
+                TaskReporting = [| TaskReportingType.TR_ResponseFence; TaskReportingType.TR_RFC3720; |];    // FastAbort has not yet been implemented. 
             }
 
         // Imprementation of IConfiguration.DeviceName

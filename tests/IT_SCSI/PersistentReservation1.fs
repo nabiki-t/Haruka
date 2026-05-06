@@ -139,6 +139,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
         DataPDUInOrder = false;
         DataSequenceInOrder = false;
         ErrorRecoveryLevel = 1uy;
+        TaskReporting = TaskReportingType.TR_ResponseFence;
     }
 
     // default connection parameters

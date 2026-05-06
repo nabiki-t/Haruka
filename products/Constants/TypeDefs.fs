@@ -123,7 +123,7 @@ type DigestType =
 /// used in ISCSINegoParam.TaskReporting value
 /// </summary>
 [<Struct; IsReadOnly>]
-type TaskReporting =
+type TaskReportingType =
     | TR_RFC3720
     | TR_ResponseFence
     | TR_FastAbort
@@ -132,23 +132,23 @@ type TaskReporting =
     /// <summary>
     /// Get string name value corresponging to TaskReporting value.
     /// </summary>
-    static member toStringName : ( TaskReporting -> string ) =
+    static member toStringName : ( TaskReportingType -> string ) =
         function
-        | TaskReporting.TR_RFC3720  -> "RFC3720"
-        | TaskReporting.TR_ResponseFence  -> "ResponseFence"
-        | TaskReporting.TR_FastAbort  -> "FastAbort"
-        | TaskReporting.TR_NotUnderstood  -> "NotUnderstood"
+        | TaskReportingType.TR_RFC3720  -> "RFC3720"
+        | TaskReportingType.TR_ResponseFence  -> "ResponseFence"
+        | TaskReportingType.TR_FastAbort  -> "FastAbort"
+        | TaskReportingType.TR_NotUnderstood  -> "NotUnderstood"
 
     /// <summary>
-    /// Get TaskReporting value corresponging to specified string value. If argument is unexpected string, NotUnderstood is returned.
+    /// Get TaskReportingType value corresponging to specified string value. If argument is unexpected string, NotUnderstood is returned.
     /// </summary>
-    static member fromStringValue : ( string -> TaskReporting ) =
+    static member fromStringValue : ( string -> TaskReportingType ) =
         function
-        | "RFC3720"  -> TaskReporting.TR_RFC3720
-        | "ResponseFence"  -> TaskReporting.TR_ResponseFence
-        | "FastAbort"  -> TaskReporting.TR_FastAbort
-        | "NotUnderstood"  -> TaskReporting.TR_NotUnderstood
-        | _ -> TaskReporting.TR_NotUnderstood
+        | "RFC3720"  -> TaskReportingType.TR_RFC3720
+        | "ResponseFence"  -> TaskReportingType.TR_ResponseFence
+        | "FastAbort"  -> TaskReportingType.TR_FastAbort
+        | "NotUnderstood"  -> TaskReportingType.TR_NotUnderstood
+        | _ -> TaskReportingType.TR_NotUnderstood
 
 
 /// <summary>

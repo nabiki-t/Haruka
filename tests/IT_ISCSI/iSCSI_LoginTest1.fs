@@ -145,6 +145,7 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
         DataPDUInOrder = false;
         DataSequenceInOrder = false;
         ErrorRecoveryLevel = 0uy;
+        TaskReporting = TaskReportingType.TR_ResponseFence;
     }
 
     // default connection parameters

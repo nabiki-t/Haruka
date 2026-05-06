@@ -89,6 +89,7 @@ type ScsiTask_Test () =
             DataPDUInOrder = true;
             DataSequenceInOrder = true;
             ErrorRecoveryLevel = 0uy;
+            TaskReporting = [| TaskReportingType.TR_ResponseFence;|];
         }
 
     let createDefScsiTaskWithPRManager ( cmd : SCSICommandPDU ) ( cdb : ICDB ) ( data : SCSIDataOutPDU list ) ( acaNoncompliant : bool ) ( prFName : string ) =

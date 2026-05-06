@@ -56,6 +56,7 @@ type ClientConfigTest() =
         DataPDUInOrder = false;
         DataSequenceInOrder = false;
         ErrorRecoveryLevel = 0uy;
+        TaskReporting = TaskReportingType.TR_ResponseFence;
     }
 
     // default connection parameters

@@ -79,6 +79,7 @@ type LoginNegociator_Test1 () =
             DataPDUInOrder =  false;
             DataSequenceInOrder = false;
             ErrorRecoveryLevel = 2uy;
+            TaskReporting = [| TaskReportingType.TR_ResponseFence;|];
         }
 
     let g_defaultiSCSINegoParamCO =
@@ -6085,6 +6086,7 @@ type LoginNegociator_Test1 () =
                 DataPDUInOrder = true;
                 DataSequenceInOrder = false;
                 ErrorRecoveryLevel = 1uy;
+                TaskReporting = [| TaskReportingType.TR_RFC3720 |];
             }
 
         stat1.p_CreateNewSession <- (
@@ -6125,6 +6127,7 @@ type LoginNegociator_Test1 () =
                     DataPDUInOrder = true;
                     DataSequenceInOrder = false;
                     ErrorRecoveryLevel = 1uy;
+                    TaskReporting = [| TaskReportingType.TR_RFC3720 |];
                 }
         )
 
@@ -6193,6 +6196,7 @@ type LoginNegociator_Test1 () =
                 DataPDUInOrder = true;
                 DataSequenceInOrder = false;
                 ErrorRecoveryLevel = 1uy;
+                TaskReporting = [| TaskReportingType.TR_RFC3720 |];
             }
 
         stat1.p_GetSession <- (
@@ -6279,6 +6283,7 @@ type LoginNegociator_Test1 () =
                 DataPDUInOrder = true;
                 DataSequenceInOrder = false;
                 ErrorRecoveryLevel = 1uy;
+                TaskReporting = [| TaskReportingType.TR_RFC3720 |];
             }
 
         stat1.p_GetSession <- (
@@ -6380,6 +6385,7 @@ type LoginNegociator_Test1 () =
                 DataPDUInOrder = true;
                 DataSequenceInOrder = false;
                 ErrorRecoveryLevel = 1uy;
+                TaskReporting = [| TaskReportingType.TR_RFC3720 |];
             }
 
         stat1.p_GetSession <- (
@@ -6472,6 +6478,7 @@ type LoginNegociator_Test1 () =
                 DataPDUInOrder = true;
                 DataSequenceInOrder = false;
                 ErrorRecoveryLevel = 1uy;
+                TaskReporting = [| TaskReportingType.TR_RFC3720 |];
             }
 
         stat1.p_GetSession <- (
@@ -6549,6 +6556,7 @@ type LoginNegociator_Test1 () =
                 DataPDUInOrder = true;
                 DataSequenceInOrder = false;
                 ErrorRecoveryLevel = 1uy;
+                TaskReporting = [| TaskReportingType.TR_RFC3720 |];
             }
 
         stat1.p_GetSession <- (
@@ -6630,6 +6638,7 @@ type LoginNegociator_Test1 () =
                 DataPDUInOrder = true;
                 DataSequenceInOrder = false;
                 ErrorRecoveryLevel = 1uy;
+                TaskReporting = [| TaskReportingType.TR_RFC3720 |];
             }
 
         stat1.p_GetSession <- (
@@ -6706,6 +6715,7 @@ type LoginNegociator_Test1 () =
                 DataPDUInOrder = true;
                 DataSequenceInOrder = false;
                 ErrorRecoveryLevel = 1uy;
+                TaskReporting = [| TaskReportingType.TR_RFC3720 |];
             }
 
         stat1.p_GetSession <- (
@@ -6795,6 +6805,7 @@ type LoginNegociator_Test1 () =
                 DataPDUInOrder = true;
                 DataSequenceInOrder = false;
                 ErrorRecoveryLevel = 1uy;
+                TaskReporting = [| TaskReportingType.TR_RFC3720 |];
             }
 
         let initiator = 
@@ -6895,6 +6906,7 @@ type LoginNegociator_Test1 () =
                 DataPDUInOrder = true;
                 DataSequenceInOrder = false;
                 ErrorRecoveryLevel = 1uy;
+                TaskReporting = [| TaskReportingType.TR_RFC3720 |];
             }
         
         let errorTextRequest =
@@ -7105,6 +7117,7 @@ type LoginNegociator_Test1 () =
                 DataPDUInOrder = true;
                 DataSequenceInOrder = false;
                 ErrorRecoveryLevel = 1uy;
+                TaskReporting = [| TaskReportingType.TR_RFC3720 |];
             }
         let errorTextRequest =
             [|
@@ -7350,6 +7363,7 @@ type LoginNegociator_Test1 () =
                 DataPDUInOrder = true;
                 DataSequenceInOrder = false;
                 ErrorRecoveryLevel = 1uy;
+                TaskReporting = [| TaskReportingType.TR_RFC3720 |];
             }
         
         let errorTextRequest =
@@ -7532,6 +7546,7 @@ type LoginNegociator_Test1 () =
                 DataPDUInOrder = true;
                 DataSequenceInOrder = false;
                 ErrorRecoveryLevel = 1uy;
+                TaskReporting = [| TaskReportingType.TR_RFC3720 |];
             }
         let sp, cp = GlbFunc.GetNetConn()
 
@@ -7737,6 +7752,7 @@ type LoginNegociator_Test1 () =
                 DataPDUInOrder = true;
                 DataSequenceInOrder = false;
                 ErrorRecoveryLevel = 1uy;
+                TaskReporting = [| TaskReportingType.TR_RFC3720 |];
             }
 
         let sp, cp = GlbFunc.GetNetConn()

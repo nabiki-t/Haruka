@@ -179,6 +179,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         DataPDUInOrder = false;
         DataSequenceInOrder = false;
         ErrorRecoveryLevel = 0uy;
+        TaskReporting = TaskReportingType.TR_RFC3720;
     }
 
     // default connection parameters
@@ -542,7 +543,6 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             do! r1.CloseSession g_CID0 BitI.F
             do! r2.CloseSession g_CID0 BitI.F
         }
-
 
     [<Fact>]
     member _.LoginNego_HeaderDigest_001() =
@@ -1974,6 +1974,36 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             // Receive SCSI Response
             let! rpdu4 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
             Assert.True(( rpdu4.Status = ScsiCmdStatCd.GOOD ))
+
+            // logout
+            do! r1.CloseSession g_CID0 BitI.F
+        }
+
+    [<Fact>]
+    member _.LoginNego_TaskReporting_001() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    TaskReporting = TaskReportingType.TR_RFC3720;
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
+
+            Assert.True(( r1.Params.TaskReporting = TaskReportingType.TR_RFC3720 ))
+
+            // logout
+            do! r1.CloseSession g_CID0 BitI.F
+        }
+
+    [<Fact>]
+    member _.LoginNego_TaskReporting_002() =
+        task {
+            let sessParam1 = {
+                m_defaultSessParam with
+                    TaskReporting = TaskReportingType.TR_ResponseFence;
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessParam1 m_defaultConnParam
+
+            Assert.True(( r1.Params.TaskReporting = TaskReportingType.TR_ResponseFence ))
 
             // logout
             do! r1.CloseSession g_CID0 BitI.F

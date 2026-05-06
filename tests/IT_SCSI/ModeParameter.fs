@@ -134,6 +134,7 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
         DataPDUInOrder = false;
         DataSequenceInOrder = false;
         ErrorRecoveryLevel = 1uy;
+        TaskReporting = TaskReportingType.TR_ResponseFence;
     }
 
     // default connection parameters

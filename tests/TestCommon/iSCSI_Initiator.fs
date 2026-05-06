@@ -46,6 +46,7 @@ type SessParams = {
     DataPDUInOrder : bool;
     DataSequenceInOrder : bool;
     ErrorRecoveryLevel : byte;
+    TaskReporting : TaskReportingType;
 }
 
 type ConnParams = {
@@ -1421,6 +1422,7 @@ type iSCSI_Initiator(
                 DataPDUInOrder = true;
                 DataSequenceInOrder = true;
                 ErrorRecoveryLevel = 0uy;
+                TaskReporting = TaskReportingType.TR_ResponseFence;
             }
             let! sess = iSCSI_Initiator.LoginForDiscoverySession swp exp_ConnParams
             let cid = exp_ConnParams.CID
@@ -1929,7 +1931,8 @@ type iSCSI_Initiator(
                         textKey.MaxOutstandingR2T <> TextValueType.ISV_Missing ||
                         textKey.DataPDUInOrder <> TextValueType.ISV_Missing ||
                         textKey.DataSequenceInOrder <> TextValueType.ISV_Missing ||
-                        textKey.ErrorRecoveryLevel <> TextValueType.ISV_Missing ) then
+                        textKey.ErrorRecoveryLevel <> TextValueType.ISV_Missing ||
+                        textKey.TaskReporting <> TextValueType.ISV_Missing ) then
                             let msg = "Invalid text key was received."
                             raise <| SessionRecoveryException ( msg, tsih_me.zero )
 
@@ -1985,6 +1988,7 @@ type iSCSI_Initiator(
                         DataPDUInOrder = if isLeadingCon then TextValueType.Value( exp_SessParams.DataPDUInOrder ) else ISV_Missing;
                         DataSequenceInOrder = if isLeadingCon then TextValueType.Value( exp_SessParams.DataSequenceInOrder ) else ISV_Missing;
                         ErrorRecoveryLevel = if isLeadingCon then TextValueType.Value( exp_SessParams.ErrorRecoveryLevel ) else ISV_Missing;
+                        TaskReporting = if isLeadingCon then TextValueType.Value( [| exp_SessParams.TaskReporting |] ) else ISV_Missing;
                 }
             let negoStat1 =
                 {
@@ -2007,6 +2011,7 @@ type iSCSI_Initiator(
                         NegoStat_DataPDUInOrder = if isLeadingCon then NegoStatusValue.NSG_WaitSend ||| NegoStatusValue.NSG_WaitReceive else NegoStatusValue.NSV_Negotiated;
                         NegoStat_DataSequenceInOrder = if isLeadingCon then NegoStatusValue.NSG_WaitSend ||| NegoStatusValue.NSG_WaitReceive else NegoStatusValue.NSV_Negotiated;
                         NegoStat_ErrorRecoveryLevel = if isLeadingCon then NegoStatusValue.NSG_WaitSend ||| NegoStatusValue.NSG_WaitReceive else NegoStatusValue.NSV_Negotiated;
+                        NegoStat_TaskReporting = if isLeadingCon then NegoStatusValue.NSG_WaitSend ||| NegoStatusValue.NSG_WaitReceive else NegoStatusValue.NSV_Negotiated;
                 }
 
             let negoValue2, negoStat2 =
@@ -2278,6 +2283,11 @@ type iSCSI_Initiator(
                     negoVal.ErrorRecoveryLevel.GetValue
                 else
                     defSessParams.ErrorRecoveryLevel;
+            TaskReporting = 
+                if isLeadingCon && negoStat.NegoStat_TaskReporting = NegoStatusValue.NSV_Negotiated then
+                    negoVal.TaskReporting.GetValue.[0]
+                else
+                    defSessParams.TaskReporting;
         }
         let resultConnParams = {
             PortNo = defConnParams.PortNo;

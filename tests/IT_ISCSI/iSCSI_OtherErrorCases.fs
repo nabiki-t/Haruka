@@ -126,6 +126,7 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
         DataPDUInOrder = false;
         DataSequenceInOrder = false;
         ErrorRecoveryLevel = 0uy;
+        TaskReporting = TaskReportingType.TR_ResponseFence;
     }
 
     // default connection parameters

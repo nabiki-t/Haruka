@@ -162,7 +162,7 @@ type TextKeyValues =
         SessionType : TextValueType<string>;
 
         /// TaskReporting. See RFC 5048 9.1
-        TaskReporting : TextValueType<TaskReporting[]>;
+        TaskReporting : TextValueType<TaskReportingType[]>;
 
         /// UnknownKeys holds unknown key name received from the initiator.
         /// It is used to responde "NotUnderstood" values.
@@ -1245,7 +1245,7 @@ type IscsiTextEncode() =
                     tranceDataType (
                         IscsiTextEncode.ListOfValuesBytes2Strings
                         >> ValueOption.get
-                        >> Array.map ( TaskReporting.fromStringValue )
+                        >> Array.map ( TaskReportingType.fromStringValue )
                     )
             }
         else {
@@ -1446,7 +1446,7 @@ type IscsiTextEncode() =
                     let w =
                         x |>
                         Array.collect (
-                            TaskReporting.toStringName
+                            TaskReportingType.toStringName
                             >> sprintf "%s,"
                             >> Encoding.GetEncoding( "utf-8" ).GetBytes
                         )

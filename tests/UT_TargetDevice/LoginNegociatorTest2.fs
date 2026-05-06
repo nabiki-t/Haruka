@@ -77,6 +77,7 @@ type LoginNegociator_Test2 () =
             DataPDUInOrder =  false;
             DataSequenceInOrder = false;
             ErrorRecoveryLevel = 2uy;
+            TaskReporting = [| TaskReportingType.TR_ResponseFence;|];
         }
 
     let g_defaultiSCSINegoParamCO =

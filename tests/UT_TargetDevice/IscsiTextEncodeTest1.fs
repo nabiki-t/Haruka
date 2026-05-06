@@ -4319,7 +4319,7 @@ type IscsiTextEncode1_Test () =
                     DataSequenceInOrder = TextValueType.Value( false );
                     ErrorRecoveryLevel = TextValueType.Value( 1uy );
                     SessionType = TextValueType.Value( "Discovery" );
-                    TaskReporting = TextValueType.Value( [| TaskReporting.TR_RFC3720; TaskReporting.TR_ResponseFence; TaskReporting.TR_FastAbort; |] );
+                    TaskReporting = TextValueType.Value( [| TaskReportingType.TR_RFC3720; TaskReportingType.TR_ResponseFence; TaskReportingType.TR_FastAbort; |] );
                     UnknownKeys = [| "XXX"; "YYY"; "ZZZ" |];
                 }
                 {
@@ -4499,7 +4499,7 @@ type IscsiTextEncode1_Test () =
                         DefaultTime2Retain = TextValueType.Value( 101us );
                         DataPDUInOrder = TextValueType.Value( true );
                         ErrorRecoveryLevel = TextValueType.Value( 1uy );
-                        TaskReporting = TextValueType.Value( [| TaskReporting.TR_RFC3720; TaskReporting.TR_FastAbort; |] );
+                        TaskReporting = TextValueType.Value( [| TaskReportingType.TR_RFC3720; TaskReportingType.TR_FastAbort; |] );
                         UnknownKeys = [| "XXX"; "YYY"; "ZZZ" |];
                 }
                 {

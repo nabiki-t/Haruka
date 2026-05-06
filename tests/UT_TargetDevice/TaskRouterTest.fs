@@ -68,6 +68,7 @@ type TaskRouter_Test () =
                 DataPDUInOrder = true;
                 DataSequenceInOrder = false;
                 ErrorRecoveryLevel = 1uy;
+                TaskReporting = [| TaskReportingType.TR_ResponseFence;|];
             }
         let lu1 = new CLU_Stub()
         status_stub.p_GetLU <- ( fun _ -> ValueSome( lu1 :> ILU ) ) 
@@ -130,6 +131,7 @@ type TaskRouter_Test () =
                 DataPDUInOrder = true;
                 DataSequenceInOrder = false;
                 ErrorRecoveryLevel = 1uy;
+                TaskReporting = [| TaskReportingType.TR_RFC3720 |];
             }
 
         status_stub.p_GetLU <- ( fun argLUN ->
@@ -192,6 +194,7 @@ type TaskRouter_Test () =
                 DataPDUInOrder = true;
                 DataSequenceInOrder = false;
                 ErrorRecoveryLevel = 1uy;
+                TaskReporting = [| TaskReportingType.TR_RFC3720 |];
             }
         status_stub.p_GetLU <- ( fun lun -> 
             Assert.True(( lun = lun_me.fromPrim 2UL || lun = lun_me.fromPrim 0UL ))
@@ -252,6 +255,7 @@ type TaskRouter_Test () =
                 DataPDUInOrder = true;
                 DataSequenceInOrder = false;
                 ErrorRecoveryLevel = 1uy;
+                TaskReporting = [| TaskReportingType.TR_RFC3720 |];
             }
         
         status_stub.p_GetLU <- ( fun argLUN ->
@@ -321,6 +325,7 @@ type TaskRouter_Test () =
                 DataPDUInOrder = true;
                 DataSequenceInOrder = false;
                 ErrorRecoveryLevel = 1uy;
+                TaskReporting = [| TaskReportingType.TR_RFC3720 |];
             }
         status_stub.p_GetLU <- ( fun argLUN ->
             match lun_me.toPrim argLUN with

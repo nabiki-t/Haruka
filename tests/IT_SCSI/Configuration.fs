@@ -178,6 +178,7 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
         DataPDUInOrder = false;
         DataSequenceInOrder = false;
         ErrorRecoveryLevel = 1uy;
+        TaskReporting = TaskReportingType.TR_ResponseFence;
     }
 
     // default session parameters( for Target 2 )

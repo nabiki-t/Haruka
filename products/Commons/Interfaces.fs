@@ -49,6 +49,7 @@ type IscsiNegoParamSW = {
     DataPDUInOrder : bool                       // LO, Initiator/Target
     DataSequenceInOrder : bool                  // LO, Initiator/Target
     ErrorRecoveryLevel : byte                   // LO, Initiator/Target
+    TaskReporting : TaskReportingType[]         // LO, Initiator/Target
 }
 
 

@@ -112,6 +112,7 @@ type StatusMaster_Test1 () =
             DataPDUInOrder = true;
             DataSequenceInOrder = true;
             ErrorRecoveryLevel = 0uy;
+            TaskReporting = [| TaskReportingType.TR_ResponseFence; |];
         }
 
     member _.GetTestDirName ( caseName : string ) =
