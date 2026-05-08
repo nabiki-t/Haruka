@@ -471,6 +471,7 @@ type LoginNegociator
                             textKey.DataPDUInOrder <> TextValueType.ISV_Missing ||
                             textKey.DataSequenceInOrder <> TextValueType.ISV_Missing ||
                             textKey.ErrorRecoveryLevel <> TextValueType.ISV_Missing ||
+                            textKey.TaskReporting <> TextValueType.ISV_Missing ||
                             textKey.SessionType <> TextValueType.ISV_Missing ||
                             textKey.UnknownKeys.Length > 0 then
                                 let msg = "Invalid text key was received in discovery session."
@@ -1649,6 +1650,11 @@ type LoginNegociator
                                 TextValueType.Value( swParam.ErrorRecoveryLevel )
                             else
                                 TextValueType.ISV_Missing;
+                        TaskReporting =
+                            if isLeadingCon then
+                                TextValueType.Value( swParam.TaskReporting )
+                            else
+                                TextValueType.ISV_Missing;
                 }
 
 
@@ -1721,6 +1727,11 @@ type LoginNegociator
                                 NegoStatusValue.NSG_WaitReceive ||| NegoStatusValue.NSG_WaitSend
                             else
                                 NegoStatusValue.NSV_Negotiated;
+                        NegoStat_TaskReporting =
+                            if isLeadingCon then
+                                NegoStatusValue.NSG_WaitReceive ||| NegoStatusValue.NSG_WaitSend
+                            else
+                                NegoStatusValue.NSV_Negotiated;
                 }
 
             // Perform operation negotiation
@@ -1760,7 +1771,8 @@ type LoginNegociator
                             textKey.MaxOutstandingR2T <> TextValueType.ISV_Missing ||
                             textKey.DataPDUInOrder <> TextValueType.ISV_Missing ||
                             textKey.DataSequenceInOrder <> TextValueType.ISV_Missing ||
-                            textKey.ErrorRecoveryLevel <> TextValueType.ISV_Missing then
+                            textKey.ErrorRecoveryLevel <> TextValueType.ISV_Missing ||
+                            textKey.TaskReporting <> TextValueType.ISV_Missing then
                             let msg = "Invalid text key was received."
                             HLogger.Trace( LogID.E_UNKNOWN_NEGOTIATION_ERROR, fun g -> g.Gen1( m_ObjID, msg ) )
                             raise <| SessionRecoveryException ( msg, tsih_me.zero )
@@ -1947,6 +1959,15 @@ type LoginNegociator
                                     0uy
                             else
                                 swParam.ErrorRecoveryLevel;
+                        TaskReporting =
+                            if isLeadingCon then
+                                if negoResultStat.NegoStat_TaskReporting = NegoStatusValue.NSV_Negotiated &&
+                                    negoResultValue.TaskReporting.HasValue then
+                                    negoResultValue.TaskReporting.GetValue
+                                else
+                                    [| TaskReportingType.TR_RFC3720 |]
+                            else
+                                swParam.TaskReporting;
                 }
 
             return struct ( loginPhaseLastPDU, resultCoParam, resultSwParam )

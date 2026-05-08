@@ -63,6 +63,7 @@ type iSCSI_LoginTest2_Fixture() =
         client.RunCommand ( sprintf "set MAXBURSTLENGTH %d" Constants.NEGOPARAM_MAX_MaxBurstLength ) "" "TD> "
         client.RunCommand ( sprintf "set FIRSTBURSTLENGTH %d" Constants.NEGOPARAM_MAX_FirstBurstLength ) "" "TD> "
         client.RunCommand "set EnableStatSNAckChecker false" "" "TD> "
+        client.RunCommand "set loglevel VERBOSE" "" "TD> "
         client.RunCommand "create targetgroup" "Created" "TD> "
         for pn in m_TD0_iSCSIPortNo do
             client.RunCommand ( sprintf "create networkportal /a ::1 /p %d" pn ) "Created" "TD> "
@@ -179,7 +180,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
         DataPDUInOrder = false;
         DataSequenceInOrder = false;
         ErrorRecoveryLevel = 0uy;
-        TaskReporting = TaskReportingType.TR_RFC3720;
+        TaskReporting = TaskReportingType.TR_ResponseFence;
     }
 
     // default connection parameters
@@ -2061,5 +2062,106 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // logout
             do! r1.CloseSession g_CID0 BitI.F
+        }
 
+    [<Fact>]
+    member _.TaskReporting_001 () =
+        task{
+            let sessp = {
+                m_defaultSessParam with
+                    TaskReporting = TaskReportingType.TR_RFC3720;
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessp m_defaultConnParam
+            let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
+
+            // Send Nop PDU
+            let! ittNOP_1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+
+            do! Task.Delay 50
+
+            // Send SCSI write command to LU 1, this command establlish ACA.
+            let writeCDB1_lu1 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F ( blkcnt_me.ofUInt32 0xFFFFFFFEu ) 0uy ( blkcnt_me.ofUInt16 1us ) NACA.T LINK.F
+            let! ittWrite1_lu1, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB1_lu1 sendData 0u
+
+            // Receive NOP-In
+            let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
+
+            // Receive SCSI_Response
+            let! nopinPDU_1 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+            Assert.True(( nopinPDU_1.InitiatorTaskTag = ittWrite1_lu1 ))
+
+            // Send Clear ACA TMF request to LU 1
+            let! ittTMF_lu1, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.CLEAR_ACA g_LUN1 ( itt_me.fromPrim 0xFFFFFFFFu ) ( ValueSome cmdsn_me.zero ) datasn_me.zero
+
+            // Receive TMF response
+            let! tmfRespPdu_lu1 = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
+            Assert.True(( tmfRespPdu_lu1.InitiatorTaskTag = ittTMF_lu1 ))
+            Assert.True(( tmfRespPdu_lu1.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            do! r1.CloseSession g_CID0 BitI.F
+            sendData.Return()
+        }
+
+    [<Fact>]
+    member _.TaskReporting_002 () =
+        task{
+            let sessp = {
+                m_defaultSessParam with
+                    TaskReporting = TaskReportingType.TR_ResponseFence;
+            }
+            let! r1 = iSCSI_Initiator.CreateInitialSession sessp m_defaultConnParam
+            let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
+
+            // Send Nop-Out PDU 1
+            let! ittNOP_1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+
+            do! Task.Delay 50
+
+            // Send SCSI write command to LU 1, this command establlish ACA.
+            let writeCDB1_lu1 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F ( blkcnt_me.ofUInt32 0xFFFFFFFEu ) 0uy ( blkcnt_me.ofUInt16 1us ) NACA.T LINK.F
+            let! ittWrite1_lu1, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB1_lu1 sendData 0u
+
+            // Receive NOP-In
+            let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
+            Assert.True(( nopinPDU_1.InitiatorTaskTag = ittNOP_1 ))
+
+            let mutable flg = false
+            [|
+                fun () -> task {
+                    // Send Nop-Out PDU 2 for acknowledge Nop-Out PDU 1.
+                    do! Task.Delay 100
+                    flg <- true
+                    let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+                    ()
+                };
+                fun () -> task {
+                    // Receive SCSI Response PDU
+                    let! srPDU_1 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
+                    Assert.True(( srPDU_1.InitiatorTaskTag = ittWrite1_lu1 ))
+                    Assert.True(( flg ))
+
+                    // Send Nop-Out PDU 3 for acknowledge Nop-Out PDU 2.
+                    let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
+
+                    // Receive two Nop-IN PDUs.
+                    let! _ = r1.Receive g_CID0
+                    let! _ = r1.Receive g_CID0
+                    ()
+                };
+            |]
+            |> Functions.RunTaskInPallalel
+            |> Functions.RunTaskSynchronously
+            |> ignore
+
+            // Send Clear ACA TMF request to LU 1
+            let! ittTMF_lu1, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.CLEAR_ACA g_LUN1 ( itt_me.fromPrim 0xFFFFFFFFu ) ( ValueSome cmdsn_me.zero ) datasn_me.zero
+
+            // Receive TMF response
+            let! tmfRespPdu_lu1 = r1.ReceiveSpecific<TaskManagementFunctionResponsePDU> g_CID0
+            Assert.True(( tmfRespPdu_lu1.InitiatorTaskTag = ittTMF_lu1 ))
+            Assert.True(( tmfRespPdu_lu1.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
+
+            do! r1.CloseSession g_CID0 BitI.F
+            sendData.Return()
         }
