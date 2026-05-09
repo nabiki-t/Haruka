@@ -21,53 +21,6 @@ open Xunit
 open Haruka.Commons
 
 
-////////////////////////////////
-// Test cases
-#if false
-
-R1  F1
-W1  F1
-F1
-
-R1  R2  F1  F2
-R1  R2  F2  F1
-R1  W2  F1  F2
-R1  F1  R2  F2
-R1  F1  W2  F2
-W1  R2  F1  F2
-W1  W2  F1  F2
-W1  F1  R2  F2
-W1  F1  W2  F2
-
-R1  R2  R3  F1  F2  F3 *
-R1  R2  W3  F1  F2  F3 *
-R1  R2  F1  R3  F2  F3 *
-R1  R2  F1  W3  F2  F3 *
-R1  R2  F1  F2  R3  F3 *
-R1  R2  F1  F2  W3  F3 *
-R1  W2  R3  F1  F2  F3 *
-R1  W2  W3  F1  F2  F3
-R1  W2  F1  R3  F2  F3
-R1  W2  F1  W3  F2  F3
-R1  W2  F1  F2  R3  F3
-R1  W2  F1  F2  W3  F3
-W1  R2  R3  F1  F2  F3
-W1  R2  W3  F1  F2  F3
-W1  R2  F1  R3  F2  F3
-W1  R2  F1  W3  F2  F3
-W1  R2  F1  F2  R3  F3
-W1  R2  F1  F2  W3  F3
-W1  W2  R3  F1  F2  F3
-W1  W2  W3  F1  F2  F3
-W1  W2  F1  R3  F2  F3
-W1  W2  F1  W3  F2  F3
-W1  W2  F1  F2  R3  F3
-W1  W2  F1  F2  W3  F3
-
-#endif
-
-
-
 //=============================================================================
 // Class implementation
 

@@ -1,0 +1,976 @@
+//=============================================================================
+// Haruka Software Storage.
+// FileAccessorTest.fs : Test cases for FileAccessor class.
+//
+
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Test.UT.Commons
+
+//=============================================================================
+// Import declaration
+
+open System
+open System.IO
+open System.Threading
+open System.Threading.Tasks
+
+open Xunit
+
+open Haruka.Commons
+open Haruka.Constants
+
+//=============================================================================
+// Class implementation
+
+type Stream_Stub() =
+    inherit Stream() with
+        let mutable f_get_CanRead : ( unit -> bool ) option = None
+        let mutable f_get_CanSeek : ( unit -> bool ) option = None
+        let mutable f_get_CanTimeout : ( unit -> bool ) option = None
+        let mutable f_get_CanWrite : ( unit -> bool ) option = None
+        let mutable f_get_Length : ( unit -> int64 ) option = None
+        let mutable f_get_Position : ( unit -> int64 ) option = None
+        let mutable f_set_Position : ( int64 -> unit ) option = None
+        let mutable f_get_ReadTimeout : ( unit -> int32 ) option = None
+        let mutable f_set_ReadTimeout : ( int32 -> unit ) option = None
+        let mutable f_get_WriteTimeout : ( unit -> int32 ) option = None
+        let mutable f_set_WriteTimeout : ( int32 -> unit ) option = None
+        let mutable f_Close  : ( unit -> unit ) option = None
+        let mutable f_Flush  : ( unit -> unit ) option = None
+        let mutable f_FlushAsync  : ( CancellationToken -> Task ) option = None
+        let mutable f_ReadAsync  : ( ( byte[] * int32 * int32 * CancellationToken ) -> Task<int32> ) option = None
+        let mutable f_Read  : ( ( byte[] * int32 * int32 ) -> int32 ) option = None
+        let mutable f_Seek : ( ( int64 * SeekOrigin ) -> int64 ) option = None
+        let mutable f_SetLength  : ( int64 -> unit ) option = None
+        let mutable f_Write  : ( byte[] * int32 * int32 -> unit ) option = None
+        let mutable f_WriteAsync  : ( byte[] * int32 * int32 * CancellationToken -> Task ) option = None
+    
+        member _.p_get_CanRead with set v = f_get_CanRead <- Some( v )
+        member _.p_get_CanSeek with set v = f_get_CanSeek <- Some( v )
+        member _.p_get_CanTimeout with set v = f_get_CanTimeout <- Some( v )
+        member _.p_get_CanWrite with set v = f_get_CanWrite <- Some( v )
+        member _.p_get_Length with set v = f_get_Length <- Some( v )
+        member _.p_get_Position with set v = f_get_Position <- Some( v )
+        member _.p_set_Position with set v = f_set_Position <- Some( v )
+        member _.p_get_ReadTimeout with set v = f_get_ReadTimeout <- Some( v )
+        member _.p_set_ReadTimeout with set v = f_set_ReadTimeout <- Some( v )
+        member _.p_get_WriteTimeout with set v = f_get_WriteTimeout <- Some( v )
+        member _.p_set_WriteTimeout with set v = f_set_WriteTimeout <- Some( v )
+        member _.p_Close with set v = f_Close <- Some( v )
+        member _.p_Flush with set v = f_Flush <- Some( v )
+        member _.p_FlushAsync with set v = f_FlushAsync <- Some( v )
+        member _.p_Read with set v = f_Read <- Some( v )
+        member _.p_ReadAsync with set v = f_ReadAsync <- Some( v )
+        member _.p_Seek with set v = f_Seek <- Some( v )
+        member _.p_SetLength with set v = f_SetLength <- Some( v )
+        member _.p_Write with set v = f_Write <- Some( v )
+        member _.p_WriteAsync with set v = f_WriteAsync <- Some( v )
+
+        override _.CanRead with get() =
+            match f_get_CanRead with
+            | Some x -> x()
+            | None -> true
+        override _.CanSeek with get() =
+            match f_get_CanSeek with
+            | Some x -> x()
+            | None -> true
+        override _.CanTimeout with get() =
+            match f_get_CanTimeout with
+            | Some x -> x()
+            | None -> true
+        override _.CanWrite with get() =
+            match f_get_CanWrite with
+            | Some x -> x()
+            | None -> true
+        override _.Length with get() = f_get_Length.Value()
+        override _.Position with get() = f_get_Position.Value()
+                            and  set v = f_set_Position.Value v
+        override _.ReadTimeout with get() = f_get_ReadTimeout.Value()
+                               and  set v = f_set_ReadTimeout.Value v
+        override _.WriteTimeout with get() = f_get_WriteTimeout.Value()
+                                and  set v = f_set_WriteTimeout.Value v
+
+        override _.Close() : unit =
+            f_Close.Value()
+        override _.Flush() : unit =
+            f_Flush.Value()
+        override _.FlushAsync( c : CancellationToken ) : Task =
+            f_FlushAsync.Value( c )
+        override _.Read ( buffer : byte[], offset : int32, count : int32 ) : int32 =
+            f_Read.Value( buffer, offset, count )
+        override _.ReadAsync ( buffer : byte[], offset : int32, count : int32, c : CancellationToken ) : Task<int> =
+            f_ReadAsync.Value( buffer, offset, count, c )
+        override _.Seek( offset : int64, origin : SeekOrigin ) : int64 =
+            f_Seek.Value( offset, origin )
+        override _.SetLength( value : int64 ) : unit =
+            f_SetLength.Value( value )
+        override _.Write ( buffer : byte[], offset : int32, count : int32 ) : unit =
+            f_Write.Value( buffer, offset, count )
+        override _.WriteAsync ( buffer : byte[], offset : int32, count : int32, c : CancellationToken ) : Task =
+            f_WriteAsync.Value( buffer, offset, count, c )
+
+
+type FileAccessorTest() =
+
+    [<Fact>]
+    member _.Constractor_InvalidFileName_001() =
+        try
+            FileAccessor( "", 1u, true )
+            |> ignore
+            Assert.Fail __LINE__
+        with
+        | :? FileNotFoundException ->
+            ()
+        | _ ->
+            Assert.Fail __LINE__
+
+    [<Fact>]
+    member _.Constractor_InvalidFileName_002() =
+        let fname = Path.Combine( Path.GetTempPath(), Guid.NewGuid().ToString( "N" ) )
+        if File.Exists fname then
+            File.Delete fname
+        try
+            FileAccessor( fname, 1u, true )
+            |> ignore
+            Assert.Fail __LINE__
+        with
+        | :? FileNotFoundException ->
+            ()
+        | _ ->
+            Assert.Fail __LINE__
+
+    [<Fact>]
+    member _.Constractor_InvalidMultiplicity_001() =
+        let fname = Path.GetTempFileName()
+        try
+            FileAccessor( fname, 0u, true )
+            |> ignore
+            Assert.Fail __LINE__
+        with
+        | :? ArgumentException ->
+            ()
+        | _ ->
+            Assert.Fail __LINE__
+        File.Delete fname
+
+    [<Fact>]
+    member _.Constractor_InvalidMultiplicity_002() =
+        let fname = Path.GetTempFileName()
+        try
+            FileAccessor( fname, Constants.LU_MAX_MULTIPLICITY + 1u, true )
+            |> ignore
+            Assert.Fail __LINE__
+        with
+        | :? ArgumentException ->
+            ()
+        | _ ->
+            Assert.Fail __LINE__
+        File.Delete fname
+
+    [<Theory>]
+    [<InlineData( true, FileAccess.Read )>]
+    [<InlineData( false, FileAccess.ReadWrite )>]
+    member _.Constractor_OpenFailed_001 ( flg : bool ) ( exfa : FileAccess ) =
+        let fname = Path.GetTempFileName()
+        let f ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+            Assert.True(( fn = fname ))
+            Assert.True(( fa = exfa ))
+            raise <| IOException "xxx" 
+
+        try
+            FileAccessor( fname, 1u, flg, f )
+            |> ignore
+            Assert.Fail __LINE__
+        with
+        | :? IOException as x ->
+            Assert.StartsWith( "xxx", x.Message )
+        | _ ->
+            Assert.Fail __LINE__
+        File.Delete fname
+
+    [<Fact>]
+    member _.Constractor_Open_001() =
+        let fname = Path.GetTempFileName()
+        let mutable cnt = 0
+        let f ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+            cnt <- cnt + 1
+            new Stream_Stub()
+
+        let _ = FileAccessor( fname, Constants.LU_MAX_MULTIPLICITY, true, f )
+        Assert.True(( cnt = int Constants.LU_MAX_MULTIPLICITY ))
+        File.Delete fname
+
+    [<Theory>]
+    [<InlineData( 0UL, 0UL, 1 )>]
+    [<InlineData( 0UL, 1UL, 0 )>]
+    [<InlineData( 0UL, 0xFFFFFFFFFFFFFFFFUL, 1 )>]
+    [<InlineData( 16UL, 0UL, 17 )>]
+    [<InlineData( 16UL, 16UL, 1 )>]
+    [<InlineData( 16UL, 17UL, 0 )>]
+    member _.Read_InvalidArg_001 ( fsize : uint64 ) ( pos : uint64 ) ( len : int ) =
+        task {
+            let fname = Path.GetTempFileName()
+            let f = File.OpenWrite fname
+            f.SetLength( int64 fsize )
+            f.Close()
+            f.Dispose()
+
+            let fa = FileAccessor( fname, 1u, true )
+            let buf = Array.zeroCreate<byte> len
+            try
+                do! fa.Read pos ( ArraySegment buf )
+                Assert.Fail __LINE__
+            with
+            | :? ArgumentOutOfRangeException ->
+                ()
+            | _ ->
+                Assert.Fail __LINE__
+            do! fa.Close()
+            File.Delete fname
+        }
+
+    [<Theory>]
+    [<InlineData( 0UL, 0UL, 0 )>]
+    [<InlineData( 4096UL, 0UL, 16 )>]
+    [<InlineData( 4096UL, 4080UL, 16 )>]
+    [<InlineData( 4096UL, 0UL, 4096 )>]
+    member _.Read_Success_001 ( fsize : uint64 ) ( pos : uint64 ) ( len : int ) =
+        task {
+            let fname = Path.GetTempFileName()
+            let wbuf = Array.zeroCreate<byte>( int fsize )
+            Random.Shared.NextBytes wbuf
+            File.WriteAllBytes( fname, wbuf )
+
+            let fa = FileAccessor( fname, 1u, true )
+
+            let wbuf2 = Array.zeroCreate<byte>( len + 20 )
+            do! fa.Read pos ( ArraySegment( wbuf2, 10, len ) )
+
+            for i = 0 to len - 1 do
+                Assert.True(( wbuf.[ i + int pos ] = wbuf2.[ i + 10 ] ))
+
+            do! fa.Close()
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.Read_TooManyDuplicate_001 () =
+        task {
+            let sm = new SemaphoreSlim( 1 )
+            sm.Wait()
+            let mutable cnt = 0
+
+            let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+                new Stream_Stub(
+                    p_ReadAsync = ( fun ( _, _, _, _ ) -> task {
+                        Interlocked.Increment &cnt |> ignore
+                        do! sm.WaitAsync()
+                        return 1
+                    }),
+                    p_get_Length = ( fun () -> 1L ),
+                    p_Seek = ( fun ( _, _ ) -> 0L ),
+                    p_Close = ( fun _ -> () )
+                )
+
+            let fname = Path.GetTempFileName()
+            File.WriteAllBytes( fname, [| 0uy |] )
+            let fa = FileAccessor( fname, Constants.LU_MAX_MULTIPLICITY, true, fc )
+
+            for _ = 1 to int Constants.LU_MAX_MULTIPLICITY do
+                fun () ->
+                    task {
+                        let buf = Array.zeroCreate<byte> 1
+                        do! fa.Read 0UL ( ArraySegment buf )
+                    }
+                |> Functions.StartTask
+
+            do! Task.Delay 5
+            while cnt < int Constants.LU_MAX_MULTIPLICITY do
+                do! Task.Delay 5
+
+            try
+                let buf = Array.zeroCreate<byte> 1
+                do! fa.Read 0UL ( ArraySegment buf )
+                Assert.Fail __LINE__
+            with
+            | :? InvalidOperationException as x ->
+                Assert.StartsWith( "No available stream", x.Message )
+            | _ ->
+                Assert.Fail __LINE__
+
+            for _ = 1 to int Constants.LU_MAX_MULTIPLICITY do
+                sm.Release() |> ignore
+            do! fa.Close()
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.Read_GetLengthError_001 () =
+        task {
+            let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+                new Stream_Stub(
+                    p_get_Length = ( fun () -> raise <| IOException "aaa" ),
+                    p_Close = ( fun _ -> () )
+                )
+
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, true, fc )
+            let buf = Array.zeroCreate<byte> 1
+
+            try
+                do! fa.Read 0UL ( ArraySegment buf )
+                Assert.Fail __LINE__
+            with
+            | :? IOException as x ->
+                Assert.StartsWith( "aaa", x.Message )
+            | _ ->
+                Assert.Fail __LINE__
+
+            do! fa.Close()
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.Read_SeekError_001 () =
+        task {
+            let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+                new Stream_Stub(
+                    p_get_Length = ( fun () -> 1L ),
+                    p_Seek = ( fun ( _, _ ) -> raise <| IOException "bbb" ),
+                    p_Close = ( fun _ -> () )
+                )
+
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, true, fc )
+            let buf = Array.zeroCreate<byte> 1
+
+            try
+                do! fa.Read 0UL ( ArraySegment buf )
+                Assert.Fail __LINE__
+            with
+            | :? IOException as x ->
+                Assert.StartsWith( "bbb", x.Message )
+            | _ ->
+                Assert.Fail __LINE__
+
+            do! fa.Close()
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.Read_ReadError_001 () =
+        task {
+            let mutable cnt = 0
+            let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+                new Stream_Stub(
+                    p_get_Length = ( fun () -> 1L ),
+                    p_Seek = ( fun ( _, _ ) -> 0L ),
+                    p_ReadAsync = ( fun ( _, _, _, _ ) -> task {
+                        cnt <- cnt + 1
+                        raise <| Exception( "gggg" )
+                        return 1
+                    }),
+                    p_Close = ( fun _ -> () )
+                )
+
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, true, fc )
+
+            try
+                let buf = Array.zeroCreate<byte> 1
+                do! fa.Read 0UL ( ArraySegment buf )
+                Assert.Fail __LINE__
+            with
+            | :? IOException as x ->
+                Assert.StartsWith( "gggg", x.Message )
+            | _ ->
+                Assert.Fail __LINE__
+            Assert.True(( cnt = 1 ))
+
+            do! fa.Close()
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.Read_ReadError_002 () =
+        task {
+            let mutable cnt = 0
+            let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+                new Stream_Stub(
+                    p_get_Length = ( fun () -> 1L ),
+                    p_Seek = ( fun ( _, _ ) -> 0L ),
+                    p_ReadAsync = ( fun ( _, _, _, _ ) -> task {
+                        cnt <- cnt + 1
+                        if cnt < 3 then
+                            raise <| IOException( "aaa" )
+                        else
+                            raise <| Exception( "bbb" )
+                        return 1
+                    }),
+                    p_Close = ( fun _ -> () )
+                )
+
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, true, fc )
+
+            try
+                let buf = Array.zeroCreate<byte> 1
+                do! fa.Read 0UL ( ArraySegment buf )
+                Assert.Fail __LINE__
+            with
+            | :? IOException as x ->
+                Assert.StartsWith( "bbb", x.Message )
+            | _ ->
+                Assert.Fail __LINE__
+            Assert.True(( cnt = 3 ))
+
+            do! fa.Close()
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.Read_ReadAfterClose_001 () =
+        task {
+            let fname = Path.GetTempFileName()
+            File.WriteAllBytes( fname, [| 0uy |] )
+            let fa = FileAccessor( fname, 1u, true )
+            do! fa.Close()
+            try
+                let buf = Array.zeroCreate<byte> 1
+                do! fa.Read 0UL ( ArraySegment buf )
+                Assert.Fail __LINE__
+            with
+            | :? ObjectDisposedException ->
+                ()
+            | _ ->
+                Assert.Fail __LINE__
+
+            File.Delete fname
+        }
+
+    [<Theory>]
+    [<InlineData( 0UL, 0UL, 1 )>]
+    [<InlineData( 0UL, 1UL, 0 )>]
+    [<InlineData( 0UL, 0xFFFFFFFFFFFFFFFFUL, 1 )>]
+    [<InlineData( 16UL, 0UL, 17 )>]
+    [<InlineData( 16UL, 16UL, 1 )>]
+    [<InlineData( 16UL, 17UL, 0 )>]
+    member _.Write_InvalidArg_001 ( fsize : uint64 ) ( pos : uint64 ) ( len : int ) =
+        task {
+            let fname = Path.GetTempFileName()
+            let f = File.OpenWrite fname
+            f.SetLength( int64 fsize )
+            f.Close()
+            f.Dispose()
+
+            let fa = FileAccessor( fname, 1u, false )
+            let buf = Array.zeroCreate<byte> len
+            try
+                do! fa.Write pos ( ArraySegment buf )
+                Assert.Fail __LINE__
+            with
+            | :? ArgumentOutOfRangeException ->
+                ()
+            | _ ->
+                Assert.Fail __LINE__
+            do! fa.Close()
+            File.Delete fname
+        }
+
+    [<Theory>]
+    [<InlineData( 0UL, 0UL, 0 )>]
+    [<InlineData( 4096UL, 0UL, 16 )>]
+    [<InlineData( 4096UL, 4080UL, 16 )>]
+    [<InlineData( 4096UL, 0UL, 4096 )>]
+    member _.Write_Success_001 ( fsize : uint64 ) ( pos : uint64 ) ( len : int ) =
+        task {
+            let fname = Path.GetTempFileName()
+
+            let wbuf = Array.zeroCreate<byte>( int fsize )
+            Random.Shared.NextBytes wbuf
+            File.WriteAllBytes( fname, wbuf )
+
+            let wbuf2 = Array.zeroCreate<byte>( len + 20 )
+            Random.Shared.NextBytes wbuf2
+
+            let fa = FileAccessor( fname, 1u, false )
+            do! fa.Write pos ( ArraySegment( wbuf2, 10, len ) )
+            do! fa.Close()
+
+            for i = 0 to len - 1 do
+                wbuf.[ i + int pos ] <- wbuf2.[ i + 10 ]
+            let wbuf3 = File.ReadAllBytes( fname )
+            Assert.True(( wbuf = wbuf3 ))
+
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.Write_ReadOnly_001 () =
+        task {
+            let fname = Path.GetTempFileName()
+
+            let fa = FileAccessor( fname, 1u, true )
+            try
+                do! fa.Write 0UL ( ArraySegment() )
+                Assert.Fail __LINE__
+            with
+            | :? InvalidOperationException as x ->
+                Assert.StartsWith( "File opened read-only", x.Message )
+            | _ ->
+                Assert.Fail __LINE__
+
+            do! fa.Close()
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.Write_TooManyDuplicate_001 () =
+        task {
+            let sm = new SemaphoreSlim( 1 )
+            sm.Wait()
+            let mutable cnt = 0
+
+            let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+                new Stream_Stub(
+                    p_WriteAsync = ( fun ( _, _, _, _ ) -> task {
+                        Interlocked.Increment &cnt |> ignore
+                        do! sm.WaitAsync()
+                        return 1
+                    }),
+                    p_FlushAsync = ( fun _ -> Task.FromResult() ),
+                    p_get_Length = ( fun () -> 1L ),
+                    p_Seek = ( fun ( _, _ ) -> 0L ),
+                    p_Close = ( fun _ -> () )
+                )
+
+            let fname = Path.GetTempFileName()
+            File.WriteAllBytes( fname, [| 0uy |] )
+            let fa = FileAccessor( fname, Constants.LU_MAX_MULTIPLICITY, false, fc )
+
+            for _ = 1 to int Constants.LU_MAX_MULTIPLICITY do
+                fun () ->
+                    task {
+                        let buf = Array.zeroCreate<byte> 1
+                        do! fa.Write 0UL ( ArraySegment buf )
+                    }
+                |> Functions.StartTask
+
+            do! Task.Delay 5
+            while cnt < int Constants.LU_MAX_MULTIPLICITY do
+                do! Task.Delay 5
+
+            try
+                let buf = Array.zeroCreate<byte> 1
+                do! fa.Write 0UL ( ArraySegment buf )
+                Assert.Fail __LINE__
+            with
+            | :? InvalidOperationException as x ->
+                Assert.StartsWith( "No available stream", x.Message )
+            | _ ->
+                Assert.Fail __LINE__
+
+            for _ = 1 to int Constants.LU_MAX_MULTIPLICITY do
+                sm.Release() |> ignore
+            do! fa.Close()
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.Write_GetLengthError_001 () =
+        task {
+            let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+                new Stream_Stub(
+                    p_get_Length = ( fun () -> raise <| IOException "aaa" ),
+                    p_Close = ( fun _ -> () )
+                )
+
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false, fc )
+            let buf = Array.zeroCreate<byte> 1
+
+            try
+                let! _ = fa.Write 0UL ( ArraySegment buf )
+                Assert.Fail __LINE__
+            with
+            | :? IOException as x ->
+                Assert.StartsWith( "aaa", x.Message )
+            | _ ->
+                Assert.Fail __LINE__
+
+            do! fa.Close()
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.Write_SeekError_001 () =
+        task {
+            let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+                new Stream_Stub(
+                    p_get_Length = ( fun () -> 1L ),
+                    p_Seek = ( fun ( _, _ ) -> raise <| IOException "bbb" ),
+                    p_Close = ( fun _ -> () )
+                )
+
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false, fc )
+            let buf = Array.zeroCreate<byte> 1
+
+            try
+                do! fa.Write 0UL ( ArraySegment buf )
+                Assert.Fail __LINE__
+            with
+            | :? IOException as x ->
+                Assert.StartsWith( "bbb", x.Message )
+            | _ ->
+                Assert.Fail __LINE__
+
+            do! fa.Close()
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.Write_WriteError_001 () =
+        task {
+            let mutable cnt = 0
+            let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+                new Stream_Stub(
+                    p_get_Length = ( fun () -> 1L ),
+                    p_Seek = ( fun ( _, _ ) -> 0L ),
+                    p_WriteAsync = ( fun ( _, _, _, _ ) -> task {
+                        cnt <- cnt + 1
+                        raise <| Exception( "gggg" )
+                        return 1
+                    }),
+                    p_Close = ( fun _ -> () )
+                )
+
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false, fc )
+
+            try
+                let buf = Array.zeroCreate<byte> 1
+                do! fa.Write 0UL ( ArraySegment buf )
+                Assert.Fail __LINE__
+            with
+            | :? IOException as x ->
+                Assert.StartsWith( "gggg", x.Message )
+            | _ ->
+                Assert.Fail __LINE__
+            Assert.True(( cnt = 1 ))
+
+            do! fa.Close()
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.Write_WriteError_002 () =
+        task {
+            let mutable cnt = 0
+            let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+                new Stream_Stub(
+                    p_get_Length = ( fun () -> 1L ),
+                    p_Seek = ( fun ( _, _ ) -> 0L ),
+                    p_WriteAsync = ( fun ( _, _, _, _ ) -> task {
+                        cnt <- cnt + 1
+                        if cnt < 3 then
+                            raise <| IOException( "aaa" )
+                        else
+                            raise <| Exception( "bbb" )
+                        return 1
+                    }),
+                    p_Close = ( fun _ -> () )
+                )
+
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false, fc )
+
+            try
+                let buf = Array.zeroCreate<byte> 1
+                do! fa.Write 0UL ( ArraySegment buf )
+                Assert.Fail __LINE__
+            with
+            | :? IOException as x ->
+                Assert.StartsWith( "bbb", x.Message )
+            | _ ->
+                Assert.Fail __LINE__
+            Assert.True(( cnt = 3 ))
+
+            do! fa.Close()
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.Write_WriteAfterClose_001 () =
+        task {
+            let fname = Path.GetTempFileName()
+            File.WriteAllBytes( fname, [| 0uy |] )
+            let fa = FileAccessor( fname, 1u, false )
+            do! fa.Close()
+            try
+                let buf = Array.zeroCreate<byte> 1
+                do! fa.Write 0UL ( ArraySegment buf )
+                Assert.Fail __LINE__
+            with
+            | :? ObjectDisposedException ->
+                ()
+            | _ ->
+                Assert.Fail __LINE__
+
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.SetFileSize_InvalidArg_001 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false )
+            try
+                do! fa.SetFileSize 0x8000000000000000UL
+                Assert.Fail __LINE__
+            with
+            | :? ArgumentOutOfRangeException ->
+                ()
+            | _ ->
+                Assert.Fail __LINE__
+            do! fa.Close()
+            File.Delete fname
+        }
+
+    [<Theory>]
+    [<InlineData( 0UL, 0UL )>]
+    [<InlineData( 0UL, 4096UL )>]
+    [<InlineData( 4096UL, 0UL )>]
+    member _.SetFileSize_Success_001 ( fsizea : uint64 ) ( fsizeb : uint64 ) =
+        task {
+            let fname = Path.GetTempFileName()
+            let f = File.OpenWrite fname
+            f.SetLength( int64 fsizea )
+            f.Close()
+            f.Dispose()
+            Assert.True(( ( FileInfo fname ).Length = int64 fsizea ))
+
+            let fa = FileAccessor( fname, 1u, false )
+            do! fa.SetFileSize fsizeb
+            do! fa.Close()
+
+            Assert.True(( ( FileInfo fname ).Length = int64 fsizeb ))
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.SetFileSize_ReadOnly_001 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, true )
+            try
+                do! fa.SetFileSize 1UL
+                Assert.Fail __LINE__
+            with
+            | :? InvalidOperationException ->
+                ()
+            | _ ->
+                Assert.Fail __LINE__
+            do! fa.Close()
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.SetFileSize_TooManyDuplicate_001 () =
+        task {
+            let sm = new SemaphoreSlim( 1 )
+            sm.Wait()
+            let mutable cnt = 0
+
+            let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+                new Stream_Stub(
+                    p_SetLength = ( fun ( _ ) -> 
+                        Interlocked.Increment &cnt |> ignore
+                        sm.Wait()
+                    ),
+                    p_FlushAsync = ( fun _ -> Task.FromResult() ),
+                    p_Close = ( fun _ -> () )
+                )
+
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, Constants.LU_MAX_MULTIPLICITY, false, fc )
+
+            for _ = 1 to int Constants.LU_MAX_MULTIPLICITY do
+                fun () ->
+                    task {
+                        do! fa.SetFileSize 1UL
+                    }
+                |> Functions.StartTask
+
+            do! Task.Delay 5
+            while cnt < int Constants.LU_MAX_MULTIPLICITY do
+                do! Task.Delay 5
+
+            try
+                do! fa.SetFileSize 1UL
+                Assert.Fail __LINE__
+            with
+            | :? InvalidOperationException as x ->
+                Assert.StartsWith( "No available stream", x.Message )
+            | _ ->
+                Assert.Fail __LINE__
+
+            for _ = 1 to int Constants.LU_MAX_MULTIPLICITY do
+                sm.Release() |> ignore
+            do! fa.Close()
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.SetFileSize_SetLengthError_001 () =
+        task {
+            let mutable cnt = 0
+            let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+                new Stream_Stub(
+                    p_SetLength = ( fun _ ->
+                        cnt <- cnt + 1
+                        raise <| Exception( "gggg" )
+                    ),
+                    p_Close = ( fun _ -> () )
+                )
+
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false, fc )
+
+            try
+                do! fa.SetFileSize 1UL
+                Assert.Fail __LINE__
+            with
+            | :? IOException as x ->
+                Assert.StartsWith( "gggg", x.Message )
+            | _ ->
+                Assert.Fail __LINE__
+            Assert.True(( cnt = 1 ))
+
+            do! fa.Close()
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.SetFileSize_SetLengthError_002 () =
+        task {
+            let mutable cnt = 0
+            let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+                new Stream_Stub(
+                    p_SetLength = ( fun _ ->
+                        cnt <- cnt + 1
+                        if cnt < 3 then
+                            raise <| IOException( "aaa" )
+                        else
+                            raise <| Exception( "bbb" )
+                    ),
+                    p_Close = ( fun _ -> () )
+                )
+
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false, fc )
+
+            try
+                do! fa.SetFileSize 0UL
+                Assert.Fail __LINE__
+            with
+            | :? IOException as x ->
+                Assert.StartsWith( "bbb", x.Message )
+            | _ ->
+                Assert.Fail __LINE__
+            Assert.True(( cnt = 3 ))
+
+            do! fa.Close()
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.SetFileSize_WriteAfterClose_001 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false )
+            do! fa.Close()
+
+            try
+                do! fa.SetFileSize 0UL
+                Assert.Fail __LINE__
+            with
+            | :? IOException ->
+                ()
+            | _ ->
+                Assert.Fail __LINE__
+
+            File.Delete fname
+        }
+
+    [<Theory>]
+    [<InlineData( 0UL )>]
+    [<InlineData( 4096UL )>]
+    member _.GetFileSize_Success_001 ( fsizea : uint64 ) =
+        task {
+            let fname = Path.GetTempFileName()
+            let f = File.OpenWrite fname
+            f.SetLength( int64 fsizea )
+            f.Close()
+            f.Dispose()
+            Assert.True(( ( FileInfo fname ).Length = int64 fsizea ))
+
+            let fa = FileAccessor( fname, 1u, true )
+            let r = fa.GetFileSize()
+            Assert.True(( r = fsizea ))
+
+            do! fa.Close()
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.GetFileSize_TooManyDuplicate_001 () =
+        task {
+            ThreadPool.SetMinThreads( int Constants.LU_MAX_MULTIPLICITY + 1, int Constants.LU_MAX_MULTIPLICITY + 1 ) |> ignore
+            let sm = new SemaphoreSlim( 1 )
+            sm.Wait()
+            let mutable cnt = 0
+
+            let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+                new Stream_Stub(
+                    p_get_Length = ( fun ( _ ) -> 
+                        Interlocked.Increment &cnt |> ignore
+                        sm.Wait()
+                        0L
+                    ),
+                    p_Close = ( fun _ -> () )
+                )
+
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, Constants.LU_MAX_MULTIPLICITY, false, fc )
+
+            for _ = 1 to int Constants.LU_MAX_MULTIPLICITY do
+                fun () ->
+                    task {
+                        do! Task.Yield()
+                        let _ = fa.GetFileSize()
+                        ()
+                    }
+                |> Functions.StartTask
+
+            do! Task.Delay 5
+            while cnt < int Constants.LU_MAX_MULTIPLICITY do
+                do! Task.Delay 5
+
+            try
+                let _ = fa.GetFileSize()
+                Assert.Fail __LINE__
+            with
+            | :? InvalidOperationException as x ->
+                Assert.StartsWith( "No available stream", x.Message )
+            | _ ->
+                Assert.Fail __LINE__
+
+            for _ = 1 to int Constants.LU_MAX_MULTIPLICITY do
+                sm.Release() |> ignore
+            do! fa.Close()
+            File.Delete fname
+        }
