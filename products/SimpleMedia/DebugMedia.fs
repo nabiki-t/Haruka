@@ -70,19 +70,23 @@ type private DebugRegist = {
 /// <param name="m_LUN">
 ///  LUN of LU which access to this media.
 /// </param>
+/// <param name="m_Multiplicity">
+///   Maximum number of simultaneous accesses.
+/// </param>
 type DebugMedia
     (
         m_StatusMaster : IStatus,
         m_Config : TargetGroupConf.T_DebugMedia,
         m_Killer : IKiller,
-        m_LUN : LUN_T
+        m_LUN : LUN_T,
+        m_Multiplicity : uint32
     ) as this =
 
     /// Hash value identify this instance
     let m_ObjID = objidx_me.NewID()
 
     /// Peripheral media object
-    let m_Peripheral = m_StatusMaster.CreateMedia m_Config.Peripheral m_LUN m_Killer
+    let m_Peripheral = m_StatusMaster.CreateMedia m_Config.Peripheral m_LUN m_Multiplicity m_Killer
 
     /// Debug actions
     let m_Action = OptimisticLock( Map< int, DebugRegist > [||] )

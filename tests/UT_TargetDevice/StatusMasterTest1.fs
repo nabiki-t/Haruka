@@ -1355,12 +1355,11 @@ type StatusMaster_Test1 () =
             IdentNumber = mediaidx_me.fromPrim 1u;
             MediaName = "";
             FileName = Functions.AppendPathName pDirName "a.txt";
-            MaxMultiplicity = 1u;
             QueueWaitTimeOut = 1;
             WriteProtect = false;
         } )
 
-        let me = sm.CreateMedia  mconf ( lun_me.fromPrim 1UL ) killer 
+        let me = sm.CreateMedia  mconf ( lun_me.fromPrim 1UL ) 1u killer 
         Assert.True( me.BlockCount = 1UL )
 
         killer.NoticeTerminate()
@@ -1385,7 +1384,7 @@ type StatusMaster_Test1 () =
             IdentNumber = mediaidx_me.fromPrim 1u;
             MediaName = "";
         })
-        let me = sm.CreateMedia  mconf ( lun_me.fromPrim 1UL ) killer 
+        let me = sm.CreateMedia  mconf ( lun_me.fromPrim 1UL ) 1u killer 
         Assert.True( me.BlockCount = 0UL )
 
         killer.NoticeTerminate()

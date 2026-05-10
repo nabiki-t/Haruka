@@ -1682,21 +1682,6 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let n = ss.UpdatePlainFileMediaNode x nextVal
                     return Some ( ss, cc, ( n :> IConfigureNode ) )
 
-                | "MAXMULTIPLICITY" ->
-                    let r, v = UInt32.TryParse entValue
-                    if not r then
-                        m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint64" )
-                        |> this.Output 0
-                        return Some ( ss, cc, cn )
-                    else
-                        let nextVal = {
-                            x.Values with
-                                MaxMultiplicity = v;
-                        }
-                        do! ss.CheckTargetGroupUnloaded cc x
-                        let n = ss.UpdatePlainFileMediaNode x nextVal
-                        return Some ( ss, cc, ( n :> IConfigureNode ) )
-
                 | "QUEUEWAITTIMEOUT" ->
                     let r, v = Int32.TryParse entValue
                     if not r then
@@ -2958,7 +2943,6 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     IdentNumber = newIdent;
                     MediaName = "";
                     FileName = fname;
-                    MaxMultiplicity = Constants.PLAINFILE_DEF_MAXMULTIPLICITY;
                     QueueWaitTimeOut = Constants.PLAINFILE_DEF_QUEUEWAITTIMEOUT;
                     WriteProtect = false;
                 }

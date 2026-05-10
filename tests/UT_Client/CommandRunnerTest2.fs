@@ -2770,7 +2770,6 @@ type CommandRunner_Test2() =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = "";
-            MaxMultiplicity = 0u;
             QueueWaitTimeOut = 0;
             WriteProtect = false;
         }
@@ -2821,7 +2820,6 @@ type CommandRunner_Test2() =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = "";
-            MaxMultiplicity = 0u;
             QueueWaitTimeOut = 0;
             WriteProtect = false;
         }
@@ -2860,7 +2858,6 @@ type CommandRunner_Test2() =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = "";
-            MaxMultiplicity = 0u;
             QueueWaitTimeOut = 0;
             WriteProtect = false;
         }
@@ -2891,57 +2888,6 @@ type CommandRunner_Test2() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
-    [<InlineData( "set MAXMULTIPLICITY 445" )>]
-    member _.set_PlainFileMedia_006 ( cmdstr : string ) =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
-        let wnode = CommandRunner_Test1.m_PlainFileMediaNode :?> ConfNode_PlainFileMedia
-        let conf : TargetGroupConf.T_PlainFile = {
-            IdentNumber = mediaidx_me.fromPrim 0u;
-            MediaName = "";
-            FileName = "";
-            MaxMultiplicity = 0u;
-            QueueWaitTimeOut = 0;
-            WriteProtect = false;
-        }
-        let initnode = wnode.CreateUpdatedNode conf
-        let mutable flg1 = false
-
-        ss.p_UpdatePlainFileMediaNode <- ( fun argcn argconf ->
-            flg1 <- true
-            Assert.True(( argcn = initnode ))
-            Assert.True(( argconf.MaxMultiplicity = 445u ))
-            initnode.CreateUpdatedNode argconf
-        )
-        ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
-
-        let r, stat = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
-        Assert.True(( r ))
-        Assert.True(( stat.IsSome ))
-        let r_ss, r_cc, r_cn = stat.Value
-        Assert.True(( ss :> ServerStatus = r_ss ))
-        Assert.True(( cc :> CtrlConnection = r_cc ))
-        let expconf = {
-            conf with
-                MaxMultiplicity = 445u;
-        }
-        Assert.True(( ( r_cn :?> IMediaNode ).MediaConfData = TargetGroupConf.U_PlainFile( expconf ) ))
-        Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
-        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
-
-    [<Theory>]
-    [<InlineData( "set MAXMULTIPLICITY -1" )>]
-    [<InlineData( "set MAXMULTIPLICITY 4294967296" )>]
-    [<InlineData( "set MAXMULTIPLICITY aaa" )>]
-    member _.set_PlainFileMedia_007 ( cmdstr : string ) =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
-        let initnode = CommandRunner_Test1.m_PlainFileMediaNode :?> ConfNode_PlainFileMedia
-        let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
-        Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "MD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
-        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
-
-    [<Theory>]
     [<InlineData( "set QUEUEWAITTIMEOUT 555" )>]
     member _.set_PlainFileMedia_008 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
@@ -2950,7 +2896,6 @@ type CommandRunner_Test2() =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = "";
-            MaxMultiplicity = 0u;
             QueueWaitTimeOut = 0;
             WriteProtect = false;
         }
@@ -3001,7 +2946,6 @@ type CommandRunner_Test2() =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = "";
-            MaxMultiplicity = 0u;
             QueueWaitTimeOut = 0;
             WriteProtect = false;
         }

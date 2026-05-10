@@ -44,7 +44,6 @@
       <item name='IdentNumber' constraint='MEDIAIDX_T' />
       <item name='MediaName' constraint='string' minvalue='0' maxvalue='MAX_MEDIA_NAME_STR_LENGTH' />
       <item name='FileName' constraint='string' minvalue='0' maxvalue='MAX_FILENAME_STR_LENGTH' />
-      <item name='MaxMultiplicity' constraint='unsignedInt' mincount='0' maxcount='1' minvalue='PLAINFILE_MIN_MAXMULTIPLICITY' maxvalue='PLAINFILE_MAX_MAXMULTIPLICITY' defaultref='PLAINFILE_DEF_MAXMULTIPLICITY' />
       <item name='QueueWaitTimeOut' constraint='int' mincount='0' maxcount='1' minvalue='PLAINFILE_MIN_QUEUEWAITTIMEOUT' maxvalue='PLAINFILE_MAX_QUEUEWAITTIMEOUT' defaultref='PLAINFILE_DEF_QUEUEWAITTIMEOUT'/>
       <item name='WriteProtect' constraint='boolean' />
     </item>

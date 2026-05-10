@@ -79,7 +79,6 @@ type PlainFileMediaPropPage(
     let m_IdentNumberTextBox = m_PropPage.FindName( "IdentNumberTextBox" ) :?> TextBox
     let m_MediaNameTextBox = m_PropPage.FindName( "MediaNameTextBox" ) :?> TextBox
     let m_FileNameTextBox = m_PropPage.FindName( "FileNameTextBox" ) :?> TextBox
-    let m_MaxMultiplicityTextBox = m_PropPage.FindName( "MaxMultiplicityTextBox" ) :?> TextBox
     let m_QueueWaitTimeOutTextBox = m_PropPage.FindName( "QueueWaitTimeOutTextBox" ) :?> TextBox
     let m_WriteProtectCombo = m_PropPage.FindName( "WriteProtectCombo" ) :?> ComboBox
 
@@ -230,13 +229,6 @@ type PlainFileMediaPropPage(
                 let msg = m_Config.MessagesText.GetMessage( "MSG_INVALID_FILE_NAME", sprintf "%d" Constants.MAX_FILENAME_STR_LENGTH )
                 raise <| Exception msg
 
-            let maxMultiplicity =
-                let r, w = UInt32.TryParse m_IdentNumberTextBox.Text
-                if not r || w < Constants.PLAINFILE_MIN_MAXMULTIPLICITY || w > Constants.PLAINFILE_MAX_MAXMULTIPLICITY then
-                    let msg = m_Config.MessagesText.GetMessage( "MSG_INVALID_FILE_NAME", sprintf "%d" Constants.MAX_FILENAME_STR_LENGTH )
-                    raise <| Exception msg
-                w
-
             let queueWaitTimeOut =
                 let r, w = Int32.TryParse m_QueueWaitTimeOutTextBox.Text
                 if not r || w < Constants.PLAINFILE_MIN_QUEUEWAITTIMEOUT || w > Constants.PLAINFILE_MAX_QUEUEWAITTIMEOUT then
@@ -250,7 +242,6 @@ type PlainFileMediaPropPage(
                 IdentNumber = mediaidx_me.fromPrim identNumber;
                 MediaName = mediaName;
                 FileName = fileName;
-                MaxMultiplicity = maxMultiplicity;
                 QueueWaitTimeOut = queueWaitTimeOut;
                 WriteProtect = writeProtect;
             }
@@ -323,8 +314,6 @@ type PlainFileMediaPropPage(
         m_MediaNameTextBox.Text <- mn.Values.MediaName
         m_FileNameTextBox.IsEnabled <- editmode && ( not loaded )
         m_FileNameTextBox.Text <- mn.Values.FileName
-        m_MaxMultiplicityTextBox.IsEnabled <- editmode && ( not loaded )
-        m_MaxMultiplicityTextBox.Text <- sprintf "%d" mn.Values.MaxMultiplicity
         m_QueueWaitTimeOutTextBox.IsEnabled <- editmode && ( not loaded )
         m_QueueWaitTimeOutTextBox.Text <- sprintf "%d" mn.Values.QueueWaitTimeOut
         m_WriteProtectCombo.IsEnabled <- editmode && ( not loaded )
@@ -332,5 +321,3 @@ type PlainFileMediaPropPage(
             m_WriteProtectCombo.SelectedIndex <- 0
         else
             m_WriteProtectCombo.SelectedIndex <- 1
-
-

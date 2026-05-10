@@ -47,7 +47,7 @@ type BlockDeviceLU_Test () =
             p_GetBlockCount = ( fun () -> 512UL )
         )
         let sm = new CStatus_Stub(
-            p_CreateMedia = ( fun _ _ _ -> media )
+            p_CreateMedia = ( fun _ _ _ _ -> media )
         )
         let info : TargetGroupConf.T_BlockDevice = {
             Peripheral = TargetGroupConf.T_MEDIA.U_PlainFile(
@@ -55,7 +55,6 @@ type BlockDeviceLU_Test () =
                     IdentNumber = mediaidx_me.fromPrim 0u;
                     MediaName = "";
                     FileName = "";
-                    MaxMultiplicity = 0u;
                     QueueWaitTimeOut = 0;
                     WriteProtect = false;
                 }
@@ -63,7 +62,7 @@ type BlockDeviceLU_Test () =
             FallbackBlockSize = Blocksize.BS_512;
             OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
         }
-        media, sm, new BlockDeviceLU( BlockDeviceType.BDT_Normal, sm, lun_me.zero, info, Path.GetTempPath(), new HKiller() )
+        media, sm, new BlockDeviceLU( BlockDeviceType.BDT_Normal, sm, lun_me.zero, 4u, info, Path.GetTempPath(), new HKiller() )
 
     
     static member private cmdSource() =

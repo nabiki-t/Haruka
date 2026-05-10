@@ -85,14 +85,6 @@
                                 <ColumnDefinition Width="4*" />
                                 <ColumnDefinition Width="6*" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Name="MaxMultiplicityTextBlock" Text="Max Multiplicity" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                            <TextBox Grid.Column="1" Name="MaxMultiplicityTextBox" Text="0" Padding="2,2,2,2" />
-                        </Grid>
-                        <Grid Margin="10,2,0,2">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="4*" />
-                                <ColumnDefinition Width="6*" />
-                            </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Name="QueueWaitTimeOutTextBlock" Text="Queue Wait TimeOut" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                             <TextBox Grid.Column="1" Name="QueueWaitTimeOutTextBox" Text="0" Padding="2,2,2,2" />
                         </Grid>

@@ -1897,18 +1897,6 @@ module Constants =
     let MEDIA_BLOCK_SIZE : uint64 =
         4096UL
 
-    /// Minimum multiplicity for plain file media.
-    let PLAINFILE_MIN_MAXMULTIPLICITY : uint32 =
-        1u
-
-    /// Maximum multiplicity for plain file media.
-    let PLAINFILE_MAX_MAXMULTIPLICITY : uint32 =
-        32u
-
-    /// Default multiplicity for plain file media.
-    let PLAINFILE_DEF_MAXMULTIPLICITY : uint32 =
-        8u
-
     /// Minimum queue wait timeout value in millisecond for plain file media.
     let PLAINFILE_MIN_QUEUEWAITTIMEOUT : int =
         50

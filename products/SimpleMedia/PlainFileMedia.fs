@@ -40,12 +40,16 @@ open Haruka.IODataTypes
 /// <param name="m_LUN">
 ///  LUN of LU which access to this media.
 /// </param>
+/// <param name="m_Multiplicity">
+///   Maximum number of simultaneous accesses.
+/// </param>
 type PlainFileMedia
     (
         m_StatusMaster : IStatus,
         m_Config : TargetGroupConf.T_PlainFile,
         m_Killer : IKiller,
-        m_LUN : LUN_T
+        m_LUN : LUN_T,
+        m_Multiplicity : uint32
     ) as this =
 
     /// Hash value identify this instance
@@ -55,7 +59,7 @@ type PlainFileMedia
     let m_vfile, m_FileSize = 
         try
             let v = [|
-                for i = 0u to m_Config.MaxMultiplicity - 1u do
+                for i = 0u to m_Multiplicity - 1u do
                     yield new FileStream( m_Config.FileName, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite, 512, true )
             |]
             ( v, v.[0].Length )
@@ -68,7 +72,7 @@ type PlainFileMedia
             reraise()
 
     /// Lock object of control multiplicity
-    let m_MulSema = new SemaphoreSlim( int( m_Config.MaxMultiplicity ) )
+    let m_MulSema = new SemaphoreSlim( int( m_Multiplicity ) )
 
     /// m_vfile index counter
     let mutable m_FileIdx = 0

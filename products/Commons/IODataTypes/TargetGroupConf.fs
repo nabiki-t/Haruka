@@ -86,7 +86,6 @@ and [<NoComparison>]T_PlainFile = {
     IdentNumber : MEDIAIDX_T;
     MediaName : string;
     FileName : string;
-    MaxMultiplicity : uint32;
     QueueWaitTimeOut : int;
     WriteProtect : bool;
 }
@@ -323,14 +322,6 @@ type ReaderWriter() =
               <xsd:restriction base='xsd:string'>
                 <xsd:minLength value='0' />
                 <xsd:maxLength value='256' />
-              </xsd:restriction>
-            </xsd:simpleType>
-          </xsd:element>
-          <xsd:element name='MaxMultiplicity' minOccurs='0' maxOccurs='1' >
-            <xsd:simpleType>
-              <xsd:restriction base='xsd:unsignedInt'>
-                <xsd:minInclusive value='1' />
-                <xsd:maxInclusive value='32' />
               </xsd:restriction>
             </xsd:simpleType>
           </xsd:element>
@@ -720,12 +711,6 @@ type ReaderWriter() =
                 elem.Element( XName.Get "MediaName" ).Value;
             FileName =
                 elem.Element( XName.Get "FileName" ).Value;
-            MaxMultiplicity = 
-                let subElem = elem.Element( XName.Get "MaxMultiplicity" )
-                if subElem = null then
-                    8u;
-                else
-                    UInt32.Parse( subElem.Value );
             QueueWaitTimeOut = 
                 let subElem = elem.Element( XName.Get "QueueWaitTimeOut" )
                 if subElem = null then
@@ -1222,11 +1207,6 @@ type ReaderWriter() =
             if (elem.FileName).Length > 256 then
                 raise <| ConfRWException( "Max value(string) restriction error. FileName" )
             yield sprintf "%s%s<FileName>%s</FileName>" singleIndent indentStr ( ReaderWriter.xmlEncode(elem.FileName) )
-            if (elem.MaxMultiplicity) < 1u then
-                raise <| ConfRWException( "Min value(unsignedInt) restriction error. MaxMultiplicity" )
-            if (elem.MaxMultiplicity) > 32u then
-                raise <| ConfRWException( "Max value(unsignedInt) restriction error. MaxMultiplicity" )
-            yield sprintf "%s%s<MaxMultiplicity>%d</MaxMultiplicity>" singleIndent indentStr (elem.MaxMultiplicity)
             if (elem.QueueWaitTimeOut) < 50 then
                 raise <| ConfRWException( "Min value(int) restriction error. QueueWaitTimeOut" )
             if (elem.QueueWaitTimeOut) > 3000000 then

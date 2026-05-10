@@ -2356,7 +2356,6 @@ type MainWindow( m_ExeDir : string ) as this =
             IdentNumber = newIdent;
             MediaName = sprintf "PlainFile_%d" newIdent;
             FileName = "";
-            MaxMultiplicity = Constants.PLAINFILE_DEF_MAXMULTIPLICITY;
             QueueWaitTimeOut = Constants.PLAINFILE_DEF_QUEUEWAITTIMEOUT;
             WriteProtect = false;
         }

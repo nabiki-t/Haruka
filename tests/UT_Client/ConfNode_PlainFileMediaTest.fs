@@ -33,7 +33,6 @@ type ConfNode_PlainFileMedia_Test() =
         IdentNumber = mediaidx_me.fromPrim 1u;
         MediaName = "";
         FileName = "aaaa";
-        MaxMultiplicity = Constants.PLAINFILE_MIN_MAXMULTIPLICITY;
         QueueWaitTimeOut = Constants.PLAINFILE_MIN_QUEUEWAITTIMEOUT;
         WriteProtect = true;
     }
@@ -73,7 +72,6 @@ type ConfNode_PlainFileMedia_Test() =
         match n.MediaConfData with
         | TargetGroupConf.T_MEDIA.U_PlainFile( x ) ->
             Assert.True(( x.FileName = "" ))
-            Assert.True(( x.MaxMultiplicity = 0u ))
             Assert.True(( x.QueueWaitTimeOut = 0 ))
             Assert.True(( x.WriteProtect = false ))
         | _ -> Assert.Fail __LINE__
@@ -100,10 +98,6 @@ type ConfNode_PlainFileMedia_Test() =
                     Value = "tghuk";
                 }
                 {
-                    Name = "MaxMultiplicity";
-                    Value = "988";
-                }
-                {
                     Name = "QueueWaitTimeOut";
                     Value = "75";
                 }
@@ -120,7 +114,6 @@ type ConfNode_PlainFileMedia_Test() =
         match n.MediaConfData with
         | TargetGroupConf.T_MEDIA.U_PlainFile( x ) ->
             Assert.True(( x.FileName = "tghuk" ))
-            Assert.True(( x.MaxMultiplicity = 988u ))
             Assert.True(( x.QueueWaitTimeOut = 75 ))
             Assert.True(( x.WriteProtect = true ))
         | _ -> Assert.Fail __LINE__
@@ -136,7 +129,6 @@ type ConfNode_PlainFileMedia_Test() =
             IdentNumber = mediaidx_me.fromPrim 2u;
             MediaName = "ggg";
             FileName = "aaaa";
-            MaxMultiplicity = 1u;
             QueueWaitTimeOut = 2;
             WriteProtect = false;
         }
@@ -150,7 +142,6 @@ type ConfNode_PlainFileMedia_Test() =
             Assert.True(( x.IdentNumber = mediaidx_me.fromPrim 2u ))
             Assert.True(( x.MediaName = "ggg" ))
             Assert.True(( x.FileName = "aaaa" ))
-            Assert.True(( x.MaxMultiplicity = 1u ))
             Assert.True(( x.QueueWaitTimeOut = 2 ))
             Assert.True(( x.WriteProtect = false ))
         | _ ->
@@ -193,7 +184,6 @@ type ConfNode_PlainFileMedia_Test() =
             IdentNumber = mediaidx_me.fromPrim 1u;
             MediaName = "ggg";
             FileName = "";
-            MaxMultiplicity = Constants.PLAINFILE_MIN_MAXMULTIPLICITY - 1u;
             QueueWaitTimeOut = Constants.PLAINFILE_MIN_QUEUEWAITTIMEOUT - 1;
             WriteProtect = true;
         }
@@ -206,7 +196,7 @@ type ConfNode_PlainFileMedia_Test() =
         rel.AddRelation lu.NodeID n.NodeID
         rel.AddRelation n.NodeID d1.NodeID
         let r = n.Validate []
-        Assert.True(( r.Length = 4 ))
+        Assert.True(( r.Length = 3 ))
 
     [<Fact>]
     member _.Validate_IdentNumber_001() =
@@ -293,74 +283,6 @@ type ConfNode_PlainFileMedia_Test() =
         Assert.True(( r.Length = 1 ))
         Assert.True(( fst r.[0] = n.NodeID ))
         Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_INVALID_FILE_NAME_LENGTH" ))
-
-    [<Fact>]
-    member _.Validate_MaxMultiplicity_001() =
-        let st = new StringTable( "" )
-        let rel = new ConfNodeRelation()
-        let confVal = {
-            defaultConf with
-                MaxMultiplicity = Constants.PLAINFILE_MIN_MAXMULTIPLICITY - 1u;
-        }
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
-        let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, confVal ) :> IMediaNode
-        rel.AddNode lu
-        rel.AddNode n
-        rel.AddRelation lu.NodeID n.NodeID
-        let r = n.Validate []
-        Assert.True(( r.Length = 1 ))
-        Assert.True(( fst r.[0] = n.NodeID ))
-        Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_INVALID_MAXMULTIPLICITY" ))
-
-    [<Fact>]
-    member _.Validate_MaxMultiplicity_002() =
-        let st = new StringTable( "" )
-        let rel = new ConfNodeRelation()
-        let confVal = {
-            defaultConf with
-                MaxMultiplicity = Constants.PLAINFILE_MIN_MAXMULTIPLICITY;
-        }
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
-        let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, confVal ) :> IMediaNode
-        rel.AddNode lu
-        rel.AddNode n
-        rel.AddRelation lu.NodeID n.NodeID
-        let r = n.Validate []
-        Assert.True(( r.Length = 0 ))
-
-    [<Fact>]
-    member _.Validate_MaxMultiplicity_003() =
-        let st = new StringTable( "" )
-        let rel = new ConfNodeRelation()
-        let confVal = {
-            defaultConf with
-                MaxMultiplicity = Constants.PLAINFILE_MAX_MAXMULTIPLICITY;
-        }
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
-        let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, confVal ) :> IMediaNode
-        rel.AddNode lu
-        rel.AddNode n
-        rel.AddRelation lu.NodeID n.NodeID
-        let r = n.Validate []
-        Assert.True(( r.Length = 0 ))
-
-    [<Fact>]
-    member _.Validate_MaxMultiplicity_004() =
-        let st = new StringTable( "" )
-        let rel = new ConfNodeRelation()
-        let confVal = {
-            defaultConf with
-                MaxMultiplicity = Constants.PLAINFILE_MAX_MAXMULTIPLICITY + 1u;
-        }
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
-        let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, confVal ) :> IMediaNode
-        rel.AddNode lu
-        rel.AddNode n
-        rel.AddRelation lu.NodeID n.NodeID
-        let r = n.Validate []
-        Assert.True(( r.Length = 1 ))
-        Assert.True(( fst r.[0] = n.NodeID ))
-        Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_INVALID_MAXMULTIPLICITY" ))
 
     [<Fact>]
     member _.Validate_QueueWaitTimeOut_001() =
@@ -755,7 +677,6 @@ type ConfNode_PlainFileMedia_Test() =
             IdentNumber = mediaidx_me.fromPrim 2u;
             MediaName = "gffgg";
             FileName = "aaaa";
-            MaxMultiplicity = 1u;
             QueueWaitTimeOut = 2;
             WriteProtect = false;
         }
@@ -776,7 +697,6 @@ type ConfNode_PlainFileMedia_Test() =
             IdentNumber = mediaidx_me.fromPrim 2u;
             MediaName = "gffgg";
             FileName = "aaaa";
-            MaxMultiplicity = 189u;
             QueueWaitTimeOut = 24;
             WriteProtect = true;
         }
@@ -784,11 +704,10 @@ type ConfNode_PlainFileMedia_Test() =
         let v = n.TempExportData
         Assert.True(( v.TypeName = ClientConst.TEMPEXP_NN_PlainFileMedia ))
         Assert.True(( v.NodeID = 1UL ))
-        Assert.True(( v.Values.Length = 6 ))
+        Assert.True(( v.Values.Length = 5 ))
         Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "ID" ) |> _.Value = "2" ))
         Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "MediaName" ) |> _.Value = "gffgg" ))
         Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "FileName" ) |> _.Value = "aaaa" ))
-        Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "MaxMultiplicity" ) |> _.Value = "189" ))
         Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "QueueWaitTimeOut" ) |> _.Value = "24" ))
         Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "WriteProtect" ) |> _.Value = "true" ))
 

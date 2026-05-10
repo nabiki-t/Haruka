@@ -453,8 +453,17 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let resvkey = resvkey_me.fromPrim 1UL
             let prfname = GetPRFileName g_LUN1
+
+            let prsave1 = Functions.AppendPathName ( Path.GetTempPath() ) "PersistReservation_LUReset_001_pr1.txt"
+            let prsave2 = Functions.AppendPathName ( Path.GetTempPath() ) "PersistReservation_LUReset_001_pr2.txt"
+            let prsave3 = Functions.AppendPathName ( Path.GetTempPath() ) "PersistReservation_LUReset_001_pr3.txt"
+            File.Delete prsave1
+            File.Delete prsave2
+            File.Delete prsave3
+
             let fexist =
                 if File.Exists prfname then
+                    File.Copy( prfname, prsave1 )
                     Some( GlbFunc.GetFileHash prfname )
                 else
                     None
@@ -465,6 +474,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
                 GlbFunc.WaitForFileUpdateByHash prfname fexist.Value
             else
                 GlbFunc.WaitForFileCreate prfname
+            File.Copy( prfname, prsave2 )
 
             // LU Reset
             let! itt_tmf = r1.SendTMFRequest_LogicalUnitReset BitI.F g_LUN1
@@ -473,7 +483,14 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
 
             // Get reservarion key
             let! res_pr_in1 = PR_ReadKey r1 g_LUN1
-            Assert.True(( res_pr_in1.ReservationKey = [| resvkey |] ))
+
+            if not ( res_pr_in1.ReservationKey = [| resvkey |] ) then
+                let logfname = Functions.AppendPathName m_WorkPath "stdout.txt"
+                let logsave = Functions.AppendPathName ( Path.GetTempPath() ) "PersistReservation_LUReset_001_log.txt"
+                File.Copy( logfname, logsave )
+                File.Copy( prfname, prsave3 )
+                Assert.Fail( sprintf "Unmatch reservation key, %s" logsave )
+                //Assert.True(( res_pr_in1.ReservationKey = [| resvkey |] ))
 
             do! ClearReservationKey r1 g_LUN1 resvkey
             do! r1.Close()

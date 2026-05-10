@@ -372,20 +372,20 @@ type StatusMaster(
 
         // ------------------------------------------------------------------------
         // Implementation of IStatus.CreateMedia
-        override this.CreateMedia  ( confInfo : TargetGroupConf.T_MEDIA ) ( lun : LUN_T ) ( argKiller : IKiller ) : IMedia =
+        override this.CreateMedia  ( confInfo : TargetGroupConf.T_MEDIA ) ( lun : LUN_T ) ( multiplicity : uint32 ) ( argKiller : IKiller ) : IMedia =
             if HLogger.IsVerbose then
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( m_ObjID, "StatusMaster.CreateMedia" ) )
 
             let r =
                 match confInfo with
                 | TargetGroupConf.T_MEDIA.U_PlainFile( x ) ->
-                    new PlainFileMedia( this, x, argKiller, lun ) :> IMedia
+                    new PlainFileMedia( this, x, argKiller, lun, multiplicity ) :> IMedia
                 | TargetGroupConf.T_MEDIA.U_MemBuffer( x ) ->
                     new MemBufferMedia( this, x, argKiller, lun, Constants.MEMBUFFER_BUF_LINE_BLOCK_SIZE, Constants.MEDIA_BLOCK_SIZE ) :> IMedia
                 | TargetGroupConf.T_MEDIA.U_DummyMedia( _ ) ->
                     new DummyMedia( argKiller, lun ) :> IMedia
                 | TargetGroupConf.T_MEDIA.U_DebugMedia( x ) ->
-                    new DebugMedia( this, x, argKiller, lun ) :> IMedia
+                    new DebugMedia( this, x, argKiller, lun, multiplicity ) :> IMedia
             r.Initialize()
             r
 
@@ -586,7 +586,7 @@ type StatusMaster(
     /// <returns>
     ///  Newly constructed LU object, or ValueNone if specified LUN missing.
     /// </returns>
-    member private _.CreateNewLUObject ( argLUN : LUN_T ) : Lazy<ILU> voption =
+    member private this.CreateNewLUObject ( argLUN : LUN_T ) : Lazy<ILU> voption =
         // Search LU configurations
         let luconfs : struct ( TargetGroupConf.T_LogicalUnit * IKiller ) voption =
             if argLUN = lun_me.zero then
@@ -624,7 +624,7 @@ type StatusMaster(
             match luinfo.LUDevice with
             | TargetGroupConf.T_DEVICE.U_BlockDevice( x ) ->
                 lazy
-                    let o = new BlockDeviceLU( BlockDeviceType.BDT_Normal, this, luinfo.LUN, x, luinfo.WorkPath, wKiller ) :> ILU
+                    let o = new BlockDeviceLU( BlockDeviceType.BDT_Normal, this, luinfo.LUN, luinfo.MaxMultiplicity, x, luinfo.WorkPath, wKiller ) :> ILU
                     HLogger.Trace( LogID.I_CREATE_LU_COMPONENT, fun g -> g.Gen0 m_ObjID )
                     o
             | TargetGroupConf.T_DEVICE.U_DummyDevice( _ ) ->
@@ -637,7 +637,7 @@ type StatusMaster(
                         FallbackBlockSize = Blocksize.BS_512;
                         OptimalTransferLength = Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH |> blkcnt_me.ofUInt32;
                     }
-                    let o = new BlockDeviceLU( BlockDeviceType.BDT_Dummy, this, luinfo.LUN, dummyDeviceConf, luinfo.WorkPath, wKiller ) :> ILU
+                    let o = new BlockDeviceLU( BlockDeviceType.BDT_Dummy, this, luinfo.LUN, luinfo.MaxMultiplicity, dummyDeviceConf, luinfo.WorkPath, wKiller ) :> ILU
                     HLogger.Trace( LogID.I_CREATE_LU_COMPONENT, fun g -> g.Gen0 m_ObjID )
                     o
             |> ValueSome

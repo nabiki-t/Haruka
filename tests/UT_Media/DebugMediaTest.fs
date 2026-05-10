@@ -117,16 +117,17 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k ->
+        stat_stub.p_CreateMedia <- ( fun c lun m k ->
             match c with
             | TargetGroupConf.U_DummyMedia( x ) ->
                 Assert.True(( x.IdentNumber = mediaidx_me.fromPrim 2u ))
             | _ ->
                 Assert.Fail __LINE__
             Assert.True(( lun = lun_me.fromPrim 1UL ))
+            Assert.True(( m = 99u ))
             stub_media
         )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 99u ) :> IMedia
         let subMedia = dm.GetSubMedia()
         Assert.True(( subMedia.Length = 1 ))
         Assert.True(( Functions.IsSame subMedia.Head stub_media ))
@@ -135,8 +136,8 @@ type DebugMedia_Test () =
     member _.Terminate_001() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> new CMedia_Stub() )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> new CMedia_Stub() )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         dm.Terminate()
 
     [<Fact>]
@@ -144,8 +145,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Initialize <- ( fun _ ->
             cnt <- cnt + 1
@@ -166,8 +167,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Closing <- ( fun _ ->
             cnt <- cnt + 1
@@ -188,8 +189,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_TestUnitReady <- ( fun itt src ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
@@ -217,8 +218,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_TestUnitReady <- ( fun itt src ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
@@ -246,8 +247,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_TestUnitReady <- ( fun itt src ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
@@ -272,8 +273,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_TestUnitReady <- ( fun itt src ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
@@ -302,8 +303,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_ReadCapacity <- ( fun itt src ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
@@ -331,8 +332,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_ReadCapacity <- ( fun itt src ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
@@ -360,8 +361,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_ReadCapacity <- ( fun itt src ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
@@ -386,8 +387,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_ReadCapacity <- ( fun itt src ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
@@ -415,8 +416,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Read <- ( fun itt src lba buf ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
@@ -447,8 +448,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Read <- ( fun itt src lba buf ->
             cnt <- cnt + 1
@@ -477,8 +478,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Read <- ( fun itt src lba buf ->
             cnt <- cnt + 1
@@ -507,8 +508,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Read <- ( fun itt src lba buf ->
             cnt <- cnt + 1
@@ -537,8 +538,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Read <- ( fun itt src lba buf ->
             cnt <- cnt + 1
@@ -567,8 +568,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Read <- ( fun itt src lba buf ->
             cnt <- cnt + 1
@@ -594,8 +595,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Read <- ( fun itt src lba buf ->
             cnt <- cnt + 1
@@ -624,8 +625,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Write <- ( fun itt src lba off buf ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
@@ -656,8 +657,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Write <- ( fun itt src lba off buf ->
             cnt <- cnt + 1
@@ -686,8 +687,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Write <- ( fun itt src lba off buf ->
             cnt <- cnt + 1
@@ -716,8 +717,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Write <- ( fun itt src lba off buf ->
             cnt <- cnt + 1
@@ -746,8 +747,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Write <- ( fun itt src lba off buf ->
             cnt <- cnt + 1
@@ -776,8 +777,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Write <- ( fun itt src lba off buf ->
             cnt <- cnt + 1
@@ -803,8 +804,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Write <- ( fun itt src lba off buf ->
             cnt <- cnt + 1
@@ -834,8 +835,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Format<- ( fun itt src ->
             Assert.True(( itt = itt_me.fromPrim 99u ))
@@ -863,8 +864,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Format<- ( fun itt src ->
             cnt <- cnt + 1
@@ -890,8 +891,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Format<- ( fun itt src ->
             cnt <- cnt + 1
@@ -914,8 +915,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Format<- ( fun itt src ->
             cnt <- cnt + 1
@@ -941,8 +942,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_NotifyLUReset <- ( fun itt src ->
             cnt <- cnt + 1
@@ -961,8 +962,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         let r1 = GetAllTraps dm
         Assert.True(( r1.Length = 0 ))
@@ -973,8 +974,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         AddCounterAction 1 ( MediaCtrlReq.U_Format() ) dm
 
@@ -993,8 +994,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         for i = 1 to Constants.DEBUG_MEDIA_MAX_TRAP_COUNT do
             AddCounterAction i ( MediaCtrlReq.U_Format() ) dm
@@ -1016,8 +1017,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         AddCounterAction 1 ( MediaCtrlReq.U_TestUnitReady() ) dm
             
@@ -1030,8 +1031,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         AddCounterAction 1 ( MediaCtrlReq.U_ReadCapacity() ) dm
 
@@ -1044,8 +1045,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         AddCounterAction 1 ( MediaCtrlReq.U_Read({ StartLBA = 0UL; EndLBA = 1UL; }) ) dm
 
@@ -1064,8 +1065,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         AddCounterAction 1 ( MediaCtrlReq.U_Write({ StartLBA = 0UL; EndLBA = 1UL; }) ) dm
 
@@ -1083,8 +1084,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         AddCounterAction 1 ( MediaCtrlReq.U_Format() ) dm
 
@@ -1097,8 +1098,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         AddTrap dm ({
             Event = MediaCtrlReq.U_Format();
@@ -1118,8 +1119,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         AddTrap dm ({
             Event = MediaCtrlReq.U_Format();
@@ -1139,8 +1140,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         AddCounterAction 5 ( MediaCtrlReq.U_Format() ) dm
 
@@ -1158,8 +1159,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         AddTrap dm ({
             Event = MediaCtrlReq.U_Format();
@@ -1179,8 +1180,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         for i = 1 to Constants.DEBUG_MEDIA_MAX_TRAP_COUNT do
             AddCounterAction i ( MediaCtrlReq.U_Format() ) dm
@@ -1207,8 +1208,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         AddTrap dm ({
             Event = MediaCtrlReq.U_Read({
@@ -1240,8 +1241,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         AddTrap dm ({
             Event = MediaCtrlReq.U_Read({
@@ -1273,8 +1274,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         let r1 =
             SendMediaCtrl dm (
@@ -1301,8 +1302,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         AddTrap dm ({
             Event = MediaCtrlReq.U_Write({
@@ -1334,8 +1335,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         AddTrap dm ({
             Event = MediaCtrlReq.U_Write({
@@ -1367,8 +1368,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         let r1 =
             SendMediaCtrl dm (
@@ -1395,8 +1396,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         AddTrap dm ({
             Event = MediaCtrlReq.U_Format();
@@ -1426,8 +1427,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         AddTrap dm ({
             Event = MediaCtrlReq.U_Format();
@@ -1456,8 +1457,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         let r1 = GetAllTraps dm
         Assert.True(( r1.Length = 0 ))
@@ -1478,8 +1479,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         AddCounterAction 1 ( MediaCtrlReq.U_Format() ) dm
 
@@ -1505,8 +1506,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         for _ = 1 to Constants.DEBUG_MEDIA_MAX_TRAP_COUNT do
             AddCounterAction 1 ( MediaCtrlReq.U_Format() ) dm
@@ -1530,8 +1531,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         let r1 = GetAllTraps dm
         Assert.True(( r1.Length = 0 ))
@@ -1548,8 +1549,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         AddCounterAction 98 ( MediaCtrlReq.U_TestUnitReady() ) dm
 
@@ -1568,8 +1569,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         AddCounterAction 88 ( MediaCtrlReq.U_TestUnitReady() ) dm
 
@@ -1588,8 +1589,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Format<- ( fun itt src -> task {
             cnt <- cnt + 1
@@ -1617,8 +1618,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
         stub_media.p_Format<- ( fun itt src -> task {
             cnt <- cnt + 1
@@ -1646,8 +1647,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         let resp = GetTaskWaitStatus dm
         Assert.True(( resp.Length = 0 ))
@@ -1657,8 +1658,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         stub_media.p_Format <- ( fun _ _ -> Task.FromResult () )
 
         AddTrap dm ({
@@ -1687,8 +1688,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         stub_media.p_Format <- ( fun _ _ -> Task.FromResult () )
 
         AddTrap dm ({
@@ -1745,8 +1746,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         stub_media.p_Format <- ( fun _ _ -> Task.FromResult () )
 
         AddTrap dm ({
@@ -1804,8 +1805,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         stub_media.p_Format <- ( fun _ _ -> Task.FromResult () )
 
         AddTrap dm ({
@@ -1858,8 +1859,8 @@ type DebugMedia_Test () =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
         let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun k -> stub_media )
-        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         stub_media.p_Format <- ( fun _ _ -> Task.FromResult () )
 
         AddTrap dm ({

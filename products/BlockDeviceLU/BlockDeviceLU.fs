@@ -51,6 +51,9 @@ type LUResetStatus =
 /// <param name="m_LUN">
 ///  LUN allocated to this LU.
 /// </param>
+/// <param name="m_Multiplicity">
+///  Maximum number of simultaneous accesses.
+/// </param>
 /// <param name="m_LogicalUnitInfo">
 ///  Configuration information.
 /// </param>
@@ -65,6 +68,7 @@ type BlockDeviceLU
         m_DeviceType : BlockDeviceType,
         m_StatusMaster : IStatus,
         m_LUN : LUN_T,
+        m_Multiplicity : uint32,
         m_LogicalUnitInfo : TargetGroupConf.T_BlockDevice,
         m_WorkDirPath : string,
         m_TargetGroupKiller : IKiller
@@ -74,7 +78,7 @@ type BlockDeviceLU
     let m_TaskSetQueue = new LambdaQueue( 1u )
 
     /// A queue for concurrent task execution
-    let m_ExecuteQueue = new TaskQueue( 4u )
+    let m_ExecuteQueue = new TaskQueue( m_Multiplicity )
 
     /// the Task set.
     let mutable m_TaskSet = {
@@ -93,6 +97,7 @@ type BlockDeviceLU
         m_StatusMaster.CreateMedia
             m_LogicalUnitInfo.Peripheral
             m_LUN
+            m_Multiplicity
             m_TargetGroupKiller
 
     /// Mode parameter values.

@@ -72,7 +72,6 @@ type ConfNode_PlainFileMedia(
             IdentNumber = Functions.SearchAndConvert d "ID" ( UInt32.Parse >> mediaidx_me.fromPrim ) mediaidx_me.zero;
             MediaName = Functions.SearchAndConvert d "MediaName" id "";
             FileName = Functions.SearchAndConvert d "FileName" id "";
-            MaxMultiplicity = Functions.SearchAndConvert d "MaxMultiplicity" UInt32.Parse 0u;
             QueueWaitTimeOut = Functions.SearchAndConvert d "QueueWaitTimeOut" Int32.Parse 0;
             WriteProtect = Functions.SearchAndConvert d "WriteProtect" bool.Parse false;
         }
@@ -104,16 +103,6 @@ type ConfNode_PlainFileMedia(
                 let maxr = Constants.MAX_FILENAME_STR_LENGTH
                 if v < 1 || maxr < v then
                     let msg = m_MessageTable.GetMessage( "CHKMSG_INVALID_FILE_NAME_LENGTH", maxr.ToString() ) 
-                    ( curID, msg ) :: argmsg
-                else
-                    argmsg
-            )
-            |> ( fun argmsg ->
-                let v = m_Value.MaxMultiplicity
-                let minr = Constants.PLAINFILE_MIN_MAXMULTIPLICITY
-                let maxr = Constants.PLAINFILE_MAX_MAXMULTIPLICITY
-                if v < minr || maxr < v then
-                    let msg = m_MessageTable.GetMessage( "CHKMSG_INVALID_MAXMULTIPLICITY", v.ToString(), minr.ToString(), maxr.ToString() ) 
                     ( curID, msg ) :: argmsg
                 else
                     argmsg
@@ -199,7 +188,6 @@ type ConfNode_PlainFileMedia(
                 yield sprintf "  ID(uint32) : %d" m_Value.IdentNumber
                 yield sprintf "  MediaName(string) : %s" m_Value.MediaName
                 yield sprintf "  FileName(string) : %s" m_Value.FileName
-                yield sprintf "  MaxMultiplicity(uint32) : %d" m_Value.MaxMultiplicity
                 yield sprintf "  QueueWaitTimeOut(int) : %d" m_Value.QueueWaitTimeOut
                 yield sprintf "  WriteProtect(bool) : %b" m_Value.WriteProtect
             ]
@@ -233,10 +221,6 @@ type ConfNode_PlainFileMedia(
                     yield {
                         Name = "FileName";
                         Value = m_Value.FileName;
-                    }
-                    yield {
-                        Name = "MaxMultiplicity";
-                        Value = sprintf "%d" m_Value.MaxMultiplicity;
                     }
                     yield {
                         Name = "QueueWaitTimeOut";

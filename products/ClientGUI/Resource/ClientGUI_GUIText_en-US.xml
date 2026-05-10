@@ -1036,10 +1036,6 @@
       <Value>File Name</Value>
     </Message>
     <Message>
-      <Name>MaxMultiplicityTextBlock</Name>
-      <Value>Max Multiplicity</Value>
-    </Message>
-    <Message>
       <Name>QueueWaitTimeOutTextBlock</Name>
       <Value>Queue Wait TimeOut</Value>
     </Message>

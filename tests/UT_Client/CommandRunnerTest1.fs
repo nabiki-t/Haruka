@@ -477,7 +477,6 @@ type CommandRunner_Test1() =
             IdentNumber = mediaidx_me.fromPrim 1u;
             MediaName = "";
             FileName = "";
-            MaxMultiplicity = 0u;
             QueueWaitTimeOut = 0;
             WriteProtect = false;
         }

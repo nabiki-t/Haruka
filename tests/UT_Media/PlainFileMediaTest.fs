@@ -88,7 +88,6 @@ type PlainFileMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = testfname;
-            MaxMultiplicity = 16u;
             QueueWaitTimeOut = 1000;
             WriteProtect = false;
         }
@@ -99,7 +98,7 @@ type PlainFileMedia_Test () =
             s.Write( Array.zeroCreate<char>( 4096 ) )
             s.Close()
 
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL )
+        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 16u )
 
         let pr = new PrivateCaller( f )
         let vfs = pr.GetField( "m_vfile" ) :?> FileStream[]
@@ -139,7 +138,6 @@ type PlainFileMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = testfname;
-            MaxMultiplicity = 1u;
             QueueWaitTimeOut = 1000;
             WriteProtect = false;
         }
@@ -150,7 +148,7 @@ type PlainFileMedia_Test () =
             s.Write( Array.zeroCreate<char>( 4096 ) )
             s.Close()
 
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL )
+        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u )
 
         let pr = new PrivateCaller( f )
         let vfs = pr.GetField( "m_vfile" ) :?> FileStream[]
@@ -177,7 +175,6 @@ type PlainFileMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = testfname;
-            MaxMultiplicity = 16u;
             QueueWaitTimeOut = 1000;
             WriteProtect = false;
         }
@@ -191,7 +188,7 @@ type PlainFileMedia_Test () =
         let ws = new FileStream( testfname, FileMode.Open, FileAccess.ReadWrite, FileShare.None, 1, true )
 
         try
-            let _ = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL )
+            let _ = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u )
             Assert.Fail __LINE__
         with
         | :? IOException as x ->
@@ -213,7 +210,6 @@ type PlainFileMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = testfname;
-            MaxMultiplicity = 16u;
             QueueWaitTimeOut = 1000;
             WriteProtect = false;
         }
@@ -226,7 +222,7 @@ type PlainFileMedia_Test () =
             ()
 
         try
-            let _ = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL )
+            let _ = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u )
             Assert.Fail __LINE__
         with
         | :? IOException as x ->
@@ -244,7 +240,6 @@ type PlainFileMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = testfname;
-            MaxMultiplicity = 16u;
             QueueWaitTimeOut = 1000;
             WriteProtect = false;
         }
@@ -255,7 +250,7 @@ type PlainFileMedia_Test () =
             s.Write( Array.zeroCreate<char>( 4096 ) )
             s.Close()
 
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         f.Closing()
 
@@ -271,7 +266,6 @@ type PlainFileMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = testfname;
-            MaxMultiplicity = 16u;
             QueueWaitTimeOut = 1000;
             WriteProtect = false;
         }
@@ -282,7 +276,7 @@ type PlainFileMedia_Test () =
             s.Write( Array.zeroCreate<char>( 4096 ) )
             s.Close()
 
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         let sourcei : CommandSourceInfo =
             {
@@ -309,7 +303,6 @@ type PlainFileMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = testfname;
-            MaxMultiplicity = 16u;
             QueueWaitTimeOut = 1000;
             WriteProtect = false;
         }
@@ -321,7 +314,7 @@ type PlainFileMedia_Test () =
             s.Write( Array.zeroCreate<char>( wBlockSize * 8 ) )
             s.Close()
 
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         let sourcei : CommandSourceInfo =
             {
@@ -350,7 +343,6 @@ type PlainFileMedia_Test () =
                 IdentNumber = mediaidx_me.fromPrim 0u;
                 MediaName = "";
                 FileName = testfname;
-                MaxMultiplicity = 1u;
                 QueueWaitTimeOut = 1000;
                 WriteProtect = false;
             }
@@ -362,7 +354,7 @@ type PlainFileMedia_Test () =
                 s.Write( Array.zeroCreate<char>( wBlockSize * 8 ) )
                 s.Close()
 
-            let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+            let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
             let pr = new PrivateCaller( f )
             let vfs = pr.GetField( "m_vfile" ) :?> FileStream[]
 
@@ -431,7 +423,6 @@ type PlainFileMedia_Test () =
                 IdentNumber = mediaidx_me.fromPrim 0u;
                 MediaName = "";
                 FileName = testfname;
-                MaxMultiplicity = 1u;
                 QueueWaitTimeOut = 1000;
                 WriteProtect = false;
             }
@@ -446,7 +437,7 @@ type PlainFileMedia_Test () =
                 s.Write( wrotedata, 0, wrotedata.Length )
                 s.Close()
 
-            let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+            let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
             let pr = new PrivateCaller( f )
             let vfs = pr.GetField( "m_vfile" ) :?> FileStream[]
 
@@ -498,7 +489,6 @@ type PlainFileMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = testfname;
-            MaxMultiplicity = 1u;
             QueueWaitTimeOut = 100;
             WriteProtect = false;
         }
@@ -509,7 +499,7 @@ type PlainFileMedia_Test () =
             s.SetLength( 4096L )
             s.Close()
 
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let pr = new PrivateCaller( f )
 
         let vfs = pr.GetField( "m_vfile" ) :?> FileStream[]
@@ -591,7 +581,6 @@ type PlainFileMedia_Test () =
                 IdentNumber = mediaidx_me.fromPrim 0u;
                 MediaName = "";
                 FileName = testfname;
-                MaxMultiplicity = 1u;
                 QueueWaitTimeOut = 1000;
                 WriteProtect = false;
             }
@@ -602,7 +591,7 @@ type PlainFileMedia_Test () =
                 s.SetLength( 4096L )
                 s.Close()
 
-            let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+            let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
             let pr = new PrivateCaller( f )
 
             let vfs = pr.GetField( "m_vfile" ) :?> FileStream[]
@@ -649,7 +638,6 @@ type PlainFileMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = testfname;
-            MaxMultiplicity = 1u;
             QueueWaitTimeOut = 1000;
             WriteProtect = false;
         }
@@ -660,7 +648,7 @@ type PlainFileMedia_Test () =
             s.SetLength( 4096L )
             s.Close()
 
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let pr = new PrivateCaller( f )
 
         let vfs = pr.GetField( "m_vfile" ) :?> FileStream[]
@@ -708,7 +696,6 @@ type PlainFileMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = testfname;
-            MaxMultiplicity = 1u;
             QueueWaitTimeOut = 1000;
             WriteProtect = false;
         }
@@ -719,7 +706,7 @@ type PlainFileMedia_Test () =
             s.SetLength( 4096L )
             s.Close()
 
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let pr = new PrivateCaller( f )
 
         let vfs = pr.GetField( "m_vfile" ) :?> FileStream[]
@@ -774,7 +761,6 @@ type PlainFileMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = testfname;
-            MaxMultiplicity = 1u;
             QueueWaitTimeOut = 1000;
             WriteProtect = false;
         }
@@ -788,7 +774,7 @@ type PlainFileMedia_Test () =
             s.Write( wrotedata, 0, wrotedata.Length )
             s.Close()
 
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let pr = new PrivateCaller( f )
 
         let vfs = pr.GetField( "m_vfile" ) :?> FileStream[]
@@ -850,7 +836,6 @@ type PlainFileMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = testfname;
-            MaxMultiplicity = 1u;
             QueueWaitTimeOut = 1000;
             WriteProtect = false;
         }
@@ -861,7 +846,7 @@ type PlainFileMedia_Test () =
             s.SetLength( 4096L )
             s.Close()
 
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let pr = new PrivateCaller( f )
 
         let vfs = pr.GetField( "m_vfile" ) :?> FileStream[]
@@ -918,7 +903,6 @@ type PlainFileMedia_Test () =
                 IdentNumber = mediaidx_me.fromPrim 0u;
                 MediaName = "";
                 FileName = testfname;
-                MaxMultiplicity = 1u;
                 QueueWaitTimeOut = 1000;
                 WriteProtect = false;
             }
@@ -930,7 +914,7 @@ type PlainFileMedia_Test () =
                 s.Write( Array.zeroCreate<char>( wBlockSize * 8 ) )
                 s.Close()
 
-            let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+            let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
             let sourcei : CommandSourceInfo =
                 {
                     I_TNexus = new ITNexus( "Initiator", isid_me.zero, "Target", tpgt_me.zero )
@@ -992,7 +976,6 @@ type PlainFileMedia_Test () =
                 IdentNumber = mediaidx_me.fromPrim 0u;
                 MediaName = "";
                 FileName = testfname;
-                MaxMultiplicity = 1u;
                 QueueWaitTimeOut = 1000;
                 WriteProtect = false;
             }
@@ -1005,7 +988,7 @@ type PlainFileMedia_Test () =
                 s.Write( Array.zeroCreate<byte>( wBlockSize * 8 ), 0, wBlockSize * 8 )
                 s.Close()
 
-            let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+            let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
             let sourcei : CommandSourceInfo =
                 {
                     I_TNexus = new ITNexus( "Initiator", isid_me.zero, "Target", tpgt_me.zero )
@@ -1106,7 +1089,6 @@ type PlainFileMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = testfname;
-            MaxMultiplicity = 1u;
             QueueWaitTimeOut = 100;
             WriteProtect = false;
         }
@@ -1117,7 +1099,7 @@ type PlainFileMedia_Test () =
             s.SetLength( 4096L )
             s.Close()
 
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let pr = new PrivateCaller( f )
 
         let vfs = pr.GetField( "m_vfile" ) :?> FileStream[]
@@ -1203,7 +1185,6 @@ type PlainFileMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = testfname;
-            MaxMultiplicity = 1u;
             QueueWaitTimeOut = 1000;
             WriteProtect = false;
         }
@@ -1214,7 +1195,7 @@ type PlainFileMedia_Test () =
             s.SetLength( 4096L )
             s.Close()
 
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let pr = new PrivateCaller( f )
 
         let vfs = pr.GetField( "m_vfile" ) :?> FileStream[]
@@ -1263,7 +1244,6 @@ type PlainFileMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = testfname;
-            MaxMultiplicity = 1u;
             QueueWaitTimeOut = 1000;
             WriteProtect = false;
         }
@@ -1274,7 +1254,7 @@ type PlainFileMedia_Test () =
             s.SetLength( 4096L )
             s.Close()
 
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let pr = new PrivateCaller( f )
 
         let vfs = pr.GetField( "m_vfile" ) :?> FileStream[]
@@ -1322,7 +1302,6 @@ type PlainFileMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = testfname;
-            MaxMultiplicity = 1u;
             QueueWaitTimeOut = 1000;
             WriteProtect = false;
         }
@@ -1333,7 +1312,7 @@ type PlainFileMedia_Test () =
             s.SetLength( 4096L )
             s.Close()
 
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let pr = new PrivateCaller( f )
 
         let vfs = pr.GetField( "m_vfile" ) :?> FileStream[]
@@ -1388,7 +1367,6 @@ type PlainFileMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = testfname;
-            MaxMultiplicity = 1u;
             QueueWaitTimeOut = 1000;
             WriteProtect = false;
         }
@@ -1399,7 +1377,7 @@ type PlainFileMedia_Test () =
             s.SetLength( 4096L )
             s.Close()
 
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let pr = new PrivateCaller( f )
 
         let vfs = pr.GetField( "m_vfile" ) :?> FileStream[]
@@ -1455,7 +1433,6 @@ type PlainFileMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = testfname;
-            MaxMultiplicity = 1u;
             QueueWaitTimeOut = 1000;
             WriteProtect = true;
         }
@@ -1467,7 +1444,7 @@ type PlainFileMedia_Test () =
             s.Write( Array.zeroCreate<char>( wBlockSize * 8 ) )
             s.Close()
 
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let sourcei : CommandSourceInfo =
             {
                 I_TNexus = new ITNexus( "Initiator", isid_me.zero, "Target", tpgt_me.zero )
@@ -1502,7 +1479,6 @@ type PlainFileMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = testfname;
-            MaxMultiplicity = 16u;
             QueueWaitTimeOut = 1000;
             WriteProtect = false;
         }
@@ -1513,7 +1489,7 @@ type PlainFileMedia_Test () =
             s.Write( Array.zeroCreate<char>( 512 * 16 ) )
             s.Close()
 
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         let sourcei : CommandSourceInfo =
             {
@@ -1542,7 +1518,6 @@ type PlainFileMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = testfname;
-            MaxMultiplicity = 16u;
             QueueWaitTimeOut = 1000;
             WriteProtect = false;
         }
@@ -1552,7 +1527,7 @@ type PlainFileMedia_Test () =
             s.Write( Array.zeroCreate<char>( 512 * 16 ) )
             s.Close()
 
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
         let r =
             f.MediaControl( MediaCtrlReq.U_Debug( MediaCtrlReq.U_GetAllTraps() ) )
@@ -1577,7 +1552,6 @@ type PlainFileMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = testfname;
-            MaxMultiplicity = 16u;
             QueueWaitTimeOut = 1000;
             WriteProtect = false;
         }
@@ -1587,7 +1561,7 @@ type PlainFileMedia_Test () =
             s.Write( Array.zeroCreate<char>( 512 * 16 ) )
             s.Close()
 
-        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL ) :> IMedia
+        let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         Assert.True(( f.GetSubMedia() = [] ))
 
         k1.NoticeTerminate()

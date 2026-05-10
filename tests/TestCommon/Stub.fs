@@ -157,7 +157,7 @@ type public CStatus_Stub() =
     let mutable f_CreateNewSession : ( ITNexus -> TSIH_T -> IscsiNegoParamSW -> CMDSN_T -> ISession voption ) option = None
     let mutable f_RemoveSession : ( TSIH_T -> unit ) option = None
     let mutable f_GetLU : ( LUN_T -> ILU voption ) option = None
-    let mutable f_CreateMedia : ( Haruka.IODataTypes.TargetGroupConf.T_MEDIA -> LUN_T -> IKiller -> IMedia ) option = None
+    let mutable f_CreateMedia : ( Haruka.IODataTypes.TargetGroupConf.T_MEDIA -> LUN_T -> uint32 -> IKiller -> IMedia ) option = None
     let mutable f_NotifyLUReset : ( LUN_T -> ILU -> unit ) option = None
     let mutable f_ProcessControlRequest : ( unit -> System.Threading.Tasks.Task ) option = None
     let mutable f_Start : ( unit -> unit ) option = None
@@ -220,8 +220,8 @@ type public CStatus_Stub() =
             f_RemoveSession.Value tsih
         override _.GetLU ( argLUN : LUN_T ) : ILU voption =
             f_GetLU.Value argLUN
-        override _.CreateMedia ( confInfo : Haruka.IODataTypes.TargetGroupConf.T_MEDIA ) ( lun : LUN_T ) ( argKiller : IKiller ) : IMedia =
-            f_CreateMedia.Value confInfo lun argKiller
+        override _.CreateMedia ( confInfo : Haruka.IODataTypes.TargetGroupConf.T_MEDIA ) ( lun : LUN_T ) ( multiplicity : uint32 ) ( argKiller : IKiller ) : IMedia =
+            f_CreateMedia.Value confInfo lun multiplicity argKiller
         override _.NotifyLUReset ( lun : LUN_T ) ( lu : ILU ) : unit =
             f_NotifyLUReset.Value lun lu
         override _.ProcessControlRequest() : System.Threading.Tasks.Task =

@@ -73,7 +73,6 @@ type ServerStatus_Test1() =
         IdentNumber = mediaidx_me.fromPrim 1u;
         MediaName = "";
         FileName = "";
-        MaxMultiplicity = Constants.PLAINFILE_DEF_MAXMULTIPLICITY;
         QueueWaitTimeOut = Constants.PLAINFILE_DEF_QUEUEWAITTIMEOUT;
         WriteProtect = false;
     }
@@ -777,7 +776,6 @@ type ServerStatus_Test1() =
                             IdentNumber = mediaidx_me.fromPrim 1u;
                             MediaName = "";
                             FileName = "aaa";
-                            MaxMultiplicity = Constants.PLAINFILE_MIN_MAXMULTIPLICITY;
                             QueueWaitTimeOut = Constants.PLAINFILE_MIN_QUEUEWAITTIMEOUT;
                             WriteProtect = false;
                         });

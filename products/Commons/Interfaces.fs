@@ -1937,6 +1937,9 @@ type IStatus =
     /// <param name="lun">
     ///   LUN value of LU that host created media object.
     /// </param>
+    /// <param name="multiplicity">
+    ///   Maximum number of simultaneous accesses.
+    /// </param>
     /// <param name="killer">
     ///   Killer object that apply create media object.
     /// </param>
@@ -1946,6 +1949,7 @@ type IStatus =
     abstract CreateMedia :
         confInfo : TargetGroupConf.T_MEDIA ->
         lun : LUN_T ->
+        multiplicity : uint32 ->
         killer : IKiller ->
         IMedia
 
