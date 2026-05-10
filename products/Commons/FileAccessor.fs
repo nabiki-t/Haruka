@@ -14,6 +14,7 @@ namespace Haruka.Commons
 open System
 open System.IO
 open System.Collections.Concurrent
+open System.Threading
 open System.Threading.Tasks
 
 open Haruka.Constants
@@ -61,36 +62,10 @@ type FileAccessor ( m_FileName : string, m_Multiplicity : uint32, m_ReadOnly : b
         q
 
     /// <summary>
-    ///  Access the file using an open stream.
-    /// </summary>
-    /// <param name="operationName">
-    ///  Function name that is used for error message.
-    /// </param>
-    /// <param name="f">
-    ///  The function.
-    /// </param>
-    let withStreamOrFail ( operationName : string ) ( f : Stream -> Task<'T> ) : Task<'T> =
-        task {
-            let r, fs = streamQueue.TryDequeue()
-            if not r then
-                sprintf "No available stream for %s (exceeds multiplicity %d)" operationName m_Multiplicity
-                |> InvalidOperationException
-                |> raise
-            try
-                let! r = Functions.RetryAsync2 ( fun () -> f fs ) ( fun _ -> false )
-                match r with
-                | Ok( x ) ->
-                    return x
-                | Error( x ) ->
-                    return ( raise <| IOException( x ) )
-            finally
-                streamQueue.Enqueue(fs)
-        }
-
-    /// <summary>
     ///  Get the stream.
     /// </summary>
     let getFreeStream() : Stream =
+
         let r, fs = streamQueue.TryDequeue()
         if not r then
             sprintf "No available stream. Exceeds multiplicity %d" m_Multiplicity
@@ -117,15 +92,15 @@ type FileAccessor ( m_FileName : string, m_Multiplicity : uint32, m_ReadOnly : b
     /// <summary>
     /// Close the file
       /// </summary>
-    member _.Close() : Task<unit> =
-        task {
-            for s in streams do
+    member _.Close() : unit =
+        for i = 0 to streams.Length - 1 do
+            let p = Interlocked.Exchange( &streams.[i], null )
+            if p <> null then
                 try
-                    s.Close()
-                    s.Dispose()
-                with _ ->
-                    ()
-        }
+                    p.Close()
+                    p.Dispose()
+                with _ -> ()
+        streamQueue.Clear()
 
     /// <summary>
     ///  Read data from the file.

@@ -228,7 +228,7 @@ type FileAccessorTest() =
                 ()
             | _ ->
                 Assert.Fail __LINE__
-            do! fa.Close()
+            fa.Close()
             File.Delete fname
         }
 
@@ -252,7 +252,7 @@ type FileAccessorTest() =
             for i = 0 to len - 1 do
                 Assert.True(( wbuf.[ i + int pos ] = wbuf2.[ i + 10 ] ))
 
-            do! fa.Close()
+            fa.Close()
             File.Delete fname
         }
 
@@ -303,7 +303,7 @@ type FileAccessorTest() =
 
             for _ = 1 to int Constants.LU_MAX_MULTIPLICITY do
                 sm.Release() |> ignore
-            do! fa.Close()
+            fa.Close()
             File.Delete fname
         }
 
@@ -329,7 +329,7 @@ type FileAccessorTest() =
             | _ ->
                 Assert.Fail __LINE__
 
-            do! fa.Close()
+            fa.Close()
             File.Delete fname
         }
 
@@ -356,7 +356,7 @@ type FileAccessorTest() =
             | _ ->
                 Assert.Fail __LINE__
 
-            do! fa.Close()
+            fa.Close()
             File.Delete fname
         }
 
@@ -390,7 +390,7 @@ type FileAccessorTest() =
                 Assert.Fail __LINE__
             Assert.True(( cnt = 1 ))
 
-            do! fa.Close()
+            fa.Close()
             File.Delete fname
         }
 
@@ -427,7 +427,7 @@ type FileAccessorTest() =
                 Assert.Fail __LINE__
             Assert.True(( cnt = 3 ))
 
-            do! fa.Close()
+            fa.Close()
             File.Delete fname
         }
 
@@ -437,13 +437,13 @@ type FileAccessorTest() =
             let fname = Path.GetTempFileName()
             File.WriteAllBytes( fname, [| 0uy |] )
             let fa = FileAccessor( fname, 1u, true )
-            do! fa.Close()
+            fa.Close()
             try
                 let buf = Array.zeroCreate<byte> 1
                 do! fa.Read 0UL ( ArraySegment buf )
                 Assert.Fail __LINE__
             with
-            | :? ObjectDisposedException ->
+            | :? InvalidOperationException ->
                 ()
             | _ ->
                 Assert.Fail __LINE__
@@ -476,7 +476,7 @@ type FileAccessorTest() =
                 ()
             | _ ->
                 Assert.Fail __LINE__
-            do! fa.Close()
+            fa.Close()
             File.Delete fname
         }
 
@@ -498,7 +498,7 @@ type FileAccessorTest() =
 
             let fa = FileAccessor( fname, 1u, false )
             do! fa.Write pos ( ArraySegment( wbuf2, 10, len ) )
-            do! fa.Close()
+            fa.Close()
 
             for i = 0 to len - 1 do
                 wbuf.[ i + int pos ] <- wbuf2.[ i + 10 ]
@@ -523,7 +523,7 @@ type FileAccessorTest() =
             | _ ->
                 Assert.Fail __LINE__
 
-            do! fa.Close()
+            fa.Close()
             File.Delete fname
         }
 
@@ -575,7 +575,7 @@ type FileAccessorTest() =
 
             for _ = 1 to int Constants.LU_MAX_MULTIPLICITY do
                 sm.Release() |> ignore
-            do! fa.Close()
+            fa.Close()
             File.Delete fname
         }
 
@@ -601,7 +601,7 @@ type FileAccessorTest() =
             | _ ->
                 Assert.Fail __LINE__
 
-            do! fa.Close()
+            fa.Close()
             File.Delete fname
         }
 
@@ -628,7 +628,7 @@ type FileAccessorTest() =
             | _ ->
                 Assert.Fail __LINE__
 
-            do! fa.Close()
+            fa.Close()
             File.Delete fname
         }
 
@@ -662,7 +662,7 @@ type FileAccessorTest() =
                 Assert.Fail __LINE__
             Assert.True(( cnt = 1 ))
 
-            do! fa.Close()
+            fa.Close()
             File.Delete fname
         }
 
@@ -699,7 +699,7 @@ type FileAccessorTest() =
                 Assert.Fail __LINE__
             Assert.True(( cnt = 3 ))
 
-            do! fa.Close()
+            fa.Close()
             File.Delete fname
         }
 
@@ -709,13 +709,13 @@ type FileAccessorTest() =
             let fname = Path.GetTempFileName()
             File.WriteAllBytes( fname, [| 0uy |] )
             let fa = FileAccessor( fname, 1u, false )
-            do! fa.Close()
+            fa.Close()
             try
                 let buf = Array.zeroCreate<byte> 1
                 do! fa.Write 0UL ( ArraySegment buf )
                 Assert.Fail __LINE__
             with
-            | :? ObjectDisposedException ->
+            | :? InvalidOperationException ->
                 ()
             | _ ->
                 Assert.Fail __LINE__
@@ -736,7 +736,7 @@ type FileAccessorTest() =
                 ()
             | _ ->
                 Assert.Fail __LINE__
-            do! fa.Close()
+            fa.Close()
             File.Delete fname
         }
 
@@ -755,7 +755,7 @@ type FileAccessorTest() =
 
             let fa = FileAccessor( fname, 1u, false )
             do! fa.SetFileSize fsizeb
-            do! fa.Close()
+            fa.Close()
 
             Assert.True(( ( FileInfo fname ).Length = int64 fsizeb ))
             File.Delete fname
@@ -774,7 +774,7 @@ type FileAccessorTest() =
                 ()
             | _ ->
                 Assert.Fail __LINE__
-            do! fa.Close()
+            fa.Close()
             File.Delete fname
         }
 
@@ -820,7 +820,7 @@ type FileAccessorTest() =
 
             for _ = 1 to int Constants.LU_MAX_MULTIPLICITY do
                 sm.Release() |> ignore
-            do! fa.Close()
+            fa.Close()
             File.Delete fname
         }
 
@@ -850,7 +850,7 @@ type FileAccessorTest() =
                 Assert.Fail __LINE__
             Assert.True(( cnt = 1 ))
 
-            do! fa.Close()
+            fa.Close()
             File.Delete fname
         }
 
@@ -883,7 +883,7 @@ type FileAccessorTest() =
                 Assert.Fail __LINE__
             Assert.True(( cnt = 3 ))
 
-            do! fa.Close()
+            fa.Close()
             File.Delete fname
         }
 
@@ -892,13 +892,13 @@ type FileAccessorTest() =
         task {
             let fname = Path.GetTempFileName()
             let fa = FileAccessor( fname, 1u, false )
-            do! fa.Close()
+            fa.Close()
 
             try
                 do! fa.SetFileSize 0UL
                 Assert.Fail __LINE__
             with
-            | :? IOException ->
+            | :? InvalidOperationException ->
                 ()
             | _ ->
                 Assert.Fail __LINE__
@@ -922,7 +922,7 @@ type FileAccessorTest() =
             let r = fa.GetFileSize()
             Assert.True(( r = fsizea ))
 
-            do! fa.Close()
+            fa.Close()
             File.Delete fname
         }
 
@@ -971,6 +971,16 @@ type FileAccessorTest() =
 
             for _ = 1 to int Constants.LU_MAX_MULTIPLICITY do
                 sm.Release() |> ignore
-            do! fa.Close()
+            fa.Close()
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.Close_001 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, true )
+            fa.Close()
+            fa.Close()
             File.Delete fname
         }
