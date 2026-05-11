@@ -73,7 +73,7 @@ type ServerStatus_Test1() =
         IdentNumber = mediaidx_me.fromPrim 1u;
         MediaName = "";
         FileName = "";
-        QueueWaitTimeOut = Constants.PLAINFILE_DEF_QUEUEWAITTIMEOUT;
+        BlockSize = Blocksize.BS_512;
         WriteProtect = false;
     }
 
@@ -776,7 +776,7 @@ type ServerStatus_Test1() =
                             IdentNumber = mediaidx_me.fromPrim 1u;
                             MediaName = "";
                             FileName = "aaa";
-                            QueueWaitTimeOut = Constants.PLAINFILE_MIN_QUEUEWAITTIMEOUT;
+                            BlockSize = Blocksize.BS_512;
                             WriteProtect = false;
                         });
                         FallbackBlockSize = Blocksize.BS_512;

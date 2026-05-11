@@ -337,6 +337,14 @@ type MemBufferMedia
         override _.BlockCount = m_BlockCount
 
         // ------------------------------------------------------------------------
+        // Get block size
+        override _.BlockSize =
+            if m_BlockSize = 512UL then
+                Blocksize.BS_512
+            else
+                Blocksize.BS_4096
+
+        // ------------------------------------------------------------------------
         // Get write protect
         override _.WriteProtect =
             false

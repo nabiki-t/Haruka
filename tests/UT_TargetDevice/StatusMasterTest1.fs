@@ -1218,6 +1218,7 @@ type StatusMaster_Test1 () =
                            <IdentNumber>1</IdentNumber>
                            <MediaName></MediaName>
                            <FileName>%s</FileName>
+                           <BlockSize>512</BlockSize>
                            <WriteProtect>false</WriteProtect>
                          </PlainFile>
                        </Peripheral>
@@ -1355,7 +1356,7 @@ type StatusMaster_Test1 () =
             IdentNumber = mediaidx_me.fromPrim 1u;
             MediaName = "";
             FileName = Functions.AppendPathName pDirName "a.txt";
-            QueueWaitTimeOut = 1;
+            BlockSize = Blocksize.BS_512;
             WriteProtect = false;
         } )
 

@@ -392,7 +392,7 @@ type CommandRunner_Test3() =
                 IdentNumber = mediaidx_me.fromPrim 1u;
                 MediaName = "";
                 FileName = "";
-                QueueWaitTimeOut = 0;
+                BlockSize = Blocksize.BS_512;
                 WriteProtect = false;
             }
             new ConfNode_PlainFileMedia( st, cnr, cnr.NextID, conf )
@@ -726,7 +726,7 @@ type CommandRunner_Test3() =
                 IdentNumber = mediaidx_me.fromPrim 1u;
                 MediaName = "";
                 FileName = "";
-                QueueWaitTimeOut = 0;
+                BlockSize = Blocksize.BS_512;
                 WriteProtect = false;
             }
             new ConfNode_PlainFileMedia( st, cnr, cnr.NextID, conf )

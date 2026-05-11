@@ -1896,18 +1896,6 @@ module Constants =
     /// The block size of media reported to the initiator.
     let MEDIA_BLOCK_SIZE : uint64 =
         4096UL
-
-    /// Minimum queue wait timeout value in millisecond for plain file media.
-    let PLAINFILE_MIN_QUEUEWAITTIMEOUT : int =
-        50
-
-    /// Maximum queue wait timeout value in millisecond for plain file media.
-    let PLAINFILE_MAX_QUEUEWAITTIMEOUT : int =
-        3000000
-
-    /// Default queue wait timeout value in millisecond for plain file media.
-    let PLAINFILE_DEF_QUEUEWAITTIMEOUT : int =
-        10000
     
     /// Buffer line size of Memory buffer media in block count.
     /// If block size(MEDIA_BLOCK_SIZE) is 512B and line size 64MB, it should be 131072 blocks.

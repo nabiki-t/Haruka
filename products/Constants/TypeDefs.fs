@@ -391,6 +391,14 @@ type Blocksize =
         Blocksize.BS_4096;
     |]
 
+/// Policy for determining block size.
+[<Struct; IsReadOnly>]
+type BlocksizePolicy =
+    | BSP_ANY           // It can accommodate any block size.
+    | BSP_CONFIG        // Determined by the configuration
+    | BPS_MEDIA         // It cannot be determined without accessing the media.
+    | BSP_ERROR         // There are inconsistencies in the configuration.
+
 
 //=============================================================================
 // Measure type definitions.

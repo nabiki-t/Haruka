@@ -1682,20 +1682,25 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let n = ss.UpdatePlainFileMediaNode x nextVal
                     return Some ( ss, cc, ( n :> IConfigureNode ) )
 
-                | "QUEUEWAITTIMEOUT" ->
+                | "BLOCKSIZE" ->
                     let r, v = Int32.TryParse entValue
                     if not r then
-                        m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "int" )
+                        m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "BlockSize" )
                         |> this.Output 0
                         return Some ( ss, cc, cn )
                     else
-                        let nextVal = {
-                            x.Values with
-                                QueueWaitTimeOut = v;
-                        }
-                        do! ss.CheckTargetGroupUnloaded cc x
-                        let n = ss.UpdatePlainFileMediaNode x nextVal
-                        return Some ( ss, cc, ( n :> IConfigureNode ) )
+                        if v <> 512 && v <> 4096 then
+                            m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "BlockSize" )
+                            |> this.Output 0
+                            return Some ( ss, cc, cn )
+                        else
+                            let nextVal = {
+                                x.Values with
+                                    BlockSize = if v = 512 then Blocksize.BS_512 else Blocksize.BS_4096;
+                            }
+                            do! ss.CheckTargetGroupUnloaded cc x
+                            let n = ss.UpdatePlainFileMediaNode x nextVal
+                            return Some ( ss, cc, ( n :> IConfigureNode ) )
 
                 | "WRITEPROTECT" ->
                     let r, v = Boolean.TryParse entValue
@@ -1713,7 +1718,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                         return Some ( ss, cc, ( n :> IConfigureNode ) )
 
                 | _ ->
-                    let paramname = "ID,MediaName,FileName,BlockSize,MaxMultiplicity,QueueWaitTimeOut,WriteProtect"
+                    let paramname = "ID,MediaName,FileName,BlockSize,MaxMultiplicity,BlockSize,WriteProtect"
                     m_Messages.GetMessage( "CMDMSG_UNKNOWN_PARAMETER_NAME", paramname )
                     |> this.Output 0
                     return Some ( ss, cc, cn )
@@ -2943,7 +2948,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     IdentNumber = newIdent;
                     MediaName = "";
                     FileName = fname;
-                    QueueWaitTimeOut = Constants.PLAINFILE_DEF_QUEUEWAITTIMEOUT;
+                    BlockSize = Blocksize.BS_512;
                     WriteProtect = false;
                 }
                 do! ss.CheckTargetGroupUnloaded cc cn

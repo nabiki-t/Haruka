@@ -477,7 +477,7 @@ type CommandRunner_Test1() =
             IdentNumber = mediaidx_me.fromPrim 1u;
             MediaName = "";
             FileName = "";
-            QueueWaitTimeOut = 0;
+            BlockSize = Blocksize.BS_512;
             WriteProtect = false;
         }
         let cnr = new ConfNodeRelation()

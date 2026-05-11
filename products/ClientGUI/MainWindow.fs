@@ -2356,7 +2356,7 @@ type MainWindow( m_ExeDir : string ) as this =
             IdentNumber = newIdent;
             MediaName = sprintf "PlainFile_%d" newIdent;
             FileName = "";
-            QueueWaitTimeOut = Constants.PLAINFILE_DEF_QUEUEWAITTIMEOUT;
+            BlockSize = Blocksize.BS_512;
             WriteProtect = false;
         }
         let newnode = ss.AddPlainFileMediaNode selectedNode conf

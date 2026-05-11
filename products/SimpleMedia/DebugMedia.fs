@@ -307,13 +307,16 @@ type DebugMedia
                         | MediaCtrlReq.U_Resume( y ) ->
                             this.MediaControl_Resume y
                     return MediaCtrlRes.U_Debug result
-//                | _ ->
-//                    return MediaCtrlRes.U_Unexpected( sprintf "Unexpected request. File=%s, Line=%d" __SOURCE_FILE__ __LINE__ )
             }
 
         // ------------------------------------------------------------------------
         // Get block count
         override _.BlockCount = m_Peripheral.BlockCount
+
+        // ------------------------------------------------------------------------
+        // Get block size
+        override _.BlockSize =
+            m_Peripheral.BlockSize
 
         // ------------------------------------------------------------------------
         // Get write protect

@@ -72,7 +72,7 @@ type ConfNode_PlainFileMedia(
             IdentNumber = Functions.SearchAndConvert d "ID" ( UInt32.Parse >> mediaidx_me.fromPrim ) mediaidx_me.zero;
             MediaName = Functions.SearchAndConvert d "MediaName" id "";
             FileName = Functions.SearchAndConvert d "FileName" id "";
-            QueueWaitTimeOut = Functions.SearchAndConvert d "QueueWaitTimeOut" Int32.Parse 0;
+            BlockSize = Functions.SearchAndConvert d "BlockSize" Blocksize.fromStringValue Blocksize.BS_512;
             WriteProtect = Functions.SearchAndConvert d "WriteProtect" bool.Parse false;
         }
         new ConfNode_PlainFileMedia( argMessageTable, argConfNodes, newNodeID, conf )
@@ -103,16 +103,6 @@ type ConfNode_PlainFileMedia(
                 let maxr = Constants.MAX_FILENAME_STR_LENGTH
                 if v < 1 || maxr < v then
                     let msg = m_MessageTable.GetMessage( "CHKMSG_INVALID_FILE_NAME_LENGTH", maxr.ToString() ) 
-                    ( curID, msg ) :: argmsg
-                else
-                    argmsg
-            )
-            |> ( fun argmsg ->
-                let v = m_Value.QueueWaitTimeOut
-                let minr = Constants.PLAINFILE_MIN_QUEUEWAITTIMEOUT
-                let maxr = Constants.PLAINFILE_MAX_QUEUEWAITTIMEOUT
-                if v < minr || maxr < v then
-                    let msg = m_MessageTable.GetMessage( "CHKMSG_INVALID_QUEUEWAITTIMEOUT", v.ToString(), minr.ToString(), maxr.ToString() ) 
                     ( curID, msg ) :: argmsg
                 else
                     argmsg
@@ -188,7 +178,7 @@ type ConfNode_PlainFileMedia(
                 yield sprintf "  ID(uint32) : %d" m_Value.IdentNumber
                 yield sprintf "  MediaName(string) : %s" m_Value.MediaName
                 yield sprintf "  FileName(string) : %s" m_Value.FileName
-                yield sprintf "  QueueWaitTimeOut(int) : %d" m_Value.QueueWaitTimeOut
+                yield sprintf "  BlockSize : %s" ( Blocksize.toStringName m_Value.BlockSize )
                 yield sprintf "  WriteProtect(bool) : %b" m_Value.WriteProtect
             ]
 
@@ -223,8 +213,8 @@ type ConfNode_PlainFileMedia(
                         Value = m_Value.FileName;
                     }
                     yield {
-                        Name = "QueueWaitTimeOut";
-                        Value = sprintf "%d" m_Value.QueueWaitTimeOut;
+                        Name = "BlockSize";
+                        Value = Blocksize.toStringName m_Value.BlockSize;
                     }
                     yield {
                         Name = "WriteProtect";

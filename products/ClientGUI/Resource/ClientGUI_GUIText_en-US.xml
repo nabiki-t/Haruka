@@ -1036,8 +1036,8 @@
       <Value>File Name</Value>
     </Message>
     <Message>
-      <Name>QueueWaitTimeOutTextBlock</Name>
-      <Value>Queue Wait TimeOut</Value>
+      <Name>BlockSizeTextBlock</Name>
+      <Value>Block Size(512/4096)</Value>
     </Message>
     <Message>
       <Name>WriteProtectTextBlock</Name>

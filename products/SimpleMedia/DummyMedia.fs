@@ -158,6 +158,11 @@ type DummyMedia
         override _.BlockCount = 0UL
 
         // ------------------------------------------------------------------------
+        // Get block size
+        override _.BlockSize =
+            Blocksize.BS_512
+
+        // ------------------------------------------------------------------------
         // Get write protect
         override _.WriteProtect =
             true

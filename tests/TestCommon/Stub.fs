@@ -543,6 +543,7 @@ type public CMedia_Stub() =
     let mutable f_NotifyLUReset : ( ITT_T voption -> CommandSourceInfo voption -> unit ) option = None
     let mutable f_MediaControl : ( MediaCtrlReq.T_Request -> Task<MediaCtrlRes.T_Response> ) option = None
     let mutable f_GetBlockCount : ( unit -> uint64 ) option = None
+    let mutable f_GetBlockSize : ( unit -> Blocksize ) option = None
     let mutable f_GetWriteProtect : ( unit -> bool ) option = None
     let mutable f_GetMediaIndex : ( unit -> MEDIAIDX_T ) option = None
     let mutable f_GetDescriptString : ( unit -> string ) option = None
@@ -564,6 +565,7 @@ type public CMedia_Stub() =
     member _.p_NotifyLUReset with set v = f_NotifyLUReset <- Some( v )
     member _.p_MediaControl with set v = f_MediaControl <- Some( v )
     member _.p_GetBlockCount with set v = f_GetBlockCount <- Some( v )
+    member _.p_GetBlockSize with set v = f_GetBlockSize <- Some( v )
     member _.p_GetWriteProtect with set v = f_GetWriteProtect <- Some( v )
     member _.p_GetMediaIndex with set v = f_GetMediaIndex <- Some( v )
     member _.p_GetDescriptString with set v = f_GetDescriptString <- Some( v )
@@ -610,6 +612,8 @@ type public CMedia_Stub() =
             f_MediaControl.Value request
         override _.BlockCount : uint64 =
             f_GetBlockCount.Value ()
+        override _.BlockSize : Blocksize =
+            f_GetBlockSize.Value ()
         override _.WriteProtect : bool =
             f_GetWriteProtect.Value ()
         override _.MediaIndex =

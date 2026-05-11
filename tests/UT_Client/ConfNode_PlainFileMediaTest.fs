@@ -33,7 +33,7 @@ type ConfNode_PlainFileMedia_Test() =
         IdentNumber = mediaidx_me.fromPrim 1u;
         MediaName = "";
         FileName = "aaaa";
-        QueueWaitTimeOut = Constants.PLAINFILE_MIN_QUEUEWAITTIMEOUT;
+        BlockSize = Blocksize.BS_512;
         WriteProtect = true;
     }
 
@@ -72,7 +72,7 @@ type ConfNode_PlainFileMedia_Test() =
         match n.MediaConfData with
         | TargetGroupConf.T_MEDIA.U_PlainFile( x ) ->
             Assert.True(( x.FileName = "" ))
-            Assert.True(( x.QueueWaitTimeOut = 0 ))
+            Assert.True(( x.BlockSize = Blocksize.BS_512 ))
             Assert.True(( x.WriteProtect = false ))
         | _ -> Assert.Fail __LINE__
 
@@ -98,7 +98,7 @@ type ConfNode_PlainFileMedia_Test() =
                     Value = "tghuk";
                 }
                 {
-                    Name = "QueueWaitTimeOut";
+                    Name = "BlockSize";
                     Value = "75";
                 }
                 {
@@ -114,7 +114,7 @@ type ConfNode_PlainFileMedia_Test() =
         match n.MediaConfData with
         | TargetGroupConf.T_MEDIA.U_PlainFile( x ) ->
             Assert.True(( x.FileName = "tghuk" ))
-            Assert.True(( x.QueueWaitTimeOut = 75 ))
+            Assert.True(( x.BlockSize = Blocksize.BS_512 ))
             Assert.True(( x.WriteProtect = true ))
         | _ -> Assert.Fail __LINE__
 
@@ -129,7 +129,7 @@ type ConfNode_PlainFileMedia_Test() =
             IdentNumber = mediaidx_me.fromPrim 2u;
             MediaName = "ggg";
             FileName = "aaaa";
-            QueueWaitTimeOut = 2;
+            BlockSize = Blocksize.BS_4096;
             WriteProtect = false;
         }
 
@@ -142,7 +142,7 @@ type ConfNode_PlainFileMedia_Test() =
             Assert.True(( x.IdentNumber = mediaidx_me.fromPrim 2u ))
             Assert.True(( x.MediaName = "ggg" ))
             Assert.True(( x.FileName = "aaaa" ))
-            Assert.True(( x.QueueWaitTimeOut = 2 ))
+            Assert.True(( x.BlockSize = Blocksize.BS_4096 ))
             Assert.True(( x.WriteProtect = false ))
         | _ ->
             Assert.Fail __LINE__
@@ -184,7 +184,7 @@ type ConfNode_PlainFileMedia_Test() =
             IdentNumber = mediaidx_me.fromPrim 1u;
             MediaName = "ggg";
             FileName = "";
-            QueueWaitTimeOut = Constants.PLAINFILE_MIN_QUEUEWAITTIMEOUT - 1;
+            BlockSize = Blocksize.BS_512;
             WriteProtect = true;
         }
         let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
@@ -196,7 +196,7 @@ type ConfNode_PlainFileMedia_Test() =
         rel.AddRelation lu.NodeID n.NodeID
         rel.AddRelation n.NodeID d1.NodeID
         let r = n.Validate []
-        Assert.True(( r.Length = 3 ))
+        Assert.True(( r.Length = 2 ))
 
     [<Fact>]
     member _.Validate_IdentNumber_001() =
@@ -283,74 +283,6 @@ type ConfNode_PlainFileMedia_Test() =
         Assert.True(( r.Length = 1 ))
         Assert.True(( fst r.[0] = n.NodeID ))
         Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_INVALID_FILE_NAME_LENGTH" ))
-
-    [<Fact>]
-    member _.Validate_QueueWaitTimeOut_001() =
-        let st = new StringTable( "" )
-        let rel = new ConfNodeRelation()
-        let confVal = {
-            defaultConf with
-                QueueWaitTimeOut = Constants.PLAINFILE_MIN_QUEUEWAITTIMEOUT - 1;
-        }
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
-        let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, confVal ) :> IMediaNode
-        rel.AddNode lu
-        rel.AddNode n
-        rel.AddRelation lu.NodeID n.NodeID
-        let r = n.Validate []
-        Assert.True(( r.Length = 1 ))
-        Assert.True(( fst r.[0] = n.NodeID ))
-        Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_INVALID_QUEUEWAITTIMEOUT" ))
-
-    [<Fact>]
-    member _.Validate_QueueWaitTimeOut_002() =
-        let st = new StringTable( "" )
-        let rel = new ConfNodeRelation()
-        let confVal = {
-            defaultConf with
-                QueueWaitTimeOut = Constants.PLAINFILE_MIN_QUEUEWAITTIMEOUT;
-        }
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
-        let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, confVal ) :> IMediaNode
-        rel.AddNode lu
-        rel.AddNode n
-        rel.AddRelation lu.NodeID n.NodeID
-        let r = n.Validate []
-        Assert.True(( r.Length = 0 ))
-
-    [<Fact>]
-    member _.Validate_QueueWaitTimeOut_003() =
-        let st = new StringTable( "" )
-        let rel = new ConfNodeRelation()
-        let confVal = {
-            defaultConf with
-                QueueWaitTimeOut = Constants.PLAINFILE_MAX_QUEUEWAITTIMEOUT;
-        }
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
-        let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, confVal ) :> IMediaNode
-        rel.AddNode lu
-        rel.AddNode n
-        rel.AddRelation lu.NodeID n.NodeID
-        let r = n.Validate []
-        Assert.True(( r.Length = 0 ))
-
-    [<Fact>]
-    member _.Validate_QueueWaitTimeOut_004() =
-        let st = new StringTable( "" )
-        let rel = new ConfNodeRelation()
-        let confVal = {
-            defaultConf with
-                QueueWaitTimeOut = Constants.PLAINFILE_MAX_QUEUEWAITTIMEOUT + 1;
-        }
-        let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
-        let n = new ConfNode_PlainFileMedia( st, rel, rel.NextID, confVal ) :> IMediaNode
-        rel.AddNode lu
-        rel.AddNode n
-        rel.AddRelation lu.NodeID n.NodeID
-        let r = n.Validate []
-        Assert.True(( r.Length = 1 ))
-        Assert.True(( fst r.[0] = n.NodeID ))
-        Assert.True(( ( snd r.[0] ).StartsWith "CHKMSG_INVALID_QUEUEWAITTIMEOUT" ))
 
     [<Fact>]
     member _.Validate_InvalidRelation_001() =
@@ -677,7 +609,7 @@ type ConfNode_PlainFileMedia_Test() =
             IdentNumber = mediaidx_me.fromPrim 2u;
             MediaName = "gffgg";
             FileName = "aaaa";
-            QueueWaitTimeOut = 2;
+            BlockSize = Blocksize.BS_512;
             WriteProtect = false;
         }
         let n = new ConfNode_PlainFileMedia( st, rel, confnode_me.fromPrim 1UL, confVal2 ) :> IMediaNode
@@ -697,7 +629,7 @@ type ConfNode_PlainFileMedia_Test() =
             IdentNumber = mediaidx_me.fromPrim 2u;
             MediaName = "gffgg";
             FileName = "aaaa";
-            QueueWaitTimeOut = 24;
+            BlockSize = Blocksize.BS_512;
             WriteProtect = true;
         }
         let n = new ConfNode_PlainFileMedia( st, rel, confnode_me.fromPrim 1UL, confVal2 ) :> IMediaNode
@@ -708,7 +640,7 @@ type ConfNode_PlainFileMedia_Test() =
         Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "ID" ) |> _.Value = "2" ))
         Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "MediaName" ) |> _.Value = "gffgg" ))
         Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "FileName" ) |> _.Value = "aaaa" ))
-        Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "QueueWaitTimeOut" ) |> _.Value = "24" ))
+        Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "BlockSize" ) |> _.Value = "512" ))
         Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "WriteProtect" ) |> _.Value = "true" ))
 
 

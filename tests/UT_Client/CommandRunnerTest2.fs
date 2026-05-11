@@ -2770,7 +2770,7 @@ type CommandRunner_Test2() =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = "";
-            QueueWaitTimeOut = 0;
+            BlockSize = Blocksize.BS_512;
             WriteProtect = false;
         }
         let initnode = wnode.CreateUpdatedNode conf
@@ -2820,7 +2820,7 @@ type CommandRunner_Test2() =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = "";
-            QueueWaitTimeOut = 0;
+            BlockSize = Blocksize.BS_512;
             WriteProtect = false;
         }
         let initnode = wnode.CreateUpdatedNode conf
@@ -2858,7 +2858,7 @@ type CommandRunner_Test2() =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = "";
-            QueueWaitTimeOut = 0;
+            BlockSize = Blocksize.BS_512;
             WriteProtect = false;
         }
         let initnode = wnode.CreateUpdatedNode conf
@@ -2888,15 +2888,15 @@ type CommandRunner_Test2() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
-    [<InlineData( "set QUEUEWAITTIMEOUT 555" )>]
-    member _.set_PlainFileMedia_008 ( cmdstr : string ) =
+    [<InlineData( "set BLOCKSIZE 512" )>]
+    member _.set_PlainFileMedia_008_1 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let wnode = CommandRunner_Test1.m_PlainFileMediaNode :?> ConfNode_PlainFileMedia
         let conf : TargetGroupConf.T_PlainFile = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = "";
-            QueueWaitTimeOut = 0;
+            BlockSize = Blocksize.BS_4096;
             WriteProtect = false;
         }
         let initnode = wnode.CreateUpdatedNode conf
@@ -2905,7 +2905,7 @@ type CommandRunner_Test2() =
         ss.p_UpdatePlainFileMediaNode <- ( fun argcn argconf ->
             flg1 <- true
             Assert.True(( argcn = initnode ))
-            Assert.True(( argconf.QueueWaitTimeOut = 555 ))
+            Assert.True(( argconf.BlockSize = Blocksize.BS_512 ))
             initnode.CreateUpdatedNode argconf
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
@@ -2918,7 +2918,7 @@ type CommandRunner_Test2() =
         Assert.True(( cc :> CtrlConnection = r_cc ))
         let expconf = {
             conf with
-                QueueWaitTimeOut = 555;
+                BlockSize = Blocksize.BS_512;
         }
         Assert.True(( ( r_cn :?> IMediaNode ).MediaConfData = TargetGroupConf.U_PlainFile( expconf ) ))
         Assert.True(( flg1 ))
@@ -2926,9 +2926,47 @@ type CommandRunner_Test2() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
-    [<InlineData( "set QUEUEWAITTIMEOUT -2147483649" )>]
-    [<InlineData( "set QUEUEWAITTIMEOUT 2147483648" )>]
-    [<InlineData( "set QUEUEWAITTIMEOUT aaa" )>]
+    [<InlineData( "set BLOCKSIZE 4096" )>]
+    member _.set_PlainFileMedia_008_2 ( cmdstr : string ) =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
+        let wnode = CommandRunner_Test1.m_PlainFileMediaNode :?> ConfNode_PlainFileMedia
+        let conf : TargetGroupConf.T_PlainFile = {
+            IdentNumber = mediaidx_me.fromPrim 0u;
+            MediaName = "";
+            FileName = "";
+            BlockSize = Blocksize.BS_512;
+            WriteProtect = false;
+        }
+        let initnode = wnode.CreateUpdatedNode conf
+        let mutable flg1 = false
+
+        ss.p_UpdatePlainFileMediaNode <- ( fun argcn argconf ->
+            flg1 <- true
+            Assert.True(( argcn = initnode ))
+            Assert.True(( argconf.BlockSize = Blocksize.BS_4096 ))
+            initnode.CreateUpdatedNode argconf
+        )
+        ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
+        Assert.True(( r ))
+        Assert.True(( stat.IsSome ))
+        let r_ss, r_cc, r_cn = stat.Value
+        Assert.True(( ss :> ServerStatus = r_ss ))
+        Assert.True(( cc :> CtrlConnection = r_cc ))
+        let expconf = {
+            conf with
+                BlockSize = Blocksize.BS_4096;
+        }
+        Assert.True(( ( r_cn :?> IMediaNode ).MediaConfData = TargetGroupConf.U_PlainFile( expconf ) ))
+        Assert.True(( flg1 ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Theory>]
+    [<InlineData( "set BLOCKSIZE 0" )>]
+    [<InlineData( "set BLOCKSIZE 4097" )>]
+    [<InlineData( "set BLOCKSIZE aaa" )>]
     member _.set_PlainFileMedia_009 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let initnode = CommandRunner_Test1.m_PlainFileMediaNode :?> ConfNode_PlainFileMedia
@@ -2946,7 +2984,7 @@ type CommandRunner_Test2() =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             FileName = "";
-            QueueWaitTimeOut = 0;
+            BlockSize = Blocksize.BS_512;
             WriteProtect = false;
         }
         let initnode = wnode.CreateUpdatedNode conf

@@ -55,7 +55,7 @@ type BlockDeviceLU_Test () =
                     IdentNumber = mediaidx_me.fromPrim 0u;
                     MediaName = "";
                     FileName = "";
-                    QueueWaitTimeOut = 0;
+                    BlockSize = Blocksize.BS_512;
                     WriteProtect = false;
                 }
             );

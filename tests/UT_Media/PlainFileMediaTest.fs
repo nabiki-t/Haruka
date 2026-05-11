@@ -51,7 +51,7 @@ type PlainFileMedia_Test () =
         IdentNumber = mediaidx_me.fromPrim 0u;
         MediaName = "";
         FileName = fname;
-        QueueWaitTimeOut = 1000;
+        BlockSize = Blocksize.BS_512;
         WriteProtect = false;
     }
 

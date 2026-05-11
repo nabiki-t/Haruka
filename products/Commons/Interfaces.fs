@@ -622,6 +622,12 @@ type IMedia =
 
     // ------------------------------------------------------------------------
     /// <summary>
+    ///   Decided block size.
+    /// </summary>
+    abstract BlockSize : Blocksize
+
+    // ------------------------------------------------------------------------
+    /// <summary>
     ///   Write protect property.
     /// </summary>
     abstract WriteProtect : bool
@@ -1873,35 +1879,7 @@ type IStatus =
         sessionParameter:IscsiNegoParamSW ->
         newCmdSN : CMDSN_T ->
         ISession voption
-(*
-    // ------------------------------------------------------------------------
-    /// <summary>
-    ///   Drop existing session and create a new session, return a new TSIH
-    ///   If specified I_T Nexus Identifier is not exist, this function failed and return 0.
-    /// </summary>
-    /// <param name="argI_TNexus">
-    ///   I_T Next identifier of drop and create session.
-    /// </param>
-    /// <param name="tsih">
-    ///   TSIH of drop and create session.
-    /// </param>
-    /// <param name="sessionParameter">
-    ///   Negotiated parameter, that used in newly created session.
-    /// </param>
-    /// <param name="newCmdSN">
-    ///   CmdSN that used in newly created session.
-    ///   This value is specified in Login request PDU sended from initiator.
-    /// </param>
-    /// <returns>
-    ///   TSIH of newly create session. Or, if it failed to create session, return 0.
-    /// </returns>
-    abstract ReinstateSession :
-        argI_TNexus:ITNexus ->
-        tsih:TSIH_T ->
-        sessionParameter:IscsiNegoParamSW ->
-        newCmdSN : CMDSN_T ->
-        TSIH_T
-*)
+
     // ------------------------------------------------------------------------
     /// <summary>
     ///  Remove terminated session object.

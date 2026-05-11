@@ -150,10 +150,6 @@
       <Value>File Name length must be 0 to {0}.</Value>
     </Message>
     <Message>
-      <Name>MSG_INVALID_QUEUE_WAIT_TIME</Name>
-      <Value>Invalid Queue Wait Time must be {0} to {1}.</Value>
-    </Message>
-    <Message>
       <Name>MSG_INVALID_MEMBUFFER_BYTES_COUNT</Name>
       <Value>Bytes Count must be 0 to 18446744073709551615.</Value>
     </Message>

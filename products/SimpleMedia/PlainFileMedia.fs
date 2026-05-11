@@ -288,6 +288,10 @@ type PlainFileMedia
         override _.BlockCount = uint64( m_FileSize ) / Constants.MEDIA_BLOCK_SIZE
 
         // ------------------------------------------------------------------------
+        // Get block size
+        override _.BlockSize = m_Config.BlockSize
+
+        // ------------------------------------------------------------------------
         // Get write protect
         override _.WriteProtect =
             m_Config.WriteProtect

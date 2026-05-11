@@ -45,12 +45,12 @@
         </Expander>
         
         <!-- Configuration -->
-        <Expander Name="ConfigurationExpander" Header="Configuration" Margin="10,10,5,2" VerticalAlignment="Top" IsExpanded="True" TabIndex="0">
+        <Expander Name="ConfigurationExpander" Header="Configuration" Margin="10,10,5,2" VerticalAlignment="Top" IsExpanded="True" TabIndex="1">
             <StackPanel>
                 <StackPanel Margin="5,2,0,2" Orientation="Horizontal">
-                    <Button Name="EditButton" Content="Edit" Width="60" Margin="5,2,5,2" TabIndex="1" />
-                    <Button Name="ApplyButton" Content="Apply" Width="60" Margin="5,2,5,2" TabIndex="2" />
-                    <Button Name="DiscardButton" Content="Discard" Width="60" Margin="5,2,5,2" TabIndex="3" />
+                    <Button Name="EditButton" Content="Edit" Width="60" Margin="5,2,5,2" TabIndex="2" />
+                    <Button Name="ApplyButton" Content="Apply" Width="60" Margin="5,2,5,2" TabIndex="3" />
+                    <Button Name="DiscardButton" Content="Discard" Width="60" Margin="5,2,5,2" TabIndex="4" />
                 </StackPanel>
                 <TextBlock Name="ErrorMessageLabel" Text="" Margin="5,2,0,2" TextTrimming="CharacterEllipsis"/>
 
@@ -62,7 +62,7 @@
                                 <ColumnDefinition Width="6*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Name="IdentNumberTextBlock" Text="Ident Number" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                            <TextBox Grid.Column="1" Name="IdentNumberTextBox" Text="0" Padding="2,2,2,2" />
+                            <TextBox Grid.Column="1" Name="IdentNumberTextBox" Text="0" Padding="2,2,2,2" TabIndex="5" />
                         </Grid>
                         <Grid Margin="10,2,0,2">
                             <Grid.ColumnDefinitions>
@@ -70,7 +70,7 @@
                                 <ColumnDefinition Width="6*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Name="MediaNameTextBlock" Text="Media Name" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                            <TextBox Grid.Column="1" Name="MediaNameTextBox" Text="0" Padding="2,2,2,2" />
+                            <TextBox Grid.Column="1" Name="MediaNameTextBox" Text="0" Padding="2,2,2,2" TabIndex="6" />
                         </Grid>
                         <Grid Margin="10,2,0,2">
                             <Grid.ColumnDefinitions>
@@ -78,15 +78,18 @@
                                 <ColumnDefinition Width="6*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Name="FileNameTextBlock" Text="File Name" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                            <TextBox Grid.Column="1" Name="FileNameTextBox" Text="0" Padding="2,2,2,2" />
+                            <TextBox Grid.Column="1" Name="FileNameTextBox" Text="0" Padding="2,2,2,2" TabIndex="7" />
                         </Grid>
                         <Grid Margin="10,2,0,2">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="4*" />
                                 <ColumnDefinition Width="6*" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Name="QueueWaitTimeOutTextBlock" Text="Queue Wait TimeOut" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                            <TextBox Grid.Column="1" Name="QueueWaitTimeOutTextBox" Text="0" Padding="2,2,2,2" />
+                            <TextBlock Grid.Column="0" Name="BlockSizeTextBlock" Text="Block Size" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            <ComboBox Grid.Column="1" Name="BlockSizeCombo" SelectedIndex="0" TabIndex="8">
+                                <TextBlock>512</TextBlock>
+                                <TextBlock>4096</TextBlock>
+                            </ComboBox>
                         </Grid>
                         <Grid Margin="10,2,0,2">
                             <Grid.ColumnDefinitions>
@@ -94,7 +97,7 @@
                                 <ColumnDefinition Width="6*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Name="WriteProtectTextBlock" Text="Write Protect" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                            <ComboBox Grid.Column="1" Name="WriteProtectCombo" SelectedIndex="0" TabIndex="26">
+                            <ComboBox Grid.Column="1" Name="WriteProtectCombo" SelectedIndex="0" TabIndex="9">
                                 <TextBlock>True</TextBlock>
                                 <TextBlock>False</TextBlock>
                             </ComboBox>

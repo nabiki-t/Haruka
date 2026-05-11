@@ -138,8 +138,8 @@
       <Value>Too many IP white list conditions count. Must be less than or equal {0}.</Value>
     </Message>
     <Message>
-      <Name>CHKMSG_INVALID_QUEUEWAITTIMEOUT</Name>
-      <Value>Queue wait timeout value {0} is out of range. Must be {1} to {2}.</Value>
+      <Name>CHKMSG_INVALID_BLOCKSIZE</Name>
+      <Value>Block Size value {0} is out of range. Must be 512 or 4096.</Value>
     </Message>
     <Message>
       <Name>CHKMSG_INVALID_RELATION</Name>

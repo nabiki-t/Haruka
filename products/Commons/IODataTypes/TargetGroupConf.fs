@@ -86,7 +86,7 @@ and [<NoComparison>]T_PlainFile = {
     IdentNumber : MEDIAIDX_T;
     MediaName : string;
     FileName : string;
-    QueueWaitTimeOut : int;
+    BlockSize : Blocksize;
     WriteProtect : bool;
 }
 
@@ -325,11 +325,10 @@ type ReaderWriter() =
               </xsd:restriction>
             </xsd:simpleType>
           </xsd:element>
-          <xsd:element name='QueueWaitTimeOut' minOccurs='0' maxOccurs='1' >
+          <xsd:element name='BlockSize' >
             <xsd:simpleType>
-              <xsd:restriction base='xsd:int'>
-                <xsd:minInclusive value='50' />
-                <xsd:maxInclusive value='3000000' />
+              <xsd:restriction base='xsd:string'>
+                <xsd:pattern value='^512|4096$' />
               </xsd:restriction>
             </xsd:simpleType>
           </xsd:element>
@@ -711,12 +710,8 @@ type ReaderWriter() =
                 elem.Element( XName.Get "MediaName" ).Value;
             FileName =
                 elem.Element( XName.Get "FileName" ).Value;
-            QueueWaitTimeOut = 
-                let subElem = elem.Element( XName.Get "QueueWaitTimeOut" )
-                if subElem = null then
-                    10000;
-                else
-                    Int32.Parse( subElem.Value );
+            BlockSize =
+                Blocksize.fromStringValue( elem.Element( XName.Get "BlockSize" ).Value );
             WriteProtect =
                 Boolean.Parse( elem.Element( XName.Get "WriteProtect" ).Value );
         }
@@ -1207,11 +1202,7 @@ type ReaderWriter() =
             if (elem.FileName).Length > 256 then
                 raise <| ConfRWException( "Max value(string) restriction error. FileName" )
             yield sprintf "%s%s<FileName>%s</FileName>" singleIndent indentStr ( ReaderWriter.xmlEncode(elem.FileName) )
-            if (elem.QueueWaitTimeOut) < 50 then
-                raise <| ConfRWException( "Min value(int) restriction error. QueueWaitTimeOut" )
-            if (elem.QueueWaitTimeOut) > 3000000 then
-                raise <| ConfRWException( "Max value(int) restriction error. QueueWaitTimeOut" )
-            yield sprintf "%s%s<QueueWaitTimeOut>%d</QueueWaitTimeOut>" singleIndent indentStr (elem.QueueWaitTimeOut)
+            yield sprintf "%s%s<BlockSize>%s</BlockSize>" singleIndent indentStr ( Blocksize.toStringName (elem.BlockSize) )
             yield sprintf "%s%s<WriteProtect>%b</WriteProtect>" singleIndent indentStr (elem.WriteProtect)
             yield sprintf "%s</%s>" indentStr elemName
         }
