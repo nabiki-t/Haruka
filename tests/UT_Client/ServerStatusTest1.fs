@@ -779,7 +779,6 @@ type ServerStatus_Test1() =
                             BlockSize = Blocksize.BS_512;
                             WriteProtect = false;
                         });
-                        FallbackBlockSize = Blocksize.BS_512;
                         OptimalTransferLength = blkcnt_me.ofUInt32 ( Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH + 1u );
                     });
                 };
@@ -793,7 +792,6 @@ type ServerStatus_Test1() =
                             IdentNumber = mediaidx_me.fromPrim 2u;
                             MediaName = "";
                         });
-                        FallbackBlockSize = Blocksize.BS_4096;
                         OptimalTransferLength = blkcnt_me.ofUInt32 ( Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH + 2u );
                     });
                 }
@@ -807,8 +805,8 @@ type ServerStatus_Test1() =
                             IdentNumber = mediaidx_me.fromPrim 3u;
                             MediaName = "";
                             BytesCount = Constants.MEDIA_BLOCK_SIZE;
+                            BlockSize = Blocksize.BS_512;
                         });
-                        FallbackBlockSize = Blocksize.BS_512;
                         OptimalTransferLength = blkcnt_me.ofUInt32 ( Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH + 3u );
                     });
                 }
@@ -826,7 +824,6 @@ type ServerStatus_Test1() =
                                 MediaName = "";
                             });
                         });
-                        FallbackBlockSize = Blocksize.BS_4096;
                         OptimalTransferLength = blkcnt_me.ofUInt32 ( Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH + 4u );
                     });
                 }
@@ -880,22 +877,18 @@ type ServerStatus_Test1() =
             Assert.True(( lulist.[0].LUN = lun_me.fromPrim 1UL ))
             Assert.True(( lulist.[0].LUName = "a111" ))
             Assert.True(( lulist.[0].MaxMultiplicity = Constants.LU_MIN_MULTIPLICITY + 1u ))
-            Assert.True(( ( lulist.[0] :?> ConfNode_BlockDeviceLU ).FallbackBlockSize = Blocksize.BS_512 ))
             Assert.True(( ( lulist.[0] :?> ConfNode_BlockDeviceLU ).OptimalTransferLength = blkcnt_me.ofUInt32 ( Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH + 1u ) ))
             Assert.True(( lulist.[1].LUN = lun_me.fromPrim 2UL ))
             Assert.True(( lulist.[1].LUName = "a222" ))
             Assert.True(( lulist.[1].MaxMultiplicity = Constants.LU_MIN_MULTIPLICITY + 2u ))
-            Assert.True(( ( lulist.[1] :?> ConfNode_BlockDeviceLU ).FallbackBlockSize = Blocksize.BS_4096 ))
             Assert.True(( ( lulist.[1] :?> ConfNode_BlockDeviceLU ).OptimalTransferLength = blkcnt_me.ofUInt32 ( Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH + 2u ) ))
             Assert.True(( lulist.[2].LUN = lun_me.fromPrim 3UL ))
             Assert.True(( lulist.[2].LUName = "a333" ))
             Assert.True(( lulist.[2].MaxMultiplicity = Constants.LU_MIN_MULTIPLICITY + 3u ))
-            Assert.True(( ( lulist.[2] :?> ConfNode_BlockDeviceLU ).FallbackBlockSize = Blocksize.BS_512 ))
             Assert.True(( ( lulist.[2] :?> ConfNode_BlockDeviceLU ).OptimalTransferLength = blkcnt_me.ofUInt32 ( Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH + 3u ) ))
             Assert.True(( lulist.[3].LUN = lun_me.fromPrim 4UL ))
             Assert.True(( lulist.[3].LUName = "a444" ))
             Assert.True(( lulist.[3].MaxMultiplicity = Constants.LU_MIN_MULTIPLICITY + 4u ))
-            Assert.True(( ( lulist.[3] :?> ConfNode_BlockDeviceLU ).FallbackBlockSize = Blocksize.BS_4096 ))
             Assert.True(( ( lulist.[3] :?> ConfNode_BlockDeviceLU ).OptimalTransferLength = blkcnt_me.ofUInt32 ( Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH + 4u ) ))
 
             let medialist1 = lulist.[0].GetDescendantNodes<IMediaNode>()
@@ -977,7 +970,6 @@ type ServerStatus_Test1() =
                             IdentNumber = mediaidx_me.fromPrim 1u;
                             MediaName = "";
                         });
-                        FallbackBlockSize = Blocksize.BS_512;
                         OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
                     });
                 };
@@ -991,7 +983,6 @@ type ServerStatus_Test1() =
                             IdentNumber = mediaidx_me.fromPrim 2u;
                             MediaName = "";
                         });
-                        FallbackBlockSize = Blocksize.BS_512;
                         OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
                     });
                 }
@@ -1088,7 +1079,6 @@ type ServerStatus_Test1() =
                             IdentNumber = mediaidx_me.fromPrim 1u;
                             MediaName = "";
                         });
-                        FallbackBlockSize = Blocksize.BS_512;
                         OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
                     });
                 };
@@ -1190,7 +1180,6 @@ type ServerStatus_Test1() =
                             IdentNumber = mediaidx_me.fromPrim 1u
                             MediaName = "";
                         });
-                        FallbackBlockSize = Blocksize.BS_512;
                         OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
                     });
                 };
@@ -1204,7 +1193,6 @@ type ServerStatus_Test1() =
                             IdentNumber = mediaidx_me.fromPrim 2u
                             MediaName = "";
                         });
-                        FallbackBlockSize = Blocksize.BS_512;
                         OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
                     });
                 };

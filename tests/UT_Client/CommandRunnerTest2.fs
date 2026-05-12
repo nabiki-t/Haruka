@@ -1805,10 +1805,10 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
         let mutable flg1 = false
 
-        ss.p_UpdateBlockDeviceLUNode <- ( fun argnode arglun argname argmm argfbs argotl ->
+        ss.p_UpdateBlockDeviceLUNode <- ( fun argnode arglun argname argmm argotl ->
             flg1 <- true
             Assert.True(( arglun = lun_me.fromPrim 1234605616436508552UL ))
-            initnode.CreateUpdatedNode arglun argname argmm argfbs argotl
+            initnode.CreateUpdatedNode arglun argname argmm argotl
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
@@ -1821,7 +1821,6 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ILUNode ).LUN = lun_me.fromPrim 1234605616436508552UL ))
         Assert.True(( ( r_cn :?> ILUNode ).LUName = "" ))
         Assert.True(( ( r_cn :?> ILUNode ).MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY ))
-        Assert.True(( ( r_cn :?> ConfNode_BlockDeviceLU ).FallbackBlockSize = Blocksize.BS_512 ))
         Assert.True(( ( r_cn :?> ConfNode_BlockDeviceLU ).OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH ))
         Assert.True(( flg1 ))
         let out_rs = CheckOutputMessage out_ms out_ws "LU" ""
@@ -1846,10 +1845,10 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
         let mutable flg1 = false
 
-        ss.p_UpdateBlockDeviceLUNode <- ( fun argnode arglun argname argmm argfbs argotl ->
+        ss.p_UpdateBlockDeviceLUNode <- ( fun argnode arglun argname argmm argotl ->
             flg1 <- true
             Assert.True(( argname = "bbb" ))
-            initnode.CreateUpdatedNode arglun argname argmm argfbs argotl
+            initnode.CreateUpdatedNode arglun argname argmm argotl
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
@@ -1862,7 +1861,6 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ILUNode ).LUN = lun_me.zero ))
         Assert.True(( ( r_cn :?> ILUNode ).LUName = "bbb" ))
         Assert.True(( ( r_cn :?> ILUNode ).MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY ))
-        Assert.True(( ( r_cn :?> ConfNode_BlockDeviceLU ).FallbackBlockSize = Blocksize.BS_512 ))
         Assert.True(( ( r_cn :?> ConfNode_BlockDeviceLU ).OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH ))
         Assert.True(( flg1 ))
         let out_rs = CheckOutputMessage out_ms out_ws "LU" ""
@@ -1875,10 +1873,10 @@ type CommandRunner_Test2() =
         let initnode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
         let mutable flg1 = false
 
-        ss.p_UpdateBlockDeviceLUNode <- ( fun argnode arglun argname argmm argfbs argotl ->
+        ss.p_UpdateBlockDeviceLUNode <- ( fun argnode arglun argname argmm argotl ->
             flg1 <- true
             Assert.True(( argmm = 2u ))
-            initnode.CreateUpdatedNode arglun argname argmm argfbs argotl
+            initnode.CreateUpdatedNode arglun argname argmm argotl
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
@@ -1891,7 +1889,6 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ILUNode ).LUN = lun_me.zero ))
         Assert.True(( ( r_cn :?> ILUNode ).LUName = "" ))
         Assert.True(( ( r_cn :?> ILUNode ).MaxMultiplicity = 2u ))
-        Assert.True(( ( r_cn :?> ConfNode_BlockDeviceLU ).FallbackBlockSize = Blocksize.BS_512 ))
         Assert.True(( ( r_cn :?> ConfNode_BlockDeviceLU ).OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH ))
         Assert.True(( flg1 ))
         let out_rs = CheckOutputMessage out_ms out_ws "LU" ""
@@ -1910,58 +1907,16 @@ type CommandRunner_Test2() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
-    [<InlineData( "set FALLBACKBLOCKSIZE 512", "512" )>]
-    [<InlineData( "set FALLBACKBLOCKSIZE 4096", "4096" )>]
-    member _.set_BlockDeviceLU_006 ( cmdstr : string ) ( fbsresult : string ) =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
-        let initnode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
-        let mutable flg1 = false
-        let expfbs = Blocksize.fromStringValue fbsresult
-
-        ss.p_UpdateBlockDeviceLUNode <- ( fun argnode arglun argname argmm argfbs argotl ->
-            flg1 <- true
-            Assert.True(( argfbs = expfbs ))
-            initnode.CreateUpdatedNode arglun argname argmm argfbs argotl
-        )
-        ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
-
-        let r, stat = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
-        Assert.True(( r ))
-        Assert.True(( stat.IsSome ))
-        let r_ss, r_cc, r_cn = stat.Value
-        Assert.True(( ss :> ServerStatus = r_ss ))
-        Assert.True(( cc :> CtrlConnection = r_cc ))
-        Assert.True(( ( r_cn :?> ILUNode ).LUN = lun_me.zero ))
-        Assert.True(( ( r_cn :?> ILUNode ).LUName = "" ))
-        Assert.True(( ( r_cn :?> ILUNode ).MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY ))
-        Assert.True(( ( r_cn :?> ConfNode_BlockDeviceLU ).FallbackBlockSize = expfbs ))
-        Assert.True(( ( r_cn :?> ConfNode_BlockDeviceLU ).OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH ))
-        Assert.True(( flg1 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU" ""
-        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
-
-    [<Theory>]
-    [<InlineData( "set FALLBACKBLOCKSIZE -1" )>]
-    [<InlineData( "set FALLBACKBLOCKSIZE aaaaa" )>]
-    member _.set_BlockDeviceLU_007 ( cmdstr : string ) =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
-        let initnode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
-        let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
-        Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
-        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
-
-    [<Theory>]
     [<InlineData( "set OPTIMALTRANSFERLENGTH 200" )>]
     member _.set_BlockDeviceLU_008 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let initnode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
         let mutable flg1 = false
 
-        ss.p_UpdateBlockDeviceLUNode <- ( fun argnode arglun argname argmm argfbs argotl ->
+        ss.p_UpdateBlockDeviceLUNode <- ( fun argnode arglun argname argmm argotl ->
             flg1 <- true
             Assert.True(( argotl = blkcnt_me.ofUInt32 200u ))
-            initnode.CreateUpdatedNode arglun argname argmm argfbs argotl
+            initnode.CreateUpdatedNode arglun argname argmm argotl
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
@@ -1974,7 +1929,6 @@ type CommandRunner_Test2() =
         Assert.True(( ( r_cn :?> ILUNode ).LUN = lun_me.zero ))
         Assert.True(( ( r_cn :?> ILUNode ).LUName = "" ))
         Assert.True(( ( r_cn :?> ILUNode ).MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY ))
-        Assert.True(( ( r_cn :?> ConfNode_BlockDeviceLU ).FallbackBlockSize = Blocksize.BS_512 ))
         Assert.True(( ( r_cn :?> ConfNode_BlockDeviceLU ).OptimalTransferLength = blkcnt_me.ofUInt32 200u ))
         Assert.True(( flg1 ))
         let out_rs = CheckOutputMessage out_ms out_ws "LU" ""
@@ -3043,6 +2997,7 @@ type CommandRunner_Test2() =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 8192UL;
+            BlockSize = Blocksize.BS_512;
         }
         let initnode = wnode.CreateUpdatedNode conf
         let mutable flg1 = false
@@ -3091,6 +3046,7 @@ type CommandRunner_Test2() =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 8192UL;
+            BlockSize = Blocksize.BS_512;
         }
         let initnode = wnode.CreateUpdatedNode conf
         let mutable flg1 = false
@@ -3127,6 +3083,7 @@ type CommandRunner_Test2() =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 8192UL;
+            BlockSize = Blocksize.BS_512;
         }
         let initnode = wnode.CreateUpdatedNode conf
         let mutable flg1 = false
@@ -3167,8 +3124,62 @@ type CommandRunner_Test2() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Theory>]
+    [<InlineData( "4096", "set BLOCKSIZE 512", "512" )>]
+    [<InlineData( "512", "set BLOCKSIZE 4096", "4096" )>]
+    member _.set_MemBufferMedia_006 ( bs1 : string ) ( cmdstr : string ) ( bs2 : string ) =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
+        let wnode = CommandRunner_Test1.m_MemBufferMediaNode :?> ConfNode_MemBufferMedia
+        let conf : TargetGroupConf.T_MemBuffer = {
+            IdentNumber = mediaidx_me.fromPrim 0u;
+            MediaName = "";
+            BytesCount = 8192UL;
+            BlockSize = Blocksize.fromStringValue bs1;
+        }
+        let initnode = wnode.CreateUpdatedNode conf
+        let mutable flg1 = false
+
+        ss.p_UpdateMemBufferMediaNode <- ( fun argcn argconf ->
+            flg1 <- true
+            Assert.True(( argcn = initnode ))
+            Assert.True(( argconf.BlockSize = Blocksize.fromStringValue bs2 ))
+            initnode.CreateUpdatedNode argconf
+        )
+        ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
+        Assert.True(( r ))
+        Assert.True(( stat.IsSome ))
+        let r_ss, r_cc, r_cn = stat.Value
+        Assert.True(( ss :> ServerStatus = r_ss ))
+        Assert.True(( cc :> CtrlConnection = r_cc ))
+        let expconf = {
+            conf with
+                BlockSize = Blocksize.fromStringValue bs2;
+        }
+        Assert.True(( ( r_cn :?> IMediaNode ).MediaConfData = TargetGroupConf.U_MemBuffer( expconf ) ))
+        Assert.True(( flg1 ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Theory>]
+    [<InlineData( "set BLOCKSIZE -1" )>]
+    [<InlineData( "set BLOCKSIZE 0" )>]
+    [<InlineData( "set BLOCKSIZE 511" )>]
+    [<InlineData( "set BLOCKSIZE 513" )>]
+    [<InlineData( "set BLOCKSIZE 4095" )>]
+    [<InlineData( "set BLOCKSIZE 4097" )>]
+    [<InlineData( "set BLOCKSIZE aaa" )>]
+    member _.set_MemBufferMedia_007 ( cmdstr : string ) =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
+        let initnode = CommandRunner_Test1.m_MemBufferMediaNode :?> ConfNode_MemBufferMedia
+        let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
+        Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Theory>]
     [<InlineData( "set aaa -1" )>]
-    member _.set_MemBufferMedia_006 ( cmdstr : string ) =
+    member _.set_MemBufferMedia_008 ( cmdstr : string ) =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
         let initnode = CommandRunner_Test1.m_MemBufferMediaNode :?> ConfNode_MemBufferMedia
         let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )

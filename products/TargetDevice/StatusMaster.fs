@@ -634,7 +634,6 @@ type StatusMaster(
                             IdentNumber = mediaidx_me.zero;
                             MediaName = "";
                         })
-                        FallbackBlockSize = Blocksize.BS_512;
                         OptimalTransferLength = Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH |> blkcnt_me.ofUInt32;
                     }
                     let o = new BlockDeviceLU( BlockDeviceType.BDT_Dummy, this, luinfo.LUN, luinfo.MaxMultiplicity, dummyDeviceConf, luinfo.WorkPath, wKiller ) :> ILU

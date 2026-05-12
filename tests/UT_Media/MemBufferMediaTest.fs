@@ -59,6 +59,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 0UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
 
@@ -73,6 +74,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             BytesCount = 16UL - 1UL;
             MediaName = "";
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -88,6 +90,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 16UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -103,6 +106,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -118,6 +122,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL + 16UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -133,6 +138,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * ( uint64 Array.MaxLength );
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -148,6 +154,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * ( uint64 Array.MaxLength ) + 16UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -163,6 +170,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 2UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -186,6 +194,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 2UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -207,6 +216,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 2UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -230,6 +240,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -243,6 +254,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 16UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -255,6 +267,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 16UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -273,6 +286,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 16UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -295,6 +309,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 16UL * 10UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -313,6 +328,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 16UL * 10UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -335,6 +351,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 16UL * 10UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -357,6 +374,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 16UL * 10UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -375,6 +393,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 16UL * 10UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -397,6 +416,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 2UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -421,6 +441,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 2UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -445,6 +466,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 2UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -469,6 +491,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 3UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -493,6 +516,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 3UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -517,6 +541,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 3UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -541,6 +566,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 3UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -565,6 +591,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 3UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -589,6 +616,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 3UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -613,6 +641,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 16UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -631,6 +660,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 16UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -653,6 +683,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 16UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -675,6 +706,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 16UL * 10UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -693,6 +725,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 16UL * 10UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -715,6 +748,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 16UL * 10UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -737,6 +771,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 16UL * 10UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -755,6 +790,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 16UL * 10UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -777,6 +813,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 2UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -800,6 +837,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 2UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -823,6 +861,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 2UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -847,6 +886,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 3UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -871,6 +911,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 3UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -895,6 +936,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 3UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -920,6 +962,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 3UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -945,6 +988,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 3UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -970,6 +1014,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 3UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -994,6 +1039,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 3UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -1019,6 +1065,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 3UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -1052,6 +1099,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 2UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
@@ -1083,6 +1131,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 2UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL ) :> IMedia
@@ -1104,6 +1153,7 @@ type MemBufferMedia_Test () =
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
             BytesCount = 4UL * 16UL * 2UL;
+            BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
         let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL ) :> IMedia

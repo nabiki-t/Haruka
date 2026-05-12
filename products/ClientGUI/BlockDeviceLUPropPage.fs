@@ -91,7 +91,6 @@ type BlockDeviceLUPropPage(
     let m_LUNTextBox = m_PropPage.FindName( "LUNTextBox" ) :?> TextBox
     let m_LUNameTextBox = m_PropPage.FindName( "LUNameTextBox" ) :?> TextBox
     let m_MaxMultiplicityTextBox = m_PropPage.FindName( "MaxMultiplicityTextBox" ) :?> TextBox
-    let m_FallbackBlockSizeCombo = m_PropPage.FindName( "FallbackBlockSizeCombo" ) :?> ComboBox
     let m_OptimalTransferLengthTextBox = m_PropPage.FindName( "OptimalTransferLengthTextBox" ) :?> TextBox
 
     // Graph Writer object
@@ -282,12 +281,6 @@ type BlockDeviceLUPropPage(
                     raise <| Exception msg
                 v
 
-            let fallbackBlockSize =
-                match m_FallbackBlockSizeCombo.SelectedIndex with
-                | 0 -> Blocksize.BS_512
-                | 1 -> Blocksize.BS_4096
-                | _ -> Blocksize.BS_512
-
             let optimalTransferLength =
                 let mins = sprintf "%d" Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH
                 let maxs = sprintf "%d" Constants.LU_MAX_OPTIMAL_TRANSFER_LENGTH
@@ -302,7 +295,7 @@ type BlockDeviceLUPropPage(
                     raise <| Exception msg
                 blkcnt_me.ofUInt32 v
 
-            let newNode = m_ServerStatus.UpdateBlockDeviceLUNode bdn lun luName maxMultiplicity fallbackBlockSize optimalTransferLength
+            let newNode = m_ServerStatus.UpdateBlockDeviceLUNode bdn lun luName maxMultiplicity optimalTransferLength
             this.ShowConfigValue false false
             m_MainWindow.NoticeUpdateConfig newNode
 
@@ -375,13 +368,6 @@ type BlockDeviceLUPropPage(
 
         m_MaxMultiplicityTextBox.IsEnabled <- editmode && ( not loaded )
         m_MaxMultiplicityTextBox.Text <- sprintf "%d" ( bdn :> ILUNode ).MaxMultiplicity
-
-        m_FallbackBlockSizeCombo.IsEnabled <- editmode && ( not loaded )
-        match bdn.FallbackBlockSize with
-        | Blocksize.BS_512 ->
-            m_FallbackBlockSizeCombo.SelectedIndex <- 0
-        | Blocksize.BS_4096 ->
-            m_FallbackBlockSizeCombo.SelectedIndex <- 1
 
         m_OptimalTransferLengthTextBox.IsEnabled <- editmode && ( not loaded )
         m_OptimalTransferLengthTextBox.Text <- sprintf "%d" bdn.OptimalTransferLength

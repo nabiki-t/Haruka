@@ -1,3 +1,9 @@
+<!--
+==============================================================================
+== Haruka Software Storage.
+== Definition of the Target Group configuration file format.
+-->
+
 <root namespace='Haruka.IODataTypes.TargetGroupConf' class='ReaderWriter' >
   <form name='TargetGroup'>
     <item name='TargetGroupID' constraint='TargetGroupID' />
@@ -34,7 +40,6 @@
   <typedef name='DEVICE' selection='true'>
     <item name='BlockDevice' >
       <item name='Peripheral' constraint='MEDIA' />
-      <item name='FallbackBlockSize' constraint='Blocksize' mincount='0' maxcount='1' defaultref='LU_DEF_FALLBACK_BLOCK_SIZE' />
       <item name='OptimalTransferLength' constraint='BLKCNT32_T' mincount='0' maxcount='1' minvalue='LU_MIN_OPTIMAL_TRANSFER_LENGTH' maxvalue='LU_MAX_OPTIMAL_TRANSFER_LENGTH' defaultref='LU_DEF_OPTIMAL_TRANSFER_LENGTH' />
     </item>
     <item name='DummyDevice' constraint='unit' />
@@ -51,6 +56,7 @@
       <item name='IdentNumber' constraint='MEDIAIDX_T' />
       <item name='MediaName' constraint='string' minvalue='0' maxvalue='MAX_MEDIA_NAME_STR_LENGTH' />
       <item name='BytesCount' constraint='unsignedLong' />
+      <item name='BlockSize' constraint='Blocksize' />
     </item>
     <item name='DummyMedia'>
       <item name='IdentNumber' constraint='MEDIAIDX_T' />

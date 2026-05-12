@@ -59,7 +59,6 @@ type BlockDeviceLU_Test () =
                     WriteProtect = false;
                 }
             );
-            FallbackBlockSize = Blocksize.BS_512;
             OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
         }
         media, sm, new BlockDeviceLU( BlockDeviceType.BDT_Normal, sm, lun_me.zero, 4u, info, Path.GetTempPath(), new HKiller() )

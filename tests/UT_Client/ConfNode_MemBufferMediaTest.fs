@@ -33,6 +33,7 @@ type ConfNode_MemBufferMedia_Test() =
         IdentNumber = mediaidx_me.fromPrim 1u;
         MediaName = "";
         BytesCount = 512UL;
+        BlockSize = Blocksize.BS_512;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -71,6 +72,7 @@ type ConfNode_MemBufferMedia_Test() =
         match n.MediaConfData with
         | TargetGroupConf.T_MEDIA.U_MemBuffer( x ) ->
             Assert.True(( x.BytesCount = 0UL ))
+            Assert.True(( x.BlockSize = Blocksize.BS_512 ))
         | _ -> Assert.Fail __LINE__
 
     [<Fact>]
@@ -83,6 +85,7 @@ type ConfNode_MemBufferMedia_Test() =
             IdentNumber = mediaidx_me.fromPrim 2u;
             MediaName = "ggg";
             BytesCount = 1024UL;
+            BlockSize = Blocksize.BS_4096;
         }
 
         let n2 = ( n :?> ConfNode_MemBufferMedia ).CreateUpdatedNode( confVal2 ) :> IMediaNode
@@ -94,6 +97,7 @@ type ConfNode_MemBufferMedia_Test() =
             Assert.True(( x.IdentNumber = mediaidx_me.fromPrim 2u ))
             Assert.True(( x.MediaName = "ggg" ))
             Assert.True(( x.BytesCount = 1024UL ))
+            Assert.True(( x.BlockSize = Blocksize.BS_4096 ))
         | _ ->
             Assert.Fail __LINE__
 
@@ -505,6 +509,7 @@ type ConfNode_MemBufferMedia_Test() =
             IdentNumber = mediaidx_me.fromPrim 2u;
             MediaName = "ggg";
             BytesCount = 1024UL;
+            BlockSize = Blocksize.BS_512;
         }
         let n = new ConfNode_MemBufferMedia( st, rel, confnode_me.fromPrim 1UL, confVal ) :> IMediaNode
         let v = n.SortKey
@@ -523,13 +528,15 @@ type ConfNode_MemBufferMedia_Test() =
             IdentNumber = mediaidx_me.fromPrim 2u;
             MediaName = "gffgg";
             BytesCount = 999UL;
+            BlockSize = Blocksize.BS_512;
         }
         let n = new ConfNode_MemBufferMedia( st, rel, confnode_me.fromPrim 1UL, confVal2 ) :> IMediaNode
         let v = n.TempExportData
         Assert.True(( v.TypeName = ClientConst.TEMPEXP_NN_MemBufferMedia ))
         Assert.True(( v.NodeID = 1UL ))
-        Assert.True(( v.Values.Length = 3 ))
+        Assert.True(( v.Values.Length = 4 ))
         Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "ID" ) |> _.Value = "2" ))
         Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "MediaName" ) |> _.Value = "gffgg" ))
         Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "BytesCount" ) |> _.Value = "999" ))
+        Assert.True(( v.Values |> Seq.find ( fun itr -> itr.Name = "BlockSize" ) |> _.Value = "512" ))
 

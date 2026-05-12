@@ -151,11 +151,6 @@
                                 <ColumnDefinition Width="4*" />
                                 <ColumnDefinition Width="6*" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Name="FallbackBlockSizeTextBlock" Text="Fallback Block Size" Padding="0,0,0,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                            <ComboBox Grid.Column="1" Name="FallbackBlockSizeCombo" Padding="2,2,2,2" VerticalAlignment="Top" TabIndex="16">
-                                <TextBlock>512</TextBlock>
-                                <TextBlock>4096</TextBlock>
-                            </ComboBox>
                         </Grid>
                         <Grid Margin="10,2,0,2">
                             <Grid.ColumnDefinitions>

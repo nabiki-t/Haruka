@@ -878,10 +878,6 @@
       <Value>Max Multiplicity</Value>
     </Message>
     <Message>
-      <Name>FallbackBlockSizeTextBlock</Name>
-      <Value>Fallback Block Size</Value>
-    </Message>
-    <Message>
       <Name>OptimalTransferLengthTextBlock</Name>
       <Value>Optimal Transfer Length</Value>
     </Message>

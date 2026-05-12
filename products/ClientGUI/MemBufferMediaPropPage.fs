@@ -235,6 +235,7 @@ type MemBufferMediaPropPage(
                 IdentNumber = mediaidx_me.fromPrim identNumber;
                 MediaName = mediaName;
                 BytesCount = bytesCount;
+                BlockSize = Blocksize.BS_512;
             }
 
             let newNode = m_ServerStatus.UpdateMemBufferMediaNode  mn conf

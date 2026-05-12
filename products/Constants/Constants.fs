@@ -2019,10 +2019,6 @@ module Constants =
     let LU_DEF_MULTIPLICITY : uint32 =
         8u
 
-    /// Default LU Fallback Block Size
-    let LU_DEF_FALLBACK_BLOCK_SIZE : uint32 =
-        512u
-
     /// Minimum Optimal Transfer Length value
     let LU_MIN_OPTIMAL_TRANSFER_LENGTH : uint32 =
         1u

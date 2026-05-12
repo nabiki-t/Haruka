@@ -1293,9 +1293,8 @@ type ServerStatus_Test4() =
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
 
                 let mult = Constants.LU_DEF_MULTIPLICITY
-                let fbs = Blocksize.BS_512
                 let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
-                let luNode = ss.AddBlockDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" mult fbs otl
+                let luNode = ss.AddBlockDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" mult otl
                 let pnodes = ( luNode :> IConfigureNode ).GetParentNodes<IConfigureNode>()
                 Assert.True(( pnodes.Length = 1 ))
                 Assert.True(( pnodes.[0] = tNode1 ))
@@ -1341,9 +1340,8 @@ type ServerStatus_Test4() =
                 Assert.True(( tNodes.Length = 1 ))
 
                 let mult = Constants.LU_DEF_MULTIPLICITY
-                let fbs = Blocksize.BS_512
                 let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
-                let luNode = ss.AddBlockDeviceLUNode tNodes.[0] ( lun_me.fromPrim 22UL ) "luname022" mult fbs otl
+                let luNode = ss.AddBlockDeviceLUNode tNodes.[0] ( lun_me.fromPrim 22UL ) "luname022" mult otl
                 let pnodes = ( luNode :> IConfigureNode ).GetParentNodes<IConfigureNode>()
                 Assert.True(( pnodes.Length = 1 ))
                 Assert.True(( pnodes.[0] = tNodes.[0] ))
@@ -1385,9 +1383,8 @@ type ServerStatus_Test4() =
                 Assert.True(( ( tgNode :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
                 
                 let mult = Constants.LU_DEF_MULTIPLICITY
-                let fbs = Blocksize.BS_512
                 let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
-                let luNode = ss.AddBlockDeviceLUNode_InTargetGroup tgNode ( lun_me.fromPrim 22UL ) "luname022" mult fbs otl
+                let luNode = ss.AddBlockDeviceLUNode_InTargetGroup tgNode ( lun_me.fromPrim 22UL ) "luname022" mult otl
                 let pnodes = ( luNode :> IConfigureNode ).GetParentNodes<IConfigureNode>()
 
                 let tgNode2 = 
@@ -1433,9 +1430,8 @@ type ServerStatus_Test4() =
                 Assert.True(( ( tgNodes.[0] :> IConfigFileNode ).Modified = ModifiedStatus.NotModified ))
 
                 let mult = Constants.LU_DEF_MULTIPLICITY
-                let fbs = Blocksize.BS_512
                 let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
-                let luNode = ss.AddBlockDeviceLUNode_InTargetGroup tgNodes.[0] ( lun_me.fromPrim 22UL ) "luname022" mult fbs otl
+                let luNode = ss.AddBlockDeviceLUNode_InTargetGroup tgNodes.[0] ( lun_me.fromPrim 22UL ) "luname022" mult otl
 
                 let tgNode2 = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                 Assert.True(( tgNode2.Length = 1 ))
@@ -1493,23 +1489,19 @@ type ServerStatus_Test4() =
                 let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
 
                 let mult1 = Constants.LU_DEF_MULTIPLICITY
-                let fbs1 = Blocksize.BS_512
                 let otl1 = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
-                let luNode = ss.AddBlockDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" mult1 fbs1 otl1
+                let luNode = ss.AddBlockDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" mult1 otl1
                 Assert.True(( ( luNode :> ILUNode ).LUN = lun_me.fromPrim 22UL ))
                 Assert.True(( ( luNode :> ILUNode ).LUName = "luname022" ))
                 Assert.True(( ( luNode :> ILUNode ).MaxMultiplicity = mult1 ))
-                Assert.True(( luNode.FallbackBlockSize = fbs1 ))
                 Assert.True(( luNode.OptimalTransferLength = otl1 ))
 
                 let mult2 = Constants.LU_DEF_MULTIPLICITY + 1u
-                let fbs2 = Blocksize.BS_4096
                 let otl2 = blkcnt_me.ofUInt32 ( Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH + 1u )
-                let luNode2 = ss.UpdateBlockDeviceLUNode luNode ( lun_me.fromPrim 33UL ) "luname033" mult2 fbs2 otl2
+                let luNode2 = ss.UpdateBlockDeviceLUNode luNode ( lun_me.fromPrim 33UL ) "luname033" mult2 otl2
                 Assert.True(( ( luNode2 :> ILUNode ).LUN = lun_me.fromPrim 33UL ))
                 Assert.True(( ( luNode2 :> ILUNode ).LUName = "luname033" ))
                 Assert.True(( ( luNode2 :> ILUNode ).MaxMultiplicity = mult2 ))
-                Assert.True(( luNode2.FallbackBlockSize = fbs2 ))
                 Assert.True(( luNode2.OptimalTransferLength = otl2 ))
 
                 let clist = ( tNode1 :> IConfigureNode ).GetChildNodes<IConfigureNode>()
@@ -1558,7 +1550,6 @@ type ServerStatus_Test4() =
                                         IdentNumber = mediaidx_me.fromPrim 1u;
                                         MediaName = "";
                                     })
-                                    FallbackBlockSize = Blocksize.BS_512;
                                     OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
                                 });
                         }];
@@ -1586,17 +1577,14 @@ type ServerStatus_Test4() =
                 Assert.True(( ( luNodes.[0] :?> ILUNode ).LUN = lun_me.fromPrim 1UL ))
                 Assert.True(( ( luNodes.[0] :?> ILUNode ).LUName = "luname001" ))
                 Assert.True(( ( luNodes.[0] :?> ILUNode ).MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY ))
-                Assert.True(( ( luNodes.[0] :?> ConfNode_BlockDeviceLU ).FallbackBlockSize = Blocksize.BS_512 ))
                 Assert.True(( ( luNodes.[0] :?> ConfNode_BlockDeviceLU ).OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH ))
 
                 let mult = Constants.LU_MIN_MULTIPLICITY + 1u
-                let fbs = Blocksize.BS_4096
                 let otl = blkcnt_me.ofUInt32 ( Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH + 1u )
-                let luNode2 = ss.UpdateBlockDeviceLUNode ( luNodes.[0] :?> ConfNode_BlockDeviceLU ) ( lun_me.fromPrim 33UL ) "luname033" mult fbs otl
+                let luNode2 = ss.UpdateBlockDeviceLUNode ( luNodes.[0] :?> ConfNode_BlockDeviceLU ) ( lun_me.fromPrim 33UL ) "luname033" mult otl
                 Assert.True(( ( luNode2 :> ILUNode ).LUN = lun_me.fromPrim 33UL ))
                 Assert.True(( ( luNode2 :> ILUNode ).LUName = "luname033" ))
                 Assert.True(( ( luNode2 :> ILUNode ).MaxMultiplicity = mult ))
-                Assert.True(( luNode2.FallbackBlockSize = fbs ))
                 Assert.True(( luNode2.OptimalTransferLength = otl ))
 
                 let pnodes = ( luNode2 :> IConfigureNode ).GetParentNodes<IConfigureNode>()
@@ -1959,7 +1947,6 @@ type ServerStatus_Test4() =
                                 MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                                 LUDevice = TargetGroupConf.U_BlockDevice({
                                     Peripheral = TargetGroupConf.U_PlainFile( ServerStatus_Test1.defaultSF )
-                                    FallbackBlockSize = Blocksize.BS_512;
                                     OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
                                 });
                         }];
@@ -2040,6 +2027,7 @@ type ServerStatus_Test4() =
                     IdentNumber = mediaidx_me.fromPrim 1u;
                     MediaName = "";
                     BytesCount = Constants.MEDIA_BLOCK_SIZE;
+                    BlockSize = Blocksize.BS_512;
                 }
                 let pnodes = ( mNode :> IConfigureNode ).GetParentNodes<IConfigureNode>()
                 Assert.True(( pnodes.Length = 1 ))
@@ -2088,7 +2076,8 @@ type ServerStatus_Test4() =
                 let mNode = ss.AddMemBufferMediaNode luNodes.[0] {
                     IdentNumber = mediaidx_me.fromPrim 1u;
                     MediaName = "";
-                    BytesCount = Constants.MEDIA_BLOCK_SIZE;
+                    BytesCount = 512UL;
+                    BlockSize = Blocksize.BS_512;
                 }
                 let pnodes = ( mNode :> IConfigureNode ).GetParentNodes<IConfigureNode>()
                 Assert.True(( pnodes.Length = 1 ))
@@ -2131,18 +2120,20 @@ type ServerStatus_Test4() =
                 let mNode = ss.AddMemBufferMediaNode luNode {
                     IdentNumber = mediaidx_me.fromPrim 1u;
                     MediaName = "";
-                    BytesCount = Constants.MEDIA_BLOCK_SIZE;
+                    BytesCount = 512UL;
+                    BlockSize = Blocksize.BS_512;
                 }
 
                 let mNode2 = ss.UpdateMemBufferMediaNode mNode {
                     IdentNumber = mediaidx_me.fromPrim 2u;
                     MediaName = "";
-                    BytesCount = Constants.MEDIA_BLOCK_SIZE * 2UL;
+                    BytesCount = 512UL * 2UL;
+                    BlockSize = Blocksize.BS_512;
                 }
                 match ( mNode2 :> IMediaNode ).MediaConfData with
                 | TargetGroupConf.T_MEDIA.U_MemBuffer( x ) ->
                     Assert.True(( x.IdentNumber = mediaidx_me.fromPrim 2u ))
-                    Assert.True(( x.BytesCount = Constants.MEDIA_BLOCK_SIZE * 2UL ))
+                    Assert.True(( x.BytesCount = 512UL * 2UL ))
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -2194,9 +2185,9 @@ type ServerStatus_Test4() =
                                     Peripheral = TargetGroupConf.U_MemBuffer({
                                         IdentNumber = mediaidx_me.fromPrim 1u;
                                         MediaName = "";
-                                        BytesCount = Constants.MEDIA_BLOCK_SIZE;
+                                        BytesCount = 512UL;
+                                        BlockSize = Blocksize.BS_512;
                                     })
-                                    FallbackBlockSize = Blocksize.BS_512;
                                     OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
                                 });
                         }];
@@ -2226,12 +2217,13 @@ type ServerStatus_Test4() =
                 let mNode2 = ss.UpdateMemBufferMediaNode ( mNodes.[0] :?> ConfNode_MemBufferMedia ) {
                     IdentNumber = mediaidx_me.fromPrim 2u;
                     MediaName = "";
-                    BytesCount = Constants.MEDIA_BLOCK_SIZE * 2UL;
+                    BytesCount = 512UL * 2UL;
+                    BlockSize = Blocksize.BS_512;
                 }
                 match ( mNode2 :> IMediaNode ).MediaConfData with
                 | TargetGroupConf.T_MEDIA.U_MemBuffer( x ) ->
                     Assert.True(( x.IdentNumber = mediaidx_me.fromPrim 2u ))
-                    Assert.True(( x.BytesCount = Constants.MEDIA_BLOCK_SIZE * 2UL ))
+                    Assert.True(( x.BytesCount = 512UL * 2UL ))
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -2417,7 +2409,6 @@ type ServerStatus_Test4() =
                                         IdentNumber = mediaidx_me.fromPrim 1u;
                                         MediaName = "";
                                     })
-                                    FallbackBlockSize = Blocksize.BS_512;
                                     OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
                                 });
                         }];
@@ -2640,7 +2631,6 @@ type ServerStatus_Test4() =
                                             MediaName = "";
                                         });
                                     })
-                                    FallbackBlockSize = Blocksize.BS_512;
                                     OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
                                 });
                         }];

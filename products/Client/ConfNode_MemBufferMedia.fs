@@ -70,6 +70,7 @@ type ConfNode_MemBufferMedia(
             IdentNumber = Functions.SearchAndConvert d "ID" ( UInt32.Parse >> mediaidx_me.fromPrim ) mediaidx_me.zero;
             MediaName = Functions.SearchAndConvert d "MediaName" id "";
             BytesCount = Functions.SearchAndConvert d "BytesCount" UInt64.Parse 0UL;
+            BlockSize = Functions.SearchAndConvert d "BlockSize" Blocksize.fromStringValue Blocksize.BS_512;
         }
         new ConfNode_MemBufferMedia( argMessageTable, argConfNodes, newNodeID, conf )
 
@@ -173,6 +174,7 @@ type ConfNode_MemBufferMedia(
                 yield sprintf "  ID(uint32) : %d" m_Value.IdentNumber
                 yield sprintf "  MediaName(string) : %s" m_Value.MediaName
                 yield sprintf "  BytesCount(uint64) : %d" m_Value.BytesCount
+                yield sprintf "  BlockSize : %s" ( m_Value.BlockSize |> Blocksize.toStringName )
             ]
 
         // ------------------------------------------------------------------------
@@ -204,6 +206,10 @@ type ConfNode_MemBufferMedia(
                     yield {
                         Name = "BytesCount";
                         Value = sprintf "%d" m_Value.BytesCount;
+                    }
+                    yield {
+                        Name = "BlockSize";
+                        Value = Blocksize.toStringName m_Value.BlockSize;
                     }
                 ]
             }

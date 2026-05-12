@@ -248,7 +248,7 @@ type ServerStatus(
                         match clu.LUDevice with
                         | TargetGroupConf.T_DEVICE.U_BlockDevice( x ) ->
                             let luConfID = m_ConfNodes.NextID
-                            let lu = ConfNode_BlockDeviceLU( m_MessageTable, m_ConfNodes, luConfID, clu.LUN, clu.LUName, clu.MaxMultiplicity, x.FallbackBlockSize, x.OptimalTransferLength )
+                            let lu = ConfNode_BlockDeviceLU( m_MessageTable, m_ConfNodes, luConfID, clu.LUN, clu.LUName, clu.MaxMultiplicity, x.OptimalTransferLength )
                             m_ConfNodes.AddNode lu
 
                             // Add media components
@@ -954,9 +954,6 @@ type ServerStatus(
     /// <param name="argMaxMultiplicity">
     ///  Number of concurrent SCSI tasks within a LU.
     /// </param>
-    /// <param name="argFallbackBlockSize">
-    ///  The block size to use if the block size is not determined by the media configuration.
-    /// </param>
     /// <param name="argOptimalTransferLength">
     ///  Optimal transfer length in block count. This value is returned as a block limit VPD page by an Inquiry command.
     /// </param>
@@ -964,10 +961,10 @@ type ServerStatus(
     ///  Created block device LU node.
     ///  Added LU node has no media nodes. So, in this state, configuration files can't be uploaded.
     /// </returns>
-    abstract AddBlockDeviceLUNode : tnode:ConfNode_Target -> argLUN:LUN_T -> argLUName:string -> argMaxMultiplicity:uint32 -> argFallbackBlockSize:Blocksize -> argOptimalTransferLength:BLKCNT32_T -> ConfNode_BlockDeviceLU
-    default this.AddBlockDeviceLUNode tnode argLUN argLUName argMaxMultiplicity argFallbackBlockSize argOptimalTransferLength =
+    abstract AddBlockDeviceLUNode : tnode:ConfNode_Target -> argLUN:LUN_T -> argLUName:string -> argMaxMultiplicity:uint32 -> argOptimalTransferLength:BLKCNT32_T -> ConfNode_BlockDeviceLU
+    default this.AddBlockDeviceLUNode tnode argLUN argLUName argMaxMultiplicity argOptimalTransferLength =
         let tgNode = this.IdentifyTargetGroupNode tnode
-        let n = new ConfNode_BlockDeviceLU( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, argLUN, argLUName, argMaxMultiplicity, argFallbackBlockSize, argOptimalTransferLength )
+        let n = new ConfNode_BlockDeviceLU( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, argLUN, argLUName, argMaxMultiplicity, argOptimalTransferLength )
         m_ConfNodes.AddNode n
         m_ConfNodes.AddRelation ( tnode :> IConfigureNode ).NodeID  ( n :> IConfigureNode ).NodeID
         if ( tgNode :> IConfigFileNode ).Modified = ModifiedStatus.NotModified then
@@ -989,9 +986,6 @@ type ServerStatus(
     /// <param name="argMaxMultiplicity">
     ///  Number of concurrent SCSI tasks within a LU.
     /// </param>
-    /// <param name="argFallbackBlockSize">
-    ///  The block size to use if the block size is not determined by the media configuration.
-    /// </param>
     /// <param name="argOptimalTransferLength">
     ///  Optimal transfer length in block count. This value is returned as a block limit VPD page by an Inquiry command.
     /// </param>
@@ -1003,9 +997,9 @@ type ServerStatus(
     ///  The block device LU node will be child of specified target group node.
     ///  So this LU is no accessible from any target until adding relation from one.
     /// </remarks>
-    abstract AddBlockDeviceLUNode_InTargetGroup : tgnode:ConfNode_TargetGroup -> argLUN:LUN_T -> argLUName:string -> argMaxMultiplicity:uint32 -> argFallbackBlockSize:Blocksize -> argOptimalTransferLength:BLKCNT32_T -> ConfNode_BlockDeviceLU
-    default this.AddBlockDeviceLUNode_InTargetGroup tgnode argLUN argLUName argMaxMultiplicity argFallbackBlockSize argOptimalTransferLength =
-        let n = new ConfNode_BlockDeviceLU( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, argLUN, argLUName, argMaxMultiplicity, argFallbackBlockSize, argOptimalTransferLength )
+    abstract AddBlockDeviceLUNode_InTargetGroup : tgnode:ConfNode_TargetGroup -> argLUN:LUN_T -> argLUName:string -> argMaxMultiplicity:uint32 -> argOptimalTransferLength:BLKCNT32_T -> ConfNode_BlockDeviceLU
+    default this.AddBlockDeviceLUNode_InTargetGroup tgnode argLUN argLUName argMaxMultiplicity argOptimalTransferLength =
+        let n = new ConfNode_BlockDeviceLU( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, argLUN, argLUName, argMaxMultiplicity, argOptimalTransferLength )
         m_ConfNodes.AddNode n
         m_ConfNodes.AddRelation ( tgnode :> IConfigureNode ).NodeID  ( n :> IConfigureNode ).NodeID
         if ( tgnode :> IConfigFileNode ).Modified = ModifiedStatus.NotModified then
@@ -1027,9 +1021,6 @@ type ServerStatus(
     /// <param name="argMaxMultiplicity">
     ///  Number of concurrent SCSI tasks within a LU.
     /// </param>
-    /// <param name="argFallbackBlockSize">
-    ///  The block size to use if the block size is not determined by the media configuration.
-    /// </param>
     /// <param name="argOptimalTransferLength">
     ///  Optimal transfer length in block count. This value is returned as a block limit VPD page by an Inquiry command.
     /// </param>
@@ -1038,10 +1029,10 @@ type ServerStatus(
     ///  If a new node is added after being deleted, the node ID will be changed and relational child node are deleted.
     ///  This method can update attribute value without changing node ID and relations.
     /// </returns>
-    abstract UpdateBlockDeviceLUNode : lunode:ConfNode_BlockDeviceLU -> argLUN:LUN_T -> argLUName:string -> argMaxMultiplicity:uint32 -> argFallbackBlockSize:Blocksize -> argOptimalTransferLength:BLKCNT32_T -> ConfNode_BlockDeviceLU
-    default this.UpdateBlockDeviceLUNode lunode argLUN argLUName argMaxMultiplicity argFallbackBlockSize argOptimalTransferLength =
+    abstract UpdateBlockDeviceLUNode : lunode:ConfNode_BlockDeviceLU -> argLUN:LUN_T -> argLUName:string -> argMaxMultiplicity:uint32 -> argOptimalTransferLength:BLKCNT32_T -> ConfNode_BlockDeviceLU
+    default this.UpdateBlockDeviceLUNode lunode argLUN argLUName argMaxMultiplicity argOptimalTransferLength =
         let tgNode = this.IdentifyTargetGroupNode lunode
-        let n = lunode.CreateUpdatedNode argLUN argLUName argMaxMultiplicity argFallbackBlockSize argOptimalTransferLength
+        let n = lunode.CreateUpdatedNode argLUN argLUName argMaxMultiplicity argOptimalTransferLength
         m_ConfNodes.Update n
         if ( tgNode :> IConfigFileNode ).Modified = ModifiedStatus.NotModified then
             tgNode.SetModified() |> m_ConfNodes.Update

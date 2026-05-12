@@ -3493,7 +3493,6 @@ type StatusMaster_Test2 () =
                                     MediaName = "dummymedia";
                                 })
                             })
-                            FallbackBlockSize = Blocksize.BS_512;
                             OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
                         });
                     }];

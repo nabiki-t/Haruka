@@ -72,7 +72,6 @@ and [<NoComparison>]T_DEVICE =
 
 and [<NoComparison>]T_BlockDevice = {
     Peripheral : T_MEDIA;
-    FallbackBlockSize : Blocksize;
     OptimalTransferLength : BLKCNT32_T;
 }
 
@@ -94,6 +93,7 @@ and [<NoComparison>]T_MemBuffer = {
     IdentNumber : MEDIAIDX_T;
     MediaName : string;
     BytesCount : uint64;
+    BlockSize : Blocksize;
 }
 
 and [<NoComparison>]T_DummyMedia = {
@@ -275,13 +275,6 @@ type ReaderWriter() =
       <xsd:element name='BlockDevice' >
         <xsd:complexType><xsd:sequence>
           <xsd:element name='Peripheral' type='MEDIA' ></xsd:element>
-          <xsd:element name='FallbackBlockSize' minOccurs='0' maxOccurs='1' >
-            <xsd:simpleType>
-              <xsd:restriction base='xsd:string'>
-                <xsd:pattern value='^512|4096$' />
-              </xsd:restriction>
-            </xsd:simpleType>
-          </xsd:element>
           <xsd:element name='OptimalTransferLength' minOccurs='0' maxOccurs='1' >
             <xsd:simpleType>
               <xsd:restriction base='xsd:unsignedInt'>
@@ -353,6 +346,13 @@ type ReaderWriter() =
           <xsd:element name='BytesCount' >
             <xsd:simpleType>
               <xsd:restriction base='xsd:unsignedLong'>
+              </xsd:restriction>
+            </xsd:simpleType>
+          </xsd:element>
+          <xsd:element name='BlockSize' >
+            <xsd:simpleType>
+              <xsd:restriction base='xsd:string'>
+                <xsd:pattern value='^512|4096$' />
               </xsd:restriction>
             </xsd:simpleType>
           </xsd:element>
@@ -656,12 +656,6 @@ type ReaderWriter() =
         {
             Peripheral =
                 ReaderWriter.Read_T_MEDIA( elem.Element( XName.Get "Peripheral" ) );
-            FallbackBlockSize = 
-                let subElem = elem.Element( XName.Get "FallbackBlockSize" )
-                if subElem = null then
-                    Blocksize.fromStringValue( "512" );
-                else
-                    Blocksize.fromStringValue( subElem.Value );
             OptimalTransferLength = 
                 let subElem = elem.Element( XName.Get "OptimalTransferLength" )
                 if subElem = null then
@@ -733,6 +727,8 @@ type ReaderWriter() =
                 elem.Element( XName.Get "MediaName" ).Value;
             BytesCount =
                 UInt64.Parse( elem.Element( XName.Get "BytesCount" ).Value );
+            BlockSize =
+                Blocksize.fromStringValue( elem.Element( XName.Get "BlockSize" ).Value );
         }
 
     /// <summary>
@@ -1128,7 +1124,6 @@ type ReaderWriter() =
         seq {
             yield sprintf "%s<%s>" indentStr elemName
             yield! ReaderWriter.T_MEDIA_toString ( indent + 1 ) indentStep ( elem.Peripheral ) "Peripheral"
-            yield sprintf "%s%s<FallbackBlockSize>%s</FallbackBlockSize>" singleIndent indentStr ( Blocksize.toStringName (elem.FallbackBlockSize) )
             yield sprintf "%s%s<OptimalTransferLength>%d</OptimalTransferLength>" singleIndent indentStr ( blkcnt_me.toUInt32 (elem.OptimalTransferLength) )
             yield sprintf "%s</%s>" indentStr elemName
         }
@@ -1237,6 +1232,7 @@ type ReaderWriter() =
                 raise <| ConfRWException( "Max value(string) restriction error. MediaName" )
             yield sprintf "%s%s<MediaName>%s</MediaName>" singleIndent indentStr ( ReaderWriter.xmlEncode(elem.MediaName) )
             yield sprintf "%s%s<BytesCount>%d</BytesCount>" singleIndent indentStr (elem.BytesCount)
+            yield sprintf "%s%s<BlockSize>%s</BlockSize>" singleIndent indentStr ( Blocksize.toStringName (elem.BlockSize) )
             yield sprintf "%s</%s>" indentStr elemName
         }
 

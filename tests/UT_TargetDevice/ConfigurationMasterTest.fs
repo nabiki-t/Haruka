@@ -1803,7 +1803,6 @@ type ConfigurationMaster_Test () =
                             IdentNumber = mediaidx_me.fromPrim 1u;
                             MediaName = "";
                         })
-                        FallbackBlockSize = Blocksize.BS_512;
                         OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
                     } );
                 };
@@ -1817,7 +1816,6 @@ type ConfigurationMaster_Test () =
                             IdentNumber = mediaidx_me.fromPrim 1u;
                             MediaName = "";
                         })
-                        FallbackBlockSize = Blocksize.BS_512;
                         OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
                     } );
                 }
