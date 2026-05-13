@@ -1349,7 +1349,7 @@ type StatusMaster_Test1 () =
 
         let mediaFName = Functions.AppendPathName pDirName "a.txt"
         let s = File.CreateText( mediaFName )
-        s.Write( Array.zeroCreate<char>( int Constants.MEDIA_BLOCK_SIZE ) )
+        s.Write( Array.zeroCreate<char>( 512 ) )
         s.Close()
         s.Dispose()
         let mconf : TargetGroupConf.T_MEDIA = TargetGroupConf.T_MEDIA.U_PlainFile( {

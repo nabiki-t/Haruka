@@ -44,6 +44,7 @@ type BlockDeviceLU_Test () =
 
     member private this.createBlockDevice() =
         let media = new CMedia_Stub(
+            p_GetBlockSize = ( fun () -> Blocksize.BS_512 ),
             p_GetBlockCount = ( fun () -> 512UL )
         )
         let sm = new CStatus_Stub(

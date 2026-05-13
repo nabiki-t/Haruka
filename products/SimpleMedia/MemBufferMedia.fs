@@ -41,21 +41,20 @@ open Haruka.IODataTypes
 /// <param name="argBufferLineBlocks">
 ///  The block count of one segment when segmenting the buffer.
 /// </param>
-/// <param name="m_BlockSize">
-///  Media block size in bytes.
-/// </param>
 type MemBufferMedia
     (
         m_StatusMaster : IStatus,
         m_Config : TargetGroupConf.T_MemBuffer,
         m_Killer : IKiller,
         m_LUN : LUN_T,
-        argBufferLineBlocks : uint64,
-        m_BlockSize : uint64
+        argBufferLineBlocks : uint64
     ) as this =
 
     /// Hash value identify this instance
     let m_ObjID = objidx_me.NewID()
+
+    /// Block size uint64 value
+    let m_BlockSize = Blocksize.toUInt64 m_Config.BlockSize
 
     /// Buffer line size in bytes. It must be multiple of the block size.
     let m_BufferLineSize =

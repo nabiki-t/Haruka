@@ -73,7 +73,8 @@ type ModeParameter
     let m_BlockLength =
         match m_DeviceType with
         | BlockDeviceType.BDT_Normal ->
-            Constants.MEDIA_BLOCK_SIZE
+            m_Media.BlockSize
+            |> Blocksize.toUInt64
         | BlockDeviceType.BDT_Dummy ->
             0UL
 

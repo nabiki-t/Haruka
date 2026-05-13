@@ -47,6 +47,7 @@ type ModeParameter_Test () =
         new ModeParameter(
             BlockDeviceType.BDT_Normal,
             new CMedia_Stub(
+                p_GetBlockSize = ( fun _ -> Blocksize.BS_4096 ),
                 p_GetBlockCount = ( fun _ -> 1024UL ),
                 p_GetWriteProtect = ( fun _ -> initWP )
             ),
@@ -179,7 +180,7 @@ type ModeParameter_Test () =
                 0x00uy; 0xAAuy; 0xBBuy; 0xCCuy; // BLOCK LENGTH
             |]
             |> PooledBuffer.Rent
-        Assert.True(( mp.BlockLength = Constants.MEDIA_BLOCK_SIZE ))
+        Assert.True(( mp.BlockLength = 4096UL ))
         try
             mp.Select6 v v.Count true false cmdSource ( itt_me.fromPrim 0u )
             Assert.Fail __LINE__
@@ -188,7 +189,7 @@ type ModeParameter_Test () =
             let msg = x.SenseData.VendorSpecific |> ValueOption.get |> _.VendorSpecific |> Encoding.UTF8.GetString
             Assert.StartsWith( "Invalid BLOCK LENGTH value", msg )
             Assert.True(( x.SenseData.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-        Assert.True(( mp.BlockLength = Constants.MEDIA_BLOCK_SIZE ))
+        Assert.True(( mp.BlockLength = 4096UL ))
 
     [<Fact>]
     member _.Select6_008_1() =
@@ -197,7 +198,7 @@ type ModeParameter_Test () =
             [|
                 0uy; 0uy; 0uy; 8uy;
                 0x00uy; 0x00uy; 0xFFuy; 0xFFuy; // NUMBER OF BLOCKS
-                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
+                0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             |]
             |> PooledBuffer.Rent
         try
@@ -320,7 +321,7 @@ type ModeParameter_Test () =
             [|
                 0uy; 0uy; 0uy; 8uy;
                 0x00uy; 0x00uy; 0x04uy; 0x00uy; // NUMBER OF BLOCKS
-                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
+                0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
                 yield! ( pc.Invoke( "GetInformationalExceptionsControlModePage_Current" ) :?> byte[] )
                 yield! ( pc.Invoke( "GetControlModePage_Current" ) :?> byte[] )
             |]
@@ -334,7 +335,7 @@ type ModeParameter_Test () =
             [|
                 0uy; 0uy; 0uy; 8uy;
                 0x00uy; 0x00uy; 0x04uy; 0x00uy; // NUMBER OF BLOCKS
-                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
+                0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
                 0x00uy; 0x00uy; 0x00uy;
             |]
             |> PooledBuffer.Rent
@@ -347,11 +348,11 @@ type ModeParameter_Test () =
             [|
                 0x00uy; 0x00uy; 0x00uy; 0x08uy;
                 0x00uy; 0x00uy; 0x04uy; 0x00uy; // NUMBER OF BLOCKS
-                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
+                0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
                 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // dummy buffer
             |]
         let v2 = PooledBuffer.Rent( v, v.Length - 4 )
-        Assert.True(( mp.BlockLength = Constants.MEDIA_BLOCK_SIZE ))
+        Assert.True(( mp.BlockLength = 4096UL ))
         mp.Select6 v2 v2.Count true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
@@ -947,7 +948,7 @@ type ModeParameter_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x08uy;
                 0x00uy; 0x00uy; 0x04uy; 0x00uy; // NUMBER OF BLOCKS
-                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
+                0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
                 yield! ( pc.Invoke( "GetInformationalExceptionsControlModePage_Current" ) :?> byte[] )
                 yield! ( pc.Invoke( "GetControlModePage_Current" ) :?> byte[] )
             |]
@@ -963,7 +964,7 @@ type ModeParameter_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x08uy;
                 0x00uy; 0x00uy; 0x04uy; 0x00uy; // NUMBER OF BLOCKS
-                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
+                0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
                 yield! ( pc.Invoke( "GetCacheModePage_Current" ) :?> byte[] )
                 yield! ( pc.Invoke( "GetInformationalExceptionsControlModePage_Current" ) :?> byte[] )
                 yield! ( pc.Invoke( "GetControlModePage_Current" ) :?> byte[] )
@@ -979,7 +980,7 @@ type ModeParameter_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x08uy;
                 0x00uy; 0x00uy; 0x04uy; 0x00uy; // NUMBER OF BLOCKS
-                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
+                0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
                 0x00uy; 0x00uy; 0x00uy;
             |]
             |> PooledBuffer.Rent
@@ -993,11 +994,11 @@ type ModeParameter_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
                 0x00uy; 0x00uy; 0x04uy; 0x00uy; // NUMBER OF BLOCKS
-                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
+                0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
                 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // dummy buffer
             |]
         let v2 = PooledBuffer.Rent( v, v.Length - 4 )
-        Assert.True(( mp.BlockLength = Constants.MEDIA_BLOCK_SIZE ))
+        Assert.True(( mp.BlockLength = 4096UL ))
         mp.Select10 v2 v2.Count true false cmdSource ( itt_me.fromPrim 0u )
 
     [<Fact>]
@@ -1007,7 +1008,7 @@ type ModeParameter_Test () =
         let v2 = [|
             0x1Fuy; 0x00uy; 0x00uy; 0x08uy;
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -1053,7 +1054,7 @@ type ModeParameter_Test () =
         let v2 = [|
             0x17uy; 0x00uy; 0x00uy; 0x08uy;
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x0Auy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x04uy;                         // TST, TMF_ONLY, D_SENSE, GLTSD, RLEC
@@ -1091,7 +1092,7 @@ type ModeParameter_Test () =
         let v2 = [|
             0x17uy; 0x00uy; 0x00uy; 0x08uy;
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x1Cuy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x39uy;                         // PERF, EBF, EWASC, DEXCPT, TEST, LOGERR
@@ -1123,7 +1124,7 @@ type ModeParameter_Test () =
         let v2 = [|
             0x37uy; 0x00uy; 0x00uy; 0x08uy;
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -1203,7 +1204,7 @@ type ModeParameter_Test () =
         let v2 = [|
             0x1Fuy; 0x00uy; 0x00uy; 0x08uy;
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
             0x00uy;                         // IC,ABPF,CAP,DISC,SIZE,WCE,MF,RCD
@@ -1247,7 +1248,7 @@ type ModeParameter_Test () =
         let v2 = [|
             0x17uy; 0x00uy; 0x00uy; 0x08uy;
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x0Auy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x04uy;                         // TST, TMF_ONLY, D_SENSE, GLTSD, RLEC
@@ -1285,7 +1286,7 @@ type ModeParameter_Test () =
         let v2 = [|
             0x17uy; 0x00uy; 0x00uy; 0x08uy;
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x1Cuy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x00uy;                         // PERF, EBF, EWASC, DEXCPT, TEST, LOGERR
@@ -1317,7 +1318,7 @@ type ModeParameter_Test () =
         let v2 = [|
             0x37uy; 0x00uy; 0x00uy; 0x08uy;
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -1397,7 +1398,7 @@ type ModeParameter_Test () =
         let v2 = [|
             0x1Fuy; 0x00uy; 0x80uy; 0x08uy;
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
             0x00uy;                         // IC,ABPF,CAP,DISC,SIZE,WCE,MF,RCD
@@ -1441,7 +1442,7 @@ type ModeParameter_Test () =
         let v2 = [|
             0x17uy; 0x00uy; 0x80uy; 0x08uy;
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x0Auy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x04uy;                         // TST, TMF_ONLY, D_SENSE, GLTSD, RLEC
@@ -1479,7 +1480,7 @@ type ModeParameter_Test () =
         let v2 = [|
             0x17uy; 0x00uy; 0x00uy; 0x08uy;
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x1Cuy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x39uy;                         // PERF, EBF, EWASC, DEXCPT, TEST, LOGERR
@@ -1511,7 +1512,7 @@ type ModeParameter_Test () =
         let v2 = [|
             0x37uy; 0x00uy; 0x00uy; 0x08uy;
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -1622,7 +1623,7 @@ type ModeParameter_Test () =
             0x00uy; 0x22uy; 0x00uy; 0x80uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
             0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -1696,7 +1697,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -1773,7 +1774,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -1798,7 +1799,7 @@ type ModeParameter_Test () =
             0x00uy; 0x1Auy; 0x00uy; 0x80uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
             0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x0Auy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x04uy;                         // TST, TMF_ONLY, D_SENSE, GLTSD, RLEC
@@ -1840,7 +1841,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x0Auy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x04uy;                         // TST, TMF_ONLY, D_SENSE, GLTSD, RLEC
@@ -1882,7 +1883,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x0Auy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x04uy;                         // TST, TMF_ONLY, D_SENSE, GLTSD, RLEC
@@ -1905,7 +1906,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x1Cuy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x39uy;                         // PERF, EBF, EWASC, DEXCPT, TEST, LOGERR
@@ -1923,7 +1924,7 @@ type ModeParameter_Test () =
             0x00uy; 0x1Auy; 0x00uy; 0x80uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
             0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x1Cuy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x39uy;                         // PERF, EBF, EWASC, DEXCPT, TEST, LOGERR
@@ -1959,7 +1960,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -2001,7 +2002,7 @@ type ModeParameter_Test () =
             0x00uy; 0x3Auy; 0x00uy; 0x80uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
             0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -2085,7 +2086,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
             0x00uy;                         // IC,ABPF,CAP,DISC,SIZE,WCE,MF,RCD
@@ -2109,7 +2110,7 @@ type ModeParameter_Test () =
             0x00uy; 0x22uy; 0x00uy; 0x80uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
             0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
             0x00uy;                         // IC,ABPF,CAP,DISC,SIZE,WCE,MF,RCD
@@ -2157,7 +2158,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x0Auy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x04uy;                         // TST, TMF_ONLY, D_SENSE, GLTSD, RLEC
@@ -2178,7 +2179,7 @@ type ModeParameter_Test () =
             0x00uy; 0x1Auy; 0x00uy; 0x80uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
             0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x0Auy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x04uy;                         // TST, TMF_ONLY, D_SENSE, GLTSD, RLEC
@@ -2220,7 +2221,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x1Cuy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x00uy;                         // PERF, EBF, EWASC, DEXCPT, TEST, LOGERR
@@ -2238,7 +2239,7 @@ type ModeParameter_Test () =
             0x00uy; 0x1Auy; 0x00uy; 0x80uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
             0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x1Cuy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x00uy;                         // PERF, EBF, EWASC, DEXCPT, TEST, LOGERR
@@ -2274,7 +2275,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -2316,7 +2317,7 @@ type ModeParameter_Test () =
             0x00uy; 0x3Auy; 0x00uy; 0x80uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
             0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -2400,7 +2401,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -2425,7 +2426,7 @@ type ModeParameter_Test () =
             0x00uy; 0x22uy; 0x00uy; 0x80uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
             0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -2475,7 +2476,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x0Auy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x04uy;                         // TST, TMF_ONLY, D_SENSE, GLTSD, RLEC
@@ -2496,7 +2497,7 @@ type ModeParameter_Test () =
             0x00uy; 0x1Auy; 0x00uy; 0x80uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
             0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x0Auy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x04uy;                         // TST, TMF_ONLY, D_SENSE, GLTSD, RLEC
@@ -2538,7 +2539,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x1Cuy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x39uy;                         // PERF, EBF, EWASC, DEXCPT, TEST, LOGERR
@@ -2556,7 +2557,7 @@ type ModeParameter_Test () =
             0x00uy; 0x1Auy; 0x00uy; 0x80uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
             0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
             0x1Cuy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
             0x39uy;                         // PERF, EBF, EWASC, DEXCPT, TEST, LOGERR
@@ -2592,7 +2593,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -2634,7 +2635,7 @@ type ModeParameter_Test () =
             0x00uy; 0x3Auy; 0x00uy; 0x80uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER
             0x00uy; 0x00uy; 0x00uy; 0x08uy; // LONGLBA, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK SIZE
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -2741,13 +2742,13 @@ type ModeParameter_Test () =
     [<Fact>]
     member _.Update_6_001() =
         let mp = ModeParameter_Test.initialMP false
-        Assert.True(( mp.BlockLength = Constants.MEDIA_BLOCK_SIZE ))
+        Assert.True(( mp.BlockLength = 4096UL ))
         Assert.True(( mp.D_SENSE ))
         Assert.False(( mp.SWP ))
         let v = [|
             0x00uy; 0x00uy; 0x00uy; 0x08uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
 
             0x1Cuy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
@@ -2791,7 +2792,7 @@ type ModeParameter_Test () =
         let v2 = [|
             0x37uy; 0x00uy; 0x00uy; 0x08uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER, BLOCK DESCRIPTOR LENGTH
             0x00uy; 0x00uy; 0x04uy; 0x00uy; // BLOCK COUNT
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH
@@ -2828,7 +2829,7 @@ type ModeParameter_Test () =
     [<Fact>]
     member _.Update_10_002() =
         let mp = ModeParameter_Test.initialMP false
-        Assert.True(( mp.BlockLength = Constants.MEDIA_BLOCK_SIZE ))
+        Assert.True(( mp.BlockLength = 4096UL ))
         Assert.True(( mp.D_SENSE ))
         Assert.False(( mp.SWP ))
         let v = [|
@@ -2837,7 +2838,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // NUMBER OF BLOCKS
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
 
             0x1Cuy;                         // PS, SPF, PAGE CODE
             0x0Auy;                         // PAGE LENGTH
@@ -2884,7 +2885,7 @@ type ModeParameter_Test () =
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
             0x00uy; 0x00uy; 0x04uy; 0x00uy;
             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE ); // BLOCK LENGTH
+            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
 
             0x08uy;                         // PS, SPF, PAGE CODE
             0x12uy;                         // PAGE LENGTH

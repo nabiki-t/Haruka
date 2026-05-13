@@ -160,7 +160,7 @@ type PlainFileMedia_Test () =
         let conf = getDefaultConf testfname
         let k1 = new HKiller() :> IKiller
         let src = getCmdSource k1
-        let wBlockSize = int Constants.MEDIA_BLOCK_SIZE
+        let wBlockSize = 512
         CreateZeroFile testfname ( wBlockSize * 8 )
 
         let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
@@ -186,7 +186,7 @@ type PlainFileMedia_Test () =
             let conf = getDefaultConf testfname
             let k1 = new HKiller() :> IKiller
             let src = getCmdSource k1
-            let wBlockSize = int Constants.MEDIA_BLOCK_SIZE
+            let wBlockSize = 512
             CreateZeroFile testfname ( wBlockSize * 8 )
 
             let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
@@ -219,7 +219,7 @@ type PlainFileMedia_Test () =
             let k1 = new HKiller() :> IKiller
             let src = getCmdSource k1
             let wrand = new Random()
-            let wBlockSize = int Constants.MEDIA_BLOCK_SIZE
+            let wBlockSize = 512
 
             let wrotedata = Array.zeroCreate<byte>( wBlockSize * 8 )
             wrand.NextBytes( wrotedata )
@@ -249,7 +249,7 @@ type PlainFileMedia_Test () =
             let k1 = new HKiller() :> IKiller
             let src = getCmdSource k1
             let wrand = new Random()
-            let wBlockSize = int Constants.MEDIA_BLOCK_SIZE
+            let wBlockSize = 512
 
             let wrotedata = Array.zeroCreate<byte>( wBlockSize * 8 )
             wrand.NextBytes( wrotedata )
@@ -277,7 +277,7 @@ type PlainFileMedia_Test () =
             let k1 = new HKiller() :> IKiller
             let src = getCmdSource k1
             let wrand = new Random()
-            let wBlockSize = int Constants.MEDIA_BLOCK_SIZE
+            let wBlockSize = 512
 
             let wrotedata = Array.zeroCreate<byte>( wBlockSize * 8 )
             wrand.NextBytes( wrotedata )
@@ -317,7 +317,7 @@ type PlainFileMedia_Test () =
             let conf = getDefaultConf testfname
             let k1 = new HKiller() :> IKiller
             let src = getCmdSource k1
-            let wBlockSize = int Constants.MEDIA_BLOCK_SIZE
+            let wBlockSize = 512
             CreateZeroFile testfname ( wBlockSize * 8 )
 
             let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
@@ -349,7 +349,7 @@ type PlainFileMedia_Test () =
             let conf = getDefaultConf testfname
             let k1 = new HKiller() :> IKiller
             let src = getCmdSource k1
-            let wBlockSize = int Constants.MEDIA_BLOCK_SIZE
+            let wBlockSize = 512
             let wrand = new Random()
             CreateZeroFile testfname ( wBlockSize * 8 )
 
@@ -378,7 +378,7 @@ type PlainFileMedia_Test () =
             let k1 = new HKiller() :> IKiller
             let src = getCmdSource k1
             let wrand = new Random()
-            let wBlockSize = int Constants.MEDIA_BLOCK_SIZE
+            let wBlockSize = 512
 
             let wrotedata = Array.zeroCreate<byte>( wBlockSize * 8 )
             wrand.NextBytes( wrotedata )
@@ -415,7 +415,7 @@ type PlainFileMedia_Test () =
             let k1 = new HKiller() :> IKiller
             let src = getCmdSource k1
             let wrand = new Random()
-            let wBlockSize = int Constants.MEDIA_BLOCK_SIZE
+            let wBlockSize = 512
 
             let wrotedata = Array.zeroCreate<byte>( wBlockSize * 8 )
             wrand.NextBytes( wrotedata )

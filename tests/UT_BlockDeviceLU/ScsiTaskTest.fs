@@ -94,6 +94,7 @@ type ScsiTask_Test () =
 
     let createDefScsiTaskWithPRManager ( cmd : SCSICommandPDU ) ( cdb : ICDB ) ( data : SCSIDataOutPDU list ) ( acaNoncompliant : bool ) ( prFName : string ) =
         let media = new CMedia_Stub(
+            p_GetBlockSize = ( fun () -> Blocksize.BS_4096 ),
             p_GetBlockCount = ( fun () -> 512UL )
         )
         let targetConf : TargetGroupConf.T_Target = {
@@ -776,7 +777,7 @@ type ScsiTask_Test () =
                         let v = [|
                             0x00uy; 0x00uy; 0x00uy; 0x08uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER, BLOCK DESCRIPTOR LENGTH
                             0x00uy; 0x00uy; 0x02uy; 0x00uy; // NUMBER OF BLOCKS
-                            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
+                            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
                             0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // Dummy buffer
                         |]
                         PooledBuffer.Rent( v, 12 )
@@ -831,7 +832,7 @@ type ScsiTask_Test () =
                         let v = [|
                             0x00uy; 0x00uy; 0x02uy; 0x00uy;
                             0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-                            yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
+                            0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
                             0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // dummy buffer
                         |]
                         PooledBuffer.Rent( v, 12 )
@@ -871,7 +872,7 @@ type ScsiTask_Test () =
                     DataSegment = [|
                         0x00uy; 0x00uy; 0x00uy; 0x08uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER, BLOCK DESCRIPTOR LENGTH
                         0x00uy; 0x00uy; 0x02uy; 0x00uy; // NUMBER OF BLOCKS
-                        yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
+                        0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
                     |] |> PooledBuffer.Rent
             }
         ]
@@ -908,7 +909,7 @@ type ScsiTask_Test () =
                     DataSegment = [|
                         0x00uy; 0x00uy; 0x00uy; 0x08uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER, BLOCK DESCRIPTOR LENGTH
                         0x00uy; 0x00uy; 0x02uy; 0x00uy; // NUMBER OF BLOCKS
-                        yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
+                        0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
                     |] |> PooledBuffer.Rent
             }
         ]
@@ -968,7 +969,7 @@ type ScsiTask_Test () =
             let v = [|
                 0x17uy; 0x00uy; 0x00uy; 0x08uy; // MODE DATA LENGTH, MEDIUM TYPE, DEVICE-SPECIFIC PARAMETER, BLOCK DESCRIPTOR LENGTH
                 0x00uy; 0x00uy; 0x02uy; 0x00uy; // BLOCK COUNT
-                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
+                0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
                 0x0Auy;                         // PS, SPF, PAGE CODE
                 0x0Auy;                         // PAGE LENGTH
                 0x04uy;                         // TST, TMF_ONLY, D_SENSE, GLTSD, RLEC
@@ -1021,7 +1022,7 @@ type ScsiTask_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // BLOCK COUNT
                 0x00uy; 0x00uy; 0x02uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
-                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH
+                0x00uy; 0x00uy; 0x10uy; 0x00uy; // BLOCK LENGTH(4096)
 
                 0x0Auy;                         // PS, SPF, PAGE CODE
                 0x0Auy;                         // PAGE LENGTH
@@ -2560,26 +2561,27 @@ type ScsiTask_Test () =
         let stask, ilu = createDefScsiTask scsiCommand cdb [scsiDataOut] false
         let psStub = stask.Source.ProtocolService :?> CProtocolService_Stub
         let mediaStub = ( stask :?> ScsiTask ).Media :?> CMedia_Stub
+        let blockSize = ( mediaStub :> IMedia ).BlockSize |> Blocksize.toUInt64
         mediaStub.p_GetBlockCount <- ( fun () -> 0xFFFFUL )
         psStub.p_SendSCSIResponse <- ( fun _ _ _ recvdl resp stat _ indata alloclen _ ->
             cnt2 <- cnt2 + 1
             Assert.True(( recvdl = 30u ))
             Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
             Assert.True(( stat = ScsiCmdStatCd.GOOD ))
-            Assert.True(( indata.Length = ( int Constants.MEDIA_BLOCK_SIZE ) * 3 ))
-            Assert.True(( alloclen = ( uint Constants.MEDIA_BLOCK_SIZE ) * 3u ))
+            Assert.True(( indata.Length = ( int blockSize ) * 3 ))
+            Assert.True(( alloclen = ( uint blockSize ) * 3u ))
         )
         mediaStub.p_Read <- ( fun itt source lba buf ->
             Assert.True(( itt = itt_me.fromPrim 0u ))
             Assert.True(( lba = blkcnt_me.ofUInt64 0xAABBUL ))
-            Assert.True(( buf.Count = ( int Constants.MEDIA_BLOCK_SIZE ) * 3 ))
+            Assert.True(( buf.Count = ( int blockSize ) * 3 ))
             Task.FromResult( buf.Count )
         )
         ilu.p_NotifyTerminateTask <- ( fun argTask ->
             cnt1 <- cnt1 + 1
         )
         ilu.p_NotifyReadBytesCount <- ( fun _ s ->
-            Assert.True(( s = ( int64 Constants.MEDIA_BLOCK_SIZE ) * 3L ))
+            Assert.True(( s = ( int64 blockSize ) * 3L ))
         )
         ilu.p_NotifyReadTickCount <- ( fun _ _ -> () )
 
@@ -2602,10 +2604,12 @@ type ScsiTask_Test () =
             GroupNumber = 0uy;
             Control = 0uy;
         }
-        let wDataLen = Constants.MEDIA_BLOCK_SIZE * 3UL
+        
         let stask, ilu = createDefScsiTask defaultSCSICommandPDU cdb [] false
         let psStub = stask.Source.ProtocolService :?> CProtocolService_Stub
         let mediaStub = ( stask :?> ScsiTask ).Media :?> CMedia_Stub
+        let blockSize = ( mediaStub :> IMedia ).BlockSize |> Blocksize.toUInt64
+        let wDataLen = blockSize * 3UL
         mediaStub.p_GetBlockCount <- ( fun () -> 0xFFFFUL )
         psStub.p_SendSCSIResponse <- ( fun _ _ _ _ _ _ _ _ _ _ ->
             cnt2 <- cnt2 + 1
@@ -2643,10 +2647,11 @@ type ScsiTask_Test () =
             GroupNumber = 0uy;
             Control = 0uy;
         }
-        let wDataLen = Constants.MEDIA_BLOCK_SIZE * 3UL
         let stask, ilu = createDefScsiTask defaultSCSICommandPDU cdb [] false
         let psStub = stask.Source.ProtocolService :?> CProtocolService_Stub
         let mediaStub = ( stask :?> ScsiTask ).Media :?> CMedia_Stub
+        let blockSize = ( mediaStub :> IMedia ).BlockSize |> Blocksize.toUInt64
+        let wDataLen = blockSize * 3UL
         mediaStub.p_GetBlockCount <- ( fun () -> 0xFFFFUL )
         psStub.p_SendSCSIResponse <- ( fun _ _ _ _ _ _ _ _ _ _ ->
             cnt2 <- cnt2 + 1
@@ -2956,6 +2961,7 @@ type ScsiTask_Test () =
         let stask, ilu = createDefScsiTask scsiCommand cdb [scsiDataOut] false
         let psStub = stask.Source.ProtocolService :?> CProtocolService_Stub
         let mediaStub = ( stask :?> ScsiTask ).Media :?> CMedia_Stub
+        let blockSize = ( mediaStub :> IMedia ).BlockSize |> Blocksize.toUInt64
         psStub.p_SendSCSIResponse <- ( fun _ _ _ recvdl resp stat _ indata alloclen _ ->
             cnt2 <- cnt2 + 1
             Assert.True(( recvdl = 30u ))
@@ -2963,7 +2969,7 @@ type ScsiTask_Test () =
             Assert.True(( stat = ScsiCmdStatCd.GOOD ))
             let v = [|
                 0x00uy; 0x00uy; 0xAAuy; 0xBAuy; // RETURNED LOGICAL BLOCK ADDRESS
-                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH IN BYTE
+                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 blockSize )  // BLOCK LENGTH IN BYTE
             |]
             Assert.True(( PooledBuffer.ValueEqualsWithArray indata v ))
             Assert.True(( alloclen = 0x10u ))
@@ -2995,13 +3001,14 @@ type ScsiTask_Test () =
         let stask, ilu = createDefScsiTask defaultSCSICommandPDU cdb [] false
         let psStub = stask.Source.ProtocolService :?> CProtocolService_Stub
         let mediaStub = ( stask :?> ScsiTask ).Media :?> CMedia_Stub
+        let blockSize = ( mediaStub :> IMedia ).BlockSize |> Blocksize.toUInt64
         psStub.p_SendSCSIResponse <- ( fun _ _ _ _ resp stat _ indata alloclen _ ->
             cnt2 <- cnt2 + 1
             Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
             Assert.True(( stat = ScsiCmdStatCd.GOOD ))
             let v = [|
                 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // RETURNED LOGICAL BLOCK ADDRESS
-                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH IN BYTE
+                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 blockSize )  // BLOCK LENGTH IN BYTE
             |]
             Assert.True(( PooledBuffer.ValueEqualsWithArray indata v ))
             Assert.True(( alloclen = 0x10u ))
@@ -3033,6 +3040,7 @@ type ScsiTask_Test () =
         let stask, ilu = createDefScsiTask defaultSCSICommandPDU cdb [] false
         let psStub = stask.Source.ProtocolService :?> CProtocolService_Stub
         let mediaStub = ( stask :?> ScsiTask ).Media :?> CMedia_Stub
+        let blockSize = ( mediaStub :> IMedia ).BlockSize |> Blocksize.toUInt64
         psStub.p_SendSCSIResponse <- ( fun _ _ _ _ resp stat _ indata alloclen _ ->
             cnt2 <- cnt2 + 1
             Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
@@ -3040,7 +3048,7 @@ type ScsiTask_Test () =
             let v = [|
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // RETURNED LOGICAL BLOCK ADDRESS
                 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // RETURNED LOGICAL BLOCK ADDRESS
-                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 Constants.MEDIA_BLOCK_SIZE )  // BLOCK LENGTH IN BYTE
+                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 blockSize )  // BLOCK LENGTH IN BYTE
                 0x00uy; // RTO_EN, PROT_EN
                 0x00uy; 0x00uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
@@ -3218,6 +3226,7 @@ type ScsiTask_Test () =
         let mutable cnt2 = 0
         let mutable cnt3 = 0
         let mutable cnt4 = 0
+        let blockSize = 4096UL
         let cdb : WriteCDB = {
             OperationCode = 0x0Auy;
             WRPROTECT = 0x00uy;
@@ -3226,7 +3235,7 @@ type ScsiTask_Test () =
             FUA_NV = false;
             LogicalBlockAddress = blkcnt_me.ofUInt64 0x00UL;
             GroupNumber = 0x00uy;
-            TransferLength = 40960u / ( uint32 Constants.MEDIA_BLOCK_SIZE ) |> blkcnt_me.ofUInt32;
+            TransferLength = 40960u / uint32 blockSize |> blkcnt_me.ofUInt32;
             Control = 0uy;
         }
         let cmd = {
@@ -3283,20 +3292,20 @@ type ScsiTask_Test () =
                 Assert.True(( offset = 0UL ))
                 Assert.True(( buf.Count = 16 ))
             | 2 ->
-                Assert.True(( lba = blkcnt_me.ofUInt64 ( 2UL / Constants.MEDIA_BLOCK_SIZE ) ))
+                Assert.True(( lba = blkcnt_me.ofUInt64 ( 2UL / blockSize ) ))
                 Assert.True(( offset = 2UL ))
                 Assert.True(( buf.Count = 2560 ))
             | 3 ->
-                Assert.True(( lba = blkcnt_me.ofUInt64( 20480UL / Constants.MEDIA_BLOCK_SIZE ) ))
+                Assert.True(( lba = blkcnt_me.ofUInt64( 20480UL / blockSize ) ))
                 Assert.True(( offset = 0UL ))
                 Assert.True(( buf.Count = 10240 ))
             | 4 ->
-                Assert.True(( lba = blkcnt_me.ofUInt64( 30976UL / Constants.MEDIA_BLOCK_SIZE ) ))
-                Assert.True(( offset = 30976UL % Constants.MEDIA_BLOCK_SIZE ))
+                Assert.True(( lba = blkcnt_me.ofUInt64( 30976UL / blockSize ) ))
+                Assert.True(( offset = 30976UL % blockSize ))
                 Assert.True(( buf.Count = 640 ))
             | 5 ->
-                Assert.True(( lba = blkcnt_me.ofUInt64( 35968UL / Constants.MEDIA_BLOCK_SIZE ) ))
-                Assert.True(( offset = 35968UL % Constants.MEDIA_BLOCK_SIZE ))
+                Assert.True(( lba = blkcnt_me.ofUInt64( 35968UL / blockSize ) ))
+                Assert.True(( offset = 35968UL % blockSize ))
                 Assert.True(( buf.Count = 4992 ))
             | _ ->
                 Assert.Fail __LINE__

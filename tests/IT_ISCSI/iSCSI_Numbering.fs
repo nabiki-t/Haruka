@@ -57,6 +57,9 @@ type iSCSI_Numbering_Fixture() =
         client.RunCommand "create debug" "Created" "LU> "
         client.RunCommand "select 0" "" "MD> "
         client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "MD> "
+        client.RunCommand "select 0" "" "MD> "
+        client.RunCommand ( sprintf "set BlockSize %d" Constants.MEDIA_BLOCK_SIZE ) "" "MD> "
+        client.RunCommand "unselect" "" "MD> "
 
         client.RunCommand "validate" "All configurations are vlidated" "MD> "
         client.RunCommand "publish" "All configurations are uploaded to the controller" "MD> "

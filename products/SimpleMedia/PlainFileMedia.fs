@@ -69,6 +69,8 @@ type PlainFileMedia
             )
             reraise()
 
+    let m_BlockSize = Blocksize.toUInt64 m_Config.BlockSize
+
     /// Resource counter for read data
     let m_ReadBytesCounter = new ResCounter( Constants.RECOUNTER_SPAN_SEC, Constants.RESCOUNTER_LENGTH_SEC )
 
@@ -138,7 +140,7 @@ type PlainFileMedia
                     let loginfo = struct( m_ObjID, ValueNone, ValueNone, ValueSome( m_LUN ) )
                     g.Gen1( loginfo, "PlainFileMedia.ReadCapacity." )
                 )
-            uint64 m_FileSize / Constants.MEDIA_BLOCK_SIZE
+            uint64 m_FileSize / m_BlockSize
 
         // ------------------------------------------------------------------------
         // Implementation of Read method
@@ -157,16 +159,16 @@ type PlainFileMedia
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "PlainFileMedia.Read." ) )
 
             let readBytesLength_u64 = uint64 buffer.Count
-            let readpos_u64 : uint64 = ( blkcnt_me.toUInt64 argLBA ) * Constants.MEDIA_BLOCK_SIZE
-            let mediaBlockCount = ( ( uint64 m_FileSize ) / Constants.MEDIA_BLOCK_SIZE )
+            let readpos_u64 : uint64 = ( blkcnt_me.toUInt64 argLBA ) * m_BlockSize
+            let mediaBlockCount = ( ( uint64 m_FileSize ) / m_BlockSize )
 
             // Check specified range is in media file.
-            if Functions.CheckAccessRange argLBA readBytesLength_u64 mediaBlockCount Constants.MEDIA_BLOCK_SIZE |> not then
+            if Functions.CheckAccessRange argLBA readBytesLength_u64 mediaBlockCount m_BlockSize |> not then
                 let errmsg =
                     sprintf
                         "Out of media capacity. BlockSize=%d, TotalBlockCount=%d, RequestedLBA=%d, RequestedBytesCount=%d"
-                        Constants.MEDIA_BLOCK_SIZE
-                        ( ( uint64 m_FileSize ) / Constants.MEDIA_BLOCK_SIZE )
+                        m_BlockSize
+                        ( ( uint64 m_FileSize ) / m_BlockSize )
                         argLBA
                         buffer.Count
                 HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE, errmsg )
@@ -177,8 +179,8 @@ type PlainFileMedia
                 let errmsg =
                     sprintf
                         "Out of module limits. BlockSize=%d, TotalBlockCount=0x%016X, RequestedLBA=0x%016X, RequestedBytesCount=%d"
-                        Constants.MEDIA_BLOCK_SIZE
-                        ( ( uint64 m_FileSize ) / Constants.MEDIA_BLOCK_SIZE )
+                        m_BlockSize
+                        ( ( uint64 m_FileSize ) / m_BlockSize )
                         argLBA
                         buffer.Count
                 HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.CONFIGURATION_OF_INCAPABLE_LOGICAL_UNITS_FAILED, errmsg )
@@ -209,7 +211,7 @@ type PlainFileMedia
             ( data : ArraySegment<byte> )
             : Task<int> =
 
-            assert( offset < Constants.MEDIA_BLOCK_SIZE )
+            assert( offset < m_BlockSize )
             let sw = new Stopwatch()
             sw.Start()
             let loginfo = struct ( m_ObjID, ValueSome( source ), ValueSome( initiatorTaskTag ), ValueSome( m_LUN ) )
@@ -217,16 +219,16 @@ type PlainFileMedia
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "PlainFileMedia.Write." ) )
 
             let writeBytesLength_u64 = uint64 data.Count
-            let writepos_u64 = ( blkcnt_me.toUInt64 argLBA ) * Constants.MEDIA_BLOCK_SIZE + offset
-            let mediaBlockCount = ( ( uint64 m_FileSize ) / Constants.MEDIA_BLOCK_SIZE )
+            let writepos_u64 = ( blkcnt_me.toUInt64 argLBA ) * m_BlockSize + offset
+            let mediaBlockCount = ( ( uint64 m_FileSize ) / m_BlockSize )
 
             // Check specified range is in media file.
-            if Functions.CheckAccessRange argLBA ( writeBytesLength_u64 + offset ) mediaBlockCount Constants.MEDIA_BLOCK_SIZE |> not then
+            if Functions.CheckAccessRange argLBA ( writeBytesLength_u64 + offset ) mediaBlockCount m_BlockSize |> not then
                 let errmsg = 
                     sprintf
                         "Out of media capacity. BlockSize=%d, TotalBlockCount=%d, RequestedLBA=%d, RequestedOffset=%d, RequestedBytesCount=%d"
-                        Constants.MEDIA_BLOCK_SIZE
-                        ( ( uint64 m_FileSize ) / Constants.MEDIA_BLOCK_SIZE )
+                        m_BlockSize
+                        ( ( uint64 m_FileSize ) / m_BlockSize )
                         argLBA
                         offset
                         writeBytesLength_u64
@@ -285,7 +287,7 @@ type PlainFileMedia
 
         // ------------------------------------------------------------------------
         // Get block count
-        override _.BlockCount = uint64( m_FileSize ) / Constants.MEDIA_BLOCK_SIZE
+        override _.BlockCount = uint64( m_FileSize ) / m_BlockSize
 
         // ------------------------------------------------------------------------
         // Get block size

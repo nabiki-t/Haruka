@@ -159,6 +159,7 @@ type PRManager_Test1 () =
 
     static member defaultTaskObj ( cdb : ICDB ) ( pm : PRManager ) =
         let media = CMedia_Stub(
+            p_GetBlockSize = ( fun () -> Blocksize.BS_4096 ),
             p_GetBlockCount = ( fun _ -> 512UL )
         )
         new ScsiTask(

@@ -63,8 +63,8 @@ type MemBufferMedia_Test () =
         }
         let k1 = new HKiller() :> IKiller
 
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
-        Assert.True(( mb.BufferLineSize = 4UL * 16UL ))
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        Assert.True(( mb.BufferLineSize = 4UL * 512UL ))
         Assert.True(( ( mb :> IMedia ).BlockCount = 0UL ))
 
     [<Fact>]
@@ -72,12 +72,12 @@ type MemBufferMedia_Test () =
         let stat_stub = new CStatus_Stub()
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
-            BytesCount = 16UL - 1UL;
+            BytesCount = 512UL - 1UL;
             MediaName = "";
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         Assert.True(( ( mb :> IMedia ).BlockCount = 0UL ))
         let pr = new PrivateCaller( mb )
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
@@ -89,11 +89,11 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 16UL;
+            BytesCount = 512UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         Assert.True(( ( mb :> IMedia ).BlockCount = 1UL ))
         let pr = new PrivateCaller( mb )
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
@@ -105,11 +105,11 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL;
+            BytesCount = 4UL * 512UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         Assert.True(( ( mb :> IMedia ).BlockCount = 4UL ))
         let pr = new PrivateCaller( mb )
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
@@ -121,11 +121,11 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL + 16UL;
+            BytesCount = 4UL * 512UL + 512UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         Assert.True(( ( mb :> IMedia ).BlockCount = 5UL ))
         let pr = new PrivateCaller( mb )
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
@@ -137,11 +137,11 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * ( uint64 Array.MaxLength );
+            BytesCount = 4UL * 512UL * ( uint64 Array.MaxLength );
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         Assert.True(( ( mb :> IMedia ).BlockCount = 4UL * ( uint64 Array.MaxLength ) ))
         let pr = new PrivateCaller( mb )
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
@@ -153,11 +153,11 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * ( uint64 Array.MaxLength ) + 16UL;
+            BytesCount = 4UL * 512UL * ( uint64 Array.MaxLength ) + 512UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         Assert.True(( ( mb :> IMedia ).BlockCount = 4UL * ( uint64 Array.MaxLength ) ))
         let pr = new PrivateCaller( mb )
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
@@ -169,11 +169,11 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 2UL;
+            BytesCount = 4UL * 512UL * 2UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         let pr = new PrivateCaller( mb )
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
         Assert.True(( m_Buffer.Length = 2 ))
@@ -193,11 +193,11 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 2UL;
+            BytesCount = 4UL * 512UL * 2UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         let pr = new PrivateCaller( mb )
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
         Assert.True(( m_Buffer.Length = 2 ))
@@ -215,11 +215,11 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 2UL;
+            BytesCount = 4UL * 512UL * 2UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         let pr = new PrivateCaller( mb )
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
         Assert.True(( m_Buffer.Length = 2 ))
@@ -239,11 +239,11 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL;
+            BytesCount = 4UL * 512UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         let r = ( mb :> IMedia ).ReadCapacity( itt_me.fromPrim 0u ) ( wCmdSrc k1 )
         Assert.True(( r = 4UL ))
 
@@ -253,11 +253,11 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 16UL;
+            BytesCount = 512UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         Assert.True(( ( ( mb :> IMedia ).TestUnitReady ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ) = ValueNone ))
 
     [<Fact>]
@@ -266,18 +266,18 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 16UL;
+            BytesCount = 512UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte > 16
+        let wbuf = Array.zeroCreate< byte > 512
         let wr =
             ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
-        Assert.True(( wr = 16 ))
+        Assert.True(( wr = 512 ))
 
     [<Fact>]
     member _.Read_002() =
@@ -285,14 +285,14 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 16UL;
+            BytesCount = 512UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte > 17
+        let wbuf = Array.zeroCreate< byte > 513
         try
             ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
@@ -308,11 +308,11 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 16UL * 10UL;
+            BytesCount = 512UL * 10UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 0 )
@@ -327,11 +327,11 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 16UL * 10UL;
+            BytesCount = 512UL * 10UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 1 )
@@ -350,11 +350,11 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 16UL * 10UL;
+            BytesCount = 512UL * 10UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 0 )
@@ -373,18 +373,18 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 16UL * 10UL;
+            BytesCount = 512UL * 10UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte > 160
+        let wbuf = Array.zeroCreate< byte > 5120
         let wr =
             ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
-        Assert.True(( wr = 160 ))
+        Assert.True(( wr = 5120 ))
 
     [<Fact>]
     member _.Read_007() =
@@ -392,14 +392,14 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 16UL * 10UL;
+            BytesCount = 512UL * 10UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte >( 16 * 10 + 1 )
+        let wbuf = Array.zeroCreate< byte >( 512 * 10 + 1 )
         try
             ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
@@ -415,19 +415,19 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 2UL;
+            BytesCount = 4UL * 512UL * 2UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte >( 4 * 16 * 2 ) |> fillBuffer
+        let wbuf = Array.zeroCreate< byte >( 4 * 512 * 2 ) |> fillBuffer
         ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
-        let rbuf = Array.zeroCreate< byte >( 4 * 16 - 1 )
+        let rbuf = Array.zeroCreate< byte >( 4 * 512 - 1 )
         let rr =
             ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment rbuf )
             |> Functions.RunTaskSynchronously
@@ -440,19 +440,19 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 2UL;
+            BytesCount = 4UL * 512UL * 2UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte >( 4 * 16 * 2 ) |> fillBuffer
+        let wbuf = Array.zeroCreate< byte >( 4 * 512 * 2 ) |> fillBuffer
         ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
-        let rbuf = Array.zeroCreate< byte >( 4 * 16 )
+        let rbuf = Array.zeroCreate< byte >( 4 * 512 )
         let rr =
             ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment rbuf )
             |> Functions.RunTaskSynchronously
@@ -465,19 +465,19 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 2UL;
+            BytesCount = 4UL * 512UL * 2UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte >( 4 * 16 * 2 ) |> fillBuffer
+        let wbuf = Array.zeroCreate< byte >( 4 * 512 * 2 ) |> fillBuffer
         ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
-        let rbuf = Array.zeroCreate< byte >( 4 * 16 + 1 )
+        let rbuf = Array.zeroCreate< byte >( 4 * 512 + 1 )
         let rr =
             ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment rbuf )
             |> Functions.RunTaskSynchronously
@@ -490,19 +490,19 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 3UL;
+            BytesCount = 4UL * 512UL * 3UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte >( 4 * 16 * 3 ) |> fillBuffer
+        let wbuf = Array.zeroCreate< byte >( 4 * 512 * 3 ) |> fillBuffer
         ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
-        let rbuf = Array.zeroCreate< byte >( 4 * 16 * 2 - 1 )
+        let rbuf = Array.zeroCreate< byte >( 4 * 512 * 2 - 1 )
         let rr =
             ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment rbuf )
             |> Functions.RunTaskSynchronously
@@ -515,19 +515,19 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 3UL;
+            BytesCount = 4UL * 512UL * 3UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte >( 4 * 16 * 3 ) |> fillBuffer
+        let wbuf = Array.zeroCreate< byte >( 4 * 512 * 3 ) |> fillBuffer
         ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
-        let rbuf = Array.zeroCreate< byte >( 4 * 16 * 2 )
+        let rbuf = Array.zeroCreate< byte >( 4 * 512 * 2 )
         let rr =
             ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment rbuf )
             |> Functions.RunTaskSynchronously
@@ -540,19 +540,19 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 3UL;
+            BytesCount = 4UL * 512UL * 3UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte >( 4 * 16 * 3 ) |> fillBuffer
+        let wbuf = Array.zeroCreate< byte >( 4 * 512 * 3 ) |> fillBuffer
         ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
-        let rbuf = Array.zeroCreate< byte >( 4 * 16 * 2 + 1 )
+        let rbuf = Array.zeroCreate< byte >( 4 * 512 * 2 + 1 )
         let rr =
             ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment rbuf )
             |> Functions.RunTaskSynchronously
@@ -565,24 +565,24 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 3UL;
+            BytesCount = 4UL * 512UL * 3UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte >( 4 * 16 * 3 ) |> fillBuffer
+        let wbuf = Array.zeroCreate< byte >( 4 * 512 * 3 ) |> fillBuffer
         ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
-        let rbuf = Array.zeroCreate< byte >( 4 * 16 * 2 )
+        let rbuf = Array.zeroCreate< byte >( 4 * 512 * 2 )
         let rr =
             ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 1UL ) ( ArraySegment rbuf )
             |> Functions.RunTaskSynchronously
         Assert.True(( rr = rbuf.Length ))
-        Assert.True(( GlbFunc.Compare wbuf 16 rbuf 0 rbuf.Length ))
+        Assert.True(( GlbFunc.Compare wbuf 512 rbuf 0 rbuf.Length ))
 
     [<Fact>]
     member _.Read_015() =
@@ -590,24 +590,24 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 3UL;
+            BytesCount = 4UL * 512UL * 3UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte >( 4 * 16 * 3 ) |> fillBuffer
+        let wbuf = Array.zeroCreate< byte >( 4 * 512 * 3 ) |> fillBuffer
         ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
-        let rbuf = Array.zeroCreate< byte >( 4 * 16 * 2 )
+        let rbuf = Array.zeroCreate< byte >( 4 * 512 * 2 )
         let rr =
             ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 4UL ) ( ArraySegment rbuf )
             |> Functions.RunTaskSynchronously
         Assert.True(( rr = rbuf.Length ))
-        Assert.True(( GlbFunc.Compare wbuf ( 4 * 16 ) rbuf 0 rbuf.Length ))
+        Assert.True(( GlbFunc.Compare wbuf ( 4 * 512 ) rbuf 0 rbuf.Length ))
 
     [<Fact>]
     member _.Read_016() =
@@ -615,24 +615,24 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 3UL;
+            BytesCount = 4UL * 512UL * 3UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte >( 4 * 16 * 3 ) |> fillBuffer
+        let wbuf = Array.zeroCreate< byte >( 4 * 512 * 3 ) |> fillBuffer
         ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
 
-        let rbuf = Array.zeroCreate< byte >( 4 * 16 * 2 )
+        let rbuf = Array.zeroCreate< byte >( 4 * 512 * 2 )
         let rr =
             ( mb :> IMedia ).Read ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 1UL ) ( ArraySegment( rbuf, 10, rbuf.Length - 10 ) )
             |> Functions.RunTaskSynchronously
         Assert.True(( rr = rbuf.Length - 10 ))
-        Assert.True(( GlbFunc.Compare wbuf 16 rbuf 10 ( rbuf.Length - 10 ) ))
+        Assert.True(( GlbFunc.Compare wbuf 512 rbuf 10 ( rbuf.Length - 10 ) ))
 
     [<Fact>]
     member _.Write_001() =
@@ -640,18 +640,18 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 16UL;
+            BytesCount = 512UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte > 16
+        let wbuf = Array.zeroCreate< byte > 512
         let wr =
             ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
-        Assert.True(( wr = 16 ))
+        Assert.True(( wr = 512 ))
 
     [<Fact>]
     member _.Write_002() =
@@ -659,14 +659,14 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 16UL;
+            BytesCount = 512UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte > 17
+        let wbuf = Array.zeroCreate< byte > 513
         try
             ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
@@ -682,14 +682,14 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 16UL;
+            BytesCount = 512UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte > 16
+        let wbuf = Array.zeroCreate< byte > 512
         try
             ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 1UL ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
@@ -705,11 +705,11 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 16UL * 10UL;
+            BytesCount = 512UL * 10UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 0 )
@@ -724,11 +724,11 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 16UL * 10UL;
+            BytesCount = 512UL * 10UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 1 )
@@ -747,11 +747,11 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 16UL * 10UL;
+            BytesCount = 512UL * 10UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 0 )
@@ -770,18 +770,18 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 16UL * 10UL;
+            BytesCount = 512UL * 10UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte > 160
+        let wbuf = Array.zeroCreate< byte > 5120
         let wr =
             ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
-        Assert.True(( wr = 160 ))
+        Assert.True(( wr = 5120 ))
 
     [<Fact>]
     member _.Write_008() =
@@ -789,14 +789,14 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 16UL * 10UL;
+            BytesCount = 512UL * 10UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte >( 16 * 10 + 1 )
+        let wbuf = Array.zeroCreate< byte >( 512 * 10 + 1 )
         try
             ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL )0UL ( ArraySegment wbuf )
             |> Functions.RunTaskSynchronously
@@ -812,14 +812,14 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 2UL;
+            BytesCount = 4UL * 512UL * 2UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte >( 4 * 16 - 1 ) |> fillBuffer
+        let wbuf = Array.zeroCreate< byte >( 4 * 512 - 1 ) |> fillBuffer
         ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
@@ -836,14 +836,14 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 2UL;
+            BytesCount = 4UL * 512UL * 2UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte >( 4 * 16 ) |> fillBuffer
+        let wbuf = Array.zeroCreate< byte >( 4 * 512 ) |> fillBuffer
         ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
@@ -860,14 +860,14 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 2UL;
+            BytesCount = 4UL * 512UL * 2UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte >( 4 * 16 + 1 ) |> fillBuffer
+        let wbuf = Array.zeroCreate< byte >( 4 * 512 + 1 ) |> fillBuffer
         ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
@@ -876,8 +876,8 @@ type MemBufferMedia_Test () =
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
         Assert.True(( m_Buffer.Length = 2 ))
 
-        Assert.True(( GlbFunc.Compare wbuf 0 m_Buffer.[0] 0 ( 4 * 16 ) ))
-        Assert.True(( m_Buffer.[1][0] = wbuf.[ 4 * 16 ] ))
+        Assert.True(( GlbFunc.Compare wbuf 0 m_Buffer.[0] 0 ( 4 * 512 ) ))
+        Assert.True(( m_Buffer.[1][0] = wbuf.[ 4 * 512 ] ))
 
     [<Fact>]
     member _.Write_012() =
@@ -885,14 +885,14 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 3UL;
+            BytesCount = 4UL * 512UL * 3UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte >( 4 * 16 * 2 - 1 ) |> fillBuffer
+        let wbuf = Array.zeroCreate< byte >( 4 * 512 * 2 - 1 ) |> fillBuffer
         ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
@@ -901,8 +901,8 @@ type MemBufferMedia_Test () =
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
         Assert.True(( m_Buffer.Length = 3 ))
 
-        Assert.True(( GlbFunc.Compare wbuf 0 m_Buffer.[0] 0 ( 4 * 16 ) ))
-        Assert.True(( GlbFunc.Compare wbuf ( 4 * 16 ) m_Buffer.[1] 0 ( 4 * 16 - 1 ) ))
+        Assert.True(( GlbFunc.Compare wbuf 0 m_Buffer.[0] 0 ( 4 * 512 ) ))
+        Assert.True(( GlbFunc.Compare wbuf ( 4 * 512 ) m_Buffer.[1] 0 ( 4 * 512 - 1 ) ))
 
     [<Fact>]
     member _.Write_013() =
@@ -910,14 +910,14 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 3UL;
+            BytesCount = 4UL * 512UL * 3UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte >( 4 * 16 * 2 ) |> fillBuffer
+        let wbuf = Array.zeroCreate< byte >( 4 * 512 * 2 ) |> fillBuffer
         ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
@@ -926,8 +926,8 @@ type MemBufferMedia_Test () =
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
         Assert.True(( m_Buffer.Length = 3 ))
 
-        Assert.True(( GlbFunc.Compare wbuf 0 m_Buffer.[0] 0 ( 4 * 16 ) ))
-        Assert.True(( GlbFunc.Compare wbuf ( 4 * 16 ) m_Buffer.[1] 0 ( 4 * 16 ) ))
+        Assert.True(( GlbFunc.Compare wbuf 0 m_Buffer.[0] 0 ( 4 * 512 ) ))
+        Assert.True(( GlbFunc.Compare wbuf ( 4 * 512 ) m_Buffer.[1] 0 ( 4 * 512 ) ))
 
     [<Fact>]
     member _.Write_014() =
@@ -935,14 +935,14 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 3UL;
+            BytesCount = 4UL * 512UL * 3UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte >( 4 * 16 * 2 + 1 ) |> fillBuffer
+        let wbuf = Array.zeroCreate< byte >( 4 * 512 * 2 + 1 ) |> fillBuffer
         ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
@@ -951,9 +951,9 @@ type MemBufferMedia_Test () =
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
         Assert.True(( m_Buffer.Length = 3 ))
 
-        Assert.True(( GlbFunc.Compare wbuf 0 m_Buffer.[0] 0 ( 4 * 16 ) ))
-        Assert.True(( GlbFunc.Compare wbuf ( 4 * 16 ) m_Buffer.[1] 0 ( 4 * 16 ) ))
-        Assert.True(( GlbFunc.Compare wbuf ( 4 * 16 * 2 ) m_Buffer.[2] 0 1 ))
+        Assert.True(( GlbFunc.Compare wbuf 0 m_Buffer.[0] 0 ( 4 * 512 ) ))
+        Assert.True(( GlbFunc.Compare wbuf ( 4 * 512 ) m_Buffer.[1] 0 ( 4 * 512 ) ))
+        Assert.True(( GlbFunc.Compare wbuf ( 4 * 512 * 2 ) m_Buffer.[2] 0 1 ))
 
     [<Fact>]
     member _.Write_015() =
@@ -961,14 +961,14 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 3UL;
+            BytesCount = 4UL * 512UL * 3UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte >( 4 * 16 * 2 ) |> fillBuffer
+        let wbuf = Array.zeroCreate< byte >( 4 * 512 * 2 ) |> fillBuffer
         ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 1UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
@@ -977,9 +977,9 @@ type MemBufferMedia_Test () =
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
         Assert.True(( m_Buffer.Length = 3 ))
 
-        Assert.True(( GlbFunc.Compare wbuf 0 m_Buffer.[0] 16 ( 4 * 16 - 16 ) ))
-        Assert.True(( GlbFunc.Compare wbuf ( 4 * 16 - 16 ) m_Buffer.[1] 0 ( 4 * 16 ) ))
-        Assert.True(( GlbFunc.Compare wbuf ( 4 * 16 * 2 - 16 ) m_Buffer.[2] 0 16 ))
+        Assert.True(( GlbFunc.Compare wbuf 0 m_Buffer.[0] 512 ( 4 * 512 - 512 ) ))
+        Assert.True(( GlbFunc.Compare wbuf ( 4 * 512 - 512 ) m_Buffer.[1] 0 ( 4 * 512 ) ))
+        Assert.True(( GlbFunc.Compare wbuf ( 4 * 512 * 2 - 512 ) m_Buffer.[2] 0 512 ))
 
     [<Fact>]
     member _.Write_016() =
@@ -987,14 +987,14 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 3UL;
+            BytesCount = 4UL * 512UL * 3UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte >( 4 * 16 * 2 ) |> fillBuffer
+        let wbuf = Array.zeroCreate< byte >( 4 * 512 * 2 ) |> fillBuffer
         ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 7UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
@@ -1003,9 +1003,9 @@ type MemBufferMedia_Test () =
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
         Assert.True(( m_Buffer.Length = 3 ))
 
-        Assert.True(( GlbFunc.Compare wbuf 0 m_Buffer.[0] 7 ( 4 * 16 - 7 ) ))
-        Assert.True(( GlbFunc.Compare wbuf ( 4 * 16 - 7 ) m_Buffer.[1] 0 ( 4 * 16 ) ))
-        Assert.True(( GlbFunc.Compare wbuf ( 4 * 16 * 2 - 7 ) m_Buffer.[2] 0 7 ))
+        Assert.True(( GlbFunc.Compare wbuf 0 m_Buffer.[0] 7 ( 4 * 512 - 7 ) ))
+        Assert.True(( GlbFunc.Compare wbuf ( 4 * 512 - 7 ) m_Buffer.[1] 0 ( 4 * 512 ) ))
+        Assert.True(( GlbFunc.Compare wbuf ( 4 * 512 * 2 - 7 ) m_Buffer.[2] 0 7 ))
 
     [<Fact>]
     member _.Write_017() =
@@ -1013,14 +1013,14 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 3UL;
+            BytesCount = 4UL * 512UL * 3UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte >( 4 * 16 * 2 ) |> fillBuffer
+        let wbuf = Array.zeroCreate< byte >( 4 * 512 * 2 ) |> fillBuffer
         ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 4UL ) 0UL ( ArraySegment wbuf )
         |> Functions.RunTaskSynchronously
         |> ignore
@@ -1029,8 +1029,8 @@ type MemBufferMedia_Test () =
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
         Assert.True(( m_Buffer.Length = 3 ))
 
-        Assert.True(( GlbFunc.Compare wbuf 0 m_Buffer.[1] 0 ( 4 * 16 ) ))
-        Assert.True(( GlbFunc.Compare wbuf ( 4 * 16 ) m_Buffer.[2] 0 ( 4 * 16 ) ))
+        Assert.True(( GlbFunc.Compare wbuf 0 m_Buffer.[1] 0 ( 4 * 512 ) ))
+        Assert.True(( GlbFunc.Compare wbuf ( 4 * 512 ) m_Buffer.[2] 0 ( 4 * 512 ) ))
 
     [<Fact>]
     member _.Write_018() =
@@ -1038,14 +1038,14 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 3UL;
+            BytesCount = 4UL * 512UL * 3UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf = Array.zeroCreate< byte >( 4 * 16 * 2 ) |> fillBuffer
+        let wbuf = Array.zeroCreate< byte >( 4 * 512 * 2 ) |> fillBuffer
         ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 1UL ) 1UL ( ArraySegment( wbuf, 10, wbuf.Length - 10 ) )
         |> Functions.RunTaskSynchronously
         |> ignore
@@ -1054,9 +1054,9 @@ type MemBufferMedia_Test () =
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
         Assert.True(( m_Buffer.Length = 3 ))
 
-        Assert.True(( GlbFunc.Compare wbuf 10 m_Buffer.[0] 17 ( 4 * 16 - 17 ) ))
-        Assert.True(( GlbFunc.Compare wbuf ( 10 + 4 * 16 - 17 ) m_Buffer.[1] 0 ( 4 * 16 ) ))
-        Assert.True(( GlbFunc.Compare wbuf ( 10 + 4 * 16 * 2 - 17 ) m_Buffer.[2] 0 7 ))
+        Assert.True(( GlbFunc.Compare wbuf 10 m_Buffer.[0] 513 ( 4 * 512 - 513 ) ))
+        Assert.True(( GlbFunc.Compare wbuf ( 10 + 4 * 512 - 513 ) m_Buffer.[1] 0 ( 4 * 512 ) ))
+        Assert.True(( GlbFunc.Compare wbuf ( 10 + 4 * 512 * 2 - 513 ) m_Buffer.[2] 0 7 ))
 
     [<Fact>]
     member _.Write_019() =
@@ -1064,14 +1064,14 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 3UL;
+            BytesCount = 4UL * 512UL * 3UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
-        let wbuf1 = Array.zeroCreate< byte >( 4 * 16 * 3 ) |> fillBuffer
+        let wbuf1 = Array.zeroCreate< byte >( 4 * 512 * 3 ) |> fillBuffer
         ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment wbuf1 )
         |> Functions.RunTaskSynchronously
         |> ignore
@@ -1080,17 +1080,17 @@ type MemBufferMedia_Test () =
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
         Assert.True(( m_Buffer.Length = 3 ))
 
-        Assert.True(( GlbFunc.Compare wbuf1 0 m_Buffer.[0] 0 ( 4 * 16 ) ))
-        Assert.True(( GlbFunc.Compare wbuf1 ( 4 * 16 ) m_Buffer.[1] 0 ( 4 * 16 ) ))
-        Assert.True(( GlbFunc.Compare wbuf1 ( 4 * 16 * 2 ) m_Buffer.[2] 0 ( 4 * 16 ) ))
+        Assert.True(( GlbFunc.Compare wbuf1 0 m_Buffer.[0] 0 ( 4 * 512 ) ))
+        Assert.True(( GlbFunc.Compare wbuf1 ( 4 * 512 ) m_Buffer.[1] 0 ( 4 * 512 ) ))
+        Assert.True(( GlbFunc.Compare wbuf1 ( 4 * 512 * 2 ) m_Buffer.[2] 0 ( 4 * 512 ) ))
 
-        let wbuf2 = Array.zeroCreate< byte >( 4 * 16 ) |> fillBuffer
+        let wbuf2 = Array.zeroCreate< byte >( 4 * 512 ) |> fillBuffer
         ( mb :> IMedia ).Write ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ( blkcnt_me.ofUInt64 2UL ) 0UL ( ArraySegment wbuf2 )
         |> Functions.RunTaskSynchronously
         |> ignore
 
-        Assert.True(( GlbFunc.Compare wbuf2 0 m_Buffer.[0] ( 2 * 16 ) ( 2 * 16 ) ))
-        Assert.True(( GlbFunc.Compare wbuf2 ( 2 * 16 ) m_Buffer.[1] 0 ( 2 * 16 ) ))
+        Assert.True(( GlbFunc.Compare wbuf2 0 m_Buffer.[0] ( 2 * 512 ) ( 2 * 512 ) ))
+        Assert.True(( GlbFunc.Compare wbuf2 ( 2 * 512 ) m_Buffer.[1] 0 ( 2 * 512 ) ))
 
     [<Fact>]
     member _.Format_001() =
@@ -1098,11 +1098,11 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 2UL;
+            BytesCount = 4UL * 512UL * 2UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
         ( mb :> IMedia ).Initialize()
 
         let pr = new PrivateCaller( mb )
@@ -1130,11 +1130,11 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 2UL;
+            BytesCount = 4UL * 512UL * 2UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL ) :> IMedia
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL ) :> IMedia
 
         let r =
             mb.MediaControl( MediaCtrlReq.U_Debug( MediaCtrlReq.U_GetAllTraps() ) )
@@ -1152,10 +1152,10 @@ type MemBufferMedia_Test () =
         let conf : TargetGroupConf.T_MemBuffer = {
             IdentNumber = mediaidx_me.fromPrim 0u;
             MediaName = "";
-            BytesCount = 4UL * 16UL * 2UL;
+            BytesCount = 4UL * 512UL * 2UL;
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL, 16UL ) :> IMedia
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL ) :> IMedia
         Assert.True(( mb.GetSubMedia() = [] ))
 

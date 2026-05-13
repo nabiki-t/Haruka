@@ -55,6 +55,9 @@ type SCSI_Commands01_Fixture() =
         client.RunCommand "create /l 1" "Created" "T > "
         client.RunCommand "select 0" "" "LU> "
         client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
+        client.RunCommand "select 0" "" "MD> "
+        client.RunCommand ( sprintf "set BlockSize %d" Constants.MEDIA_BLOCK_SIZE ) "" "MD> "
+        client.RunCommand "unselect" "" "LU> "
         client.RunCommand "unselect" "" "T > "
         client.RunCommand "unselect" "" "TG> "
 
@@ -66,6 +69,9 @@ type SCSI_Commands01_Fixture() =
             client.RunCommand ( sprintf "create /l %d" i ) "Created" "T > "
             client.RunCommand ( sprintf "select %d" ( i - 2 ) ) "" "LU> "
             client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
+            client.RunCommand "select 0" "" "MD> "
+            client.RunCommand ( sprintf "set BlockSize %d" Constants.MEDIA_BLOCK_SIZE ) "" "MD> "
+            client.RunCommand "unselect" "" "LU> "
             client.RunCommand "unselect" "" "T > "
         client.RunCommand "unselect" "" "TG> "
 

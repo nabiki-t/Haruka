@@ -381,7 +381,7 @@ type StatusMaster(
                 | TargetGroupConf.T_MEDIA.U_PlainFile( x ) ->
                     new PlainFileMedia( this, x, argKiller, lun, multiplicity ) :> IMedia
                 | TargetGroupConf.T_MEDIA.U_MemBuffer( x ) ->
-                    new MemBufferMedia( this, x, argKiller, lun, Constants.MEMBUFFER_BUF_LINE_BLOCK_SIZE, Constants.MEDIA_BLOCK_SIZE ) :> IMedia
+                    new MemBufferMedia( this, x, argKiller, lun, Constants.MEMBUFFER_BUF_LINE_BLOCK_SIZE ) :> IMedia
                 | TargetGroupConf.T_MEDIA.U_DummyMedia( _ ) ->
                     new DummyMedia( argKiller, lun ) :> IMedia
                 | TargetGroupConf.T_MEDIA.U_DebugMedia( x ) ->
