@@ -77,7 +77,7 @@ type iSCSI_LoginTest2_Fixture() =
             client.RunCommand "select 0" "" "LU> "
             client.RunCommand ( sprintf "create membuffer /s %d" m_TD0_MediaSize ) "Created" "LU> "
             client.RunCommand "select 0" "" "MD> "
-            client.RunCommand ( sprintf "set BlockSize %d" Constants.MEDIA_BLOCK_SIZE ) "" "MD> "
+            client.RunCommand "set BlockSize 512" "" "MD> "
             client.RunCommand "unselect" "" "LU> "
             client.RunCommand "unselect" "" "T > "
             client.RunCommand "unselect" "" "TG> "
@@ -104,7 +104,7 @@ type iSCSI_LoginTest2_Fixture() =
             client.RunCommand "select 0" "" "LU> "
             client.RunCommand "create membuffer /s 65536" "Created" "LU> "
             client.RunCommand "select 0" "" "MD> "
-            client.RunCommand ( sprintf "set BlockSize %d" Constants.MEDIA_BLOCK_SIZE ) "" "MD> "
+            client.RunCommand "set BlockSize 512" "" "MD> "
             client.RunCommand "unselect" "" "LU> "
             client.RunCommand "unselect" "" "T > "
             client.RunCommand "unselect" "" "TG> "
@@ -146,7 +146,7 @@ type iSCSI_LoginTest2_Fixture() =
     member _.TD0_MediaSize = m_TD0_MediaSize
     member _.targetCount = m_TargetCount
     member _.luCount = m_LUCount
-    member _.MediaBlockSize = uint Constants.MEDIA_BLOCK_SIZE
+    member _.MediaBlockSize = 512u  // must be 512 or 4096
 
 
 [<Collection( "iSCSI_LoginTest2" )>]

@@ -33,6 +33,7 @@ type iSCSI_OtherErrorCases_Fixture() =
 
     let m_iSCSIPortNo = GlbFunc.nextTcpPortNo()
     let m_MediaSize = 65536u
+    let m_MediaBlockSizse = 512    // 4096 or 512 bytes
 
     // Add default configurations
     let AddDefaultConf( client : ClientProc ): unit =
@@ -58,7 +59,7 @@ type iSCSI_OtherErrorCases_Fixture() =
         client.RunCommand "select 0" "" "LU> "
         client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
         client.RunCommand "select 0" "" "MD> "
-        client.RunCommand ( sprintf "set BlockSize %d" Constants.MEDIA_BLOCK_SIZE ) "" "MD> "
+        client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSizse ) "" "MD> "
         client.RunCommand "unselect" "" "LU> "
 
         client.RunCommand "validate" "All configurations are vlidated" "LU> "
@@ -85,7 +86,7 @@ type iSCSI_OtherErrorCases_Fixture() =
     member _.clientProc = m_Client
     member _.iSCSIPortNo = m_iSCSIPortNo
     member _.MediaSize = m_MediaSize
-    member _.MediaBlockSize = uint Constants.MEDIA_BLOCK_SIZE   // 4096 or 512 bytes
+    member _.MediaBlockSize = uint m_MediaBlockSizse
 
 
 [<Collection( "iSCSI_OtherErrorCases" )>]     // Reuse existing test fixtures

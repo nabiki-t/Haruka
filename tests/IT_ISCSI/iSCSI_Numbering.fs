@@ -31,6 +31,7 @@ type iSCSI_Numbering_Fixture() =
 
     let m_iSCSIPortNo = GlbFunc.nextTcpPortNo()
     let m_MediaSize = 65536u
+    let m_BlockSize = 512u     // 4096 or 512 bytes
 
     // Add default configurations
     let AddDefaultConf( client : ClientProc ): unit =
@@ -58,7 +59,7 @@ type iSCSI_Numbering_Fixture() =
         client.RunCommand "select 0" "" "MD> "
         client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "MD> "
         client.RunCommand "select 0" "" "MD> "
-        client.RunCommand ( sprintf "set BlockSize %d" Constants.MEDIA_BLOCK_SIZE ) "" "MD> "
+        client.RunCommand ( sprintf "set BlockSize %d" m_BlockSize ) "" "MD> "
         client.RunCommand "unselect" "" "MD> "
 
         client.RunCommand "validate" "All configurations are vlidated" "MD> "
@@ -88,7 +89,7 @@ type iSCSI_Numbering_Fixture() =
     member _.clientProc = m_Client
     member _.iSCSIPortNo = m_iSCSIPortNo
     member _.MediaSize = m_MediaSize
-    member _.MediaBlockSize = uint Constants.MEDIA_BLOCK_SIZE   // 4096 or 512 bytes
+    member _.MediaBlockSize = m_BlockSize
 
 
 [<Collection( "iSCSI_Numbering" )>]

@@ -1445,7 +1445,7 @@ type ScsiTask
         assert( match m_CDB with | :? ReadCDB -> true | _ -> false )
         let cdb = m_CDB :?> ReadCDB
         let wMediaBlockCount = m_Media.BlockCount
-        let wBlkSize = Constants.MEDIA_BLOCK_SIZE
+        let wBlkSize = m_Media.BlockSize |> Blocksize.toUInt64
 
         task {
             if cdb.DPO then
@@ -1535,6 +1535,7 @@ type ScsiTask
 
         let wBlockCount = m_Media.ReadCapacity m_ITT m_Source
         let blockCount = wBlockCount - 1UL
+        let blockSize = m_Media.BlockSize |> Blocksize.toUInt32
 
         let result =
             if cdb.OperationCode = 0x25uy then
@@ -1544,14 +1545,14 @@ type ScsiTask
                     Functions.UInt32ToNetworkBytes r.Array 0 ( uint32 blockCount )
                 else
                     Functions.UInt32ToNetworkBytes r.Array 0 0xFFFFFFFFu
-                Functions.UInt32ToNetworkBytes r.Array 4 ( uint32 Constants.MEDIA_BLOCK_SIZE )
+                Functions.UInt32ToNetworkBytes r.Array 4 blockSize
                 r
 
             else
                 //  READ CAPACITY(16)
                 let r = PooledBuffer.Rent 32
                 Functions.UInt64ToNetworkBytes r.Array 0 blockCount
-                Functions.UInt32ToNetworkBytes r.Array 8 ( uint32 Constants.MEDIA_BLOCK_SIZE )
+                Functions.UInt32ToNetworkBytes r.Array 8 blockSize
                 r.Array.[12] <- 0x00uy; // RTO_EN, PROT_EN
                 for i = 13 to 31 do
                     r.Array.[i] <- 0x00uy;
@@ -1622,7 +1623,7 @@ type ScsiTask
         assert( m_CDB.Type = Write )
         assert( match m_CDB with | :? WriteCDB -> true | _ -> false )
         let cdb = m_CDB :?> WriteCDB
-        let wBlkSize = Constants.MEDIA_BLOCK_SIZE
+        let wBlkSize = m_Media.BlockSize |> Blocksize.toUInt64
         let wTransBytesLen = ( uint64 cdb.TransferLength ) * wBlkSize
         let wMediaBlockCount = m_Media.BlockCount
 

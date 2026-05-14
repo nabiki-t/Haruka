@@ -27,12 +27,8 @@ open Haruka.Test
 [<CollectionDefinition( "SCSI_ReadWrite" )>]
 type SCSI_ReadWrite_Fixture() =
 
-    static let m_MediaSize = uint32 Constants.MEDIA_BLOCK_SIZE * 256u
-    static let m_MediaBlockSize = 
-        if Constants.MEDIA_BLOCK_SIZE = 512UL then     // 4096 or 512 bytes
-            Blocksize.BS_512
-        else
-            Blocksize.BS_4096
+    static let m_MediaBlockSize = 512           // 4096 or 512 bytes
+    static let m_MediaSize = uint32 m_MediaBlockSize * 256u
 
     let m_iSCSIPortNo = GlbFunc.nextTcpPortNo()
 
@@ -57,7 +53,7 @@ type SCSI_ReadWrite_Fixture() =
         client.RunCommand "select 0" "" "LU> "
         client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
         client.RunCommand "select 0" "" "MD> "
-        client.RunCommand ( sprintf "set BlockSize %d" Constants.MEDIA_BLOCK_SIZE ) "" "MD> "
+        client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSize ) "" "MD> "
         client.RunCommand "unselect" "" "LU> "
         client.RunCommand "unselect" "" "T > "
         client.RunCommand "unselect" "" "TG> "
@@ -125,7 +121,11 @@ type SCSI_ReadWrite_Fixture() =
     member _.DefaultConnParam = m_defaultConnParam
 
     static member MediaSize = m_MediaSize
-    static member MediaBlockSize = m_MediaBlockSize
+    static member MediaBlockSize =
+        if m_MediaBlockSize = 512 then
+            Blocksize.BS_512
+        else
+            Blocksize.BS_4096
 
 [<Collection( "SCSI_ReadWrite" )>]
 type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =

@@ -116,7 +116,7 @@ type DebugMedia_Test () =
     member _.Constructor_001() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k ->
             match c with
             | TargetGroupConf.U_DummyMedia( x ) ->
@@ -136,7 +136,8 @@ type DebugMedia_Test () =
     member _.Terminate_001() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun m k -> new CMedia_Stub() )
+        let media_stub = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> media_stub )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         dm.Terminate()
 
@@ -144,7 +145,7 @@ type DebugMedia_Test () =
     member _.Initialize_001() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -166,11 +167,11 @@ type DebugMedia_Test () =
     member _.Closing_001() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
-        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let media_stub = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> media_stub )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
-        stub_media.p_Closing <- ( fun _ ->
+        media_stub.p_Closing <- ( fun _ ->
             cnt <- cnt + 1
         )
 
@@ -188,7 +189,7 @@ type DebugMedia_Test () =
     member _.TestUnitReady_001() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -217,7 +218,7 @@ type DebugMedia_Test () =
     member _.TestUnitReady_002() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -246,7 +247,7 @@ type DebugMedia_Test () =
     member _.TestUnitReady_003() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -272,7 +273,7 @@ type DebugMedia_Test () =
     member _.TestUnitReady_004() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -302,7 +303,7 @@ type DebugMedia_Test () =
     member _.ReadCapacity_001() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -331,7 +332,7 @@ type DebugMedia_Test () =
     member _.ReadCapacity_002() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -360,7 +361,7 @@ type DebugMedia_Test () =
     member _.ReadCapacity_003() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -386,7 +387,7 @@ type DebugMedia_Test () =
     member _.ReadCapacity_004() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -415,7 +416,7 @@ type DebugMedia_Test () =
     member _.Read_001() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -431,7 +432,7 @@ type DebugMedia_Test () =
         Assert.True(( r1.Length = 1 ))
 
         let r2 =
-            let buf = Array.zeroCreate< byte >( int Constants.MEDIA_BLOCK_SIZE * 10 )
+            let buf = Array.zeroCreate< byte >( 512 * 10 )
             dm.Read ( itt_me.fromPrim 99u ) defaultCommandSource ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment( buf, 0, buf.Length ) )
             |> Functions.RunTaskSynchronously
         Assert.True(( r2 = 112 ))
@@ -447,7 +448,7 @@ type DebugMedia_Test () =
     member _.Read_002() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -461,7 +462,7 @@ type DebugMedia_Test () =
         Assert.True(( r1.Length = 1 ))
 
         let r2 =
-            let buf = Array.zeroCreate< byte >( int Constants.MEDIA_BLOCK_SIZE * 11 )
+            let buf = Array.zeroCreate< byte >( 512 * 11 )
             dm.Read ( itt_me.fromPrim 99u ) defaultCommandSource ( blkcnt_me.ofUInt64 10UL ) ( ArraySegment( buf, 0, buf.Length ) )
             |> Functions.RunTaskSynchronously
         Assert.True(( r2 = 112 ))
@@ -477,7 +478,7 @@ type DebugMedia_Test () =
     member _.Read_003() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -491,7 +492,7 @@ type DebugMedia_Test () =
         Assert.True(( r1.Length = 1 ))
 
         let r2 =
-            let buf = Array.zeroCreate< byte >( int Constants.MEDIA_BLOCK_SIZE * 1 )
+            let buf = Array.zeroCreate< byte >( 512 * 1 )
             dm.Read ( itt_me.fromPrim 99u ) defaultCommandSource ( blkcnt_me.ofUInt64 20UL ) ( ArraySegment( buf, 0, buf.Length ) )
             |> Functions.RunTaskSynchronously
         Assert.True(( r2 = 112 ))
@@ -507,7 +508,7 @@ type DebugMedia_Test () =
     member _.Read_004() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -521,7 +522,7 @@ type DebugMedia_Test () =
         Assert.True(( r1.Length = 1 ))
 
         let r2 =
-            let buf = Array.zeroCreate< byte >( int Constants.MEDIA_BLOCK_SIZE * 1 )
+            let buf = Array.zeroCreate< byte >( 512 * 1 )
             dm.Read ( itt_me.fromPrim 99u ) defaultCommandSource ( blkcnt_me.ofUInt64 21UL ) ( ArraySegment( buf, 0, buf.Length ) )
             |> Functions.RunTaskSynchronously
         Assert.True(( r2 = 112 ))
@@ -537,7 +538,7 @@ type DebugMedia_Test () =
     member _.Read_005() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -551,7 +552,7 @@ type DebugMedia_Test () =
         Assert.True(( r1.Length = 1 ))
 
         let r2 =
-            let buf = Array.zeroCreate< byte >( int Constants.MEDIA_BLOCK_SIZE * 1 )
+            let buf = Array.zeroCreate< byte >( 512 * 1 )
             dm.Read ( itt_me.fromPrim 99u ) defaultCommandSource ( blkcnt_me.ofUInt64 0UL ) ( ArraySegment( buf, 0, buf.Length ) )
             |> Functions.RunTaskSynchronously
         Assert.True(( r2 = 112 ))
@@ -567,7 +568,7 @@ type DebugMedia_Test () =
     member _.Read_006() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -579,7 +580,7 @@ type DebugMedia_Test () =
         for i = 1 to Constants.DEBUG_MEDIA_MAX_TRAP_COUNT do
             AddCounterAction i ( MediaCtrlReq.U_Read({ StartLBA = 10UL; EndLBA = 20UL; }) ) dm
 
-        let buf = Array.zeroCreate< byte >( int Constants.MEDIA_BLOCK_SIZE * 1 )
+        let buf = Array.zeroCreate< byte >( 512 * 1 )
         let r2 =
             dm.Read ( itt_me.fromPrim 99u ) defaultCommandSource ( blkcnt_me.ofUInt64 10UL ) ( ArraySegment( buf, 0, buf.Length ) )
             |> Functions.RunTaskSynchronously
@@ -594,7 +595,7 @@ type DebugMedia_Test () =
     member _.Read_007() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -610,7 +611,7 @@ type DebugMedia_Test () =
         })
 
         let startTime = Environment.TickCount64
-        let buf = Array.zeroCreate< byte >( int Constants.MEDIA_BLOCK_SIZE * 1 )
+        let buf = Array.zeroCreate< byte >( 512 * 1 )
         let r2 =
             dm.Read ( itt_me.fromPrim 99u ) defaultCommandSource ( blkcnt_me.ofUInt64 10UL ) ( ArraySegment( buf, 0, buf.Length ) )
             |> Functions.RunTaskSynchronously
@@ -624,7 +625,7 @@ type DebugMedia_Test () =
     member _.Write_001() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -640,7 +641,7 @@ type DebugMedia_Test () =
         Assert.True(( r1.Length = 1 ))
 
         let r2 =
-            let buf = Array.zeroCreate< byte >( int Constants.MEDIA_BLOCK_SIZE * 10 )
+            let buf = Array.zeroCreate< byte >( 512 * 10 )
             dm.Write ( itt_me.fromPrim 99u ) defaultCommandSource ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment( buf, 0, buf.Length ) )
             |> Functions.RunTaskSynchronously
         Assert.True(( r2 = 112 ))
@@ -656,7 +657,7 @@ type DebugMedia_Test () =
     member _.Write_002() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -670,7 +671,7 @@ type DebugMedia_Test () =
         Assert.True(( r1.Length = 1 ))
 
         let r2 =
-            let buf = Array.zeroCreate< byte >( int Constants.MEDIA_BLOCK_SIZE * 11 )
+            let buf = Array.zeroCreate< byte >( 512 * 11 )
             dm.Write ( itt_me.fromPrim 99u ) defaultCommandSource ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment( buf, 0, buf.Length ) )
             |> Functions.RunTaskSynchronously
         Assert.True(( r2 = 112 ))
@@ -686,7 +687,7 @@ type DebugMedia_Test () =
     member _.Write_003() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -700,7 +701,7 @@ type DebugMedia_Test () =
         Assert.True(( r1.Length = 1 ))
 
         let r2 =
-            let buf = Array.zeroCreate< byte >( int Constants.MEDIA_BLOCK_SIZE * 1 )
+            let buf = Array.zeroCreate< byte >( 512 * 1 )
             dm.Write ( itt_me.fromPrim 99u ) defaultCommandSource ( blkcnt_me.ofUInt64 20UL ) 0UL ( ArraySegment( buf, 0, buf.Length ) )
             |> Functions.RunTaskSynchronously
         Assert.True(( r2 = 112 ))
@@ -716,7 +717,7 @@ type DebugMedia_Test () =
     member _.Write_004() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -730,7 +731,7 @@ type DebugMedia_Test () =
         Assert.True(( r1.Length = 1 ))
 
         let r2 =
-            let buf = Array.zeroCreate< byte >( int Constants.MEDIA_BLOCK_SIZE * 1 )
+            let buf = Array.zeroCreate< byte >( 512 * 1 )
             dm.Write ( itt_me.fromPrim 99u ) defaultCommandSource ( blkcnt_me.ofUInt64 21UL ) 0UL ( ArraySegment( buf, 0, buf.Length ) )
             |> Functions.RunTaskSynchronously
         Assert.True(( r2 = 112 ))
@@ -746,7 +747,7 @@ type DebugMedia_Test () =
     member _.Write_005() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -760,7 +761,7 @@ type DebugMedia_Test () =
         Assert.True(( r1.Length = 1 ))
 
         let r2 =
-            let buf = Array.zeroCreate< byte >( int Constants.MEDIA_BLOCK_SIZE * 1 )
+            let buf = Array.zeroCreate< byte >( 512 * 1 )
             dm.Write ( itt_me.fromPrim 99u ) defaultCommandSource ( blkcnt_me.ofUInt64 0UL ) 0UL ( ArraySegment( buf, 0, buf.Length ) )
             |> Functions.RunTaskSynchronously
         Assert.True(( r2 = 112 ))
@@ -776,7 +777,7 @@ type DebugMedia_Test () =
     member _.Write_006() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -788,7 +789,7 @@ type DebugMedia_Test () =
         for i = 1 to Constants.DEBUG_MEDIA_MAX_TRAP_COUNT do
             AddCounterAction i ( MediaCtrlReq.U_Write({ StartLBA = 10UL; EndLBA = 20UL; }) ) dm
 
-        let buf = Array.zeroCreate< byte >( int Constants.MEDIA_BLOCK_SIZE * 10 )
+        let buf = Array.zeroCreate< byte >( 512 * 10 )
         let r2 =
             dm.Write ( itt_me.fromPrim 99u ) defaultCommandSource ( blkcnt_me.ofUInt64 10UL ) 0UL ( ArraySegment( buf, 0, buf.Length ) )
             |> Functions.RunTaskSynchronously
@@ -803,7 +804,7 @@ type DebugMedia_Test () =
     member _.Write_007() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -819,7 +820,7 @@ type DebugMedia_Test () =
         })
 
         let startTime = Environment.TickCount64
-        let buf = Array.zeroCreate< byte >( int Constants.MEDIA_BLOCK_SIZE * 10 )
+        let buf = Array.zeroCreate< byte >( 512 * 10 )
         let r2 =
             dm.Write ( itt_me.fromPrim 99u ) defaultCommandSource ( blkcnt_me.ofUInt64 10UL ) 0UL ( ArraySegment( buf, 0, buf.Length ) )
             |> Functions.RunTaskSynchronously
@@ -834,7 +835,7 @@ type DebugMedia_Test () =
     member _.Format_001() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -863,7 +864,7 @@ type DebugMedia_Test () =
     member _.Format_002() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -890,7 +891,7 @@ type DebugMedia_Test () =
     member _.Format_003() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -914,7 +915,7 @@ type DebugMedia_Test () =
     member _.Format_004() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -941,7 +942,7 @@ type DebugMedia_Test () =
     member _.NotifyLUReset_001() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -961,7 +962,7 @@ type DebugMedia_Test () =
     member _.MediaControl_GetAllTraps_001() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -973,7 +974,7 @@ type DebugMedia_Test () =
     member _.MediaControl_GetAllTraps_002() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -993,7 +994,7 @@ type DebugMedia_Test () =
     member _.MediaControl_GetAllTraps_003() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1016,7 +1017,7 @@ type DebugMedia_Test () =
     member _.MediaControl_GetAllTraps_Event_TestUnitReady() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1030,7 +1031,7 @@ type DebugMedia_Test () =
     member _.MediaControl_GetAllTraps_Event_ReadCapacity() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1044,7 +1045,7 @@ type DebugMedia_Test () =
     member _.MediaControl_GetAllTraps_Event_Read() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1064,7 +1065,7 @@ type DebugMedia_Test () =
     member _.MediaControl_GetAllTraps_Event_Write() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1083,7 +1084,7 @@ type DebugMedia_Test () =
     member _.MediaControl_GetAllTraps_Event_Format() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1097,7 +1098,7 @@ type DebugMedia_Test () =
     member _.MediaControl_GetAllTraps_Action_ACA() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1118,7 +1119,7 @@ type DebugMedia_Test () =
     member _.MediaControl_GetAllTraps_Action_LUReset() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1139,7 +1140,7 @@ type DebugMedia_Test () =
     member _.MediaControl_GetAllTraps_Action_Count() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1158,7 +1159,7 @@ type DebugMedia_Test () =
     member _.MediaControl_GetAllTraps_Action_Delay() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1179,7 +1180,7 @@ type DebugMedia_Test () =
     member _.MediaControl_AddTrap_001() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1207,7 +1208,7 @@ type DebugMedia_Test () =
     member _.MediaControl_AddTrap_002() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1240,7 +1241,7 @@ type DebugMedia_Test () =
     member _.MediaControl_AddTrap_003() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1273,7 +1274,7 @@ type DebugMedia_Test () =
     member _.MediaControl_AddTrap_004() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1301,7 +1302,7 @@ type DebugMedia_Test () =
     member _.MediaControl_AddTrap_005() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1334,7 +1335,7 @@ type DebugMedia_Test () =
     member _.MediaControl_AddTrap_006() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1367,7 +1368,7 @@ type DebugMedia_Test () =
     member _.MediaControl_AddTrap_007() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1395,7 +1396,7 @@ type DebugMedia_Test () =
     member _.MediaControl_AddTrap_008() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1426,7 +1427,7 @@ type DebugMedia_Test () =
     member _.MediaControl_AddTrap_009() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1456,7 +1457,7 @@ type DebugMedia_Test () =
     member _.MediaControl_ClearTraps_001() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1478,7 +1479,7 @@ type DebugMedia_Test () =
     member _.MediaControl_ClearTraps_002() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1505,7 +1506,7 @@ type DebugMedia_Test () =
     member _.MediaControl_ClearTraps_003() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1530,7 +1531,7 @@ type DebugMedia_Test () =
     member _.MediaControl_GetCounterValue_001() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1548,7 +1549,7 @@ type DebugMedia_Test () =
     member _.MediaControl_GetCounterValue_002() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1568,7 +1569,7 @@ type DebugMedia_Test () =
     member _.MediaControl_GetCounterValue_003() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1588,7 +1589,7 @@ type DebugMedia_Test () =
     member _.MediaControl_ACA_001() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -1617,7 +1618,7 @@ type DebugMedia_Test () =
     member _.MediaControl_LUReset_001() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         let mutable cnt = 0
@@ -1646,7 +1647,7 @@ type DebugMedia_Test () =
     member _.MediaControl_GetTaskWaitStatus_001() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
 
@@ -1657,7 +1658,7 @@ type DebugMedia_Test () =
     member _.MediaControl_GetTaskWaitStatus_002() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         stub_media.p_Format <- ( fun _ _ -> Task.FromResult () )
@@ -1687,7 +1688,7 @@ type DebugMedia_Test () =
     member _.MediaControl_GetTaskWaitStatus_003() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         stub_media.p_Format <- ( fun _ _ -> Task.FromResult () )
@@ -1745,7 +1746,7 @@ type DebugMedia_Test () =
     member _.MediaControl_GetTaskWaitStatus_004() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         stub_media.p_Format <- ( fun _ _ -> Task.FromResult () )
@@ -1804,7 +1805,7 @@ type DebugMedia_Test () =
     member _.MediaControl_GetTaskWaitStatus_005() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         stub_media.p_Format <- ( fun _ _ -> Task.FromResult () )
@@ -1858,7 +1859,7 @@ type DebugMedia_Test () =
     member _.MediaControl_GetTaskWaitStatus_006() =
         let k1 = new HKiller() :> IKiller
         let stat_stub = new CStatus_Stub()
-        let stub_media = new CMedia_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
         stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
         let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
         stub_media.p_Format <- ( fun _ _ -> Task.FromResult () )

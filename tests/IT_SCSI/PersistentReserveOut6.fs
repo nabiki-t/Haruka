@@ -31,6 +31,7 @@ type SCSI_PersistentReserveOut6_Fixture() =
 
     let m_iSCSIPortNo = GlbFunc.nextTcpPortNo()
     let m_MediaSize = 65536u
+    let m_MediaBlockSize = 512           // 4096 or 512 bytes
 
     // Add default configurations
     let AddDefaultConf( client : ClientProc ): unit =
@@ -57,7 +58,7 @@ type SCSI_PersistentReserveOut6_Fixture() =
         client.RunCommand "select 0" "" "MD> "
         client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "MD> "
         client.RunCommand "select 0" "" "MD> "
-        client.RunCommand ( sprintf "set BlockSize %d" Constants.MEDIA_BLOCK_SIZE ) "" "MD> "
+        client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSize ) "" "MD> "
         client.RunCommand "unselect" "" "MD> "
         client.RunCommand "unselect" "" "LU> "
         client.RunCommand "unselect" "" "T > "
@@ -93,7 +94,7 @@ type SCSI_PersistentReserveOut6_Fixture() =
     member _.iSCSIPortNo = m_iSCSIPortNo
     member _.MediaSize = m_MediaSize
     member _.MediaBlockSize = 
-        if Constants.MEDIA_BLOCK_SIZE = 512UL then     // 4096 or 512 bytes
+        if m_MediaBlockSize = 512 then
             Blocksize.BS_512
         else
             Blocksize.BS_4096

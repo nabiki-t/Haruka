@@ -804,7 +804,7 @@ type ServerStatus_Test1() =
                         Peripheral = TargetGroupConf.U_MemBuffer({
                             IdentNumber = mediaidx_me.fromPrim 3u;
                             MediaName = "";
-                            BytesCount = Constants.MEDIA_BLOCK_SIZE;
+                            BytesCount = 512UL;
                             BlockSize = Blocksize.BS_512;
                         });
                         OptimalTransferLength = blkcnt_me.ofUInt32 ( Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH + 3u );
@@ -919,7 +919,7 @@ type ServerStatus_Test1() =
 
             match medialist3.[0] with
             | :? ConfNode_MemBufferMedia as x ->
-                Assert.True(( x.Values.BytesCount = Constants.MEDIA_BLOCK_SIZE )) 
+                Assert.True(( x.Values.BytesCount = 512UL )) 
             | _ ->
                 Assert.Fail __LINE__
 

@@ -2026,7 +2026,7 @@ type ServerStatus_Test4() =
                 let mNode = ss.AddMemBufferMediaNode luNode {
                     IdentNumber = mediaidx_me.fromPrim 1u;
                     MediaName = "";
-                    BytesCount = Constants.MEDIA_BLOCK_SIZE;
+                    BytesCount = 512UL;
                     BlockSize = Blocksize.BS_512;
                 }
                 let pnodes = ( mNode :> IConfigureNode ).GetParentNodes<IConfigureNode>()

@@ -37,6 +37,7 @@ type SCSI_ACACases_Fixture() =
     let m_iSCSIPortNo1 = GlbFunc.nextTcpPortNo()
     let m_iSCSIPortNo2 = GlbFunc.nextTcpPortNo()
     let m_MediaSize = 65536u
+    let m_MediaBlockSizse = 512      // 4096 or 512 bytes
 
     // Add default configurations
     let AddDefaultConf( client : ClientProc ): unit =
@@ -58,7 +59,7 @@ type SCSI_ACACases_Fixture() =
         client.RunCommand "select 0" "" "MD> "
         client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "MD> "
         client.RunCommand "select 0" "" "MD> "
-        client.RunCommand ( sprintf "set BlockSize %d" Constants.MEDIA_BLOCK_SIZE ) "" "MD> "
+        client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSizse ) "" "MD> "
         client.RunCommand "unselect" "" "MD> "
         client.RunCommand "unselect" "" "LU> "
         client.RunCommand "unselect" "" "T > "
@@ -66,7 +67,7 @@ type SCSI_ACACases_Fixture() =
         client.RunCommand "select 1" "" "LU> "
         client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
         client.RunCommand "select 0" "" "MD> "
-        client.RunCommand ( sprintf "set BlockSize %d" Constants.MEDIA_BLOCK_SIZE ) "" "MD> "
+        client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSizse ) "" "MD> "
         client.RunCommand "unselect" "" "LU> "
         client.RunCommand "unselect" "" "T > "
         client.RunCommand "unselect" "" "TG> "
@@ -81,7 +82,7 @@ type SCSI_ACACases_Fixture() =
         client.RunCommand "select 0" "" "LU> "
         client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
         client.RunCommand "select 0" "" "MD> "
-        client.RunCommand ( sprintf "set BlockSize %d" Constants.MEDIA_BLOCK_SIZE ) "" "MD> "
+        client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSizse ) "" "MD> "
         client.RunCommand "unselect" "" "LU> "
         client.RunCommand "unselect" "" "T > "
         client.RunCommand "unselect" "" "TG> "
@@ -103,7 +104,7 @@ type SCSI_ACACases_Fixture() =
         client.RunCommand "select 0" "" "LU> "
         client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
         client.RunCommand "select 0" "" "MD> "
-        client.RunCommand ( sprintf "set BlockSize %d" Constants.MEDIA_BLOCK_SIZE ) "" "MD> "
+        client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSizse ) "" "MD> "
         client.RunCommand "unselect" "" "LU> "
         client.RunCommand "unselect" "" "T > "
         client.RunCommand "unselect" "" "TG> "
@@ -149,7 +150,7 @@ type SCSI_ACACases_Fixture() =
     member _.iSCSIPortNo2 = m_iSCSIPortNo2
     member _.MediaSize = m_MediaSize
     member _.MediaBlockSize = 
-        if Constants.MEDIA_BLOCK_SIZE = 512UL then     // 4096 or 512 bytes
+        if m_MediaBlockSizse = 512 then
             Blocksize.BS_512
         else
             Blocksize.BS_4096

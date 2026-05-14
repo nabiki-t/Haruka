@@ -30,6 +30,7 @@ open Haruka.Test
 type SCSI_ModeParameter_Fixture() =
 
     static let m_MediaSize = 65536u
+    static let m_MediaBlockSize = 512           // 4096 or 512 bytes
 
     let m_iSCSIPortNo = GlbFunc.nextTcpPortNo()
 
@@ -57,7 +58,7 @@ type SCSI_ModeParameter_Fixture() =
         client.RunCommand "select 0" "" "LU> "
         client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
         client.RunCommand "select 0" "" "MD> "
-        client.RunCommand ( sprintf "set BlockSize %d" Constants.MEDIA_BLOCK_SIZE ) "" "MD> "
+        client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSize ) "" "MD> "
         client.RunCommand "unselect" "" "LU> "
         client.RunCommand "unselect" "" "T > "
         client.RunCommand "unselect" "" "TG> "
@@ -88,7 +89,7 @@ type SCSI_ModeParameter_Fixture() =
 
     static member MediaSize = m_MediaSize
     static member MediaBlockSize = 
-        if Constants.MEDIA_BLOCK_SIZE = 512UL then     // 4096 or 512 bytes
+        if m_MediaBlockSize = 512 then
             Blocksize.BS_512
         else
             Blocksize.BS_4096

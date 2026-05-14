@@ -94,6 +94,9 @@ type DebugMedia
     /// An object for waiting on tasks.
     let m_TaskWaiter = OptimisticLock( ImmutableDictionary< TSIH_T, TaskWaiterWithTag<ITT_T,unit,string> >.Empty )
 
+    /// Block size of the peripheral media
+    let m_BlockSize = m_Peripheral.BlockSize |> Blocksize.toUInt64
+
     do
         m_Killer.Add this
         HLogger.Trace( LogID.I_OBJ_INSTANCE_CREATED, fun g ->
@@ -193,7 +196,7 @@ type DebugMedia
                     HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "DebugMedia.Read." ) )
 
                 let readBlockCount =
-                    let struct( d, r ) = Math.DivRem( uint64 buffer.Count, Constants.MEDIA_BLOCK_SIZE )
+                    let struct( d, r ) = Math.DivRem( uint64 buffer.Count, m_BlockSize )
                     if r > 0UL then
                         d + 1UL
                     else
@@ -229,9 +232,9 @@ type DebugMedia
                 if HLogger.IsVerbose then
                     HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "DebugMedia.Write." ) )
 
-                let writeStartLBA = ( blkcnt_me.toUInt64 argLBA ) + ( offset / Constants.MEDIA_BLOCK_SIZE )
+                let writeStartLBA = ( blkcnt_me.toUInt64 argLBA ) + ( offset / m_BlockSize )
                 let writeBlockCount = 
-                    let struct( d, r ) = Math.DivRem( uint64 data.Count, Constants.MEDIA_BLOCK_SIZE )
+                    let struct( d, r ) = Math.DivRem( uint64 data.Count, m_BlockSize )
                     if r > 0UL then
                         d + 1UL
                     else

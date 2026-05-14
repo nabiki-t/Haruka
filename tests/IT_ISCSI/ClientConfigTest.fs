@@ -117,6 +117,7 @@ type ClientConfigTest() =
         task {
             // Initialize working folder, Start controller and client process
             let controller, client = ControllerFunc.StartHarukaController workPath controllPortNo
+            let blockSize = 512
 
             // Add and start the target device.
             client.RunCommand "create" "Created" "CR> "
@@ -135,7 +136,7 @@ type ClientConfigTest() =
             client.RunCommand "select 0" "" "MD> "
             client.RunCommand "create membuffer /s 65536" "Created" "MD> "
             client.RunCommand "select 0" "" "MD> "
-            client.RunCommand ( sprintf "set BlockSize %d" Constants.MEDIA_BLOCK_SIZE ) "" "MD> "
+            client.RunCommand ( sprintf "set BlockSize %d" blockSize ) "" "MD> "
             client.RunCommand "unselect" "" "MD> "
             client.RunCommand "unselect" "" "LU> "
             client.RunCommand "unselect" "" "T > "
@@ -200,7 +201,7 @@ type ClientConfigTest() =
             client.RunCommand "select 0" "" "MD> "
             client.RunCommand "create membuffer /s 32768" "Created" "MD> "
             client.RunCommand "select 0" "" "MD> "
-            client.RunCommand ( sprintf "set BlockSize %d" Constants.MEDIA_BLOCK_SIZE ) "" "MD> "
+            client.RunCommand ( sprintf "set BlockSize %d" blockSize ) "" "MD> "
             client.RunCommand "unselect" "" "MD> "
             client.RunCommand "validate" "All configurations are vlidated" "MD> "
             client.RunCommand "publish" "All configurations are uploaded to the controller" "MD> "
@@ -267,7 +268,7 @@ type ClientConfigTest() =
             client.RunCommand "select 0" "" "MD> "
             client.RunCommand "create membuffer /s 16384" "Created" "MD> "
             client.RunCommand "select 0" "" "MD> "
-            client.RunCommand ( sprintf "set BlockSize %d" Constants.MEDIA_BLOCK_SIZE ) "" "MD> "
+            client.RunCommand ( sprintf "set BlockSize %d" blockSize ) "" "MD> "
             client.RunCommand "unselect" "" "MD> "
             client.RunCommand "validate" "All configurations are vlidated" "MD> "
             client.RunCommand "publish" "All configurations are uploaded to the controller" "MD> "

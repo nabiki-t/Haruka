@@ -1892,10 +1892,6 @@ module Constants =
     /// (= This value is same as maximum LU count in one target group.)
     let MAX_LOGICALUNIT_COUNT_IN_TD : int =
         255
-
-    /// The block size of media reported to the initiator.
-    let MEDIA_BLOCK_SIZE : uint64 =
-        4096UL
     
     /// Buffer line size of Memory buffer media in block count.
     /// If block size(MEDIA_BLOCK_SIZE) is 512B and line size 64MB, it should be 131072 blocks.
