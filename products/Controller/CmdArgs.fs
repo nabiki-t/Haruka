@@ -37,7 +37,8 @@ type CmdArgs() =
             Varb = CtrlCmdType.Server;
             NamedArgs = Array.empty;
             ValuelessArgs = Array.empty;
-            NamelessArgs = [| CRV_String( Constants.MAX_FILENAME_STR_LENGTH ); |];
+            NamelessArgs = [| CRVM_String( Constants.MAX_FILENAME_STR_LENGTH ); |];
+            HelpMsgName = "";
         }
 
     /// "ID" arguments rule
@@ -47,7 +48,8 @@ type CmdArgs() =
             Varb = CtrlCmdType.InitWorkDir;
             NamedArgs = [| ( "/p", CRV_uint32( 1u, 65535u ) ); ( "/a", CRV_String( Constants.MAX_CTRL_ADDRESS_STR_LENGTH ) ) |];
             ValuelessArgs = [| "/o" |];
-            NamelessArgs = [| CRV_String( Constants.MAX_FILENAME_STR_LENGTH ); |];
+            NamelessArgs = [| CRVM_String( Constants.MAX_FILENAME_STR_LENGTH ); |];
+            HelpMsgName = "";
         }
 
     /// "PlainFile" arguments rule
@@ -58,6 +60,7 @@ type CmdArgs() =
             NamedArgs = [| ( "/f", CRVM_String( Constants.MAX_FILENAME_STR_LENGTH ) ); ( "/s", CRVM_int64( 1L, Int64.MaxValue ) ); |];
             ValuelessArgs = [| "/x" |];
             NamelessArgs = Array.empty;
+            HelpMsgName = "";
         }
 
     /// Command arguments rules.

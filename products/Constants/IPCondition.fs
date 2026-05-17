@@ -315,7 +315,7 @@ type IPCondition =
             ValueSome IPCondition.IPv4Loopback
         | "IPV4LINKLOCAL" ->
             ValueSome IPCondition.IPv4Linklocal
-        | "IPv$PRIVATE" ->
+        | "IPv4PRIVATE" ->
             ValueSome IPCondition.IPv4Private
         | "IPV4MULTICAST" ->
             ValueSome IPCondition.IPv4Multicast

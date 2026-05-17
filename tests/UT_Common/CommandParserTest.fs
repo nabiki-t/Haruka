@@ -58,6 +58,7 @@ type CommandParser_Test1() =
             NamedArgs = namedArgs;
             ValuelessArgs = valuelessArgs;
             NamelessArgs = namelessArgs;
+            HelpMsgName = "";
         }|]
 
     let genAccCmd2 ( cmds : string[] ) ( v : testVerb ) ( namelessArgs : CRValidateType[] ) =
@@ -67,6 +68,7 @@ type CommandParser_Test1() =
             NamedArgs = Array.empty;
             ValuelessArgs = Array.empty;
             NamelessArgs = namelessArgs;
+            HelpMsgName = "";
         }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -728,12 +730,15 @@ type CommandParser_Test1() =
         | _ ->
             Assert.Fail __LINE__
 
-    [<Fact>]
-    member _.RecognizeCommand_019() =
+    [<Theory>]
+    [<InlineData( "exit" )>]
+    [<InlineData( "exit aa" )>]
+    [<InlineData( "exit aa aa aa aa aa " )>]
+    member _.RecognizeCommand_019 ( cmd : string ) =
         let st = new StringTable( "" )
-        let accCommands = exitAccCmd Array.empty Array.empty [| CRV_int32( 0, 1 ); CRV_String( 10 ); CRV_String( 10 ); |]
+        let accCommands = exitAccCmd Array.empty Array.empty [| CRVM_String( 10 ); CRVM_String( 10 ); CRV_String( 10 ); CRV_String( 10 ); |]
         try
-            let _ = CommandParser.FromString st accCommands "exit 0 aa"
+            let _ = CommandParser.FromString st accCommands cmd
             Assert.Fail __LINE__
         with
         | :? CommandInputError as x ->
@@ -741,31 +746,16 @@ type CommandParser_Test1() =
         | _ ->
             Assert.Fail __LINE__
 
-    [<Fact>]
-    member _.RecognizeCommand_020() =
+    [<Theory>]
+    [<InlineData( "exit aa aa" )>]
+    [<InlineData( "exit aa aa aa" )>]
+    [<InlineData( "exit aa aa aa aa" )>]
+    member _.RecognizeCommand_020 ( cmd : string ) =
         let st = new StringTable( "" )
-        let accCommands = exitAccCmd Array.empty Array.empty [| CRV_int32( 0, 1 ); CRV_String( 10 ); CRV_String( 10 ); |]
-        try
-            let _ = CommandParser.FromString st accCommands "exit 0 aa bb cc"
-            Assert.Fail __LINE__
-        with
-        | :? CommandInputError as x ->
-            Assert.True(( x.Message.StartsWith "CMDERR_INVALID_ARG_COUNT" ))
-        | _ ->
-            Assert.Fail __LINE__
-
-    [<Fact>]
-    member _.RecognizeCommand_021() =
-        let st = new StringTable( "" )
-        let accCommands = exitAccCmd Array.empty Array.empty Array.empty
-        try
-            let _ = CommandParser.FromString st accCommands "exit 0"
-            Assert.Fail __LINE__
-        with
-        | :? CommandInputError as x ->
-            Assert.True(( x.Message.StartsWith "CMDERR_INVALID_ARG_COUNT" ))
-        | _ ->
-            Assert.Fail __LINE__
+        let accCommands = exitAccCmd Array.empty Array.empty [| CRVM_String( 10 ); CRVM_String( 10 ); CRV_String( 10 ); CRV_String( 10 ); |]
+        let r = CommandParser.FromString st accCommands cmd
+        Assert.True(( r.Varb = testVerb.Exit ))
+        Assert.True(( r.NamelessArgs.Length = 4 ))
 
     [<Fact>]
     member _.RecognizeCommand_022() =
@@ -1993,3 +1983,58 @@ type CommandParser_Test1() =
         let accCommands = exitAccCmd Array.empty Array.empty [| CRV_String( 5 ); |]
         let r = CommandParser.FromString st accCommands "exit aaa"
         Assert.True(( ( r.NamelessLUN 0 ) = None ))
+
+    [<Fact>]
+    member _.ValidateNamelessValues_001() =
+        let st = new StringTable( "" )
+        let accCommands = exitAccCmd Array.empty Array.empty [| CRVM_String( 5 ); CRVM_String( 5 ); CRV_String( 5 ); CRV_String( 5 ); |]
+        let r = CommandParser.FromString st accCommands "exit aa bb"
+        Assert.True(( r.NamelessArgs.Length = 4 ))
+        Assert.True(( r.NamelessArgs.[0] = EV_String( "aa" ) ))
+        Assert.True(( r.NamelessArgs.[1] = EV_String( "bb" ) ))
+        Assert.True(( r.NamelessArgs.[2] = EV_NoValue ))
+        Assert.True(( r.NamelessArgs.[3] = EV_NoValue ))
+
+    [<Fact>]
+    member _.ValidateNamelessValues_002() =
+        let st = new StringTable( "" )
+        let accCommands = exitAccCmd Array.empty Array.empty [| CRVM_String( 5 ); CRV_String( 5 ); CRV_String( 5 ); CRVM_String( 5 ); |]
+        let r = CommandParser.FromString st accCommands "exit aa bb"
+        Assert.True(( r.NamelessArgs.Length = 4 ))
+        Assert.True(( r.NamelessArgs.[0] = EV_String( "aa" ) ))
+        Assert.True(( r.NamelessArgs.[1] = EV_NoValue ))
+        Assert.True(( r.NamelessArgs.[2] = EV_NoValue ))
+        Assert.True(( r.NamelessArgs.[3] = EV_String( "bb" ) ))
+
+    [<Fact>]
+    member _.ValidateNamelessValues_003() =
+        let st = new StringTable( "" )
+        let accCommands = exitAccCmd Array.empty Array.empty [| CRVM_String( 5 ); CRV_int32( 0, 1 ); CRV_int32( 0, 1 ); CRVM_String( 5 ); |]
+        let x =
+            Assert.Throws<CommandInputError>( fun () ->
+                let _ = CommandParser.FromString st accCommands "exit aa bb cc"
+                ()
+            )
+        Assert.StartsWith( "CMDERR_NAMELESS_PTN_MISMATCH", x.Message )
+
+    [<Fact>]
+    member _.ValidateNamelessValues_004() =
+        let st = new StringTable( "" )
+        let accCommands = exitAccCmd Array.empty Array.empty [| CRVM_String( 5 ); CRV_int32( 0, 1 ); CRV_int32( 0, 1 ); CRVM_String( 5 ); |]
+        let r = CommandParser.FromString st accCommands "exit aa 1 bb"
+        Assert.True(( r.NamelessArgs.Length = 4 ))
+        Assert.True(( r.NamelessArgs.[0] = EV_String( "aa" ) ))
+        Assert.True(( r.NamelessArgs.[1] = EV_int32( 1 ) ))
+        Assert.True(( r.NamelessArgs.[2] = EV_NoValue ))
+        Assert.True(( r.NamelessArgs.[3] = EV_String( "bb" ) ))
+
+    [<Fact>]
+    member _.ValidateNamelessValues_005() =
+        let st = new StringTable( "" )
+        let accCommands = exitAccCmd Array.empty Array.empty [| CRVM_String( 5 ); CRVM_int32( 0, 1 ); |]
+        let x =
+            Assert.Throws<CommandInputError>( fun () ->
+                let _ = CommandParser.FromString st accCommands "exit aa bb"
+                ()
+            )
+        Assert.StartsWith( "CMDERR_NAMELESS_PTN_MISMATCH", x.Message )

@@ -92,7 +92,7 @@ type CmdArgs_Test () =
             Assert.Fail __LINE__
         with
         | :? CommandInputError as x ->
-            Assert.True(( x.Message.StartsWith "CMDERR_INVALID_ARG_VALUE" ))
+            Assert.True(( x.Message.StartsWith "CMDERR_NAMELESS_PTN_MISMATCH" ))
         | _ ->
             Assert.Fail __LINE__
 
@@ -161,7 +161,7 @@ type CmdArgs_Test () =
             Assert.Fail __LINE__
         with
         | :? CommandInputError as x ->
-            Assert.True(( x.Message.StartsWith "CMDERR_INVALID_ARG_VALUE" ))
+            Assert.True(( x.Message.StartsWith "CMDERR_NAMELESS_PTN_MISMATCH" ))
         | _ ->
             Assert.Fail __LINE__
 

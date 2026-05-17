@@ -1,5 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Messages>
+
+  <!-- Message string for client commands. -->
   <Section>
     <Message>
       <Name>CHKMSG_BELONGS_MULTI_GROUP</Name>
@@ -369,12 +371,17 @@
     </Message>
     <Message>
       <Name>CMDERR_INVALID_ARG_COUNT</Name>
-      <Value>Invalid arguments count. Expected {0} args.</Value>
+      <Value>Invalid arguments count.</Value>
     </Message>
     <Message>
       <Name>CMDERR_INVALID_ARG_VALUE</Name>
       <Value>Invalid value '{0}' was specified.</Value>
     </Message>
+    <Message>
+      <Name>CMDERR_NAMELESS_PTN_MISMATCH</Name>
+      <Value>Invalid argument values</Value>
+    </Message>
+
     <Message>
       <Name>CMDERR_FAILED_CONNECT_CTRL</Name>
       <Value>Failed connect to controller. {0}</Value>
@@ -399,22 +406,6 @@
     <Message>
       <Name>CMDMSG_MISSING_NODE</Name>
       <Value>Specified node({0}) does not exist.</Value>
-    </Message>
-    <Message>
-      <Name>CMDMSG_ADDPARAM_INITIATOR_USERNAME</Name>
-      <Value>Initiator user name(/iu) must be specified.</Value>
-    </Message>
-    <Message>
-      <Name>CMDMSG_ADDPARAM_INITIATOR_PASSWORD</Name>
-      <Value>Initiator password(/ip) must be specified.</Value>
-    </Message>
-    <Message>
-      <Name>CMDMSG_ADDPARAM_TARGET_USERNAME</Name>
-      <Value>Initiator user name(/tu) must be specified.</Value>
-    </Message>
-    <Message>
-      <Name>CMDMSG_ADDPARAM_TARGET_PASSWORD</Name>
-      <Value>Initiator password(/tp) must be specified.</Value>
     </Message>
     <Message>
       <Name>CMDMSG_ADDPARAM_LUN</Name>
@@ -480,5 +471,699 @@
       <Name>CMDMSG_TOO_MANY_CHILD</Name>
       <Value>Too many child nodes, can't add any more.</Value>
     </Message>
+    <Message>
+      <Name>CMDMSG_HELP_UNKNOWN_CMD</Name>
+      <Value>Unknown command.</Value>
+    </Message>
   </Section>
+
+
+  <!-- Message string for client commands. -->
+  <Section>
+    <Name>ShortCommandUsage</Name>
+    <Message>
+      <Name>EXIT</Name>
+      <Value>exit : Terminate client command.</Value>
+    </Message>
+    <Message>
+      <Name>HELP</Name>
+      <Value>help : Display help message.</Value>
+    </Message>
+    <Message>
+      <Name>LOGIN</Name>
+      <Value>login : Connect to the controller.</Value>
+    </Message>
+    <Message>
+      <Name>LOGOUT</Name>
+      <Value>logout : Disconnect from the controller.</Value>
+    </Message>
+    <Message>
+      <Name>RELOAD</Name>
+      <Value>reload : Discard all changes and reload the configurations.</Value>
+    </Message>
+    <Message>
+      <Name>SELECT</Name>
+      <Value>select : Select the child object as the target for operation or modification.</Value>
+    </Message>
+    <Message>
+      <Name>UNSELECT</Name>
+      <Value>unselect : Select the parent object as the target for operation or modification.</Value>
+    </Message>
+    <Message>
+      <Name>LIST</Name>
+      <Value>list : Display a list of child objects.</Value>
+    </Message>
+    <Message>
+      <Name>LISTPARENT</Name>
+      <Value>listparent : Display a list of parent objects.</Value>
+    </Message>
+    <Message>
+      <Name>PWD</Name>
+      <Value>pwd : Displays the currently selected object.</Value>
+    </Message>
+    <Message>
+      <Name>VALUES</Name>
+      <Value>values : Displays a list of settings for the currently selected object.</Value>
+    </Message>
+    <Message>
+      <Name>SET</Name>
+      <Value>set : Changes the settings of the currently selected object.</Value>
+    </Message>
+    <Message>
+      <Name>VALIDATE</Name>
+      <Value>validate : Verify that there are no errors in the configuration or settings.</Value>
+    </Message>
+    <Message>
+      <Name>PUBLISH</Name>
+      <Value>publish : Upload the changed configuration to the controller.</Value>
+    </Message>
+    <Message>
+      <Name>NOP</Name>
+      <Value>nop : No operation</Value>
+    </Message>
+    <Message>
+      <Name>STATUSALL</Name>
+      <Value>statusall : Displays the current running, stopped, and editing status.</Value>
+    </Message>
+    <Message>
+      <Name>CREATE_TARGET_DEVICE</Name>
+      <Value>create : Add Target Device as a child object.</Value>
+    </Message>
+    <Message>
+      <Name>STATUS</Name>
+      <Value>status : Displays the current running, stopped, and editing status.</Value>
+    </Message>
+    <Message>
+      <Name>DELETE</Name>
+      <Value>delete : Delete object.</Value>
+    </Message>
+    <Message>
+      <Name>START</Name>
+      <Value>start : Start the target device.</Value>
+    </Message>
+    <Message>
+      <Name>KILL</Name>
+      <Value>kill : Stop the target device.</Value>
+    </Message>
+    <Message>
+      <Name>SETLOGPARAM</Name>
+      <Value>setlogparam : Temporarily change log output settings.</Value>
+    </Message>
+    <Message>
+      <Name>GETLOGPARAM</Name>
+      <Value>getlogparam : Display the currently effective log output settings.</Value>
+    </Message>
+    <Message>
+      <Name>CREATE_NETWORKPORTAL</Name>
+      <Value>create networkportal : Add Network Portal as a child object.</Value>
+    </Message>
+    <Message>
+      <Name>CREATE_TARGETGROUP</Name>
+      <Value>create targetgroup : Add Target Group as a child object.</Value>
+    </Message>
+    <Message>
+      <Name>ADD_IPWHITELIST</Name>
+      <Value>add ipwhitelist : Add the source IP address to the whitelist.</Value>
+    </Message>
+    <Message>
+      <Name>CLEAR_IPWHITELIST</Name>
+      <Value>clear ipwhitelist : Delete all IP whitelist entries.</Value>
+    </Message>
+    <Message>
+      <Name>LOAD</Name>
+      <Value>load : Load the Target Group.</Value>
+    </Message>
+    <Message>
+      <Name>UNLOAD</Name>
+      <Value>unload : Unload the Target Group.</Value>
+    </Message>
+    <Message>
+      <Name>ACTIVATE</Name>
+      <Value>activate : Enables access to LUs belonging to the Target Group.</Value>
+    </Message>
+    <Message>
+      <Name>INACTIVATE</Name>
+      <Value>inactivate : Prohibits access to LUs belonging to the Target Group.</Value>
+    </Message>
+    <Message>
+      <Name>CREATE_TARGET</Name>
+      <Value>create : Add Target as a child object.</Value>
+    </Message>
+    <Message>
+      <Name>SETCHAP</Name>
+      <Value>setchap : Add CHAP authentication.</Value>
+    </Message>
+    <Message>
+      <Name>UNSETAUTH</Name>
+      <Value>unsetauth : Remove authentication settings.</Value>
+    </Message>
+    <Message>
+      <Name>CREATE_LU</Name>
+      <Value>create : Add LU as a child object.</Value>
+    </Message>
+    <Message>
+      <Name>ATTACH</Name>
+      <Value>attach : Connect the Target and the LU.</Value>
+    </Message>
+    <Message>
+      <Name>DETACH</Name>
+      <Value>detach : Disconnect the connection between the Target and the LU.</Value>
+    </Message>
+    <Message>
+      <Name>CREATE_PLAINFILE</Name>
+      <Value>create plainfile : Add Plain File Media as a child object.</Value>
+    </Message>
+    <Message>
+      <Name>CREATE_MEMBUFFER</Name>
+      <Value>create membuffer : Add Memory Buffer Media as a child object.</Value>
+    </Message>
+    <Message>
+      <Name>CREATE_DEBUG</Name>
+      <Value>create debug : Add Debug Media as a child object.</Value>
+    </Message>
+    <Message>
+      <Name>INITMEDIA_PLAINFILE</Name>
+      <Value>initmedia plainfile : Create a media file for Plain File Media.</Value>
+    </Message>
+    <Message>
+      <Name>IMSTATUS</Name>
+      <Value>imstatus : Displays the progress of the media file creation process.</Value>
+    </Message>
+    <Message>
+      <Name>IMKILL</Name>
+      <Value>imkill : Stop the media file creation process.</Value>
+    </Message>
+    <Message>
+      <Name>SESSIONS</Name>
+      <Value>sessions : Display a list of sessions.</Value>
+    </Message>
+    <Message>
+      <Name>SESSKILL</Name>
+      <Value>sesskill : Disconnect the session.</Value>
+    </Message>
+    <Message>
+      <Name>CONNECTIONS</Name>
+      <Value>connections : Display a list of connections.</Value>
+    </Message>
+    <Message>
+      <Name>LUSTATUS</Name>
+      <Value>lustatus : Display LU status.</Value>
+    </Message>
+    <Message>
+      <Name>LURESET</Name>
+      <Value>lureset : Perform LU reset.</Value>
+    </Message>
+    <Message>
+      <Name>MEDIASTATUS</Name>
+      <Value>mediastatus : Display media status.</Value>
+    </Message>
+    <Message>
+      <Name>ADD_TRAP</Name>
+      <Value>add trap : Add a trap to Debug Media.</Value>
+    </Message>
+    <Message>
+      <Name>CLEAR_TRAP</Name>
+      <Value>clear trap : Remove the Debug Media traps.</Value>
+    </Message>
+    <Message>
+      <Name>TRAPS</Name>
+      <Value>traps : Display a list of traps configured in Debug Media.</Value>
+    </Message>
+    <Message>
+      <Name>TASK_LIST</Name>
+      <Value>task list : Display a list of ITTs that are currently pending due to the Wait action.</Value>
+    </Message>
+    <Message>
+      <Name>TASK_RESUME</Name>
+      <Value>task resume : Resume pending tasks.</Value>
+    </Message>
+  </Section>
+
+  <Section>
+    <Name>LongCommandUsage</Name>
+    <Message>
+      <Name>EXIT</Name>
+      <Value>exit [/y]
+
+  /y    If the configuration information has been changed,
+        discard the changes and terminate the client command.
+      </Value>
+    </Message>
+    <Message>
+      <Name>HELP</Name>
+      <Value>help [command]
+
+Displays context-dependent help messages. If no command name is specified, a list of currently available command names is displayed.
+If a command name is specified, detailed usage instructions for the specified command are displayed.
+</Value>
+    </Message>
+    <Message>
+      <Name>LOGIN</Name>
+      <Value>login /h host /p port [/f]
+
+  /h host    Specify the hostname or IP address of the destination controller.
+  /p port    Specify the TCP port number of the destination controller.
+  /f         Discard the session of the other client.
+
+Connects to the controller listening at the specified IP address and TCP port number. If another client is already logged in, the login will fail. If the "/f" option is specified, the login from this client will be given priority, and the sessions of other clients will be discarded.
+</Value>
+    </Message>
+    <Message>
+      <Name>LOGOUT</Name>
+      <Value>logout [/y]
+
+  /y    If the configuration information has been changed,
+        discard the changes and disconnect from the controller.
+</Value>
+    </Message>
+    <Message>
+      <Name>RELOAD</Name>
+      <Value>reload [/y]
+
+  /y    If the configuration information has been changed,
+        discard the changes and reload the configurations.
+</Value>
+    </Message>
+    <Message>
+      <Name>SELECT</Name>
+      <Value>select index
+
+  index    Specify the index number of the child object to select.
+           The index number can be displayed using the list command.
+</Value>
+    </Message>
+    <Message>
+      <Name>UNSELECT</Name>
+      <Value>unselect [/p index]
+
+  /p    Specify the index number of the parent object to select.
+        The index number can be displayed using the listparent command.
+        If omitted, 0 is assumed.
+
+This command selects the parent object specified in the argument. Note that if the currently selected object has multiple parents, it does not "return" to the object before the current object was selected.
+</Value>
+    </Message>
+    <Message>
+      <Name>LIST</Name>
+      <Value>list
+
+This command displays a list of child objects registered to the currently selected object. The index value is used as an argument to the select command.
+</Value>
+    </Message>
+    <Message>
+      <Name>LISTPARENT</Name>
+      <Value>listparent
+
+This command displays a list of parent objects registered to the currently selected object. The index value is used as an argument to the unselect command.
+</Value>
+    </Message>
+    <Message>
+      <Name>PWD</Name>
+      <Value>pwd
+
+This command displays a short description of the currently selected object. It displays the same information as the list and listparent commands.
+</Value>
+    </Message>
+    <Message>
+      <Name>VALUES</Name>
+      <Value>values
+
+This command displays detailed information about the currently selected object, including its settings. The settings include the item name, data type, and the set value.
+</Value>
+    </Message>
+    <Message>
+      <Name>SET</Name>
+      <Value>set name value
+
+  name    Specify the name of the setting item whose value should be changed. Case sensitivity is ignored.
+  values  Specify the value to be set.
+</Value>
+    </Message>
+    <Message>
+      <Name>VALIDATE</Name>
+      <Value>validate
+
+Verify that there are no errors in the modified configuration. All errors must be removed before uploading the configuration information to the controller. Note that the validate command is implicitly executed when the publish command is run.
+</Value>
+    </Message>
+    <Message>
+      <Name>PUBLISH</Name>
+      <Value>publish
+
+Upload the modified configuration information to the controller. The modified configuration information will not take effect unless it is uploaded to the controller by executing this command. The validate command is also implicitly executed when this command is run. All errors must be removed before uploading the configuration information.
+</Value>
+    </Message>
+    <Message>
+      <Name>NOP</Name>
+      <Value>nop
+
+This command issues a "No Operation" command to the controller. Executing this command extends the session timeout value. This command can also be used to check the controller's health and maintain the TCP connection.
+</Value>
+    </Message>
+    <Message>
+      <Name>STATUSALL</Name>
+      <Value>statusall
+
+This command displays the operational status and any changes to all registered controllers, target devices, and target groups.
+</Value>
+    </Message>
+    <Message>
+      <Name>CREATE_TARGET_DEVICE</Name>
+      <Value>create [/n name]
+
+  /n     Specify the name of the newly created target device.
+
+A Target Device will be created and registered as a child of the currently selected object. All settings except the name will be created with their default values. Note that default values ​​are not always practical; therefore, settings must be changed as needed.
+</Value>
+    </Message>
+    <Message>
+      <Name>STATUS</Name>
+      <Value>status
+
+This command displays the operational status and any changes to the controller, Target Device, and Target Group to which the currently selected object belongs.
+</Value>
+    </Message>
+    <Message>
+      <Name>DELETE</Name>
+      <Value>delete [/i index]
+
+  /i    Specify the index value of the child object to delete.
+
+If an index value is specified with /i, the selected child object is deleted. If the argument is omitted, the currently selected object is deleted and the parent object is selected. If there are multiple parent objects, index 0 is treated as specified.
+</Value>
+    </Message>
+    <Message>
+      <Name>START</Name>
+      <Value>start
+
+This command launches the Target Device to which the currently selected object belongs.
+</Value>
+    </Message>
+    <Message>
+      <Name>KILL</Name>
+      <Value>kill
+
+This command stop the Target Device to which the currently selected object belongs. All LUs belonging to the Target Device will also be shut down.
+</Value>
+    </Message>
+    <Message>
+      <Name>SETLOGPARAM</Name>
+      <Value>setlogparam [/s SoftLimit] [/h HardLimit] [/l Level]
+
+  /s    Specify a soft limit for the number of log lines output per second.
+  /h    Specify a hard limit for the number of log lines output per second.
+  /l    Specify one of the following: VERBOSE, INFO, WARNING, ERROR, FAILED, or OFF.
+
+This command temporarily changes the log output limit and output level. The changes are effective while the Target Device is running, but will be reset to the values ​​set in the configuration information upon reboot. Note that this command cannot be used to change configuration information.
+</Value>
+    </Message>
+    <Message>
+      <Name>GETLOGPARAM</Name>
+      <Value>getlogparam
+
+This command displays the currently active log output limit and log output level.
+</Value>
+    </Message>
+    <Message>
+      <Name>CREATE_NETWORKPORTAL</Name>
+      <Value>create networkportal [/a address] [/p port]
+
+  /a     Specify the IP address or hostname to listen for incoming calls from the initiator.
+  /p     Specifies the TCP port number to listen for incoming calls from the initiator.
+
+Add an iSCSI Network Portal. If no IP address or hostname is specified, the system will listen for incoming calls on all available ports. If the port number is omitted, the default value of 3260 is used. The validate and publish commands do not verify the validity of addresses or port numbers. It is the user's responsibility to specify available addresses and ports.
+</Value>
+    </Message>
+    <Message>
+      <Name>CREATE_TARGETGROUP</Name>
+      <Value>create targetgroup [/n name]
+
+  /n     Specify the name of the newly created target group.
+
+A Target Device will be created and registered as a child of the currently selected object. All settings except the name will be created with their default values. Note that default values ​​are not always practical; therefore, settings must be changed as needed.
+</Value>
+    </Message>
+    <Message>
+      <Name>ADD_IPWHITELIST</Name>
+      <Value>add ipwhitelist [/fadr address] [/fmask mask] [/t type]
+
+  /fabr      Specify the IP address.
+  /fmask     Specify the mask value to be applied to the IP address.
+  /t         Specify the types of IP addresses that are allowed to receive incoming connections.
+             It must be one of the following: ANY, LOOPBACK, LINKLOCAL, PRIVATE, MULTICAST,
+             GLOBAL, IPV4ANY, IPV4LOOPBACK, IPV4LINKLOCAL, IPv4PRIVATE, IPV4MULTICAST, IPV4GLOBAL,
+             IPV6ANY, IPV6LOOPBACK, IPV6LINKLOCAL, IPV6PRIVATE, IPV6MULTICAST, IPV6GLOBAL.
+
+Add the IP addresses of incoming connections to the whitelist. Either both "/fabr" and "/fmask", or "/t" alone must be specified. 
+
+When a TCP connection is established, the IP whitelist compares each entry in the order they were registered, and if a match is found, the incoming connection is permitted. If there is no entry registered in the IP whitelist, all incoming connections will be allowed.
+
+If "/fabr 192.168.111.222" and "/fmask 255.255.0.0" are specified, incoming TCP connections with source IP addresses between 192.168.0.0 and 192.168.255.255 will be allowed. Both "/fabr" and "/fmask" can be used with IPv4 and IPv6, but the same type must be used for both.
+</Value>
+    </Message>
+    <Message>
+      <Name>CLEAR_IPWHITELIST</Name>
+      <Value>clear ipwhitelist
+
+Remove all entries from the list of allowed incoming IP addresses. Note that if no entries are registered, all incoming calls will be allowed.
+</Value>
+    </Message>
+    <Message>
+      <Name>LOAD</Name>
+      <Value>load
+
+Load the configuration information of the Target Group to which the currently selected object belongs and make it ready for execution. Note that incoming connections from the initiator will not be allowed until the "activate" command is executed.
+</Value>
+    </Message>
+    <Message>
+      <Name>UNLOAD</Name>
+      <Value>unload
+
+Stop execution and unload configuration information for the currently selected Target Group. To modify the configuration information of objects belonging to a Target Group, such as Targets and LUs etc, the Target Group must be unloaded beforehand.
+</Value>
+    </Message>
+    <Message>
+      <Name>ACTIVATE</Name>
+      <Value>activate
+
+Allow the initiator to connect to the Target Group to which the currently selected object belongs.
+</Value>
+    </Message>
+    <Message>
+      <Name>INACTIVATE</Name>
+      <Value>inactivate
+
+This command prohibits initiators from connecting to the Target Group to which the currently selected object belongs. Executing this command will prevent new connections. Note that existing sessions will remain intact.
+</Value>
+    </Message>
+    <Message>
+      <Name>CREATE_TARGET</Name>
+      <Value>create [/n name]
+
+  /n    Specify the iSCSI target name.
+
+A Target will be created and registered as a child of the currently selected object. All settings except the name will be created with their default values. Note that default values ​​are not always practical; therefore, settings must be changed as needed.
+</Value>
+    </Message>
+    <Message>
+      <Name>SETCHAP</Name>
+      <Value>setchap /iu user /ip password [/tu user] [/tp password]
+
+  /iu    Specify the username to be used for initiator authentication.
+  /ip    Specify the password to be used for initiator authentication.
+  /tu    Specify the username to be used for target authentication.
+  /tp    Specify the password to be used for target authentication.
+
+Specify the username and password to be used for CHAP authentication. If authentication information is not registered, the connection will be permitted without authentication.
+</Value>
+    </Message>
+    <Message>
+      <Name>UNSETAUTH</Name>
+      <Value>unsetauth
+
+Delete all registered authentication information. If authentication information is not registered, the connection will be permitted without authentication.
+</Value>
+    </Message>
+    <Message>
+      <Name>CREATE_LU</Name>
+      <Value>create /l LUN [/n name]
+
+  /l    Specify the LUN.
+  /n    Specify the LU name.
+
+A LU will be created and registered as a child of the currently selected object. All settings except the name and LUN will be created with their default values. Note that default values ​​are not always practical; therefore, settings must be changed as needed.
+
+The LUN must be a value between 1 and 255. Furthermore, it cannot be duplicated within a single Target Device.
+</Value>
+    </Message>
+    <Message>
+      <Name>ATTACH</Name>
+      <Value>attach /l LUN
+
+  /l    Specify the LUN.
+
+This configures the currently selected Target to be able to access the LU of the specified LUN. Note that an attached LU will have multiple parents.
+</Value>
+    </Message>
+    <Message>
+      <Name>DETACH</Name>
+      <Value>detach /l LUN
+
+  /l    Specify the LUN.
+
+Unregister LU, who is registered as a child of target. If a specified LU becomes inaccessible from all Targets, that LU is deleted.
+</Value>
+    </Message>
+    <Message>
+      <Name>CREATE_PLAINFILE</Name>
+      <Value>create plainfile /n FileName
+
+  /n    Specify the file name to access.
+
+Register an object for accessing RAW files (regular files without a specific format) as a child of the currently selected object. All settings except the file name will be created with their default values. Note that default values ​​are not always practical; therefore, settings must be changed as needed.
+
+The path name is represented by the path name in the system where the controller or Target Device is running. Note that this will differ from the path name on the client's system if the client is connected to a remote controller. If a file name is specified using a relative path, it will be interpreted as a relative path from the configuration directory specified when the controller was started. To avoid confusion, it is recommended to specify an absolute path.
+</Value>
+    </Message>
+    <Message>
+      <Name>CREATE_MEMBUFFER</Name>
+      <Value>create membuffer /s size
+
+  /s    Specify the media size in bytes.
+
+Registers an object that uses a memory buffer as its medium as a child of the currently selected object. All settings except the media size will be created with their default values. Note that default values ​​are not always practical; therefore, settings must be changed as needed.
+</Value>
+    </Message>
+    <Message>
+      <Name>CREATE_DEBUG</Name>
+      <Value>create debug
+
+Register the object that provides debugging functionality as a child of the currently selected object.
+</Value>
+    </Message>
+    <Message>
+      <Name>INITMEDIA_PLAINFILE</Name>
+      <Value>initmedia plainfile FileName Size
+
+  FileName    Specify the path name of the file to be created.
+  Size        Specify the file size of the file to be created in bytes.
+
+Create a file to be used with the Plain File Media. The path name is represented by the path name in the system where the controller or Target Device is running. Note that this will differ from the path name on the client's system if the client is connected to a remote controller. If a file name is specified using a relative path, it will be interpreted as a relative path from the configuration directory specified when the controller was started. To avoid confusion, it is recommended to specify an absolute path.
+</Value>
+    </Message>
+    <Message>
+      <Name>IMSTATUS</Name>
+      <Value>imstatus
+
+Displays the progress of the file creation process.
+</Value>
+    </Message>
+    <Message>
+      <Name>IMKILL</Name>
+      <Value>imkill index
+
+  index    Specify the index of the file creation process that should be stopped.
+
+The index value is displayed using the imstatus command.
+</Value>
+    </Message>
+    <Message>
+      <Name>SESSIONS</Name>
+      <Value>sessions
+
+Display a list of currently active sessions.
+</Value>
+    </Message>
+    <Message>
+      <Name>SESSKILL</Name>
+      <Value>sesskill TSIH
+
+  TSIH    Specify the TSIH of the session to be disconnected.
+
+The specified session will be forcibly terminated.
+</Value>
+    </Message>
+    <Message>
+      <Name>CONNECTIONS</Name>
+      <Value>connections [/s TSIH]
+
+  /s    Specify the TSIH of the session for which the list of connections should be displayed.
+
+Displays a list of currently connected connections. If TSIH is specified, a list of connections belonging to the specified session is displayed. If TSIH is omitted, it displays a list of connections within the session related to the Target Device, Network Portal, Target Group, and Target, depending on the currently selected object.
+</Value>
+    </Message>
+    <Message>
+      <Name>LUSTATUS</Name>
+      <Value>lustatus
+
+Displays the status and operational status of the LU.
+</Value>
+    </Message>
+    <Message>
+      <Name>LURESET</Name>
+      <Value>lureset
+
+Perform an LU reset. Running tasks will be aborted, and media will be closed and reloaded. Note that all contents of Memory Buffer Media will be erased.
+</Value>
+    </Message>
+    <Message>
+      <Name>MEDIASTATUS</Name>
+      <Value>mediastatus
+
+Displays the status and operational status of the media.
+</Value>
+    </Message>
+    <Message>
+      <Name>ADD_TRAP</Name>
+      <Value>add trap [/e event] [/slba LBA] [/elba LBA] [/a action] [/msg message] [/idx index] [/ms MiliSec]
+
+  /e     Specify the event that will trigger the Trap.
+         Choose one of the following: TestUnitReady, ReadCapacity, Read, Write, or Format.
+  /slba  In a trap triggered by a Read or Write command,
+         specify the starting position of the access range that triggers the trap.
+  /elba  In a trap triggered by a Read or Write command,
+         specify the end position of the access range that triggers the trap.
+  /a     Specify the action to be performed by the Trap.
+         Specify one of the following: ACA, LUReset, Count, Delay, or Wait.
+  /msg   Specify the message that is output when performing an ACA or LU reset.
+  /idx   Specify the index value of the counter to which the value will be added.
+  /ms    Specify the waiting time in milliseconds when delaying task processing using the Delay action.
+
+Register various Traps and Actions to be used for debugging. Traps can only be registered for active Debug Media. Registered traps are cleared when an LU reset, Target Group unload, or Target Device is restarted.
+
+Traps are executed in the order they are registered. For example, if a trap that triggers ACA is registered first, subsequent traps will not be executed.
+</Value>
+    </Message>
+    <Message>
+      <Name>CLEAR_TRAP</Name>
+      <Value>clear trap
+
+Delete all Traps currently registered in the selected Debug Media.
+</Value>
+    </Message>
+    <Message>
+      <Name>TRAPS</Name>
+      <Value>traps
+
+This command displays a list of traps registered to the currently selected Debug Media.
+</Value>
+    </Message>
+    <Message>
+      <Name>TASK_LIST</Name>
+      <Value>task list
+
+This command displays a list of tasks that are waiting to run due to a Trap in Debug Media that performs a Wait action. Tasks stopped by the Wait action will not resume execution until restarted by the task resume command.
+</Value>
+    </Message>
+    <Message>
+      <Name>TASK_RESUME</Name>
+      <Value>task resume
+
+This command resumes a task that has been stopped by a Trap in Debug Media that performs a Wait action. 
+</Value>
+    </Message>
+
+
+  </Section>
+
 </Messages>

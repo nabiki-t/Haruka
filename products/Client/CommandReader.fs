@@ -25,6 +25,7 @@ open Haruka.Commons
 /// Command varb type
 type CommandVarb =
     | Exit
+    | Help
     | Login
     | Logout
     | Reload
@@ -87,7 +88,6 @@ type CommandVarb =
 [<NoComparison>]
 type CommandReader () =
 
-
     /// "exit" command rule.
     static member CmdRule_exit : AcceptableCommand< CommandVarb > = {
         Command = [| "EXIT" |];
@@ -95,6 +95,17 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = [| "/y" |];
         NamelessArgs = Array.empty;
+        HelpMsgName = "EXIT";
+    }
+
+    /// "help" command rule.
+    static member CmdRule_help : AcceptableCommand< CommandVarb > = {
+        Command = [| "HELP" |];
+        Varb = CommandVarb.Help;
+        NamedArgs = Array.empty;
+        ValuelessArgs = [||];
+        NamelessArgs = [| CRV_String( 32 ); CRV_String( 32 ); CRV_String( 32 ); CRV_String( 32 ); CRV_String( 32 ); |];
+        HelpMsgName = "HELP";
     }
 
     /// "login" command rule.
@@ -104,6 +115,7 @@ type CommandReader () =
         NamedArgs = [| ( "/h", CRVM_String( 256 ) ); ( "/p", CRVM_int32( 1, int32 UInt16.MaxValue ) ); |];
         ValuelessArgs = [| "/f" |];
         NamelessArgs = Array.empty;
+        HelpMsgName = "LOGIN";
     }
 
     /// "logout" command rule.
@@ -113,6 +125,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = [| "/y" |];
         NamelessArgs = Array.empty;
+        HelpMsgName = "LOGOUT";
     }
 
     /// "reload" command rule.
@@ -122,6 +135,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = [| "/y" |];
         NamelessArgs = Array.empty;
+        HelpMsgName = "RELOAD";
     }
 
     /// "select" command rule.
@@ -131,6 +145,7 @@ type CommandReader () =
         NamedArgs = Array.empty
         ValuelessArgs = Array.empty;
         NamelessArgs = [| CRVM_uint32( 0u, uint ClientConst.MAX_CHILD_NODE_COUNT - 1u ); |];
+        HelpMsgName = "SELECT";
     }
 
     /// "unselect" command rule.
@@ -140,6 +155,7 @@ type CommandReader () =
         NamedArgs = [| ( "/p", CRV_uint32( 0u, uint ClientConst.MAX_CHILD_NODE_COUNT - 1u ) ); |];
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "UNSELECT";
     }
 
     /// "list" command rule.
@@ -149,6 +165,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "LIST";
     }
 
     /// "listparent" command rule.
@@ -158,6 +175,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "LISTPARENT";
     }
 
     /// "pwd" command rule.
@@ -167,6 +185,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "PWD";
     }
 
     /// "values" command rule.
@@ -176,6 +195,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "VALUES";
     }
 
     /// "set" command rule.
@@ -185,6 +205,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = [| CRVM_String( 256 ); CRVM_String( 65536 ); |];
+        HelpMsgName = "SET";
     }
 
     /// "validate" command rule.
@@ -194,6 +215,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "VALIDATE";
     }
 
     /// "publish" command rule.
@@ -203,6 +225,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "PUBLISH";
     }
 
     /// "nop" command rule.
@@ -212,6 +235,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "NOP";
     }
 
     /// "statusall" command rule.
@@ -221,6 +245,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "STATUSALL";
     }
 
     /// "create" command for controller rule.
@@ -230,6 +255,7 @@ type CommandReader () =
         NamedArgs = [| ( "/n", CRV_String( Constants.MAX_DEVICE_NAME_STR_LENGTH ) ); |];
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "CREATE_TARGET_DEVICE";
     }
 
     /// "status" command rule.
@@ -239,6 +265,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "STATUS";
     }
 
     /// "delete" command rule.
@@ -249,6 +276,7 @@ type CommandReader () =
             [| ( "/i", CRV_uint32( 0u, uint ClientConst.MAX_CHILD_NODE_COUNT - 1u ) ); |];
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "DELETE";
     }
 
     /// "start" command rule.
@@ -258,6 +286,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "START";
     }
 
     /// "kill" command rule.
@@ -267,6 +296,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "KILL";
     }
 
     /// "setlogparam" command rule.
@@ -286,6 +316,7 @@ type CommandReader () =
             |];
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "SETLOGPARAM";
     }
 
     /// "getlogparam" command rule.
@@ -295,6 +326,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "GETLOGPARAM";
     }
 
     /// "create NetworkPortal" command rule.
@@ -307,6 +339,7 @@ type CommandReader () =
         |];
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "CREATE_NETWORKPORTAL";
     }
 
     /// "create TargetGroup" command for target device rule.
@@ -316,6 +349,7 @@ type CommandReader () =
         NamedArgs = [| ( "/n", CRV_String( Constants.MAX_TARGET_GROUP_NAME_STR_LENGTH ) ); |];
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "CREATE_TARGETGROUP";
     }
 
     /// "add IPWhiteList" command for network portal rule.
@@ -329,6 +363,7 @@ type CommandReader () =
         |];
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "ADD_IPWHITELIST";
     }
 
     /// "clear IPWhiteList" command for network portal rule.
@@ -338,6 +373,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "CLEAR_IPWHITELIST";
     }
 
     /// "load" command rule.
@@ -347,6 +383,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "LOAD";
     }
 
     /// "unload" command rule.
@@ -356,6 +393,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "UNLOAD";
     }
 
     /// "activate" command rule.
@@ -365,6 +403,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "ACTIVATE";
     }
 
     /// "inactivate" command rule.
@@ -374,6 +413,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "INACTIVATE";
     }
 
     /// "create" command for target group rule.
@@ -383,6 +423,7 @@ type CommandReader () =
         NamedArgs = [| ( "/n", CRV_Regex( Constants.ISCSI_TEXT_ISCSI_NAME_VALUE_REGEX_OBJ ) ); |];
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "CREATE_TARGET";
     }
 
     /// "setchap" command rule.
@@ -397,6 +438,7 @@ type CommandReader () =
         |];
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "SETCHAP";
     }
 
     /// "unsetauth" command rule.
@@ -406,6 +448,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "UNSETAUTH";
     }
 
     /// "create" command for target rule.
@@ -418,6 +461,7 @@ type CommandReader () =
         |];
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "CREATE_LU";
     }
 
     /// "attach" command rule.
@@ -427,6 +471,7 @@ type CommandReader () =
         NamedArgs = [| ( "/l", CRV_LUN ); |];
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "ATTACH";
     }
 
     /// "detach" command rule.
@@ -436,6 +481,7 @@ type CommandReader () =
         NamedArgs = [| ( "/l", CRV_LUN ); |];
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "DETACH";
     }
 
     /// "create plainfile" command for LU or media rule.
@@ -445,6 +491,7 @@ type CommandReader () =
         NamedArgs = [| ( "/n", CRVM_String( Constants.MAX_FILENAME_STR_LENGTH ) ); |];
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "CREATE_PLAINFILE";
     }
 
     /// "create membuffer" command for LU or media rule.
@@ -454,6 +501,7 @@ type CommandReader () =
         NamedArgs = [| ( "/s", CRVM_uint64( 0UL, UInt64.MaxValue ) ); |];
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "CREATE_MEMBUFFER";
     }
 
     /// "create debug" command for LU or media rule.
@@ -463,6 +511,7 @@ type CommandReader () =
         NamedArgs = [||];
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "CREATE_DEBUG";
     }
 
     /// "initmedia plainfile" command for LU or media rule.
@@ -471,7 +520,8 @@ type CommandReader () =
         Varb = CommandVarb.InitMedia_PlainFile;
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
-        NamelessArgs = [| CRV_String( Constants.MAX_FILENAME_STR_LENGTH ); CRVM_int64( 1L, Int64.MaxValue ) |];
+        NamelessArgs = [| CRVM_String( Constants.MAX_FILENAME_STR_LENGTH ); CRVM_int64( 1L, Int64.MaxValue ) |];
+        HelpMsgName = "INITMEDIA_PLAINFILE";
     }
 
     /// "imstatus" command for LU or media rule.
@@ -481,6 +531,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "IMSTATUS";
     }
 
     /// "imkill" command for LU or media rule.
@@ -490,6 +541,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = [| CRVM_uint64( 0UL, UInt64.MaxValue ) |];
+        HelpMsgName = "IMKILL";
     }
 
     /// "sessions" command for LU or media rule.
@@ -499,6 +551,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "SESSIONS";
     }
 
     /// "sesskill" command for LU or media rule.
@@ -507,7 +560,8 @@ type CommandReader () =
         Varb = CommandVarb.SessKill;
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
-        NamelessArgs = [| CRV_uint32( 0u, uint32 UInt16.MaxValue ) |];
+        NamelessArgs = [| CRVM_uint32( 0u, uint32 UInt16.MaxValue ) |];
+        HelpMsgName = "SESSKILL";
     }
 
     /// "connections" command for LU or media rule.
@@ -517,6 +571,7 @@ type CommandReader () =
         NamedArgs = [| ( "/s", CRV_uint32( 0u, uint32 UInt16.MaxValue ) ) |];
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "CONNECTIONS";
     }
 
     /// "lustatus" command for LU or media rule.
@@ -526,6 +581,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "LUSTATUS";
     }
 
     /// "lureset" command for LU or media rule.
@@ -535,6 +591,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "LURESET";
     }
 
     /// "mediastatus" command for LU or media rule.
@@ -544,6 +601,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "MEDIASTATUS";
     }
 
     /// "add trap" command for debug media rule.
@@ -561,6 +619,7 @@ type CommandReader () =
         |];
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "ADD_TRAP";
     }
 
     /// "clear trap" command for debug media rule.
@@ -570,6 +629,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "CLEAR_TRAP";
     }
 
     /// "traps" command for debug media rule.
@@ -579,6 +639,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "TRAPS";
     }
 
     /// "task list" command for debug media rule.
@@ -588,6 +649,7 @@ type CommandReader () =
         NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
+        HelpMsgName = "TASK_LIST";
     }
 
     /// "task resume" command for debug media rule.
@@ -599,7 +661,8 @@ type CommandReader () =
             ( "/i", CRVM_uint32( 0u, UInt32.MaxValue ) );
         |];
         ValuelessArgs = Array.empty;
-        NamelessArgs = [||];
+        NamelessArgs = Array.empty;
+        HelpMsgName = "TASK_RESUME";
     }
 
     /// <summary>

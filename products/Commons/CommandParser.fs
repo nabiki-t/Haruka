@@ -44,6 +44,29 @@ type CRValidateType =
     | CRVM_Regex of Regex                // Regular Expression, Mandatory
     | CRVM_LUN                           // LUN, Mandatory
 
+    /// <summary>
+    ///   Determine whether the value is optional or not.
+    /// </summary>
+    /// <param name="v">
+    ///   CRValidateType value.
+    /// </param>
+    /// <returns>
+    ///   Returns True if the specified Validation type indicates an optional value.
+    /// </returns>
+    static member isOptional ( v : CRValidateType ) =
+        match v with
+        | CRV_int32 _
+        | CRV_uint32 _
+        | CRV_int64 _
+        | CRV_uint64 _
+        | CRV_String _
+        | CRV_Regex _
+        | CRV_LUN ->
+            true
+        | _ ->
+            false
+
+
 /// Data type that specifies the acceptable commands.
 [<NoComparison>]
 type AcceptableCommand<'a> = {
@@ -61,6 +84,9 @@ type AcceptableCommand<'a> = {
 
     /// nameless arguments
     NamelessArgs : CRValidateType[];
+
+    /// help message
+    HelpMsgName : string;
 }
 
 /// Entered value type
@@ -180,8 +206,10 @@ type CommandParser<'a> (
             |> Array.fold ( fun ( s, li1, li2, li3 ) itr ->
                 match s with
                 | Some x ->
-                    let ev = CommandParser<'a>.ValidateValue st ( snd cmdval.NamedArgs.[x] ) itr
-                    ( None, li1, ( fst cmdval.NamedArgs.[x], ev ) :: li2, li3 )
+                    let ev = CommandParser<'a>.ValidateValue ( snd cmdval.NamedArgs.[x] ) itr
+                    if ev.IsNone then
+                        raise <| CommandInputError( st.GetMessage( "CMDERR_INVALID_ARG_VALUE", itr ) )
+                    ( None, li1, ( fst cmdval.NamedArgs.[x], ev.Value ) :: li2, li3 )
                 | None ->
                     if cmdval.ValuelessArgs |> Array.exists ( fun itr2 -> String.Equals( itr2, itr, StringComparison.Ordinal ) ) then
                         ( None, itr :: li1, li2, li3 )
@@ -197,8 +225,10 @@ type CommandParser<'a> (
         if lastStat.IsSome then
             let msg = st.GetMessage( "CMDERR_LAST_ARG_VAL_MISSING" )
             raise <| CommandInputError msg
-        if namelessArgList.Length <> cmdval.NamelessArgs.Length then
-            let msg = st.GetMessage( "CMDERR_INVALID_ARG_COUNT", ( sprintf "%d" cmdval.NamelessArgs.Length ) )
+        let lessMCnt = cmdval.NamelessArgs |> Array.sumBy ( fun itr -> if CRValidateType.isOptional itr then 0 else 1 )
+        let lessOCnt = cmdval.NamelessArgs.Length - lessMCnt
+        if namelessArgList.Length < lessMCnt || namelessArgList.Length > lessMCnt + lessOCnt then
+            let msg = st.GetMessage( "CMDERR_INVALID_ARG_COUNT" )
             raise <| CommandInputError msg
 
         cmdval.NamedArgs
@@ -232,11 +262,23 @@ type CommandParser<'a> (
             |> Seq.map KeyValuePair
             |> Dictionary
 
-        let allNamelessArgs =
+(*        let allNamelessArgs =
             namelessArgList
             |> Seq.rev
-            |> Seq.map2 ( CommandParser<'a>.ValidateValue st ) cmdval.NamelessArgs
-            |> Seq.toArray
+            |> Seq.map2 ( fun vt s ->
+                match CommandParser<'a>.ValidateValue vt s with
+                | ValueNone ->
+                    raise <| CommandInputError( st.GetMessage( "CMDERR_INVALID_ARG_VALUE", s ) )
+                | ValueSome x ->
+                    x
+            ) cmdval.NamelessArgs
+            |> Seq.toArray*)
+        let allNamelessArgs =
+            match CommandParser<'a>.ValidateNamelessValues ( namelessArgList |> List.rev ) cmdval.NamelessArgs with
+            | ValueNone ->
+                raise <| CommandInputError( st.GetMessage( "CMDERR_NAMELESS_PTN_MISMATCH" ) )
+            | ValueSome x ->
+                x
 
         new CommandParser<'a> ( cmdval.Varb, allNamedArgs, allNamelessArgs )
 
@@ -252,7 +294,7 @@ type CommandParser<'a> (
     /// <returns>
     ///  Matched command or None, if no matching command is found.
     /// </returns>
-    static member private SearchCommand ( args : string[] ) ( cmds : AcceptableCommand<'a> array ) : AcceptableCommand<'a> option =
+    static member SearchCommand ( args : string[] ) ( cmds : AcceptableCommand<'a> array ) : AcceptableCommand<'a> option =
 
         let rec loop ( idx : int ) ( argcmds : AcceptableCommand<'a> array ) : AcceptableCommand<'a> option =
             // Find exact match
@@ -303,9 +345,6 @@ type CommandParser<'a> (
     /// <summary>
     ///  Validate and convert input string value.
     /// </summary>
-    /// <param name="st">
-    ///  Message table.
-    /// </param>
     /// <param name="vt">
     ///   Validation information.
     /// </param>
@@ -318,48 +357,53 @@ type CommandParser<'a> (
     /// <exceptions>
     ///   If validation failed, CommandInputError exception is raised.
     /// </exceptions>
-    static member private ValidateValue ( st : StringTable ) ( vt : CRValidateType ) ( argval : string ) : EnteredValue =
-        let ex = CommandInputError( st.GetMessage( "CMDERR_INVALID_ARG_VALUE", argval ) )
+    static member private ValidateValue ( vt : CRValidateType ) ( argval : string ) : EnteredValue voption =
         match vt with
         | CRV_int32( min, max )
         | CRVM_int32( min, max ) ->
             let r, v = Int32.TryParse argval
             if not r || v < min || v > max then
-                raise <| ex
-            EV_int32( v )
+                ValueNone
+            else
+                EV_int32( v ) |> ValueSome
 
         | CRV_uint32( min, max )
         | CRVM_uint32( min, max ) ->
             let r, v = UInt32.TryParse argval
             if not r || v < min || v > max then
-                raise <| ex
-            EV_uint32( v )
+                ValueNone
+            else
+                EV_uint32( v ) |> ValueSome
 
         | CRV_int64( min, max )
         | CRVM_int64( min, max ) ->
             let r, v = Int64.TryParse argval
             if not r || v < min || v > max then
-                raise <| ex
-            EV_int64( v )
+                ValueNone
+            else
+                EV_int64( v ) |> ValueSome
 
         | CRV_uint64( min, max )
         | CRVM_uint64( min, max ) ->
             let r, v = UInt64.TryParse argval
             if not r || v < min || v > max then
-                raise <| ex
-            EV_uint64( v )
+                ValueNone
+            else
+                EV_uint64( v ) |> ValueSome
 
         | CRV_String( len )
         | CRVM_String( len ) ->
             if argval.Length > len then
-                raise <| ex
-            EV_String( argval )
+                ValueNone
+            else
+                EV_String( argval ) |> ValueSome
 
         | CRV_Regex( r )
         | CRVM_Regex( r ) ->
             if not ( r.IsMatch argval ) then
-                raise <| ex
-            EV_String( argval )
+                ValueNone
+            else
+                EV_String( argval ) |> ValueSome
 
         | CRV_LUN
         | CRVM_LUN ->
@@ -370,10 +414,71 @@ type CommandParser<'a> (
                     Convert.ToUInt64 argval
                 |> lun_me.fromPrim
                 |> EV_LUN
+                |> ValueSome
             with
             | :? OverflowException 
             | :? FormatException ->
-                raise ex
+                ValueNone
+
+    /// <summary>
+    ///  Check if the unnamed argument meets the condition.
+    /// </summary>
+    /// <param name="arglist">
+    ///  The entered string.
+    /// </param>
+    /// <param name="cond">
+    ///  Conditions that unnamed arguments must satisfy.
+    /// </param>
+    /// <returns>
+    ///  Converted values, or None.
+    /// </returns>
+    static member private ValidateNamelessValues ( arglist : string list ) ( cond : CRValidateType[] ) : EnteredValue[] voption =
+    
+        let rec matchNext ( wArgList : string list ) ( condIdx : int ) ( acc : EnteredValue list ) : EnteredValue list voption =
+
+            match wArgList with
+            | [] ->
+                if condIdx = cond.Length then
+                    // If all conditions have been processed, the match is successful.
+                    ValueSome( acc )
+                else
+                    // If the remaining conditions can be omitted, they will be considered omitted.
+                    let currentCond = cond.[ condIdx ]
+                    if CRValidateType.isOptional currentCond then
+                        matchNext [] ( condIdx + 1 ) ( EV_NoValue :: acc )
+                    else
+                        ValueNone
+
+            | currentArg :: tail ->
+                if condIdx = cond.Length then
+                    // If all conditions have been processed but there is still input data remaining, the match will fail.
+                    ValueNone
+                else
+                    let currentCond = cond.[ condIdx ]
+
+                    // Regardless of whether it can be omitted or not, 
+                    // the match continues assuming it was not omitted.
+                    let consumedResult =
+                        match CommandParser<'a>.ValidateValue currentCond currentArg with
+                        | ValueSome(ev) ->
+                            matchNext tail ( condIdx + 1 ) ( ev :: acc )
+                        | ValueNone ->
+                            ValueNone
+
+                    match consumedResult with
+                    | ValueSome( result ) ->
+                        ValueSome( result )
+                    | ValueNone ->
+                        if CRValidateType.isOptional currentCond then
+                            // The match failed because the value was assumed to be omitted.
+                            // The match proceeds assuming this value is omitted.
+                            matchNext wArgList ( condIdx + 1 ) ( EV_NoValue :: acc )
+                        else
+                            // Match failed because a non-optional value does not meet the condition.
+                            ValueNone
+
+        matchNext arglist 0 []
+        |> ValueOption.map ( List.rev >> List.toArray )
 
     /// <summary>
     ///  Get named argument value by int32. If specified value missing, it returns default value.

@@ -45,6 +45,7 @@ type CommandReader_Test() =
             NamedArgs = namedArgs;
             ValuelessArgs = valuelessArgs;
             NamelessArgs = namelessArgs;
+            HelpMsgName = "";
         }|]
 
     let RunInputCommandMethod ( infile : TextReader ) ( accCommands :  AcceptableCommand<CommandVarb> array ) : CommandParser<CommandVarb> =
@@ -271,8 +272,8 @@ type CommandReader_Test() =
     [<Theory>]
     [<InlineData( "select", "CMDERR_INVALID_ARG_COUNT" )>]
     [<InlineData( "select 1 2", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "select -1", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "select /f", "CMDERR_INVALID_ARG_VALUE" )>]
+    [<InlineData( "select -1", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
+    [<InlineData( "select /f", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
     member _.Select_003 ( cmdstr : string ) ( msgstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_select |]
@@ -283,7 +284,7 @@ type CommandReader_Test() =
     member _.Select_004() =
         let ms, ws, rs = GenCommandStream ( sprintf "select %d" ClientConst.MAX_CHILD_NODE_COUNT )
         let accCommands = [| CommandReader.CmdRule_select |]
-        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_INVALID_ARG_VALUE"
+        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_NAMELESS_PTN_MISMATCH"
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -447,7 +448,7 @@ type CommandReader_Test() =
         let astr = String.replicate 257 "a"
         let ms, ws, rs = GenCommandStream ( "set " + astr + " b" )
         let accCommands = [| CommandReader.CmdRule_set |]
-        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_INVALID_ARG_VALUE"
+        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_NAMELESS_PTN_MISMATCH"
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -455,7 +456,7 @@ type CommandReader_Test() =
         let bstr = String.replicate 65537 "a"
         let ms, ws, rs = GenCommandStream ( "set a " + bstr )
         let accCommands = [| CommandReader.CmdRule_set |]
-        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_INVALID_ARG_VALUE"
+        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_NAMELESS_PTN_MISMATCH"
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
@@ -1599,7 +1600,7 @@ type CommandReader_Test() =
         let fname = String.replicate ( Constants.MAX_FILENAME_STR_LENGTH + 1 ) "a"
         let ms, ws, rs = GenCommandStream ( sprintf "initmedia plainfile %s 1" fname )
         let accCommands = [| CommandReader.CmdRule_initmedia_PlainFile |]
-        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_INVALID_ARG_VALUE"
+        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_NAMELESS_PTN_MISMATCH"
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -1618,9 +1619,9 @@ type CommandReader_Test() =
     [<InlineData( "initmedia plainfile", "CMDERR_INVALID_ARG_COUNT" )>]
     [<InlineData( "initmedia plainfile a", "CMDERR_INVALID_ARG_COUNT" )>]
     [<InlineData( "initmedia plainfile a 1 2", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "initmedia plainfile a 0", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "initmedia plainfile a 9223372036854775808", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "initmedia plainfile a b", "CMDERR_INVALID_ARG_VALUE" )>]
+    [<InlineData( "initmedia plainfile a 0", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
+    [<InlineData( "initmedia plainfile a 9223372036854775808", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
+    [<InlineData( "initmedia plainfile a b", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
     member _.Create_initmedia_PlainFile_004 ( cmdstr : string ) ( msgstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_initmedia_PlainFile |]
@@ -1672,9 +1673,9 @@ type CommandReader_Test() =
     [<Theory>]
     [<InlineData( "imkill", "CMDERR_INVALID_ARG_COUNT" )>]
     [<InlineData( "imkill 1 2", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "imkill -1", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "imkill 18446744073709551616", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "imkill /f", "CMDERR_INVALID_ARG_VALUE" )>]
+    [<InlineData( "imkill -1", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
+    [<InlineData( "imkill 18446744073709551616", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
+    [<InlineData( "imkill /f", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
     member _.IMKill_003 ( cmdstr : string ) ( msgstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_imkill |]
@@ -1726,9 +1727,9 @@ type CommandReader_Test() =
     [<Theory>]
     [<InlineData( "sesskill", "CMDERR_INVALID_ARG_COUNT" )>]
     [<InlineData( "sesskill 1 2", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "sesskill -1", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "sesskill 65536", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "sesskill /f", "CMDERR_INVALID_ARG_VALUE" )>]
+    [<InlineData( "sesskill -1", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
+    [<InlineData( "sesskill 65536", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
+    [<InlineData( "sesskill /f", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
     member _.SessKill_003 ( cmdstr : string ) ( msgstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_sesskill |]

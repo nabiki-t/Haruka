@@ -44,6 +44,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     static let AccCmd_NotConnected : AcceptableCommand< CommandVarb > [] =
         [|
             CommandReader.CmdRule_exit;
+            CommandReader.CmdRule_help;
             CommandReader.CmdRule_login;
         |]
 
@@ -51,6 +52,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     static let AccCmd_Controller : AcceptableCommand< CommandVarb > [] =
         [|
             CommandReader.CmdRule_exit;
+            CommandReader.CmdRule_help;
             CommandReader.CmdRule_logout;
             CommandReader.CmdRule_reload;
             CommandReader.CmdRule_select;
@@ -78,6 +80,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     static let AccCmd_TargetDevice : AcceptableCommand< CommandVarb > [] =
         [|
             CommandReader.CmdRule_exit;
+            CommandReader.CmdRule_help;
             CommandReader.CmdRule_logout;
             CommandReader.CmdRule_reload;
             CommandReader.CmdRule_select;
@@ -111,6 +114,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     static let AccCmd_NetworkPortal : AcceptableCommand< CommandVarb > [] =
         [|
             CommandReader.CmdRule_exit;
+            CommandReader.CmdRule_help;
             CommandReader.CmdRule_logout;
             CommandReader.CmdRule_reload;
             CommandReader.CmdRule_select;
@@ -141,6 +145,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     static let AccCmd_TargetGroup : AcceptableCommand< CommandVarb > [] =
         [|
             CommandReader.CmdRule_exit;
+            CommandReader.CmdRule_help;
             CommandReader.CmdRule_logout;
             CommandReader.CmdRule_reload;
             CommandReader.CmdRule_select;
@@ -175,6 +180,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     static let AccCmd_Target : AcceptableCommand< CommandVarb > [] =
         [|
             CommandReader.CmdRule_exit;
+            CommandReader.CmdRule_help;
             CommandReader.CmdRule_logout;
             CommandReader.CmdRule_reload;
             CommandReader.CmdRule_select;
@@ -213,6 +219,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     static let AccCmd_LU : AcceptableCommand< CommandVarb > [] =
         [|
             CommandReader.CmdRule_exit;
+            CommandReader.CmdRule_help;
             CommandReader.CmdRule_logout;
             CommandReader.CmdRule_reload;
             CommandReader.CmdRule_select;
@@ -249,6 +256,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     static let AccCmd_PlainFileMedia : AcceptableCommand< CommandVarb > [] =
         [|
             CommandReader.CmdRule_exit;
+            CommandReader.CmdRule_help;
             CommandReader.CmdRule_logout;
             CommandReader.CmdRule_reload;
             CommandReader.CmdRule_select;
@@ -290,6 +298,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     static let AccCmd_DebugMedia : AcceptableCommand< CommandVarb > [] =
         [|
             CommandReader.CmdRule_exit;
+            CommandReader.CmdRule_help;
             CommandReader.CmdRule_logout;
             CommandReader.CmdRule_reload;
             CommandReader.CmdRule_select;
@@ -393,6 +402,9 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     match cmd.Varb with
                     | CommandVarb.Exit ->
                         return struct( false, None )
+                    | CommandVarb.Help ->
+                        this.Command_Help cmd AccCmd_NotConnected
+                        return struct( true, None )
                     | CommandVarb.Login ->
                         let! nextStat = this.Command_Login cmd
                         return struct( true, nextStat )
@@ -421,6 +433,10 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     | CommandVarb.Exit ->
                         let! nextStat = this.Command_Exit cmd ss cc cn
                         return struct( nextStat.IsSome, nextStat )
+
+                    | CommandVarb.Help ->
+                        this.Command_Help cmd accCmd
+                        return struct( true, stat )
 
                     | CommandVarb.Logout ->
                         // Same procedure as exit command
@@ -705,7 +721,6 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 return None
         }
 
-
     /// <summary>
     ///  Execute exit command.
     /// </summary>
@@ -750,6 +765,41 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 cc.Dispose()
                 return None
         }
+
+    /// <summary>
+    ///  Execute exit command.
+    /// </summary>
+    /// <param name="cmd">
+    ///  User entered command.
+    /// </param>
+    /// <param name="accCmd">
+    ///  Currentry available commands.
+    /// </param>
+    member private this.Command_Help
+        ( cmd : CommandParser<CommandVarb> ) ( accCmd : AcceptableCommand<CommandVarb>[] ) : unit =
+
+        let vcmd =
+            [| 0 .. 4 |]
+            |> Array.choose cmd.NamelessString 
+            |> Array.map _.ToUpperInvariant()
+
+        if vcmd.Length = 0 then
+            for itr in accCmd do
+                m_Messages.Get( "ShortCommandUsage", itr.HelpMsgName )
+                |> this.Output 1
+        else
+            match CommandParser<CommandVarb>.SearchCommand vcmd accCmd with
+            | None ->
+                m_Messages.GetMessage( "CMDMSG_HELP_UNKNOWN_CMD" )
+                |> this.Output 0
+            | Some x ->
+                printfn ""
+                m_Messages.Get( "ShortCommandUsage", x.HelpMsgName )
+                |> this.Output 0
+                printfn ""
+                m_Messages.Get( "LongCommandUsage", x.HelpMsgName )
+                |> this.Output 0
+       
 
     /// <summary>
     ///  Execute reload command.
