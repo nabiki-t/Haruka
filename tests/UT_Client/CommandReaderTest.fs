@@ -148,6 +148,51 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
+    member _.Help_001() =
+        let ms, ws, rs = GenCommandStream "help"
+        let accCommands = [| CommandReader.CmdRule_help |]
+        let r = RunInputCommandMethod rs accCommands
+        Assert.True(( r.Varb = CommandVarb.Help ))
+        Assert.True(( r.NamelessArgs.Length = 5 ))
+        Assert.True(( r.NamelessArgs.[0] = EV_NoValue ))
+        Assert.True(( r.NamelessArgs.[1] = EV_NoValue ))
+        Assert.True(( r.NamelessArgs.[2] = EV_NoValue ))
+        Assert.True(( r.NamelessArgs.[3] = EV_NoValue ))
+        Assert.True(( r.NamelessArgs.[4] = EV_NoValue ))
+        Assert.True(( r.NamedArgs.Count = 0 ))
+        GlbFunc.AllDispose [ ms; ws; rs; ]
+
+    [<Fact>]
+    member _.Help_002() =
+        let a = String.replicate 32 "a"
+        let ms, ws, rs =
+            GenCommandStream ( sprintf "help %s %s %s %s %s" a a a a a )
+        let accCommands = [| CommandReader.CmdRule_help |]
+        let r = RunInputCommandMethod rs accCommands
+        Assert.True(( r.Varb = CommandVarb.Help ))
+        Assert.True(( r.NamelessArgs.Length = 5 ))
+        Assert.True(( r.NamelessArgs.[0] = EV_String a ))
+        Assert.True(( r.NamelessArgs.[1] = EV_String a ))
+        Assert.True(( r.NamelessArgs.[2] = EV_String a ))
+        Assert.True(( r.NamelessArgs.[3] = EV_String a ))
+        Assert.True(( r.NamelessArgs.[4] = EV_String a ))
+        Assert.True(( r.NamedArgs.Count = 0 ))
+        GlbFunc.AllDispose [ ms; ws; rs; ]
+
+    [<Theory>]
+    [<InlineData( "help a a a a a a", "CMDERR_INVALID_ARG_COUNT" )>]
+    [<InlineData( "help 012345678901234567890123456789012 a a a a", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
+    [<InlineData( "help a 012345678901234567890123456789012 a a a", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
+    [<InlineData( "help a a 012345678901234567890123456789012 a a", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
+    [<InlineData( "help a a a 012345678901234567890123456789012 a", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
+    [<InlineData( "help a a a a 012345678901234567890123456789012", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
+    member _.Help_003 ( cmdstr : string ) ( msgstr : string ) =
+        let ms, ws, rs = GenCommandStream cmdstr
+        let accCommands = [| CommandReader.CmdRule_help |]
+        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        GlbFunc.AllDispose [ ms; ws; rs; ]
+
+    [<Fact>]
     member _.login_001() =
         let ms, ws, rs = GenCommandStream "login /h a /p 1 /f"
         let accCommands = [| CommandReader.CmdRule_login |]

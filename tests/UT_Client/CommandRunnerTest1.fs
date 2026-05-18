@@ -770,6 +770,43 @@ type CommandRunner_Test1() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
+    member _.CommandLoop_help_001() =
+        let st = new StringTable( "" )
+        let in_ms, in_ws, in_rs = GenCommandStream( "help help" )
+        let out_ms, out_ws = GenOutputStream()
+        let cr = new CommandRunner( st, in_rs, out_ws )
+
+        let r, stat = CallCommandLoop cr None
+        Assert.True(( r ))
+        Assert.True(( stat.IsNone ))
+
+        let out_rs = GenOutputStreamReader out_ms out_ws
+        CheckPromptAndMessage out_rs "--" "HELP"
+
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Theory>]
+    [<MemberData( "m_CommandLoop_exit_data" )>]
+    member _.CommandLoop_help_002 ( node : obj ) ( prompt : obj ) =
+        let st = new StringTable( "" )
+        let in_ms, in_ws, in_rs = GenCommandStream( "help help" )
+        let out_ms, out_ws = GenOutputStream()
+        let cr = new CommandRunner( st, in_rs, out_ws )
+        let ss = new ServerStatusStub( st )
+        let cc = new CtrlConnectionStub( st )
+        let tnode = node :?> IConfigureNode
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tnode ) )
+        Assert.True(( r ))
+        Assert.True(( stat = Some( ss, cc, tnode ) ))
+
+        let out_rs = GenOutputStreamReader out_ms out_ws
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "HELP"
+
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+
+    [<Fact>]
     member _.CommandLoop_login_001() =
         let portNo = GlbFunc.nextTcpPortNo()
         [|
