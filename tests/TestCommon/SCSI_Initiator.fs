@@ -2292,6 +2292,15 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
             do! m_ISCIInitiator.CloseSession m_CID BitI.T
         }
 
+    /// <summary>
+    ///  Forces an update of the negotiated connection parameter values.
+    /// </summary>
+    /// <param name="conParams">
+    ///  New parameter values.
+    /// </param>
+    member _.FakeConnectionParameter ( conParams : ConnParams ) : unit =
+        m_ISCIInitiator.FakeConnectionParameter m_CID conParams
+
     //=========================================================================
     // Private method
 

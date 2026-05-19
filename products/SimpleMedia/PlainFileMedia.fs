@@ -156,7 +156,7 @@ type PlainFileMedia
             let loginfo = struct ( m_ObjID, ValueSome( source ), ValueSome( initiatorTaskTag ), ValueSome( m_LUN ) )
 
             if HLogger.IsVerbose then
-                HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "PlainFileMedia.Read." ) )
+                HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, sprintf "PlainFileMedia.Read( LBA=%d, len=%d )." argLBA buffer.Count ) )
 
             let readBytesLength_u64 = uint64 buffer.Count
             let readpos_u64 : uint64 = ( blkcnt_me.toUInt64 argLBA ) * m_BlockSize
@@ -216,7 +216,7 @@ type PlainFileMedia
             sw.Start()
             let loginfo = struct ( m_ObjID, ValueSome( source ), ValueSome( initiatorTaskTag ), ValueSome( m_LUN ) )
             if HLogger.IsVerbose then
-                HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "PlainFileMedia.Write." ) )
+                HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, sprintf "PlainFileMedia.Write( LBA=%d, offset=%d, len=%d )." argLBA offset data.Count ) )
 
             let writeBytesLength_u64 = uint64 data.Count
             let writepos_u64 = ( blkcnt_me.toUInt64 argLBA ) * m_BlockSize + offset

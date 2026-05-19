@@ -171,7 +171,7 @@ type MemBufferMedia
             let loginfo = struct ( m_ObjID, ValueSome( source ), ValueSome( initiatorTaskTag ), ValueSome( m_LUN ) )
 
             if HLogger.IsVerbose then
-                HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "MemBufferMedia.Read." ) )
+                HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, sprintf "MemBufferMedia.Read( LBA=%d, len=%d )." argLBA buffer.Count ) )
 
             let readBytesLength_u64 = uint64 buffer.Count
             let readpos_u64 = ( blkcnt_me.toUInt64 argLBA ) * m_BlockSize
@@ -237,7 +237,7 @@ type MemBufferMedia
             let loginfo = struct ( m_ObjID, ValueSome( source ), ValueSome( initiatorTaskTag ), ValueSome( m_LUN ) )
     
             if HLogger.IsVerbose then
-                HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "MemBufferMedia.Write." ) )
+                HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, sprintf "MemBufferMedia.Write( LBA=%d, offset=%d, len=%d )." argLBA offset data.Count ) )
 
             let writeBytesLength_u64 = uint64 data.Count
             let writepos_u64 = ( blkcnt_me.toUInt64 argLBA ) * m_BlockSize + offset
@@ -445,6 +445,21 @@ type MemBufferMedia
     /// Reffer buffer line size
     member _.BufferLineSize = m_BufferLineSize
 
+    /// <summary>
+    ///  Allocate a new memory buffer.
+    /// </summary>
+    /// <param name="buffer">
+    ///  Array that holds the memory buffer.
+    /// </param>
+    /// <param name="blockCount">
+    ///  Total number of blocks in media.
+    /// </param>
+    /// <param name="blockSize">
+    ///  Block Size in bytes.
+    /// </param>
+    /// <param name="bufferLineSize">
+    ///  Unit for allocating buffer.
+    /// </param>
     static member InitializeBuffer ( buffer : byte[][] ) ( blockCount : uint64 ) ( blockSize : uint64 ) ( bufferLineSize : uint64 ) : unit =
         for i = 0 to buffer.Length - 1 do
             let reqBufSize =

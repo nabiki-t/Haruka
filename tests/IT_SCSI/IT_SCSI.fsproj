@@ -24,6 +24,7 @@
     <Compile Include="Commands02.fs" />
     <Compile Include="Queueing.fs" />
     <Compile Include="ReadWrite.fs" />
+    <Compile Include="MemBufferMedia.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
 
