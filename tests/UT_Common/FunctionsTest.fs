@@ -24,6 +24,7 @@ open Xunit
 open Haruka.Constants
 open Haruka.Commons
 open Haruka.Test
+open System.Net.Sockets
 
 //=============================================================================
 // Class implementation
@@ -2149,3 +2150,60 @@ type Functions_Test () =
     member _.ConfiguredNetPortAddressToTargetAddressStr_004() =
         let r = Functions.ConfiguredNetPortAddressToTargetAddressStr "" ValueNone
         Assert.True(( r = "" ))
+
+    [<Fact>]
+    member _.ConnectToServer_001() =
+        let portNo = GlbFunc.nextTcpPortNo()
+        [|
+            fun () -> task {
+                do! Task.Yield()
+                use listener = new TcpListener( IPAddress.IPv6Loopback, portNo )
+                listener.Start ()
+                use r = new NetworkStream( listener.AcceptSocket () )
+                listener.Stop()
+                r.Close()
+            };
+            fun () -> task {
+                do! Task.Delay 50
+                use! p = Functions.ConnectToServer "::1" portNo 1000 1 1
+                p.Close()
+            };
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+    [<Fact>]
+    member _.ConnectToServer_002() =
+        task {
+            let portNo = GlbFunc.nextTcpPortNo()
+            try
+                let! r = Functions.ConnectToServer "::1" portNo 200 1 1
+                Assert.Fail __LINE__
+            with
+            | :? IOException as x ->
+                Assert.StartsWith( "Failed to connect", x.Message )
+        }
+
+    [<Fact>]
+    member _.ConnectToServer_003() =
+        let portNo = GlbFunc.nextTcpPortNo()
+        [|
+            fun () -> task {
+                do! Task.Delay 500
+                use listener = new TcpListener( IPAddress.IPv6Loopback, portNo )
+                listener.Start ()
+                use r = new NetworkStream( listener.AcceptSocket () )
+                listener.Stop()
+                r.Close()
+            };
+            fun () -> task {
+                do! Task.Yield()
+                use! p = Functions.ConnectToServer "::1" portNo 200 100 10
+                p.Close()
+            };
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+

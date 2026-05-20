@@ -791,7 +791,8 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
     [<Fact>]
     member _.UnexpectedPDUInLoginPhase_001() =
         task {
-            let conn = GlbFunc.ConnectToServer( iSCSIPortNo )
+            use cli = GlbFunc.ConnectToServer( iSCSIPortNo )
+            use conn = cli.GetStream()
 
             // Send Nop-Out PDU
             let pdu = {
@@ -811,7 +812,8 @@ type iSCSI_OtherErrorCases( fx : iSCSI_OtherErrorCases_Fixture ) =
     [<Fact>]
     member _.UnexpectedPDUInLoginPhase_002() =
         task {
-            let conn = GlbFunc.ConnectToServer( iSCSIPortNo )
+            use cli = GlbFunc.ConnectToServer( iSCSIPortNo )
+            use conn = cli.GetStream()
             let objid = objidx_me.NewID()
 
             // Send first login request PDU

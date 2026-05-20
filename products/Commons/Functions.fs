@@ -1983,3 +1983,57 @@ type Functions() =
     /// </remarks>
     static member IsSame< 'T when 'T : not struct > ( a : 'T ) ( b : 'T ) : bool =
         Object.ReferenceEquals( a, b )
+
+
+    /// <summary>
+    ///  Connect to the server and establish a TCP connection. If it fails, retry.
+    /// </summary>
+    /// <param name="host">
+    ///  Specify the hostname or IP address of the destination.
+    /// </param>
+    /// <param name="port">
+    ///  Specify the TCP port number to connect to.
+    /// </param>
+    /// <param name="timeoutMS">
+    ///  Timeout period in milliseconds for a single connection attempt.
+    /// </param>
+    /// <param name="intervalMS">
+    ///  The waiting time in milliseconds after a connection failure before attempting the next connection.
+    /// </param>
+    /// <param name="retry">
+    ///  Maximum number of retries.
+    /// </param>
+    /// <returns>
+    ///  Returns a TcpClient object with an established connection.
+    /// </returns>
+    static member ConnectToServer ( host : string ) ( port : int ) ( timeoutMS : int ) ( intervalMS : int ) ( retry : int ) : Task<TcpClient> =
+        let rec loop ( cnt : int ) : Task<TcpClient option> =
+            task {
+                if cnt < retry then
+                    if cnt > 0 then
+                        do! Task.Delay( intervalMS )
+                    let client = new TcpClient()
+                    try
+                        let connectTask = client.ConnectAsync( host, port )
+                        let timeoutTask = Task.Delay( timeoutMS )
+                        let! completed = Task.WhenAny( connectTask, timeoutTask )
+                        if obj.ReferenceEquals( completed, connectTask ) && connectTask.Status = TaskStatus.RanToCompletion then
+                            return Some client
+                        else
+                            client.Dispose()
+                            return! loop ( cnt + 1 )
+                    with
+                    | _ as ex ->
+                        client.Dispose()
+                        return! loop ( cnt + 1 )
+                else
+                    return None
+            }
+        task {
+            match! loop 0 with
+            | Some x ->
+                return x
+            | None -> 
+                let msg = sprintf "Failed to connect. Host=%s, port=%d" host port
+                return( raise ( IOException msg ) )
+        }

@@ -1479,7 +1479,8 @@ type iSCSI_Initiator(
             ( isDiscoverySession : bool )
             : Task< SessParams * ConnParams * STATSN_T * NetworkStream > =
         task {
-            let conn = GlbFunc.ConnectToServer( exp_ConnParams.PortNo )
+            let cli = GlbFunc.ConnectToServer( exp_ConnParams.PortNo )
+            let conn = cli.GetStream()
 
             let negoValue1 =
                 {

@@ -1316,8 +1316,9 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             do! checkACA TaskATTRCd.SIMPLE_TASK r4 g_LUN4 NACA.T
 
             // wait for restart target device 1
-            let n = GlbFunc.ConnectToServer iSCSIPortNo1
+            let n = GlbFunc.ConnectToServer( iSCSIPortNo1 )
             n.Close()
+            n.Dispose()
 
             // Reconnect sessions
             let! r1_2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam   // Target Device1, Target1, LU1, LU2

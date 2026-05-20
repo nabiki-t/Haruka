@@ -177,18 +177,9 @@ type GlbFunc() =
     /// <remarks>
     ///   The destination address is IPv6 loopback.
     /// </remarks>
-    static member ConnectToServer ( port : int ) : NetworkStream =
-        let rec loop cnt =
-            try
-                ( new TcpClient( "::1", port ) ).GetStream()
-            with
-            | _ as x ->
-                if cnt < 100 then
-                    Thread.Sleep 20
-                    loop ( cnt + 1 )
-                else
-                    reraise ()
-        loop 0
+    static member ConnectToServer ( port : int ) : TcpClient =
+        Functions.ConnectToServer "::1" port 1000 100 50
+        |> Functions.RunTaskSynchronously
 
     /// <summary>
     ///  Creates a single, connected TCP connection.
@@ -211,7 +202,8 @@ type GlbFunc() =
             };
         Task.WaitAll( t1, t2 )
         listener.Stop()
-        t1.Result, t2.Result
+        listener.Dispose()
+        t1.Result, t2.Result.GetStream()
 
     /// <summary>
     ///  Builds multiple connected TCP connections.

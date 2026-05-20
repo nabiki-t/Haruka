@@ -1736,7 +1736,8 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.Login_InvalidInitiatorName_002() =
         task {
-            let conn = GlbFunc.ConnectToServer( m_iSCSIPortNo )
+            use cli = GlbFunc.ConnectToServer( m_iSCSIPortNo )
+            use conn = cli.GetStream()
 
             // Send initial login request
             let textReq = [|
@@ -1784,7 +1785,8 @@ type iSCSI_LoginTest1( fx : iSCSI_LoginTest1_Fixture ) =
     [<Fact>]
     member _.Login_InvalidSessionType_002() =
         task {
-            let conn = GlbFunc.ConnectToServer( m_iSCSIPortNo )
+            use cli = GlbFunc.ConnectToServer( m_iSCSIPortNo )
+            use conn = cli.GetStream()
 
             // Send initial login request
             let textReq = [|

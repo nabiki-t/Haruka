@@ -121,10 +121,9 @@ type CtrlConnection_Test1() =
                 let! cc = CtrlConnection.Connect st "***" 1 false
                 Assert.Fail __LINE__
             with
-            | :? SocketException ->
-                ()
+            | :? IOException as x ->
+                Assert.StartsWith( "Failed to connect", x.Message )
         }
-        |> Functions.RunTaskSynchronously
 
     [<Fact>]
     member _.Constractor_002() =

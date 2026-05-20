@@ -91,8 +91,7 @@ type CtrlConnection(
     /// </returns>
     static member Connect ( messageTable : StringTable ) ( h : string ) ( p : int ) ( f : bool )  : Task<CtrlConnection> =
         task {
-            let con = new TcpClient()
-            do! con.ConnectAsync( h, p )
+            let! con = Functions.ConnectToServer h p 1000 100 50
             let c1 = con.GetStream()
             try
                 return! CtrlConnection.ConnectWithStream messageTable c1 f
@@ -104,8 +103,7 @@ type CtrlConnection(
                     con.Dispose()
                 with
                 | _ -> ()
-                raise x
-                return new CtrlConnection( messageTable, c1, CtrlSessionID() )
+                return ( raise x )
         }
 
     /// <summary>
