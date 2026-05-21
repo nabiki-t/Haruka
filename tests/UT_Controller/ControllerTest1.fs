@@ -147,7 +147,7 @@ type Controller_Test1 () =
     [<Fact>]
     member _.Login_001() =
         task {
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -182,7 +182,7 @@ type Controller_Test1 () =
     [<Fact>]
     member _.Login_002() =
         task {
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -230,7 +230,7 @@ type Controller_Test1 () =
     [<Fact>]
     member _.Login_003() =
         task {
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -265,7 +265,7 @@ type Controller_Test1 () =
     [<Fact>]
     member _.Logout_001() =
         task {
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let dummySessID = CtrlSessionID.NewID()
 
@@ -297,7 +297,7 @@ type Controller_Test1 () =
     [<Fact>]
     member _.Logout_002() =
         task {
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -337,7 +337,7 @@ type Controller_Test1 () =
     [<Fact>]
     member _.Logout_003() =
         task {
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -373,7 +373,7 @@ type Controller_Test1 () =
     [<Fact>]
     member _.Logout_004() =
         task {
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -404,7 +404,7 @@ type Controller_Test1 () =
     [<Fact>]
     member _.NoOperation_001() =
         task {
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let dummySessID = CtrlSessionID.NewID()
 
@@ -431,7 +431,7 @@ type Controller_Test1 () =
     [<Fact>]
     member _.NoOperation_002() =
         task {
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -458,7 +458,7 @@ type Controller_Test1 () =
     [<Fact>]
     member _.NoOperation_003() =
         task {
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -486,7 +486,7 @@ type Controller_Test1 () =
     [<Fact>]
     member _.NoOperation_004() =
         task {
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -521,7 +521,7 @@ type Controller_Test1 () =
     [<Fact>]
     member _.NoOperation_005() =
         task {
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -557,7 +557,7 @@ type Controller_Test1 () =
     [<Fact>]
     member _.GetControllerConfig_001() =
         task {
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -589,7 +589,7 @@ type Controller_Test1 () =
                 let fname = Functions.AppendPathName dname Constants.CONTROLLER_CONF_FILE_NAME
                 File.ReadAllText fname
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -620,7 +620,7 @@ type Controller_Test1 () =
             let fname_bk = fname + "_bk"
             File.Move( fname, fname_bk )
             try
-                use con1 = new TcpClient( "::1", portNum )
+                use con1 = GlbFunc.ConnectToServer portNum
                 use c1 = con1.GetStream()
                 let! sessID = Controller_Test1.FirstLogin c1
 
@@ -655,7 +655,7 @@ type Controller_Test1 () =
             File.Move( fname, fname_bk )
             Directory.CreateDirectory fname |> ignore
             try
-                use con1 = new TcpClient( "::1", portNum )
+                use con1 = GlbFunc.ConnectToServer portNum
                 use c1 = con1.GetStream()
                 let! sessID = Controller_Test1.FirstLogin c1
 
@@ -685,7 +685,7 @@ type Controller_Test1 () =
     [<Fact>]
     member _.SetControllerConfig_001() =
         task {
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -721,7 +721,7 @@ type Controller_Test1 () =
             File.Copy( fname, fname_bk )
 
             try
-                use con1 = new TcpClient( "::1", portNum )
+                use con1 = GlbFunc.ConnectToServer portNum
                 use c1 = con1.GetStream()
                 let! sessID = Controller_Test1.FirstLogin c1
 
@@ -763,7 +763,7 @@ type Controller_Test1 () =
             File.Move( fname, fname_bk )
 
             try
-                use con1 = new TcpClient( "::1", portNum )
+                use con1 = GlbFunc.ConnectToServer portNum
                 use c1 = con1.GetStream()
                 let! sessID = Controller_Test1.FirstLogin c1
 
@@ -805,7 +805,7 @@ type Controller_Test1 () =
             Directory.CreateDirectory fname |> ignore
 
             try
-                use con1 = new TcpClient( "::1", portNum )
+                use con1 = GlbFunc.ConnectToServer portNum
                 use c1 = con1.GetStream()
                 let! sessID = Controller_Test1.FirstLogin c1
 
@@ -838,7 +838,7 @@ type Controller_Test1 () =
     [<Fact>]
     member _.GetTargetDeviceDir_001() =
         task {
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -866,7 +866,7 @@ type Controller_Test1 () =
     [<Fact>]
     member _.GetTargetDeviceDir_002() =
         task {
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -903,7 +903,7 @@ type Controller_Test1 () =
                 Directory.CreateDirectory tddname |> ignore
             )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -949,7 +949,7 @@ type Controller_Test1 () =
                 Directory.CreateDirectory tddname |> ignore
             )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -992,7 +992,7 @@ type Controller_Test1 () =
                 Functions.AppendPathName dname "abcdefg"
             Directory.CreateDirectory tddname2 |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1028,7 +1028,7 @@ type Controller_Test1 () =
             if Directory.Exists tddname then GlbFunc.DeleteDir tddname
             if File.Exists tddname then File.Delete tddname
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -1068,7 +1068,7 @@ type Controller_Test1 () =
             if Directory.Exists tddname then GlbFunc.DeleteDir tddname
             if File.Exists tddname then File.Delete tddname
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1108,7 +1108,7 @@ type Controller_Test1 () =
             if File.Exists tddname then File.Delete tddname
             Directory.CreateDirectory tddname |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1157,7 +1157,7 @@ type Controller_Test1 () =
             let tddname2 = Functions.AppendPathName dname ( tdid_me.toString wtdid2 )
             let tddname3 = Functions.AppendPathName dname ( tdid_me.toString wtdid3 )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1224,7 +1224,7 @@ type Controller_Test1 () =
             let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
             File.WriteAllBytes( tddname, Array.empty )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1258,7 +1258,7 @@ type Controller_Test1 () =
     member _.DeleteTargetDeviceDir_001() =
         task {
             let wtdid = tdid_me.Zero
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -1291,7 +1291,7 @@ type Controller_Test1 () =
     member _.DeleteTargetDeviceDir_002() =
         task {
             let wtdid = tdid_me.Zero
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1326,7 +1326,7 @@ type Controller_Test1 () =
             let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
             Directory.CreateDirectory tddname |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1365,7 +1365,7 @@ type Controller_Test1 () =
             let fname = Functions.AppendPathName tddname "a.txt"
             File.WriteAllBytes( fname, Array.empty )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1407,7 +1407,7 @@ type Controller_Test1 () =
             let fname1 = Functions.AppendPathName subDirName1 "a.txt"
             File.WriteAllBytes( fname1, Array.empty )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1441,7 +1441,7 @@ type Controller_Test1 () =
     member _.GetTargetDeviceConfig_001() =
         task {
             let wtdid = tdid_me.Zero
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -1474,7 +1474,7 @@ type Controller_Test1 () =
     member _.GetTargetDeviceConfig_002() =
         task {
             let wtdid = tdid_me.Zero
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1509,7 +1509,7 @@ type Controller_Test1 () =
             let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
             Directory.CreateDirectory tddname |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1547,7 +1547,7 @@ type Controller_Test1 () =
             Directory.CreateDirectory tddname |> ignore
             Directory.CreateDirectory fname |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1587,7 +1587,7 @@ type Controller_Test1 () =
             let fdata = ( String.replicate 256 "a" ) + "<aaa><bbb>&\"\'&>><<"
             File.WriteAllText( fname, fdata )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1621,7 +1621,7 @@ type Controller_Test1 () =
     member _.CreateTargetDeviceConfig_001() =
         task {
             let wtdid = tdid_me.Zero
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -1657,7 +1657,7 @@ type Controller_Test1 () =
             let wtdid = tdid_me.Zero
             let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
             let fname = Functions.AppendPathName tddname Constants.TARGET_DEVICE_CONF_FILE_NAME
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1696,7 +1696,7 @@ type Controller_Test1 () =
             let fname = Functions.AppendPathName tddname Constants.TARGET_DEVICE_CONF_FILE_NAME
             Directory.CreateDirectory tddname |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1739,7 +1739,7 @@ type Controller_Test1 () =
             let fname = Functions.AppendPathName tddname Constants.TARGET_DEVICE_CONF_FILE_NAME
             Directory.CreateDirectory fname |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1779,7 +1779,7 @@ type Controller_Test1 () =
             Directory.CreateDirectory tddname |> ignore
             File.WriteAllText( fname , "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY" )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1819,7 +1819,7 @@ type Controller_Test1 () =
     member _.GetTargetGroupID_001() =
         task {
             let wtdid = tdid_me.Zero
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -1852,7 +1852,7 @@ type Controller_Test1 () =
     member _.GetTargetGroupID_002() =
         task {
             let wtdid = tdid_me.Zero
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1886,7 +1886,7 @@ type Controller_Test1 () =
             let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
             Directory.CreateDirectory tddname |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1932,7 +1932,7 @@ type Controller_Test1 () =
                 let fname = Functions.AppendPathName tddname ( tgid_me.toString itr )
                 File.WriteAllText( fname, "" )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1979,7 +1979,7 @@ type Controller_Test1 () =
                 let fname = Functions.AppendPathName tddname ( tgid_me.toString itr )
                 File.WriteAllText( fname, "" )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -2028,7 +2028,7 @@ type Controller_Test1 () =
             let fname3 = Functions.AppendPathName tddname "aaaaaaaa.txt"
             File.WriteAllText( fname3, "" )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -2063,7 +2063,7 @@ type Controller_Test1 () =
             let wtdid = tdid_me.Zero
             let wtgid = tgid_me.fromPrim( 11111111u )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -2100,7 +2100,7 @@ type Controller_Test1 () =
             let wtdid = tdid_me.Zero
             let wtgid = tgid_me.fromPrim( 11111111u )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -2138,7 +2138,7 @@ type Controller_Test1 () =
             let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
             Directory.CreateDirectory tddname |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -2181,7 +2181,7 @@ type Controller_Test1 () =
             let fdata = ( String.replicate 256 "a" ) + "<aaa><bbb>&\"\'&>><<"
             File.WriteAllText( fname, fdata )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -2223,7 +2223,7 @@ type Controller_Test1 () =
             let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
             Directory.CreateDirectory fname |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -2258,7 +2258,7 @@ type Controller_Test1 () =
     member _.GetAllTargetGroupConfig_001() =
         task {
             let wtdid = tdid_me.Zero
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -2291,7 +2291,7 @@ type Controller_Test1 () =
     member _.GetAllTargetGroupConfig_002() =
         task {
             let wtdid = tdid_me.Zero
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -2326,7 +2326,7 @@ type Controller_Test1 () =
             let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
             Directory.CreateDirectory tddname |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -2367,7 +2367,7 @@ type Controller_Test1 () =
             let fdata = ( String.replicate 256 "a" ) + "<aaa><bbb>&\"\'&>><<"
             File.WriteAllText( fname, fdata )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -2421,7 +2421,7 @@ type Controller_Test1 () =
                 let fname = Functions.AppendPathName tddname ( tgid_me.toString vtgid.[i] )
                 File.WriteAllText( fname, tgconfdata.[i] )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -2475,7 +2475,7 @@ type Controller_Test1 () =
                 let fname = Functions.AppendPathName tddname ( tgid_me.toString vtgid.[i] )
                 File.WriteAllText( fname, tgconfdata.[i] )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -2525,7 +2525,7 @@ type Controller_Test1 () =
             let fname3 = Functions.AppendPathName tddname "aaaaaaaa.txt"
             File.WriteAllText( fname3, "bbbb" )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -2561,7 +2561,7 @@ type Controller_Test1 () =
             let wtdid = tdid_me.Zero
             let wtgid = tgid_me.fromPrim( 11111111u )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -2601,7 +2601,7 @@ type Controller_Test1 () =
             let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
             let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -2643,7 +2643,7 @@ type Controller_Test1 () =
             let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
             Directory.CreateDirectory tddname |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -2690,7 +2690,7 @@ type Controller_Test1 () =
             let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
             Directory.CreateDirectory fname |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -2733,7 +2733,7 @@ type Controller_Test1 () =
             Directory.CreateDirectory tddname |> ignore
             File.WriteAllText( fname , "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -2790,7 +2790,7 @@ type Controller_Test1 () =
                 File.WriteAllText( tgfname , "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" )
             )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -2862,7 +2862,7 @@ type Controller_Test1 () =
             let wtdid = tdid_me.Zero
             let wtgid = tgid_me.fromPrim( 11111111u )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -2899,7 +2899,7 @@ type Controller_Test1 () =
             let wtdid = tdid_me.Zero
             let wtgid = tgid_me.fromPrim( 11111111u )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -2936,7 +2936,7 @@ type Controller_Test1 () =
             let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
             Directory.CreateDirectory tddname |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -2977,7 +2977,7 @@ type Controller_Test1 () =
             let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
             File.WriteAllText( fname , "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -3021,7 +3021,7 @@ type Controller_Test1 () =
             let fname = Functions.AppendPathName tddname ( tgid_me.toString wtgid )
             Directory.CreateDirectory fname |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -3059,7 +3059,7 @@ type Controller_Test1 () =
         task {
             let wtdid = tdid_me.Zero
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -3092,7 +3092,7 @@ type Controller_Test1 () =
     member _.GetLUWorkDir_002() =
         task {
             let wtdid = tdid_me.Zero
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -3127,7 +3127,7 @@ type Controller_Test1 () =
             let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
             File.WriteAllBytes( tddname, [| 0uy |] )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -3163,7 +3163,7 @@ type Controller_Test1 () =
             let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
             Directory.CreateDirectory tddname |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -3207,7 +3207,7 @@ type Controller_Test1 () =
             for itr in v do
                 File.WriteAllBytes( Functions.AppendPathName tddname itr, [| 0uy |] )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -3254,7 +3254,7 @@ type Controller_Test1 () =
                 |> Directory.CreateDirectory
                 |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -3296,7 +3296,7 @@ type Controller_Test1 () =
                 let luwdirname2 = Functions.AppendPathName tddname luwdirname1
                 Directory.CreateDirectory luwdirname2 |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -3337,7 +3337,7 @@ type Controller_Test1 () =
     member _.CreateLUWorkDir_001() =
         task {
             let wtdid = tdid_me.Zero
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -3375,7 +3375,7 @@ type Controller_Test1 () =
             let tddname = Functions.AppendPathName dname ( tdid_me.toString wtdid )
             if Directory.Exists tddname then GlbFunc.DeleteDir tddname
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -3415,7 +3415,7 @@ type Controller_Test1 () =
             if Directory.Exists tddname then GlbFunc.DeleteDir tddname
             File.WriteAllLines( tddname, [| "a" |] )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -3457,7 +3457,7 @@ type Controller_Test1 () =
             Directory.CreateDirectory tddname |> ignore
             File.WriteAllLines( ludname, [| "a" |] )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -3499,7 +3499,7 @@ type Controller_Test1 () =
             if Directory.Exists tddname then GlbFunc.DeleteDir tddname
             Directory.CreateDirectory tddname |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -3541,7 +3541,7 @@ type Controller_Test1 () =
             Directory.CreateDirectory tddname |> ignore
             Directory.CreateDirectory ludname |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -3586,7 +3586,7 @@ type Controller_Test1 () =
                 let luwdirname2 = Functions.AppendPathName tddname luwdirname1
                 Directory.CreateDirectory luwdirname2 |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -3653,7 +3653,7 @@ type Controller_Test1 () =
     member _.DeleteLUWorkDir_001() =
         task {
             let wtdid = tdid_me.Zero
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -3688,7 +3688,7 @@ type Controller_Test1 () =
     member _.DeleteLUWorkDir_002() =
         task {
             let wtdid = tdid_me.Zero
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -3728,7 +3728,7 @@ type Controller_Test1 () =
             if Directory.Exists tddname then GlbFunc.DeleteDir tddname
             File.WriteAllLines( tddname, [| "a" |] )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -3770,7 +3770,7 @@ type Controller_Test1 () =
             Directory.CreateDirectory tddname |> ignore
             File.WriteAllLines( ludname, [| "a" |] )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -3811,7 +3811,7 @@ type Controller_Test1 () =
             if Directory.Exists tddname then GlbFunc.DeleteDir tddname
             Directory.CreateDirectory tddname |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -3854,7 +3854,7 @@ type Controller_Test1 () =
             Directory.CreateDirectory tddname |> ignore
             Directory.CreateDirectory ludname |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -3904,7 +3904,7 @@ type Controller_Test1 () =
             File.WriteAllText( fname1, "a" )
             File.WriteAllText( fname2, "a" )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 

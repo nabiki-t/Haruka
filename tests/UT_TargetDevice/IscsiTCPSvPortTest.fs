@@ -338,7 +338,7 @@ type IscsiTCPSvPort_Test () =
         Thread.Sleep 10
 
         swait.Wait()
-        use s = new TcpClient( "::1", portNo )
+        use s = GlbFunc.ConnectToServer portNo
         s.Close()
         swait.Wait()
         swait.Release() |> ignore
@@ -379,7 +379,7 @@ type IscsiTCPSvPort_Test () =
         Assert.True( p.Start() )
         Thread.Sleep 10
 
-        use s = new TcpClient( "::1", portNo )
+        use s = GlbFunc.ConnectToServer portNo
         s.Close()
         Assert.True(( count = 0 ))
         

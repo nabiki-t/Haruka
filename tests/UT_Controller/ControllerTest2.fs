@@ -337,8 +337,8 @@ type Controller_Test2 () =
             tc.WaitRequest()
 
             for i = 0 to 5 do
-                let con = new TcpClient( "::1", portNum )
-                let c = con.GetStream()
+                use con = GlbFunc.ConnectToServer portNum
+                use c = con.GetStream()
                 try
                     for j = 0 to 5 do
                         let reqStr =
@@ -400,7 +400,7 @@ type Controller_Test2 () =
             tc.LoadInitialTargetDeviceProcs()
             tc.WaitRequest()
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
 
             let reqStr = "aaaaaaaaaaaaaa"
@@ -444,7 +444,7 @@ type Controller_Test2 () =
             tc.LoadInitialTargetDeviceProcs()
             tc.WaitRequest()
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
 
             let reqStr = "aaaaaaaaaaaaaa"
@@ -488,7 +488,7 @@ type Controller_Test2 () =
             tc.LoadInitialTargetDeviceProcs()
             tc.WaitRequest()
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
 
             try
@@ -518,7 +518,7 @@ type Controller_Test2 () =
             tc.LoadInitialTargetDeviceProcs()
             tc.WaitRequest()
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -559,7 +559,7 @@ type Controller_Test2 () =
             tc.LoadInitialTargetDeviceProcs()
             tc.WaitRequest()
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -607,7 +607,7 @@ type Controller_Test2 () =
             tc.LoadInitialTargetDeviceProcs()
             tc.WaitRequest()
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -673,7 +673,7 @@ type Controller_Test2 () =
             tc.LoadInitialTargetDeviceProcs()
             tc.WaitRequest()
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -727,7 +727,7 @@ type Controller_Test2 () =
                 }
                 m_TargetDeviceProcs.AddOrUpdate( tdid_me.toPrim itr, pi, ( fun k o -> pi ) ) |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -769,7 +769,7 @@ type Controller_Test2 () =
             tc.LoadInitialTargetDeviceProcs()
             tc.WaitRequest()
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -817,7 +817,7 @@ type Controller_Test2 () =
             tc.LoadInitialTargetDeviceProcs()
             tc.WaitRequest()
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -868,7 +868,7 @@ type Controller_Test2 () =
             tc.LoadInitialTargetDeviceProcs()
             tc.WaitRequest()
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummyTDID = GlbFunc.newTargetDeviceID()
@@ -917,7 +917,7 @@ type Controller_Test2 () =
             tc.LoadInitialTargetDeviceProcs()
             tc.WaitRequest()
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -962,7 +962,7 @@ type Controller_Test2 () =
             tc.LoadInitialTargetDeviceProcs()
             tc.WaitRequest()
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummyTDID = GlbFunc.newTargetDeviceID()
@@ -1014,7 +1014,7 @@ type Controller_Test2 () =
             tc.LoadInitialTargetDeviceProcs()
             tc.WaitRequest()
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1065,7 +1065,7 @@ type Controller_Test2 () =
             let tdid0 = GlbFunc.newTargetDeviceID()
             Controller_Test1.CreateDefaultTDConf dname tdid0
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1132,7 +1132,7 @@ type Controller_Test2 () =
                 }
                 m_TargetDeviceProcs.AddOrUpdate( tdid_me.toPrim itr, pi, ( fun k o -> pi ) ) |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1202,7 +1202,7 @@ type Controller_Test2 () =
                 }
                 m_TargetDeviceProcs.AddOrUpdate( tdid_me.toPrim itr, pi, ( fun k o -> pi ) ) |> ignore
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1249,7 +1249,7 @@ type Controller_Test2 () =
             tc.LoadInitialTargetDeviceProcs()
             tc.WaitRequest()
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -1300,7 +1300,7 @@ type Controller_Test2 () =
             tc.LoadInitialTargetDeviceProcs()
             tc.WaitRequest()
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummyTDID = GlbFunc.newTargetDeviceID()
@@ -1353,7 +1353,7 @@ type Controller_Test2 () =
             tc.LoadInitialTargetDeviceProcs()
             tc.WaitRequest()
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
@@ -1412,7 +1412,7 @@ type Controller_Test2 () =
             tc.LoadInitialTargetDeviceProcs()
             tc.WaitRequest()
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -1468,7 +1468,7 @@ type Controller_Test2 () =
                     new MediaCreateProcStub( p_Progress = MC_PROGRESS.NotStarted, p_CreatedTime = DateTime.UtcNow )
                 )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let reqStr =
@@ -1523,7 +1523,7 @@ type Controller_Test2 () =
                     new MediaCreateProcStub( p_Progress = MC_PROGRESS.NotStarted, p_CreatedTime = DateTime.UtcNow )
                 )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let reqStr =
@@ -1591,7 +1591,7 @@ type Controller_Test2 () =
                     new MediaCreateProcStub( p_Progress = MC_PROGRESS.NotStarted, p_CreatedTime = DateTime.UtcNow)
                 )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let reqStr =
@@ -1659,7 +1659,7 @@ type Controller_Test2 () =
                     new MediaCreateProcStub( p_Progress = MC_PROGRESS.NotStarted, p_CreatedTime = DateTime.UtcNow)
                 )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let reqStr =
@@ -1709,7 +1709,7 @@ type Controller_Test2 () =
             tc.LoadInitialTargetDeviceProcs()
             tc.WaitRequest()
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -1750,7 +1750,7 @@ type Controller_Test2 () =
             tc.LoadInitialTargetDeviceProcs()
             tc.WaitRequest()
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let reqStr =
@@ -1804,7 +1804,7 @@ type Controller_Test2 () =
                     )
                 )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let reqStr =
@@ -1866,7 +1866,7 @@ type Controller_Test2 () =
                     )
                 )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let reqStr =
@@ -1928,7 +1928,7 @@ type Controller_Test2 () =
                     )
                 )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let reqStr =
@@ -1992,7 +1992,7 @@ type Controller_Test2 () =
                     )
                 )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let reqStr =
@@ -2057,7 +2057,7 @@ type Controller_Test2 () =
                     )
                 )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let reqStr =
@@ -2123,7 +2123,7 @@ type Controller_Test2 () =
                     )
                 )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let reqStr =
@@ -2172,7 +2172,7 @@ type Controller_Test2 () =
             tc.LoadInitialTargetDeviceProcs()
             tc.WaitRequest()
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let dummySessID = CtrlSessionID.NewID()
@@ -2217,7 +2217,7 @@ type Controller_Test2 () =
             tc.LoadInitialTargetDeviceProcs()
             tc.WaitRequest()
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let reqStr =
@@ -2273,7 +2273,7 @@ type Controller_Test2 () =
                 )
             )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let reqStr =
@@ -2332,7 +2332,7 @@ type Controller_Test2 () =
                 )
             )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let reqStr =
@@ -2391,7 +2391,7 @@ type Controller_Test2 () =
                 )
             )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let reqStr =
@@ -2450,7 +2450,7 @@ type Controller_Test2 () =
                 )
             )
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
             let reqStr =
@@ -2501,7 +2501,7 @@ type Controller_Test2 () =
             let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
             Assert.True(( m_TargetDeviceProcs.Count = 1 ))
 
-            use con1 = new TcpClient( "::1", portNum )
+            use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
             let! sessID = Controller_Test1.FirstLogin c1
 
