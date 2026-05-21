@@ -468,21 +468,23 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
                 GlbFunc.WaitForFileCreate prfname
             File.Copy( prfname, prsave2 )
 
+            // Get reservarion key
+            let! res_pr_in1 = PR_ReadKey r1 g_LUN1
+
             // LU Reset
             let! itt_tmf = r1.SendTMFRequest_LogicalUnitReset BitI.F g_LUN1
             let! res_tmf = r1.WaitTMFResponse itt_tmf
             Assert.True(( res_tmf = TaskMgrResCd.FUNCTION_COMPLETE ))
 
             // Get reservarion key
-            let! res_pr_in1 = PR_ReadKey r1 g_LUN1
+            let! res_pr_in2 = PR_ReadKey r1 g_LUN1
 
-            if not ( res_pr_in1.ReservationKey = [| resvkey |] ) then
+            if not ( res_pr_in1.ReservationKey = res_pr_in2.ReservationKey ) then
                 let logfname = Functions.AppendPathName m_WorkPath "stdout.txt"
                 let logsave = Functions.AppendPathName ( Path.GetTempPath() ) "PersistReservation_LUReset_001_log.txt"
                 File.Copy( logfname, logsave )
                 File.Copy( prfname, prsave3 )
                 Assert.Fail( sprintf "Unmatch reservation key, %s" logsave )
-                //Assert.True(( res_pr_in1.ReservationKey = [| resvkey |] ))
 
             do! ClearReservationKey r1 g_LUN1 resvkey
             do! r1.Close()

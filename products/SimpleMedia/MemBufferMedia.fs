@@ -38,7 +38,7 @@ open Haruka.IODataTypes
 /// <param name="m_LUN">
 ///  LUN of LU which access to this media.
 /// </param>
-/// <param name="argBufferLineBlocks">
+/// <param name="argBufferLineBytes">
 ///  The block count of one segment when segmenting the buffer.
 /// </param>
 type MemBufferMedia
@@ -47,7 +47,7 @@ type MemBufferMedia
         m_Config : TargetGroupConf.T_MemBuffer,
         m_Killer : IKiller,
         m_LUN : LUN_T,
-        argBufferLineBlocks : uint64
+        argBufferLineBytes : uint64
     ) as this =
 
     /// Hash value identify this instance
@@ -58,7 +58,8 @@ type MemBufferMedia
 
     /// Buffer line size in bytes. It must be multiple of the block size.
     let m_BufferLineSize =
-        argBufferLineBlocks * m_BlockSize
+        let a = ( argBufferLineBytes + ( m_BlockSize - 1UL ) ) / m_BlockSize
+        a * m_BlockSize
 
     /// Block count
     let m_BlockCount =

@@ -63,8 +63,8 @@ type MemBufferMedia_Test () =
         }
         let k1 = new HKiller() :> IKiller
 
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
-        Assert.True(( mb.BufferLineSize = 4UL * 512UL ))
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
+        Assert.True(( mb.BufferLineSize = 2048UL ))
         Assert.True(( ( mb :> IMedia ).BlockCount = 0UL ))
 
     [<Fact>]
@@ -77,7 +77,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         Assert.True(( ( mb :> IMedia ).BlockCount = 0UL ))
         let pr = new PrivateCaller( mb )
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
@@ -93,7 +93,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         Assert.True(( ( mb :> IMedia ).BlockCount = 1UL ))
         let pr = new PrivateCaller( mb )
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
@@ -109,7 +109,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         Assert.True(( ( mb :> IMedia ).BlockCount = 4UL ))
         let pr = new PrivateCaller( mb )
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
@@ -125,7 +125,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         Assert.True(( ( mb :> IMedia ).BlockCount = 5UL ))
         let pr = new PrivateCaller( mb )
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
@@ -141,7 +141,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         Assert.True(( ( mb :> IMedia ).BlockCount = 4UL * ( uint64 Array.MaxLength ) ))
         let pr = new PrivateCaller( mb )
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
@@ -157,7 +157,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         Assert.True(( ( mb :> IMedia ).BlockCount = 4UL * ( uint64 Array.MaxLength ) ))
         let pr = new PrivateCaller( mb )
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
@@ -173,7 +173,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         let pr = new PrivateCaller( mb )
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
         Assert.True(( m_Buffer.Length = 2 ))
@@ -197,7 +197,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         let pr = new PrivateCaller( mb )
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
         Assert.True(( m_Buffer.Length = 2 ))
@@ -219,7 +219,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         let pr = new PrivateCaller( mb )
         let m_Buffer = pr.GetField( "m_Buffer" ) :?> byte[][]
         Assert.True(( m_Buffer.Length = 2 ))
@@ -243,7 +243,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         let r = ( mb :> IMedia ).ReadCapacity( itt_me.fromPrim 0u ) ( wCmdSrc k1 )
         Assert.True(( r = 4UL ))
 
@@ -257,7 +257,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         Assert.True(( ( ( mb :> IMedia ).TestUnitReady ( itt_me.fromPrim 0u ) ( wCmdSrc k1 ) ) = ValueNone ))
 
     [<Fact>]
@@ -270,7 +270,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte > 512
@@ -289,7 +289,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte > 513
@@ -312,7 +312,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 0 )
@@ -331,7 +331,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 1 )
@@ -354,7 +354,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 0 )
@@ -377,7 +377,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte > 5120
@@ -396,7 +396,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 512 * 10 + 1 )
@@ -419,7 +419,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 512 * 2 ) |> fillBuffer
@@ -444,7 +444,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 512 * 2 ) |> fillBuffer
@@ -469,7 +469,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 512 * 2 ) |> fillBuffer
@@ -494,7 +494,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 512 * 3 ) |> fillBuffer
@@ -519,7 +519,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 512 * 3 ) |> fillBuffer
@@ -544,7 +544,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 512 * 3 ) |> fillBuffer
@@ -569,7 +569,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 512 * 3 ) |> fillBuffer
@@ -594,7 +594,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 512 * 3 ) |> fillBuffer
@@ -619,7 +619,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 512 * 3 ) |> fillBuffer
@@ -644,7 +644,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte > 512
@@ -663,7 +663,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte > 513
@@ -686,7 +686,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte > 512
@@ -709,7 +709,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 0 )
@@ -728,7 +728,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 1 )
@@ -751,7 +751,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 0 )
@@ -774,7 +774,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte > 5120
@@ -793,7 +793,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 512 * 10 + 1 )
@@ -816,7 +816,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 512 - 1 ) |> fillBuffer
@@ -840,7 +840,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 512 ) |> fillBuffer
@@ -864,7 +864,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 512 + 1 ) |> fillBuffer
@@ -889,7 +889,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 512 * 2 - 1 ) |> fillBuffer
@@ -914,7 +914,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 512 * 2 ) |> fillBuffer
@@ -939,7 +939,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 512 * 2 + 1 ) |> fillBuffer
@@ -965,7 +965,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 512 * 2 ) |> fillBuffer
@@ -991,7 +991,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 512 * 2 ) |> fillBuffer
@@ -1017,7 +1017,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 512 * 2 ) |> fillBuffer
@@ -1042,7 +1042,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf = Array.zeroCreate< byte >( 4 * 512 * 2 ) |> fillBuffer
@@ -1068,7 +1068,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller()
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let wbuf1 = Array.zeroCreate< byte >( 4 * 512 * 3 ) |> fillBuffer
@@ -1102,7 +1102,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL )
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL )
         ( mb :> IMedia ).Initialize()
 
         let pr = new PrivateCaller( mb )
@@ -1134,7 +1134,7 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL ) :> IMedia
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL ) :> IMedia
 
         let r =
             mb.MediaControl( MediaCtrlReq.U_Debug( MediaCtrlReq.U_GetAllTraps() ) )
@@ -1156,6 +1156,6 @@ type MemBufferMedia_Test () =
             BlockSize = Blocksize.BS_512;
         }
         let k1 = new HKiller() :> IKiller
-        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 4UL ) :> IMedia
+        let mb = new MemBufferMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 2048UL ) :> IMedia
         Assert.True(( mb.GetSubMedia() = [] ))
 

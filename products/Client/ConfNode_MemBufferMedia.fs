@@ -97,7 +97,7 @@ type ConfNode_MemBufferMedia(
                     argmsg
             )
             |> ( fun argmsg ->
-                let mediaMaxSize = ( uint64 Array.MaxLength ) * 512UL * Constants.MEMBUFFER_BUF_LINE_BLOCK_SIZE
+                let mediaMaxSize = ( uint64 Array.MaxLength ) * 512UL * Constants.MEMBUFFER_BUF_LINE_SIZE
                 if m_Value.BytesCount > mediaMaxSize then
                     let msg = m_MessageTable.GetMessage( "CHKMSG_INVALID_MEDIA_SIZE", mediaMaxSize.ToString() ) 
                     ( curID, msg ) :: argmsg

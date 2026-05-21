@@ -1893,11 +1893,9 @@ module Constants =
     let MAX_LOGICALUNIT_COUNT_IN_TD : int =
         255
     
-    /// Buffer line size of Memory buffer media in block count.
-    /// If block size(MEDIA_BLOCK_SIZE) is 512B and line size 64MB, it should be 131072 blocks.
-    /// If block size is 4096B and line size 64MB, it should be 16384 blocks.
-    let MEMBUFFER_BUF_LINE_BLOCK_SIZE : uint64 =
-        131072UL
+    /// Buffer line size of Memory buffer media in byte count.
+    let MEMBUFFER_BUF_LINE_SIZE : uint64 =
+        67108864UL
 
     /// A constant that indicates the maximum number of persistent reservation registrations that can be registered.
     let PRDATA_MAX_REGISTRATION_COUNT : int =

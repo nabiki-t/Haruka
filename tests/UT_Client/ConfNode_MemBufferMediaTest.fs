@@ -152,7 +152,7 @@ type ConfNode_MemBufferMedia_Test() =
     member _.Validate_BytesCount_001() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
-        let mediaMaxSize = ( uint64 Array.MaxLength ) * 512UL * Constants.MEMBUFFER_BUF_LINE_BLOCK_SIZE
+        let mediaMaxSize = ( uint64 Array.MaxLength ) * 512UL * Constants.MEMBUFFER_BUF_LINE_SIZE
         let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let confVal = {
             defaultConf with
@@ -169,7 +169,7 @@ type ConfNode_MemBufferMedia_Test() =
     member _.Validate_BytesCount_002() =
         let st = new StringTable( "" )
         let rel = new ConfNodeRelation()
-        let mediaMaxSize = ( uint64 Array.MaxLength ) * 512UL * Constants.MEMBUFFER_BUF_LINE_BLOCK_SIZE
+        let mediaMaxSize = ( uint64 Array.MaxLength ) * 512UL * Constants.MEMBUFFER_BUF_LINE_SIZE
         let lu = new ConfNode_DummyDeviceLU( st, rel, rel.NextID, lun_me.fromPrim 1UL, "", Constants.LU_DEF_MULTIPLICITY ) :> IConfigureNode
         let confVal = {
             defaultConf with
