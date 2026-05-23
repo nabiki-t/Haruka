@@ -1783,6 +1783,7 @@ type CommandRunner_Test1() =
             Assert.True(( argcn = cn ))
             Some tgnode
         )
+        ss.p_CheckTargetGroupUnloaded <- ( fun _ _ -> Task.CompletedTask )
         cc.p_LoadTargetGroup <- ( fun tdid tgid ->
             flg3 <- true
             Assert.True(( tdid = tdnode.TargetDeviceID ))

@@ -2596,15 +2596,22 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
         task {
             let tdnode = ss.GetAncestorTargetDevice cn
             let tgnode = ss.GetAncestorTargetGroup cn
-            if tdnode.IsSome && tgnode.IsSome then
-                let! tdlist = cc.GetTargetDeviceProcs()
-                let tdNodeId = tdnode.Value.TargetDeviceID
-                if List.exists ( (=) tdNodeId ) tdlist then
-                    do! cc.LoadTargetGroup tdnode.Value.TargetDeviceID tgnode.Value.TargetGroupID
-                    this.Output 0 ( sprintf "Loaded : %s" ( tgnode.Value :> IConfigureNode ).ShortDescriptString )
+            match tdnode, tgnode with
+            | Some( td ), Some( tg ) ->
+                if ( tg :> IConfigFileNode ).Modified = ModifiedStatus.NotModified then
+                    let! tdlist = cc.GetTargetDeviceProcs()
+                    let tdNodeId = td.TargetDeviceID
+                    if List.exists ( (=) tdNodeId ) tdlist then
+                        let tdid = td.TargetDeviceID
+                        let tgid = tg.TargetGroupID
+                        do! ss.CheckTargetGroupUnloaded cc tg
+                        do! cc.LoadTargetGroup tdid tgid
+                        this.Output 0 ( sprintf "Loaded : %s" ( tg :> IConfigureNode ).ShortDescriptString )
+                    else
+                        this.Output 0 ( sprintf "%s" ( m_Messages.GetMessage "ERRMSG_TARGET_DEVICE_NOT_RUNNING" ) )
                 else
-                    this.Output 0 ( sprintf "%s" ( m_Messages.GetMessage "ERRMSG_TARGET_DEVICE_NOT_RUNNING" ) )
-            else
+                    this.Output 0 ( sprintf "%s" ( m_Messages.GetMessage "CMDMSG_CONFIG_MODIFIED" ) )
+            | _ ->
                 raise <| Exception "Unexpected error."
         }
 
