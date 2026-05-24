@@ -3252,10 +3252,11 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
                     for itrs in sessList do
                         this.Output 0 ( sprintf "Session( TSIH : %d )" ( tsih_me.toPrim itrs.TSIH ) )
-                        this.Output 1 ( sprintf "I_T Nexus       : %s" ( itrs.ITNexus.ToString() ) )
+                        let itn = Functions.ConvertITNexus itrs.ITNexus
+                        this.Output 1 ( sprintf "I_T Nexus       : %s" ( itn.ToString() ) )
                         this.Output 1 ( sprintf "Target group ID : %s" ( tgid_me.toString itrs.TargetGroupID ) )
                         this.Output 1 ( sprintf "Target node ID  : %d" ( tnodeidx_me.toPrim itrs.TargetNodeID ) )
-                        this.Output 1 ( sprintf "Establish time  : %s" ( itrs.EstablishTime.ToString( "YYYY/MM/DD hh:mm:ss" ) ) )
+                        this.Output 1 ( sprintf "Establish time  : %s" ( itrs.EstablishTime.ToString( "yyyy/MM/dd HH:mm:ss" ) ) )
                         this.Output 1 ( sprintf "Session parameters : {"  )
                         this.Output 2 ( sprintf "MaxConnections      : %d" ( itrs.SessionParameters.MaxConnections ) )
                         this.Output 2 ( sprintf "InitiatorAlias      : %s" ( itrs.SessionParameters.InitiatorAlias ) )
