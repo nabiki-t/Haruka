@@ -113,12 +113,9 @@ type ConfigurationMaster_Test () =
     member this.LoadConfig_001() =
         let pDirName = this.GetTestDirName "LoadConfig_001"
         GlbFunc.CreateDir pDirName |> ignore
-        try
-            new ConfigurationMaster( pDirName, new HKiller() ) |> ignore
-            Assert.Fail __LINE__
-        with
-        | :? Xunit.Sdk.FailException -> reraise();
-        | _ -> ()
+        Assert.ThrowsAny( fun () ->
+            new ConfigurationMaster( pDirName, true, new HKiller() ) |> ignore
+        ) |> ignore
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -129,12 +126,9 @@ type ConfigurationMaster_Test () =
         let targetDeviceConfName = Functions.AppendPathName pDirName Constants.TARGET_DEVICE_CONF_FILE_NAME
         GlbFunc.CreateDir targetDeviceConfName |> ignore
 
-        try
-            new ConfigurationMaster( pDirName, new HKiller() ) |> ignore
-            Assert.Fail __LINE__
-        with
-        | :? Xunit.Sdk.FailException -> reraise();
-        | _ -> ()
+        Assert.ThrowsAny( fun () ->
+            new ConfigurationMaster( pDirName, true, new HKiller() ) |> ignore
+        ) |> ignore
 
         GlbFunc.DeleteDir targetDeviceConfName
         GlbFunc.DeleteDir pDirName
@@ -151,12 +145,9 @@ type ConfigurationMaster_Test () =
         let targetGroupConfName = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName, defaultTargetGroupConfStr )
 
-        try
-            new ConfigurationMaster( pDirName, new HKiller() ) |> ignore
-            Assert.Fail __LINE__
-        with
-        | :? Xunit.Sdk.FailException -> reraise();
-        | _ -> ()
+        Assert.ThrowsAny( fun () ->
+            new ConfigurationMaster( pDirName, true, new HKiller() ) |> ignore
+        ) |> ignore
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName
@@ -180,12 +171,12 @@ type ConfigurationMaster_Test () =
         let targetGroupConfName = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName, defaultTargetGroupConfStr )
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-        Assert.True(( cm.DeviceName = "aassddff" ))
-        Assert.True(( cm.EnableStatSNAckChecker = false ))
-        Assert.True(( cm.GetNetworkPortal().Length = 1 ))
-        Assert.True(( cm.GetNetworkPortal().[0].PortNumber = 3260us ))
-        Assert.True(( cm.GetAllTargetGroupConf().Length = 1 ))
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
+        Assert.StrictEqual( "aassddff", cm.DeviceName )
+        Assert.False( cm.EnableStatSNAckChecker )
+        Assert.StrictEqual( 1, cm.GetNetworkPortal().Length )
+        Assert.StrictEqual( 3260us, cm.GetNetworkPortal().[0].PortNumber )
+        Assert.StrictEqual( 1, cm.GetAllTargetGroupConf().Length )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName
@@ -240,18 +231,17 @@ type ConfigurationMaster_Test () =
         let targetGroupConfName = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName, defaultTargetGroupConfStr )
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-        Assert.True(( cm.DeviceName = "rrffgghh" ))
-        Assert.True(( cm.EnableStatSNAckChecker = true ))
-        Assert.True(( cm.GetNetworkPortal().Length = 3 ))
-        Assert.True(( cm.GetNetworkPortal().[0].PortNumber = 2360us ))
-        Assert.True(( cm.GetNetworkPortal().[0].WhiteList = [] ))
-        Assert.True(( cm.GetNetworkPortal().[1].PortNumber = 2361us ))
-        Assert.True(( cm.GetNetworkPortal().[1].WhiteList = [ IPCondition.Any; ] ))
-        Assert.True(( cm.GetNetworkPortal().[2].PortNumber = 2362us ))
-        Assert.True(( cm.GetNetworkPortal().[2].WhiteList = [ IPCondition.Global; IPCondition.IPv4Linklocal; ] ))
-
-        Assert.True(( cm.GetAllTargetGroupConf().Length = 1 ))
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
+        Assert.StrictEqual( "rrffgghh", cm.DeviceName )
+        Assert.True( cm.EnableStatSNAckChecker )
+        Assert.StrictEqual( 3, cm.GetNetworkPortal().Length )
+        Assert.StrictEqual( 2360us, cm.GetNetworkPortal().[0].PortNumber )
+        Assert.StrictEqual( [], cm.GetNetworkPortal().[0].WhiteList )
+        Assert.StrictEqual( 2361us, cm.GetNetworkPortal().[1].PortNumber )
+        Assert.StrictEqual( [ IPCondition.Any; ], cm.GetNetworkPortal().[1].WhiteList )
+        Assert.StrictEqual( 2362us, cm.GetNetworkPortal().[2].PortNumber )
+        Assert.StrictEqual( [ IPCondition.Global; IPCondition.IPv4Linklocal; ], cm.GetNetworkPortal().[2].WhiteList )
+        Assert.StrictEqual( 1, cm.GetAllTargetGroupConf().Length )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName
@@ -282,15 +272,15 @@ type ConfigurationMaster_Test () =
         let targetGroupConfName = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName, defaultTargetGroupConfStr )
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-        Assert.True(( cm.GetNetworkPortal().Length = 1 ))
-        Assert.True(( cm.IscsiNegoParamCO.MaxRecvDataSegmentLength_T = 512u ))
-        Assert.True(( cm.IscsiNegoParamSW.MaxBurstLength = 512u ))
-        Assert.True(( cm.IscsiNegoParamSW.FirstBurstLength = 512u ))
-        Assert.True(( cm.IscsiNegoParamSW.DefaultTime2Wait = 99us ))
-        Assert.True(( cm.IscsiNegoParamSW.DefaultTime2Retain = 99us ))
-        Assert.True(( cm.IscsiNegoParamSW.MaxOutstandingR2T = 3us ))
-        Assert.True(( cm.GetAllTargetGroupConf().Length = 1 ))
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
+        Assert.StrictEqual( 1, cm.GetNetworkPortal().Length )
+        Assert.StrictEqual( 512u, cm.IscsiNegoParamCO.MaxRecvDataSegmentLength_T )
+        Assert.StrictEqual( 512u, cm.IscsiNegoParamSW.MaxBurstLength )
+        Assert.StrictEqual( 512u, cm.IscsiNegoParamSW.FirstBurstLength )
+        Assert.StrictEqual( 99us, cm.IscsiNegoParamSW.DefaultTime2Wait )
+        Assert.StrictEqual( 99us, cm.IscsiNegoParamSW.DefaultTime2Retain )
+        Assert.StrictEqual( 3us, cm.IscsiNegoParamSW.MaxOutstandingR2T )
+        Assert.StrictEqual( 1, cm.GetAllTargetGroupConf().Length )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName
@@ -353,41 +343,41 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName targetGroupConf
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
         let tgc = cm.GetAllTargetGroupConf()
         let targets = getAllTagetConf tgc
         let lus = getAllLUConf tgc
-        Assert.True(( targets.Length = 2 ))
-        Assert.True(( targets.[0].IdentNumber = tnodeidx_me.fromPrim 1us ))
-        Assert.True(( targets.[0].TargetPortalGroupTag = tpgt_me.fromPrim 0us ))
-        Assert.True(( targets.[0].TargetName = "target000" ))
-        Assert.True(( targets.[0].TargetAlias = "target000" ))
-        Assert.True(( targets.[0].LUN.Length = 2 ))
-        Assert.True(( targets.[0].LUN.[0] = lun_me.fromPrim 1UL ))
-        Assert.True(( targets.[0].LUN.[1] = lun_me.fromPrim 2UL ))
-        Assert.True(( targets.[0].Auth = TargetGroupConf.T_Auth.U_None() ))
-        Assert.True(( targets.[1].IdentNumber = tnodeidx_me.fromPrim 2us ))
-        Assert.True(( targets.[1].TargetPortalGroupTag = tpgt_me.fromPrim 0us ))
-        Assert.True(( targets.[1].TargetName = "target001" ))
-        Assert.True(( targets.[1].TargetAlias = "target001" ))
-        Assert.True(( targets.[1].LUN.Length = 2 ))
-        Assert.True(( targets.[1].LUN.[0] = lun_me.fromPrim 1UL ))
-        Assert.True(( targets.[1].LUN.[1] = lun_me.fromPrim 2UL ))
-        Assert.True(( targets.[1].Auth = TargetGroupConf.T_Auth.U_None() ))
+        Assert.StrictEqual( 2, targets.Length )
+        Assert.StrictEqual( tnodeidx_me.fromPrim 1us , targets.[0].IdentNumber )
+        Assert.StrictEqual( tpgt_me.fromPrim 0us, targets.[0].TargetPortalGroupTag )
+        Assert.StrictEqual( "target000", targets.[0].TargetName )
+        Assert.StrictEqual( "target000", targets.[0].TargetAlias )
+        Assert.StrictEqual( 2, targets.[0].LUN.Length )
+        Assert.StrictEqual( lun_me.fromPrim 1UL, targets.[0].LUN.[0] )
+        Assert.StrictEqual( lun_me.fromPrim 2UL, targets.[0].LUN.[1] )
+        Assert.StrictEqual( TargetGroupConf.T_Auth.U_None(), targets.[0].Auth )
+        Assert.StrictEqual( tnodeidx_me.fromPrim 2us, targets.[1].IdentNumber )
+        Assert.StrictEqual( tpgt_me.fromPrim 0us, targets.[1].TargetPortalGroupTag )
+        Assert.StrictEqual( "target001", targets.[1].TargetName )
+        Assert.StrictEqual( "target001", targets.[1].TargetAlias )
+        Assert.StrictEqual( 2, targets.[1].LUN.Length )
+        Assert.StrictEqual( lun_me.fromPrim 1UL, targets.[1].LUN.[0] )
+        Assert.StrictEqual( lun_me.fromPrim 2UL, targets.[1].LUN.[1] )
+        Assert.StrictEqual( TargetGroupConf.T_Auth.U_None(), targets.[1].Auth )
 
-        Assert.True(( lus.Length = 2 ))
-        Assert.True(( lus.[0].LUN = lun_me.fromPrim 1UL ))
-        Assert.True(( lus.[0].LUName = "luname001" ))
-        Assert.True(( lus.[0].LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice() ))
-        Assert.True(( lus.[0].WorkPath = Functions.AppendPathName pDirName "LU_1" ))
-        Assert.True(( lus.[1].LUN = lun_me.fromPrim 2UL ))
-        Assert.True(( lus.[1].LUName = "luname002" ))
-        Assert.True(( lus.[1].LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice() ))
-        Assert.True(( lus.[1].WorkPath = Functions.AppendPathName pDirName "LU_2" ))
+        Assert.StrictEqual( 2, lus.Length )
+        Assert.StrictEqual( lun_me.fromPrim 1UL, lus.[0].LUN )
+        Assert.StrictEqual( "luname001", lus.[0].LUName )
+        Assert.StrictEqual( TargetGroupConf.T_DEVICE.U_DummyDevice(), lus.[0].LUDevice )
+        Assert.StrictEqual( Functions.AppendPathName pDirName "LU_1", lus.[0].WorkPath )
+        Assert.StrictEqual( lun_me.fromPrim 2UL, lus.[1].LUN )
+        Assert.StrictEqual( "luname002", lus.[1].LUName )
+        Assert.StrictEqual( TargetGroupConf.T_DEVICE.U_DummyDevice(), lus.[1].LUDevice )
+        Assert.StrictEqual( Functions.AppendPathName pDirName "LU_2", lus.[1].WorkPath )
 
-        Assert.True(( tgc.Length = 1 ))
-        Assert.True(( ( fst tgc.[0] ).TargetGroupID = tgid_me.Zero))
-        Assert.True(( ( fst tgc.[0] ).TargetGroupName = "a" ))
+        Assert.StrictEqual( 1, tgc.Length )
+        Assert.StrictEqual( tgid_me.Zero, ( fst tgc.[0] ).TargetGroupID )
+        Assert.StrictEqual( "a", ( fst tgc.[0] ).TargetGroupName )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName
@@ -438,35 +428,35 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName2 targetGroupConf
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
         let tgc = cm.GetAllTargetGroupConf()
         let targets = getAllTagetConf tgc
         let lus = getAllLUConf tgc
-        Assert.True(( targets.Length = 2 ))
-        Assert.True(( targets.[0].IdentNumber = tnodeidx_me.fromPrim 1us ))
-        Assert.True(( targets.[0].TargetPortalGroupTag = tpgt_me.fromPrim 0us ))
-        Assert.True(( targets.[0].TargetName = "target001" ))
-        Assert.True(( targets.[0].TargetAlias = "target001" ))
-        Assert.True(( targets.[0].LUN.Length = 1 ))
-        Assert.True(( targets.[0].LUN.[0] = lun_me.fromPrim 1UL ))
-        Assert.True(( targets.[0].Auth = TargetGroupConf.T_Auth.U_None() ))
-        Assert.True(( targets.[1].IdentNumber = tnodeidx_me.fromPrim 2us ))
-        Assert.True(( targets.[1].TargetPortalGroupTag = tpgt_me.fromPrim 0us ))
-        Assert.True(( targets.[1].TargetName = "target002" ))
-        Assert.True(( targets.[1].TargetAlias = "target002" ))
-        Assert.True(( targets.[1].LUN.Length = 1 ))
-        Assert.True(( targets.[1].LUN.[0] = lun_me.fromPrim 2UL ))
-        Assert.True(( targets.[1].Auth = TargetGroupConf.T_Auth.U_None() ))
+        Assert.StrictEqual( 2, targets.Length )
+        Assert.StrictEqual( tnodeidx_me.fromPrim 1us, targets.[0].IdentNumber )
+        Assert.StrictEqual( tpgt_me.fromPrim 0us, targets.[0].TargetPortalGroupTag )
+        Assert.StrictEqual( "target001", targets.[0].TargetName )
+        Assert.StrictEqual( "target001", targets.[0].TargetAlias )
+        Assert.StrictEqual( 1, targets.[0].LUN.Length )
+        Assert.StrictEqual( lun_me.fromPrim 1UL, targets.[0].LUN.[0] )
+        Assert.StrictEqual( TargetGroupConf.T_Auth.U_None(), targets.[0].Auth )
+        Assert.StrictEqual( tnodeidx_me.fromPrim 2us, targets.[1].IdentNumber )
+        Assert.StrictEqual( tpgt_me.fromPrim 0us, targets.[1].TargetPortalGroupTag )
+        Assert.StrictEqual( "target002", targets.[1].TargetName )
+        Assert.StrictEqual( "target002", targets.[1].TargetAlias )
+        Assert.StrictEqual( 1, targets.[1].LUN.Length )
+        Assert.StrictEqual( lun_me.fromPrim 2UL, targets.[1].LUN.[0] )
+        Assert.StrictEqual( TargetGroupConf.T_Auth.U_None(), targets.[1].Auth )
 
-        Assert.True(( lus.Length = 2 ))
-        Assert.True(( lus.[0].LUN = lun_me.fromPrim 1UL ))
-        Assert.True(( lus.[0].LUName = "luname001" ))
-        Assert.True(( lus.[0].LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice() ))
-        Assert.True(( lus.[0].WorkPath = Functions.AppendPathName pDirName "LU_1" ))
-        Assert.True(( lus.[1].LUN = lun_me.fromPrim 2UL ))
-        Assert.True(( lus.[1].LUName = "luname002" ))
-        Assert.True(( lus.[1].LUDevice = TargetGroupConf.T_DEVICE.U_DummyDevice() ))
-        Assert.True(( lus.[1].WorkPath = Functions.AppendPathName pDirName "LU_2" ))
+        Assert.StrictEqual( 2, lus.Length )
+        Assert.StrictEqual( lun_me.fromPrim 1UL, lus.[0].LUN )
+        Assert.StrictEqual( "luname001", lus.[0].LUName )
+        Assert.StrictEqual( TargetGroupConf.T_DEVICE.U_DummyDevice(), lus.[0].LUDevice )
+        Assert.StrictEqual( Functions.AppendPathName pDirName "LU_1", lus.[0].WorkPath )
+        Assert.StrictEqual( lun_me.fromPrim 2UL, lus.[1].LUN )
+        Assert.StrictEqual( "luname002", lus.[1].LUName )
+        Assert.StrictEqual( TargetGroupConf.T_DEVICE.U_DummyDevice(), lus.[1].LUDevice )
+        Assert.StrictEqual( Functions.AppendPathName pDirName "LU_2", lus.[1].WorkPath )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -491,9 +481,9 @@ type ConfigurationMaster_Test () =
         let targetGroupConfName = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         GlbFunc.CreateDir targetGroupConfName |> ignore
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
         let tgc = cm.GetAllTargetGroupConf()
-        Assert.True(( tgc.Length = 0 )) // directory is ignored, it's considered that there are no target groups.
+        Assert.StrictEqual( 0, tgc.Length ) // directory is ignored, it's considered that there are no target groups.
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteDir targetGroupConfName
@@ -517,17 +507,39 @@ type ConfigurationMaster_Test () =
         let targetGroupConfName = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         let targetGroupConfStr = "<TargetGroup></TargetGroup>"
         File.WriteAllText( targetGroupConfName, targetGroupConfStr )
-        try
-            let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-            Assert.Fail __LINE__
-        with
-        | :? Xunit.Sdk.FailException -> reraise();
-        | _ -> ()
+        Assert.ThrowsAny( fun () ->
+            new ConfigurationMaster( pDirName, true, new HKiller() ) |> ignore
+        ) |> ignore
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName
         GlbFunc.DeleteDir pDirName
 
+    [<Fact>]
+    member this.LoadConfig_011() =
+        let pDirName = this.GetTestDirName "LoadConfig_011"
+        GlbFunc.CreateDir pDirName |> ignore
+
+        let targetDeviceConfName = Functions.AppendPathName pDirName Constants.TARGET_DEVICE_CONF_FILE_NAME
+        let targetDeviceConf : TargetDeviceConf.T_TargetDevice = {
+            NetworkPortal = [];
+            NegotiableParameters = None;
+            LogParameters = None;
+            DeviceName = "";
+            EnableStatSNAckChecker = false;
+        }
+        TargetDeviceConf.ReaderWriter.WriteFile targetDeviceConfName targetDeviceConf
+
+        let targetGroupConfName1 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
+        File.WriteAllText( targetGroupConfName1, defaultTargetGroupConfStr )
+
+        let cm = new ConfigurationMaster( pDirName, false, new HKiller() ) :> IConfiguration
+        let tgc = cm.GetAllTargetGroupConf()
+        Assert.StrictEqual( 0, tgc.Length )
+
+        GlbFunc.DeleteFile targetDeviceConfName
+        GlbFunc.DeleteFile targetGroupConfName1
+        GlbFunc.DeleteDir pDirName
     [<Fact>]
     member this.VerifyConfig_001() =
         let pDirName = this.GetTestDirName "VerifyConfig_001"
@@ -562,12 +574,11 @@ type ConfigurationMaster_Test () =
         let targetGroupConfName = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName, defaultTargetGroupConfStr )
 
-        try
-            let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-            Assert.Fail __LINE__
-        with
-        | :? ConfRWException as x ->
-            Assert.True( x.Message.StartsWith( "Duplicate Network portal IdentNumber" ) )
+        let e =
+            Assert.Throws<ConfRWException>( fun () ->
+                new ConfigurationMaster( pDirName, true, new HKiller() ) |> ignore
+            )
+        Assert.StartsWith( "Duplicate Network portal IdentNumber", e.Message )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName
@@ -603,8 +614,8 @@ type ConfigurationMaster_Test () =
         let targetGroupConfName = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName, defaultTargetGroupConfStr )
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-        Assert.True(( cm.GetNetworkPortal().Length = Constants.MAX_NETWORK_PORTAL_COUNT ))
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
+        Assert.StrictEqual( Constants.MAX_NETWORK_PORTAL_COUNT, cm.GetNetworkPortal().Length )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName
@@ -632,12 +643,11 @@ type ConfigurationMaster_Test () =
                 genTargetGroupConfStr tgid ( tnodeidx_me.fromPrim ( uint16 i ) ) ( sprintf "target%03d" i ) ( lun_me.fromPrim 1UL )
             File.WriteAllText( targetGroupConfName1, targetGroupConfStr1 )
 
-        try
-            let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-            Assert.Fail __LINE__
-        with
-        | :? ConfRWException as x ->
-            Assert.True( x.Message.StartsWith( "Too many target groups" ) )
+        let e =
+            Assert.Throws<ConfRWException>( fun () ->
+                new ConfigurationMaster( pDirName, true, new HKiller() ) |> ignore
+            )
+        Assert.StartsWith( "Too many target groups", e.Message )
 
         GlbFunc.DeleteDir pDirName
 
@@ -667,7 +677,7 @@ type ConfigurationMaster_Test () =
                 genTargetGroupConfStr tgids.[i] ( tnodeidx_me.fromPrim ( uint16 i + 1us ) ) ( sprintf "target%03d" i ) ( lun_me.fromPrim ( uint64 i + 1UL ) )
             File.WriteAllText( targetGroupConfName1, targetGroupConfStr1 )
 
-        let c = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        let c = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
         for i = 0 to Constants.MAX_TARGET_COUNT_IN_TD - 1 do
             let conf = c.GetTargetGroupConf tgids.[i]
             Assert.True( conf.IsSome )
@@ -740,7 +750,7 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName2 targetGroupConf2
 
-        let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        let _ = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
 
         GlbFunc.DeleteDir pDirName
 
@@ -819,12 +829,11 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName2 targetGroupConf2
 
-        try
-            let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-            Assert.Fail __LINE__
-        with
-        | :? ConfRWException as x ->
-            Assert.True( x.Message.StartsWith( "Too many target" ) )
+        let e =
+            Assert.Throws<ConfRWException>( fun () ->
+                new ConfigurationMaster( pDirName, true, new HKiller() ) |> ignore
+            )
+        Assert.StartsWith( "Too many target", e.Message )
 
         GlbFunc.DeleteDir pDirName
 
@@ -869,12 +878,11 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName2 targetGroupConf2
 
-        try
-            let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-            Assert.Fail __LINE__
-        with
-        | :? ConfRWException as x ->
-            Assert.True( x.Message.StartsWith( "LUN 0 is exist in target" ) )
+        let e =
+            Assert.Throws<ConfRWException>( fun () ->
+                new ConfigurationMaster( pDirName, true, new HKiller() ) |> ignore
+            )
+        Assert.StartsWith( "LUN 0 is exist in target", e.Message )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -928,12 +936,11 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName2 targetGroupConf2
 
-        try
-            let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-            Assert.Fail __LINE__
-        with
-        | :? ConfRWException as x ->
-            Assert.True( x.Message.StartsWith( "Duplicate LUN in target" ) )
+        let e =
+            Assert.Throws<ConfRWException>( fun () ->
+                new ConfigurationMaster( pDirName, true, new HKiller() ) |> ignore
+            )
+        Assert.StartsWith( "Duplicate LUN in target", e.Message )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName2
@@ -983,12 +990,12 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName2 targetGroupConf2
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
         let gconf = cm.GetTargetGroupConf( tgid1 )
         Assert.True(( gconf.IsSome ))
-        Assert.True(( gconf.Value.LogicalUnit.Length = Constants.MAX_LOGICALUNIT_COUNT_IN_TD ))
-        Assert.True(( gconf.Value.Target.Length = 1 ))
-        Assert.True(( gconf.Value.Target.[0].LUN.Length = Constants.MAX_LOGICALUNIT_COUNT_IN_TD ))
+        Assert.StrictEqual( Constants.MAX_LOGICALUNIT_COUNT_IN_TD, gconf.Value.LogicalUnit.Length )
+        Assert.StrictEqual( 1, gconf.Value.Target.Length )
+        Assert.StrictEqual( Constants.MAX_LOGICALUNIT_COUNT_IN_TD, gconf.Value.Target.[0].LUN.Length )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName2
@@ -1072,7 +1079,7 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName2 targetGroupConf2
 
-        let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        let _ = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
 
         GlbFunc.DeleteDir pDirName
 
@@ -1153,12 +1160,11 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName2 targetGroupConf2
 
-        try
-            let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-            Assert.Fail __LINE__
-        with
-        | :? ConfRWException as x ->
-            Assert.True( x.Message.StartsWith( "Too many LUs" ) )
+        let e =
+            Assert.Throws<ConfRWException>( fun () ->
+                new ConfigurationMaster( pDirName, true, new HKiller() ) |> ignore
+            )
+        Assert.StartsWith( "Too many LUs", e.Message )
 
         GlbFunc.DeleteDir pDirName
 
@@ -1245,12 +1251,11 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName2 targetGroupConf2
 
-        try
-            let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-            Assert.Fail __LINE__
-        with
-        | :? ConfRWException as x ->
-            Assert.True( x.Message.StartsWith( "Duplicate LUN" ) )
+        let e =
+            Assert.Throws<ConfRWException>( fun () ->
+                new ConfigurationMaster( pDirName, true, new HKiller() ) |> ignore
+            )
+        Assert.StartsWith( "Duplicate LUN", e.Message )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -1309,12 +1314,11 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName2 targetGroupConf2
 
-        try
-            let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-            Assert.Fail __LINE__
-        with
-        | :? ConfRWException as x ->
-            Assert.True( x.Message.StartsWith( "LUN 0 is exist" ) )
+        let e =
+            Assert.Throws<ConfRWException>( fun () ->
+                new ConfigurationMaster( pDirName, true, new HKiller() ) |> ignore
+            )
+        Assert.StartsWith( "LUN 0 is exist", e.Message )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -1370,12 +1374,11 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName1 targetGroupConf1
 
-        try
-            let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-            Assert.Fail __LINE__
-        with
-        | :? ConfRWException as x ->
-            Assert.True( x.Message.StartsWith( "Missing LUN(3" ) )
+        let e =
+            Assert.Throws<ConfRWException>( fun () ->
+                new ConfigurationMaster( pDirName, true, new HKiller() ) |> ignore
+            )
+        Assert.StartsWith( "Missing LUN(3", e.Message )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -1430,12 +1433,11 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName1 targetGroupConf1
 
-        try
-            let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-            Assert.Fail __LINE__
-        with
-        | :? ConfRWException as x ->
-            Assert.True( x.Message.StartsWith( "LU(2) is not refferd by any target" ) )
+        let e =
+            Assert.Throws<ConfRWException>( fun () ->
+                new ConfigurationMaster( pDirName, true, new HKiller() ) |> ignore
+            )
+        Assert.StartsWith( "LU(2) is not refferd by any target", e.Message )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -1486,12 +1488,11 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName2 targetGroupConf2
 
-        try
-            let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-            Assert.Fail __LINE__
-        with
-        | :? ConfRWException as x ->
-            Assert.True( x.Message.StartsWith( "Duplicate Target Name" ) )
+        let e =
+            Assert.Throws<ConfRWException>( fun () ->
+                new ConfigurationMaster( pDirName, true, new HKiller() ) |> ignore
+            )
+        Assert.StartsWith( "Duplicate Target Name", e.Message )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName2
@@ -1562,12 +1563,11 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName2 targetGroupConf2
 
-        try
-            let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-            Assert.Fail __LINE__
-        with
-        | :? ConfRWException as x ->
-            Assert.True( x.Message.StartsWith( "Duplicate Target Name" ) )
+        let e =
+            Assert.Throws<ConfRWException>( fun () ->
+                new ConfigurationMaster( pDirName, true, new HKiller() ) |> ignore
+            )
+        Assert.StartsWith( "Duplicate Target Name", e.Message )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName2
@@ -1617,12 +1617,12 @@ type ConfigurationMaster_Test () =
             };];
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName2 targetGroupConf2
-        try
-            let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-            Assert.Fail __LINE__
-        with
-        | :? ConfRWException as x ->
-            Assert.True( x.Message.StartsWith( "Duplicate Target IdentNumber" ) )
+
+        let e =
+            Assert.Throws<ConfRWException>( fun () ->
+                new ConfigurationMaster( pDirName, true, new HKiller() ) |> ignore
+            )
+        Assert.StartsWith( "Duplicate Target IdentNumber", e.Message )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName2
@@ -1695,12 +1695,11 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName2 targetGroupConf2
 
-        try
-            let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-            Assert.Fail __LINE__
-        with
-        | :? ConfRWException as x ->
-            Assert.True( x.Message.StartsWith( "Duplicate Target IdentNumber" ) )
+        let e =
+            Assert.Throws<ConfRWException>( fun () ->
+                new ConfigurationMaster( pDirName, true, new HKiller() ) |> ignore
+            )
+        Assert.StartsWith( "Duplicate Target IdentNumber", e.Message )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -1750,12 +1749,11 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName2 targetGroupConf2
 
-        try
-            let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-            Assert.Fail __LINE__
-        with
-        | :? ConfRWException as x ->
-            Assert.True( x.Message.StartsWith( "Duplicate Target group ID" ) )
+        let e =
+            Assert.Throws<ConfRWException>( fun () ->
+                new ConfigurationMaster( pDirName, true, new HKiller() ) |> ignore
+            )
+        Assert.StartsWith( "Duplicate Target group ID", e.Message )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -1824,12 +1822,11 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName2 targetGroupConfStr2
 
-        try
-            let _ = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-            Assert.Fail __LINE__
-        with
-        | :? ConfRWException as x ->
-            Assert.True( x.Message.StartsWith( "Duplicate Media ID" ) )
+        let e =
+            Assert.Throws<ConfRWException>( fun () ->
+                new ConfigurationMaster( pDirName, true, new HKiller() ) |> ignore
+            )
+        Assert.StartsWith( "Duplicate Media ID", e.Message )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName2
@@ -1876,16 +1873,16 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName2 targetGroupConfStr2
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
 
         let vtgid = cm.GetTargetGroupID() |> Array.sort
         let tgc = cm.GetAllTargetGroupConf() |> Array.sortBy ( fun ( itr, _ ) -> itr.TargetGroupID )
-        Assert.True(( vtgid.Length = 2 ))
-        Assert.True(( vtgid.[0] = tgid0 ))
-        Assert.True(( vtgid.[1] = tgid1 ))
+        Assert.StrictEqual( 2, vtgid.Length )
+        Assert.StrictEqual( tgid0, vtgid.[0] )
+        Assert.StrictEqual( tgid1, vtgid.[1] )
 
-        Assert.True(( ( fst tgc.[0] ).TargetGroupName = "a" ))
-        Assert.True(( ( fst tgc.[1] ).TargetGroupName = "b" ))
+        Assert.StrictEqual( "a", ( fst tgc.[0] ).TargetGroupName )
+        Assert.StrictEqual( "b", ( fst tgc.[1] ).TargetGroupName )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -1961,26 +1958,26 @@ type ConfigurationMaster_Test () =
         }
         TargetGroupConf.ReaderWriter.WriteFile targetGroupConfName3 targetGroupConf3
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
 
         let vtgid1 = cm.GetTargetGroupID() |> Array.sort
         let tgc1 = cm.GetAllTargetGroupConf()
         let targets1 = getAllTagetConf tgc1
         let lus1 = getAllLUConf tgc1
-        Assert.True(( vtgid1.Length = 3 ))
-        Assert.True(( vtgid1.[0] = tgid0 ))
-        Assert.True(( vtgid1.[1] = tgid1 ))
-        Assert.True(( vtgid1.[2] = tgid2 ))
+        Assert.StrictEqual( 3, vtgid1.Length )
+        Assert.StrictEqual( tgid0, vtgid1.[0] )
+        Assert.StrictEqual( tgid1, vtgid1.[1] )
+        Assert.StrictEqual( tgid2, vtgid1.[2] )
 
-        Assert.True(( lus1.Length = 3 ))
-        Assert.True(( lus1.[0].LUN = lun_me.fromPrim 1UL ))
-        Assert.True(( lus1.[1].LUN = lun_me.fromPrim 2UL ))
-        Assert.True(( lus1.[2].LUN = lun_me.fromPrim 3UL ))
+        Assert.StrictEqual( 3, lus1.Length )
+        Assert.StrictEqual( lun_me.fromPrim 1UL, lus1.[0].LUN )
+        Assert.StrictEqual( lun_me.fromPrim 2UL, lus1.[1].LUN )
+        Assert.StrictEqual( lun_me.fromPrim 3UL, lus1.[2].LUN )
 
-        Assert.True(( targets1.Length = 3 ))
-        Assert.True(( targets1.[0].TargetName = "target001" ))
-        Assert.True(( targets1.[1].TargetName = "target002" ))
-        Assert.True(( targets1.[2].TargetName = "target003" ))
+        Assert.StrictEqual( 3, targets1.Length )
+        Assert.StrictEqual( "target001", targets1.[0].TargetName )
+        Assert.StrictEqual( "target002", targets1.[1].TargetName )
+        Assert.StrictEqual( "target003", targets1.[2].TargetName )
 
         cm.UnloadTargetGroup( tgid1 )
 
@@ -1988,17 +1985,17 @@ type ConfigurationMaster_Test () =
         let tgc2 = cm.GetAllTargetGroupConf()
         let targets2 = getAllTagetConf tgc2
         let lus2 = getAllLUConf tgc2
-        Assert.True(( vtgid2.Length = 2 ))
-        Assert.True(( vtgid2.[0] = tgid0 ))
-        Assert.True(( vtgid2.[1] = tgid2 ))
+        Assert.StrictEqual( 2, vtgid2.Length )
+        Assert.StrictEqual( tgid0, vtgid2.[0] )
+        Assert.StrictEqual( tgid2, vtgid2.[1] )
 
-        Assert.True(( lus2.Length = 2 ))
-        Assert.True(( lus2.[0].LUN = lun_me.fromPrim 1UL ))
-        Assert.True(( lus2.[1].LUN = lun_me.fromPrim 3UL ))
+        Assert.StrictEqual( 2, lus2.Length )
+        Assert.StrictEqual( lun_me.fromPrim 1UL, lus2.[0].LUN )
+        Assert.StrictEqual( lun_me.fromPrim 3UL, lus2.[1].LUN )
 
-        Assert.True(( targets2.Length = 2 ))
-        Assert.True(( targets2.[0].TargetName = "target001" ))
-        Assert.True(( targets2.[1].TargetName = "target003" ))
+        Assert.StrictEqual( 2, targets2.Length )
+        Assert.StrictEqual( "target001", targets2.[0].TargetName )
+        Assert.StrictEqual( "target003", targets2.[1].TargetName )
 
         cm.UnloadTargetGroup( tgid99 )
 
@@ -2006,17 +2003,17 @@ type ConfigurationMaster_Test () =
         let tgc3 = cm.GetAllTargetGroupConf()
         let targets3 = getAllTagetConf tgc3
         let lus3 = getAllLUConf tgc3
-        Assert.True(( vtgid3.Length = 2 ))
-        Assert.True(( vtgid3.[0] = tgid0 ))
-        Assert.True(( vtgid3.[1] = tgid2 ))
+        Assert.StrictEqual( 2, vtgid3.Length )
+        Assert.StrictEqual( tgid0, vtgid3.[0] )
+        Assert.StrictEqual( tgid2, vtgid3.[1] )
 
-        Assert.True(( lus3.Length = 2 ))
-        Assert.True(( lus3.[0].LUN = lun_me.fromPrim 1UL ))
-        Assert.True(( lus3.[1].LUN = lun_me.fromPrim 3UL ))
+        Assert.StrictEqual( 2, lus3.Length )
+        Assert.StrictEqual( lun_me.fromPrim 1UL, lus3.[0].LUN )
+        Assert.StrictEqual( lun_me.fromPrim 3UL, lus3.[1].LUN )
 
-        Assert.True(( targets3.Length = 2 ))
-        Assert.True(( targets3.[0].TargetName = "target001" ))
-        Assert.True(( targets3.[1].TargetName = "target003" ))
+        Assert.StrictEqual( 2, targets3.Length )
+        Assert.StrictEqual( "target001", targets3.[0].TargetName )
+        Assert.StrictEqual( "target003", targets3.[1].TargetName )
 
         cm.UnloadTargetGroup( tgid2 )
 
@@ -2024,14 +2021,14 @@ type ConfigurationMaster_Test () =
         let tgc4 = cm.GetAllTargetGroupConf()
         let targets4 = getAllTagetConf tgc4
         let lus4 = getAllLUConf tgc4
-        Assert.True(( vtgid4.Length = 1 ))
-        Assert.True(( vtgid4.[0] = tgid0 ))
+        Assert.StrictEqual( 1, vtgid4.Length )
+        Assert.StrictEqual( tgid0, vtgid4.[0] )
 
-        Assert.True(( lus4.Length = 1 ))
-        Assert.True(( lus4.[0].LUN = lun_me.fromPrim 1UL ))
+        Assert.StrictEqual( 1, lus4.Length )
+        Assert.StrictEqual( lun_me.fromPrim 1UL, lus4.[0].LUN )
 
-        Assert.True(( targets4.Length = 1 ))
-        Assert.True(( targets4.[0].TargetName = "target001" ))
+        Assert.StrictEqual( 1, targets4.Length )
+        Assert.StrictEqual( "target001", targets4.[0].TargetName )
 
         cm.UnloadTargetGroup( tgid0 )
 
@@ -2039,9 +2036,9 @@ type ConfigurationMaster_Test () =
         let tgc5 = cm.GetAllTargetGroupConf()
         let targets5 = getAllTagetConf tgc5
         let lus5 = getAllLUConf tgc5
-        Assert.True(( vtgid5.Length = 0 ))
-        Assert.True(( lus5.Length = 0 ))
-        Assert.True(( targets5.Length = 0 ))
+        Assert.StrictEqual( 0, vtgid5.Length )
+        Assert.StrictEqual( 0, lus5.Length )
+        Assert.StrictEqual( 0, targets5.Length )
 
         cm.UnloadTargetGroup( tgid98 )
 
@@ -2049,9 +2046,9 @@ type ConfigurationMaster_Test () =
         let tgc6 = cm.GetAllTargetGroupConf()
         let targets6 = getAllTagetConf tgc6
         let lus6 = getAllLUConf tgc6
-        Assert.True(( vtgid6.Length = 0 ))
-        Assert.True(( lus6.Length = 0 ))
-        Assert.True(( targets6.Length = 0 ))
+        Assert.StrictEqual( 0, vtgid6.Length )
+        Assert.StrictEqual( 0, lus6.Length )
+        Assert.StrictEqual( 0, targets6.Length )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -2077,18 +2074,18 @@ type ConfigurationMaster_Test () =
         let targetGroupConfName1 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName1, defaultTargetGroupConfStr )
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
 
         let vtgid1 = cm.GetTargetGroupID() |> Array.sort
         let tgc1 = cm.GetAllTargetGroupConf()
         let targets1 = getAllTagetConf tgc1
         let lus1 = getAllLUConf tgc1
-        Assert.True(( vtgid1.Length = 1 ))
-        Assert.True(( vtgid1.[0] = tgid0 ))
-        Assert.True(( lus1.Length = 1 ))
-        Assert.True(( lus1.[0].LUN = lun_me.fromPrim 1UL ))
-        Assert.True(( targets1.Length = 1 ))
-        Assert.True(( targets1.[0].TargetName = "target001" ))
+        Assert.StrictEqual( 1, vtgid1.Length )
+        Assert.StrictEqual( tgid0, vtgid1.[0])
+        Assert.StrictEqual( 1, lus1.Length )
+        Assert.StrictEqual( lun_me.fromPrim 1UL, lus1.[0].LUN )
+        Assert.StrictEqual( 1, targets1.Length )
+        Assert.StrictEqual( "target001", targets1.[0].TargetName )
 
         let targetGroupConfName2 = Functions.AppendPathName pDirName ( tgid_me.toString tgid1 )
         GlbFunc.CreateDir targetGroupConfName2 |> ignore
@@ -2099,12 +2096,12 @@ type ConfigurationMaster_Test () =
         let tgc2 = cm.GetAllTargetGroupConf()
         let targets2 = getAllTagetConf tgc2
         let lus2 = getAllLUConf tgc2
-        Assert.True(( vtgid2.Length = 1 ))
-        Assert.True(( vtgid2.[0] = tgid0 ))
-        Assert.True(( lus2.Length = 1 ))
-        Assert.True(( lus2.[0].LUN = lun_me.fromPrim 1UL ))
-        Assert.True(( targets2.Length = 1 ))
-        Assert.True(( targets2.[0].TargetName = "target001" ))
+        Assert.StrictEqual( 1, vtgid2.Length )
+        Assert.StrictEqual( tgid0, vtgid2.[0] )
+        Assert.StrictEqual( 1, lus2.Length )
+        Assert.StrictEqual( lun_me.fromPrim 1UL, lus2.[0].LUN )
+        Assert.StrictEqual( 1, targets2.Length )
+        Assert.StrictEqual( "target001", targets2.[0].TargetName )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -2129,18 +2126,18 @@ type ConfigurationMaster_Test () =
         let targetGroupConfName1 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName1, defaultTargetGroupConfStr )
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
 
         let vtgid1 = cm.GetTargetGroupID() |> Array.sort
         let tgc1 = cm.GetAllTargetGroupConf()
         let targets1 = getAllTagetConf tgc1
         let lus1 = getAllLUConf tgc1
-        Assert.True(( vtgid1.Length = 1 ))
-        Assert.True(( vtgid1.[0] = tgid0 ))
-        Assert.True(( lus1.Length = 1 ))
-        Assert.True(( lus1.[0].LUN = lun_me.fromPrim 1UL ))
-        Assert.True(( targets1.Length = 1 ))
-        Assert.True(( targets1.[0].TargetName = "target001" ))
+        Assert.StrictEqual( 1, vtgid1.Length )
+        Assert.StrictEqual( tgid0, vtgid1.[0] )
+        Assert.StrictEqual( 1, lus1.Length )
+        Assert.StrictEqual( lun_me.fromPrim 1UL, lus1.[0].LUN )
+        Assert.StrictEqual( 1, targets1.Length )
+        Assert.StrictEqual( "target001", targets1.[0].TargetName )
 
         let targetGroupConfName2 = Functions.AppendPathName pDirName ( tgid_me.toString tgid1 )
         File.WriteAllText( targetGroupConfName2, defaultTargetGroupConfStr )
@@ -2151,12 +2148,12 @@ type ConfigurationMaster_Test () =
         let tgc2 = cm.GetAllTargetGroupConf()
         let targets2 = getAllTagetConf tgc2
         let lus2 = getAllLUConf tgc2
-        Assert.True(( vtgid2.Length = 1 ))
-        Assert.True(( vtgid2.[0] = tgid0 ))
-        Assert.True(( lus2.Length = 1 ))
-        Assert.True(( lus2.[0].LUN = lun_me.fromPrim 1UL ))
-        Assert.True(( targets2.Length = 1 ))
-        Assert.True(( targets2.[0].TargetName = "target001" ))
+        Assert.StrictEqual( 1, vtgid2.Length )
+        Assert.StrictEqual( tgid0, vtgid2.[0] )
+        Assert.StrictEqual( 1, lus2.Length )
+        Assert.StrictEqual( lun_me.fromPrim 1UL, lus2.[0].LUN )
+        Assert.StrictEqual( 1, targets2.Length )
+        Assert.StrictEqual( "target001", targets2.[0].TargetName )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -2181,18 +2178,18 @@ type ConfigurationMaster_Test () =
         let targetGroupConfName1 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName1, defaultTargetGroupConfStr )
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
 
         let vtgid1 = cm.GetTargetGroupID() |> Array.sort
         let tgc1 = cm.GetAllTargetGroupConf()
         let targets1 = getAllTagetConf tgc1
         let lus1 = getAllLUConf tgc1
-        Assert.True(( vtgid1.Length = 1 ))
-        Assert.True(( vtgid1.[0] = tgid0 ))
-        Assert.True(( lus1.Length = 1 ))
-        Assert.True(( lus1.[0].LUN = lun_me.fromPrim 1UL ))
-        Assert.True(( targets1.Length = 1 ))
-        Assert.True(( targets1.[0].TargetName = "target001" ))
+        Assert.StrictEqual( 1, vtgid1.Length )
+        Assert.StrictEqual( tgid0, vtgid1.[0] )
+        Assert.StrictEqual( 1, lus1.Length )
+        Assert.StrictEqual( lun_me.fromPrim 1UL, lus1.[0].LUN )
+        Assert.StrictEqual( 1, targets1.Length )
+        Assert.StrictEqual( "target001", targets1.[0].TargetName )
 
         let targetGroupConfName2 = Functions.AppendPathName pDirName ( tgid_me.toString tgid1 )
         let targetGroupConf2 : TargetGroupConf.T_TargetGroup = {
@@ -2250,15 +2247,15 @@ type ConfigurationMaster_Test () =
         let tgc2 = cm.GetAllTargetGroupConf()
         let targets2 = getAllTagetConf tgc2
         let lus2 = getAllLUConf tgc2
-        Assert.True(( vtgid2.Length = 2 ))
-        Assert.True(( vtgid2.[0] = tgid0 ))
-        Assert.True(( vtgid2.[1] = tgid1 ))
-        Assert.True(( lus2.Length = 2 ))
-        Assert.True(( lus2.[0].LUN = lun_me.fromPrim 1UL ))
-        Assert.True(( lus2.[1].LUN = lun_me.fromPrim 2UL ))
-        Assert.True(( targets2.Length = 2 ))
-        Assert.True(( targets2.[0].TargetName = "target001" ))
-        Assert.True(( targets2.[1].TargetName = "target002" ))
+        Assert.StrictEqual( 2, vtgid2.Length )
+        Assert.StrictEqual( tgid0, vtgid2.[0] )
+        Assert.StrictEqual( tgid1, vtgid2.[1] )
+        Assert.StrictEqual( 2, lus2.Length )
+        Assert.StrictEqual( lun_me.fromPrim 1UL, lus2.[0].LUN )
+        Assert.StrictEqual( lun_me.fromPrim 2UL, lus2.[1].LUN )
+        Assert.StrictEqual( 2, targets2.Length )
+        Assert.StrictEqual( "target001", targets2.[0].TargetName )
+        Assert.StrictEqual( "target002", targets2.[1].TargetName )
 
         Assert.True( cm.LoadTargetGroup( tgid2 ) )
 
@@ -2266,18 +2263,18 @@ type ConfigurationMaster_Test () =
         let tgc3 = cm.GetAllTargetGroupConf()
         let targets3 = getAllTagetConf tgc3
         let lus3 = getAllLUConf tgc3
-        Assert.True(( vtgid3.Length = 3 ))
-        Assert.True(( vtgid3.[0] = tgid0 ))
-        Assert.True(( vtgid3.[1] = tgid1 ))
-        Assert.True(( vtgid3.[2] = tgid2 ))
-        Assert.True(( lus3.Length = 3 ))
-        Assert.True(( lus3.[0].LUN = lun_me.fromPrim 1UL ))
-        Assert.True(( lus3.[1].LUN = lun_me.fromPrim 2UL ))
-        Assert.True(( lus3.[2].LUN = lun_me.fromPrim 3UL ))
-        Assert.True(( targets3.Length = 3 ))
-        Assert.True(( targets3.[0].TargetName = "target001" ))
-        Assert.True(( targets3.[1].TargetName = "target002" ))
-        Assert.True(( targets3.[2].TargetName = "target003" ))
+        Assert.StrictEqual( 3, vtgid3.Length )
+        Assert.StrictEqual( tgid0, vtgid3.[0] )
+        Assert.StrictEqual( tgid1, vtgid3.[1] )
+        Assert.StrictEqual( tgid2, vtgid3.[2] )
+        Assert.StrictEqual( 3, lus3.Length )
+        Assert.StrictEqual( lun_me.fromPrim 1UL, lus3.[0].LUN )
+        Assert.StrictEqual( lun_me.fromPrim 2UL, lus3.[1].LUN )
+        Assert.StrictEqual( lun_me.fromPrim 3UL, lus3.[2].LUN )
+        Assert.StrictEqual( 3, targets3.Length )
+        Assert.StrictEqual( "target001", targets3.[0].TargetName )
+        Assert.StrictEqual( "target002", targets3.[1].TargetName )
+        Assert.StrictEqual( "target003", targets3.[2].TargetName )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -2303,9 +2300,9 @@ type ConfigurationMaster_Test () =
         let targetGroupConfName1 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName1, defaultTargetGroupConfStr )
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
 
-        Assert.True(( cm.IscsiNegoParamCO.MaxRecvDataSegmentLength_T = Constants.NEGOPARAM_DEF_MaxRecvDataSegmentLength ))
+        Assert.StrictEqual( Constants.NEGOPARAM_DEF_MaxRecvDataSegmentLength, cm.IscsiNegoParamCO.MaxRecvDataSegmentLength_T )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -2336,9 +2333,9 @@ type ConfigurationMaster_Test () =
         let targetGroupConfName1 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName1, defaultTargetGroupConfStr )
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
 
-        Assert.True(( cm.IscsiNegoParamCO.MaxRecvDataSegmentLength_T = 512u ))
+        Assert.StrictEqual( 512u, cm.IscsiNegoParamCO.MaxRecvDataSegmentLength_T )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -2362,13 +2359,13 @@ type ConfigurationMaster_Test () =
         let targetGroupConfName1 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName1, defaultTargetGroupConfStr )
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
 
-        Assert.True(( cm.IscsiNegoParamSW.MaxBurstLength = 262144u ))
-        Assert.True(( cm.IscsiNegoParamSW.FirstBurstLength = 65536u ))
-        Assert.True(( cm.IscsiNegoParamSW.DefaultTime2Wait = 2us ))
-        Assert.True(( cm.IscsiNegoParamSW.DefaultTime2Retain = 20us ))
-        Assert.True(( cm.IscsiNegoParamSW.MaxOutstandingR2T = 65535us ))
+        Assert.StrictEqual( 262144u, cm.IscsiNegoParamSW.MaxBurstLength )
+        Assert.StrictEqual( 65536u, cm.IscsiNegoParamSW.FirstBurstLength )
+        Assert.StrictEqual( 2us, cm.IscsiNegoParamSW.DefaultTime2Wait )
+        Assert.StrictEqual( 20us, cm.IscsiNegoParamSW.DefaultTime2Retain )
+        Assert.StrictEqual( 65535us, cm.IscsiNegoParamSW.MaxOutstandingR2T )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -2399,13 +2396,13 @@ type ConfigurationMaster_Test () =
         let targetGroupConfName1 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName1, defaultTargetGroupConfStr )
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
 
-        Assert.True(( cm.IscsiNegoParamSW.MaxBurstLength = 9999u ))
-        Assert.True(( cm.IscsiNegoParamSW.FirstBurstLength = 9999u ))
-        Assert.True(( cm.IscsiNegoParamSW.DefaultTime2Wait = 99us ))
-        Assert.True(( cm.IscsiNegoParamSW.DefaultTime2Retain = 99us ))
-        Assert.True(( cm.IscsiNegoParamSW.MaxOutstandingR2T = 9999us ))
+        Assert.StrictEqual( 9999u, cm.IscsiNegoParamSW.MaxBurstLength )
+        Assert.StrictEqual( 9999u, cm.IscsiNegoParamSW.FirstBurstLength )
+        Assert.StrictEqual( 99us, cm.IscsiNegoParamSW.DefaultTime2Wait )
+        Assert.StrictEqual( 99us, cm.IscsiNegoParamSW.DefaultTime2Retain )
+        Assert.StrictEqual( 9999us, cm.IscsiNegoParamSW.MaxOutstandingR2T )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -2429,12 +2426,12 @@ type ConfigurationMaster_Test () =
         let targetGroupConfName1 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName1, defaultTargetGroupConfStr )
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
 
         let struct( s, h, l ) = cm.GetDefaultLogParameters()
-        Assert.True(( s = Constants.LOGPARAM_DEF_SOFTLIMIT ))
-        Assert.True(( h = Constants.LOGPARAM_DEF_HARDLIMIT ))
-        Assert.True(( l = LogLevel.LOGLEVEL_INFO ))
+        Assert.StrictEqual( Constants.LOGPARAM_DEF_SOFTLIMIT, s )
+        Assert.StrictEqual( Constants.LOGPARAM_DEF_HARDLIMIT, h )
+        Assert.StrictEqual( LogLevel.LOGLEVEL_INFO, l )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -2462,12 +2459,12 @@ type ConfigurationMaster_Test () =
         let targetGroupConfName1 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName1, defaultTargetGroupConfStr )
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
 
         let struct( s, h, l ) = cm.GetDefaultLogParameters()
-        Assert.True(( s = 999u ))
-        Assert.True(( h = 9999u ))
-        Assert.True(( l = LogLevel.LOGLEVEL_WARNING ))
+        Assert.StrictEqual( 999u, s )
+        Assert.StrictEqual( 9999u, h )
+        Assert.StrictEqual( LogLevel.LOGLEVEL_WARNING, l )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -2491,8 +2488,8 @@ type ConfigurationMaster_Test () =
         let targetGroupConfName1 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName1, defaultTargetGroupConfStr )
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-        Assert.True(( cm.DeviceName = "" ))
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
+        Assert.StrictEqual( "", cm.DeviceName )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -2516,8 +2513,8 @@ type ConfigurationMaster_Test () =
         let targetGroupConfName1 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName1, defaultTargetGroupConfStr )
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-        Assert.True(( cm.DeviceName = "aaaabbbb" ))
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
+        Assert.StrictEqual( "aaaabbbb", cm.DeviceName )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -2541,8 +2538,8 @@ type ConfigurationMaster_Test () =
         let targetGroupConfName1 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName1, defaultTargetGroupConfStr )
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-        Assert.True(( cm.EnableStatSNAckChecker = true ))
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
+        Assert.True( cm.EnableStatSNAckChecker )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1
@@ -2566,8 +2563,8 @@ type ConfigurationMaster_Test () =
         let targetGroupConfName1 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName1, defaultTargetGroupConfStr )
 
-        let cm = new ConfigurationMaster( pDirName, new HKiller() ) :> IConfiguration
-        Assert.True(( cm.EnableStatSNAckChecker = false ))
+        let cm = new ConfigurationMaster( pDirName, true, new HKiller() ) :> IConfiguration
+        Assert.False( cm.EnableStatSNAckChecker )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName1

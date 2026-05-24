@@ -225,7 +225,7 @@ type Controller (
         |> Array.map Path.GetFileName
         |> Array.filter rx.IsMatch
         |> Array.truncate Constants.MAX_TARGET_DEVICE_COUNT
-        |> Array.iter ( tdid_me.fromString >> this.StartNewTDProcessAndAddEntry >> ignore )
+        |> Array.iter ( tdid_me.fromString >> this.StartNewTDProcessAndAddEntry true >> ignore )
 
     /// <summary>
     ///  Start waiting for requests.
@@ -323,7 +323,7 @@ type Controller (
     /// <param name="tdid">
     ///  Target device ID.
     /// </param>
-    member private _.OnExitChildProc ( tdid : TDID_T ) : unit =
+    member private this.OnExitChildProc ( tdid : TDID_T ) : unit =
         let tdidStr = tdid_me.toString tdid
         HLogger.Trace( LogID.I_TD_PROC_TERMINATE_DETECTED, fun g -> g.Gen1( m_ObjID, tdidStr ) )
 
@@ -352,25 +352,45 @@ type Controller (
                             g.Gen2( m_ObjID, tdidStr, pidStr )
                         )
 
-                        // Update restart count.
+                        // Restart child process
                         let newPinfo = {
                             pinfo with
                                 m_LastStartTime = currentTime;
+                                // Update restart count.
                                 m_RestartCount =
                                     if pinfo.m_LastStartTime = currentTime then
                                         pinfo.m_RestartCount + 1
                                     else
                                         1;
+                                m_Proc =
+                                    // Even when launched from a client, it loads all Target Group configuration information.
+                                    let si = pinfo.m_Proc.StartInfo
+                                    let p = new Process(
+                                        StartInfo = ProcessStartInfo(
+                                            FileName = si.FileName,
+                                            Arguments = "\"" + ( tdid_me.toString tdid ) + "\"",
+                                            CreateNoWindow = si.CreateNoWindow,
+                                            RedirectStandardError = si.RedirectStandardError,
+                                            RedirectStandardInput = si.RedirectStandardInput,
+                                            RedirectStandardOutput = si.RedirectStandardOutput,
+                                            WorkingDirectory = si.WorkingDirectory
+                                        ),
+                                        EnableRaisingEvents = true
+                                    )
+                                    p.Exited.Add ( fun _ -> this.OnExitChildProc tdid )
+                                    p;
                         }
                         m_TargetDeviceProcs.Remove( tdid ) |> ignore
                         m_TargetDeviceProcs.AddOrUpdate( tdid, newPinfo, ( fun k o -> newPinfo ) ) |> ignore
+                        if newPinfo.m_Proc.Start() then
+                            let pid = newPinfo.m_Proc.Id
+                            let newProcIDStr = pid.ToString()
+                            HLogger.Trace( LogID.I_TARGET_DEVICE_PROC_STARTED, fun g -> g.Gen2( m_ObjID, tdidStr, newProcIDStr ) )
+                            m_logAgr.AddChild( newPinfo.m_Proc.StandardError )
+                        else
+                            newPinfo.m_Proc.Dispose()
+                            HLogger.Trace( LogID.W_FAILED_START_TARGET_DEVICE_PROC, fun g -> g.Gen1( m_ObjID, tdidStr ) )
 
-                        // Restart child process
-                        pinfo.m_Proc.Start() |> ignore
-
-                        let pid = pinfo.m_Proc.Id
-                        let newProcIDStr = pid.ToString()
-                        HLogger.Trace( LogID.I_TARGET_DEVICE_PROC_STARTED, fun g -> g.Gen2( m_ObjID, tdidStr, newProcIDStr ) )
                     with
                     | _ as x ->
                         // If failed to start child process, remove entry.
@@ -1418,7 +1438,7 @@ type Controller (
         let wresult, wmsg =
             if Controller.CheckLoginStatus curStatus arg.SessionID then
                 m_MgrCliSessID <- MgrCliSessionStatus.LoggedIn( arg.SessionID, DateTime.UtcNow )
-                match this.StartNewTDProcessAndAddEntry arg.TargetDeviceID with
+                match this.StartNewTDProcessAndAddEntry false arg.TargetDeviceID with
                 | Ok() ->
                     HLogger.Trace( LogID.V_CTRL_REQ_NORMAL_END, fun g -> g.Gen2( m_ObjID, "GetTargetDeviceProcs", "" ) )
                     true, ""
@@ -1690,13 +1710,16 @@ type Controller (
     /// <summary>
     ///  Start new target device process and add to process entry.
     /// </summary>
+    /// <param name="atStartUp">
+    ///  Specify True when the controller is started.
+    /// </param>
     /// <param name="tdid">
     ///  Target device ID.
     /// </param>
     /// <returns>
     ///  If succeed to start new process, returns Ok(), otherwise error message.
     /// </returns>
-    member private this.StartNewTDProcessAndAddEntry ( tdid : TDID_T ) : Result<unit,string> =
+    member private this.StartNewTDProcessAndAddEntry ( atStartUp : bool ) ( tdid : TDID_T ) : Result<unit,string> =
         let tdidStr = tdid_me.toString tdid
         let dirName = Functions.AppendPathName m_ConfPath tdidStr
 
@@ -1718,11 +1741,17 @@ type Controller (
             HLogger.Trace( LogID.W_TARGET_DEVICE_COUNT_OVER, fun g -> g.Gen1( m_ObjID, procCount.ToString() ) )
             Error( "Number of target devicees exceeds limit." )
         else
+            let args =
+                if atStartUp then
+                    "\"" + tdidStr + "\""
+                else
+                    "\"" + tdidStr + "\" /d"
+
             // Create Process structure
             let p = new Process(
                 StartInfo = ProcessStartInfo(
                     FileName = m_TD_ExePath,
-                    Arguments = "\"" + tdidStr + "\"",
+                    Arguments = args,
                     CreateNoWindow = false,
                     RedirectStandardError = true,
                     RedirectStandardInput = true,

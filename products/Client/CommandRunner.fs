@@ -2229,8 +2229,20 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             // Show target device status
             match ss.GetAncestorTargetDevice cn with
             | Some ( tdnode ) ->
-                do! cc.StartTargetDeviceProc tdnode.TargetDeviceID
+                let tdid = tdnode.TargetDeviceID
+                do! cc.StartTargetDeviceProc tdid
                 this.Output 0( sprintf "Started : %s" ( tdnode :> IConfigureNode ).ShortDescriptString )
+
+                let tglist = ( tdnode :> IConfigureNode ).GetChildNodes< ConfNode_TargetGroup >()
+                for ig in tglist do
+                    if ( ig :> IConfigFileNode ).Modified = ModifiedStatus.NotModified then
+                        // Load updated Target Groups.
+                        do! cc.LoadTargetGroup tdid ig.TargetGroupID
+
+                        // For Target Groups that are instructed to be enabled at startup, also activate them.
+                        if ig.EnabledAtStart then
+                            do! cc.ActivateTargetGroup tdid ig.TargetGroupID
+
             | _ ->
                 raise <| Exception "Unexpected error."
         }

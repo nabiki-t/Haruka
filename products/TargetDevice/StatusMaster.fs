@@ -36,6 +36,9 @@ open Haruka.IODataTypes
 /// <param name="m_WorkDirPath">
 ///   path name of working directory specified at main arguments.
 /// </param>
+/// <param name="loadtg">
+///   If false, the configuration information for the Target Group will not be loaded.
+/// </param>
 /// <param name="m_Killer">
 ///   Killer object.
 /// </param>
@@ -47,6 +50,7 @@ open Haruka.IODataTypes
 /// </param>
 type StatusMaster(
     m_WorkDirPath : string,
+    loadtg : bool,
     m_Killer : IKiller,
     m_CtrlReqSource : TextReader,
     m_CtrlReqSink : TextWriter
@@ -58,7 +62,7 @@ type StatusMaster(
     /// Instance of ConfigurationMaster
     /// In the Haruka process, only one instance of ConfigurationMaster cmoponent is exist.
     let m_config =
-        new ConfigurationMaster( m_WorkDirPath, m_Killer ) :> IConfiguration
+        new ConfigurationMaster( m_WorkDirPath, loadtg, m_Killer ) :> IConfiguration
 
     /// Component instance of TCPPort.
     /// Lifetime of TCPPort component is managed by StatusMaster 

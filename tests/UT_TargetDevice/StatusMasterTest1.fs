@@ -142,14 +142,14 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName, defaultTargetGroupConfStr 0 true )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
 
         let np = sm.GetNetworkPortal()
-        Assert.True(( np.Length = 1 ))
-        Assert.True(( np.[0].IdentNumber = netportidx_me.fromPrim 0u ))
+        Assert.StrictEqual( 1, np.Length )
+        Assert.StrictEqual( netportidx_me.fromPrim 0u, np.[0].IdentNumber )
 
-        Assert.True(( sm.GetActiveTarget().Length = 1 ))
-        Assert.True(( sm.GetActiveTarget().[0].IdentNumber = tnodeidx_me.fromPrim 1us ))
+        Assert.StrictEqual( 1, sm.GetActiveTarget().Length )
+        Assert.StrictEqual( tnodeidx_me.fromPrim 1us, sm.GetActiveTarget().[0].IdentNumber )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName
@@ -168,14 +168,14 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName1, defaultTargetGroupConfStr 1 true )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
 
         let np = sm.GetNetworkPortal()
-        Assert.True(( np.Length = 1 ))
-        Assert.True(( np.[0].IdentNumber = netportidx_me.fromPrim 0u ))
+        Assert.StrictEqual( 1, np.Length )
+        Assert.StrictEqual( netportidx_me.fromPrim 0u, np.[0].IdentNumber )
 
-        Assert.True(( sm.GetActiveTarget().Length = 1 ))
-        Assert.True(( sm.GetActiveTarget().[0].IdentNumber = tnodeidx_me.fromPrim 2us ))
+        Assert.StrictEqual( 1, sm.GetActiveTarget().Length )
+        Assert.StrictEqual( tnodeidx_me.fromPrim 2us, sm.GetActiveTarget().[0].IdentNumber )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName0
@@ -208,12 +208,12 @@ type StatusMaster_Test1 () =
             HLogger.SetLogParameters( Constants.LOGPARAM_DEF_SOFTLIMIT, Constants.LOGPARAM_DEF_HARDLIMIT, 0u, LogLevel.LOGLEVEL_VERBOSE, stderr )
 
             let killer = new HKiller()
-            let _ = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+            let _ = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
 
             let s, h, l = HLogger.GetLogParameters()
-            Assert.True(( s = 999u ))
-            Assert.True(( h = 9999u ))
-            Assert.True(( l = LogLevel.LOGLEVEL_FAILED ))
+            Assert.StrictEqual( 999u, s )
+            Assert.StrictEqual( 9999u, h )
+            Assert.StrictEqual( LogLevel.LOGLEVEL_FAILED, l )
 
             // set initial log parameters
             HLogger.SetLogParameters( Constants.LOGPARAM_DEF_SOFTLIMIT, Constants.LOGPARAM_DEF_HARDLIMIT, 0u, LogLevel.LOGLEVEL_OFF, stderr )
@@ -225,14 +225,37 @@ type StatusMaster_Test1 () =
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
+    member this.Constructor_004() =
+        let pDirName = this.GetTestDirName "Constructor_004"
+        GlbFunc.CreateDir pDirName |> ignore
+
+        let targetDeviceConfName = StatusMaster_Test1.CreateEmptyTDConf pDirName
+        let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
+        File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 true )
+
+        let targetGroupConfName1 = Functions.AppendPathName pDirName ( tgid_me.toString tgid1 )
+        File.WriteAllText( targetGroupConfName1, defaultTargetGroupConfStr 1 true )
+
+        let killer = new HKiller()
+        let sm = new StatusMaster( pDirName, false, killer, stdin, stdout ) :> IStatus
+
+        Assert.StrictEqual( 0, ( sm.GetLoadedTarget() ).Length )
+        Assert.StrictEqual( 0, ( sm.GetActiveTargetGroup() ).Length )
+
+        GlbFunc.DeleteFile targetDeviceConfName
+        GlbFunc.DeleteFile targetGroupConfName0
+        GlbFunc.DeleteFile targetGroupConfName1
+        GlbFunc.DeleteDir pDirName
+
+    [<Fact>]
     member this.GetNetworkPortal_001() =
         let pDirName = this.GetTestDirName "GetNetworkPortal_001"
         GlbFunc.CreateDir pDirName |> ignore
         StatusMaster_Test1.CreateEmptyTDConf pDirName |> ignore
-        let sm = new StatusMaster( pDirName, new HKiller(), stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, new HKiller(), stdin, stdout ) :> IStatus
         let npl = sm.GetNetworkPortal()
-        Assert.True(( npl.Length = 1 ))
-        Assert.True(( npl.[0].IdentNumber = netportidx_me.zero ))
+        Assert.StrictEqual( 1, npl.Length )
+        Assert.StrictEqual( netportidx_me.zero, npl.[0].IdentNumber )
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -259,11 +282,11 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetDeviceConfName, tdConf )
 
         let k = new HKiller()
-        let sm = new StatusMaster( pDirName, k, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, k, stdin, stdout ) :> IStatus
         let npl = sm.GetNetworkPortal()
-        Assert.True(( npl.Length = 1 ))
-        Assert.True(( npl.[0].IdentNumber = netportidx_me.fromPrim 1u ))
-        Assert.True(( npl.[0].ReceiveBufferSize = 1111 ))
+        Assert.StrictEqual( 1, npl.Length )
+        Assert.StrictEqual( netportidx_me.fromPrim 1u, npl.[0].IdentNumber )
+        Assert.StrictEqual( 1111, npl.[0].ReceiveBufferSize )
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -300,13 +323,13 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetDeviceConfName, tdConf )
 
         let k = new HKiller()
-        let sm = new StatusMaster( pDirName, k, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, k, stdin, stdout ) :> IStatus
         let npl = sm.GetNetworkPortal()
-        Assert.True(( npl.Length = 2 ))
-        Assert.True(( npl.[0].IdentNumber = netportidx_me.fromPrim 1u ))
-        Assert.True(( npl.[0].ReceiveBufferSize = 2222 ))
-        Assert.True(( npl.[1].IdentNumber = netportidx_me.fromPrim 2u ))
-        Assert.True(( npl.[1].ReceiveBufferSize = 3333 ))
+        Assert.StrictEqual( 2, npl.Length )
+        Assert.StrictEqual( netportidx_me.fromPrim 1u, npl.[0].IdentNumber )
+        Assert.StrictEqual( 2222, npl.[0].ReceiveBufferSize )
+        Assert.StrictEqual( netportidx_me.fromPrim 2u, npl.[1].IdentNumber )
+        Assert.StrictEqual( 3333, npl.[1].ReceiveBufferSize )
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -316,9 +339,9 @@ type StatusMaster_Test1 () =
         StatusMaster_Test1.CreateEmptyTDConf pDirName |> ignore
         let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
-        let sm = new StatusMaster( pDirName, new HKiller(), stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, new HKiller(), stdin, stdout ) :> IStatus
         let atg = sm.GetActiveTargetGroup()
-        Assert.True(( atg.Length = 0 ))
+        Assert.StrictEqual( 0, atg.Length )
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -328,10 +351,10 @@ type StatusMaster_Test1 () =
         StatusMaster_Test1.CreateEmptyTDConf pDirName |> ignore
         let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 99 true )
-        let sm = new StatusMaster( pDirName, new HKiller(), stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, new HKiller(), stdin, stdout ) :> IStatus
         let atg = sm.GetActiveTargetGroup()
-        Assert.True(( atg.Length = 1 ))
-        Assert.True(( atg.[0].TargetGroupID = tgid_me.fromPrim( 99u ) ))
+        Assert.StrictEqual( 1, atg.Length )
+        Assert.StrictEqual( tgid_me.fromPrim( 99u ), atg.[0].TargetGroupID )
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -341,13 +364,13 @@ type StatusMaster_Test1 () =
         StatusMaster_Test1.CreateEmptyTDConf pDirName |> ignore
         let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 99 true )
-        let sm = new StatusMaster( pDirName, new HKiller(), stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, new HKiller(), stdin, stdout ) :> IStatus
         let pc = PrivateCaller( sm )
         let m_ActiveTargetGroups = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
         m_ActiveTargetGroups.TryAdd( 1u, () ) |> ignore
         let atg = sm.GetActiveTargetGroup()
-        Assert.True(( atg.Length = 1 ))
-        Assert.True(( atg.[0].TargetGroupID = tgid_me.fromPrim( 99u ) ))
+        Assert.StrictEqual( 1, atg.Length )
+        Assert.StrictEqual( tgid_me.fromPrim( 99u ), atg.[0].TargetGroupID )
 
         GlbFunc.DeleteDir pDirName
 
@@ -358,9 +381,9 @@ type StatusMaster_Test1 () =
         StatusMaster_Test1.CreateEmptyTDConf pDirName |> ignore
         let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
-        let sm = new StatusMaster( pDirName, new HKiller(), stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, new HKiller(), stdin, stdout ) :> IStatus
         let atg = sm.GetActiveTarget()
-        Assert.True(( atg.Length = 0 ))
+        Assert.StrictEqual( 0, atg.Length )
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -370,10 +393,10 @@ type StatusMaster_Test1 () =
         StatusMaster_Test1.CreateEmptyTDConf pDirName |> ignore
         let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 99 true )
-        let sm = new StatusMaster( pDirName, new HKiller(), stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, new HKiller(), stdin, stdout ) :> IStatus
         let atg = sm.GetActiveTarget()
-        Assert.True(( atg.Length = 1 ))
-        Assert.True(( atg.[0].IdentNumber = tnodeidx_me.fromPrim 100us ))
+        Assert.StrictEqual( 1, atg.Length )
+        Assert.StrictEqual( tnodeidx_me.fromPrim 100us, atg.[0].IdentNumber )
 
         GlbFunc.DeleteDir pDirName
 
@@ -384,13 +407,13 @@ type StatusMaster_Test1 () =
         StatusMaster_Test1.CreateEmptyTDConf pDirName |> ignore
         let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 99 true )
-        let sm = new StatusMaster( pDirName, new HKiller(), stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, new HKiller(), stdin, stdout ) :> IStatus
         let pc = PrivateCaller( sm )
         let m_ActiveTargetGroups = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
         m_ActiveTargetGroups.TryAdd( 1u, () ) |> ignore
         let atg = sm.GetActiveTarget()
-        Assert.True(( atg.Length = 1 ))
-        Assert.True(( atg.[0].IdentNumber = tnodeidx_me.fromPrim 100us ))
+        Assert.StrictEqual( 1, atg.Length )
+        Assert.StrictEqual( tnodeidx_me.fromPrim 100us, atg.[0].IdentNumber )
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -400,10 +423,10 @@ type StatusMaster_Test1 () =
         StatusMaster_Test1.CreateEmptyTDConf pDirName |> ignore
         let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 88 false )
-        let sm = new StatusMaster( pDirName, new HKiller(), stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, new HKiller(), stdin, stdout ) :> IStatus
         let tgl = sm.GetTargetFromLUN ( lun_me.fromPrim 89UL )
-        Assert.True(( tgl.Length = 1 ))
-        Assert.True(( tgl.[0].IdentNumber = tnodeidx_me.fromPrim 89us ))
+        Assert.StrictEqual( 1, tgl.Length )
+        Assert.StrictEqual( tnodeidx_me.fromPrim 89us, tgl.[0].IdentNumber )
 
         GlbFunc.DeleteDir pDirName
 
@@ -414,9 +437,9 @@ type StatusMaster_Test1 () =
         StatusMaster_Test1.CreateEmptyTDConf pDirName |> ignore
         let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 88 true )
-        let sm = new StatusMaster( pDirName, new HKiller(), stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, new HKiller(), stdin, stdout ) :> IStatus
         let tgl = sm.GetTargetFromLUN ( lun_me.fromPrim 1UL )
-        Assert.True(( tgl.Length = 0 ))
+        Assert.StrictEqual( 0, tgl.Length )
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -469,17 +492,17 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, tgConf )
 
         let k = new HKiller()
-        let sm = new StatusMaster( pDirName, k, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, k, stdin, stdout ) :> IStatus
 
         let tgl1 = sm.GetTargetFromLUN ( lun_me.fromPrim 0UL )
-        Assert.True(( tgl1.Length = 2 ))
+        Assert.StrictEqual( 2, tgl1.Length )
 
         let tgl2 = sm.GetTargetFromLUN ( lun_me.fromPrim 1UL )
-        Assert.True(( tgl2.Length = 1 ))
-        Assert.True(( tgl2.[0].IdentNumber = tnodeidx_me.fromPrim 10us ))
+        Assert.StrictEqual( 1, tgl2.Length )
+        Assert.StrictEqual( tnodeidx_me.fromPrim 10us, tgl2.[0].IdentNumber )
 
         let tgl3 = sm.GetTargetFromLUN ( lun_me.fromPrim 2UL )
-        Assert.True(( tgl3.Length = 2 ))
+        Assert.StrictEqual( 2, tgl3.Length )
 
         GlbFunc.DeleteDir pDirName
 
@@ -488,9 +511,9 @@ type StatusMaster_Test1 () =
         let pDirName = this.GetTestDirName "GetLoadedTarget_001"
         GlbFunc.CreateDir pDirName |> ignore
         StatusMaster_Test1.CreateEmptyTDConf pDirName |> ignore
-        let sm = new StatusMaster( pDirName, new HKiller(), stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, new HKiller(), stdin, stdout ) :> IStatus
         let tc = sm.GetLoadedTarget()
-        Assert.True(( tc.Length = 0 ))
+        Assert.StrictEqual( 0, tc.Length )
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -501,10 +524,10 @@ type StatusMaster_Test1 () =
         let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
         let tgConf = defaultTargetGroupConfStr 0 true
         File.WriteAllText( targetGroupConfName0, tgConf )
-        let sm = new StatusMaster( pDirName, new HKiller(), stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, new HKiller(), stdin, stdout ) :> IStatus
         let tc = sm.GetLoadedTarget()
-        Assert.True(( tc.Length = 1 ))
-        Assert.True(( tc.[0].IdentNumber = tnodeidx_me.fromPrim 1us ))
+        Assert.StrictEqual( 1, tc.Length )
+        Assert.StrictEqual( tnodeidx_me.fromPrim 1us, tc.[0].IdentNumber )
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
@@ -521,9 +544,9 @@ type StatusMaster_Test1 () =
         let tgConf1 = defaultTargetGroupConfStr 1 false
         File.WriteAllText( targetGroupConfName1, tgConf1 )
 
-        let sm = new StatusMaster( pDirName, new HKiller(), stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, new HKiller(), stdin, stdout ) :> IStatus
         let tc = sm.GetLoadedTarget()
-        Assert.True(( tc.Length = 2 ))
+        Assert.StrictEqual( 2, tc.Length )
         Assert.True(( tc |> List.exists ( fun itr -> itr.IdentNumber = tnodeidx_me.fromPrim 1us ) ))
         Assert.True(( tc |> List.exists ( fun itr -> itr.IdentNumber = tnodeidx_me.fromPrim 2us ) ))
         GlbFunc.DeleteDir pDirName
@@ -538,14 +561,14 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
 
         let sp, cp = GlbFunc.GetNetConn()
         let ln = sm.CreateLoginNegociator cp DateTime.UtcNow ( tpgt_me.fromPrim 1us ) ( netportidx_me.fromPrim 2u )
         let pc_ln = new PrivateCaller( ln )
-        Assert.True(( pc_ln.GetField( "m_StatusMaster" ) :?> IStatus = sm ))
-        Assert.True(( pc_ln.GetField( "m_TargetPortalGroupTag" )= 1us ))
-        Assert.True(( pc_ln.GetField( "m_NetPortIdx" )= 2u ))
+        Assert.StrictEqual( sm, pc_ln.GetField( "m_StatusMaster" ) :?> IStatus )
+        Assert.StrictEqual( 1us, pc_ln.GetField( "m_TargetPortalGroupTag" ) :?> uint16 )
+        Assert.StrictEqual( 2u, pc_ln.GetField( "m_NetPortIdx" ) :?> uint32 )
 
         GlbFunc.ClosePorts [| sp; cp |]
 
@@ -564,10 +587,10 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
 
         let I_TNexus1 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 1us );
-        Assert.True(( sm.GetTSIH( I_TNexus1 ) = tsih_me.zero ))
+        Assert.StrictEqual( tsih_me.zero, sm.GetTSIH( I_TNexus1 ) )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName0
@@ -583,7 +606,7 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
 
         let itn0 = new ITNexus( "initiator000", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target000", tpgt_me.fromPrim 0us )
@@ -600,10 +623,10 @@ type StatusMaster_Test1 () =
             |> OptimisticLock
         pc_sm.SetField( "m_Sessions", m_Sessions )
 
-        Assert.True(( sm.GetTSIH( itn0 ) = tsih_me.fromPrim 1us ))
-        Assert.True(( sm.GetTSIH( itn1 ) = tsih_me.fromPrim 2us ))
-        Assert.True(( sm.GetTSIH( itn2 ) = tsih_me.fromPrim 3us ))
-        Assert.True(( sm.GetTSIH( itn3 ) = tsih_me.zero ))
+        Assert.StrictEqual( tsih_me.fromPrim 1us, sm.GetTSIH( itn0 ) )
+        Assert.StrictEqual( tsih_me.fromPrim 2us, sm.GetTSIH( itn1 ) )
+        Assert.StrictEqual( tsih_me.fromPrim 3us, sm.GetTSIH( itn2 ) )
+        Assert.StrictEqual( tsih_me.zero, sm.GetTSIH( itn3 ) )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName0
@@ -619,7 +642,7 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
 
         let m_Sessions =
@@ -632,7 +655,7 @@ type StatusMaster_Test1 () =
             |> OptimisticLock
         pc_sm.SetField( "m_Sessions", m_Sessions )
 
-        Assert.True(( sm.GenNewTSIH() = tsih_me.fromPrim 4us ))
+        Assert.StrictEqual( tsih_me.fromPrim 4us, sm.GenNewTSIH() )
 
         GlbFunc.DeleteFile targetGroupConfName0
         GlbFunc.DeleteDir pDirName
@@ -647,12 +670,12 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
 
         pc_sm.SetField( "m_newTSIHGen", 65535 )
 
-        Assert.True(( sm.GenNewTSIH() = tsih_me.fromPrim 1us ))
+        Assert.StrictEqual( tsih_me.fromPrim 1us, sm.GenNewTSIH() )
 
         GlbFunc.DeleteFile targetGroupConfName0
         GlbFunc.DeleteDir pDirName
@@ -667,7 +690,7 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
 
         let m_Sessions =
@@ -679,7 +702,7 @@ type StatusMaster_Test1 () =
             |> OptimisticLock
         pc_sm.SetField( "m_Sessions", m_Sessions )
 
-        Assert.True(( sm.GenNewTSIH() = tsih_me.fromPrim 65535us ))
+        Assert.StrictEqual( tsih_me.fromPrim 65535us, sm.GenNewTSIH() )
 
         GlbFunc.DeleteFile targetGroupConfName0
         GlbFunc.DeleteDir pDirName
@@ -694,7 +717,7 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
 
         let m_Sessions =
@@ -706,7 +729,7 @@ type StatusMaster_Test1 () =
             |> OptimisticLock
         pc_sm.SetField( "m_Sessions", m_Sessions )
 
-        Assert.True(( sm.GenNewTSIH() = tsih_me.fromPrim 0us ))
+        Assert.StrictEqual( tsih_me.fromPrim 0us, sm.GenNewTSIH() )
 
         GlbFunc.DeleteFile targetGroupConfName0
         GlbFunc.DeleteDir pDirName
@@ -721,7 +744,7 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
 
         let sess_stub1 = new CSession_Stub( p_IsAlive = ( fun () -> true ) )
@@ -739,19 +762,19 @@ type StatusMaster_Test1 () =
         pc_sm.SetField( "m_Sessions", m_Sessions )
 
         let sess_1 = sm.GetSession( tsih_me.fromPrim 1us )
-        Assert.True(( sess_1.Value = ( sess_stub1 :> ISession ) ))
+        Assert.StrictEqual( ( sess_stub1 :> ISession ), sess_1.Value )
         let sess_3 = sm.GetSession( tsih_me.fromPrim 3us )
-        Assert.True(( sess_3.Value = ( sess_stub3 :> ISession ) ))
+        Assert.StrictEqual( ( sess_stub3 :> ISession ), sess_3.Value )
         let sess_4 = sm.GetSession( tsih_me.fromPrim 4us )
-        Assert.True(( sess_4.IsNone ))
+        Assert.True( sess_4.IsNone )
         let m_Sessions1 = pc_sm.GetField( "m_Sessions" ) :?> OptimisticLock<ImmutableDictionary< TSIH_T, ISession >>
 
-        Assert.True(( m_Sessions1.obj.Count = 3 ) )
+        Assert.StrictEqual( 3, m_Sessions1.obj.Count )
 
         let sess_2 = sm.GetSession( tsih_me.fromPrim 2us )
         Assert.True(( sess_2.IsNone ))
         let m_Sessions2 = pc_sm.GetField( "m_Sessions" ) :?> OptimisticLock<ImmutableDictionary< TSIH_T, ISession >>
-        Assert.True(( m_Sessions2.obj.Count = 2 ) )
+        Assert.StrictEqual( 2, m_Sessions2.obj.Count )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName0
@@ -768,7 +791,7 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
 
         let itn1 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 0us );
@@ -811,16 +834,16 @@ type StatusMaster_Test1 () =
             |> OptimisticLock
         pc_sm.SetField( "m_Sessions", m_Sessions1 )
 
-        Assert.True(( sm.GetITNexusFromLUN( lun_me.fromPrim 1UL ) = [| itn1 |] ))
-        Assert.True(( sm.GetITNexusFromLUN( lun_me.fromPrim 2UL ) = [| itn2 |] ))
-        Assert.True(( sm.GetITNexusFromLUN( lun_me.fromPrim 3UL ) = [| itn3 |] ))
-        Assert.True(( sm.GetITNexusFromLUN( lun_me.fromPrim 4UL ) = Array.empty ))
+        Assert.True( [| itn1 |] = sm.GetITNexusFromLUN( lun_me.fromPrim 1UL ) )
+        Assert.True( [| itn2 |] = sm.GetITNexusFromLUN( lun_me.fromPrim 2UL ) )
+        Assert.True( [| itn3 |] = sm.GetITNexusFromLUN( lun_me.fromPrim 3UL ) )
+        Assert.StrictEqual( Array.empty, sm.GetITNexusFromLUN( lun_me.fromPrim 4UL ) )
 
         let wv = sm.GetITNexusFromLUN( lun_me.fromPrim 0UL )
-        Assert.True(( wv.Length = 3 ))
-        Assert.True(( wv |> Array.exists ( (=) itn1 ) ))
-        Assert.True(( wv |> Array.exists ( (=) itn2 ) ))
-        Assert.True(( wv |> Array.exists ( (=) itn3 ) ))
+        Assert.StrictEqual( 3, wv.Length )
+        Assert.True( wv |> Array.exists ( (=) itn1 ) )
+        Assert.True( wv |> Array.exists ( (=) itn2 ) )
+        Assert.True( wv |> Array.exists ( (=) itn3 ) )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName0
@@ -836,7 +859,7 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
 
         let itn1 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 0us );
@@ -871,7 +894,7 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
 
         let itn1 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 0us );
@@ -917,7 +940,7 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
 
         let itn1 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 0us );
@@ -963,7 +986,7 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
 
         let itn1 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 0us );
@@ -1001,7 +1024,7 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
 
         let itn1 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 0us );
@@ -1039,7 +1062,7 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
 
         let itn1 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 0us );
@@ -1084,7 +1107,7 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
 
         let itn1 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 0us );
@@ -1131,7 +1154,7 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
 
         let itn1 = new ITNexus( "initiator001", isid_me.fromElem ( 1uy <<< 6 ) 1uy 1us 1uy 1us, "target001", tpgt_me.fromPrim 0us );
@@ -1155,7 +1178,7 @@ type StatusMaster_Test1 () =
         Assert.True(( r.IsNone ))
         let r2 = sm.GetSession ( tsih_me.fromPrim 1us )
         Assert.True(( r2.IsSome ))
-        Assert.True(( Functions.IsSame r2.Value sess_stub1 ))
+        Assert. True(( Functions.IsSame r2.Value sess_stub1 ))
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName0
@@ -1171,13 +1194,13 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
 
         let lu1 = sm.GetLU( lun_me.fromPrim 0UL )
         match lu1.Value with
         | :? BlockDeviceLU as x ->
             let pc_bd = new PrivateCaller( x )
-            Assert.True(( ( pc_bd.GetField( "m_DeviceType" ) :?> BlockDeviceType ) = BlockDeviceType.BDT_Dummy ))
+            Assert.StrictEqual( BlockDeviceType.BDT_Dummy, ( pc_bd.GetField( "m_DeviceType" ) :?> BlockDeviceType ) )
         | _ ->
             Assert.Fail __LINE__
 
@@ -1232,13 +1255,13 @@ type StatusMaster_Test1 () =
         File.WriteAllBytes( mediaFileName, Array.zeroCreate<byte> 1024 )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
 
         let lu1 = sm.GetLU( lun_me.fromPrim 1UL )
         match lu1.Value with
         | :? BlockDeviceLU as x ->
             let pc_bd = new PrivateCaller( x )
-            Assert.True(( ( pc_bd.GetField( "m_DeviceType" ) :?> BlockDeviceType ) = BlockDeviceType.BDT_Normal ))
+            Assert.StrictEqual( BlockDeviceType.BDT_Normal, ( pc_bd.GetField( "m_DeviceType" ) :?> BlockDeviceType ) )
         | _ ->
             Assert.Fail __LINE__
 
@@ -1258,7 +1281,7 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
 
         let lu1 = sm.GetLU( lun_me.fromPrim 2UL )
         Assert.True(( lu1.IsNone ))
@@ -1277,21 +1300,21 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
 
         let m_LU0 = pc_sm.GetField( "m_LU" ) :?> OptimisticLock< ImmutableDictionary< LUN_T, Lazy<ILU> > >
-        Assert.True(( m_LU0.obj.Count = 0 ))
+        Assert.StrictEqual( 0, m_LU0.obj.Count )
 
         let lu1 = sm.GetLU( lun_me.fromPrim 0UL )
         let m_LU1 = pc_sm.GetField( "m_LU" ) :?> OptimisticLock< ImmutableDictionary< LUN_T, Lazy<ILU> > >
         Assert.True(( lu1.IsSome ))
-        Assert.True(( m_LU1.obj.Count = 1 ))
+        Assert.StrictEqual( 1, m_LU1.obj.Count )
 
         let lu2 = sm.GetLU( lun_me.fromPrim 0UL )
         let m_LU2 = pc_sm.GetField( "m_LU" ) :?> OptimisticLock< ImmutableDictionary< LUN_T, Lazy<ILU> > >
         Assert.True(( lu2.IsSome ))
-        Assert.True(( m_LU2.obj.Count = 1 ))
+        Assert.StrictEqual( 1, m_LU2.obj.Count )
 
         Assert.True(( Functions.IsSame lu1.Value lu2.Value ))
 
@@ -1309,7 +1332,7 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
 
         let mutable cnt = 0
@@ -1327,9 +1350,9 @@ type StatusMaster_Test1 () =
 
         let lu1 = sm.GetLU( lun_me.fromPrim 0UL )
 
-        Assert.True(( m_LU1.obj.Count = 1 ))
+        Assert.StrictEqual( 1, m_LU1.obj.Count )
         Assert.False(( Functions.IsSame lu1.Value ( lun_stub :> ILU  ) ))
-        Assert.True(( cnt = 1 ))
+        Assert.StrictEqual( 1, cnt )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName0
@@ -1345,7 +1368,7 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
 
         let mediaFName = Functions.AppendPathName pDirName "a.txt"
         let s = File.CreateText( mediaFName )
@@ -1361,7 +1384,7 @@ type StatusMaster_Test1 () =
         } )
 
         let me = sm.CreateMedia  mconf ( lun_me.fromPrim 1UL ) 1u killer 
-        Assert.True( me.BlockCount = 1UL )
+        Assert.StrictEqual( 1UL, me.BlockCount )
 
         killer.NoticeTerminate()
         GlbFunc.DeleteFile mediaFName
@@ -1379,14 +1402,14 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
 
         let mconf : TargetGroupConf.T_MEDIA = TargetGroupConf.T_MEDIA.U_DummyMedia({
             IdentNumber = mediaidx_me.fromPrim 1u;
             MediaName = "";
         })
         let me = sm.CreateMedia  mconf ( lun_me.fromPrim 1UL ) 1u killer 
-        Assert.True( me.BlockCount = 0UL )
+        Assert.StrictEqual( 0UL, me.BlockCount )
 
         killer.NoticeTerminate()
         GlbFunc.DeleteFile targetDeviceConfName
@@ -1404,7 +1427,7 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
         let m_LU = pc_sm.GetField( "m_LU" ) :?> OptimisticLock< ImmutableDictionary< LUN_T, Lazy<ILU> > >
 
@@ -1415,7 +1438,7 @@ type StatusMaster_Test1 () =
 
         sm.NotifyLUReset ( lun_me.fromPrim 0UL ) lun_stub
 
-        Assert.True(( m_LU.obj.Count = 0 ))
+        Assert.StrictEqual( 0, m_LU.obj.Count )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName0
@@ -1431,7 +1454,7 @@ type StatusMaster_Test1 () =
         File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
 
         let killer = new HKiller()
-        let sm = new StatusMaster( pDirName, killer, stdin, stdout ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
         let pc_sm = new PrivateCaller( sm )
         let m_LU = pc_sm.GetField( "m_LU" ) :?> OptimisticLock< ImmutableDictionary< LUN_T, Lazy<ILU> > >
 
@@ -1442,7 +1465,7 @@ type StatusMaster_Test1 () =
         |> ignore
         sm.NotifyLUReset ( lun_me.fromPrim 1UL ) ( new CLU_Stub()  )
 
-        Assert.True(( m_LU.obj.Count = 1 ))
+        Assert.StrictEqual( 1, m_LU.obj.Count )
 
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName0

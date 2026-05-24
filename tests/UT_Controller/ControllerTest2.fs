@@ -95,12 +95,9 @@ type Controller_Test2 () =
     member _.Constractor_001() =
         let dname = Controller_Test1.CreateTestDir "Constractor_001"
         let k = new HKiller() :> IKiller
-        try
-            let _ = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-            Assert.Fail "Missing"
-        with
-        | x ->
-            Assert.True(( x.Message.StartsWith "" ))
+        Assert.ThrowsAny ( fun () ->
+            new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath ) |> ignore
+        ) |> ignore
         k.NoticeTerminate()
         GlbFunc.DeleteDir dname
 
@@ -109,12 +106,9 @@ type Controller_Test2 () =
         let dname = Controller_Test1.CreateTestDir "Constractor_001"
         GlbFunc.DeleteDir dname
         let k = new HKiller() :> IKiller
-        try
-            let _ = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
-            Assert.Fail "Missing"
-        with
-        | x ->
-            Assert.True(( x.Message.StartsWith "" ))
+        Assert.ThrowsAny ( fun () ->
+            new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath ) |> ignore
+        ) |> ignore
         k.NoticeTerminate()
 
     [<Fact>]
@@ -147,24 +141,24 @@ type Controller_Test2 () =
         let k = new HKiller() :> IKiller
         let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
 
-        Assert.True(( Directory.Exists dname ))
-        Assert.True(( File.Exists confFName ))
+        Assert.True( Directory.Exists dname )
+        Assert.True( File.Exists confFName )
 
-        Assert.True(( tc.CtrlConf.RemoteCtrl.IsSome ))
-        Assert.True(( tc.CtrlConf.RemoteCtrl.Value.PortNum = conf.RemoteCtrl.Value.PortNum ))
-        Assert.True(( tc.CtrlConf.RemoteCtrl.Value.Address = "localhost" ))
-        Assert.True(( tc.CtrlConf.LogMaintenance.IsSome ))
+        Assert.True( tc.CtrlConf.RemoteCtrl.IsSome )
+        Assert.StrictEqual( conf.RemoteCtrl.Value.PortNum, tc.CtrlConf.RemoteCtrl.Value.PortNum )
+        Assert.StrictEqual( "localhost", tc.CtrlConf.RemoteCtrl.Value.Address )
+        Assert.True( tc.CtrlConf.LogMaintenance.IsSome )
         match tc.CtrlConf.LogMaintenance.Value.OutputDest with
         | HarukaCtrlConf.U_ToFile( x ) ->
-            Assert.True(( x.TotalLimit = 1234u ))
-            Assert.True(( x.MaxFileCount = 234u ))
-            Assert.True(( x.ForceSync = true ))
+            Assert.StrictEqual( 1234u, x.TotalLimit )
+            Assert.StrictEqual( 234u, x.MaxFileCount )
+            Assert.True( x.ForceSync )
         | HarukaCtrlConf.U_ToStdout( x ) ->
             Assert.Fail __LINE__
-        Assert.True(( tc.CtrlConf.LogParameters.IsSome ))
-        Assert.True(( tc.CtrlConf.LogParameters.Value.SoftLimit = 3456u ))
-        Assert.True(( tc.CtrlConf.LogParameters.Value.HardLimit = 4567u ))
-        Assert.True(( tc.CtrlConf.LogParameters.Value.LogLevel = LogLevel.LOGLEVEL_INFO ))
+        Assert.True( tc.CtrlConf.LogParameters.IsSome )
+        Assert.StrictEqual( 3456u, tc.CtrlConf.LogParameters.Value.SoftLimit )
+        Assert.StrictEqual( 4567u, tc.CtrlConf.LogParameters.Value.HardLimit )
+        Assert.StrictEqual( LogLevel.LOGLEVEL_INFO, tc.CtrlConf.LogParameters.Value.LogLevel )
 
         k.NoticeTerminate()
         GlbFunc.DeleteDir dname
@@ -186,12 +180,12 @@ type Controller_Test2 () =
         let k = new HKiller() :> IKiller
         let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
 
-        Assert.True(( Directory.Exists dname ))
-        Assert.True(( File.Exists confFName ))
+        Assert.True( Directory.Exists dname )
+        Assert.True( File.Exists confFName )
 
-        Assert.True(( tc.CtrlConf.RemoteCtrl.IsNone ))
-        Assert.True(( tc.CtrlConf.LogMaintenance.IsNone ))
-        Assert.True(( tc.CtrlConf.LogParameters.IsNone ))
+        Assert.True( tc.CtrlConf.RemoteCtrl.IsNone )
+        Assert.True( tc.CtrlConf.LogMaintenance.IsNone )
+        Assert.True( tc.CtrlConf.LogParameters.IsNone )
 
         k.NoticeTerminate()
         GlbFunc.DeleteDir dname
@@ -214,17 +208,17 @@ type Controller_Test2 () =
         let k = new HKiller() :> IKiller
         let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
 
-        Assert.True(( Directory.Exists dname ))
-        Assert.True(( File.Exists confFName ))
+        Assert.True( Directory.Exists dname )
+        Assert.True( File.Exists confFName )
 
-        Assert.True(( tc.CtrlConf.RemoteCtrl.IsNone ))
-        Assert.True(( tc.CtrlConf.LogMaintenance.IsSome ))
+        Assert.True( tc.CtrlConf.RemoteCtrl.IsNone )
+        Assert.True( tc.CtrlConf.LogMaintenance.IsSome )
         match tc.CtrlConf.LogMaintenance.Value.OutputDest with
         | HarukaCtrlConf.U_ToFile( _ ) ->
             Assert.Fail __LINE__
         | HarukaCtrlConf.U_ToStdout( x ) ->
-            Assert.True(( x = 99999u ))
-        Assert.True(( tc.CtrlConf.LogParameters.IsNone ))
+            Assert.StrictEqual( 99999u, x )
+        Assert.True( tc.CtrlConf.LogParameters.IsNone )
 
         k.NoticeTerminate()
         GlbFunc.DeleteDir dname
@@ -239,10 +233,10 @@ type Controller_Test2 () =
         let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
         let pc = PrivateCaller( tc )
         let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-        Assert.True(( m_TargetDeviceProcs.Count = 0 ))
+        Assert.StrictEqual( 0, m_TargetDeviceProcs.Count )
 
         tc.LoadInitialTargetDeviceProcs()
-        Assert.True(( m_TargetDeviceProcs.Count = 0 ))
+        Assert.StrictEqual( 0, m_TargetDeviceProcs.Count )
 
         k.NoticeTerminate()
         GlbFunc.DeleteDir dname
@@ -259,10 +253,10 @@ type Controller_Test2 () =
         let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
         let pc = PrivateCaller( tc )
         let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-        Assert.True(( m_TargetDeviceProcs.Count = 0 ))
+        Assert.StrictEqual( 0, m_TargetDeviceProcs.Count )
 
         tc.LoadInitialTargetDeviceProcs()
-        Assert.True(( m_TargetDeviceProcs.Count = 1 ))
+        Assert.StrictEqual( 1, m_TargetDeviceProcs.Count )
 
         for i in m_TargetDeviceProcs do
             i.Value.m_Proc.Kill()
@@ -284,10 +278,10 @@ type Controller_Test2 () =
         let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
         let pc = PrivateCaller( tc )
         let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-        Assert.True(( m_TargetDeviceProcs.Count = 0 ))
+        Assert.StrictEqual( 0, m_TargetDeviceProcs.Count )
 
         tc.LoadInitialTargetDeviceProcs()
-        Assert.True(( m_TargetDeviceProcs.Count = 1 ))
+        Assert.StrictEqual( 1, m_TargetDeviceProcs.Count )
 
         for i in m_TargetDeviceProcs do
             i.Value.m_Proc.Kill()
@@ -312,14 +306,14 @@ type Controller_Test2 () =
         let tc = new Controller( dname, k, GlbFunc.tdExePath, GlbFunc.imExePath )
         let pc = PrivateCaller( tc )
         let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-        Assert.True(( m_TargetDeviceProcs.Count = 0 ))
+        Assert.StrictEqual( 0, m_TargetDeviceProcs.Count )
 
         tc.LoadInitialTargetDeviceProcs()
-        Assert.True(( m_TargetDeviceProcs.Count = Constants.MAX_TARGET_DEVICE_COUNT ))
+        Assert.StrictEqual( Constants.MAX_TARGET_DEVICE_COUNT, m_TargetDeviceProcs.Count )
 
         let wlist1 = m_TargetDeviceProcs.Keys |> Seq.sort |> Seq.map tdid_me.fromPrim |> Seq.toList
         let wlist2 = tdids|> List.sort |> List.truncate Constants.MAX_TARGET_DEVICE_COUNT
-        Assert.True(( wlist1 = wlist2 ))
+        Assert.StrictEqual( wlist1, wlist2 )
 
         k.NoticeTerminate()
         Controller_Test2.DeleteDir dname
@@ -534,8 +528,8 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_TargetDeviceProcs( x ) ->
-                Assert.True(( x.TargetDeviceID.Length = 0 ))
-                Assert.True(( x.ErrorMessage = "Session ID mismatch" ))
+                Assert.StrictEqual( 0, x.TargetDeviceID.Length )
+                Assert.StrictEqual( "Session ID mismatch", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -574,9 +568,9 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_TargetDeviceProcs( x ) ->
-                Assert.True(( x.TargetDeviceID.Length = 1 ))
-                Assert.True(( x.TargetDeviceID.[0] = tdid ))
-                Assert.True(( x.ErrorMessage = "" ))
+                Assert.StrictEqual( 1, x.TargetDeviceID.Length )
+                Assert.StrictEqual( tdid, x.TargetDeviceID.[0] )
+                Assert.StrictEqual( "", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -624,9 +618,9 @@ type Controller_Test2 () =
             let res1 = HarukaCtrlerCtrlRes.ReaderWriter.LoadString resStr1
             match res1.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_KillTargetDeviceProcResult( x ) ->
-                Assert.True(( x.Result ))
-                Assert.True(( x.TargetDeviceID = tdid1 ))
-                Assert.True(( x.ErrorMessage = "" ))
+                Assert.True( x.Result )
+                Assert.StrictEqual( tdid1, x.TargetDeviceID )
+                Assert.StrictEqual( "", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -641,10 +635,10 @@ type Controller_Test2 () =
 
             match res2.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_TargetDeviceProcs( x ) ->
-                Assert.True(( x.TargetDeviceID.Length = 2 ))
+                Assert.StrictEqual( 2, x.TargetDeviceID.Length )
                 let wlist = [ tdid0; tdid2 ] |> List.sort
-                Assert.True(( x.TargetDeviceID |> List.sort = wlist  ))
-                Assert.True(( x.ErrorMessage = "" ))
+                Assert.StrictEqual( wlist, x.TargetDeviceID |> List.sort )
+                Assert.StrictEqual( "", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -688,9 +682,9 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_TargetDeviceProcs( x ) ->
-                Assert.True(( x.TargetDeviceID.Length = Constants.MAX_TARGET_DEVICE_COUNT ))
-                Assert.True(( x.TargetDeviceID |> List.sort = ( tdids |> List.sort ) ))
-                Assert.True(( x.ErrorMessage = "" ))
+                Assert.StrictEqual( Constants.MAX_TARGET_DEVICE_COUNT, x.TargetDeviceID.Length )
+                Assert.StrictEqual( ( tdids |> List.sort ), x.TargetDeviceID |> List.sort )
+                Assert.StrictEqual( "", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -742,10 +736,10 @@ type Controller_Test2 () =
 
             match res2.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_TargetDeviceProcs( x ) ->
-                Assert.True(( x.TargetDeviceID.Length = Constants.MAX_TARGET_DEVICE_COUNT ))
+                Assert.StrictEqual( Constants.MAX_TARGET_DEVICE_COUNT, x.TargetDeviceID.Length )
                 let wlist = tdids |> List.sort |> List.truncate Constants.MAX_TARGET_DEVICE_COUNT
-                Assert.True(( x.TargetDeviceID = wlist  ))
-                Assert.True(( x.ErrorMessage = "" ))
+                Assert.StrictEqual( wlist, x.TargetDeviceID )
+                Assert.StrictEqual( "", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -791,8 +785,8 @@ type Controller_Test2 () =
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_KillTargetDeviceProcResult( x ) ->
                 Assert.False(( x.Result ))
-                Assert.True(( x.TargetDeviceID = dummyTDID ))
-                Assert.True(( x.ErrorMessage = "Session ID mismatch" ))
+                Assert.StrictEqual( dummyTDID, x.TargetDeviceID )
+                Assert.StrictEqual( "Session ID mismatch", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -837,8 +831,8 @@ type Controller_Test2 () =
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_KillTargetDeviceProcResult( x ) ->
                 Assert.True(( x.Result ))
-                Assert.True(( x.TargetDeviceID = tdid0 ))
-                Assert.True(( x.ErrorMessage = "" ))
+                Assert.StrictEqual( tdid0, x.TargetDeviceID )
+                Assert.StrictEqual( "", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -847,7 +841,7 @@ type Controller_Test2 () =
 
             let pc = PrivateCaller( tc )
             let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-            Assert.True(( m_TargetDeviceProcs.Count = 0 ))
+            Assert.StrictEqual( 0, m_TargetDeviceProcs.Count )
 
             k.NoticeTerminate()
             GlbFunc.DeleteDir dname
@@ -888,9 +882,9 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_KillTargetDeviceProcResult( x ) ->
-                Assert.True(( x.Result ))
-                Assert.True(( x.TargetDeviceID = dummyTDID ))
-                Assert.True(( x.ErrorMessage = "" ))
+                Assert.True( x.Result )
+                Assert.StrictEqual( dummyTDID, x.TargetDeviceID )
+                Assert.StrictEqual( "", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -899,7 +893,7 @@ type Controller_Test2 () =
 
             let pc = PrivateCaller( tc )
             let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-            Assert.True(( m_TargetDeviceProcs.Count = 1 ))
+            Assert.StrictEqual( 1, m_TargetDeviceProcs.Count )
 
             k.NoticeTerminate()
             Controller_Test2.DeleteDir dname
@@ -938,9 +932,9 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_StartTargetDeviceProcResult( x ) ->
-                Assert.False(( x.Result ))
-                Assert.True(( x.TargetDeviceID = dummyTDID ))
-                Assert.True(( x.ErrorMessage = "Session ID mismatch" ))
+                Assert.False( x.Result )
+                Assert.StrictEqual( dummyTDID, x.TargetDeviceID )
+                Assert.StrictEqual( "Session ID mismatch", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -982,8 +976,8 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_StartTargetDeviceProcResult( x ) ->
-                Assert.False(( x.Result ))
-                Assert.True(( x.TargetDeviceID = dummyTDID ))
+                Assert.False( x.Result )
+                Assert.StrictEqual( dummyTDID, x.TargetDeviceID )
                 Assert.True(( x.ErrorMessage.Length > 0 ))
             | _ ->
                 Assert.Fail __LINE__
@@ -993,7 +987,7 @@ type Controller_Test2 () =
 
             let pc = PrivateCaller( tc )
             let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-            Assert.True(( m_TargetDeviceProcs.Count = 0 ))
+            Assert.StrictEqual( 0, m_TargetDeviceProcs.Count )
 
             k.NoticeTerminate()
             GlbFunc.DeleteDir dname
@@ -1033,8 +1027,8 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_StartTargetDeviceProcResult( x ) ->
-                Assert.False(( x.Result ))
-                Assert.True(( x.TargetDeviceID = tdid0 ))
+                Assert.False( x.Result )
+                Assert.StrictEqual( tdid0, x.TargetDeviceID )
                 Assert.True(( x.ErrorMessage.Length > 0 ))
             | _ ->
                 Assert.Fail __LINE__
@@ -1044,7 +1038,7 @@ type Controller_Test2 () =
 
             let pc = PrivateCaller( tc )
             let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-            Assert.True(( m_TargetDeviceProcs.Count = 1 ))
+            Assert.StrictEqual( 1, m_TargetDeviceProcs.Count )
 
             k.NoticeTerminate()
             Controller_Test2.DeleteDir dname
@@ -1084,9 +1078,38 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_StartTargetDeviceProcResult( x ) ->
-                Assert.True(( x.Result ))
-                Assert.True(( x.TargetDeviceID = tdid0 ))
-                Assert.True(( x.ErrorMessage.Length = 0 ))
+                Assert.True( x.Result )
+                Assert.StrictEqual( tdid0, x.TargetDeviceID )
+                Assert.StrictEqual( 0, x.ErrorMessage.Length )
+            | _ ->
+                Assert.Fail __LINE__
+            
+            // Verify that the Target Group configuration has not been loaded.
+            let reqtgstr =
+                let wstr =
+                    TargetDeviceCtrlReq.ReaderWriter.ToString {
+                        Request =
+                            TargetDeviceCtrlReq.T_Request.U_GetLoadedTargetGroups()
+                    }
+                HarukaCtrlerCtrlReq.ReaderWriter.ToString {
+                    Request =
+                        HarukaCtrlerCtrlReq.T_Request.U_TargetDeviceCtrlRequest( {
+                            SessionID = sessID;
+                            TargetDeviceID = tdid0;
+                            Request = wstr;
+                    } )
+                }
+            do! Functions.FramingSender c1 reqtgstr
+            let! restgstr = Functions.FramingReceiver c1
+            let restg = HarukaCtrlerCtrlRes.ReaderWriter.LoadString restgstr
+            match restg.Response with
+            | HarukaCtrlerCtrlRes.T_Response.U_TargetDeviceCtrlResponse( x ) ->
+                let w = TargetDeviceCtrlRes.ReaderWriter.LoadString x.Response
+                match w.Response with
+                | TargetDeviceCtrlRes.U_LoadedTargetGroups( x ) ->
+                    Assert.StrictEqual( 0, x.LoadedTGInfo.Length )
+                | _ ->
+                    Assert.Fail __LINE__
             | _ ->
                 Assert.Fail __LINE__
 
@@ -1095,7 +1118,7 @@ type Controller_Test2 () =
 
             let pc = PrivateCaller( tc )
             let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-            Assert.True(( m_TargetDeviceProcs.Count = 1 ))
+            Assert.StrictEqual( 1, m_TargetDeviceProcs.Count )
 
             k.NoticeTerminate()
             Controller_Test2.DeleteDir dname
@@ -1115,7 +1138,7 @@ type Controller_Test2 () =
 
             let pc = PrivateCaller( tc )
             let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-            Assert.True(( m_TargetDeviceProcs.Count = 0 ))
+            Assert.StrictEqual( 0, m_TargetDeviceProcs.Count )
 
             let tdid0 = GlbFunc.newTargetDeviceID()
             Controller_Test1.CreateDefaultTDConf dname tdid0
@@ -1151,16 +1174,16 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_StartTargetDeviceProcResult( x ) ->
-                Assert.True(( x.Result ))
-                Assert.True(( x.TargetDeviceID = tdid0 ))
-                Assert.True(( x.ErrorMessage.Length = 0 ))
+                Assert.True( x.Result )
+                Assert.StrictEqual( tdid0, x.TargetDeviceID )
+                Assert.StrictEqual( 0, x.ErrorMessage.Length )
             | _ ->
                 Assert.Fail __LINE__
 
             c1.Close()
             con1.Close()
 
-            Assert.True(( m_TargetDeviceProcs.Count = Constants.MAX_TARGET_DEVICE_COUNT ))
+            Assert.StrictEqual( Constants.MAX_TARGET_DEVICE_COUNT, m_TargetDeviceProcs.Count )
             let r, v = m_TargetDeviceProcs.TryGetValue( tdid_me.toPrim tdid0 )
             Assert.True( r )
             v.m_Proc.Kill()
@@ -1185,7 +1208,7 @@ type Controller_Test2 () =
 
             let pc = PrivateCaller( tc )
             let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-            Assert.True(( m_TargetDeviceProcs.Count = 0 ))
+            Assert.StrictEqual( 0, m_TargetDeviceProcs.Count )
 
             let tdid0 = GlbFunc.newTargetDeviceID()
             Controller_Test1.CreateDefaultTDConf dname tdid0
@@ -1221,8 +1244,8 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_StartTargetDeviceProcResult( x ) ->
-                Assert.False(( x.Result ))
-                Assert.True(( x.TargetDeviceID = tdid0 ))
+                Assert.False( x.Result )
+                Assert.StrictEqual( tdid0, x.TargetDeviceID )
                 Assert.True(( x.ErrorMessage.Length > 0 ))
             | _ ->
                 Assert.Fail __LINE__
@@ -1230,7 +1253,7 @@ type Controller_Test2 () =
             c1.Close()
             con1.Close()
 
-            Assert.True(( m_TargetDeviceProcs.Count = Constants.MAX_TARGET_DEVICE_COUNT ))
+            Assert.StrictEqual( Constants.MAX_TARGET_DEVICE_COUNT, m_TargetDeviceProcs.Count )
             m_TargetDeviceProcs.Clear()
 
             k.NoticeTerminate()
@@ -1276,9 +1299,9 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_TargetDeviceCtrlResponse( x ) ->
-                Assert.True(( x.Response = "" ))
-                Assert.True(( x.TargetDeviceID = dummyTDID ))
-                Assert.True(( x.ErrorMessage = "Session ID mismatch" ))
+                Assert.StrictEqual( "", x.Response )
+                Assert.StrictEqual( dummyTDID, x.TargetDeviceID )
+                Assert.StrictEqual( "Session ID mismatch", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -1326,9 +1349,9 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_TargetDeviceCtrlResponse( x ) ->
-                Assert.True(( x.Response = "" ))
-                Assert.True(( x.TargetDeviceID = dummyTDID ))
-                Assert.True(( x.ErrorMessage.StartsWith "Specified target device missing" ))
+                Assert.StrictEqual( "", x.Response )
+                Assert.StrictEqual( dummyTDID, x.TargetDeviceID )
+                Assert.StartsWith( "Specified target device missing", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -1379,14 +1402,14 @@ type Controller_Test2 () =
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_TargetDeviceCtrlResponse( x ) ->
                 Assert.True(( x.Response.Length > 0 ))
-                Assert.True(( x.TargetDeviceID = tdid0 ))
-                Assert.True(( x.ErrorMessage.StartsWith "" ))
+                Assert.StrictEqual( tdid0, x.TargetDeviceID )
+                Assert.StrictEqual( "", x.ErrorMessage )
 
                 let tdCtrlRes =
                     TargetDeviceCtrlRes.ReaderWriter.LoadString x.Response
                 match tdCtrlRes.Response with
                 | TargetDeviceCtrlRes.T_Response.U_DeviceName( x ) ->
-                    Assert.True(( x= "abc" ))
+                    Assert.StrictEqual( "abc", x )
                 | _ ->
                     Assert.Fail __LINE__
             | _ ->
@@ -1434,8 +1457,8 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_CreateMediaFileResult( x ) ->
-                Assert.False(( x.Result ))
-                Assert.True(( x.ErrorMessage = "Session ID mismatch" ))
+                Assert.False( x.Result )
+                Assert.StrictEqual( "Session ID mismatch", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -1489,7 +1512,7 @@ type Controller_Test2 () =
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_CreateMediaFileResult( x ) ->
                 Assert.False(( x.Result ))
-                Assert.True(( x.ErrorMessage.StartsWith "Maximum multiplicity of" ))
+                Assert.StartsWith( "Maximum multiplicity of", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -1543,7 +1566,7 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_CreateMediaFileResult( x ) ->
-                Assert.True(( x.Result ))
+                Assert.True( x.Result )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -1551,7 +1574,7 @@ type Controller_Test2 () =
             while not ( File.Exists mfilename ) && loopcnt < 100 do
                 Thread.Sleep 5
                 loopcnt <- loopcnt + 1
-            Assert.True(( loopcnt < 100 ))
+            Assert.True( loopcnt < 100 )
 
             c1.Close()
             con1.Close()
@@ -1611,7 +1634,7 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_CreateMediaFileResult( x ) ->
-                Assert.True(( x.Result ))
+                Assert.True( x.Result )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -1619,7 +1642,7 @@ type Controller_Test2 () =
             while not ( File.Exists mfilename ) && loopcnt < 100 do
                 Thread.Sleep 5
                 loopcnt <- loopcnt + 1
-            Assert.True(( loopcnt < 100 ))
+            Assert.True( loopcnt < 100 )
 
             c1.Close()
             con1.Close()
@@ -1679,7 +1702,7 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_CreateMediaFileResult( x ) ->
-                Assert.True(( x.Result ))
+                Assert.True( x.Result )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -1687,7 +1710,7 @@ type Controller_Test2 () =
             while not ( File.Exists mfilename ) && loopcnt < 100 do
                 Thread.Sleep 5
                 loopcnt <- loopcnt + 1
-            Assert.True(( loopcnt < 100 ))
+            Assert.True( loopcnt < 100 )
 
             c1.Close()
             con1.Close()
@@ -1725,8 +1748,8 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_InitMediaStatus( x ) ->
-                Assert.True(( x.Procs.Length = 0 ))
-                Assert.True(( x.ErrorMessage = "Session ID mismatch" ))
+                Assert.StrictEqual( 0, x.Procs.Length )
+                Assert.StrictEqual( "Session ID mismatch", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -1764,8 +1787,8 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_InitMediaStatus( x ) ->
-                Assert.True(( x.Procs.Length = 0 ))
-                Assert.True(( x.ErrorMessage = "" ))
+                Assert.StrictEqual( 0, x.Procs.Length )
+                Assert.StrictEqual( "", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -1818,18 +1841,18 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_InitMediaStatus( x ) ->
-                Assert.True(( x.ErrorMessage = "" ))
-                Assert.True(( x.Procs.Length = Constants.INITMEDIA_MAX_MULTIPLICITY ))
+                Assert.StrictEqual( "", x.ErrorMessage )
+                Assert.StrictEqual( Constants.INITMEDIA_MAX_MULTIPLICITY, x.Procs.Length )
                 for i = 0 to Constants.INITMEDIA_MAX_MULTIPLICITY - 1 do
-                    Assert.True(( x.Procs.[i].ProcID = 0x1000000000000001UL + ( uint64 i ) ))
-                    Assert.True(( x.Procs.[i].PathName = "ccc" ))
-                    Assert.True(( x.Procs.[i].FileType = "ddd" ))
-                    Assert.True(( x.Procs.[i].Status = HarukaCtrlerCtrlRes.U_NotStarted() ))
-                    Assert.True(( x.Procs.[i].ErrorMessage = [ "a"; "b" ] ))
+                    Assert.StrictEqual( 0x1000000000000001UL + ( uint64 i ), x.Procs.[i].ProcID )
+                    Assert.StrictEqual( "ccc", x.Procs.[i].PathName )
+                    Assert.StrictEqual( "ddd", x.Procs.[i].FileType )
+                    Assert.StrictEqual( HarukaCtrlerCtrlRes.U_NotStarted(), x.Procs.[i].Status )
+                    Assert.StrictEqual( [ "a"; "b" ], x.Procs.[i].ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
-            Assert.True(( m_InitMediaProcs.Count = Constants.INITMEDIA_MAX_MULTIPLICITY ))
+            Assert.StrictEqual( Constants.INITMEDIA_MAX_MULTIPLICITY, m_InitMediaProcs.Count )
 
             c1.Close()
             con1.Close()
@@ -1880,18 +1903,18 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_InitMediaStatus( x ) ->
-                Assert.True(( x.ErrorMessage = "" ))
-                Assert.True(( x.Procs.Length = Constants.INITMEDIA_MAX_MULTIPLICITY ))
+                Assert.StrictEqual( "", x.ErrorMessage )
+                Assert.StrictEqual( Constants.INITMEDIA_MAX_MULTIPLICITY, x.Procs.Length )
                 for i = 0 to Constants.INITMEDIA_MAX_MULTIPLICITY - 1 do
-                    Assert.True(( x.Procs.[i].ProcID = 0x1000000000000001UL + ( uint64 i ) ))
-                    Assert.True(( x.Procs.[i].PathName = "ccc" ))
-                    Assert.True(( x.Procs.[i].FileType = "ddd" ))
-                    Assert.True(( x.Procs.[i].Status = HarukaCtrlerCtrlRes.U_ProgressCreation( 2uy ) ))
-                    Assert.True(( x.Procs.[i].ErrorMessage = [ "a" ] ))
+                    Assert.StrictEqual( 0x1000000000000001UL + ( uint64 i ), x.Procs.[i].ProcID )
+                    Assert.StrictEqual( "ccc", x.Procs.[i].PathName )
+                    Assert.StrictEqual( "ddd", x.Procs.[i].FileType )
+                    Assert.StrictEqual( HarukaCtrlerCtrlRes.U_ProgressCreation( 2uy ), x.Procs.[i].Status )
+                    Assert.StrictEqual( [ "a" ], x.Procs.[i].ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
-            Assert.True(( m_InitMediaProcs.Count = Constants.INITMEDIA_MAX_MULTIPLICITY ))
+            Assert.StrictEqual( Constants.INITMEDIA_MAX_MULTIPLICITY, m_InitMediaProcs.Count )
 
             c1.Close()
             con1.Close()
@@ -1942,18 +1965,18 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_InitMediaStatus( x ) ->
-                Assert.True(( x.ErrorMessage = "" ))
-                Assert.True(( x.Procs.Length = Constants.INITMEDIA_MAX_MULTIPLICITY ))
+                Assert.StrictEqual( "", x.ErrorMessage )
+                Assert.StrictEqual( Constants.INITMEDIA_MAX_MULTIPLICITY, x.Procs.Length )
                 for i = 0 to Constants.INITMEDIA_MAX_MULTIPLICITY - 1 do
-                    Assert.True(( x.Procs.[i].ProcID = 0x1000000000000001UL + ( uint64 i ) ))
-                    Assert.True(( x.Procs.[i].PathName = "ccc" ))
-                    Assert.True(( x.Procs.[i].FileType = "ddd" ))
-                    Assert.True(( x.Procs.[i].Status = HarukaCtrlerCtrlRes.U_Recovery( 3uy ) ))
-                    Assert.True(( x.Procs.[i].ErrorMessage = [ "x" ] ))
+                    Assert.StrictEqual( 0x1000000000000001UL + ( uint64 i ), x.Procs.[i].ProcID )
+                    Assert.StrictEqual( "ccc", x.Procs.[i].PathName )
+                    Assert.StrictEqual( "ddd", x.Procs.[i].FileType )
+                    Assert.StrictEqual( HarukaCtrlerCtrlRes.U_Recovery( 3uy ), x.Procs.[i].Status )
+                    Assert.StrictEqual( [ "x" ], x.Procs.[i].ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
-            Assert.True(( m_InitMediaProcs.Count = Constants.INITMEDIA_MAX_MULTIPLICITY ))
+            Assert.StrictEqual( Constants.INITMEDIA_MAX_MULTIPLICITY, m_InitMediaProcs.Count )
 
             c1.Close()
             con1.Close()
@@ -2006,19 +2029,19 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_InitMediaStatus( x ) ->
-                Assert.True(( x.ErrorMessage = "" ))
-                Assert.True(( x.Procs.Length = Constants.INITMEDIA_MAX_MULTIPLICITY ))
+                Assert.StrictEqual( "", x.ErrorMessage )
+                Assert.StrictEqual( Constants.INITMEDIA_MAX_MULTIPLICITY, x.Procs.Length )
                 for i = 0 to Constants.INITMEDIA_MAX_MULTIPLICITY - 1 do
-                    Assert.True(( x.Procs.[i].ProcID = 0x1000000000000001UL + ( uint64 i ) ))
-                    Assert.True(( x.Procs.[i].PathName = "ccc1" ))
-                    Assert.True(( x.Procs.[i].FileType = "ddd1" ))
-                    Assert.True(( x.Procs.[i].Status = HarukaCtrlerCtrlRes.U_NormalEnd() ))
-                    Assert.True(( x.Procs.[i].ErrorMessage = [ "x" ] ))
+                    Assert.StrictEqual( 0x1000000000000001UL + ( uint64 i ), x.Procs.[i].ProcID )
+                    Assert.StrictEqual( "ccc1", x.Procs.[i].PathName )
+                    Assert.StrictEqual( "ddd1", x.Procs.[i].FileType )
+                    Assert.StrictEqual( HarukaCtrlerCtrlRes.U_NormalEnd(), x.Procs.[i].Status )
+                    Assert.StrictEqual( [ "x" ], x.Procs.[i].ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
-            Assert.True(( m_InitMediaProcs.Count = 0 ))
-            Assert.True(( flg1 = Constants.INITMEDIA_MAX_MULTIPLICITY ))
+            Assert.StrictEqual( 0, m_InitMediaProcs.Count )
+            Assert.StrictEqual( Constants.INITMEDIA_MAX_MULTIPLICITY,  flg1 )
 
             c1.Close()
             con1.Close()
@@ -2071,19 +2094,19 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_InitMediaStatus( x ) ->
-                Assert.True(( x.ErrorMessage = "" ))
-                Assert.True(( x.Procs.Length = Constants.INITMEDIA_MAX_MULTIPLICITY ))
+                Assert.StrictEqual( "", x.ErrorMessage )
+                Assert.StrictEqual( Constants.INITMEDIA_MAX_MULTIPLICITY, x.Procs.Length )
                 for i = 0 to Constants.INITMEDIA_MAX_MULTIPLICITY - 1 do
-                    Assert.True(( x.Procs.[i].ProcID = 0x1000000000000001UL + ( uint64 i ) ))
-                    Assert.True(( x.Procs.[i].PathName = "ccc1" ))
-                    Assert.True(( x.Procs.[i].FileType = "ddd1" ))
-                    Assert.True(( x.Procs.[i].Status = HarukaCtrlerCtrlRes.U_AbnormalEnd() ))
-                    Assert.True(( x.Procs.[i].ErrorMessage = [ "x" ] ))
+                    Assert.StrictEqual( 0x1000000000000001UL + ( uint64 i ), x.Procs.[i].ProcID )
+                    Assert.StrictEqual( "ccc1", x.Procs.[i].PathName )
+                    Assert.StrictEqual( "ddd1", x.Procs.[i].FileType )
+                    Assert.StrictEqual( HarukaCtrlerCtrlRes.U_AbnormalEnd(), x.Procs.[i].Status )
+                    Assert.StrictEqual( [ "x" ], x.Procs.[i].ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
-            Assert.True(( m_InitMediaProcs.Count = 0 ))
-            Assert.True(( flg1 = Constants.INITMEDIA_MAX_MULTIPLICITY ))
+            Assert.StrictEqual( 0, m_InitMediaProcs.Count )
+            Assert.StrictEqual( Constants.INITMEDIA_MAX_MULTIPLICITY, flg1 )
 
             c1.Close()
             con1.Close()
@@ -2137,19 +2160,19 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_InitMediaStatus( x ) ->
-                Assert.True(( x.ErrorMessage = "" ))
-                Assert.True(( x.Procs.Length = Constants.INITMEDIA_MAX_MULTIPLICITY ))
+                Assert.StrictEqual( "", x.ErrorMessage )
+                Assert.StrictEqual( Constants.INITMEDIA_MAX_MULTIPLICITY, x.Procs.Length )
                 for i = 0 to Constants.INITMEDIA_MAX_MULTIPLICITY - 1 do
-                    Assert.True(( x.Procs.[i].ProcID = 0x1000000000000001UL + ( uint64 i ) ))
-                    Assert.True(( x.Procs.[i].PathName = "ccc2" ))
-                    Assert.True(( x.Procs.[i].FileType = "ddd2" ))
-                    Assert.True(( x.Procs.[i].Status = HarukaCtrlerCtrlRes.U_NotStarted() ))
-                    Assert.True(( x.Procs.[i].ErrorMessage = [ "x" ] ))
+                    Assert.StrictEqual( 0x1000000000000001UL + ( uint64 i ), x.Procs.[i].ProcID )
+                    Assert.StrictEqual( "ccc2", x.Procs.[i].PathName )
+                    Assert.StrictEqual( "ddd2", x.Procs.[i].FileType )
+                    Assert.StrictEqual( HarukaCtrlerCtrlRes.U_NotStarted(), x.Procs.[i].Status )
+                    Assert.StrictEqual( [ "x" ], x.Procs.[i].ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
-            Assert.True(( m_InitMediaProcs.Count = 0 ))
-            Assert.True(( flg1 = Constants.INITMEDIA_MAX_MULTIPLICITY ))
+            Assert.StrictEqual( 0, m_InitMediaProcs.Count )
+            Assert.StrictEqual( Constants.INITMEDIA_MAX_MULTIPLICITY, flg1 )
 
             c1.Close()
             con1.Close()
@@ -2192,7 +2215,7 @@ type Controller_Test2 () =
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_KillInitMediaProcResult( x ) ->
                 Assert.False(( x.Result ))
-                Assert.True(( x.ErrorMessage = "Session ID mismatch" ))
+                Assert.StrictEqual( "Session ID mismatch", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -2235,7 +2258,7 @@ type Controller_Test2 () =
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_KillInitMediaProcResult( x ) ->
                 Assert.False(( x.Result ))
-                Assert.True(( x.ErrorMessage.StartsWith "Specified process is missing" ))
+                Assert.StartsWith( "Specified process is missing", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -2290,13 +2313,13 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_KillInitMediaProcResult( x ) ->
-                Assert.True(( x.Result ))
-                Assert.True(( x.ErrorMessage = "" ))
+                Assert.True( x.Result )
+                Assert.StrictEqual( "", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
-            Assert.True(( flg1 = 1 ))
-            Assert.True(( m_InitMediaProcs.Count = 1 ))
+            Assert.StrictEqual( 1, flg1 )
+            Assert.StrictEqual( 1, m_InitMediaProcs.Count )
 
             c1.Close()
             con1.Close()
@@ -2350,12 +2373,12 @@ type Controller_Test2 () =
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_KillInitMediaProcResult( x ) ->
                 Assert.False(( x.Result ))
-                Assert.True(( x.ErrorMessage.StartsWith "Specified process is missing" ))
+                Assert.StartsWith( "Specified process is missing", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
-            Assert.True(( flg1 = 1 ))
-            Assert.True(( m_InitMediaProcs.Count = 0 ))
+            Assert.StrictEqual( 1, flg1 )
+            Assert.StrictEqual( 0, m_InitMediaProcs.Count )
 
             c1.Close()
             con1.Close()
@@ -2409,12 +2432,12 @@ type Controller_Test2 () =
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_KillInitMediaProcResult( x ) ->
                 Assert.False(( x.Result ))
-                Assert.True(( x.ErrorMessage.StartsWith "Specified process is missing" ))
+                Assert.StartsWith( "Specified process is missing", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
-            Assert.True(( flg1 = 1 ))
-            Assert.True(( m_InitMediaProcs.Count = 0 ))
+            Assert.StrictEqual( 1, flg1 )
+            Assert.StrictEqual( 0, m_InitMediaProcs.Count )
 
             c1.Close()
             con1.Close()
@@ -2468,12 +2491,12 @@ type Controller_Test2 () =
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_KillInitMediaProcResult( x ) ->
                 Assert.False(( x.Result ))
-                Assert.True(( x.ErrorMessage.StartsWith "Specified process is missing" ))
+                Assert.StartsWith( "Specified process is missing", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
-            Assert.True(( flg1 = 1 ))
-            Assert.True(( m_InitMediaProcs.Count = 0 ))
+            Assert.StrictEqual( 1, flg1 )
+            Assert.StrictEqual( 0, m_InitMediaProcs.Count )
 
             c1.Close()
             con1.Close()
@@ -2499,7 +2522,7 @@ type Controller_Test2 () =
 
             let pc = PrivateCaller( tc )
             let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-            Assert.True(( m_TargetDeviceProcs.Count = 1 ))
+            Assert.StrictEqual( 1, m_TargetDeviceProcs.Count )
 
             use con1 = GlbFunc.ConnectToServer portNum
             use c1 = con1.GetStream()
@@ -2520,9 +2543,9 @@ type Controller_Test2 () =
 
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_KillTargetDeviceProcResult( x ) ->
-                Assert.True(( x.Result ))
-                Assert.True(( x.TargetDeviceID = tdid0 ))
-                Assert.True(( x.ErrorMessage = "" ))
+                Assert.True( x.Result )
+                Assert.StrictEqual( tdid0, x.TargetDeviceID )
+                Assert.StrictEqual( "", x.ErrorMessage )
             | _ ->
                 Assert.Fail __LINE__
 
@@ -2530,7 +2553,7 @@ type Controller_Test2 () =
             con1.Close()
 
             for i = 1 to 10 do
-                Assert.True(( m_TargetDeviceProcs.Count = 0 ))
+                Assert.StrictEqual( 0, m_TargetDeviceProcs.Count )
                 if i <> 10 then Thread.Sleep 50
 
             k.NoticeTerminate()
@@ -2553,13 +2576,13 @@ type Controller_Test2 () =
 
         let pc = PrivateCaller( tc )
         let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-        Assert.True(( m_TargetDeviceProcs.Count = 1 ))
+        Assert.StrictEqual( 1, m_TargetDeviceProcs.Count )
 
         let m_Sema = pc.GetField( "m_Sema" ) :?> SemaphoreSlim
 
         let r, v = m_TargetDeviceProcs.TryGetValue( tdid_me.toPrim tdid0 )
         Assert.True( r )
-        Assert.True(( v.m_RestartCount = 0 ))
+        Assert.StrictEqual( 0, v.m_RestartCount )
 
         v.m_Proc.Kill()
         Thread.Sleep 10
@@ -2577,7 +2600,7 @@ type Controller_Test2 () =
                 cnt <- cnt + 1
                 if cnt < 10 then
                     Thread.Sleep 50
-        Assert.True(( cnt = 99 ))
+        Assert.StrictEqual( 99, cnt )
 
         k.NoticeTerminate()
         Controller_Test2.DeleteDir dname
@@ -2603,13 +2626,13 @@ type Controller_Test2 () =
 
         let pc = PrivateCaller( tc )
         let m_TargetDeviceProcs = pc.GetField( "m_TargetDeviceProcs" ) :?> ConcurrentDictionary< uint32, TargetDeviceProcInfo >
-        Assert.True(( m_TargetDeviceProcs.Count = 1 ))
+        Assert.StrictEqual( 1, m_TargetDeviceProcs.Count )
 
         let m_Sema = pc.GetField( "m_Sema" ) :?> SemaphoreSlim
 
         let r, v = m_TargetDeviceProcs.TryGetValue( tdid_me.toPrim tdid0 )
         Assert.True( r )
-        Assert.True(( v.m_RestartCount = 0 ))
+        Assert.StrictEqual( 0, v.m_RestartCount )
 
         for i = 1 to Constants.MAX_CHILD_PROC_RESTART_COUNT do
             m_Sema.Wait()
@@ -2634,9 +2657,14 @@ type Controller_Test2 () =
                     cnt <- cnt + 1
                     if cnt < 10 then
                         Thread.Sleep 50
-            Assert.True(( cnt = 99 ))
+            Assert.StrictEqual( 99, cnt )
 
-        v.m_Proc.Kill()
+        m_Sema.Wait()
+        let r2, v2 = m_TargetDeviceProcs.TryGetValue( tdid_me.toPrim tdid0 )
+        Assert.True( r2 )
+        m_Sema.Release() |> ignore
+
+        v2.m_Proc.Kill()
         Thread.Sleep 10
 
         let mutable cnt = 0
@@ -2644,7 +2672,7 @@ type Controller_Test2 () =
             cnt <- cnt + 1
             if cnt <> 9 then
                 Thread.Sleep 50
-        Assert.True(( m_TargetDeviceProcs.Count = 0 ))
+        Assert.StrictEqual( 0, m_TargetDeviceProcs.Count )
 
         k.NoticeTerminate()
         Controller_Test2.DeleteDir dname

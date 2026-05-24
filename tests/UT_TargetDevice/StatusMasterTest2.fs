@@ -70,9 +70,6 @@ type StatusMaster_Test2 () =
         HLogger.SetLogParameters( 100u, 100u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
         lock.ReleaseMutex() |> ignore
 
-//    member _.GetTestFileName( fn : string ) =
-//        Functions.AppendPathName ( Path.GetTempPath() ) fn
-
     member _.GetTestDirName ( caseName : string ) =
         Functions.AppendPathName ( Path.GetTempPath() ) "StatusMaster_Test2_" + caseName
 
@@ -93,7 +90,7 @@ type StatusMaster_Test2 () =
         let rq_out = new StreamWriter( new MemoryStream() )
 
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, rq_in, rq_out ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, rq_in, rq_out ) :> IStatus
 
         killer.NoticeTerminate()
 
@@ -116,7 +113,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -150,7 +147,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -195,7 +192,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -214,9 +211,9 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_ActiveTargetGroups( x ) ->
-                    Assert.True( x.ActiveTGInfo.Length = 1 )
-                    Assert.True( x.ActiveTGInfo.[0].ID = tgid0 )
-                    Assert.True( x.ActiveTGInfo.[0].Name = "a-000" )
+                    Assert.StrictEqual( 1, x.ActiveTGInfo.Length )
+                    Assert.StrictEqual( tgid0, x.ActiveTGInfo.[0].ID )
+                    Assert.StrictEqual( "a-000", x.ActiveTGInfo.[0].Name )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -245,7 +242,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -264,7 +261,7 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_ActiveTargetGroups( x ) ->
-                    Assert.True( x.ActiveTGInfo.Length = 0 )
+                    Assert.StrictEqual( 0, x.ActiveTGInfo.Length )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -294,7 +291,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -313,11 +310,11 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_LoadedTargetGroups( x ) ->
-                    Assert.True( x.LoadedTGInfo.Length = 2 )
-                    Assert.True( x.LoadedTGInfo.[0].ID = tgid0 )
-                    Assert.True( x.LoadedTGInfo.[0].Name = "a-000" )
-                    Assert.True( x.LoadedTGInfo.[1].ID = tgid1 )
-                    Assert.True( x.LoadedTGInfo.[1].Name = "a-001" )
+                    Assert.StrictEqual( 2,       x.LoadedTGInfo.Length )
+                    Assert.StrictEqual( tgid0,   x.LoadedTGInfo.[0].ID )
+                    Assert.StrictEqual( "a-000", x.LoadedTGInfo.[0].Name )
+                    Assert.StrictEqual( tgid1,   x.LoadedTGInfo.[1].ID )
+                    Assert.StrictEqual( "a-001", x.LoadedTGInfo.[1].Name )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -348,7 +345,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -367,7 +364,7 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_InactivateTargetGroupResult( x ) ->
-                    Assert.True( x.ID = tgid0 )
+                    Assert.StrictEqual( tgid0, x.ID )
                     Assert.True( x.Result )
                 | _ ->
                     Assert.Fail __LINE__
@@ -375,7 +372,7 @@ type StatusMaster_Test2 () =
                 let pc = PrivateCaller( sm )
                 let m_ActiveTargetGroups = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
 
-                Assert.True( m_ActiveTargetGroups.Count = 1 )
+                Assert.StrictEqual( 1, m_ActiveTargetGroups.Count )
                 Assert.True( m_ActiveTargetGroups.ContainsKey( tgid_me.toPrim tgid1 ) )
 
                 GlbFunc.AllDispose [ rq_out; rq_in; rs_out; rs_in; ]
@@ -403,7 +400,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -422,7 +419,7 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_InactivateTargetGroupResult( x ) ->
-                    Assert.True( x.ID = tgid99 )
+                    Assert.StrictEqual( tgid99, x.ID )
                     Assert.True( x.Result )
                 | _ ->
                     Assert.Fail __LINE__
@@ -430,7 +427,7 @@ type StatusMaster_Test2 () =
                 let pc = PrivateCaller( sm )
                 let m_ActiveTargetGroups = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
 
-                Assert.True( m_ActiveTargetGroups.Count = 1 )
+                Assert.StrictEqual( 1, m_ActiveTargetGroups.Count )
                 Assert.True( m_ActiveTargetGroups.ContainsKey( tgid_me.toPrim tgid0 ) )
 
                 GlbFunc.AllDispose [ rq_out; rq_in; rs_out; rs_in; ]
@@ -457,7 +454,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -469,7 +466,7 @@ type StatusMaster_Test2 () =
 
                 let pc = PrivateCaller( sm )
                 let m_ActiveTargetGroups = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
-                Assert.True( m_ActiveTargetGroups.Count = 0 )
+                Assert.StrictEqual( 0, m_ActiveTargetGroups.Count )
 
                 let req1 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
                     Request = TargetDeviceCtrlReq.T_Request.U_ActivateTargetGroup( tgid0 )
@@ -480,13 +477,13 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_ActivateTargetGroupResult( x ) ->
-                    Assert.True( x.ID = tgid0 )
+                    Assert.StrictEqual( tgid0, x.ID )
                     Assert.True( x.Result )
-                    Assert.True(( x.ErrorMessage = "" ))
+                    Assert.StrictEqual( "", x.ErrorMessage )
                 | _ ->
                     Assert.Fail __LINE__
 
-                Assert.True( m_ActiveTargetGroups.Count = 1 )
+                Assert.StrictEqual( 1, m_ActiveTargetGroups.Count )
                 Assert.True( m_ActiveTargetGroups.ContainsKey( tgid_me.toPrim tgid0 ) )
 
                 let req2 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
@@ -498,13 +495,13 @@ type StatusMaster_Test2 () =
                 let res2 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res2.Response with
                 | TargetDeviceCtrlRes.T_Response.U_ActivateTargetGroupResult( x ) ->
-                    Assert.True( x.ID = tgid99 )
+                    Assert.StrictEqual( tgid99, x.ID )
                     Assert.False( x.Result )
-                    Assert.True(( x.ErrorMessage = "Specified target group is missing." ))
+                    Assert.StrictEqual( "Specified target group is missing.", x.ErrorMessage )
                 | _ ->
                     Assert.Fail __LINE__
 
-                Assert.True( m_ActiveTargetGroups.Count = 1 )
+                Assert.StrictEqual( 1, m_ActiveTargetGroups.Count )
                 Assert.True( m_ActiveTargetGroups.ContainsKey( tgid_me.toPrim tgid0 ) )
 
                 GlbFunc.AllDispose [ rq_out; rq_in; rs_out; rs_in; ]
@@ -531,7 +528,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -543,7 +540,7 @@ type StatusMaster_Test2 () =
 
                 let pc = PrivateCaller( sm )
                 let m_ActiveTargetGroups = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
-                Assert.True( m_ActiveTargetGroups.Count = 1 )
+                Assert.StrictEqual( 1, m_ActiveTargetGroups.Count )
 
                 let req1 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
                     Request = TargetDeviceCtrlReq.T_Request.U_UnloadTargetGroup( tgid0 )
@@ -554,13 +551,13 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_UnloadTargetGroupResult( x ) ->
-                    Assert.True( x.ID = tgid0 )
+                    Assert.StrictEqual( tgid0, x.ID )
                     Assert.False( x.Result )
-                    Assert.True(( x.ErrorMessage = "Specified target group is still active." ))
+                    Assert.StrictEqual( "Specified target group is still active.", x.ErrorMessage )
                 | _ ->
                     Assert.Fail __LINE__
 
-                Assert.True( m_ActiveTargetGroups.Count = 1 )
+                Assert.StrictEqual( 1, m_ActiveTargetGroups.Count )
                 Assert.True( m_ActiveTargetGroups.ContainsKey( tgid_me.toPrim tgid0 ) )
 
                 GlbFunc.AllDispose [ rq_out; rq_in; rs_out; rs_in; ]
@@ -589,7 +586,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -601,7 +598,7 @@ type StatusMaster_Test2 () =
 
                 let pc = PrivateCaller( sm )
                 let m_ActiveTargetGroups = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
-                Assert.True( m_ActiveTargetGroups.Count = 1 )
+                Assert.StrictEqual( 1, m_ActiveTargetGroups.Count )
 
                 let req1 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
                     Request = TargetDeviceCtrlReq.T_Request.U_UnloadTargetGroup( tgid99 )
@@ -612,13 +609,13 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_UnloadTargetGroupResult( x ) ->
-                    Assert.True( x.ID = tgid99 )
+                    Assert.StrictEqual( tgid99, x.ID )
                     Assert.True( x.Result )
-                    Assert.True(( x.ErrorMessage = "" ))
+                    Assert.StrictEqual( "", x.ErrorMessage )
                 | _ ->
                     Assert.Fail __LINE__
 
-                Assert.True( m_ActiveTargetGroups.Count = 1 )
+                Assert.StrictEqual( 1, m_ActiveTargetGroups.Count )
                 Assert.True( m_ActiveTargetGroups.ContainsKey( tgid_me.toPrim tgid0 ) )
 
                 GlbFunc.AllDispose [ rq_out; rq_in; rs_out; rs_in; ]
@@ -648,7 +645,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -660,7 +657,7 @@ type StatusMaster_Test2 () =
 
                 let pc = PrivateCaller( sm )
                 let m_ActiveTargetGroups = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
-                Assert.True( m_ActiveTargetGroups.Count = 1 )
+                Assert.StrictEqual( 1, m_ActiveTargetGroups.Count )
 
                 let sessParam = {
                     StatusMaster_Test1.defaultSessParam with
@@ -688,13 +685,13 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_UnloadTargetGroupResult( x ) ->
-                    Assert.True( x.ID = tgid0 )
+                    Assert.StrictEqual( tgid0, x.ID )
                     Assert.False( x.Result )
-                    Assert.True(( x.ErrorMessage = "Specified target group is still used." ))
+                    Assert.StrictEqual( "Specified target group is still used.", x.ErrorMessage )
                 | _ ->
                     Assert.Fail __LINE__
 
-                Assert.True( m_ActiveTargetGroups.Count = 1 )
+                Assert.StrictEqual( 1, m_ActiveTargetGroups.Count )
                 Assert.True( m_ActiveTargetGroups.ContainsKey( tgid_me.toPrim tgid1 ) )
 
                 pc.SetField( "m_Sessions", OptimisticLock( ImmutableDictionary< TSIH_T, ISession >.Empty ) )
@@ -725,7 +722,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -737,7 +734,7 @@ type StatusMaster_Test2 () =
 
                 let pc = PrivateCaller( sm )
                 let m_ActiveTargetGroups = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
-                Assert.True( m_ActiveTargetGroups.Count = 1 )
+                Assert.StrictEqual( 1, m_ActiveTargetGroups.Count )
 
                 // Target group 0 is still used.
                 let m_sessions1 =
@@ -750,7 +747,7 @@ type StatusMaster_Test2 () =
                 pc.SetField( "m_Sessions", m_sessions1 )
 
                 let m_config = pc.GetField( "m_config" ) :?> IConfiguration
-                Assert.True( m_config.GetAllTargetGroupConf().Length = 2 )
+                Assert.StrictEqual( 2, m_config.GetAllTargetGroupConf().Length )
 
                 let req1 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
                     Request = TargetDeviceCtrlReq.T_Request.U_UnloadTargetGroup( tgid1 )
@@ -761,16 +758,16 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_UnloadTargetGroupResult( x ) ->
-                    Assert.True( x.ID = tgid1 )
+                    Assert.StrictEqual( tgid1, x.ID )
                     Assert.True( x.Result )
-                    Assert.True(( x.ErrorMessage = "" ))
+                    Assert.StrictEqual( "", x.ErrorMessage )
                 | _ ->
                     Assert.Fail __LINE__
 
-                Assert.True( m_ActiveTargetGroups.Count = 1 )
+                Assert.StrictEqual( 1, m_ActiveTargetGroups.Count )
                 Assert.True( m_ActiveTargetGroups.ContainsKey( tgid_me.toPrim tgid0 ) )
-                Assert.True( m_config.GetAllTargetGroupConf().Length = 1 )
-                Assert.True( ( fst ( m_config.GetAllTargetGroupConf().[0] ) ).TargetGroupID = tgid0 )
+                Assert.StrictEqual( 1, m_config.GetAllTargetGroupConf().Length )
+                Assert.StrictEqual( tgid0, ( fst ( m_config.GetAllTargetGroupConf().[0] ) ).TargetGroupID )
 
                 pc.SetField( "m_Sessions", OptimisticLock( ImmutableDictionary< TSIH_T, ISession >.Empty ) )
                 GlbFunc.AllDispose [ rq_out; rq_in; rs_out; rs_in; ]
@@ -800,7 +797,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -812,7 +809,7 @@ type StatusMaster_Test2 () =
 
                 let pc = PrivateCaller( sm )
                 let m_ActiveTargetGroups1 = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
-                Assert.True( m_ActiveTargetGroups1.Count = 2 )
+                Assert.StrictEqual( 2, m_ActiveTargetGroups1.Count )
 
                 // Target group 0 is still used.
                 let m_sessions1 =
@@ -825,13 +822,13 @@ type StatusMaster_Test2 () =
                 pc.SetField( "m_Sessions", m_sessions1 )
 
                 let m_config = pc.GetField( "m_config" ) :?> IConfiguration
-                Assert.True( m_config.GetAllTargetGroupConf().Length = 2 )
+                Assert.StrictEqual( 2, m_config.GetAllTargetGroupConf().Length )
 
                 // create LU object in tgid1
                 sm.GetLU ( lun_me.fromPrim 2UL ) |> ignore
 
                 let m_LU1 = pc.GetField( "m_LU" ) :?> OptimisticLock< ImmutableDictionary< LUN_T, Lazy<ILU> > >
-                Assert.True( m_LU1.obj.Count = 1 )
+                Assert.StrictEqual( 1, m_LU1.obj.Count )
 
                 // inactivate target group tgid1
                 let req1 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
@@ -843,17 +840,17 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_InactivateTargetGroupResult( x ) ->
-                    Assert.True( x.ID = tgid1 )
+                    Assert.StrictEqual( tgid1, x.ID )
                     Assert.True( x.Result )
-                    Assert.True(( x.ErrorMessage = "" ))
+                    Assert.StrictEqual( "", x.ErrorMessage )
                 | _ ->
                     Assert.Fail __LINE__
 
                 let m_ActiveTargetGroups2 = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
-                Assert.True( m_ActiveTargetGroups2.Count = 1 )
+                Assert.StrictEqual( 1, m_ActiveTargetGroups2.Count )
 
                 let m_LU2 = pc.GetField( "m_LU" ) :?> OptimisticLock< ImmutableDictionary< LUN_T, Lazy<ILU> > >
-                Assert.True( m_LU2.obj.Count = 1 )
+                Assert.StrictEqual( 1, m_LU2.obj.Count )
 
                 // Unload target group tgid1
                 let req2 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
@@ -865,20 +862,20 @@ type StatusMaster_Test2 () =
                 let res2 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res2.Response with
                 | TargetDeviceCtrlRes.T_Response.U_UnloadTargetGroupResult( x ) ->
-                    Assert.True( x.ID = tgid1 )
+                    Assert.StrictEqual( tgid1, x.ID )
                     Assert.True( x.Result )
-                    Assert.True(( x.ErrorMessage = "" ))
+                    Assert.StrictEqual( "", x.ErrorMessage )
                 | _ ->
                     Assert.Fail __LINE__
 
                 let m_LU3 = pc.GetField( "m_LU" ) :?> OptimisticLock< ImmutableDictionary< LUN_T, Lazy<ILU> > >
-                Assert.True( m_LU3.obj.Count = 0 )
+                Assert.StrictEqual( 0, m_LU3.obj.Count  )
 
                 let m_ActiveTargetGroups3 = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
-                Assert.True( m_ActiveTargetGroups3.Count = 1 )
+                Assert.StrictEqual( 1, m_ActiveTargetGroups3.Count )
                 Assert.True( m_ActiveTargetGroups3.ContainsKey( tgid_me.toPrim tgid0 ) )
-                Assert.True( m_config.GetAllTargetGroupConf().Length = 1 )
-                Assert.True( ( fst ( m_config.GetAllTargetGroupConf().[0] ) ).TargetGroupID = tgid0 )
+                Assert.StrictEqual( 1, m_config.GetAllTargetGroupConf().Length )
+                Assert.StrictEqual( tgid0, ( fst ( m_config.GetAllTargetGroupConf().[0] ) ).TargetGroupID )
 
                 pc.SetField( "m_Sessions", OptimisticLock( ImmutableDictionary< TSIH_T, ISession >.Empty ) )
                 GlbFunc.AllDispose [ rq_out; rq_in; rs_out; rs_in; ]
@@ -907,7 +904,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -919,10 +916,10 @@ type StatusMaster_Test2 () =
 
                 let pc = PrivateCaller( sm )
                 let m_ActiveTargetGroups = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
-                Assert.True( m_ActiveTargetGroups.Count = 1 )
+                Assert.StrictEqual( 1, m_ActiveTargetGroups.Count  )
 
                 let m_config = pc.GetField( "m_config" ) :?> IConfiguration
-                Assert.True( m_config.GetAllTargetGroupConf().Length = 1 )
+                Assert.StrictEqual( 1, m_config.GetAllTargetGroupConf().Length )
 
                 let req1 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
                     Request = TargetDeviceCtrlReq.T_Request.U_LoadTargetGroup( tgid0 )
@@ -933,14 +930,14 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_LoadTargetGroupResult( x ) ->
-                    Assert.True( x.ID = tgid0 )
+                    Assert.StrictEqual( tgid0, x.ID )
                     Assert.False( x.Result )
-                    Assert.True(( x.ErrorMessage = "Specified target group is still active." ))
+                    Assert.StrictEqual( "Specified target group is still active.",  x.ErrorMessage )
                 | _ ->
                     Assert.Fail __LINE__
 
-                Assert.True( m_ActiveTargetGroups.Count = 1 )
-                Assert.True( m_config.GetAllTargetGroupConf().Length = 1 )
+                Assert.StrictEqual( 1, m_ActiveTargetGroups.Count )
+                Assert.StrictEqual( 1, m_config.GetAllTargetGroupConf().Length )
 
                 GlbFunc.AllDispose [ rq_out; rq_in; rs_out; rs_in; ]
             };
@@ -966,7 +963,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -978,10 +975,10 @@ type StatusMaster_Test2 () =
 
                 let pc = PrivateCaller( sm )
                 let m_ActiveTargetGroups = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
-                Assert.True( m_ActiveTargetGroups.Count = 1 )
+                Assert.StrictEqual( 1, m_ActiveTargetGroups.Count )
 
                 let m_config = pc.GetField( "m_config" ) :?> IConfiguration
-                Assert.True( m_config.GetAllTargetGroupConf().Length = 1 )
+                Assert.StrictEqual( 1, m_config.GetAllTargetGroupConf().Length )
 
                 let req1 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
                     Request = TargetDeviceCtrlReq.T_Request.U_LoadTargetGroup( tgid99 )
@@ -992,14 +989,14 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_LoadTargetGroupResult( x ) ->
-                    Assert.True( x.ID = tgid99 )
+                    Assert.StrictEqual( tgid99, x.ID )
                     Assert.False( x.Result )
-                    Assert.True(( x.ErrorMessage = "Failed to load target group config." ))
+                    Assert.StrictEqual( "Failed to load target group config.", x.ErrorMessage )
                 | _ ->
                     Assert.Fail __LINE__
 
-                Assert.True( m_ActiveTargetGroups.Count = 1 )
-                Assert.True( m_config.GetAllTargetGroupConf().Length = 1 )
+                Assert.StrictEqual( 1, m_ActiveTargetGroups.Count )
+                Assert.StrictEqual( 1, m_config.GetAllTargetGroupConf().Length )
 
                 GlbFunc.AllDispose [ rq_out; rq_in; rs_out; rs_in; ]
             };
@@ -1025,7 +1022,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         let targetGroupConfName1 = Functions.AppendPathName pDirName ( tgid_me.toString tgid1 )
         File.WriteAllText( targetGroupConfName1, defaultTargetGroupConfStr 1 true )
@@ -1040,10 +1037,10 @@ type StatusMaster_Test2 () =
 
                 let pc = PrivateCaller( sm )
                 let m_ActiveTargetGroups = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
-                Assert.True( m_ActiveTargetGroups.Count = 1 )
+                Assert.StrictEqual( 1, m_ActiveTargetGroups.Count )
 
                 let m_config = pc.GetField( "m_config" ) :?> IConfiguration
-                Assert.True( m_config.GetAllTargetGroupConf().Length = 1 )
+                Assert.StrictEqual( 1, m_config.GetAllTargetGroupConf().Length )
 
                 let req1 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
                     Request = TargetDeviceCtrlReq.T_Request.U_LoadTargetGroup( tgid1 )
@@ -1054,14 +1051,14 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_LoadTargetGroupResult( x ) ->
-                    Assert.True( x.ID = tgid1 )
+                    Assert.StrictEqual( tgid1, x.ID )
                     Assert.True( x.Result )
-                    Assert.True(( x.ErrorMessage = "" ))
+                    Assert.StrictEqual( "", x.ErrorMessage )
                 | _ ->
                     Assert.Fail __LINE__
 
-                Assert.True( m_ActiveTargetGroups.Count = 1 )
-                Assert.True( m_config.GetAllTargetGroupConf().Length = 2 )
+                Assert.StrictEqual( 1, m_ActiveTargetGroups.Count )
+                Assert.StrictEqual( 2, m_config.GetAllTargetGroupConf().Length )
 
                 GlbFunc.AllDispose [ rq_out; rq_in; rs_out; rs_in; ]
             };
@@ -1088,7 +1085,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -1120,10 +1117,10 @@ type StatusMaster_Test2 () =
                     | _ ->
                         Assert.Fail __LINE__
 
-                    let softLimit, hardLimit, lv = HLogger.GetLogParameters()
-                    Assert.True(( softLimit = 10000u ))
-                    Assert.True(( hardLimit = 10000u ))
-                    Assert.True(( lv = LogLevel.LOGLEVEL_VERBOSE ))
+//                    let softLimit, hardLimit, lv = HLogger.GetLogParameters()
+//                    Assert.StrictEqual( 10000u, softLimit )
+//                    Assert.StrictEqual( 10000u, hardLimit )
+//                    Assert.StrictEqual( LogLevel.LOGLEVEL_VERBOSE, lv )
                 finally
                     HLogger.SetLogParameters( 10000u, 10000u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
                     lock.ReleaseMutex() |> ignore
@@ -1152,7 +1149,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -1184,9 +1181,9 @@ type StatusMaster_Test2 () =
                         Assert.Fail __LINE__
 
                     let softLimit, hardLimit, lv = HLogger.GetLogParameters()
-                    Assert.True(( softLimit = 9999u ))
-                    Assert.True(( hardLimit = 99999u ))
-                    Assert.True(( lv = LogLevel.LOGLEVEL_INFO ))
+                    Assert.StrictEqual( 9999u, softLimit )
+                    Assert.StrictEqual( 99999u, hardLimit )
+                    Assert.StrictEqual( LogLevel.LOGLEVEL_INFO, lv )
                 finally
                     HLogger.SetLogParameters( 10000u, 10000u, 0u, LogLevel.LOGLEVEL_OFF, stderr )
                     lock.ReleaseMutex() |> ignore
@@ -1215,7 +1212,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -1238,9 +1235,9 @@ type StatusMaster_Test2 () =
                     let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                     match res1.Response with
                     | TargetDeviceCtrlRes.T_Response.U_LogParameters( x ) ->
-                        Assert.True(( x.SoftLimit = 1234u ))
-                        Assert.True(( x.HardLimit = 2345u ))
-                        Assert.True(( x.LogLevel = LogLevel.LOGLEVEL_WARNING ))
+                        Assert.StrictEqual( 1234u, x.SoftLimit )
+                        Assert.StrictEqual( 2345u, x.HardLimit )
+                        Assert.StrictEqual( LogLevel.LOGLEVEL_WARNING, x.LogLevel )
                     | _ ->
                         Assert.Fail __LINE__
                 finally
@@ -1278,7 +1275,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -1297,7 +1294,7 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_DeviceName( x ) ->
-                    Assert.True(( x = "abcdefg" ))
+                    Assert.StrictEqual("abcdefg", x )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -1325,7 +1322,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -1344,7 +1341,7 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_SessionList( x ) ->
-                    Assert.True(( x.Session.Length = 0 ))
+                    Assert.StrictEqual( 0, x.Session.Length )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -1372,7 +1369,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -1407,11 +1404,11 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_SessionList( x ) ->
-                    Assert.True(( x.Session.Length = 1 ))
-                    Assert.True(( x.Session.[0].TargetGroupID = tgid0 ))
-                    Assert.True(( x.Session.[0].TargetNodeID = tnodeidx_me.fromPrim 10us ))
-                    Assert.True(( x.Session.[0].EstablishTime = wCreateDate ))
-                    Assert.True(( x.Session.[0].TSIH = tsih_me.fromPrim 1us ))
+                    Assert.StrictEqual( 1, x.Session.Length )
+                    Assert.StrictEqual( tgid0, x.Session.[0].TargetGroupID )
+                    Assert.StrictEqual( tnodeidx_me.fromPrim 10us, x.Session.[0].TargetNodeID )
+                    Assert.StrictEqual( wCreateDate, x.Session.[0].EstablishTime )
+                    Assert.StrictEqual( tsih_me.fromPrim 1us, x.Session.[0].TSIH )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -1440,7 +1437,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -1512,16 +1509,16 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_SessionList( x ) ->
-                    Assert.True(( x.Session.Length = 2 ))
+                    Assert.StrictEqual( 2, x.Session.Length )
                     let rss1, rss2 =
                         if x.Session.[0].TargetNodeID = tnodeidx_me.fromPrim 21us then
                             x.Session.[0], x.Session.[1]
                         else
                             x.Session.[1], x.Session.[2]
-                    Assert.True(( rss1.TargetGroupID = tgid_me.fromPrim( 2u ) ))
-                    Assert.True(( rss1.TargetNodeID = tnodeidx_me.fromPrim 21us ))
-                    Assert.True(( rss2.TargetGroupID = tgid_me.fromPrim( 2u ) ))
-                    Assert.True(( rss2.TargetNodeID = tnodeidx_me.fromPrim 22us ))
+                    Assert.StrictEqual( tgid_me.fromPrim( 2u ),    rss1.TargetGroupID )
+                    Assert.StrictEqual( tnodeidx_me.fromPrim 21us, rss1.TargetNodeID )
+                    Assert.StrictEqual( tgid_me.fromPrim( 2u ),    rss2.TargetGroupID )
+                    Assert.StrictEqual( tnodeidx_me.fromPrim 22us, rss2.TargetNodeID )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -1550,7 +1547,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -1622,11 +1619,11 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_SessionList( x ) ->
-                    Assert.True(( x.Session.Length = 2 ))
-                    Assert.True(( x.Session.[0].TargetGroupID = tgid_me.fromPrim( 1u ) ))
-                    Assert.True(( x.Session.[1].TargetGroupID = tgid_me.fromPrim( 1u ) ))
-                    Assert.True(( x.Session.[0].TargetNodeID = tnodeidx_me.fromPrim 21us ))
-                    Assert.True(( x.Session.[1].TargetNodeID = tnodeidx_me.fromPrim 21us ))
+                    Assert.StrictEqual( 2, x.Session.Length )
+                    Assert.StrictEqual( tgid_me.fromPrim( 1u ), x.Session.[0].TargetGroupID )
+                    Assert.StrictEqual( tgid_me.fromPrim( 1u ), x.Session.[1].TargetGroupID )
+                    Assert.StrictEqual( tnodeidx_me.fromPrim 21us, x.Session.[0].TargetNodeID )
+                    Assert.StrictEqual( tnodeidx_me.fromPrim 21us, x.Session.[1].TargetNodeID )
                     let in0 = x.Session.[0].ITNexus.InitiatorName
                     let in1 = x.Session.[1].ITNexus.InitiatorName
                     Assert.True(( ( in0 = "in1" && in1 = "in3" ) || ( in0 = "in1" && in1 = "in3" ) ))
@@ -1658,7 +1655,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -1677,9 +1674,9 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_DestructSessionResult( x ) ->
-                    Assert.True(( x.TSIH = tsih_me.fromPrim 0us ))
+                    Assert.StrictEqual( tsih_me.fromPrim 0us, x.TSIH )
                     Assert.False(( x.Result ))
-                    Assert.True(( x.ErrorMessage.StartsWith "Unknown session" ))
+                    Assert.StartsWith( "Unknown session", x.ErrorMessage )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -1707,7 +1704,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -1740,10 +1737,10 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_DestructSessionResult( x ) ->
-                    Assert.True(( x.TSIH = tsih_me.fromPrim 1us ))
+                    Assert.StrictEqual( tsih_me.fromPrim 1us, x.TSIH )
                     Assert.True(( x.Result ))
-                    Assert.True(( x.ErrorMessage = "" ))
-                    Assert.True(( flg = 1 ))
+                    Assert.StrictEqual( "", x.ErrorMessage )
+                    Assert.StrictEqual( 1, flg )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -1772,7 +1769,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -1868,50 +1865,50 @@ type StatusMaster_Test2 () =
                         []
 
                 let wl = wConList |> List.sortBy ( fun itr -> itr.ConnectionID )
-                Assert.True(( wl.Length = 5 ))
+                Assert.StrictEqual( 5, wl.Length )
 
-                Assert.True(( wl.[0].TSIH = tsih_me.fromPrim 1us ))
-                Assert.True(( wl.[0].ConnectionID = cid_me.fromPrim 0us ))
-                Assert.True(( wl.[0].ConnectionCount = concnt_me.fromPrim 0 ))
-                Assert.True(( wl.[0].ReceiveBytesCount.Length = 0 ))
-                Assert.True(( wl.[0].SentBytesCount.Length = 0 ))
-                Assert.True(( wl.[0].EstablishTime = DateTime( 0L, DateTimeKind.Utc ) ))
+                Assert.StrictEqual( tsih_me.fromPrim 1us,             wl.[0].TSIH )
+                Assert.StrictEqual( cid_me.fromPrim 0us,              wl.[0].ConnectionID )
+                Assert.StrictEqual( concnt_me.fromPrim 0,             wl.[0].ConnectionCount )
+                Assert.StrictEqual( 0,                                wl.[0].ReceiveBytesCount.Length )
+                Assert.StrictEqual( 0,                                wl.[0].SentBytesCount.Length )
+                Assert.StrictEqual( DateTime( 0L, DateTimeKind.Utc ), wl.[0].EstablishTime )
 
-                Assert.True(( wl.[1].TSIH = tsih_me.fromPrim 1us ))
-                Assert.True(( wl.[1].ConnectionID = cid_me.fromPrim 1us ))
-                Assert.True(( wl.[1].ConnectionCount = concnt_me.fromPrim 1 ))
-                Assert.True(( wl.[1].ReceiveBytesCount.Length = 1 ))
-                Assert.True(( wl.[1].ReceiveBytesCount.[0].Value = 0L ))
-                Assert.True(( wl.[1].SentBytesCount.Length = 1 ))
-                Assert.True(( wl.[1].SentBytesCount.[0].Value = 0L ))
-                Assert.True(( wl.[1].EstablishTime = DateTime( 1L, DateTimeKind.Utc ) ))
+                Assert.StrictEqual( tsih_me.fromPrim 1us,             wl.[1].TSIH )
+                Assert.StrictEqual( cid_me.fromPrim 1us,              wl.[1].ConnectionID )
+                Assert.StrictEqual( concnt_me.fromPrim 1,             wl.[1].ConnectionCount )
+                Assert.StrictEqual( 1,                                wl.[1].ReceiveBytesCount.Length )
+                Assert.StrictEqual( 0L,                               wl.[1].ReceiveBytesCount.[0].Value )
+                Assert.StrictEqual( 1,                                wl.[1].SentBytesCount.Length )
+                Assert.StrictEqual( 0L,                               wl.[1].SentBytesCount.[0].Value )
+                Assert.StrictEqual( DateTime( 1L, DateTimeKind.Utc ), wl.[1].EstablishTime )
 
-                Assert.True(( wl.[2].TSIH = tsih_me.fromPrim 2us ))
-                Assert.True(( wl.[2].ConnectionID = cid_me.fromPrim 2us ))
-                Assert.True(( wl.[2].ConnectionCount = concnt_me.fromPrim 0 ))
-                Assert.True(( wl.[2].ReceiveBytesCount.Length = 1 ))
-                Assert.True(( wl.[2].ReceiveBytesCount.[0].Value = 1L ))
-                Assert.True(( wl.[2].SentBytesCount.Length = 1 ))
-                Assert.True(( wl.[2].SentBytesCount.[0].Value = 1L ))
-                Assert.True(( wl.[2].EstablishTime = DateTime( 2L, DateTimeKind.Utc ) ))
+                Assert.StrictEqual( tsih_me.fromPrim 2us,             wl.[2].TSIH )
+                Assert.StrictEqual( cid_me.fromPrim 2us,              wl.[2].ConnectionID )
+                Assert.StrictEqual( concnt_me.fromPrim 0,             wl.[2].ConnectionCount )
+                Assert.StrictEqual( 1,                                wl.[2].ReceiveBytesCount.Length )
+                Assert.StrictEqual( 1L,                               wl.[2].ReceiveBytesCount.[0].Value )
+                Assert.StrictEqual( 1,                                wl.[2].SentBytesCount.Length )
+                Assert.StrictEqual( 1L,                               wl.[2].SentBytesCount.[0].Value )
+                Assert.StrictEqual( DateTime( 2L, DateTimeKind.Utc ), wl.[2].EstablishTime )
 
-                Assert.True(( wl.[3].TSIH = tsih_me.fromPrim 2us ))
-                Assert.True(( wl.[3].ConnectionID = cid_me.fromPrim 3us ))
-                Assert.True(( wl.[3].ConnectionCount = concnt_me.fromPrim 0 ))
-                Assert.True(( wl.[3].ReceiveBytesCount.Length = 1 ))
-                Assert.True(( wl.[3].ReceiveBytesCount.[0].Value = 2L ))
-                Assert.True(( wl.[3].SentBytesCount.Length = 1 ))
-                Assert.True(( wl.[3].SentBytesCount.[0].Value = 2L ))
-                Assert.True(( wl.[3].EstablishTime = DateTime( 3L, DateTimeKind.Utc ) ))
+                Assert.StrictEqual( tsih_me.fromPrim 2us,             wl.[3].TSIH )
+                Assert.StrictEqual( cid_me.fromPrim 3us,              wl.[3].ConnectionID )
+                Assert.StrictEqual( concnt_me.fromPrim 0,             wl.[3].ConnectionCount )
+                Assert.StrictEqual( 1,                                wl.[3].ReceiveBytesCount.Length )
+                Assert.StrictEqual( 2L,                               wl.[3].ReceiveBytesCount.[0].Value )
+                Assert.StrictEqual( 1,                                wl.[3].SentBytesCount.Length )
+                Assert.StrictEqual( 2L,                               wl.[3].SentBytesCount.[0].Value )
+                Assert.StrictEqual( DateTime( 3L, DateTimeKind.Utc ), wl.[3].EstablishTime )
 
-                Assert.True(( wl.[4].TSIH = tsih_me.fromPrim 2us ))
-                Assert.True(( wl.[4].ConnectionID = cid_me.fromPrim 4us ))
-                Assert.True(( wl.[4].ConnectionCount = concnt_me.fromPrim 0 ))
-                Assert.True(( wl.[4].ReceiveBytesCount.Length = 1 ))
-                Assert.True(( wl.[4].ReceiveBytesCount.[0].Value = 3L ))
-                Assert.True(( wl.[4].SentBytesCount.Length = 1 ))
-                Assert.True(( wl.[4].SentBytesCount.[0].Value = 3L ))
-                Assert.True(( wl.[4].EstablishTime = DateTime( 4L, DateTimeKind.Utc ) ))
+                Assert.StrictEqual( tsih_me.fromPrim 2us,             wl.[4].TSIH )
+                Assert.StrictEqual( cid_me.fromPrim 4us,              wl.[4].ConnectionID )
+                Assert.StrictEqual( concnt_me.fromPrim 0,             wl.[4].ConnectionCount )
+                Assert.StrictEqual( 1,                                wl.[4].ReceiveBytesCount.Length )
+                Assert.StrictEqual( 3L,                               wl.[4].ReceiveBytesCount.[0].Value )
+                Assert.StrictEqual( 1,                                wl.[4].SentBytesCount.Length )
+                Assert.StrictEqual( 3L,                               wl.[4].SentBytesCount.[0].Value )
+                Assert.StrictEqual( DateTime( 4L, DateTimeKind.Utc ), wl.[4].EstablishTime )
 
                 pc.SetField( "m_Sessions", OptimisticLock( ImmutableDictionary< TSIH_T, ISession >.Empty ) )
                 GlbFunc.AllDispose [ rq_out; rq_in; rs_out; rs_in; ]
@@ -1938,7 +1935,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -2012,16 +2009,16 @@ type StatusMaster_Test2 () =
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_ConnectionList( x ) ->
                     let wl = x.Connection |> List.sortBy ( fun itr -> itr.ConnectionID )
-                    Assert.True(( wl.Length = 1 ))
+                    Assert.StrictEqual( 1, wl.Length )
 
-                    Assert.True(( wl.[0].TSIH = tsih_me.fromPrim 1us ))
-                    Assert.True(( wl.[0].ConnectionID = cid_me.fromPrim 1us ))
-                    Assert.True(( wl.[0].ConnectionCount = concnt_me.fromPrim 1 ))
-                    Assert.True(( wl.[0].ReceiveBytesCount.Length = 1 ))
-                    Assert.True(( wl.[0].ReceiveBytesCount.[0].Value = 0L ))
-                    Assert.True(( wl.[0].SentBytesCount.Length = 1 ))
-                    Assert.True(( wl.[0].SentBytesCount.[0].Value = 0L ))
-                    Assert.True(( wl.[0].EstablishTime = DateTime( 1L, DateTimeKind.Utc ) ))
+                    Assert.StrictEqual( tsih_me.fromPrim 1us,             wl.[0].TSIH )
+                    Assert.StrictEqual( cid_me.fromPrim 1us,              wl.[0].ConnectionID )
+                    Assert.StrictEqual( concnt_me.fromPrim 1,             wl.[0].ConnectionCount )
+                    Assert.StrictEqual( 1,                                wl.[0].ReceiveBytesCount.Length )
+                    Assert.StrictEqual( 0L,                               wl.[0].ReceiveBytesCount.[0].Value )
+                    Assert.StrictEqual( 1,                                wl.[0].SentBytesCount.Length )
+                    Assert.StrictEqual( 0L,                               wl.[0].SentBytesCount.[0].Value )
+                    Assert.StrictEqual( DateTime( 1L, DateTimeKind.Utc ), wl.[0].EstablishTime )
 
                 | _ ->
                     Assert.Fail __LINE__
@@ -2051,7 +2048,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -2132,16 +2129,16 @@ type StatusMaster_Test2 () =
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_ConnectionList( x ) ->
                     let wl = x.Connection |> List.sortBy ( fun itr -> itr.ConnectionID )
-                    Assert.True(( wl.Length = 1 ))
+                    Assert.StrictEqual( 1, wl.Length )
 
-                    Assert.True(( wl.[0].TSIH = tsih_me.fromPrim 2us ))
-                    Assert.True(( wl.[0].ConnectionID = cid_me.fromPrim 2us ))
-                    Assert.True(( wl.[0].ConnectionCount = concnt_me.fromPrim 0 ))
-                    Assert.True(( wl.[0].ReceiveBytesCount.Length = 1 ))
-                    Assert.True(( wl.[0].ReceiveBytesCount.[0].Value = 1L ))
-                    Assert.True(( wl.[0].SentBytesCount.Length = 1 ))
-                    Assert.True(( wl.[0].SentBytesCount.[0].Value = 1L ))
-                    Assert.True(( wl.[0].EstablishTime = DateTime( 2L, DateTimeKind.Utc ) ))
+                    Assert.StrictEqual( tsih_me.fromPrim 2us,             wl.[0].TSIH )
+                    Assert.StrictEqual( cid_me.fromPrim 2us,              wl.[0].ConnectionID )
+                    Assert.StrictEqual( concnt_me.fromPrim 0,             wl.[0].ConnectionCount )
+                    Assert.StrictEqual( 1,                                wl.[0].ReceiveBytesCount.Length )
+                    Assert.StrictEqual( 1L,                               wl.[0].ReceiveBytesCount.[0].Value )
+                    Assert.StrictEqual( 1,                                wl.[0].SentBytesCount.Length )
+                    Assert.StrictEqual( 1L,                               wl.[0].SentBytesCount.[0].Value )
+                    Assert.StrictEqual( DateTime( 2L, DateTimeKind.Utc ), wl.[0].EstablishTime )
 
                 | _ ->
                     Assert.Fail __LINE__
@@ -2171,7 +2168,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -2273,23 +2270,23 @@ type StatusMaster_Test2 () =
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_ConnectionList( x ) ->
                     let wl = x.Connection |> List.sortBy ( fun itr -> itr.ConnectionID )
-                    Assert.True(( wl.Length = 2 ))
+                    Assert.StrictEqual( 2, wl.Length )
 
-                    Assert.True(( wl.[0].TSIH = tsih_me.fromPrim 1us ))
-                    Assert.True(( wl.[0].ConnectionID = cid_me.fromPrim 0us ))
-                    Assert.True(( wl.[0].ConnectionCount = concnt_me.fromPrim 0 ))
-                    Assert.True(( wl.[0].ReceiveBytesCount.Length = 0 ))
-                    Assert.True(( wl.[0].SentBytesCount.Length = 0 ))
-                    Assert.True(( wl.[0].EstablishTime = DateTime( 0L, DateTimeKind.Utc ) ))
+                    Assert.StrictEqual( tsih_me.fromPrim 1us,             wl.[0].TSIH )
+                    Assert.StrictEqual( cid_me.fromPrim 0us,              wl.[0].ConnectionID )
+                    Assert.StrictEqual( concnt_me.fromPrim 0,             wl.[0].ConnectionCount )
+                    Assert.StrictEqual( 0,                                wl.[0].ReceiveBytesCount.Length )
+                    Assert.StrictEqual( 0,                                wl.[0].SentBytesCount.Length )
+                    Assert.StrictEqual( DateTime( 0L, DateTimeKind.Utc ), wl.[0].EstablishTime )
 
-                    Assert.True(( wl.[1].TSIH = tsih_me.fromPrim 2us ))
-                    Assert.True(( wl.[1].ConnectionID = cid_me.fromPrim 1us ))
-                    Assert.True(( wl.[1].ConnectionCount = concnt_me.fromPrim 1 ))
-                    Assert.True(( wl.[1].ReceiveBytesCount.Length = 1 ))
-                    Assert.True(( wl.[1].ReceiveBytesCount.[0].Value = 0L ))
-                    Assert.True(( wl.[1].SentBytesCount.Length = 1 ))
-                    Assert.True(( wl.[1].SentBytesCount.[0].Value = 0L ))
-                    Assert.True(( wl.[1].EstablishTime = DateTime( 1L, DateTimeKind.Utc ) ))
+                    Assert.StrictEqual( tsih_me.fromPrim 2us,             wl.[1].TSIH )
+                    Assert.StrictEqual( cid_me.fromPrim 1us,              wl.[1].ConnectionID )
+                    Assert.StrictEqual( concnt_me.fromPrim 1,             wl.[1].ConnectionCount )
+                    Assert.StrictEqual( 1,                                wl.[1].ReceiveBytesCount.Length )
+                    Assert.StrictEqual( 0L,                               wl.[1].ReceiveBytesCount.[0].Value )
+                    Assert.StrictEqual( 1,                                wl.[1].SentBytesCount.Length )
+                    Assert.StrictEqual( 0L,                               wl.[1].SentBytesCount.[0].Value )
+                    Assert.StrictEqual( DateTime( 1L, DateTimeKind.Utc ), wl.[1].EstablishTime )
 
                 | _ ->
                     Assert.Fail __LINE__
@@ -2319,7 +2316,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -2389,23 +2386,23 @@ type StatusMaster_Test2 () =
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_ConnectionList( x ) ->
                     let wl = x.Connection |> List.sortBy ( fun itr -> itr.ConnectionID )
-                    Assert.True(( wl.Length = 2 ))
+                    Assert.StrictEqual( 2, wl.Length )
 
-                    Assert.True(( wl.[0].TSIH = tsih_me.fromPrim 1us ))
-                    Assert.True(( wl.[0].ConnectionID = cid_me.fromPrim 0us ))
-                    Assert.True(( wl.[0].ConnectionCount = concnt_me.fromPrim 0 ))
-                    Assert.True(( wl.[0].ReceiveBytesCount.Length = 0 ))
-                    Assert.True(( wl.[0].SentBytesCount.Length = 0 ))
-                    Assert.True(( wl.[0].EstablishTime = DateTime( 0L, DateTimeKind.Utc ) ))
+                    Assert.StrictEqual( tsih_me.fromPrim 1us,             wl.[0].TSIH )
+                    Assert.StrictEqual( cid_me.fromPrim 0us,              wl.[0].ConnectionID )
+                    Assert.StrictEqual( concnt_me.fromPrim 0,             wl.[0].ConnectionCount )
+                    Assert.StrictEqual( 0,                                wl.[0].ReceiveBytesCount.Length )
+                    Assert.StrictEqual( 0,                                wl.[0].SentBytesCount.Length )
+                    Assert.StrictEqual( DateTime( 0L, DateTimeKind.Utc ), wl.[0].EstablishTime )
 
-                    Assert.True(( wl.[1].TSIH = tsih_me.fromPrim 1us ))
-                    Assert.True(( wl.[1].ConnectionID = cid_me.fromPrim 1us ))
-                    Assert.True(( wl.[1].ConnectionCount = concnt_me.fromPrim 1 ))
-                    Assert.True(( wl.[1].ReceiveBytesCount.Length = 1 ))
-                    Assert.True(( wl.[1].ReceiveBytesCount.[0].Value = 0L ))
-                    Assert.True(( wl.[1].SentBytesCount.Length = 1 ))
-                    Assert.True(( wl.[1].SentBytesCount.[0].Value = 0L ))
-                    Assert.True(( wl.[1].EstablishTime = DateTime( 1L, DateTimeKind.Utc ) ))
+                    Assert.StrictEqual( tsih_me.fromPrim 1us,             wl.[1].TSIH )
+                    Assert.StrictEqual( cid_me.fromPrim 1us,              wl.[1].ConnectionID )
+                    Assert.StrictEqual( concnt_me.fromPrim 1,             wl.[1].ConnectionCount )
+                    Assert.StrictEqual( 1,                                wl.[1].ReceiveBytesCount.Length )
+                    Assert.StrictEqual( 0L,                               wl.[1].ReceiveBytesCount.[0].Value )
+                    Assert.StrictEqual( 1,                                wl.[1].SentBytesCount.Length )
+                    Assert.StrictEqual( 0L,                               wl.[1].SentBytesCount.[0].Value )
+                    Assert.StrictEqual( DateTime( 1L, DateTimeKind.Utc ), wl.[1].EstablishTime )
 
                 | _ ->
                     Assert.Fail __LINE__
@@ -2435,7 +2432,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -2479,7 +2476,7 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_ConnectionList( x ) ->
-                    Assert.True(( x.Connection.Length = 0 ))
+                    Assert.StrictEqual( 0, x.Connection.Length )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -2508,7 +2505,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -2529,7 +2526,7 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_ConnectionList( x ) ->
-                    Assert.True(( x.Connection.Length = 0 ))
+                    Assert.StrictEqual( 0, x.Connection.Length )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -2557,7 +2554,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -2576,8 +2573,8 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_LUStatus( x ) ->
-                    Assert.True(( x.LUN = lun_me.fromPrim 0UL ))
-                    Assert.True(( x.ErrorMessage.StartsWith "Missing LU" ))
+                    Assert.StrictEqual( lun_me.fromPrim 0UL, x.LUN )
+                    Assert.StartsWith( "Missing LU", x.ErrorMessage )
                     Assert.True(( x.LUStatus_Success.IsNone ))
                 | _ ->
                     Assert.Fail __LINE__
@@ -2606,7 +2603,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -2625,14 +2622,14 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_LUStatus( x ) ->
-                    Assert.True(( x.LUN = lun_me.fromPrim 1UL ))
-                    Assert.True(( x.ErrorMessage = "" ))
-                    Assert.True(( x.LUStatus_Success.IsSome ))
-                    Assert.True(( x.LUStatus_Success.Value.ReadBytesCount.Length = 0 ))
-                    Assert.True(( x.LUStatus_Success.Value.WrittenBytesCount.Length = 0 ))
-                    Assert.True(( x.LUStatus_Success.Value.ReadTickCount.Length = 0 ))
-                    Assert.True(( x.LUStatus_Success.Value.WriteTickCount.Length = 0 ))
-                    Assert.True(( x.LUStatus_Success.Value.ACAStatus.IsNone ))
+                    Assert.StrictEqual( lun_me.fromPrim 1UL, x.LUN )
+                    Assert.StrictEqual( "", x.ErrorMessage )
+                    Assert.True( x.LUStatus_Success.IsSome )
+                    Assert.StrictEqual( 0, x.LUStatus_Success.Value.ReadBytesCount.Length )
+                    Assert.StrictEqual( 0, x.LUStatus_Success.Value.WrittenBytesCount.Length )
+                    Assert.StrictEqual( 0, x.LUStatus_Success.Value.ReadTickCount.Length )
+                    Assert.StrictEqual( 0, x.LUStatus_Success.Value.WriteTickCount.Length )
+                    Assert.True( x.LUStatus_Success.Value.ACAStatus.IsNone )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -2660,7 +2657,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -2686,14 +2683,14 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_LUStatus( x ) ->
-                    Assert.True(( x.LUN = lun_me.fromPrim 1UL ))
-                    Assert.True(( x.ErrorMessage = "" ))
-                    Assert.True(( x.LUStatus_Success.IsSome ))
-                    Assert.True(( x.LUStatus_Success.Value.ReadBytesCount.Length = 0 ))
-                    Assert.True(( x.LUStatus_Success.Value.WrittenBytesCount.Length = 0 ))
-                    Assert.True(( x.LUStatus_Success.Value.ReadTickCount.Length = 0 ))
-                    Assert.True(( x.LUStatus_Success.Value.WriteTickCount.Length = 0 ))
-                    Assert.True(( x.LUStatus_Success.Value.ACAStatus.IsNone ))
+                    Assert.StrictEqual( lun_me.fromPrim 1UL, x.LUN )
+                    Assert.StrictEqual( "", x.ErrorMessage )
+                    Assert.True( x.LUStatus_Success.IsSome )
+                    Assert.StrictEqual( 0, x.LUStatus_Success.Value.ReadBytesCount.Length )
+                    Assert.StrictEqual( 0, x.LUStatus_Success.Value.WrittenBytesCount.Length )
+                    Assert.StrictEqual( 0, x.LUStatus_Success.Value.ReadTickCount.Length )
+                    Assert.StrictEqual( 0, x.LUStatus_Success.Value.WriteTickCount.Length )
+                    Assert.True( x.LUStatus_Success.Value.ACAStatus.IsNone )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -2721,7 +2718,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -2760,24 +2757,24 @@ type StatusMaster_Test2 () =
                 let res2 = res1.Response
                 match res2 with
                 | TargetDeviceCtrlRes.T_Response.U_LUStatus( x ) ->
-                    Assert.True(( x.LUN = lun_me.fromPrim 1UL ))
-                    Assert.True(( x.ErrorMessage = "" ))
-                    Assert.True(( x.LUStatus_Success.IsSome ))
+                    Assert.StrictEqual( lun_me.fromPrim 1UL, x.LUN )
+                    Assert.StrictEqual( "", x.ErrorMessage )
+                    Assert.True( x.LUStatus_Success.IsSome )
                     let sucVal = x.LUStatus_Success.Value
-                    Assert.True(( sucVal.ReadBytesCount.Length = 1 ))
-                    Assert.True(( sucVal.ReadBytesCount.[0].Value = 1L ))
-                    Assert.True(( sucVal.WrittenBytesCount.Length = 1 ))
-                    Assert.True(( sucVal.WrittenBytesCount.[0].Value = 2L ))
-                    Assert.True(( sucVal.ReadTickCount.Length = 1 ))
-                    Assert.True(( sucVal.ReadTickCount.[0].Value = 3L ))
-                    Assert.True(( sucVal.WriteTickCount.Length = 1 ))
-                    Assert.True(( sucVal.WriteTickCount.[0].Value = 4L ))
-                    Assert.True(( sucVal.ACAStatus.IsSome ))
+                    Assert.StrictEqual( 1,  sucVal.ReadBytesCount.Length )
+                    Assert.StrictEqual( 1L, sucVal.ReadBytesCount.[0].Value )
+                    Assert.StrictEqual( 1,  sucVal.WrittenBytesCount.Length )
+                    Assert.StrictEqual( 2L, sucVal.WrittenBytesCount.[0].Value )
+                    Assert.StrictEqual( 1,  sucVal.ReadTickCount.Length )
+                    Assert.StrictEqual( 3L, sucVal.ReadTickCount.[0].Value )
+                    Assert.StrictEqual( 1,  sucVal.WriteTickCount.Length )
+                    Assert.StrictEqual( 4L, sucVal.WriteTickCount.[0].Value )
+                    Assert.True( sucVal.ACAStatus.IsSome )
                     let acaVal = sucVal.ACAStatus.Value
-                    Assert.True(( acaVal.ITNexus.InitiatorName = "initiator000" ))
-                    Assert.True(( acaVal.StatusCode = uint8 ScsiCmdStatCd.CHECK_CONDITION ))
-                    Assert.True(( acaVal.AdditionalSenseCode = uint16 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT ))
-                    Assert.True(( acaVal.IsCurrent ))
+                    Assert.StrictEqual( "initiator000",                              acaVal.ITNexus.InitiatorName )
+                    Assert.StrictEqual( uint8 ScsiCmdStatCd.CHECK_CONDITION,         acaVal.StatusCode )
+                    Assert.StrictEqual( uint16 ASCCd.ACCESS_DENIED_ACL_LUN_CONFLICT, acaVal.AdditionalSenseCode )
+                    Assert.True( acaVal.IsCurrent )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -2805,7 +2802,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -2824,9 +2821,9 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_LUResetResult( x ) ->
-                    Assert.True(( x.LUN = lun_me.fromPrim 99UL ))
-                    Assert.True(( x.Result = false ))
-                    Assert.True(( x.ErrorMessage.StartsWith "Specified LU is not configured" ))
+                    Assert.StrictEqual( lun_me.fromPrim 99UL, x.LUN )
+                    Assert.False( x.Result )
+                    Assert.StartsWith( "Specified LU is not configured", x.ErrorMessage )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -2854,7 +2851,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -2873,9 +2870,9 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_LUResetResult( x ) ->
-                    Assert.True(( x.LUN = lun_me.fromPrim 1UL ))
-                    Assert.True(( x.Result = true ))
-                    Assert.True(( x.ErrorMessage = "" ))
+                    Assert.StrictEqual( lun_me.fromPrim 1UL, x.LUN )
+                    Assert.True( x.Result )
+                    Assert.StrictEqual( "", x.ErrorMessage )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -2903,7 +2900,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -2929,9 +2926,9 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_LUResetResult( x ) ->
-                    Assert.True(( x.LUN = lun_me.fromPrim 1UL ))
-                    Assert.True(( x.Result = true ))
-                    Assert.True(( x.ErrorMessage = "" ))
+                    Assert.StrictEqual( lun_me.fromPrim 1UL, x.LUN )
+                    Assert.True( x.Result )
+                    Assert.StrictEqual( "", x.ErrorMessage )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -2959,7 +2956,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -2997,9 +2994,9 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_LUResetResult( x ) ->
-                    Assert.True(( x.LUN = lun_me.fromPrim 1UL ))
+                    Assert.StrictEqual( lun_me.fromPrim 1UL, x.LUN )
                     Assert.True(( x.Result ))
-                    Assert.True(( x.ErrorMessage = "" ))
+                    Assert.StrictEqual( "", x.ErrorMessage )
                     Assert.True(( flg ))
                 | _ ->
                     Assert.Fail __LINE__
@@ -3028,7 +3025,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -3050,9 +3047,9 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_MediaStatus( x ) ->
-                    Assert.True(( x.LUN = lun_me.fromPrim 99UL ))
-                    Assert.True(( x.ID = mediaidx_me.fromPrim 99u ))
-                    Assert.True(( x.ErrorMessage.StartsWith "Specified LU is not configured" ))
+                    Assert.StrictEqual( lun_me.fromPrim 99UL, x.LUN )
+                    Assert.StrictEqual( mediaidx_me.fromPrim 99u, x.ID )
+                    Assert.StartsWith( "Specified LU is not configured",  x.ErrorMessage )
                     Assert.True(( x.MediaStatus_Success.IsNone ))
                 | _ ->
                     Assert.Fail __LINE__
@@ -3081,7 +3078,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -3103,9 +3100,9 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_MediaStatus( x ) ->
-                    Assert.True(( x.LUN = lun_me.fromPrim 1UL ))
-                    Assert.True(( x.ID = mediaidx_me.fromPrim 99u ))
-                    Assert.True(( x.ErrorMessage = "" ))
+                    Assert.StrictEqual( lun_me.fromPrim 1UL, x.LUN )
+                    Assert.StrictEqual( mediaidx_me.fromPrim 99u, x.ID )
+                    Assert.StrictEqual( "", x.ErrorMessage )
                     Assert.True(( x.MediaStatus_Success.IsSome ))
                 | _ ->
                     Assert.Fail __LINE__
@@ -3134,7 +3131,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -3163,10 +3160,10 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_MediaStatus( x ) ->
-                    Assert.True(( x.LUN = lun_me.fromPrim 1UL ))
-                    Assert.True(( x.ID = mediaidx_me.fromPrim 99u ))
-                    Assert.True(( x.ErrorMessage = "" ))
-                    Assert.True(( x.MediaStatus_Success.IsSome ))
+                    Assert.StrictEqual( lun_me.fromPrim 1UL, x.LUN )
+                    Assert.StrictEqual( mediaidx_me.fromPrim 99u, x.ID )
+                    Assert.StrictEqual( "", x.ErrorMessage )
+                    Assert.True( x.MediaStatus_Success.IsSome )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -3194,7 +3191,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -3234,14 +3231,14 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_MediaStatus( x ) ->
-                    Assert.True(( x.LUN = lun_me.fromPrim 1UL ))
-                    Assert.True(( x.ID = mediaidx_me.fromPrim 1u ))
-                    Assert.True(( x.ErrorMessage = "" ))
-                    Assert.True(( x.MediaStatus_Success.IsSome ))
-                    Assert.True(( x.MediaStatus_Success.Value.ReadBytesCount.Length = 0 ))
-                    Assert.True(( x.MediaStatus_Success.Value.WrittenBytesCount.Length = 0 ))
-                    Assert.True(( x.MediaStatus_Success.Value.ReadTickCount.Length = 0 ))
-                    Assert.True(( x.MediaStatus_Success.Value.WriteTickCount.Length = 0 ))
+                    Assert.StrictEqual( lun_me.fromPrim 1UL, x.LUN )
+                    Assert.StrictEqual( mediaidx_me.fromPrim 1u, x.ID )
+                    Assert.StrictEqual( "", x.ErrorMessage )
+                    Assert.True( x.MediaStatus_Success.IsSome )
+                    Assert.StrictEqual( 0, x.MediaStatus_Success.Value.ReadBytesCount.Length )
+                    Assert.StrictEqual( 0, x.MediaStatus_Success.Value.WrittenBytesCount.Length )
+                    Assert.StrictEqual( 0, x.MediaStatus_Success.Value.ReadTickCount.Length )
+                    Assert.StrictEqual( 0, x.MediaStatus_Success.Value.WriteTickCount.Length )
 
                 | _ ->
                     Assert.Fail __LINE__
@@ -3270,7 +3267,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -3322,18 +3319,18 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_MediaStatus( x ) ->
-                    Assert.True(( x.LUN = lun_me.fromPrim 1UL ))
-                    Assert.True(( x.ID = mediaidx_me.fromPrim 4u ))
-                    Assert.True(( x.ErrorMessage = "" ))
-                    Assert.True(( x.MediaStatus_Success.IsSome ))
-                    Assert.True(( x.MediaStatus_Success.Value.ReadBytesCount.Length = 1 ))
-                    Assert.True(( x.MediaStatus_Success.Value.ReadBytesCount.[0].Value = 1L ))
-                    Assert.True(( x.MediaStatus_Success.Value.WrittenBytesCount.Length = 1 ))
-                    Assert.True(( x.MediaStatus_Success.Value.WrittenBytesCount.[0].Value = 2L ))
-                    Assert.True(( x.MediaStatus_Success.Value.ReadTickCount.Length = 1 ))
-                    Assert.True(( x.MediaStatus_Success.Value.ReadTickCount.[0].Value = 3L ))
-                    Assert.True(( x.MediaStatus_Success.Value.WriteTickCount.Length = 1 ))
-                    Assert.True(( x.MediaStatus_Success.Value.WriteTickCount.[0].Value = 4L ))
+                    Assert.StrictEqual( lun_me.fromPrim 1UL, x.LUN )
+                    Assert.StrictEqual( mediaidx_me.fromPrim 4u, x.ID )
+                    Assert.StrictEqual( "", x.ErrorMessage )
+                    Assert.True( x.MediaStatus_Success.IsSome )
+                    Assert.StrictEqual( 1,  x.MediaStatus_Success.Value.ReadBytesCount.Length )
+                    Assert.StrictEqual( 1L, x.MediaStatus_Success.Value.ReadBytesCount.[0].Value )
+                    Assert.StrictEqual( 1,  x.MediaStatus_Success.Value.WrittenBytesCount.Length )
+                    Assert.StrictEqual( 2L, x.MediaStatus_Success.Value.WrittenBytesCount.[0].Value )
+                    Assert.StrictEqual( 1,  x.MediaStatus_Success.Value.ReadTickCount.Length )
+                    Assert.StrictEqual( 3L, x.MediaStatus_Success.Value.ReadTickCount.[0].Value )
+                    Assert.StrictEqual( 1,  x.MediaStatus_Success.Value.WriteTickCount.Length )
+                    Assert.StrictEqual( 4L, x.MediaStatus_Success.Value.WriteTickCount.[0].Value )
 
                 | _ ->
                     Assert.Fail __LINE__
@@ -3362,7 +3359,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -3385,9 +3382,9 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_MediaControlResponse( x ) ->
-                    Assert.True(( x.LUN = lun_me.fromPrim 99UL ))
-                    Assert.True(( x.ID = mediaidx_me.fromPrim 4u ))
-                    Assert.True(( x.ErrorMessage.StartsWith "Specified LU is not configured" ))
+                    Assert.StrictEqual( lun_me.fromPrim 99UL, x.LUN )
+                    Assert.StrictEqual( mediaidx_me.fromPrim 4u, x.ID )
+                    Assert.StartsWith( "Specified LU is not configured", x.ErrorMessage )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -3415,7 +3412,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -3438,9 +3435,9 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_MediaControlResponse( x ) ->
-                    Assert.True(( x.LUN = lun_me.fromPrim 1UL ))
-                    Assert.True(( x.ID = mediaidx_me.fromPrim 4u ))
-                    Assert.True(( x.ErrorMessage.StartsWith "Specified media missing" ))
+                    Assert.StrictEqual( lun_me.fromPrim 1UL, x.LUN )
+                    Assert.StrictEqual( mediaidx_me.fromPrim 4u, x.ID )
+                    Assert.StartsWith( "Specified media missing", x.ErrorMessage )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -3503,7 +3500,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -3533,20 +3530,20 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_MediaControlResponse( x ) ->
-                    Assert.True(( x.LUN = lun_me.fromPrim 1UL ))
-                    Assert.True(( x.ID = mediaidx_me.fromPrim 1u ))
+                    Assert.StrictEqual( lun_me.fromPrim 1UL, x.LUN )
+                    Assert.StrictEqual( mediaidx_me.fromPrim 1u, x.ID )
                     let resData = MediaCtrlRes.ReaderWriter.LoadString x.Response
                     match resData.Response with
                     | MediaCtrlRes.U_Debug( x ) ->
                         match x with
                         | MediaCtrlRes.U_ClearTrapsResult( y ) ->
                             Assert.True(( y.Result ))
-                            Assert.True(( y.ErrorMessage = "" ))
+                            Assert.StrictEqual( "", y.ErrorMessage )
                         | _ ->
                             Assert.Fail __LINE__
                     | _ ->
                         Assert.Fail __LINE__
-                    Assert.True(( x.ErrorMessage ="" ))
+                    Assert.StrictEqual( "", x.ErrorMessage )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -3574,7 +3571,7 @@ type StatusMaster_Test2 () =
         let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
         let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
         let killer = new HKiller() :> IKiller
-        let sm = new StatusMaster( pDirName, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
 
         [|
             fun () -> task {
@@ -3629,20 +3626,20 @@ type StatusMaster_Test2 () =
                 let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_MediaControlResponse( x ) ->
-                    Assert.True(( x.LUN = lun_me.fromPrim 1UL ))
-                    Assert.True(( x.ID = mediaidx_me.fromPrim 1u ))
+                    Assert.StrictEqual( lun_me.fromPrim 1UL, x.LUN )
+                    Assert.StrictEqual( mediaidx_me.fromPrim 1u, x.ID )
                     let resData = MediaCtrlRes.ReaderWriter.LoadString x.Response
                     match resData.Response with
                     | MediaCtrlRes.U_Debug( x ) ->
                         match x with
                         | MediaCtrlRes.U_ClearTrapsResult( y ) ->
                             Assert.True(( y.Result ))
-                            Assert.True(( y.ErrorMessage = "ggggg" ))
+                            Assert.StrictEqual( "ggggg", y.ErrorMessage )
                         | _ ->
                             Assert.Fail __LINE__
                     | _ ->
                         Assert.Fail __LINE__
-                    Assert.True(( x.ErrorMessage ="" ))
+                    Assert.StrictEqual( "", x.ErrorMessage )
                 | _ ->
                     Assert.Fail __LINE__
 

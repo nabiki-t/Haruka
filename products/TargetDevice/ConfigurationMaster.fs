@@ -30,10 +30,13 @@ open Haruka.IODataTypes
 /// <param name="m_WorkDirPath">
 ///   Path name of working directory.
 /// </param>
+/// <param name="loadtg">
+///   If false, the configuration information for the Target Group will not be loaded.
+/// </param>
 /// <param name="killer">
 ///   An object that notices the terminate request to this object.
 /// </param>
-type ConfigurationMaster( m_WorkDirPath : string, killer : IKiller ) as this = 
+type ConfigurationMaster( m_WorkDirPath : string, loadtg : bool, killer : IKiller ) as this = 
 
     /// Hash value identify this instance
     let m_ObjID = objidx_me.NewID()
@@ -52,7 +55,7 @@ type ConfigurationMaster( m_WorkDirPath : string, killer : IKiller ) as this =
         m_TargetGroup :
             ConcurrentDictionary< TGID_T, {| conf : TargetGroupConf.T_TargetGroup; killer : IKiller |} >
 
-    ) = ConfigurationMaster.LoadConfig m_WorkDirPath m_ObjID
+    ) = ConfigurationMaster.LoadConfig m_WorkDirPath loadtg m_ObjID
 
     do
         m_Killer.Add this
@@ -248,13 +251,16 @@ type ConfigurationMaster( m_WorkDirPath : string, killer : IKiller ) as this =
     /// <param name="workDirPath">
     ///   Path name of the working folder.
     /// </param>
+    /// <param name="loadtg">
+    ///   If false, the configuration information for the Target Group will not be loaded.
+    /// </param>
     /// <param name="objId">
     ///   Identifier of configuration master instance.
     /// </param>
     /// <returns>
     ///   Configuration data structure. See ParseSystemConfigXMLFile function.
     /// </returns>
-    static member private LoadConfig ( workDirPath : string ) ( objId : OBJIDX_T ) :
+    static member private LoadConfig ( workDirPath : string ) ( loadtg : bool ) ( objId : OBJIDX_T ) :
         TargetDeviceConf.T_TargetDevice * ConcurrentDictionary< TGID_T, {| conf : TargetGroupConf.T_TargetGroup; killer : IKiller |} > =
         try
             let sysConfName = Functions.AppendPathName workDirPath Constants.TARGET_DEVICE_CONF_FILE_NAME
@@ -267,8 +273,11 @@ type ConfigurationMaster( m_WorkDirPath : string, killer : IKiller ) as this =
 
             // Get Target Group configuration file names.
             let tgConfNames =
-                Directory.GetFiles workDirPath
-                |> Array.filter ( Path.GetFileName >> rx.IsMatch )
+                if loadtg then
+                    Directory.GetFiles workDirPath
+                    |> Array.filter ( Path.GetFileName >> rx.IsMatch )
+                else
+                    [||]
 
             // Load Target Group configuration.
             let tgConf = [|

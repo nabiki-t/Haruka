@@ -29,7 +29,7 @@ let help() : unit =
     printfn "Copyright (C) nabiki_t. All rights reserved."
     printfn ""
     printfn "Instructions :"
-    printfn "    TargetDevice WorkFolderPath"
+    printfn "    TargetDevice WorkFolderPath [/d]"
     printfn ""
 
 
@@ -81,10 +81,16 @@ let main ( argv : string[] ) : int =
         help()
         exit 0
 
+    let loadtg =
+        if argv.Length >= 2 && argv.[1] = "/d" then
+            false
+        else
+            true
+
     try
         // Initialize process environment and start server service.
         let k = new HKiller() :> IKiller
-        let sm = new StatusMaster( argv.[0], k, stdin, stdout ) :>IStatus
+        let sm = new StatusMaster( argv.[0], loadtg, k, stdin, stdout ) :>IStatus
         sm.Start()
 
         // Wait for user input.
