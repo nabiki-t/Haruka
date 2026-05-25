@@ -428,6 +428,9 @@ type ServerStatus(
                 let _, h = wd.[ tdid ]
                 h.Add( itr ) |> ignore
 
+            // Get running target device IDs.
+            let! activeTDs = con.GetTargetDeviceProcs()
+
             for itr in wd do
                 let tdid = itr.Key              // target device ID
                 let tdnode, mod_tgnode = itr.Value  // target device node and target group nodes
@@ -459,6 +462,31 @@ type ServerStatus(
                     )
                     |> Seq.toArray
 
+                // If a deleted or updated Target group is loaded, it will be forcibly unloaded.
+                if activeTDs |> List.exists ( (=) tdid ) then
+                    // inactivate
+                    let! activetgs = con.GetActiveTargetGroups tdid
+                    for itr in activetgs do
+                        let flg =
+                            ( removedTGIDs |> Array.exists ( (=) itr.ID ) ) ||
+                            ( mod_tgnode |> Seq.exists( fun i -> i.TargetGroupID = itr.ID ) )
+                        if flg then
+                            do! con.InactivateTargetGroup tdid itr.ID
+
+                    // unload
+                    let! loadedtgs = con.GetLoadedTargetGroups tdid
+                    for itr in loadedtgs do
+                        let flg =
+                            ( removedTGIDs |> Array.exists ( (=) itr.ID ) ) ||
+                            ( mod_tgnode |> Seq.exists( fun i -> i.TargetGroupID = itr.ID ) )
+                        if flg then
+                            // terminate session
+                            let! sess = con.GetSession_InTargetGroup tdid itr.ID
+                            for si in sess do
+                                do! con.DestructSession tdid si.TSIH
+                            // unload
+                            do! con.UnloadTargetGroup tdid itr.ID
+
                 // Delete removed target group configuration file
                 for rmtgid in removedTGIDs do
                     do! con.DeleteTargetGroupConfig tdid rmtgid
@@ -482,6 +510,7 @@ type ServerStatus(
                     for lunitr in luInTg do
                         do! con.DeleteLUWorkDir tdid lunitr
                         do! con.CreateLUWorkDir tdid lunitr
+
         }
 
     /// <summary>
