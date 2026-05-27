@@ -71,7 +71,7 @@ type InterProcessCounter( m_Name : string ) =
                     0UL
             let nextVal = currentVal + 1UL
             f.Seek( 0L, SeekOrigin.Begin ) |> ignore
-            BitConverter.TryWriteBytes( buf, nextVal ) |> ignore
+            BitConverter.TryWriteBytes( Span(buf), nextVal ) |> ignore
             f.Write( buf )
             nextVal
         finally
