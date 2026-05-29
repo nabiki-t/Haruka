@@ -13,6 +13,7 @@ namespace Haruka.Test
 
 open System
 open System.Diagnostics
+open System.Threading
 
 open Haruka.Constants
 open Haruka.Commons
@@ -21,23 +22,52 @@ open System.Text
 //=============================================================================
 // Class implementation
 
-///
-/// <summary>
-///  Haruka CLI client process wrapper.
-/// </summary>
-/// <param name="address">
-///  Specify the IP address or host name to connect to the controller.
-/// </param>
-/// <param name="portNumber">
-///  Specify the TCP port number to connect to the controller.
-/// </param>
-/// <param name="workPath">
-///  Working directory path name.
-/// </param>
-type ClientProc ( address : string, portNumber : int, workPath : string ) =
 
-    // Start client process
-    let m_Proc =
+type ClientProc ( m_Proc : Process ) =
+
+    /// <summary>
+    ///  Haruka CLI client process wrapper.
+    /// </summary>
+    /// <param name="workPath">
+    ///  Working directory path name.
+    /// </param>
+    new ( workPath : string ) =
+        // Start client process
+        let p = new Process(
+            StartInfo = ProcessStartInfo(
+                FileName = GlbFunc.clientExePath,
+                Arguments = "",
+                CreateNoWindow = false,
+                RedirectStandardError = true,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                WorkingDirectory = workPath
+            ),
+            EnableRaisingEvents = true
+        )
+
+        if p.Start() |> not then
+            raise <| TestException( "Failed to start client proc." )
+
+        let prompt = GlbFunc.ReadString p.StandardOutput 4
+        if prompt <> "--> " then
+            raise <| TestException( sprintf "Next prompt is different from what is expected. Expect=--> , Result=%s" prompt )
+        ClientProc p
+
+    /// <summary>
+    ///  Haruka CLI client process wrapper.
+    /// </summary>
+    /// <param name="address">
+    ///  Specify the IP address or host name to connect to the controller.
+    /// </param>
+    /// <param name="portNumber">
+    ///  Specify the TCP port number to connect to the controller.
+    /// </param>
+    /// <param name="workPath">
+    ///  Working directory path name.
+    /// </param>
+    new ( address : string, portNumber : int, workPath : string ) =
+        // Start client process
         let p = new Process(
             StartInfo = ProcessStartInfo(
                 FileName = GlbFunc.clientExePath,
@@ -54,12 +84,10 @@ type ClientProc ( address : string, portNumber : int, workPath : string ) =
         if p.Start() |> not then
             raise <| TestException( "Failed to start client proc." )
 
-        //let buf = Array.zeroCreate<char>( 6 )
         let prompt = GlbFunc.ReadString p.StandardOutput 4
         if prompt <> "CR> " then
             raise <| TestException( sprintf "Next prompt is different from what is expected. Expect=CR> , Result=%s" prompt )
-
-        p
+        ClientProc p
 
     /// Whether the client process has terminated or not.
     member _.HasExited =
@@ -126,3 +154,16 @@ type ClientProc ( address : string, portNumber : int, workPath : string ) =
         if resultPrompt <> nextPrompt then
             raise <| TestException( sprintf "Next prompt is different from what is expected. Expect=%s, Result=%s" nextPrompt resultPrompt )
         Seq.toArray vResult
+
+    member _.RunCommandForTerminate ( command : string ) : unit =
+        m_Proc.StandardInput.WriteLine command
+
+        let rec loop ( cnt : int ) =
+            if cnt < 10 then
+                Thread.Sleep 10
+                if not m_Proc.HasExited then
+                    loop ( cnt + 1 )
+            else
+                raise <| TestException( sprintf "Contrary to expectations, the process continues. Comand=%s" command )
+        loop 0
+

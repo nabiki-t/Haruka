@@ -58,12 +58,54 @@ type ControllerFunc() =
         if ctrlProc1.ExitCode <> 0 then
             raise <| TestException( "The controller process terminated abnormally." )
 
-    /// Start Haruka controller and client process.
-    static member StartHarukaController( workPath : string ) ( controllPortNo : int ) : ( Process * ClientProc ) =
+    /// <summary>
+    ///  Start controller process by direct.
+    /// </summary>
+    /// <param name="workPath">
+    ///  Initialized working directory name.
+    /// </param>
+    /// <returns>
+    ///  Process.
+    /// </returns>
+    static member StartControllerDirect ( workPath : string ) : Process =
+        let stdOutLogName = Functions.AppendPathName workPath "stdout.txt"
+        let stdErrLogName = Functions.AppendPathName workPath "stderr.txt"
+        let stdoutLog = new StreamWriter( File.Open( stdOutLogName, FileMode.Create, FileAccess.Write, FileShare.Read ) )
+        let stderrLog = new StreamWriter( File.Open( stdErrLogName, FileMode.Create, FileAccess.Write, FileShare.Read ) )
 
-        // Initialize Haruka configuration directory
-        ControllerFunc.InitializeConfigDir workPath controllPortNo
+        let ctrlProc2 = new Process(
+            StartInfo = ProcessStartInfo(
+                FileName = GlbFunc.controllerExePath,
+                Arguments = "\"" + workPath + "\"",
+                CreateNoWindow = false,
+                RedirectStandardError = true,
+                RedirectStandardInput = false,
+                RedirectStandardOutput = true,
+                WorkingDirectory = workPath
+            ),
+            EnableRaisingEvents = false
+        )
 
+        fun () -> ctrlProc2.StandardOutput.BaseStream.CopyToAsync( stdoutLog.BaseStream )
+        |> Functions.StartTask
+
+        fun () -> ctrlProc2.StandardError.BaseStream.CopyToAsync( stderrLog.BaseStream )
+        |> Functions.StartTask
+
+        if ctrlProc2.Start() |> not then
+            raise <| TestException( "Failed to start controller proc." )
+        ctrlProc2
+
+    /// <summary>
+    ///  The controllerr process is launched via a stub process..
+    /// </summary>
+    /// <param name="workPath">
+    ///  Initialized working directory name.
+    /// </param>
+    /// <returns>
+    ///  Process.
+    /// </returns>
+    static member StartController ( workPath : string ) : Process =
         // Start controller process
         Environment.SetEnvironmentVariable( GlbFunc.STUB_PROC_TYPE, "ControllerStarter" )
         let ctrlProc2 = new Process(
@@ -81,6 +123,16 @@ type ControllerFunc() =
 
         if ctrlProc2.Start() |> not then
             raise <| TestException( "Failed to start controller proc." )
+        ctrlProc2
+
+    /// Start Haruka controller and client process.
+    static member StartHarukaController( workPath : string ) ( controllPortNo : int ) : ( Process * ClientProc ) =
+
+        // Initialize Haruka configuration directory
+        ControllerFunc.InitializeConfigDir workPath controllPortNo
+
+        // Start controller process
+        let ctrlProc2 = ControllerFunc.StartController workPath
 
         // Start client process
         let clientProc = ClientProc( "::1", controllPortNo, workPath )
