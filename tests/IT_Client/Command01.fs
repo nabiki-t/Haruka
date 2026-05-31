@@ -64,7 +64,6 @@ type Command01( fx : Command01_Fixture ) =
     member _.Exit_001 ( command : string ) =
         let client = ClientProc m_WorkPath
         client.RunCommandForTerminate command
-        GlbFunc.DeleteDir m_WorkPath
 
     [<Theory>]
     [<InlineData( "exit" )>]
@@ -72,7 +71,6 @@ type Command01( fx : Command01_Fixture ) =
     member _.Exit_002 ( command : string ) =
         let client = ClientProc( "::1", m_ControllPortNo, m_WorkPath )
         client.RunCommandForTerminate command
-        GlbFunc.DeleteDir m_WorkPath
 
     [<Fact>]
     member _.Exit_003 () =
@@ -81,7 +79,6 @@ type Command01( fx : Command01_Fixture ) =
         let v = client.RunCommandGetResp "exit" "CR> "
         Assert.NotEmpty v
         client.RunCommandForTerminate "exit /y"
-        GlbFunc.DeleteDir m_WorkPath
 
     [<Fact>]
     member _.Login_001 () =
@@ -100,7 +97,6 @@ type Command01( fx : Command01_Fixture ) =
         Assert.NotEmpty v2
 
         client2.RunCommandForTerminate "exit /y"
-        GlbFunc.DeleteDir m_WorkPath
 
     [<Fact>]
     member _.Logout_001 () =
@@ -110,7 +106,6 @@ type Command01( fx : Command01_Fixture ) =
         client.RunCommand ( sprintf "login /h ::1 /p %d" m_ControllPortNo ) "" "CR> "
         client.RunCommand "logout" "" "--> "
         client.RunCommandForTerminate "exit"
-        GlbFunc.DeleteDir m_WorkPath
 
     [<Fact>]
     member _.Logout_002 () =
@@ -120,14 +115,12 @@ type Command01( fx : Command01_Fixture ) =
         Assert.NotEmpty v
         client.RunCommand "logout /y" "" "--> "
         client.RunCommandForTerminate "exit"
-        GlbFunc.DeleteDir m_WorkPath
 
     [<Fact>]
     member _.Reload_001 () =
         let client = ClientProc( "::1", m_ControllPortNo, m_WorkPath )
         client.RunCommand "reload" "" "CR> "
         client.RunCommandForTerminate "exit"
-        GlbFunc.DeleteDir m_WorkPath
 
     [<Fact>]
     member _.Reload_002 () =
@@ -136,7 +129,6 @@ type Command01( fx : Command01_Fixture ) =
         let v = client.RunCommandGetResp "reload" "CR> "
         Assert.NotEmpty v
         client.RunCommandForTerminate "exit /y"
-        GlbFunc.DeleteDir m_WorkPath
 
     [<Fact>]
     member _.Reload_003 () =
@@ -144,4 +136,3 @@ type Command01( fx : Command01_Fixture ) =
         client.RunCommand "set LOGLEVEL VERBOSE" "" "CR> "
         client.RunCommand "reload /y" "" "CR> "
         client.RunCommandForTerminate "exit"
-        GlbFunc.DeleteDir m_WorkPath

@@ -58,7 +58,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "01 Solution Items", "01 Sol
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IT_SCSI", "tests\IT_SCSI\IT_SCSI.fsproj", "{62E5AF9D-BB5F-4CD6-BA39-20866CF3997B}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IT_Client", "IT_Client\IT_Client.fsproj", "{CDA0F7E9-4686-484E-A523-7AC3E299B09C}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IT_Client", "tests\IT_Client\IT_Client.fsproj", "{CDA0F7E9-4686-484E-A523-7AC3E299B09C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
