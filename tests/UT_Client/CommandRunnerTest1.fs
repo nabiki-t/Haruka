@@ -742,7 +742,7 @@ type CommandRunner_Test1() =
 
         let out_rs = GenOutputStreamReader out_ms out_ws
         let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith "--> " ))
+        Assert.StartsWith( "--> ", outline )
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -765,7 +765,7 @@ type CommandRunner_Test1() =
 
         let out_rs = GenOutputStreamReader out_ms out_ws
         let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith ( prompt :?> string ) ))
+        Assert.StartsWith( prompt :?> string, outline )
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -860,7 +860,7 @@ type CommandRunner_Test1() =
                 let out_rs = new StreamReader( out_ms )
                 let outline = out_rs.ReadLine()
 
-                Assert.True(( outline.StartsWith "--> " ))
+                Assert.StartsWith( "--> ", outline )
 
                 GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
             }
@@ -923,7 +923,7 @@ type CommandRunner_Test1() =
                 let out_rs = new StreamReader( out_ms )
                 let outline = out_rs.ReadLine()
 
-                Assert.True(( outline.StartsWith "--> " ))
+                Assert.StartsWith( "--> ", outline )
 
                 GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
             }
@@ -983,7 +983,6 @@ type CommandRunner_Test1() =
                     GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
                 with
                 | _ as x ->
-                    printfn "aaa"
                     ()
             }
         |]
@@ -1090,7 +1089,7 @@ type CommandRunner_Test1() =
 
         let out_rs = GenOutputStreamReader out_ms out_ws
         let outline = out_rs.ReadLine()
-        Assert.True(( outline.StartsWith ( prompt :?> string ) ))
+        Assert.StartsWith( prompt :?> string, outline )
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1292,7 +1291,7 @@ type CommandRunner_Test1() =
         ss.p_Publish <- ( fun argcc ->
             task {
                 flg <- true
-                Assert.True(( argcc = cc ))
+                Assert.Same( cc, argcc )
             }
         )
 
@@ -1403,7 +1402,7 @@ type CommandRunner_Test1() =
 
         ss.p_ControllerNode <- ( CommandRunner_Test1.m_ControllerNode :?> ConfNode_Controller )
         ss.p_GetAncestorTargetDevice <- ( fun a ->
-            Assert.True(( a = tnode ))
+            Assert.Same( tnode, a )
             flg1 <- true;
             None
         )
@@ -1453,13 +1452,13 @@ type CommandRunner_Test1() =
         let mutable flg2 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun cn ->
-            Assert.True(( cn = tnode ))
+            Assert.Same( tnode, cn )
             flg1 <- true
             Some tdnode
         )
 
         cc.p_StartTargetDeviceProc <- ( fun tdid ->
-            Assert.True(( tdid = tdnode.TargetDeviceID ))
+            Assert.StrictEqual( tdnode.TargetDeviceID, tdid )
             flg2 <- true
             Task.FromResult ()
         )
@@ -1494,13 +1493,13 @@ type CommandRunner_Test1() =
         let mutable flg2 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun cn ->
-            Assert.True(( cn = tnode ))
+            Assert.Same( tnode, cn )
             flg1 <- true
             Some tdnode
         )
 
         cc.p_KillTargetDeviceProc <- ( fun tdid ->
-            Assert.True(( tdid = tdnode.TargetDeviceID ))
+            Assert.StrictEqual( tdnode.TargetDeviceID, tdid )
             flg2 <- true
             Task.FromResult ()
         )
@@ -1533,7 +1532,7 @@ type CommandRunner_Test1() =
         let mutable flg2 = false
 
         cc.p_GetLogParameters <- ( fun tdid ->
-            Assert.True(( tdid = tdnode.TargetDeviceID ))
+            Assert.StrictEqual( tdnode.TargetDeviceID, tdid )
             flg1 <- true
             task {
                 return {
@@ -1547,10 +1546,10 @@ type CommandRunner_Test1() =
         cc.p_SetLogParameters <- ( fun tdid argp ->
             flg2 <- true
             task {
-                Assert.True(( tdid = tdnode.TargetDeviceID ))
-                Assert.True(( argp.SoftLimit = Constants.LOGPARAM_DEF_SOFTLIMIT ))
-                Assert.True(( argp.HardLimit = Constants.LOGPARAM_DEF_HARDLIMIT ))
-                Assert.True(( argp.LogLevel = LogLevel.LOGLEVEL_INFO ))
+                Assert.StrictEqual( tdnode.TargetDeviceID, tdid )
+                Assert.StrictEqual( Constants.LOGPARAM_DEF_SOFTLIMIT, argp.SoftLimit )
+                Assert.StrictEqual( Constants.LOGPARAM_DEF_HARDLIMIT, argp.HardLimit )
+                Assert.StrictEqual( LogLevel.LOGLEVEL_INFO, argp.LogLevel )
             }
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
@@ -1583,7 +1582,7 @@ type CommandRunner_Test1() =
         let mutable flg1 = false
 
         cc.p_GetLogParameters <- ( fun tdid ->
-            Assert.True(( tdid = tdnode.TargetDeviceID ))
+            Assert.StrictEqual( tdnode.TargetDeviceID, tdid )
             flg1 <- true
             task {
                 return {
@@ -1623,7 +1622,7 @@ type CommandRunner_Test1() =
 
         ss.p_AddNetworkPortalNode <- ( fun argtdnode conf ->
             flg1 <- true
-            Assert.True(( argtdnode = tdnode ))
+            Assert.Same( tdnode, argtdnode )
             CommandRunner_Test1.m_NetworkPortalNode :?> ConfNode_NetworkPortal
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node ->
@@ -1659,7 +1658,7 @@ type CommandRunner_Test1() =
 
         ss.p_AddTargetGroupNode <- ( fun argtdnode newTgid tgName eas ->
             flg1 <- true
-            Assert.True(( tdnode = argtdnode ))
+            Assert.Same( argtdnode, tdnode )
             tgnode
         )
 
@@ -1775,19 +1774,19 @@ type CommandRunner_Test1() =
 
         ss.p_GetAncestorTargetDevice <- ( fun argcn ->
             flg1 <- true
-            Assert.True(( argcn = cn ))
+            Assert.Same( cn, argcn )
             Some tdnode
         )
         ss.p_GetAncestorTargetGroup <- ( fun argcn ->
             flg2 <- true
-            Assert.True(( argcn = cn ))
+            Assert.Same( cn, argcn )
             Some tgnode
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun _ _ -> Task.CompletedTask )
         cc.p_LoadTargetGroup <- ( fun tdid tgid ->
             flg3 <- true
-            Assert.True(( tdid = tdnode.TargetDeviceID ))
-            Assert.True(( tgid = tgnode.TargetGroupID ))
+            Assert.StrictEqual( tdnode.TargetDeviceID, tdid )
+            Assert.StrictEqual( tgnode.TargetGroupID, tgid )
             Task.FromResult ()
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
@@ -1827,18 +1826,18 @@ type CommandRunner_Test1() =
 
         ss.p_GetAncestorTargetDevice <- ( fun argcn ->
             flg1 <- true
-            Assert.True(( argcn = cn ))
+            Assert.Same( cn, argcn )
             Some tdnode
         )
         ss.p_GetAncestorTargetGroup <- ( fun argcn ->
             flg2 <- true
-            Assert.True(( argcn = cn ))
+            Assert.Same( cn, argcn )
             Some tgnode
         )
         cc.p_UnloadTargetGroup <- ( fun tdid tgid ->
             flg3 <- true
-            Assert.True(( tdid = tdnode.TargetDeviceID ))
-            Assert.True(( tgid = tgnode.TargetGroupID ))
+            Assert.StrictEqual( tdnode.TargetDeviceID, tdid )
+            Assert.StrictEqual( tgnode.TargetGroupID, tgid )
             Task.FromResult ()
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
@@ -1878,18 +1877,18 @@ type CommandRunner_Test1() =
 
         ss.p_GetAncestorTargetDevice <- ( fun argcn ->
             flg1 <- true
-            Assert.True(( argcn = cn ))
+            Assert.Same( cn, argcn )
             Some tdnode
         )
         ss.p_GetAncestorTargetGroup <- ( fun argcn ->
             flg2 <- true
-            Assert.True(( argcn = cn ))
+            Assert.Same( cn, argcn )
             Some tgnode
         )
         cc.p_ActivateTargetGroup <- ( fun tdid tgid ->
             flg3 <- true
-            Assert.True(( tdid = tdnode.TargetDeviceID ))
-            Assert.True(( tgid = tgnode.TargetGroupID ))
+            Assert.StrictEqual( tdnode.TargetDeviceID, tdid )
+            Assert.StrictEqual( tgnode.TargetGroupID, tgid )
             Task.FromResult ()
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
@@ -1929,18 +1928,18 @@ type CommandRunner_Test1() =
 
         ss.p_GetAncestorTargetDevice <- ( fun argcn ->
             flg1 <- true
-            Assert.True(( argcn = cn ))
+            Assert.Same( cn, argcn )
             Some tdnode
         )
         ss.p_GetAncestorTargetGroup <- ( fun argcn ->
             flg2 <- true
-            Assert.True(( argcn = cn ))
+            Assert.Same( cn, argcn )
             Some tgnode
         )
         cc.p_InactivateTargetGroup <- ( fun tdid tgid ->
             flg3 <- true
-            Assert.True(( tdid = tdnode.TargetDeviceID ))
-            Assert.True(( tgid = tgnode.TargetGroupID ))
+            Assert.StrictEqual( tdnode.TargetDeviceID, tdid )
+            Assert.StrictEqual( tgnode.TargetGroupID, tgid )
             Task.FromResult ()
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
@@ -1975,12 +1974,12 @@ type CommandRunner_Test1() =
         let mutable flg1 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun curnode -> 
-            Assert.True(( curnode = tgnode ))
+            Assert.Same( tgnode, curnode )
             Some( CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice )
         )
         ss.p_AddTargetNode <- ( fun argtgnode conf ->
             flg1 <- true
-            Assert.True(( tgnode = argtgnode ))
+            Assert.Same( tgnode, argtgnode )
             tnode
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node ->
@@ -2010,7 +2009,7 @@ type CommandRunner_Test1() =
 
         ss.p_UpdateTargetNode <- ( fun argtnode conf ->
             flg1 <- true
-            Assert.True(( tnode = argtnode ))
+            Assert.Same( tnode, argtnode )
             tnode
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node ->
@@ -2045,7 +2044,7 @@ type CommandRunner_Test1() =
 
         ss.p_UpdateTargetNode <- ( fun argtnode conf ->
             flg1 <- true
-            Assert.True(( tnode = argtnode ))
+            Assert.Same( tnode, argtnode )
             tnode
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node ->
@@ -2081,7 +2080,7 @@ type CommandRunner_Test1() =
 
         ss.p_AddBlockDeviceLUNode <- ( fun argtnode lun luname mm otl ->
             flg1 <- true
-            Assert.True(( tnode = argtnode ))
+            Assert.Same( tnode, argtnode )
             lunode
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node ->
@@ -2112,7 +2111,7 @@ type CommandRunner_Test1() =
 
         ss.p_GetAncestorTargetGroup <- ( fun argtnode ->
             flg1 <- true
-            Assert.True(( argtnode = tnode ))
+            Assert.Same( tnode, argtnode )
             Some tgnode
         )
 
@@ -2169,12 +2168,12 @@ type CommandRunner_Test1() =
         let mutable flg1 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun curnode -> 
-            Assert.True(( curnode = cn ))
+            Assert.Same( cn, curnode )
             Some( CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice )
         )
         ss.p_AddPlainFileMediaNode <- ( fun argcn conf ->
             flg1 <- true
-            Assert.True(( cn = argcn ))
+            Assert.Same( cn, argcn )
             sfnode
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node ->
@@ -2205,12 +2204,12 @@ type CommandRunner_Test1() =
         let mutable flg1 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun curnode -> 
-            Assert.True(( curnode = cn ))
+            Assert.Same( cn, curnode )
             Some( CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice )
         )
         ss.p_AddMemBufferMediaNode <- ( fun argcn conf ->
             flg1 <- true
-            Assert.True(( cn = argcn ))
+            Assert.Same( cn, argcn )
             sfnode
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node ->
@@ -2241,12 +2240,12 @@ type CommandRunner_Test1() =
         let mutable flg1 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun curnode -> 
-            Assert.True(( curnode = cn ))
+            Assert.Same( cn, curnode )
             Some( CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice )
         )
         ss.p_AddDebugMediaNode <- ( fun argcn ident medianame ->
             flg1 <- true
-            Assert.True(( cn = argcn ))
+            Assert.Same( cn, argcn )
             sfnode
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node ->
@@ -2276,8 +2275,8 @@ type CommandRunner_Test1() =
         let mutable flg1 = false
 
         cc.p_CreateMediaFile_PlainFile <- ( fun fname fsize ->
-            Assert.True(( fname = "a" ))
-            Assert.True(( fsize = 1L ))
+            Assert.StrictEqual( "a", fname )
+            Assert.StrictEqual( 1L, fsize )
             flg1 <- true
             Task.FromResult 0UL
         )
@@ -2329,7 +2328,7 @@ type CommandRunner_Test1() =
         let mutable flg1 = false
 
         cc.p_KillInitMediaProc <- ( fun pid ->
-            Assert.True(( pid = 111UL ))
+            Assert.StrictEqual( 111UL, pid )
             flg1 <- true
             Task.FromResult []
         )
@@ -2426,8 +2425,8 @@ type CommandRunner_Test1() =
         ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdnode )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
         cc.p_DestructSession <- ( fun argtdid argtsih ->
-            Assert.True(( argtdid = tdnode.TargetDeviceID ))
-            Assert.True(( argtsih = tsih_me.fromPrim 99us ))
+            Assert.StrictEqual( tdnode.TargetDeviceID, argtdid )
+            Assert.StrictEqual( tsih_me.fromPrim 99us, argtsih )
             Task.FromResult ()
         )
 
@@ -2511,12 +2510,16 @@ type CommandRunner_Test1() =
         let cc = new CtrlConnectionStub( st )
         let cn = node :?> IConfigureNode
         let tdnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
 
         ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdnode )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> task { return [ { ID = tgn.TargetGroupID; Name = "" } ] } )
+
         cc.p_GetLUStatus <- ( fun tdid lun -> task {
-            Assert.True(( tdid = tdnode.TargetDeviceID ))
-            Assert.True(( lun = ( cn :?> ILUNode ).LUN ))
+            Assert.StrictEqual( tdnode.TargetDeviceID, tdid )
+            Assert.StrictEqual( ( cn :?> ILUNode ).LUN, lun )
             return {
                 ReadBytesCount = [];
                 WrittenBytesCount = [];
@@ -2552,12 +2555,16 @@ type CommandRunner_Test1() =
         let cc = new CtrlConnectionStub( st )
         let cn = node :?> IConfigureNode
         let tdnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
 
         ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdnode )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> task { return [ { ID = tgn.TargetGroupID; Name = "" } ] } )
+
         cc.p_LUReset <- ( fun tdid lun -> task {
-            Assert.True(( tdid = tdnode.TargetDeviceID ))
-            Assert.True(( lun = ( cn :?> ILUNode ).LUN ))
+            Assert.StrictEqual( tdnode.TargetDeviceID, tdid )
+            Assert.StrictEqual( ( cn :?> ILUNode ).LUN, lun )
         })
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
@@ -2585,22 +2592,28 @@ type CommandRunner_Test1() =
         let cc = new CtrlConnectionStub( st )
         let cn = node :?> IConfigureNode
         let tdnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode = cn ))
+            Assert.Same( cn, argnode )
             Some tdnode
         )
+        ss.p_GetAncestorTargetGroup <- ( fun argnode ->
+            Assert.Same( cn, argnode )
+            Some tgn
+        )
         ss.p_GetAncestorLogicalUnit <- ( fun argnode ->
-            Assert.True(( argnode = cn ))
+            Assert.Same( cn, argnode )
             Some lunode
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ ->Task.FromResult [ tdnode.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> task { return [ { ID = tgn.TargetGroupID; Name = "" } ] } )
         cc.p_GetMediaStatus <- ( fun tdid lun mdid ->
             task {
-                Assert.True(( tdid = tdnode.TargetDeviceID ))
-                Assert.True(( lun = ( lunode :> ILUNode ).LUN ))
-                Assert.True(( mdid = ( cn :?> IMediaNode ).IdentNumber ))
+                Assert.StrictEqual( tdnode.TargetDeviceID, tdid )
+                Assert.StrictEqual( ( lunode :> ILUNode ).LUN, lun )
+                Assert.StrictEqual( ( cn :?> IMediaNode ).IdentNumber, mdid )
                 return {
                     ReadBytesCount = [];
                     WrittenBytesCount = [];
@@ -2635,17 +2648,23 @@ type CommandRunner_Test1() =
         let cc = new CtrlConnectionStub( st )
         let cn = node :?> IConfigureNode
         let tdnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode = cn ))
+            Assert.Same( cn, argnode )
             Some tdnode
         )
+        ss.p_GetAncestorTargetGroup <- ( fun argnode ->
+            Assert.Same( cn, argnode )
+            Some tgn
+        )
         ss.p_GetAncestorLogicalUnit <- ( fun argnode ->
-            Assert.True(( argnode = cn ))
+            Assert.Same( cn, argnode )
             Some lunode
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> task { return [ { ID = tgn.TargetGroupID; Name = "" } ] } )
         cc.p_DebugMedia_AddTrap <- ( fun tdid lun mdid e a ->
             Assert.True(( e.IsU_TestUnitReady ))
             Assert.True(( a.IsU_ACA ))
@@ -2677,21 +2696,27 @@ type CommandRunner_Test1() =
         let cc = new CtrlConnectionStub( st )
         let cn = node :?> IConfigureNode
         let tdnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode = cn ))
+            Assert.Same( cn, argnode )
             Some tdnode
         )
+        ss.p_GetAncestorTargetGroup <- ( fun argnode ->
+            Assert.Same( cn, argnode )
+            Some tgn
+        )
         ss.p_GetAncestorLogicalUnit <- ( fun argnode ->
-            Assert.True(( argnode = cn ))
+            Assert.Same( cn, argnode )
             Some lunode
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> task { return [ { ID = tgn.TargetGroupID; Name = "" } ] } )
         cc.p_DebugMedia_ClearTraps <- ( fun tdid lun mdid ->
-            Assert.True(( tdid = tdnode.TargetDeviceID ))
-            Assert.True(( lun = ( lunode :> ILUNode ).LUN ))
-            Assert.True(( mdid = ( cn :?> IMediaNode ).IdentNumber ))
+            Assert.StrictEqual( tdnode.TargetDeviceID, tdid )
+            Assert.StrictEqual( ( lunode :> ILUNode ).LUN, lun )
+            Assert.StrictEqual( ( cn :?> IMediaNode ).IdentNumber, mdid )
             Task.FromResult ()
         )
 
@@ -2720,21 +2745,27 @@ type CommandRunner_Test1() =
         let cc = new CtrlConnectionStub( st )
         let cn = node :?> IConfigureNode
         let tdnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode = cn ))
+            Assert.Same( cn, argnode )
             Some tdnode
         )
+        ss.p_GetAncestorTargetGroup <- ( fun argnode ->
+            Assert.Same( cn, argnode )
+            Some tgn
+        )
         ss.p_GetAncestorLogicalUnit <- ( fun argnode ->
-            Assert.True(( argnode = cn ))
+            Assert.Same( cn, argnode )
             Some lunode
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> task { return [ { ID = tgn.TargetGroupID; Name = "" } ] } )
         cc.p_DebugMedia_GetAllTraps <- ( fun tdid lun mdid ->
-            Assert.True(( tdid = tdnode.TargetDeviceID ))
-            Assert.True(( lun = ( lunode :> ILUNode ).LUN ))
-            Assert.True(( mdid = ( cn :?> IMediaNode ).IdentNumber ))
+            Assert.StrictEqual( tdnode.TargetDeviceID, tdid )
+            Assert.StrictEqual( ( lunode :> ILUNode ).LUN, lun )
+            Assert.StrictEqual( ( cn :?> IMediaNode ).IdentNumber, mdid )
             Task.FromResult []
         )
 
@@ -2763,21 +2794,27 @@ type CommandRunner_Test1() =
         let cc = new CtrlConnectionStub( st )
         let cn = node :?> IConfigureNode
         let tdnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode = cn ))
+            Assert.Same( cn, argnode )
             Some tdnode
         )
+        ss.p_GetAncestorTargetGroup <- ( fun argnode ->
+            Assert.Same( cn, argnode )
+            Some tgn
+        )
         ss.p_GetAncestorLogicalUnit <- ( fun argnode ->
-            Assert.True(( argnode = cn ))
+            Assert.Same( cn, argnode )
             Some lunode
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> task { return [ { ID = tgn.TargetGroupID; Name = "" } ] } )
         cc.p_DebugMedia_GetTaskWaitStatus <- ( fun tdid lun mdid ->
-            Assert.True(( tdid = tdnode.TargetDeviceID ))
-            Assert.True(( lun = ( lunode :> ILUNode ).LUN ))
-            Assert.True(( mdid = ( cn :?> IMediaNode ).IdentNumber ))
+            Assert.StrictEqual( tdnode.TargetDeviceID, tdid )
+            Assert.StrictEqual( ( lunode :> ILUNode ).LUN, lun )
+            Assert.StrictEqual( ( cn :?> IMediaNode ).IdentNumber, mdid )
             Task.FromResult []
         )
 
@@ -2806,23 +2843,29 @@ type CommandRunner_Test1() =
         let cc = new CtrlConnectionStub( st )
         let cn = node :?> IConfigureNode
         let tdnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode = cn ))
+            Assert.Same( cn, argnode )
             Some tdnode
         )
+        ss.p_GetAncestorTargetGroup <- ( fun argnode ->
+            Assert.Same( cn, argnode )
+            Some tgn
+        )
         ss.p_GetAncestorLogicalUnit <- ( fun argnode ->
-            Assert.True(( argnode = cn ))
+            Assert.Same( cn, argnode )
             Some lunode
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> task { return [ { ID = tgn.TargetGroupID; Name = "" } ] } )
         cc.p_DebugMedia_Resume <- ( fun tdid lun mdid tsih itt ->
-            Assert.True(( tdid = tdnode.TargetDeviceID ))
-            Assert.True(( lun = ( lunode :> ILUNode ).LUN ))
-            Assert.True(( mdid = ( cn :?> IMediaNode ).IdentNumber ))
-            Assert.True(( tsih = ( tsih_me.fromPrim 1us ) ))
-            Assert.True(( itt = ( itt_me.fromPrim 2u ) ))
+            Assert.StrictEqual( tdnode.TargetDeviceID, tdid )
+            Assert.StrictEqual( ( lunode :> ILUNode ).LUN, lun )
+            Assert.StrictEqual( ( cn :?> IMediaNode ).IdentNumber, mdid )
+            Assert.StrictEqual( tsih_me.fromPrim 1us, tsih )
+            Assert.StrictEqual( itt_me.fromPrim 2u, itt )
             Task.FromResult()
         )
 

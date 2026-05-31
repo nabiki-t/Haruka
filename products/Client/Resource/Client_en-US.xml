@@ -333,6 +333,14 @@
       <Value>Specified target group is still loaded.</Value>
     </Message>
     <Message>
+      <Name>ERRMSG_TARGET_GROUP_MODIFIED</Name>
+      <Value>The target group has been modified.</Value>
+    </Message>
+    <Message>
+      <Name>ERRMSG_TARGET_GROUP_UNLOADED</Name>
+      <Value>Target group is not loaded.</Value>
+    </Message>
+    <Message>
       <Name>ERRMSG_UNEXPECTED_RESPONSE</Name>
       <Value>Failed to send {0} request. Unexpected response was received.</Value>
     </Message>

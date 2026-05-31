@@ -4454,32 +4454,14 @@ type CommandRunner_Test3() =
     [<Fact>]
     member _.LUStatus_001 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lustatus" )
-        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let lun = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
-        let mutable flg1 = false
-        let mutable flg2 = false
 
-        ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode = lun ))
-            flg1 <- true
-            None
-        )
-        cc.p_GetTargetDeviceProcs <- ( fun _ ->
-            task {
-                flg2 <- true
-                return [tdn.TargetDeviceID ]
-            }
-        )
+        ss.p_GetAncestorTargetDevice <- ( fun argnode -> None )
 
-        try
-            let _ = CallCommandLoop cr ( Some ( ss, cc, lun ) )
-            Assert.Fail __LINE__
-        with
-        | :? Xunit.Sdk.FailException -> reraise();
-        | _ as x ->
-            ()
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
+        Assert.ThrowsAny( fun () ->
+            CallCommandLoop cr ( Some ( ss, cc, lun ) ) |> ignore
+        ) |> ignore
+
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
 
     [<Fact>]
@@ -4487,31 +4469,84 @@ type CommandRunner_Test3() =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lustatus" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
-        let mutable flg2 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
-        cc.p_GetTargetDeviceProcs <- ( fun _ ->
-            task {
-                flg2 <- true
-                return []
-            }
-        )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> None )
 
-        let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
-        Assert.True(( stat = Some ( ss, cc, lunode ) ))
-        Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
-        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+        Assert.ThrowsAny( fun () ->
+            CallCommandLoop cr ( Some ( ss, cc, lunode ) ) |> ignore
+        ) |> ignore
+
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
 
     [<Fact>]
     member _.LUStatus_003 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lustatus" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
 
         ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> task { return [] } )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, lunode ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.LUStatus_004 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lustatus" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [] )
+
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, lunode ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "ERRMSG_TARGET_GROUP_UNLOADED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.LUStatus_005 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lustatus" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn =
+            let n = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+            n.SetModified()
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID = tgn.TargetGroupID; Name = "" } ] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, lunode ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "ERRMSG_TARGET_GROUP_MODIFIED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.LUStatus_006 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lustatus" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID = tgn.TargetGroupID; Name = "" } ] )
+
         cc.p_GetLUStatus <- ( fun tdid lun -> task {
             Assert.True(( tdid = tdn.TargetDeviceID ))
             Assert.True(( lun = ( lunode :> ILUNode ).LUN ))
@@ -4538,13 +4573,17 @@ type CommandRunner_Test3() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.LUStatus_004 () =
+    member _.LUStatus_007 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lustatus" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
 
         ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID = tgn.TargetGroupID; Name = "" } ] )
+
         cc.p_GetLUStatus <- ( fun tdid lun -> task {
             Assert.True(( tdid = tdn.TargetDeviceID ))
             Assert.True(( lun = ( lunode :> ILUNode ).LUN ))
@@ -4584,32 +4623,13 @@ type CommandRunner_Test3() =
     [<Fact>]
     member _.LUReset_001 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lureset" )
-        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
-        let mutable flg1 = false
-        let mutable flg2 = false
 
-        ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode = lunode ))
-            flg1 <- true
-            None
-        )
-        cc.p_GetTargetDeviceProcs <- ( fun _ ->
-            task {
-                flg2 <- true
-                return [tdn.TargetDeviceID ]
-            }
-        )
+        ss.p_GetAncestorTargetDevice <- ( fun argnode -> None )
 
-        try
-            let _ = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-            Assert.Fail __LINE__
-        with
-        | :? Xunit.Sdk.FailException -> reraise();
-        | _ as x ->
-            ()
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
+        Assert.ThrowsAny( fun () ->
+            CallCommandLoop cr ( Some ( ss, cc, lunode ) ) |> ignore
+        ) |> ignore
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
 
     [<Fact>]
@@ -4617,45 +4637,93 @@ type CommandRunner_Test3() =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lureset" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
-        let mutable flg2 = false
 
-        ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode = lunode ))
-            Some tdn
-        )
-        cc.p_GetTargetDeviceProcs <- ( fun _ ->
-            task {
-                flg2 <- true
-                return []
-            }
-        )
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> None )
 
-        let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
-        Assert.True(( stat = Some ( ss, cc, lunode ) ))
-        Assert.True(( flg2 ))
-        let out_rs = CheckOutputMessage out_ms out_ws "LU" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
-        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+        Assert.ThrowsAny( fun () ->
+            CallCommandLoop cr ( Some ( ss, cc, lunode ) ) |> ignore
+        ) |> ignore
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
 
     [<Fact>]
     member _.LUReset_003 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lureset" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> task { return [] } )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, lunode ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.LUReset_004 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lureset" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, lunode ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "ERRMSG_TARGET_GROUP_UNLOADED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.LUReset_005 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lureset" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn =
+            let n = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+            n.SetModified()
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID = tgn.TargetGroupID; Name = "" } ] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, lunode ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "ERRMSG_TARGET_GROUP_MODIFIED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.LUReset_006 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lureset" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
         let mutable flg3 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID = tgn.TargetGroupID; Name = "" } ] )
+
         cc.p_LUReset <- ( fun tdid lun -> task {
-            Assert.True(( tdid = tdn.TargetDeviceID ))
+            Assert.StrictEqual( tdn.TargetDeviceID, tdid )
             Assert.True(( lun = ( lunode :> ILUNode ).LUN ))
             flg3 <- true
         })
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
-        Assert.True(( flg3 ))
+        Assert.True( flg3 )
         let out_rs = CheckOutputMessage out_ms out_ws "LU" "LU Reseted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 

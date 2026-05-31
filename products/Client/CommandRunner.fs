@@ -3417,16 +3417,40 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
+            let lunode =
+                match cn with
+                | :? ILUNode as x -> x
+                | _ ->
+                    raise <| Exception "Unexpected error."
+
             let tdnode = ss.GetAncestorTargetDevice cn
+            if tdnode.IsNone then raise <| Exception "Unexpected error."
+            let tdid = tdnode.Value.TargetDeviceID
+
+            let tgnode = ss.GetAncestorTargetGroup cn
+            if tgnode.IsNone then raise <| Exception "Unexpected error."
+            let tgid = tgnode.Value.TargetGroupID
+            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified <> ModifiedStatus.NotModified
+
             let! tdlist = cc.GetTargetDeviceProcs()
 
-            if tdnode.IsNone then
-                raise <| Exception "Unexpected error."
-            elif List.exists ( (=) tdnode.Value.TargetDeviceID ) tdlist then
-                match cn with
-                | :? ILUNode as x ->
-                    let! lustat = cc.GetLUStatus tdnode.Value.TargetDeviceID x.LUN
-                    this.Output 0 ( sprintf "LU Status( LUN : %s )" ( lun_me.toString x.LUN ) )
+            if List.exists ( (=) tdid ) tdlist then
+
+                let! loadedtg = cc.GetLoadedTargetGroups tdid
+                let tgloaded =
+                    loadedtg
+                    |> List.exists ( fun itr -> itr.ID = tgid )
+
+                if tgmodified then
+                    m_Messages.GetMessage( "ERRMSG_TARGET_GROUP_MODIFIED" )
+                    |> this.Output 0
+                elif not tgloaded then
+                    m_Messages.GetMessage( "ERRMSG_TARGET_GROUP_UNLOADED" )
+                    |> this.Output 0
+                else
+
+                    let! lustat = cc.GetLUStatus tdid lunode.LUN
+                    this.Output 0 ( sprintf "LU Status( LUN : %s )" ( lun_me.toString lunode.LUN ) )
 
                     if lustat.ACAStatus.IsNone then
                         this.Output 1 "ACA : None"
@@ -3475,8 +3499,6 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                             ( float ( Option.defaultValue 0L us_val.[3] ) ) / ( float ( Constants.RECOUNTER_SPAN_SEC * Stopwatch.Frequency ) )
                         this.Output 2 ( sprintf "%s, %d, %d, %f, %f" dtstr readBytesSec writtenBytesSec avgReadSec avgWriteSec )
                     )
-                | _ ->
-                    raise <| Exception "Unexpected error."
             else
                 m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
                 |> this.Output 0
@@ -3501,18 +3523,38 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
-            let tdnoe = ss.GetAncestorTargetDevice cn
-            let! tdlist = cc.GetTargetDeviceProcs()
-
-            if tdnoe.IsNone then
-                raise <| Exception "Unexpected error."
-            elif List.exists ( (=) tdnoe.Value.TargetDeviceID ) tdlist then
+            let lunode =
                 match cn with
-                | :? ILUNode as x ->
-                    do! cc.LUReset tdnoe.Value.TargetDeviceID x.LUN
-                    this.Output 0 "LU Reseted"
+                | :? ILUNode as x -> x
                 | _ ->
                     raise <| Exception "Unexpected error."
+
+            let tdnode = ss.GetAncestorTargetDevice cn
+            if tdnode.IsNone then raise <| Exception "Unexpected error."
+            let tdid = tdnode.Value.TargetDeviceID
+
+            let tgnode = ss.GetAncestorTargetGroup cn
+            if tgnode.IsNone then raise <| Exception "Unexpected error."
+            let tgid = tgnode.Value.TargetGroupID
+            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified <> ModifiedStatus.NotModified
+
+            let! tdlist = cc.GetTargetDeviceProcs()
+            if List.exists ( (=) tdid ) tdlist then
+
+                let! loadedtg = cc.GetLoadedTargetGroups tdid
+                let tgloaded =
+                    loadedtg
+                    |> List.exists ( fun itr -> itr.ID = tgid )
+
+                if tgmodified then
+                    m_Messages.GetMessage( "ERRMSG_TARGET_GROUP_MODIFIED" )
+                    |> this.Output 0
+                elif not tgloaded then
+                    m_Messages.GetMessage( "ERRMSG_TARGET_GROUP_UNLOADED" )
+                    |> this.Output 0
+                else
+                    do! cc.LUReset tdid lunode.LUN
+                    this.Output 0 "LU Reseted"
             else
                 m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
                 |> this.Output 0
@@ -3537,17 +3579,40 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
-            let tdnoe = ss.GetAncestorTargetDevice cn
+            let medianode =
+                match cn with
+                | :? IMediaNode as x -> x
+                | _ ->
+                    raise <| Exception "Unexpected error."
+
+            let tdnode = ss.GetAncestorTargetDevice cn
+            let tgnode = ss.GetAncestorTargetGroup cn
             let lunode = ss.GetAncestorLogicalUnit cn
             let! tdlist = cc.GetTargetDeviceProcs()
 
-            if tdnoe.IsNone || lunode.IsNone then
+            if tdnode.IsNone || tgnode.IsNone || lunode.IsNone then
                 raise <| Exception "Unexpected error."
-            elif List.exists ( (=) tdnoe.Value.TargetDeviceID ) tdlist then
-                match cn with
-                | :? IMediaNode as x ->
-                    let! mediaStat = cc.GetMediaStatus tdnoe.Value.TargetDeviceID lunode.Value.LUN x.IdentNumber
-                    this.Output 0 ( sprintf "Media Status( ID : %d )" ( mediaidx_me.toPrim x.IdentNumber ) )
+
+            let tdid = tdnode.Value.TargetDeviceID
+            let tgid = tgnode.Value.TargetGroupID
+            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified <> ModifiedStatus.NotModified
+
+            if List.exists ( (=) tdid ) tdlist then
+
+                let! loadedtg = cc.GetLoadedTargetGroups tdid
+                let tgloaded =
+                    loadedtg
+                    |> List.exists ( fun itr -> itr.ID = tgid )
+
+                if tgmodified then
+                    m_Messages.GetMessage( "ERRMSG_TARGET_GROUP_MODIFIED" )
+                    |> this.Output 0
+                elif not tgloaded then
+                    m_Messages.GetMessage( "ERRMSG_TARGET_GROUP_UNLOADED" )
+                    |> this.Output 0
+                else
+                    let! mediaStat = cc.GetMediaStatus tdid lunode.Value.LUN medianode.IdentNumber
+                    this.Output 0 ( sprintf "Media Status( ID : %d )" ( mediaidx_me.toPrim medianode.IdentNumber ) )
                     this.Output 1 "Usage( Time, Read Bytes/s, Written Bytes/s, Avg Read Sec, Avg Write Sec )"
                     let usageseq =
                         Functions.PairByIndex
@@ -3565,8 +3630,6 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                             ( float ( Option.defaultValue 0L us_val.[3] ) ) / ( float ( Constants.RECOUNTER_SPAN_SEC * Stopwatch.Frequency ) )
                         this.Output 2 ( sprintf "%s, %d, %d, %f, %f" dtstr readBytesSec writtenBytesSec avgReadSec avgWriteSec )
                     )
-                | _ ->
-                    raise <| Exception "Unexpected error."
             else
                 m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
                 |> this.Output 0
@@ -3590,11 +3653,24 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     member private this.Command_AddTrap
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
-
         task {
-            let tdnoe = ss.GetAncestorTargetDevice cn
+            let medianode =
+                match cn with
+                | :? ConfNode_DebugMedia as x -> x
+                | _ ->
+                    raise <| Exception "Unexpected error."
+
+            let tdnode = ss.GetAncestorTargetDevice cn
+            let tgnode = ss.GetAncestorTargetGroup cn
             let lunode = ss.GetAncestorLogicalUnit cn
             let! tdlist = cc.GetTargetDeviceProcs()
+
+            if tdnode.IsNone || tgnode.IsNone || lunode.IsNone then
+                raise <| Exception "Unexpected error."
+
+            let tdid = tdnode.Value.TargetDeviceID
+            let tgid = tgnode.Value.TargetGroupID
+            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified <> ModifiedStatus.NotModified
 
             let eventStr = cmd.DefaultNamedString "/e" ""
             let actionStr = cmd.DefaultNamedString "/a" ""
@@ -3632,15 +3708,21 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 else
                     raise <| Exception "Unexpected error."
 
-            if tdnoe.IsNone || lunode.IsNone then
-                raise <| Exception "Unexpected error."
-            elif List.exists ( (=) tdnoe.Value.TargetDeviceID ) tdlist then
-                match cn with
-                | :? ConfNode_DebugMedia as x ->
-                    do! cc.DebugMedia_AddTrap tdnoe.Value.TargetDeviceID lunode.Value.LUN ( x :> IMediaNode ).IdentNumber eventVal actionVal
+            if List.exists ( (=) tdid ) tdlist then
+                let! loadedtg = cc.GetLoadedTargetGroups tdid
+                let tgloaded =
+                    loadedtg
+                    |> List.exists ( fun itr -> itr.ID = tgid )
+
+                if tgmodified then
+                    m_Messages.GetMessage( "ERRMSG_TARGET_GROUP_MODIFIED" )
+                    |> this.Output 0
+                elif not tgloaded then
+                    m_Messages.GetMessage( "ERRMSG_TARGET_GROUP_UNLOADED" )
+                    |> this.Output 0
+                else
+                    do! cc.DebugMedia_AddTrap tdid lunode.Value.LUN ( medianode :> IMediaNode ).IdentNumber eventVal actionVal
                     this.Output 0 "Trap added."
-                | _ ->
-                    raise <| Exception "Unexpected error."
             else
                 m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
                 |> this.Output 0
@@ -3665,19 +3747,39 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
-            let tdnoe = ss.GetAncestorTargetDevice cn
+            let medianode =
+                match cn with
+                | :? ConfNode_DebugMedia as x -> x
+                | _ ->
+                    raise <| Exception "Unexpected error."
+
+            let tdnode = ss.GetAncestorTargetDevice cn
+            let tgnode = ss.GetAncestorTargetGroup cn
             let lunode = ss.GetAncestorLogicalUnit cn
             let! tdlist = cc.GetTargetDeviceProcs()
 
-            if tdnoe.IsNone || lunode.IsNone then
+            if tdnode.IsNone || tgnode.IsNone || lunode.IsNone then
                 raise <| Exception "Unexpected error."
-            elif List.exists ( (=) tdnoe.Value.TargetDeviceID ) tdlist then
-                match cn with
-                | :? ConfNode_DebugMedia as x ->
-                    do! cc.DebugMedia_ClearTraps tdnoe.Value.TargetDeviceID lunode.Value.LUN ( x :> IMediaNode ).IdentNumber
+
+            let tdid = tdnode.Value.TargetDeviceID
+            let tgid = tgnode.Value.TargetGroupID
+            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified <> ModifiedStatus.NotModified
+
+            if List.exists ( (=) tdid ) tdlist then
+                let! loadedtg = cc.GetLoadedTargetGroups tdid
+                let tgloaded =
+                    loadedtg
+                    |> List.exists ( fun itr -> itr.ID = tgid )
+
+                if tgmodified then
+                    m_Messages.GetMessage( "ERRMSG_TARGET_GROUP_MODIFIED" )
+                    |> this.Output 0
+                elif not tgloaded then
+                    m_Messages.GetMessage( "ERRMSG_TARGET_GROUP_UNLOADED" )
+                    |> this.Output 0
+                else
+                    do! cc.DebugMedia_ClearTraps tdid lunode.Value.LUN ( medianode :> IMediaNode ).IdentNumber
                     this.Output 0 "Traps cleared."
-                | _ ->
-                    raise <| Exception "Unexpected error."
             else
                 m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
                 |> this.Output 0
@@ -3702,17 +3804,39 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
-            let tdnoe = ss.GetAncestorTargetDevice cn
+            let medianode =
+                match cn with
+                | :? ConfNode_DebugMedia as x -> x
+                | _ ->
+                    raise <| Exception "Unexpected error."
+
+            let tdnode = ss.GetAncestorTargetDevice cn
+            let tgnode = ss.GetAncestorTargetGroup cn
             let lunode = ss.GetAncestorLogicalUnit cn
             let! tdlist = cc.GetTargetDeviceProcs()
 
-            if tdnoe.IsNone || lunode.IsNone then
+            if tdnode.IsNone || tgnode.IsNone || lunode.IsNone then
                 raise <| Exception "Unexpected error."
-            elif List.exists ( (=) tdnoe.Value.TargetDeviceID ) tdlist then
-                match cn with
-                | :? ConfNode_DebugMedia as x ->
-                    let mediaidx = ( x :> IMediaNode ).IdentNumber
-                    let! tlist = cc.DebugMedia_GetAllTraps tdnoe.Value.TargetDeviceID lunode.Value.LUN mediaidx
+
+            let tdid = tdnode.Value.TargetDeviceID
+            let tgid = tgnode.Value.TargetGroupID
+            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified <> ModifiedStatus.NotModified
+
+            if List.exists ( (=) tdid ) tdlist then
+                let! loadedtg = cc.GetLoadedTargetGroups tdid
+                let tgloaded =
+                    loadedtg
+                    |> List.exists ( fun itr -> itr.ID = tgid )
+
+                if tgmodified then
+                    m_Messages.GetMessage( "ERRMSG_TARGET_GROUP_MODIFIED" )
+                    |> this.Output 0
+                elif not tgloaded then
+                    m_Messages.GetMessage( "ERRMSG_TARGET_GROUP_UNLOADED" )
+                    |> this.Output 0
+                else
+                    let mediaidx = ( medianode :> IMediaNode ).IdentNumber
+                    let! tlist = cc.DebugMedia_GetAllTraps tdid lunode.Value.LUN mediaidx
                     this.Output 0 ( sprintf "Registered traps( ID : %d )" ( mediaidx_me.toPrim mediaidx ) )
                     for itr in tlist do
                         let eventStr =
@@ -3740,8 +3864,6 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                             | MediaCtrlRes.U_Wait() ->
                                 sprintf "Wait"
                         this.Output 1 ( sprintf "%s : %s" eventStr actionStr )
-                | _ ->
-                    raise <| Exception "Unexpected error."
             else
                 m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
                 |> this.Output 0
@@ -3766,22 +3888,42 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
-            let tdnoe = ss.GetAncestorTargetDevice cn
+            let medianode =
+                match cn with
+                | :? ConfNode_DebugMedia as x -> x
+                | _ ->
+                    raise <| Exception "Unexpected error."
+
+            let tdnode = ss.GetAncestorTargetDevice cn
+            let tgnode = ss.GetAncestorTargetGroup cn
             let lunode = ss.GetAncestorLogicalUnit cn
             let! tdlist = cc.GetTargetDeviceProcs()
 
-            if tdnoe.IsNone || lunode.IsNone then
+            if tdnode.IsNone || tgnode.IsNone || lunode.IsNone then
                 raise <| Exception "Unexpected error."
-            elif List.exists ( (=) tdnoe.Value.TargetDeviceID ) tdlist then
-                match cn with
-                | :? ConfNode_DebugMedia as x ->
-                    let mediaidx = ( x :> IMediaNode ).IdentNumber
-                    let! tlist = cc.DebugMedia_GetTaskWaitStatus tdnoe.Value.TargetDeviceID lunode.Value.LUN mediaidx
+
+            let tdid = tdnode.Value.TargetDeviceID
+            let tgid = tgnode.Value.TargetGroupID
+            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified <> ModifiedStatus.NotModified
+
+            if List.exists ( (=) tdid ) tdlist then
+                let! loadedtg = cc.GetLoadedTargetGroups tdid
+                let tgloaded =
+                    loadedtg
+                    |> List.exists ( fun itr -> itr.ID = tgid )
+
+                if tgmodified then
+                    m_Messages.GetMessage( "ERRMSG_TARGET_GROUP_MODIFIED" )
+                    |> this.Output 0
+                elif not tgloaded then
+                    m_Messages.GetMessage( "ERRMSG_TARGET_GROUP_UNLOADED" )
+                    |> this.Output 0
+                else
+                    let mediaidx = ( medianode :> IMediaNode ).IdentNumber
+                    let! tlist = cc.DebugMedia_GetTaskWaitStatus tdid lunode.Value.LUN mediaidx
                     this.Output 0 ( sprintf "Task wait status( ID : %d )" ( mediaidx_me.toPrim mediaidx ) )
                     for itr in tlist do
                         this.Output 1 ( sprintf "%s( TSIH=%d, ITT=%d )" itr.Description itr.TSIH itr.ITT )
-                | _ ->
-                    raise <| Exception "Unexpected error."
             else
                 m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
                 |> this.Output 0
@@ -3806,21 +3948,41 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
         task {
-            let tdnoe = ss.GetAncestorTargetDevice cn
+            let medianode =
+                match cn with
+                | :? ConfNode_DebugMedia as x -> x
+                | _ ->
+                    raise <| Exception "Unexpected error."
+
+            let tdnode = ss.GetAncestorTargetDevice cn
+            let tgnode = ss.GetAncestorTargetGroup cn
             let lunode = ss.GetAncestorLogicalUnit cn
             let! tdlist = cc.GetTargetDeviceProcs()
 
-            if tdnoe.IsNone || lunode.IsNone then
+            if tdnode.IsNone || tgnode.IsNone || lunode.IsNone then
                 raise <| Exception "Unexpected error."
-            elif List.exists ( (=) tdnoe.Value.TargetDeviceID ) tdlist then
-                match cn with
-                | :? ConfNode_DebugMedia as x ->
+
+            let tdid = tdnode.Value.TargetDeviceID
+            let tgid = tgnode.Value.TargetGroupID
+            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified <> ModifiedStatus.NotModified
+
+            if List.exists ( (=) tdid ) tdlist then
+                let! loadedtg = cc.GetLoadedTargetGroups tdid
+                let tgloaded =
+                    loadedtg
+                    |> List.exists ( fun itr -> itr.ID = tgid )
+
+                if tgmodified then
+                    m_Messages.GetMessage( "ERRMSG_TARGET_GROUP_MODIFIED" )
+                    |> this.Output 0
+                elif not tgloaded then
+                    m_Messages.GetMessage( "ERRMSG_TARGET_GROUP_UNLOADED" )
+                    |> this.Output 0
+                else
                     let itt = cmd.DefaultNamedUInt32 "/i" 0u |> itt_me.fromPrim
                     let tsih = cmd.DefaultNamedUInt32 "/t" 0u |> uint16 |> tsih_me.fromPrim
-                    do! cc.DebugMedia_Resume tdnoe.Value.TargetDeviceID lunode.Value.LUN ( x :> IMediaNode ).IdentNumber tsih itt
+                    do! cc.DebugMedia_Resume tdid lunode.Value.LUN ( medianode :> IMediaNode ).IdentNumber tsih itt
                     this.Output 0 ( sprintf "Task( TSIH=%d, ITT=%d ) resumed." tsih itt )
-                | _ ->
-                    raise <| Exception "Unexpected error."
             else
                 m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
                 |> this.Output 0
