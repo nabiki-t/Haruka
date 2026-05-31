@@ -1968,11 +1968,18 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 for itrtg in tgnodes do
                     let tgid = itrtg.TargetGroupID
                     let tgdesc = ( itrtg :> IConfigureNode ).ShortDescriptString
+                    let modified = ( itrtg :> IConfigFileNode ).Modified = ModifiedStatus.Modified
                     if activeTgsHash.Contains tgid then
-                        this.Output 2 ( sprintf "ACTIVE       : %s" tgdesc )
+                        if modified then
+                            this.Output 2 ( sprintf "ACTIVE(MOD)  : %s" tgdesc )
+                        else
+                            this.Output 2 ( sprintf "ACTIVE       : %s" tgdesc )
                     elif loadedTgsHash.Contains tgid then
-                        this.Output 2 ( sprintf "LOADED       : %s" tgdesc )
-                    elif ( itrtg :> IConfigFileNode ).Modified = ModifiedStatus.Modified then
+                        if modified then
+                            this.Output 2 ( sprintf "LOADED(MOD)  : %s" tgdesc )
+                        else
+                            this.Output 2 ( sprintf "LOADED       : %s" tgdesc )
+                    elif modified then
                         this.Output 2 ( sprintf "UNLOADED(MOD): %s" tgdesc )
                     else
                         this.Output 2( sprintf "UNLOADED     : %s" tgdesc )
@@ -2090,11 +2097,18 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let tgdesc = ( tgnode :> IConfigureNode ).ShortDescriptString
                     let isActive = activeTgs |> Seq.map _.ID |> Seq.exists ( (=) tgid )
                     let isLoaded = loadedTgs |> Seq.map _.ID |> Seq.exists ( (=) tgid )
+                    let modified = ( tgnode :> IConfigFileNode ).Modified = ModifiedStatus.Modified
                     if isActive then
-                        this.Output 2 ( sprintf "ACTIVE       : %s" tgdesc )
+                        if modified then
+                            this.Output 2 ( sprintf "ACTIVE(MOD)  : %s" tgdesc )
+                        else
+                            this.Output 2 ( sprintf "ACTIVE       : %s" tgdesc )
                     elif isLoaded then
-                        this.Output 2 ( sprintf "LOADED       : %s" tgdesc )
-                    elif ( tgnode :> IConfigFileNode ).Modified = ModifiedStatus.Modified then
+                        if modified then
+                            this.Output 2 ( sprintf "LOADED(MOD)  : %s" tgdesc )
+                        else
+                            this.Output 2 ( sprintf "LOADED       : %s" tgdesc )
+                    elif modified then
                         this.Output 2 ( sprintf "UNLOADED(MOD): %s" tgdesc )
                     else
                         this.Output 2 ( sprintf "UNLOADED     : %s" tgdesc )
