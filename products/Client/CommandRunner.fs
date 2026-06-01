@@ -3243,51 +3243,82 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     member private this.Command_Sessions
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
+
+        // Verify that the Target Group is loaded and not modified.
+        let CheckTargetGroupStatus ( tdid : TDID_T ) : Task<bool> =
+            task {
+                let tgnode = ss.GetAncestorTargetGroup cn
+                if tgnode.IsNone then raise <| Exception "Unexpected error."
+                let tgid = tgnode.Value.TargetGroupID
+                let! loadedtg = cc.GetLoadedTargetGroups tdid
+
+                if ( tgnode.Value :> IConfigFileNode ).Modified <> ModifiedStatus.NotModified then
+                    m_Messages.GetMessage( "ERRMSG_TARGET_GROUP_MODIFIED" )
+                    |> this.Output 0
+                    return false
+                elif not ( loadedtg |> List.exists ( fun itr -> itr.ID = tgid ) ) then
+                    m_Messages.GetMessage( "ERRMSG_TARGET_GROUP_UNLOADED" )
+                    |> this.Output 0
+                    return false
+                else
+                    return true
+            }
+
+        let DisplaySessionList ( sessList : TargetDeviceCtrlRes.T_Session list ) =
+            for itrs in sessList do
+                this.Output 0 ( sprintf "Session( TSIH : %d )" ( tsih_me.toPrim itrs.TSIH ) )
+                let itn = Functions.ConvertITNexus itrs.ITNexus
+                this.Output 1 ( sprintf "I_T Nexus       : %s" ( itn.ToString() ) )
+                this.Output 1 ( sprintf "Target group ID : %s" ( tgid_me.toString itrs.TargetGroupID ) )
+                this.Output 1 ( sprintf "Target node ID  : %d" ( tnodeidx_me.toPrim itrs.TargetNodeID ) )
+                this.Output 1 ( sprintf "Establish time  : %s" ( itrs.EstablishTime.ToString( "yyyy/MM/dd HH:mm:ss" ) ) )
+                this.Output 1 ( sprintf "Session parameters : {"  )
+                this.Output 2 ( sprintf "MaxConnections      : %d" ( itrs.SessionParameters.MaxConnections ) )
+                this.Output 2 ( sprintf "InitiatorAlias      : %s" ( itrs.SessionParameters.InitiatorAlias ) )
+                this.Output 2 ( sprintf "InitialR2T          : %b" ( itrs.SessionParameters.InitialR2T ) )
+                this.Output 2 ( sprintf "ImmediateData       : %b" ( itrs.SessionParameters.ImmediateData ) )
+                this.Output 2 ( sprintf "MaxBurstLength      : %d" ( itrs.SessionParameters.MaxBurstLength ) )
+                this.Output 2 ( sprintf "FirstBurstLength    : %d" ( itrs.SessionParameters.FirstBurstLength ) )
+                this.Output 2 ( sprintf "DefaultTime2Wait    : %d" ( itrs.SessionParameters.DefaultTime2Wait ) )
+                this.Output 2 ( sprintf "DefaultTime2Retain  : %d" ( itrs.SessionParameters.DefaultTime2Retain ) )
+                this.Output 2 ( sprintf "MaxOutstandingR2T   : %d" ( itrs.SessionParameters.MaxOutstandingR2T ) )
+                this.Output 2 ( sprintf "DataPDUInOrder      : %b" ( itrs.SessionParameters.DataPDUInOrder ) )
+                this.Output 2 ( sprintf "DataSequenceInOrder : %b" ( itrs.SessionParameters.DataSequenceInOrder ) )
+                this.Output 2 ( sprintf "ErrorRecoveryLevel  : %d" ( itrs.SessionParameters.ErrorRecoveryLevel ) )
+                this.Output 1 ( sprintf "}"  )
+
         task {
             // get current target device node.
-            match ss.GetAncestorTargetDevice cn with
-            | None ->
-                raise <| Exception "Unexpected error."
-            | Some( tdnode ) ->
-                // Check the target device is activated nor not.
-                let! tdlist = cc.GetTargetDeviceProcs()
-                if List.exists ( (=) tdnode.TargetDeviceID ) tdlist then
+            let tdnode = ss.GetAncestorTargetDevice cn
+            if tdnode.IsNone then raise <| Exception "Unexpected error."
+            let tdid = tdnode.Value.TargetDeviceID
 
-                    let! sessList =
-                        match cn with
-                        | :? ConfNode_TargetDevice as x ->
-                            cc.GetSession_InTargetDevice x.TargetDeviceID
-                        | :? ConfNode_TargetGroup as x ->
-                            cc.GetSession_InTargetGroup ( tdnode.TargetDeviceID ) x.TargetGroupID
-                        | :? ConfNode_Target as x ->
-                            cc.GetSession_InTarget ( tdnode.TargetDeviceID ) x.Values.IdentNumber
-                        | _ ->
-                            raise <| Exception "Unexpected error."
+            // Check the target device is activated nor not.
+            let! tdlist = cc.GetTargetDeviceProcs()
+            if List.exists ( (=) tdid ) tdlist then
+                match cn with
+                | :? ConfNode_TargetDevice as x ->
+                    let! sessList = cc.GetSession_InTargetDevice x.TargetDeviceID
+                    DisplaySessionList sessList
 
-                    for itrs in sessList do
-                        this.Output 0 ( sprintf "Session( TSIH : %d )" ( tsih_me.toPrim itrs.TSIH ) )
-                        let itn = Functions.ConvertITNexus itrs.ITNexus
-                        this.Output 1 ( sprintf "I_T Nexus       : %s" ( itn.ToString() ) )
-                        this.Output 1 ( sprintf "Target group ID : %s" ( tgid_me.toString itrs.TargetGroupID ) )
-                        this.Output 1 ( sprintf "Target node ID  : %d" ( tnodeidx_me.toPrim itrs.TargetNodeID ) )
-                        this.Output 1 ( sprintf "Establish time  : %s" ( itrs.EstablishTime.ToString( "yyyy/MM/dd HH:mm:ss" ) ) )
-                        this.Output 1 ( sprintf "Session parameters : {"  )
-                        this.Output 2 ( sprintf "MaxConnections      : %d" ( itrs.SessionParameters.MaxConnections ) )
-                        this.Output 2 ( sprintf "InitiatorAlias      : %s" ( itrs.SessionParameters.InitiatorAlias ) )
-                        this.Output 2 ( sprintf "InitialR2T          : %b" ( itrs.SessionParameters.InitialR2T ) )
-                        this.Output 2 ( sprintf "ImmediateData       : %b" ( itrs.SessionParameters.ImmediateData ) )
-                        this.Output 2 ( sprintf "MaxBurstLength      : %d" ( itrs.SessionParameters.MaxBurstLength ) )
-                        this.Output 2 ( sprintf "FirstBurstLength    : %d" ( itrs.SessionParameters.FirstBurstLength ) )
-                        this.Output 2 ( sprintf "DefaultTime2Wait    : %d" ( itrs.SessionParameters.DefaultTime2Wait ) )
-                        this.Output 2 ( sprintf "DefaultTime2Retain  : %d" ( itrs.SessionParameters.DefaultTime2Retain ) )
-                        this.Output 2 ( sprintf "MaxOutstandingR2T   : %d" ( itrs.SessionParameters.MaxOutstandingR2T ) )
-                        this.Output 2 ( sprintf "DataPDUInOrder      : %b" ( itrs.SessionParameters.DataPDUInOrder ) )
-                        this.Output 2 ( sprintf "DataSequenceInOrder : %b" ( itrs.SessionParameters.DataSequenceInOrder ) )
-                        this.Output 2 ( sprintf "ErrorRecoveryLevel  : %d" ( itrs.SessionParameters.ErrorRecoveryLevel ) )
-                        this.Output 1 ( sprintf "}"  )
-                else
-                    m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
-                    |> this.Output 0
+                | :? ConfNode_TargetGroup as x ->
+                    let! f = CheckTargetGroupStatus tdid
+                    if f then
+                        let! sessList = cc.GetSession_InTargetGroup tdid x.TargetGroupID
+                        DisplaySessionList sessList
+
+                | :? ConfNode_Target as x ->
+                    let! f = CheckTargetGroupStatus tdid
+                    if f then
+                        let! sessList = cc.GetSession_InTarget tdid x.Values.IdentNumber
+                        DisplaySessionList sessList
+
+                | _ ->
+                    raise <| Exception "Unexpected error."
+
+            else
+                m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
+                |> this.Output 0
         }
 
     /// <summary>
@@ -3343,59 +3374,92 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     member private this.Command_Connections
         ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
         : Task =
+
+        // Verify that the Target Group is loaded and not modified.
+        let CheckTargetGroupStatus ( tdid : TDID_T ) : Task<bool> =
+            task {
+                let tgnode = ss.GetAncestorTargetGroup cn
+                if tgnode.IsNone then raise <| Exception "Unexpected error."
+                let tgid = tgnode.Value.TargetGroupID
+                let! loadedtg = cc.GetLoadedTargetGroups tdid
+
+                if ( tgnode.Value :> IConfigFileNode ).Modified <> ModifiedStatus.NotModified then
+                    m_Messages.GetMessage( "ERRMSG_TARGET_GROUP_MODIFIED" )
+                    |> this.Output 0
+                    return false
+                elif not ( loadedtg |> List.exists ( fun itr -> itr.ID = tgid ) ) then
+                    m_Messages.GetMessage( "ERRMSG_TARGET_GROUP_UNLOADED" )
+                    |> this.Output 0
+                    return false
+                else
+                    return true
+            }
+
+        let DisplayConnectionList ( conList : TargetDeviceCtrlRes.T_Connection list ) =
+            conList
+            |> List.iter ( fun itrc ->
+                this.Output 0 ( sprintf "Connection( CID : %d, Counter : %d )" ( cid_me.toPrim itrc.ConnectionID ) ( concnt_me.toPrim itrc.ConnectionCount ) )
+                this.Output 1 ( sprintf "TSIH       : %d" ( tsih_me.toPrim itrc.TSIH ) )
+                this.Output 1 ( sprintf "Establish time  : %s" ( itrc.EstablishTime.ToString( "YYYY/MM/DD hh:mm:ss" ) ) )
+                this.Output 1 ( sprintf "Connection parameters : {"  )
+                this.Output 2 ( sprintf "AuthMethod                          : %s" ( itrc.ConnectionParameters.AuthMethod ) )
+                this.Output 2 ( sprintf "HeaderDigest                        : %s" ( itrc.ConnectionParameters.HeaderDigest ) )
+                this.Output 2 ( sprintf "DataDigest                          : %s" ( itrc.ConnectionParameters.DataDigest ) )
+                this.Output 2 ( sprintf "MaxRecvDataSegmentLength(Initiator) : %d" ( itrc.ConnectionParameters.MaxRecvDataSegmentLength_I ) )
+                this.Output 2 ( sprintf "MaxRecvDataSegmentLength(Target)    : %d" ( itrc.ConnectionParameters.MaxRecvDataSegmentLength_T ) )
+                this.Output 1 ( sprintf "}" )
+                this.Output 1 ( sprintf "Usage( Time, Recv Bytes/s, Send Bytes/s )" )
+                let usageseq = Functions.PairByIndex [| itrc.ReceiveBytesCount; itrc.SentBytesCount |] ( fun i -> i.Time ) ( fun i -> i.Value )
+                usageseq
+                |> Seq.iter ( fun ( us_dt, us_val ) ->
+                    let dtstr = us_dt.ToString( "YYYY/MM/DD hh:mm:ss" )
+                    let recvval = ( Option.defaultValue 0L us_val.[0] ) / Constants.RECOUNTER_SPAN_SEC
+                    let sendval = ( Option.defaultValue 0L us_val.[1] ) / Constants.RECOUNTER_SPAN_SEC
+                    this.Output 2 ( sprintf "%s, %d, %d" dtstr recvval sendval )
+                )
+            )
+
         task {
             // get current target device node.
-            match ss.GetAncestorTargetDevice cn with
-            | None ->
-                raise <| Exception "Unexpected error."
-            | Some( tdnode ) ->
-                // Check the target device is activated nor not.
-                let! tdlist = cc.GetTargetDeviceProcs()
-                if List.exists ( (=) tdnode.TargetDeviceID ) tdlist then
+            let tdnode = ss.GetAncestorTargetDevice cn
+            if tdnode.IsNone then raise <| Exception "Unexpected error."
+            let tdid = tdnode.Value.TargetDeviceID
 
-                    let tsih = cmd.NamedUInt32 "/s"
+            // Check the target device is activated nor not.
+            let! tdlist = cc.GetTargetDeviceProcs()
+            if List.exists ( (=) tdid ) tdlist then
+                let tsih = cmd.NamedUInt32 "/s"
 
-                    let! conList =
-                        if tsih.IsSome then
-                            cc.GetConnection_InSession tdnode.TargetDeviceID ( tsih_me.fromPrim ( uint16 tsih.Value ) )
-                        else
-                            match cn with
-                            | :? ConfNode_TargetDevice as _ ->
-                                cc.GetConnection_InTargetDevice tdnode.TargetDeviceID
-                            | :? ConfNode_NetworkPortal as x ->
-                                cc.GetConnection_InNetworkPortal tdnode.TargetDeviceID x.NetworkPortal.IdentNumber
-                            | :? ConfNode_TargetGroup as x ->
-                                cc.GetConnection_InTargetGroup ( tdnode.TargetDeviceID ) x.TargetGroupID
-                            | :? ConfNode_Target as x ->
-                                cc.GetConnection_InTarget ( tdnode.TargetDeviceID ) x.Values.IdentNumber
-                            | _ ->
-                                raise <| Exception "Unexpected error."
-
-                    conList |> List.iter ( fun itrc ->
-                        this.Output 0 ( sprintf "Connection( CID : %d, Counter : %d )" ( cid_me.toPrim itrc.ConnectionID ) ( concnt_me.toPrim itrc.ConnectionCount ) )
-                        this.Output 1 ( sprintf "TSIH       : %d" ( tsih_me.toPrim itrc.TSIH ) )
-                        this.Output 1 ( sprintf "Establish time  : %s" ( itrc.EstablishTime.ToString( "YYYY/MM/DD hh:mm:ss" ) ) )
-                        this.Output 1 ( sprintf "Connection parameters : {"  )
-                        this.Output 2 ( sprintf "AuthMethod                          : %s" ( itrc.ConnectionParameters.AuthMethod ) )
-                        this.Output 2 ( sprintf "HeaderDigest                        : %s" ( itrc.ConnectionParameters.HeaderDigest ) )
-                        this.Output 2 ( sprintf "DataDigest                          : %s" ( itrc.ConnectionParameters.DataDigest ) )
-                        this.Output 2 ( sprintf "MaxRecvDataSegmentLength(Initiator) : %d" ( itrc.ConnectionParameters.MaxRecvDataSegmentLength_I ) )
-                        this.Output 2 ( sprintf "MaxRecvDataSegmentLength(Target)    : %d" ( itrc.ConnectionParameters.MaxRecvDataSegmentLength_T ) )
-                        this.Output 1 ( sprintf "}" )
-                        this.Output 1 ( sprintf "Usage( Time, Recv Bytes/s, Send Bytes/s )" )
-                        let usageseq = Functions.PairByIndex [| itrc.ReceiveBytesCount; itrc.SentBytesCount |] ( fun i -> i.Time ) ( fun i -> i.Value )
-                        usageseq
-                        |> Seq.iter ( fun ( us_dt, us_val ) ->
-                            let dtstr = us_dt.ToString( "YYYY/MM/DD hh:mm:ss" )
-                            let recvval = ( Option.defaultValue 0L us_val.[0] ) / Constants.RECOUNTER_SPAN_SEC
-                            let sendval = ( Option.defaultValue 0L us_val.[1] ) / Constants.RECOUNTER_SPAN_SEC
-                            this.Output 2 ( sprintf "%s, %d, %d" dtstr recvval sendval )
-                        )
-                    )
-
+                if tsih.IsSome then
+                    let! conList = cc.GetConnection_InSession tdid ( tsih_me.fromPrim ( uint16 tsih.Value ) )
+                    DisplayConnectionList conList
                 else
-                    m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
-                    |> this.Output 0
+                    match cn with
+                    | :? ConfNode_TargetDevice as _ ->
+                        let! conList = cc.GetConnection_InTargetDevice tdid
+                        DisplayConnectionList conList
+
+                    | :? ConfNode_NetworkPortal as x ->
+                        let! conList = cc.GetConnection_InNetworkPortal tdid x.NetworkPortal.IdentNumber
+                        DisplayConnectionList conList
+
+                    | :? ConfNode_TargetGroup as x ->
+                        let! f = CheckTargetGroupStatus tdid
+                        if f then
+                            let! conList = cc.GetConnection_InTargetGroup tdid x.TargetGroupID
+                            DisplayConnectionList conList
+
+                    | :? ConfNode_Target as x ->
+                        let! f = CheckTargetGroupStatus tdid
+                        if f then
+                            let! conList = cc.GetConnection_InTarget tdid x.Values.IdentNumber
+                            DisplayConnectionList conList
+
+                    | _ ->
+                        raise <| Exception "Unexpected error."
+            else
+                m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
+                |> this.Output 0
         }
 
     /// <summary>

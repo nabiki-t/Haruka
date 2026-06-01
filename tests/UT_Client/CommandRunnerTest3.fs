@@ -3914,48 +3914,33 @@ type CommandRunner_Test3() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.Sessions_001 () =
+    member _.Sessions_TargetDevice_001 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "sessions" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
-        let mutable flg1 = false
 
-        ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode = tdn ))
-            flg1 <- true
-            None
-        )
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> None )
 
-        try
-            let _ = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-            Assert.Fail __LINE__
-        with
-        | :? Xunit.Sdk.FailException -> reraise();
-        | _ as x ->
-            ()
-        Assert.True(( flg1 ))
+        Assert.ThrowsAny( fun () ->
+            CallCommandLoop cr ( Some ( ss, cc, tdn ) ) |> ignore
+        ) |> ignore
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
 
     [<Fact>]
-    member _.Sessions_002 () =
+    member _.Sessions_TargetDevice_002 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "sessions" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
-        let mutable flg2 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
-        cc.p_GetTargetDeviceProcs <- ( fun _ ->
-            flg2 <- true
-            Task.FromResult []
-        )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [] )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
-        Assert.True(( flg2 ))
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.Sessions_003 () =
+    member _.Sessions_TargetDevice_003 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "sessions" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let mutable flg3 = false
@@ -3999,14 +3984,65 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
-        Assert.True(( flg3 ))
+        Assert.True( flg3 )
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "Session("
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.Sessions_004 () =
+    member _.Sessions_TargetGroup_001 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "sessions" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> None )
+
+        Assert.ThrowsAny( fun () ->
+            CallCommandLoop cr ( Some ( ss, cc, tgn ) ) |> ignore
+        ) |> ignore
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
+
+    [<Fact>]
+    member _.Sessions_TargetGroup_002 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "sessions" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tgn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_GROUP_UNLOADED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Sessions_TargetGroup_003 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "sessions" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn =
+            CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+            |> _.SetModified()
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID=tgn.TargetGroupID; Name=""; } ] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tgn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_GROUP_MODIFIED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Sessions_TargetGroup_004 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "sessions" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
@@ -4014,6 +4050,9 @@ type CommandRunner_Test3() =
 
         ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID=tgn.TargetGroupID; Name=""; } ] )
+
         cc.p_GetSession_InTargetGroup <- ( fun argtdid argtgid ->
             task {
                 flg3 <- true
@@ -4052,21 +4091,78 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
-        Assert.True(( flg3 ))
+        Assert.True( flg3 )
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "Session("
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.Sessions_005 () =
+    member _.Sessions_Target_001 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "sessions" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tn = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> None )
+
+        Assert.ThrowsAny( fun () ->
+            CallCommandLoop cr ( Some ( ss, cc, tn ) ) |> ignore
+        ) |> ignore
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
+
+    [<Fact>]
+    member _.Sessions_Target_002 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "sessions" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+        let tn = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "ERRMSG_TARGET_GROUP_UNLOADED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Sessions_Target_003 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "sessions" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn =
+            CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+            |> _.SetModified()
+        let tn = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID=tgn.TargetGroupID; Name=""; } ] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "ERRMSG_TARGET_GROUP_MODIFIED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Sessions_Target_004 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "sessions" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let tn = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
         let mutable flg3 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID=tgn.TargetGroupID; Name=""; } ] )
+
         cc.p_GetSession_InTarget <- ( fun argtdid argtid ->
             task {
                 flg3 <- true
@@ -4105,9 +4201,9 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tn ) ))
-        Assert.True(( flg3 ))
+        Assert.True( flg3 )
         let out_rs = CheckOutputMessage out_ms out_ws "T " "Session("
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -4185,7 +4281,7 @@ type CommandRunner_Test3() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.Connections_001 () =
+    member _.Connections_TargetDevice_001 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "connections" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let mutable flg1 = false
@@ -4196,18 +4292,14 @@ type CommandRunner_Test3() =
             None
         )
 
-        try
-            let _ = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-            Assert.Fail __LINE__
-        with
-        | :? Xunit.Sdk.FailException -> reraise();
-        | _ as x ->
-            ()
-        Assert.True(( flg1 ))
+        Assert.ThrowsAny( fun () ->
+            CallCommandLoop cr ( Some ( ss, cc, tdn ) ) |> ignore
+        ) |> ignore
+        Assert.True( flg1 )
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
 
     [<Fact>]
-    member _.Connections_002 () =
+    member _.Connections_TargetDevice_002 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "connections" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let mutable flg2 = false
@@ -4219,14 +4311,14 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
-        Assert.True(( flg2 ))
+        Assert.True( flg2 )
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.Connections_003 () =
+    member _.Connections_TargetDevice_003 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "connections /s 1" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let mutable flg3 = false
@@ -4259,14 +4351,14 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
-        Assert.True(( flg3 ))
+        Assert.True( flg3 )
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "Connection"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.Connections_004 () =
+    member _.Connections_TargetDevice_004 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "connections" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let mutable flg3 = false
@@ -4299,14 +4391,14 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
-        Assert.True(( flg3 ))
+        Assert.True( flg3 )
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "Connection"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.Connections_005 () =
+    member _.Connections_NetworkPortal_001 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "connections" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let npn = CommandRunner_Test1.m_NetworkPortalNode :?> ConfNode_NetworkPortal
@@ -4340,14 +4432,65 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, npn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, npn ) ))
-        Assert.True(( flg3 ))
+        Assert.True( flg3 )
         let out_rs = CheckOutputMessage out_ms out_ws "NP" "Connection"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.Connections_006 () =
+    member _.Connections_TargetGroup_001 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "connections" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> None )
+
+        Assert.ThrowsAny( fun () ->
+            CallCommandLoop cr ( Some ( ss, cc, tgn ) ) |> ignore
+        ) |> ignore
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
+
+    [<Fact>]
+    member _.Connections_TargetGroup_002 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "connections" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> task { return [] } )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tgn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_GROUP_UNLOADED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Connections_TargetGroup_003 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "connections" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn =
+            CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+            |> _.SetModified()
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> task { return [ { ID=tgn.TargetGroupID; Name=""; } ] } )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tgn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_GROUP_MODIFIED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Connections_TargetGroup_004 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "connections" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
@@ -4355,6 +4498,8 @@ type CommandRunner_Test3() =
 
         ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> task { return [ { ID=tgn.TargetGroupID; Name=""; } ] } )
         cc.p_GetConnection_InTargetGroup <- ( fun tdid tgid ->
             task {
                 flg3 <- true
@@ -4381,21 +4526,77 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
-        Assert.True(( flg3 ))
+        Assert.True( flg3 )
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "Connection"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.Connections_007 () =
+    member _.Connections_Target_001 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "connections" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tn = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> None )
+
+        Assert.ThrowsAny( fun () ->
+            CallCommandLoop cr ( Some ( ss, cc, tn ) ) |> ignore
+        ) |> ignore
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
+
+    [<Fact>]
+    member _.Connections_Target_002 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "connections" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+        let tn = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> task { return [] } )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "ERRMSG_TARGET_GROUP_UNLOADED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Connections_Target_003 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "connections" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn =
+            CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+            |> _.SetModified()
+        let tn = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> task { return [ { ID=tgn.TargetGroupID; Name=""; } ] } )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "T " "ERRMSG_TARGET_GROUP_MODIFIED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Connections_Target_004 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "connections" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let tn = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
         let mutable flg3 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> task { return [ { ID=tgn.TargetGroupID; Name=""; } ] } )
         cc.p_GetConnection_InTarget <- ( fun tdid tid ->
             task {
                 flg3 <- true
@@ -4422,32 +4623,24 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tn ) ))
-        Assert.True(( flg3 ))
+        Assert.True( flg3 )
         let out_rs = CheckOutputMessage out_ms out_ws "T " "Connection"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.Connections_008 () =
+    member _.Connections_NoConnections_014 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "connections" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
-        let mutable flg3 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
-        cc.p_GetConnection_InTargetDevice <- ( fun tdid ->
-            task {
-                flg3 <- true
-                Assert.True(( tdid = tdn.TargetDeviceID ))
-                return []
-            }
-        )
+        cc.p_GetConnection_InTargetDevice <- ( fun tdid -> task { return [] } )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
-        Assert.True(( flg3 ))
         let out_rs = CheckOutputMessage out_ms out_ws "TD" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 

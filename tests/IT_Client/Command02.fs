@@ -101,7 +101,7 @@ type Command02( fx : Command02_Fixture ) =
 
     // If the Target Device is unloaded, the settings can be changed.
     [<Fact>]
-    member _.Set_TargetDevice_001 () =
+    member _.Set_TargetDevice_Unloaded_001 () =
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "set LOGLEVEL INFO" "" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
@@ -109,7 +109,7 @@ type Command02( fx : Command02_Fixture ) =
 
     // If the Target Device is running, the settings cannot be changed.
     [<Fact>]
-    member _.Set_TargetDevice_002 () =
+    member _.Set_TargetDevice_Running_001 () =
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "start" "Started" "TD> "
         m_Client.RunCommand "set LOGLEVEL INFO" "Unexpected error" "TD> "
@@ -119,7 +119,7 @@ type Command02( fx : Command02_Fixture ) =
 
     // If the Target Group is activated, the settings cannot be changed.
     [<Fact>]
-    member _.Set_TargetGroup_001 () =
+    member _.Set_TargetGroup_Activated_001 () =
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "start" "Started" "TD> "
         let tgidx = m_Client.GetIndexNumber "Target Group" "TD> "
@@ -134,7 +134,7 @@ type Command02( fx : Command02_Fixture ) =
 
     // If the Target Group is loaded, the settings cannot be changed.
     [<Fact>]
-    member _.Set_TargetGroup_002 () =
+    member _.Set_TargetGroup_Loaded_001 () =
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "start" "Started" "TD> "
         let tgidx = m_Client.GetIndexNumber "Target Group" "TD> "
@@ -148,7 +148,7 @@ type Command02( fx : Command02_Fixture ) =
 
     // If the Target Group is unloaded, the settings can be changed.
     [<Fact>]
-    member _.Set_TargetGroup_003 () =
+    member _.Set_TargetGroup_Unloaded_001 () =
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "start" "Started" "TD> "
         let tgidx = m_Client.GetIndexNumber "Target Group" "TD> "

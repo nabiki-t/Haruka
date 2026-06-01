@@ -2354,10 +2354,14 @@ type CommandRunner_Test1() =
         let cc = new CtrlConnectionStub( st )
         let cn = node :?> IConfigureNode
         let tdnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let mutable flg3 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdnode )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID=tgn.TargetGroupID; Name=""; } ] )
+
         let funcGetSession() : Task< TargetDeviceCtrlRes.T_Session list > =
             task {
                 flg3 <- true
@@ -2454,10 +2458,14 @@ type CommandRunner_Test1() =
         let cc = new CtrlConnectionStub( st )
         let cn = node :?> IConfigureNode
         let tdnode = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let mutable flg3 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdnode )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID=tgn.TargetGroupID; Name=""; } ] )
+
         let funcGetConnection() : Task< TargetDeviceCtrlRes.T_Connection list > =
             task {
                 flg3 <- true
