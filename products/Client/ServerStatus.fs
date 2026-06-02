@@ -1503,21 +1503,22 @@ type ServerStatus(
                     x
                 | _ ->
                     this.IdentifyTargetGroupNode node
+(*
             if ( tgNode :> IConfigFileNode ).Modified = ModifiedStatus.Modified then
                 return true
+            else *)
+            // If the target device is unloaded, the target group it belongs to has already been unloaded.
+            let! tdlist = con.GetTargetDeviceProcs()
+            if List.exists ( (=) tdNode.TargetDeviceID ) tdlist then
+                // check corresponding target group has been unloaded or not.
+                let! wlist = con.GetLoadedTargetGroups ( tdNode.TargetDeviceID )
+                return 
+                    wlist
+                    |> List.map _.ID
+                    |> List.exists ( (=) tgNode.TargetGroupID )
+                    |> not
             else
-                // If the target device is unloaded, the target group it belongs to has already been unloaded.
-                let! tdlist = con.GetTargetDeviceProcs()
-                if List.exists ( (=) tdNode.TargetDeviceID ) tdlist then
-                    // check corresponding target group has been unloaded or not.
-                    let! wlist = con.GetLoadedTargetGroups ( tdNode.TargetDeviceID )
-                    return 
-                        wlist
-                        |> List.map _.ID
-                        |> List.exists ( (=) tgNode.TargetGroupID )
-                        |> not
-                else
-                    return true
+                return true
         }
 
     /// <summary>
