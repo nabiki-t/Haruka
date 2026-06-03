@@ -1971,12 +1971,12 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let modified = ( itrtg :> IConfigFileNode ).Modified = ModifiedStatus.Modified
                     if activeTgsHash.Contains tgid then
                         if modified then
-                            this.Output 2 ( sprintf "ACTIVE(MOD)  : %s" tgdesc )
+                            this.Output 2 ( sprintf "UNLOAD(A-MOD): %s" tgdesc )
                         else
                             this.Output 2 ( sprintf "ACTIVE       : %s" tgdesc )
                     elif loadedTgsHash.Contains tgid then
                         if modified then
-                            this.Output 2 ( sprintf "LOADED(MOD)  : %s" tgdesc )
+                            this.Output 2 ( sprintf "UNLOAD(L-MOD): %s" tgdesc )
                         else
                             this.Output 2 ( sprintf "LOADED       : %s" tgdesc )
                     elif modified then
@@ -2100,12 +2100,12 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     let modified = ( tgnode :> IConfigFileNode ).Modified = ModifiedStatus.Modified
                     if isActive then
                         if modified then
-                            this.Output 2 ( sprintf "ACTIVE(MOD)  : %s" tgdesc )
+                            this.Output 2 ( sprintf "UNLOAD(A-MOD): %s" tgdesc )
                         else
                             this.Output 2 ( sprintf "ACTIVE       : %s" tgdesc )
                     elif isLoaded then
                         if modified then
-                            this.Output 2 ( sprintf "LOADED(MOD)  : %s" tgdesc )
+                            this.Output 2 ( sprintf "UNLOAD(L-MOD): %s" tgdesc )
                         else
                             this.Output 2 ( sprintf "LOADED       : %s" tgdesc )
                     elif modified then

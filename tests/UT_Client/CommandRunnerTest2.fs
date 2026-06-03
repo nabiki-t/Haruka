@@ -3522,7 +3522,7 @@ type CommandRunner_Test2() =
             for i = 1 to 3 do
                 yield ( out_rs.ReadLine() ).TrimStart()
         |]
-        Assert.StartsWith( "ACTIVE(MOD)", lines.[2] )
+        Assert.StartsWith( "UNLOAD(A-MOD)", lines.[2] )
         Assert.True( flg1 )
         Assert.True( flg2 )
         
@@ -3620,7 +3620,7 @@ type CommandRunner_Test2() =
             for i = 1 to 3 do
                 yield ( out_rs.ReadLine() ).TrimStart()
         |]
-        Assert.StartsWith( "LOADED(MOD)", lines.[2] )
+        Assert.StartsWith( "UNLOAD(L-MOD)", lines.[2] )
         Assert.True( flg1 )
         Assert.True( flg2 )
 
@@ -4117,7 +4117,7 @@ type CommandRunner_Test2() =
             for i = 1 to 3 do
                 yield ( out_rs.ReadLine() ).TrimStart()
         |]
-        Assert.StartsWith( "ACTIVE(MOD)", lines.[2] )
+        Assert.StartsWith( "UNLOAD(A-MOD)", lines.[2] )
         Assert.True( flg1 )
         Assert.True( flg2 )
 
@@ -4196,7 +4196,7 @@ type CommandRunner_Test2() =
             for i = 1 to 3 do
                 yield ( out_rs.ReadLine() ).TrimStart()
         |]
-        Assert.StartsWith( "LOADED(MOD)", lines.[2] )
+        Assert.StartsWith( "UNLOAD(L-MOD)", lines.[2] )
         Assert.True( flg1 )
         Assert.True( flg2 )
 
