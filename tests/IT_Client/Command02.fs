@@ -174,6 +174,26 @@ type Command02( fx : Command02_Fixture ) =
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
 
+    // If the Target Device is unloaded, the settings can be changed.
+    // If the same Target Device ID is specified as that of an operational Target Device,
+    // it becomes ambiguous to determine whether or not the Target Device is operational.
+    [<Fact>]
+    member _.Set_TargetDevice_RunningMod_001 () =
+        m_Client.RunCommand "select 0" "" "TD> "
+        m_Client.RunCommand "start" "Started" "TD> "
+        m_Client.RunCommand "unselect" "" "CR> "
+        m_Client.RunCommand "create" "Created" "CR> "
+        m_Client.RunCommand "select 1" "" "TD> "
+        m_Client.RunCommand "set ID TD_00000001" "" "TD> "
+        m_Client.RunCommand "set NAME AAAAA" "" "TD> "
+        let stat = m_Client.GetStatus "AAAAA" "TD> "
+        Assert.StartsWith( "UNLOAD(R-MOD)", stat )
+        m_Client.RunCommand "unselect" "" "CR> "
+        m_Client.RunCommand "select 0" "" "TD> "
+        m_Client.RunCommand "kill" "Killed" "TD> "
+        m_Client.RunCommand "unselect" "" "CR> "
+        m_Client.RunCommand "reload /y" "" "CR> "
+
     // If the Target Group is activated, the settings cannot be changed.
     [<Fact>]
     member _.Set_TargetGroup_Activated_001 () =
@@ -256,7 +276,6 @@ type Command02( fx : Command02_Fixture ) =
     // If the Target Group is unloaded, the settings can be changed.
     [<Fact>]
     member _.Set_TargetGroup_ActiveMod_002 () =
-
         task {
             m_Client.RunCommand "select 0" "" "TD> "
             m_Client.RunCommand "start" "Started" "TD> "
@@ -318,7 +337,6 @@ type Command02( fx : Command02_Fixture ) =
     // If the Target Group is unloaded, the settings can be changed.
     [<Fact>]
     member _.Set_TargetGroup_LoadedMod_002 () =
-
         task {
             m_Client.RunCommand "select 0" "" "TD> "
             m_Client.RunCommand "start" "Started" "TD> "

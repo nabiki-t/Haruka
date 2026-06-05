@@ -1944,9 +1944,12 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 let tdid = itrtd.TargetDeviceID
                 let tddesc = ( itrtd :> IConfigureNode ).ShortDescriptString
                 let isRunning = List.exists ( (=) tdid ) tdprocs
-                if isRunning then
+                let ismodified = ( itrtd :> IConfigFileNode ).Modified = ModifiedStatus.Modified
+                if isRunning && not ismodified then
                     this.Output 1 ( sprintf "RUNNING      : %s" tddesc )
-                elif ( itrtd :> IConfigFileNode ).Modified = ModifiedStatus.Modified then
+                elif isRunning && ismodified then
+                    this.Output 1 ( sprintf "UNLOAD(R-MOD): %s" tddesc )
+                elif not isRunning && ismodified then
                     this.Output 1 ( sprintf "UNLOADED(MOD): %s" tddesc )
                 else
                     this.Output 1 ( sprintf "UNLOADED     : %s" tddesc )
@@ -2072,9 +2075,12 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 let tdid = tdnode.TargetDeviceID
                 let tddesc = ( tdnode :> IConfigureNode ).ShortDescriptString
                 let isRunning = List.exists ( (=) tdid ) tdprocs
-                if isRunning then
+                let ismodified = ( tdnode :> IConfigFileNode ).Modified = ModifiedStatus.Modified
+                if isRunning && not ismodified then
                     this.Output 1 ( sprintf "RUNNING      : %s" tddesc )
-                elif ( tdnode :> IConfigFileNode ).Modified = ModifiedStatus.Modified then
+                elif isRunning && ismodified then
+                    this.Output 1 ( sprintf "UNLOAD(R-MOD): %s" tddesc )
+                elif not isRunning && ismodified then
                     this.Output 1 ( sprintf "UNLOADED(MOD): %s" tddesc )
                 else
                     this.Output 1 ( sprintf "UNLOADED     : %s" tddesc )

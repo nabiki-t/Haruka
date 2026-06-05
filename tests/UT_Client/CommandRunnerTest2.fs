@@ -3377,6 +3377,33 @@ type CommandRunner_Test2() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
+    member _.StatusAll_TargetDevice_Running_Mod_001 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "statusall" )
+        let cn = CommandRunner_Test1.m_ControllerNode :?> ConfNode_Controller
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tdn2 = tdn.SetModified()
+
+        ss.p_ControllerNode <- cn
+        ss.p_GetTargetDeviceNodes <- ( fun () -> [ tdn2 ] )
+        cc.p_GetTargetDeviceProcs <- ( fun () -> Task.FromResult [ tdn2.TargetDeviceID ] )
+        cc.p_GetActiveTargetGroups <- ( fun _ -> Task.FromResult [] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, cn ) ))
+
+        out_ws.Flush()
+        out_ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
+        let out_rs = new StreamReader( out_ms )
+        let lines = [|
+            for i = 1 to 2 do
+                yield ( out_rs.ReadLine() ).TrimStart()
+        |]
+        Assert.StartsWith( "UNLOAD(R-MOD)", lines.[1] )
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
     member _.StatusAll_TargetDevice_Unloaded_Mod_001 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "statusall" )
         let cn = CommandRunner_Test1.m_ControllerNode :?> ConfNode_Controller
@@ -3975,6 +4002,40 @@ type CommandRunner_Test2() =
                 yield ( out_rs.ReadLine() ).TrimStart()
         |]
         Assert.StartsWith( "RUNNING", lines.[1] )
+
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Status_TargetDevice_Running_Mod_001 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "status" )
+        let cn = CommandRunner_Test1.m_ControllerNode
+        let tdn =
+            CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+            |> _.SetModified()
+
+        ss.p_ControllerNode <- ( cn :?> ConfNode_Controller )
+        ss.p_GetAncestorTargetDevice <- ( fun argnode ->
+            Assert.Same( argnode, tdn )
+            Some( tdn )
+        )
+        cc.p_GetTargetDeviceProcs <- ( fun () -> Task.FromResult [ tdn.TargetDeviceID ] )
+        ss.p_GetAncestorTargetGroup <- ( fun argnode ->
+            Assert.Same( argnode, tdn )
+            None
+        )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tdn ) ))
+
+        out_ws.Flush()
+        out_ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
+        let out_rs = new StreamReader( out_ms )
+        let lines = [|
+            for _ = 1 to 2 do
+                yield ( out_rs.ReadLine() ).TrimStart()
+        |]
+        Assert.StartsWith( "UNLOAD(R-MOD)", lines.[1] )
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
