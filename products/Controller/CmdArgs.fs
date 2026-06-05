@@ -74,15 +74,12 @@ type CmdArgs() =
     /// <summary>
     ///  Recognize arguments.
     /// </summary>
-    /// <param name="st">
-    ///  Message table
-    /// </param>
     /// <param name="argv">
     ///  arguments
     /// </param>
     /// <returns>
     ///  Recognized arguments.
     /// </returns>
-    static member Recognize ( st : StringTable ) ( argv: string[] ) : CommandParser<CtrlCmdType> =
-        CommandParser.FromStringArray st CmdArgs.ArgRules argv
+    static member Recognize ( argv: string[] ) : CommandParser<CtrlCmdType> =
+        CommandParser.FromStringArray CmdArgs.ArgRules argv
 

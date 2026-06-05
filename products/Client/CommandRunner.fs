@@ -398,7 +398,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
         task {
             try
                 if stat.IsNone then
-                    let! cmd = CommandReader.InputCommand m_InFile m_OutFile m_Messages AccCmd_NotConnected "--"
+                    let! cmd = CommandReader.InputCommand m_InFile m_OutFile AccCmd_NotConnected "--"
                     match cmd.Varb with
                     | CommandVarb.Exit ->
                         return struct( false, None )
@@ -428,7 +428,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                         | _ ->
                             raise <| Exception "Unexpected error."
 
-                    let! cmd = CommandReader.InputCommand m_InFile m_OutFile m_Messages accCmd prompt
+                    let! cmd = CommandReader.InputCommand m_InFile m_OutFile accCmd prompt
                     match cmd.Varb with
                     | CommandVarb.Exit ->
                         let! nextStat = this.Command_Exit cmd ss cc cn
@@ -650,7 +650,23 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                         return struct( true, stat )
             with
             | :? CommandInputError as x ->
-                this.Output 0 x.Message
+                let msg =
+                    match x.ErrorCode with
+                    | CIE_ErrorCode.NoCommandString ->
+                        "Unexpected error"
+                    | CIE_ErrorCode.UnknownCommand( x ) ->
+                        m_Messages.GetMessage( "CMDERR_UNKNOWN_COMMAND", x )
+                    | CIE_ErrorCode.InvalidArgValue( x ) ->
+                        m_Messages.GetMessage( "CMDERR_INVALID_ARG_VALUE", x )
+                    | CIE_ErrorCode.LastArgValMissing ->
+                        m_Messages.GetMessage( "CMDERR_LAST_ARG_VAL_MISSING" )
+                    | CIE_ErrorCode.InvalidArgCount ->
+                        m_Messages.GetMessage( "CMDERR_INVALID_ARG_COUNT" )
+                    | CIE_ErrorCode.MissingMandatoryArg ->
+                        m_Messages.GetMessage( "CMDERR_MISSING_MANDATORY_ARG" )
+                    | CIE_ErrorCode.NamelessPatternMismatch ->
+                        m_Messages.GetMessage( "CMDERR_NAMELESS_PTN_MISMATCH" )
+                this.Output 0 msg
                 return true, stat
             | :? RequestError as x ->
                 m_Messages.GetMessage( "CMDERR_UNEXPECTED_REQUEST_ERROR", x.Message )

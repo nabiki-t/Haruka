@@ -157,7 +157,7 @@ let main ( args : string[] ) : int =
     let st = StringTable( "Controller" )
     let exitStatus =
         try
-            let cmd = CmdArgs.Recognize st args
+            let cmd = CmdArgs.Recognize args
             match cmd.Varb with
             | Server ->
                 Server cmd
@@ -172,7 +172,23 @@ let main ( args : string[] ) : int =
                     1   // failed
         with
         | :? CommandInputError as x ->
-            fprintf stderr "%s" x.Message
+            let msg =
+                match x.ErrorCode with
+                | CIE_ErrorCode.NoCommandString ->
+                    "Unexpected error"
+                | CIE_ErrorCode.UnknownCommand( x ) ->
+                    st.GetMessage( "CMDERR_UNKNOWN_COMMAND", x )
+                | CIE_ErrorCode.InvalidArgValue( x ) ->
+                    st.GetMessage( "CMDERR_INVALID_ARG_VALUE", x )
+                | CIE_ErrorCode.LastArgValMissing ->
+                    st.GetMessage( "CMDERR_LAST_ARG_VAL_MISSING" )
+                | CIE_ErrorCode.InvalidArgCount ->
+                    st.GetMessage( "CMDERR_INVALID_ARG_COUNT" )
+                | CIE_ErrorCode.MissingMandatoryArg ->
+                    st.GetMessage( "CMDERR_MISSING_MANDATORY_ARG" )
+                | CIE_ErrorCode.NamelessPatternMismatch ->
+                    st.GetMessage( "CMDERR_NAMELESS_PTN_MISMATCH" )
+            fprintf stderr "%s" msg
             fprintf stderr ""
             help()
             exit( 1 )

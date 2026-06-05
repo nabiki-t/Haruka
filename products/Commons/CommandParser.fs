@@ -22,9 +22,19 @@ open Haruka.Commons
 //=============================================================================
 // Type definition
 
+type CIE_ErrorCode =
+    | NoCommandString
+    | UnknownCommand of string
+    | InvalidArgValue of string
+    | LastArgValMissing
+    | InvalidArgCount
+    | MissingMandatoryArg
+    | NamelessPatternMismatch
+
 /// Exception that is raised when read command is invalid.
-type CommandInputError( m_Message : string ) =
-    inherit Exception( m_Message )
+type CommandInputError( cd : CIE_ErrorCode ) =
+    inherit Exception( "" )
+    member _.ErrorCode = cd
 
 /// Validation type
 [<NoComparison>]
@@ -133,12 +143,36 @@ type CommandParser<'a> (
     member _.NamelessArgs : EnteredValue[] =
         m_NamelessArgs
 
-    static member FromString ( st : StringTable ) ( accCommands : AcceptableCommand<'a> array ) ( lineStr : string ) : CommandParser<'a> =
+    /// <summary>
+    ///  Parsecommand string.
+    /// </summary>
+    /// <param name="accCommands">
+    ///  Acceptable command.
+    /// </param>
+    /// <param name="lineStr">
+    ///  Entered string.
+    /// </param>
+    /// <returns>
+    ///  Parsed command and arguments.
+    /// </returns>
+    static member FromString ( accCommands : AcceptableCommand<'a> array ) ( lineStr : string ) : CommandParser<'a> =
         let divLine = CommandParser<'a>.DiviteInputString lineStr
-        CommandParser<'a>.FromStringArray st accCommands divLine
+        CommandParser<'a>.FromStringArray accCommands divLine
 
-    static member FromStringArray ( st : StringTable ) ( accCommands : AcceptableCommand<'a> array ) ( strv : string[] ) : CommandParser<'a> =
-        CommandParser<'a>.RecognizeCommand st strv accCommands
+    /// <summary>
+    ///  Parsecommand string.
+    /// </summary>
+    /// <param name="accCommands">
+    ///  Acceptable command.
+    /// </param>
+    /// <param name="strv">
+    ///  Entered string. Specify a string that has been split into individual elements.
+    /// </param>
+    /// <returns>
+    ///  Parsed command and arguments.
+    /// </returns>
+    static member FromStringArray ( accCommands : AcceptableCommand<'a> array ) ( strv : string[] ) : CommandParser<'a> =
+        CommandParser<'a>.RecognizeCommand strv accCommands
 
     /// <summary>
     ///  Divite inputted string by space.
@@ -173,9 +207,6 @@ type CommandParser<'a> (
     /// <summary>
     ///  Recognize and validate inputted command.
     /// </summary>
-    /// <param name="st">
-    ///  Message table.
-    /// </param>
     /// <param name="args">
     ///  Entered strings, divided by space.
     /// </param>
@@ -188,17 +219,16 @@ type CommandParser<'a> (
     /// <exceptions>
     ///   If validation failed, CommandInputError exception is raised.
     /// </exceptions>
-    static member private RecognizeCommand ( st : StringTable ) ( args : string[] ) ( accCommands : AcceptableCommand<'a> array ) : CommandParser<'a> =
+    static member private RecognizeCommand ( args : string[] ) ( accCommands : AcceptableCommand<'a> array ) : CommandParser<'a> =
         if args.Length < 1 then
             // Unexpected
-            raise <| CommandInputError( "No command strings" )
+            raise <| CommandInputError( CIE_ErrorCode.NoCommandString )
 
         let r =
             let upargs = args |> Array.map ( fun itr -> itr.ToUpperInvariant() )
             CommandParser<'a>.SearchCommand upargs accCommands
         if r.IsNone then
-            let msg = st.GetMessage( "CMDERR_UNKNOWN_COMMAND", args.[0] )
-            raise <| CommandInputError( msg )
+            raise <| CommandInputError( CIE_ErrorCode.UnknownCommand( args.[0] ) )
         let cmdval = r.Value
 
         let lastStat, valuelessArgList, namedArgList, namelessArgList =
@@ -208,7 +238,7 @@ type CommandParser<'a> (
                 | Some x ->
                     let ev = CommandParser<'a>.ValidateValue ( snd cmdval.NamedArgs.[x] ) itr
                     if ev.IsNone then
-                        raise <| CommandInputError( st.GetMessage( "CMDERR_INVALID_ARG_VALUE", itr ) )
+                        raise <| CommandInputError( CIE_ErrorCode.InvalidArgValue( itr ) )
                     ( None, li1, ( fst cmdval.NamedArgs.[x], ev.Value ) :: li2, li3 )
                 | None ->
                     if cmdval.ValuelessArgs |> Array.exists ( fun itr2 -> String.Equals( itr2, itr, StringComparison.Ordinal ) ) then
@@ -223,13 +253,11 @@ type CommandParser<'a> (
             ) ( None, [], [], [] )
 
         if lastStat.IsSome then
-            let msg = st.GetMessage( "CMDERR_LAST_ARG_VAL_MISSING" )
-            raise <| CommandInputError msg
+            raise <| CommandInputError CIE_ErrorCode.LastArgValMissing
         let lessMCnt = cmdval.NamelessArgs |> Array.sumBy ( fun itr -> if CRValidateType.isOptional itr then 0 else 1 )
         let lessOCnt = cmdval.NamelessArgs.Length - lessMCnt
         if namelessArgList.Length < lessMCnt || namelessArgList.Length > lessMCnt + lessOCnt then
-            let msg = st.GetMessage( "CMDERR_INVALID_ARG_COUNT" )
-            raise <| CommandInputError msg
+            raise <| CommandInputError CIE_ErrorCode.InvalidArgCount
 
         cmdval.NamedArgs
         |> Array.iter (
@@ -247,8 +275,7 @@ type CommandParser<'a> (
                     |> Seq.exists ( fun itr -> String.Equals( itr, n, StringComparison.Ordinal ) )
                     |> not
                 if r then
-                    let msg = st.GetMessage( "CMDERR_MISSING_MANDATORY_ARG" )
-                    raise <| CommandInputError msg
+                    raise <| CommandInputError CIE_ErrorCode.MissingMandatoryArg
             | _ -> ()
         )
 
@@ -262,21 +289,10 @@ type CommandParser<'a> (
             |> Seq.map KeyValuePair
             |> Dictionary
 
-(*        let allNamelessArgs =
-            namelessArgList
-            |> Seq.rev
-            |> Seq.map2 ( fun vt s ->
-                match CommandParser<'a>.ValidateValue vt s with
-                | ValueNone ->
-                    raise <| CommandInputError( st.GetMessage( "CMDERR_INVALID_ARG_VALUE", s ) )
-                | ValueSome x ->
-                    x
-            ) cmdval.NamelessArgs
-            |> Seq.toArray*)
         let allNamelessArgs =
             match CommandParser<'a>.ValidateNamelessValues ( namelessArgList |> List.rev ) cmdval.NamelessArgs with
             | ValueNone ->
-                raise <| CommandInputError( st.GetMessage( "CMDERR_NAMELESS_PTN_MISMATCH" ) )
+                raise <| CommandInputError( CIE_ErrorCode.NamelessPatternMismatch )
             | ValueSome x ->
                 x
 

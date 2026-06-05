@@ -50,20 +50,20 @@ type CommandReader_Test() =
 
     let RunInputCommandMethod ( infile : TextReader ) ( accCommands :  AcceptableCommand<CommandVarb> array ) : CommandParser<CommandVarb> =
         use outs = new StreamWriter( new MemoryStream() )
-        let st = new StringTable( "" )
-        CommandReader.InputCommand infile outs st accCommands "--"
+        CommandReader.InputCommand infile outs accCommands "--"
         |> Functions.RunTaskSynchronously
 
-    let RunInputCommandMethod_CommandInputError ( infile : TextReader ) ( accCommands : AcceptableCommand<CommandVarb> array ) ( resultmsg : string ) =
+    let RunInputCommandMethod_CommandInputError ( infile : TextReader ) ( accCommands : AcceptableCommand<CommandVarb> array ) ( resultmsg : CIE_ErrorCode ) =
         task {
             use outs = new StreamWriter( new MemoryStream() )
-            let st = new StringTable( "" )
-            try
-                let! _ = CommandReader.InputCommand infile outs st accCommands "--"
-                Assert.Fail __LINE__
-            with
-            | :? CommandInputError as x ->
-                Assert.True(( x.Message.StartsWith resultmsg ))
+            let! e =
+                Assert.ThrowsAsync< CommandInputError >( fun () ->
+                    task {
+                        let! _ = CommandReader.InputCommand infile outs accCommands "--"
+                        ()
+                    }
+                )
+            Assert.StrictEqual( resultmsg, e.ErrorCode )
         }
         |> Functions.RunTaskSynchronously
 
@@ -74,11 +74,9 @@ type CommandReader_Test() =
     member _.InputCommand_001() =
         let ms, ws, rs = GenCommandStream "exit"
         use outs = new StreamWriter( new MemoryStream() )
-        let st = new StringTable( "" )
         let accCommands = exitAccCmd Array.empty [| "/y" |] Array.empty
-
         let r =
-            CommandReader.InputCommand rs outs st accCommands "--"
+            CommandReader.InputCommand rs outs accCommands "--"
             |> Functions.RunTaskSynchronously
         Assert.True(( r.Varb = CommandVarb.Exit ))
         Assert.True(( r.NamedArgs.Count = 0 ))
@@ -89,11 +87,9 @@ type CommandReader_Test() =
     member _.InputCommand_002() =
         let ms, ws, rs = GenCommandStream "exit"
         use outs = new StreamWriter( new MemoryStream() )
-        let st = new StringTable( "" )
         let accCommands = exitAccCmd Array.empty [| "/y" |] Array.empty
-
         let r =
-            CommandReader.InputCommand rs outs st accCommands "--"
+            CommandReader.InputCommand rs outs accCommands "--"
             |> Functions.RunTaskSynchronously
         Assert.True(( r.Varb = CommandVarb.Exit ))
         Assert.True(( r.NamedArgs.Count = 0 ))
@@ -105,15 +101,15 @@ type CommandReader_Test() =
         task {
             let ms, ws, rs = GenCommandStream "aaa"
             use outs = new StreamWriter( new MemoryStream() )
-            let st = new StringTable( "" )
             let accCommands = exitAccCmd Array.empty [| "/y" |] Array.empty
-
-            try
-                let! _ = CommandReader.InputCommand rs outs st accCommands "--"
-                Assert.Fail __LINE__
-            with
-            | :? CommandInputError as x ->
-                Assert.True(( x.Message.StartsWith "CMDERR_UNKNOWN_COMMAND" ))
+            let! e =
+                Assert.ThrowsAsync< CommandInputError >( fun () ->
+                    task {
+                        let! _ = CommandReader.InputCommand rs outs accCommands "--"
+                        ()
+                    }
+                )
+            Assert.StrictEqual( CIE_ErrorCode.UnknownCommand( "aaa" ), e.ErrorCode )
             GlbFunc.AllDispose [ ms; ws; rs; ]
         }
 
@@ -138,13 +134,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "exit /i", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "exit 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "exit /y 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Exit_003 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "exit /i" )>]
+    [<InlineData( "exit 0" )>]
+    [<InlineData( "exit /y 0" )>]
+    member _.Exit_003 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_exit |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -179,14 +175,18 @@ type CommandReader_Test() =
         Assert.True(( r.NamedArgs.Count = 0 ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member Help_003_data : obj[][] = [|
+        [| "help a a a a a a"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "help 012345678901234567890123456789012 a a a a"; CIE_ErrorCode.NamelessPatternMismatch; |];
+        [| "help a 012345678901234567890123456789012 a a a"; CIE_ErrorCode.NamelessPatternMismatch; |];
+        [| "help a a 012345678901234567890123456789012 a a"; CIE_ErrorCode.NamelessPatternMismatch; |];
+        [| "help a a a 012345678901234567890123456789012 a"; CIE_ErrorCode.NamelessPatternMismatch; |];
+        [| "help a a a a 012345678901234567890123456789012"; CIE_ErrorCode.NamelessPatternMismatch; |];
+    |]
+
     [<Theory>]
-    [<InlineData( "help a a a a a a", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "help 012345678901234567890123456789012 a a a a", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
-    [<InlineData( "help a 012345678901234567890123456789012 a a a", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
-    [<InlineData( "help a a 012345678901234567890123456789012 a a", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
-    [<InlineData( "help a a a 012345678901234567890123456789012 a", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
-    [<InlineData( "help a a a a 012345678901234567890123456789012", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
-    member _.Help_003 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "Help_003_data" )>]
+    member _.Help_003 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_help |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -217,16 +217,20 @@ type CommandReader_Test() =
         Assert.True(( r.NamedArgs.["/p"] = EV_int32( 65535 ) ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member login_003_data : obj[][] = [|
+        [| "login 0"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "login /h /p 1"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "login /h " + String.replicate 257 "a"; CIE_ErrorCode.InvalidArgValue( String.replicate 257 "a" ); |];
+        [| "login /p 0"; CIE_ErrorCode.InvalidArgValue( "0" ); |];
+        [| "login /p 65536"; CIE_ErrorCode.InvalidArgValue( "65536" ); |];
+        [| "login /d"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "login /h"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "login /p"; CIE_ErrorCode.LastArgValMissing; |];
+    |]
+
     [<Theory>]
-    [<InlineData( "login 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "login /h /p 1", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "login /h aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "login /p 0", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "login /p 65536", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "login /d", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "login /h", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "login /p", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    member _.login_003 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "login_003_data" )>]
+    member _.login_003 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_login |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -253,13 +257,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "logout /i", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "logout 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "logout /y 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Logout_003 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "logout /i" )>]
+    [<InlineData( "logout 0" )>]
+    [<InlineData( "logout /y 0" )>]
+    member _.Logout_003 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_logout |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -283,13 +287,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "reload /i", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "reload 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "reload /y 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Reload_003 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "reload /i" )>]
+    [<InlineData( "reload 0" )>]
+    [<InlineData( "reload /y 0" )>]
+    member _.Reload_003 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_reload |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -314,12 +318,16 @@ type CommandReader_Test() =
         Assert.True(( r.NamedArgs.Count = 0 ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member Select_003_data : obj[][] = [|
+        [| "select"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "select 1 2"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "select -1"; CIE_ErrorCode.NamelessPatternMismatch; |];
+        [| "select /f"; CIE_ErrorCode.NamelessPatternMismatch; |];
+    |]
+
     [<Theory>]
-    [<InlineData( "select", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "select 1 2", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "select -1", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
-    [<InlineData( "select /f", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
-    member _.Select_003 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "Select_003_data" )>]
+    member _.Select_003 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_select |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -329,7 +337,7 @@ type CommandReader_Test() =
     member _.Select_004() =
         let ms, ws, rs = GenCommandStream ( sprintf "select %d" ClientConst.MAX_CHILD_NODE_COUNT )
         let accCommands = [| CommandReader.CmdRule_select |]
-        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_NAMELESS_PTN_MISMATCH"
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.NamelessPatternMismatch
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -364,12 +372,16 @@ type CommandReader_Test() =
         Assert.True(( r.NamedArgs.["/p"] = EV_uint32( uint ClientConst.MAX_CHILD_NODE_COUNT - 1u ) ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member UnSelect_004_data : obj[][] = [|
+        [| "unselect 0"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "unselect /p"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "unselect /p -1"; CIE_ErrorCode.InvalidArgValue( "-1" ); |];
+        [| "unselect /f"; CIE_ErrorCode.InvalidArgCount; |];
+    |]
+
     [<Theory>]
-    [<InlineData( "unselect 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "unselect /p", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "unselect /p -1", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "unselect /f", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.UnSelect_004 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "UnSelect_004_data" )>]
+    member _.UnSelect_004 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_unselect |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -377,9 +389,10 @@ type CommandReader_Test() =
 
     [<Fact>]
     member _.UnSelect_005() =
-        let ms, ws, rs = GenCommandStream ( sprintf "unselect /p %d" ClientConst.MAX_CHILD_NODE_COUNT )
+        let argstr = sprintf "%d" ClientConst.MAX_CHILD_NODE_COUNT
+        let ms, ws, rs = GenCommandStream ( "unselect /p " + argstr )
         let accCommands = [| CommandReader.CmdRule_unselect |]
-        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_INVALID_ARG_VALUE"
+        RunInputCommandMethod_CommandInputError rs accCommands ( CIE_ErrorCode.InvalidArgValue( argstr ) )
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -393,13 +406,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "list 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "list /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "list /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.List_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "list 0" )>]
+    [<InlineData( "list /p" )>]
+    [<InlineData( "list /p -1" )>]
+    member _.List_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_list |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -413,13 +426,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "listparent 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "listparent /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "listparent /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.ListParent_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "listparent 0" )>]
+    [<InlineData( "listparent /p" )>]
+    [<InlineData( "listparent /p -1" )>]
+    member _.ListParent_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_listparent |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -433,13 +446,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "pwd 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "pwd /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "pwd /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Pwd_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "pwd 0" )>]
+    [<InlineData( "pwd /p" )>]
+    [<InlineData( "pwd /p -1" )>]
+    member _.Pwd_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_pwd |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -453,13 +466,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "values 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "values /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "values /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Values_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "values 0" )>]
+    [<InlineData( "values /p" )>]
+    [<InlineData( "values /p -1" )>]
+    member _.Values_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_values |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -493,7 +506,7 @@ type CommandReader_Test() =
         let astr = String.replicate 257 "a"
         let ms, ws, rs = GenCommandStream ( "set " + astr + " b" )
         let accCommands = [| CommandReader.CmdRule_set |]
-        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_NAMELESS_PTN_MISMATCH"
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.NamelessPatternMismatch
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -501,17 +514,17 @@ type CommandReader_Test() =
         let bstr = String.replicate 65537 "a"
         let ms, ws, rs = GenCommandStream ( "set a " + bstr )
         let accCommands = [| CommandReader.CmdRule_set |]
-        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_NAMELESS_PTN_MISMATCH"
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.NamelessPatternMismatch
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "set 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "set /p -1 6", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "set", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Set_005 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "set 0" )>]
+    [<InlineData( "set /p -1 6" )>]
+    [<InlineData( "set" )>]
+    member _.Set_005 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_set |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -525,13 +538,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "validate 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "validate /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "validate /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Validate_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "validate 0" )>]
+    [<InlineData( "validate /p" )>]
+    [<InlineData( "validate /p -1" )>]
+    member _.Validate_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_validate |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -545,13 +558,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "publish 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "publish /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "publish /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Publish_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "publish 0" )>]
+    [<InlineData( "publish /p" )>]
+    [<InlineData( "publish /p -1" )>]
+    member _.Publish_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_publish |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -565,13 +578,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "nop 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "nop /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "nop /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Nop_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "nop 0" )>]
+    [<InlineData( "nop /p" )>]
+    [<InlineData( "nop /p -1" )>]
+    member _.Nop_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_nop |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -585,13 +598,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "statusall 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "statusall /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "statusall /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.StatusAll_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "statusall 0" )>]
+    [<InlineData( "statusall /p" )>]
+    [<InlineData( "statusall /p -1" )>]
+    member _.StatusAll_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_statusall |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -632,15 +645,19 @@ type CommandReader_Test() =
         let astr = String.replicate ( Constants.MAX_DEVICE_NAME_STR_LENGTH + 1 ) "a"
         let ms, ws, rs = GenCommandStream ( "create /n " + astr )
         let accCommands = [| CommandReader.CmdRule_create_TargetDevice |]
-        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_INVALID_ARG_VALUE"
+        RunInputCommandMethod_CommandInputError rs accCommands ( CIE_ErrorCode.InvalidArgValue( astr ) )
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member Create_TargetDevice_005_data : obj[][] = [|
+        [| "create 0"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "create /p"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "create /n"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "create /n a 0"; CIE_ErrorCode.InvalidArgCount; |];
+    |]
+
     [<Theory>]
-    [<InlineData( "create 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "create /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "create /n", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "create /n a 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Create_TargetDevice_005 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "Create_TargetDevice_005_data" )>]
+    member _.Create_TargetDevice_005 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_create_TargetDevice |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -657,13 +674,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "status 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "status /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "status /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Status_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "status 0" )>]
+    [<InlineData( "status /p" )>]
+    [<InlineData( "status /p -1" )>]
+    member _.Status_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_status |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -700,18 +717,23 @@ type CommandReader_Test() =
 
     [<Fact>]
     member _.Delete_004() =
-        let ms, ws, rs = GenCommandStream ( sprintf "delete /i %d" ClientConst.MAX_CHILD_NODE_COUNT )
+        let argstr = sprintf "%d" ClientConst.MAX_CHILD_NODE_COUNT
+        let ms, ws, rs = GenCommandStream ( "delete /i " + argstr )
         let accCommands = [| CommandReader.CmdRule_delete |]
-        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_INVALID_ARG_VALUE"
+        RunInputCommandMethod_CommandInputError rs accCommands ( CIE_ErrorCode.InvalidArgValue argstr )
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member Delete_005_data : obj[][] = [|
+        [| "delete 0"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "delete /i"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "delete /i 0 1"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "delete /i -1"; CIE_ErrorCode.InvalidArgValue( "-1" ); |];
+        [| "delete /u"; CIE_ErrorCode.InvalidArgCount; |];
+    |]
+
     [<Theory>]
-    [<InlineData( "delete 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "delete /i", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "delete /i 0 1", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "delete /i -1", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "delete /u", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Delete_005 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "Delete_005_data" )>]
+    member _.Delete_005 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_delete |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -728,13 +750,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "start 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "start /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "start /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Start_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "start 0" )>]
+    [<InlineData( "start /p" )>]
+    [<InlineData( "start /p -1" )>]
+    member _.Start_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_start |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -748,13 +770,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "kill 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "kill /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "kill /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Kill_005 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "kill 0" )>]
+    [<InlineData( "kill /p" )>]
+    [<InlineData( "kill /p -1" )>]
+    member _.Kill_005 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_kill |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -792,17 +814,19 @@ type CommandReader_Test() =
     [<Fact>]
     member _.SetLogParam_004() =
         if Constants.LOGPARAM_MIN_SOFTLIMIT > 0u then
-            let ms, ws, rs = GenCommandStream ( sprintf "setlogparam /s %d" ( Constants.LOGPARAM_MIN_SOFTLIMIT - 1u ) )
+            let argstr = sprintf "%d" ( Constants.LOGPARAM_MIN_SOFTLIMIT - 1u )
+            let ms, ws, rs = GenCommandStream ( "setlogparam /s " + argstr )
             let accCommands = [| CommandReader.CmdRule_setlogparam |]
-            RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_INVALID_ARG_VALUE"
+            RunInputCommandMethod_CommandInputError rs accCommands ( CIE_ErrorCode.InvalidArgValue argstr )
             GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
     member _.SetLogParam_005() =
         if Constants.LOGPARAM_MAX_SOFTLIMIT < UInt32.MaxValue then
-            let ms, ws, rs = GenCommandStream ( sprintf "setlogparam /s %d" ( Constants.LOGPARAM_MAX_SOFTLIMIT + 1u ) )
+            let argstr = sprintf "%d" ( Constants.LOGPARAM_MAX_SOFTLIMIT + 1u )
+            let ms, ws, rs = GenCommandStream ( "setlogparam /s " + argstr )
             let accCommands = [| CommandReader.CmdRule_setlogparam |]
-            RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_INVALID_ARG_VALUE"
+            RunInputCommandMethod_CommandInputError rs accCommands ( CIE_ErrorCode.InvalidArgValue argstr )
             GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -830,17 +854,19 @@ type CommandReader_Test() =
     [<Fact>]
     member _.SetLogParam_008() =
         if Constants.LOGPARAM_MIN_HARDLIMIT > 0u then
-            let ms, ws, rs = GenCommandStream ( sprintf "setlogparam /h %d" ( Constants.LOGPARAM_MIN_HARDLIMIT - 1u ) )
+            let argstr = sprintf "%d" ( Constants.LOGPARAM_MIN_HARDLIMIT - 1u )
+            let ms, ws, rs = GenCommandStream ( "setlogparam /h " + argstr )
             let accCommands = [| CommandReader.CmdRule_setlogparam |]
-            RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_INVALID_ARG_VALUE"
+            RunInputCommandMethod_CommandInputError rs accCommands ( CIE_ErrorCode.InvalidArgValue argstr )
             GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
     member _.SetLogParam_009() =
         if Constants.LOGPARAM_MAX_HARDLIMIT < UInt32.MaxValue then
-            let ms, ws, rs = GenCommandStream ( sprintf "setlogparam /h %d" ( Constants.LOGPARAM_MAX_HARDLIMIT + 1u ) )
+            let argstr = sprintf "%d" ( Constants.LOGPARAM_MAX_HARDLIMIT + 1u )
+            let ms, ws, rs = GenCommandStream ( "setlogparam /h " + argstr )
             let accCommands = [| CommandReader.CmdRule_setlogparam |]
-            RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_INVALID_ARG_VALUE"
+            RunInputCommandMethod_CommandInputError rs accCommands ( CIE_ErrorCode.InvalidArgValue argstr )
             GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -872,16 +898,20 @@ type CommandReader_Test() =
         Assert.True(( r.NamedArgs.[ "/l" ] = EV_String( LogLevel.toString LogLevel.LOGLEVEL_INFO ) ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member SetLogParam_012_data : obj[][] = [|
+        [| "setlogparam 0"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "setlogparam /p"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "setlogparam /s"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "setlogparam /s aaa"; CIE_ErrorCode.InvalidArgValue( "aaa" ); |];
+        [| "setlogparam /h"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "setlogparam /h aaa"; CIE_ErrorCode.InvalidArgValue( "aaa" ); |];
+        [| "setlogparam /l"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "setlogparam /l aaa"; CIE_ErrorCode.InvalidArgValue( "aaa" ); |];
+    |]
+
     [<Theory>]
-    [<InlineData( "setlogparam 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "setlogparam /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "setlogparam /s", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "setlogparam /s aaa", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "setlogparam /h", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "setlogparam /h aaa", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "setlogparam /l", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "setlogparam /l aaa", "CMDERR_INVALID_ARG_VALUE" )>]
-    member _.SetLogParam_012 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "SetLogParam_012_data" )>]
+    member _.SetLogParam_012 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_setlogparam |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -898,13 +928,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "getlogparam 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "getlogparam /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "getlogparam /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.GetLogParam_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "getlogparam 0" )>]
+    [<InlineData( "getlogparam /p" )>]
+    [<InlineData( "getlogparam /p -1" )>]
+    member _.GetLogParam_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_getlogparam |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -979,21 +1009,24 @@ type CommandReader_Test() =
         let astr = String.replicate ( Constants.MAX_TARGET_ADDRESS_STR_LENGTH + 1 ) "a"
         let ms, ws, rs = GenCommandStream ( "create networkportal /a " + astr )
         let accCommands = [| CommandReader.CmdRule_addportal |]
-        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_INVALID_ARG_VALUE"
+        RunInputCommandMethod_CommandInputError rs accCommands ( CIE_ErrorCode.InvalidArgValue astr )
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member AddPortal_008_data : obj[][] = [|
+        [| "create networkportal 0"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "create networkportal /x"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "create networkportal /a"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "create networkportal /p"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "create networkportal /p aaa"; CIE_ErrorCode.InvalidArgValue "aaa"; |];
+        [| "create networkportal /p 0"; CIE_ErrorCode.InvalidArgValue "0"; |];
+        [| "create networkportal /p 65536"; CIE_ErrorCode.InvalidArgValue "65536"; |];
+    |]
+
     [<Theory>]
-    [<InlineData( "create networkportal 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "create networkportal /x", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "create networkportal /a", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "create networkportal /p", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "create networkportal /p aaa", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "create networkportal /p 0", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "create networkportal /p 65536", "CMDERR_INVALID_ARG_VALUE" )>]
-    member _.AddPortal_008 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "AddPortal_008_data" )>]
+    member _.AddPortal_008 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         use outs = new StreamWriter( new MemoryStream() )
-        let st = new StringTable( "" )
         let accCommands = [| CommandReader.CmdRule_addportal |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
         GlbFunc.AllDispose [ ms; ws; rs; ]
@@ -1036,15 +1069,19 @@ type CommandReader_Test() =
         let astr = String.replicate ( Constants.MAX_TARGET_GROUP_NAME_STR_LENGTH + 1 ) "a"
         let ms, ws, rs = GenCommandStream ( "create targetgroup /n " + astr )
         let accCommands = [| CommandReader.CmdRule_create_TargetGroup |]
-        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_INVALID_ARG_VALUE"
+        RunInputCommandMethod_CommandInputError rs accCommands ( CIE_ErrorCode.InvalidArgValue astr )
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member Create_TargetGroup_005_data : obj[][] = [|
+        [| "create targetgroup 0"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "create targetgroup /x"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "create targetgroup /n"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "create targetgroup /n 0 1"; CIE_ErrorCode.InvalidArgCount; |];
+    |]
+
     [<Theory>]
-    [<InlineData( "create targetgroup 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "create targetgroup /x", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "create targetgroup /n", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "create targetgroup /n 0 1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Create_TargetGroup_005 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "Create_TargetGroup_005_data" )>]
+    member _.Create_TargetGroup_005 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_create_TargetGroup |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -1083,19 +1120,23 @@ type CommandReader_Test() =
         let astr = String.replicate 49 "a"
         let ms, ws, rs = GenCommandStream ( "add IPWhiteList " + testarg + " " + astr )
         let accCommands = [| CommandReader.CmdRule_add_IPWhiteList |]
-        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_INVALID_ARG_VALUE"
+        RunInputCommandMethod_CommandInputError rs accCommands ( CIE_ErrorCode.InvalidArgValue astr )
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member Add_IPWhiteList_004_data : obj[][] = [|
+        [| "add IPWhiteList 0"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "add IPWhiteList /x"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "add IPWhiteList /fadr"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "add IPWhiteList /fmask"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "add IPWhiteList /t"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "add IPWhiteList /fadr a b"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "add IPWhiteList /fmask a b"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "add IPWhiteList /t a b"; CIE_ErrorCode.InvalidArgCount; |];
+    |]
+
     [<Theory>]
-    [<InlineData( "add IPWhiteList 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "add IPWhiteList /x", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "add IPWhiteList /fadr", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "add IPWhiteList /fmask", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "add IPWhiteList /t", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "add IPWhiteList /fadr a b", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "add IPWhiteList /fmask a b", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "add IPWhiteList /t a b", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Add_IPWhiteList_004 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "Add_IPWhiteList_004_data" )>]
+    member _.Add_IPWhiteList_004 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_add_IPWhiteList |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -1112,13 +1153,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "clear IPWhiteList 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "clear IPWhiteList /x", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "clear IPWhiteList /x 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Clear_IPWhiteList_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "clear IPWhiteList 0" )>]
+    [<InlineData( "clear IPWhiteList /x" )>]
+    [<InlineData( "clear IPWhiteList /x 0" )>]
+    member _.Clear_IPWhiteList_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_clear_IPWhiteList |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -1132,13 +1173,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "load 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "load /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "load /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Load_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "load 0" )>]
+    [<InlineData( "load /p" )>]
+    [<InlineData( "load /p -1" )>]
+    member _.Load_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_load |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -1152,13 +1193,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "unload 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "unload /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "unload /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.UnLoad_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "unload 0" )>]
+    [<InlineData( "unload /p" )>]
+    [<InlineData( "unload /p -1" )>]
+    member _.UnLoad_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_unload |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -1172,13 +1213,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "activate 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "activate /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "activate /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Activate_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "activate 0" )>]
+    [<InlineData( "activate /p" )>]
+    [<InlineData( "activate /p -1" )>]
+    member _.Activate_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_activate |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -1192,13 +1233,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "inactivate 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "inactivate /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "inactivate /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Inactivate_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "inactivate 0" )>]
+    [<InlineData( "inactivate /p" )>]
+    [<InlineData( "inactivate /p -1" )>]
+    member _.Inactivate_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_inactivate |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -1239,22 +1280,26 @@ type CommandReader_Test() =
         let astr = String.replicate ( Constants.ISCSI_TEXT_MAX_ISCSI_NAME_LENGTH + 1 ) "a"
         let ms, ws, rs = GenCommandStream ( "create /n " + astr )
         let accCommands = [| CommandReader.CmdRule_create_Target |]
-        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_INVALID_ARG_VALUE"
+        RunInputCommandMethod_CommandInputError rs accCommands ( CIE_ErrorCode.InvalidArgValue astr )
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
     member _.Create_Target_005() =
         let ms, ws, rs = GenCommandStream "create /n ***"
         let accCommands = [| CommandReader.CmdRule_create_Target |]
-        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_INVALID_ARG_VALUE"
+        RunInputCommandMethod_CommandInputError rs accCommands ( CIE_ErrorCode.InvalidArgValue "***" )
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member Create_Target_006_data : obj[][] = [|
+        [| "create 0"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "create /x"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "create /n"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "create /n 0 1"; CIE_ErrorCode.InvalidArgCount; |];
+    |]
+
     [<Theory>]
-    [<InlineData( "create 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "create /x", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "create /n", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "create /n 0 1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Create_Target_006 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "Create_Target_006_data" )>]
+    member _.Create_Target_006 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_create_Target |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -1297,7 +1342,7 @@ type CommandReader_Test() =
         let astr = String.replicate ( Constants.MAX_USER_NAME_STR_LENGTH + 1 ) "a"
         let ms, ws, rs = GenCommandStream ( sprintf "setchap %s %s" wsname astr )
         let accCommands = [| CommandReader.CmdRule_setchap |]
-        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_INVALID_ARG_VALUE"
+        RunInputCommandMethod_CommandInputError rs accCommands ( CIE_ErrorCode.InvalidArgValue astr )
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -1338,7 +1383,7 @@ type CommandReader_Test() =
         let astr = String.replicate ( Constants.MAX_PASSWORD_STR_LENGTH + 1 ) "a"
         let ms, ws, rs = GenCommandStream ( sprintf "setchap %s %s" wsname astr )
         let accCommands = [| CommandReader.CmdRule_setchap |]
-        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_INVALID_ARG_VALUE"
+        RunInputCommandMethod_CommandInputError rs accCommands ( CIE_ErrorCode.InvalidArgValue astr )
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -1381,21 +1426,25 @@ type CommandReader_Test() =
         Assert.True(( r.NamedArgs.[ "/tp" ] = EV_String( "d" ) ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member SetChap_010_data : obj[][] = [|
+        [| "setchap 0"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "setchap /x"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "setchap /tu a /tp a /ip a /iu"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "setchap /tu a /tp a /ip a /iu ***"; CIE_ErrorCode.InvalidArgValue "***"; |];
+        [| "setchap /tu a /tp a /iu a /ip"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "setchap /tu a /tp a /iu a /ip ***"; CIE_ErrorCode.InvalidArgValue "***"; |];
+        [| "setchap /ip a /iu a /tp a /tu"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "setchap /ip a /iu a /tp a /tu ***"; CIE_ErrorCode.InvalidArgValue "***"; |];
+        [| "setchap /ip a /iu a /tu a /tp"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "setchap /ip a /iu a /tu a /tp ***"; CIE_ErrorCode.InvalidArgValue "***"; |];
+        [| "setchap /ip a /tu a /tp a"; CIE_ErrorCode.MissingMandatoryArg; |];
+        [| "setchap /iu a /tu a /tp a"; CIE_ErrorCode.MissingMandatoryArg; |];
+        [| "setchap"; CIE_ErrorCode.MissingMandatoryArg; |];
+    |]
+
     [<Theory>]
-    [<InlineData( "setchap 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "setchap /x", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "setchap /tu a /tp a /ip a /iu", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "setchap /tu a /tp a /ip a /iu ***", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "setchap /tu a /tp a /iu a /ip", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "setchap /tu a /tp a /iu a /ip ***", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "setchap /ip a /iu a /tp a /tu", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "setchap /ip a /iu a /tp a /tu ***", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "setchap /ip a /iu a /tu a /tp", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "setchap /ip a /iu a /tu a /tp ***", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "setchap /ip a /tu a /tp a", "CMDERR_MISSING_MANDATORY_ARG" )>]
-    [<InlineData( "setchap /iu a /tu a /tp a", "CMDERR_MISSING_MANDATORY_ARG" )>]
-    [<InlineData( "setchap", "CMDERR_MISSING_MANDATORY_ARG" )>]
-    member _.SetChap_010 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "SetChap_010_data" )>]
+    member _.SetChap_010 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_setchap |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -1412,13 +1461,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "unsetauth 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "unsetauth /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "unsetauth /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.UnsetAuth_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "unsetauth 0" )>]
+    [<InlineData( "unsetauth /p" )>]
+    [<InlineData( "unsetauth /p -1" )>]
+    member _.UnsetAuth_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_unsetauth |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -1470,16 +1519,20 @@ type CommandReader_Test() =
         let astr = String.replicate ( Constants.MAX_LU_NAME_STR_LENGTH + 1 ) "a"
         let ms, ws, rs = GenCommandStream ( "create /n " + astr )
         let accCommands = [| CommandReader.CmdRule_create_LU |]
-        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_INVALID_ARG_VALUE"
+        RunInputCommandMethod_CommandInputError rs accCommands ( CIE_ErrorCode.InvalidArgValue astr )
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member Create_LU_006_data : obj[][] = [|
+        [| "create 0"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "create /x"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "create /l"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "create /l ***"; CIE_ErrorCode.InvalidArgValue "***"; |];
+        [| "create /n"; CIE_ErrorCode.LastArgValMissing; |];
+    |]
+
     [<Theory>]
-    [<InlineData( "create 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "create /x", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "create /l", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "create /l ***", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "create /n", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    member _.Create_LU_006 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "Create_LU_006_data" )>]
+    member _.Create_LU_006 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_create_LU |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -1506,12 +1559,16 @@ type CommandReader_Test() =
         Assert.True(( r.NamedArgs.[ "/l" ] = EV_LUN( lun_me.fromPrim 0UL ) ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member Attach_003_data : obj[][] = [|
+        [| "attach 0"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "attach /x"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "attach /l"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "attach /l ***"; CIE_ErrorCode.InvalidArgValue "***"; |];
+    |]
+
     [<Theory>]
-    [<InlineData( "attach 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "attach /x", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "attach /l", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "attach /l ***", "CMDERR_INVALID_ARG_VALUE" )>]
-    member _.Attach_003 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "Attach_003_data" )>]
+    member _.Attach_003 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_attach |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -1538,12 +1595,16 @@ type CommandReader_Test() =
         Assert.True(( r.NamedArgs.[ "/l" ] = EV_LUN( lun_me.fromPrim 0UL ) ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member Detach_003_data : obj[][] = [|
+        [| "detach 0"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "detach /x"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "detach /l"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "detach /l ***"; CIE_ErrorCode.InvalidArgValue "***"; |];
+    |]
+
     [<Theory>]
-    [<InlineData( "detach 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "detach /x", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "detach /l", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "detach /l ***", "CMDERR_INVALID_ARG_VALUE" )>]
-    member _.Detach_003 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "Detach_003_data" )>]
+    member _.Detach_003 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_detach |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -1566,15 +1627,19 @@ type CommandReader_Test() =
         let astr = String.replicate ( Constants.MAX_FILENAME_STR_LENGTH + 1 ) "a"
         let ms, ws, rs = GenCommandStream ( "create plainfile /n " + astr )
         let accCommands = [| CommandReader.CmdRule_create_Media_PlainFile |]
-        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_INVALID_ARG_VALUE"
+        RunInputCommandMethod_CommandInputError rs accCommands ( CIE_ErrorCode.InvalidArgValue astr )
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member Create_Media_PlainFile_004_data : obj[][] = [|
+        [| "create plainfile"; CIE_ErrorCode.MissingMandatoryArg; |];
+        [| "create plainfile a"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "create plainfile 0 1"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "create plainfile /n"; CIE_ErrorCode.LastArgValMissing; |];
+    |]
+
     [<Theory>]
-    [<InlineData( "create plainfile", "CMDERR_MISSING_MANDATORY_ARG" )>]
-    [<InlineData( "create plainfile a", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "create plainfile 0 1", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "create plainfile /n", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    member _.Create_Media_PlainFile_004 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "Create_Media_PlainFile_004_data" )>]
+    member _.Create_Media_PlainFile_004 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_create_Media_PlainFile |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -1593,15 +1658,19 @@ type CommandReader_Test() =
         Assert.True(( r.NamedArgs.["/s"] = EV_uint64( iv ) ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member Create_Media_MemBuffer_002_data : obj[][] = [|
+        [| "create membuffer"; CIE_ErrorCode.MissingMandatoryArg; |];
+        [| "create membuffer a"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "create membuffer 0 1"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "create membuffer /s"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "create membuffer /s ***"; CIE_ErrorCode.InvalidArgValue "***"; |];
+        [| "create membuffer /s -1"; CIE_ErrorCode.InvalidArgValue "-1" |];
+        [| "create membuffer /s 18446744073709551616"; CIE_ErrorCode.InvalidArgValue "18446744073709551616" |];
+    |]
+
     [<Theory>]
-    [<InlineData( "create membuffer", "CMDERR_MISSING_MANDATORY_ARG" )>]
-    [<InlineData( "create membuffer a", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "create membuffer 0 1", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "create membuffer /s", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "create membuffer /s ***", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "create membuffer /s -1", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "create membuffer /s 18446744073709551616", "CMDERR_INVALID_ARG_VALUE" )>]
-    member _.Create_Media_MemBuffer_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "Create_Media_MemBuffer_002_data" )>]
+    member _.Create_Media_MemBuffer_002 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_create_Media_MemBuffer |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -1618,13 +1687,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "create debug a", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "create debug /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "create debug /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Create_Media_Debug_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "create debug a" )>]
+    [<InlineData( "create debug /p" )>]
+    [<InlineData( "create debug /p -1" )>]
+    member _.Create_Media_Debug_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_create_Media_Debug |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -1645,7 +1714,7 @@ type CommandReader_Test() =
         let fname = String.replicate ( Constants.MAX_FILENAME_STR_LENGTH + 1 ) "a"
         let ms, ws, rs = GenCommandStream ( sprintf "initmedia plainfile %s 1" fname )
         let accCommands = [| CommandReader.CmdRule_initmedia_PlainFile |]
-        RunInputCommandMethod_CommandInputError rs accCommands "CMDERR_NAMELESS_PTN_MISMATCH"
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.NamelessPatternMismatch
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -1660,14 +1729,18 @@ type CommandReader_Test() =
         Assert.True(( r.NamedArgs.Count = 0 ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member Create_initmedia_PlainFile_004_data : obj[][] = [|
+        [| "initmedia plainfile"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "initmedia plainfile a"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "initmedia plainfile a 1 2"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "initmedia plainfile a 0"; CIE_ErrorCode.NamelessPatternMismatch; |];
+        [| "initmedia plainfile a 9223372036854775808"; CIE_ErrorCode.NamelessPatternMismatch; |];
+        [| "initmedia plainfile a b"; CIE_ErrorCode.NamelessPatternMismatch; |];
+    |]
+
     [<Theory>]
-    [<InlineData( "initmedia plainfile", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "initmedia plainfile a", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "initmedia plainfile a 1 2", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "initmedia plainfile a 0", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
-    [<InlineData( "initmedia plainfile a 9223372036854775808", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
-    [<InlineData( "initmedia plainfile a b", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
-    member _.Create_initmedia_PlainFile_004 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "Create_initmedia_PlainFile_004_data" )>]
+    member _.Create_initmedia_PlainFile_004 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_initmedia_PlainFile |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -1684,13 +1757,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
         
     [<Theory>]
-    [<InlineData( "imstatus 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "imstatus /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "imstatus /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.IMStatus_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "imstatus 0" )>]
+    [<InlineData( "imstatus /p" )>]
+    [<InlineData( "imstatus /p -1" )>]
+    member _.IMStatus_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_imstatus |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -1715,13 +1788,17 @@ type CommandReader_Test() =
         Assert.True(( r.NamedArgs.Count = 0 ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member IMKill_003_data : obj[][] = [|
+        [| "imkill"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "imkill 1 2"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "imkill -1"; CIE_ErrorCode.NamelessPatternMismatch; |];
+        [| "imkill 18446744073709551616"; CIE_ErrorCode.NamelessPatternMismatch; |];
+        [| "imkill /f"; CIE_ErrorCode.NamelessPatternMismatch; |];
+    |]
+
     [<Theory>]
-    [<InlineData( "imkill", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "imkill 1 2", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "imkill -1", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
-    [<InlineData( "imkill 18446744073709551616", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
-    [<InlineData( "imkill /f", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
-    member _.IMKill_003 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "IMKill_003_data" )>]
+    member _.IMKill_003 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_imkill |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -1738,13 +1815,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "sessions 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "sessions /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "sessions /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Sessions_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "sessions 0" )>]
+    [<InlineData( "sessions /p" )>]
+    [<InlineData( "sessions /p -1" )>]
+    member _.Sessions_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_sessions |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -1769,13 +1846,17 @@ type CommandReader_Test() =
         Assert.True(( r.NamedArgs.Count = 0 ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member SessKill_003_data : obj[][] = [|
+        [| "sesskill"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "sesskill 1 2"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "sesskill -1"; CIE_ErrorCode.NamelessPatternMismatch; |];
+        [| "sesskill 65536"; CIE_ErrorCode.NamelessPatternMismatch; |];
+        [| "sesskill /f"; CIE_ErrorCode.NamelessPatternMismatch; |];
+    |]
+
     [<Theory>]
-    [<InlineData( "sesskill", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "sesskill 1 2", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "sesskill -1", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
-    [<InlineData( "sesskill 65536", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
-    [<InlineData( "sesskill /f", "CMDERR_NAMELESS_PTN_MISMATCH" )>]
-    member _.SessKill_003 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "SessKill_003_data" )>]
+    member _.SessKill_003 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_sesskill |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -1813,13 +1894,17 @@ type CommandReader_Test() =
         Assert.True(( r.NamedArgs.["/s"] = EV_uint32( 65535u ) ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member Connections_004_data : obj[][] = [|
+        [| "connections 0"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "connections /s"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "connections /s -1"; CIE_ErrorCode.InvalidArgValue "-1"; |];
+        [| "connections /s 65536"; CIE_ErrorCode.InvalidArgValue "65536"; |];
+        [| "connections /f"; CIE_ErrorCode.InvalidArgCount; |];
+    |]
+
     [<Theory>]
-    [<InlineData( "connections 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "connections /s", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "connections /s -1", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "connections /s 65536", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "connections /f", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Connections_004 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "Connections_004_data" )>]
+    member _.Connections_004 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_connections |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -1836,13 +1921,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "lustatus 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "lustatus /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "lustatus /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.LUStatus_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "lustatus 0" )>]
+    [<InlineData( "lustatus /p" )>]
+    [<InlineData( "lustatus /p -1" )>]
+    member _.LUStatus_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_lustatus |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -1856,13 +1941,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "lureset 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "lureset /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "lureset /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.LUReset_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "lureset 0" )>]
+    [<InlineData( "lureset /p" )>]
+    [<InlineData( "lureset /p -1" )>]
+    member _.LUReset_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_lureset |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -1876,13 +1961,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "mediastatus 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "mediastatus /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "mediastatus /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.MediaStatus_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "mediastatus 0" )>]
+    [<InlineData( "mediastatus /p" )>]
+    [<InlineData( "mediastatus /p -1" )>]
+    member _.MediaStatus_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_mediastatus |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
@@ -1955,28 +2040,32 @@ type CommandReader_Test() =
         Assert.True(( r.NamedArgs.[ argname ] = EV_int32( varg ) ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member AddTrap_008_data : obj[][] = [|
+        [| "add trap 0"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "add trap /a"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "add trap /e"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "add trap /e ReadCapacity /a"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "add trap /a ACA /e"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "add trap /e eee /a ACA"; CIE_ErrorCode.InvalidArgValue "eee"; |];
+        [| "add trap /e ReadCapacity /a aaa"; CIE_ErrorCode.InvalidArgValue "aaa"; |];
+        [| "add trap /e ReadCapacity /a ACA /slba"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "add trap /e ReadCapacity /a ACA /elba"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "add trap /e ReadCapacity /a ACA /msg"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "add trap /e ReadCapacity /a ACA /idx"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "add trap /e ReadCapacity /a ACA /ms"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "add trap /e ReadCapacity /a ACA /slba -1"; CIE_ErrorCode.InvalidArgValue "-1"; |];
+        [| "add trap /e ReadCapacity /a ACA /slba 18446744073709551616"; CIE_ErrorCode.InvalidArgValue "18446744073709551616"; |];
+        [| "add trap /e ReadCapacity /a ACA /elba -1"; CIE_ErrorCode.InvalidArgValue "-1"; |];
+        [| "add trap /e ReadCapacity /a ACA /elba 18446744073709551616"; CIE_ErrorCode.InvalidArgValue "18446744073709551616"; |];
+        [| "add trap /e ReadCapacity /a ACA /idx -2147483649"; CIE_ErrorCode.InvalidArgValue "-2147483649"; |];
+        [| "add trap /e ReadCapacity /a ACA /idx 2147483648"; CIE_ErrorCode.InvalidArgValue "2147483648"; |];
+        [| "add trap /e ReadCapacity /a ACA /ms -1"; CIE_ErrorCode.InvalidArgValue "-1"; |];
+        [| "add trap /e ReadCapacity /a ACA /ms 2147483648"; CIE_ErrorCode.InvalidArgValue "2147483648"; |];
+    |]
+
     [<Theory>]
-    [<InlineData( "add trap 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "add trap /a", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "add trap /e", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "add trap /e ReadCapacity /a", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "add trap /a ACA /e", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "add trap /e eee /a ACA", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "add trap /e ReadCapacity /a aaa", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "add trap /e ReadCapacity /a ACA /slba", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "add trap /e ReadCapacity /a ACA /elba", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "add trap /e ReadCapacity /a ACA /msg", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "add trap /e ReadCapacity /a ACA /idx", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "add trap /e ReadCapacity /a ACA /ms", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "add trap /e ReadCapacity /a ACA /slba -1", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "add trap /e ReadCapacity /a ACA /slba 18446744073709551616", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "add trap /e ReadCapacity /a ACA /elba -1", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "add trap /e ReadCapacity /a ACA /elba 18446744073709551616", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "add trap /e ReadCapacity /a ACA /idx -2147483649", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "add trap /e ReadCapacity /a ACA /idx 2147483648", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "add trap /e ReadCapacity /a ACA /ms -1", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "add trap /e ReadCapacity /a ACA /ms 2147483648", "CMDERR_INVALID_ARG_VALUE" )>]
-    member _.AddTrap_008 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "AddTrap_008_data" )>]
+    member _.AddTrap_008 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_add_trap |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -1993,13 +2082,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "clear trap 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "clear trap /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "clear trap /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.ClearTrap_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "clear trap 0" )>]
+    [<InlineData( "clear trap /p" )>]
+    [<InlineData( "clear trap /p -1" )>]
+    member _.ClearTrap_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_clear_trap |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -2013,13 +2102,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "traps 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "traps /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "traps /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.Traps_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "traps 0" )>]
+    [<InlineData( "traps /p" )>]
+    [<InlineData( "traps /p -1" )>]
+    member _.Traps_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_traps |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -2033,13 +2122,13 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Theory>]
-    [<InlineData( "task list 0", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "task list /p", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "task list /p -1", "CMDERR_INVALID_ARG_COUNT" )>]
-    member _.TaskList_002 ( cmdstr : string ) ( msgstr : string ) =
+    [<InlineData( "task list 0" )>]
+    [<InlineData( "task list /p" )>]
+    [<InlineData( "task list /p -1" )>]
+    member _.TaskList_002 ( cmdstr : string ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_task_list |]
-        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        RunInputCommandMethod_CommandInputError rs accCommands CIE_ErrorCode.InvalidArgCount
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -2066,21 +2155,25 @@ type CommandReader_Test() =
         Assert.True(( r.NamedArgs.["/i"] = EV_uint32( 4294967295u ) ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
+    static member TaskResume_004_data : obj[][] = [|
+        [| "task resume"; CIE_ErrorCode.MissingMandatoryArg; |];
+        [| "task resume 1 2"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "task resume /f"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "task resume /t 0 /i"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "task resume /i 0 /t"; CIE_ErrorCode.LastArgValMissing; |];
+        [| "task resume /t 0"; CIE_ErrorCode.MissingMandatoryArg; |];
+        [| "task resume /i 0"; CIE_ErrorCode.MissingMandatoryArg; |];
+        [| "task resume /t 0 /i -1"; CIE_ErrorCode.InvalidArgValue "-1"; |];
+        [| "task resume /t 0 /i 4294967296"; CIE_ErrorCode.InvalidArgValue "4294967296"; |];
+        [| "task resume /t -1 /i 0"; CIE_ErrorCode.InvalidArgValue "-1"; |];
+        [| "task resume /t 65536 /i 0"; CIE_ErrorCode.InvalidArgValue "65536"; |];
+        [| "task resume /t 0 /i a"; CIE_ErrorCode.InvalidArgValue "a"; |];
+        [| "task resume /t a /i 0"; CIE_ErrorCode.InvalidArgValue "a"; |];
+    |]
+
     [<Theory>]
-    [<InlineData( "task resume", "CMDERR_MISSING_MANDATORY_ARG" )>]
-    [<InlineData( "task resume 1 2", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "task resume /f", "CMDERR_INVALID_ARG_COUNT" )>]
-    [<InlineData( "task resume /t 0 /i", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "task resume /i 0 /t", "CMDERR_LAST_ARG_VAL_MISSING" )>]
-    [<InlineData( "task resume /t 0", "CMDERR_MISSING_MANDATORY_ARG" )>]
-    [<InlineData( "task resume /i 0", "CMDERR_MISSING_MANDATORY_ARG" )>]
-    [<InlineData( "task resume /t 0 /i -1", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "task resume /t 0 /i 4294967296", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "task resume /t -1 /i 0", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "task resume /t 65536 /i 0", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "task resume /t 0 /i a", "CMDERR_INVALID_ARG_VALUE" )>]
-    [<InlineData( "task resume /t a /i 0", "CMDERR_INVALID_ARG_VALUE" )>]
-    member _.TaskResume_004 ( cmdstr : string ) ( msgstr : string ) =
+    [<MemberData( "TaskResume_004_data" )>]
+    member _.TaskResume_004 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_task_resume |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr

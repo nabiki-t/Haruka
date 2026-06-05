@@ -633,7 +633,7 @@ type CommandRunner_Test1() =
     |]
 
     static member m_CommandLoop_expection_data = [|
-        [| CommandInputError( "aaaa" ) :> obj; "CR"; "aaaa" :> obj |];
+        [| CommandInputError( CIE_ErrorCode.InvalidArgCount ) :> obj; "CR"; "CMDERR_INVALID_ARG_COUNT" :> obj |];
         [| RequestError( "aaaa" ) :> obj; "CR"; "CMDERR_UNEXPECTED_REQUEST_ERROR" :> obj |];
         [| SocketException( 0 ) :> obj; "CR"; "CMDERR_CONNECTION_ERROR" :> obj |];
         [| IOException( "aaaa" ) :> obj; "CR"; "CMDERR_CONNECTION_ERROR" :> obj |];

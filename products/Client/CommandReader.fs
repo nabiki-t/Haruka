@@ -674,9 +674,6 @@ type CommandReader () =
     /// <param name="outfile">
     ///  Stream which output prompt string to.
     /// </param>
-    /// <param name="st">
-    ///  Message table.
-    /// </param>
     /// <param name="accCommands">
     ///  Acceptable command.
     /// </param>
@@ -692,7 +689,6 @@ type CommandReader () =
     static member InputCommand
         ( infile : TextReader )
         ( outfile : TextWriter )
-        ( st : StringTable )
         ( accCommands : AcceptableCommand<CommandVarb> array )
         ( prp : string ) : Task<CommandParser<CommandVarb>> =
 
@@ -707,6 +703,6 @@ type CommandReader () =
             }
         task {
             let! line = Functions.loopAsyncWithState loop ""
-            return CommandParser.FromString st accCommands line
+            return CommandParser.FromString accCommands line
         }
 
