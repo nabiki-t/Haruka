@@ -1503,7 +1503,9 @@ type ServerStatus(
                     x
                 | _ ->
                     this.IdentifyTargetGroupNode node
-            if ( tgNode :> IConfigFileNode ).Modified = ModifiedStatus.Modified then
+            let tdModified = ( tdNode :> IConfigFileNode ).Modified.IsModified
+            let tgModified = ( tgNode :> IConfigFileNode ).Modified.IsModified
+            if tdModified || tgModified then
                 return true
             else
                 // If the target device is unloaded, the target group it belongs to has already been unloaded.

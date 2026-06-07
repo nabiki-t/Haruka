@@ -96,19 +96,19 @@ type CommandRunner_Test3() =
 
         ss.p_ControllerNode <- ( cn :?> ConfNode_Controller )
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode = tgn2 ))
+            Assert.Same( tgn2, argnode )
             Some( tdn )
         )
         cc.p_GetTargetDeviceProcs <- ( fun () -> Task.FromResult [] )
         ss.p_GetAncestorTargetGroup <- ( fun argnode ->
-            Assert.True(( argnode = tgn2 ))
+            Assert.Same( tgn2, argnode )
             Some tgn2
         )
         cc.p_GetActiveTargetGroups <- ( fun _ -> task { flg1 <- true; return [] } )
         cc.p_GetLoadedTargetGroups <- ( fun _ -> task { flg2 <- true; return [] } )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn2 ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tgn2 ) ))
 
         out_ws.Flush()
@@ -118,9 +118,9 @@ type CommandRunner_Test3() =
             for i = 1 to 3 do
                 yield ( out_rs.ReadLine() ).TrimStart()
         |]
-        Assert.True(( lines.[2].StartsWith "UNLOADED " ))
-        Assert.False(( flg1 ))
-        Assert.False(( flg2 ))
+        Assert.StartsWith( "UNLOADED ", lines.[2] )
+        Assert.False( flg1 )
+        Assert.False( flg2 )
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -145,7 +145,7 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID tdn.NodeID
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_MISSING_NODE"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -159,7 +159,7 @@ type CommandRunner_Test3() =
         cnr.AddNode cn
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_MISSING_NODE"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -177,7 +177,7 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID cn2.NodeID
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_CTRL_NODE_NOT_DELETABLE"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -204,15 +204,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID ( tdn :> IConfigureNode ).NodeID
 
         ss.p_DeleteTargetDeviceNode <- ( fun argn ->
-            Assert.True(( argn = tdn ))
+            Assert.Same( tdn, argn )
             flg1 <- true
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "CR" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -252,15 +252,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID ( npn :> IConfigureNode ).NodeID
 
         ss.p_DeleteNetworkPortalNode <- ( fun argn ->
-            Assert.True(( argn = npn ))
+            Assert.Same( npn, argn )
             flg1 <- true
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "CR" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -278,15 +278,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID ( tgn :> IConfigureNode ).NodeID
 
         ss.p_DeleteTargetGroupNode <- ( fun argn ->
-            Assert.True(( argn = tgn ))
+            Assert.Same( tgn, argn )
             flg1 <- true
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "CR" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -314,15 +314,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID ( tn :> IConfigureNode ).NodeID
 
         ss.p_DeleteNodeInTargetGroup <- ( fun argn ->
-            Assert.True(( argn = tn ))
+            Assert.Same( tn, argn )
             flg1 <- true
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "CR" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -342,15 +342,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID ( bdn :> IConfigureNode ).NodeID
 
         ss.p_DeleteNodeInTargetGroup <- ( fun argn ->
-            Assert.True(( argn = bdn ))
+            Assert.Same( bdn, argn )
             flg1 <- true
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "CR" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -368,15 +368,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID ( ddn :> IConfigureNode ).NodeID
 
         ss.p_DeleteNodeInTargetGroup <- ( fun argn ->
-            Assert.True(( argn = ddn ))
+            Assert.Same( ddn, argn )
             flg1 <- true
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "CR" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -402,15 +402,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID ( sfn :> IConfigureNode ).NodeID
 
         ss.p_DeleteNodeInTargetGroup <- ( fun argn ->
-            Assert.True(( argn = sfn ))
+            Assert.Same( sfn, argn )
             flg1 <- true
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "CR" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -435,15 +435,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID ( sfn :> IConfigureNode ).NodeID
 
         ss.p_DeleteNodeInTargetGroup <- ( fun argn ->
-            Assert.True(( argn = sfn ))
+            Assert.Same( sfn, argn )
             flg1 <- true
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "CR" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -461,15 +461,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID ( dmn :> IConfigureNode ).NodeID
 
         ss.p_DeleteNodeInTargetGroup <- ( fun argn ->
-            Assert.True(( argn = dmn ))
+            Assert.Same( dmn, argn )
             flg1 <- true
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "CR" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -487,15 +487,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID ( dmn :> IConfigureNode ).NodeID
 
         ss.p_DeleteNodeInTargetGroup <- ( fun argn ->
-            Assert.True(( argn = dmn ))
+            Assert.Same( dmn, argn )
             flg1 <- true
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "CR" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -504,7 +504,7 @@ type CommandRunner_Test3() =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "delete" )
         let cn = CommandRunner_Test1.m_TargetDeviceNode
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_CTRL_NODE_NOT_DELETABLE"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -522,7 +522,7 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn1.NodeID cn2.NodeID
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn2 ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn2 ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "CR" "CMDMSG_CTRL_NODE_NOT_DELETABLE"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -549,15 +549,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID ( tdn :> IConfigureNode ).NodeID
 
         ss.p_DeleteTargetDeviceNode <- ( fun argn ->
-            Assert.True(( argn = tdn ))
+            Assert.Same( tdn, argn )
             flg1 <- true
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -586,15 +586,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID ( npn :> IConfigureNode ).NodeID
 
         ss.p_DeleteNetworkPortalNode <- ( fun argn ->
-            Assert.True(( argn = npn ))
+            Assert.Same( npn, argn )
             flg1 <- true
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, npn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "NP" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -612,15 +612,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID ( tgn :> IConfigureNode ).NodeID
 
         ss.p_DeleteTargetGroupNode <- ( fun argn ->
-            Assert.True(( argn = tgn ))
+            Assert.Same( tgn, argn )
             flg1 <- true
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -647,15 +647,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID ( tn :> IConfigureNode ).NodeID
 
         ss.p_DeleteNodeInTargetGroup <- ( fun argn ->
-            Assert.True(( argn = tn ))
+            Assert.Same( tn, argn )
             flg1 <- true
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "T " "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -676,15 +676,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID ( bdn :> IConfigureNode ).NodeID
 
         ss.p_DeleteNodeInTargetGroup <- ( fun argn ->
-            Assert.True(( argn = bdn ))
+            Assert.Same( bdn, argn )
             flg1 <- true
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, bdn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "LU" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -702,15 +702,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID ( ddn :> IConfigureNode ).NodeID
 
         ss.p_DeleteNodeInTargetGroup <- ( fun argn ->
-            Assert.True(( argn = ddn ))
+            Assert.Same( ddn, argn )
             flg1 <- true
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, ddn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "LU" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -736,15 +736,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID ( sfn :> IConfigureNode ).NodeID
 
         ss.p_DeleteNodeInTargetGroup <- ( fun argn ->
-            Assert.True(( argn = sfn ))
+            Assert.Same( sfn, argn )
             flg1 <- true
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, sfn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "MD" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -769,15 +769,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID ( sfn :> IConfigureNode ).NodeID
 
         ss.p_DeleteNodeInTargetGroup <- ( fun argn ->
-            Assert.True(( argn = sfn ))
+            Assert.Same( sfn, argn )
             flg1 <- true
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, sfn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "MD" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -795,15 +795,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID ( dmn :> IConfigureNode ).NodeID
 
         ss.p_DeleteNodeInTargetGroup <- ( fun argn ->
-            Assert.True(( argn = dmn ))
+            Assert.Same( dmn, argn )
             flg1 <- true
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, dmn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "MD" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -821,15 +821,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation cn.NodeID ( sfn :> IConfigureNode ).NodeID
 
         ss.p_DeleteNodeInTargetGroup <- ( fun argn ->
-            Assert.True(( argn = sfn ))
+            Assert.Same( sfn, argn )
             flg1 <- true
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, sfn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, cn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "MD" "Deleted"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -841,21 +841,21 @@ type CommandRunner_Test3() =
         let mutable flg2 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode = td ))
+            Assert.Same( td, argnode )
             flg1 <- true
             Some td
         )
         cc.p_StartTargetDeviceProc <- ( fun argid ->
-            Assert.True(( argid = td.TargetDeviceID ))
+            Assert.StrictEqual( td.TargetDeviceID, argid )
             flg2 <- true
             Task.FromResult ()
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, td ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, td ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "Started"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -866,68 +866,87 @@ type CommandRunner_Test3() =
         let mutable flg1 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode = td ))
+            Assert.Same( td, argnode )
             flg1 <- true
             None
         )
-
-        try
-            let _ = CallCommandLoop cr ( Some ( ss, cc, td ) )
-            Assert.Fail __LINE__
-        with
-        | :? Xunit.Sdk.FailException -> reraise();
-        | _ -> ()
-        Assert.True(( flg1 ))
+        Assert.ThrowsAny( fun () ->
+            CallCommandLoop cr ( Some ( ss, cc, td ) ) |> ignore
+        ) |> ignore
+        Assert.True( flg1 )
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
 
     [<Fact>]
     member _.Kill_001 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "kill" )
         let td = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
-        let mutable flg1 = false
-        let mutable flg2 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode = td ))
-            flg1 <- true
+            Assert.Same( td, argnode )
             Some td
         )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ td.TargetDeviceID ] )
+
         cc.p_KillTargetDeviceProc <- ( fun argid ->
-            Assert.True(( argid = td.TargetDeviceID ))
-            flg2 <- true
+            Assert.StrictEqual( td.TargetDeviceID, argid )
             Task.FromResult ()
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, td ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, td ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "Killed"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
+    [<Fact>]
+    member _.Kill_002 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "kill" )
+        let td = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some td )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, td ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, td ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.Kill_005 () =
+    member _.Kill_003 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "kill" )
+        let td =
+            CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+            |> _.SetModified()
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some td )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ td.TargetDeviceID ] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, td ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, td ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Kill_004 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "kill" )
         let td = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let mutable flg1 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode = td ))
+            Assert.Same( td, argnode )
             flg1 <- true
             None
         )
 
-        try
-            let _ = CallCommandLoop cr ( Some ( ss, cc, td ) )
-            Assert.Fail __LINE__
-        with
-        | :? Xunit.Sdk.FailException -> reraise();
-        | _ as x ->
-            Assert.True(( x.Message.StartsWith "Unexpected" ))
+        let e =
+            Assert.ThrowsAny( fun () ->
+                CallCommandLoop cr ( Some ( ss, cc, td ) ) |> ignore
+            )
+        Assert.StartsWith( "Unexpected", e.Message )
 
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
 
     [<Fact>]
@@ -939,7 +958,7 @@ type CommandRunner_Test3() =
 
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ td.TargetDeviceID ] )
         cc.p_GetLogParameters <- ( fun argid ->
-            Assert.True(( argid = td.TargetDeviceID ))
+            Assert.StrictEqual( td.TargetDeviceID, argid )
             flg1 <- true
             task {
                 return {
@@ -951,19 +970,19 @@ type CommandRunner_Test3() =
         )
 
         cc.p_SetLogParameters <- ( fun argid conf ->
-            Assert.True(( argid = td.TargetDeviceID ))
+            Assert.StrictEqual( td.TargetDeviceID, argid )
             flg2 <- true
-            Assert.True(( conf.SoftLimit = 123u ))
-            Assert.True(( conf.HardLimit = 456u ))
-            Assert.True(( conf.LogLevel = LogLevel.LOGLEVEL_FAILED ))
+            Assert.StrictEqual( 123u, conf.SoftLimit )
+            Assert.StrictEqual( 456u, conf.HardLimit )
+            Assert.StrictEqual( LogLevel.LOGLEVEL_FAILED, conf.LogLevel )
             Task.FromResult ()
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, td ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, td ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_LOG_PARAM_UPDATED"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -976,7 +995,7 @@ type CommandRunner_Test3() =
 
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ td.TargetDeviceID ] )
         cc.p_GetLogParameters <- ( fun argid ->
-            Assert.True(( argid = td.TargetDeviceID ))
+            Assert.StrictEqual( td.TargetDeviceID, argid )
             flg1 <- true
             task {
                 return {
@@ -988,19 +1007,19 @@ type CommandRunner_Test3() =
         )
 
         cc.p_SetLogParameters <- ( fun argid conf ->
-            Assert.True(( argid = td.TargetDeviceID ))
+            Assert.StrictEqual( td.TargetDeviceID, argid )
             flg2 <- true
-            Assert.True(( conf.SoftLimit = 999u ))
-            Assert.True(( conf.HardLimit = 456u ))
-            Assert.True(( conf.LogLevel = LogLevel.LOGLEVEL_FAILED ))
+            Assert.StrictEqual( 999u, conf.SoftLimit )
+            Assert.StrictEqual( 456u, conf.HardLimit )
+            Assert.StrictEqual( LogLevel.LOGLEVEL_FAILED, conf.LogLevel )
             Task.FromResult ()
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, td ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, td ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_LOG_PARAM_UPDATED"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1013,7 +1032,7 @@ type CommandRunner_Test3() =
 
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ td.TargetDeviceID ] )
         cc.p_GetLogParameters <- ( fun argid ->
-            Assert.True(( argid = td.TargetDeviceID ))
+            Assert.StrictEqual( td.TargetDeviceID, argid )
             flg1 <- true
             task {
                 return {
@@ -1025,19 +1044,19 @@ type CommandRunner_Test3() =
         )
 
         cc.p_SetLogParameters <- ( fun argid conf ->
-            Assert.True(( argid = td.TargetDeviceID ))
+            Assert.StrictEqual( td.TargetDeviceID, argid )
             flg2 <- true
-            Assert.True(( conf.SoftLimit = 123u ))
-            Assert.True(( conf.HardLimit = 888u ))
-            Assert.True(( conf.LogLevel = LogLevel.LOGLEVEL_FAILED ))
+            Assert.StrictEqual( 123u, conf.SoftLimit )
+            Assert.StrictEqual( 888u, conf.HardLimit )
+            Assert.StrictEqual( LogLevel.LOGLEVEL_FAILED, conf.LogLevel )
             Task.FromResult ()
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, td ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, td ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_LOG_PARAM_UPDATED"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1050,7 +1069,7 @@ type CommandRunner_Test3() =
 
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ td.TargetDeviceID ] )
         cc.p_GetLogParameters <- ( fun argid ->
-            Assert.True(( argid = td.TargetDeviceID ))
+            Assert.StrictEqual( td.TargetDeviceID, argid )
             flg1 <- true
             task {
                 return {
@@ -1062,19 +1081,19 @@ type CommandRunner_Test3() =
         )
 
         cc.p_SetLogParameters <- ( fun argid conf ->
-            Assert.True(( argid = td.TargetDeviceID ))
+            Assert.StrictEqual( td.TargetDeviceID, argid )
             flg2 <- true
-            Assert.True(( conf.SoftLimit = 123u ))
-            Assert.True(( conf.HardLimit = 456u ))
-            Assert.True(( conf.LogLevel = LogLevel.LOGLEVEL_INFO ))
+            Assert.StrictEqual( 123u, conf.SoftLimit )
+            Assert.StrictEqual( 456u, conf.HardLimit )
+            Assert.StrictEqual( LogLevel.LOGLEVEL_INFO, conf.LogLevel )
             Task.FromResult ()
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, td ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, td ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_LOG_PARAM_UPDATED"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1086,7 +1105,22 @@ type CommandRunner_Test3() =
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [] )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, td ) )
-        Assert.True(( r ))
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, td ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.SetLogParam_006 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "setlogparam /l INFO" )
+        let td =
+            CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+            |> _.SetModified()
+
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ td.TargetDeviceID ] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, td ) )
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, td ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -1099,7 +1133,7 @@ type CommandRunner_Test3() =
 
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ td.TargetDeviceID ] )
         cc.p_GetLogParameters <- ( fun argid ->
-            Assert.True(( argid = td.TargetDeviceID ))
+            Assert.StrictEqual( td.TargetDeviceID, argid )
             flg1 <- true
             task {
                 return {
@@ -1111,9 +1145,9 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, td ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, td ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
 
         out_ws.Flush()
         out_ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
@@ -1122,8 +1156,8 @@ type CommandRunner_Test3() =
             for i = 1 to 2 do
                 yield ( out_rs.ReadLine() ).TrimStart()
         |]
-        Assert.True(( lines.[0].StartsWith "HardLimit" ))
-        Assert.True(( lines.[1].StartsWith "LogLevel" ))
+        Assert.StartsWith( "HardLimit", lines.[0]  )
+        Assert.StartsWith( "LogLevel", lines.[1]  )
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1135,7 +1169,22 @@ type CommandRunner_Test3() =
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [] )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, td ) )
-        Assert.True(( r ))
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, td ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.GetLogParam_003 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "getlogparam" )
+        let td =
+            CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+            |> _.SetModified()
+
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ td.TargetDeviceID ] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, td ) )
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, td ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -1158,18 +1207,18 @@ type CommandRunner_Test3() =
         let mutable flg1 = false
 
         ss.p_AddNetworkPortalNode <- ( fun argtd argconf ->
-            Assert.True(( argtd = tdn ))
-            Assert.True(( argconf.TargetAddress = "" ))
-            Assert.True(( argconf.PortNumber = Constants.DEFAULT_ISCSI_PORT_NUM ))
+            Assert.Same( tdn, argtd )
+            Assert.StrictEqual( "", argconf.TargetAddress )
+            Assert.StrictEqual( Constants.DEFAULT_ISCSI_PORT_NUM, argconf.PortNumber )
             flg1 <- true
             CommandRunner_Test1.m_NetworkPortalNode :?> ConfNode_NetworkPortal
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1205,19 +1254,19 @@ type CommandRunner_Test3() =
         let mutable flg1 = false
 
         ss.p_AddNetworkPortalNode <- ( fun argtd argconf ->
-            Assert.True(( argtd = tdn ))
-            Assert.True(( argconf.TargetAddress = "" ))
-            Assert.True(( argconf.PortNumber = Constants.DEFAULT_ISCSI_PORT_NUM ))
-            Assert.True(( argconf.IdentNumber <> npn.NetworkPortal.IdentNumber ))
+            Assert.Same( tdn, argtd )
+            Assert.StrictEqual( "", argconf.TargetAddress )
+            Assert.StrictEqual( Constants.DEFAULT_ISCSI_PORT_NUM, argconf.PortNumber )
+            Assert.NotStrictEqual( npn.NetworkPortal.IdentNumber, argconf.IdentNumber )
             flg1 <- true
             CommandRunner_Test1.m_NetworkPortalNode :?> ConfNode_NetworkPortal
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1239,18 +1288,18 @@ type CommandRunner_Test3() =
         let mutable flg1 = false
 
         ss.p_AddNetworkPortalNode <- ( fun argtd argconf ->
-            Assert.True(( argtd = tdn ))
-            Assert.True(( argconf.TargetAddress = "aaa" ))
-            Assert.True(( argconf.PortNumber = Constants.DEFAULT_ISCSI_PORT_NUM ))
+            Assert.Same( tdn, argtd )
+            Assert.StrictEqual( "aaa", argconf.TargetAddress )
+            Assert.StrictEqual( Constants.DEFAULT_ISCSI_PORT_NUM, argconf.PortNumber )
             flg1 <- true
             CommandRunner_Test1.m_NetworkPortalNode :?> ConfNode_NetworkPortal
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1272,18 +1321,18 @@ type CommandRunner_Test3() =
         let mutable flg1 = false
 
         ss.p_AddNetworkPortalNode <- ( fun argtd argconf ->
-            Assert.True(( argtd = tdn ))
-            Assert.True(( argconf.TargetAddress = "" ))
-            Assert.True(( argconf.PortNumber = 123us ))
+            Assert.Same( tdn, argtd )
+            Assert.StrictEqual( "", argconf.TargetAddress )
+            Assert.StrictEqual( 123us, argconf.PortNumber )
             flg1 <- true
             CommandRunner_Test1.m_NetworkPortalNode :?> ConfNode_NetworkPortal
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1331,7 +1380,7 @@ type CommandRunner_Test3() =
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -1375,7 +1424,7 @@ type CommandRunner_Test3() =
             cnr.AddRelation ( tdn :> IConfigureNode ).NodeID nid
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_TOO_MANY_CHILD"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -1400,14 +1449,14 @@ type CommandRunner_Test3() =
 
         ss.p_AddTargetGroupNode <- ( fun argtd newTgid tgName eas ->
             flg1 <- true
-            Assert.True(( argtd = tdn ))
+            Assert.Same( tdn, argtd )
             CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1433,16 +1482,16 @@ type CommandRunner_Test3() =
 
         ss.p_AddTargetGroupNode <- ( fun argtd newTgid tgName eas ->
             flg1 <- true
-            Assert.True(( argtd = tdn ))
-            Assert.True(( newTgid <> tgn.TargetGroupID ))
-            Assert.True(( tgName <> tgn.TargetGroupName ))
+            Assert.Same( tdn, argtd )
+            Assert.NotStrictEqual( tgn.TargetGroupID, newTgid )
+            Assert.NotStrictEqual( tgn.TargetGroupName, tgName )
             CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1465,15 +1514,15 @@ type CommandRunner_Test3() =
 
         ss.p_AddTargetGroupNode <- ( fun argtd newTgid tgName eas ->
             flg1 <- true
-            Assert.True(( argtd = tdn ))
-            Assert.True(( tgName = "bbb" ))
+            Assert.Same( tdn, argtd )
+            Assert.StrictEqual( "bbb", tgName )
             CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -1520,7 +1569,7 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -1564,7 +1613,7 @@ type CommandRunner_Test3() =
             cnr.AddRelation ( tdn :> IConfigureNode ).NodeID nid
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "CMDMSG_TOO_MANY_CHILD"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -1580,7 +1629,7 @@ type CommandRunner_Test3() =
         let npnode = CommandRunner_Test1.m_NetworkPortalNode :?> ConfNode_NetworkPortal
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, npnode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some( ss, cc, npnode ) ))
 
         let out_rs = CheckOutputMessage out_ms out_ws "NP" "CMDMSG_PARAMVAL_INVALID_PARAM_PATTERN"
@@ -1597,7 +1646,7 @@ type CommandRunner_Test3() =
         let npnode = CommandRunner_Test1.m_NetworkPortalNode :?> ConfNode_NetworkPortal
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, npnode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some( ss, cc, npnode ) ))
 
         let out_rs = CheckOutputMessage out_ms out_ws "NP" "CMDMSG_PARAMVAL_INVALID_PARAM_PATTERN"
@@ -1614,7 +1663,7 @@ type CommandRunner_Test3() =
         let npnode = CommandRunner_Test1.m_NetworkPortalNode :?> ConfNode_NetworkPortal
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, npnode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some( ss, cc, npnode ) ))
 
         let out_rs = CheckOutputMessage out_ms out_ws "NP" "CMDMSG_PARAMVAL_INVALID_PARAM_PATTERN"
@@ -1633,13 +1682,13 @@ type CommandRunner_Test3() =
 
         ss.p_UpdateNetworkPortalNode <- ( fun _ c ->
             flg1 <- true
-            Assert.True(( c.WhiteList = [ IPCondition.Any ] ))
+            Assert.StrictEqual( [ IPCondition.Any ], c.WhiteList )
             npnode
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, npnode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat.IsSome ))
         Assert.True flg1
 
@@ -1663,13 +1712,13 @@ type CommandRunner_Test3() =
                 ( IPAddress.Parse "192.168.1.1" ).GetAddressBytes(),
                 ( IPAddress.Parse "255.255.0.0" ).GetAddressBytes()
             )
-            Assert.True(( c.WhiteList = [ cond ] ))
+            Assert.StrictEqual( [ cond ], c.WhiteList )
             npnode
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, npnode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat.IsSome ))
         Assert.True flg1
 
@@ -1697,13 +1746,13 @@ type CommandRunner_Test3() =
 
         ss.p_UpdateNetworkPortalNode <- ( fun _ c ->
             flg1 <- true
-            Assert.True(( c.WhiteList.Length = Constants.MAX_IP_WHITELIST_COUNT ))
+            Assert.StrictEqual( Constants.MAX_IP_WHITELIST_COUNT, c.WhiteList.Length )
             npnode2
         )
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, npnode2 ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat.IsSome ))
         Assert.True flg1
 
@@ -1728,7 +1777,7 @@ type CommandRunner_Test3() =
         }
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, npnode2 ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat.IsSome ))
 
         let out_rs = CheckOutputMessage out_ms out_ws "NP" "CHKMSG_IP_WHITELIST_TOO_LONG"
@@ -1751,7 +1800,7 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, crnode1 ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat.IsSome ))
         Assert.True flg1
 
@@ -1775,12 +1824,12 @@ type CommandRunner_Test3() =
                 ( IPAddress.Parse "192.168.1.1" ).GetAddressBytes(),
                 ( IPAddress.Parse "255.255.0.0" ).GetAddressBytes()
             )
-            Assert.True(( c.RemoteCtrl.Value.WhiteList = [ cond ] ))
+            Assert.StrictEqual( [ cond ], c.RemoteCtrl.Value.WhiteList )
             crnode1
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, crnode1 ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat.IsSome ))
         Assert.True flg1
 
@@ -1811,12 +1860,12 @@ type CommandRunner_Test3() =
 
         ss.p_UpdateControllerNode <- ( fun c ->
             flg1 <- true
-            Assert.True(( c.RemoteCtrl.Value.WhiteList.Length = Constants.MAX_IP_WHITELIST_COUNT ))
+            Assert.StrictEqual( Constants.MAX_IP_WHITELIST_COUNT, c.RemoteCtrl.Value.WhiteList.Length )
             crnode1
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, crnode2 ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat.IsSome ))
         Assert.True flg1
 
@@ -1844,7 +1893,7 @@ type CommandRunner_Test3() =
         }
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, crnode2 ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat.IsSome ))
 
         let out_rs = CheckOutputMessage out_ms out_ws "CR" "CHKMSG_IP_WHITELIST_TOO_LONG"
@@ -1868,12 +1917,12 @@ type CommandRunner_Test3() =
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, npnode1 ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True stat.IsSome
         Assert.True flg1
         match stat.Value with
         | ( _, _, n ) ->
-            Assert.True(( ( n :?> ConfNode_NetworkPortal ).NetworkPortal.WhiteList.Length = 0 ))
+            Assert.Empty( ( n :?> ConfNode_NetworkPortal ).NetworkPortal.WhiteList )
 
         let out_rs = CheckOutputMessage out_ms out_ws "NP" "IP white list cleared"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -1900,12 +1949,12 @@ type CommandRunner_Test3() =
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, npnode2 ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True stat.IsSome
         Assert.True flg1
         match stat.Value with
         | ( _, _, n ) ->
-            Assert.True(( ( n :?> ConfNode_NetworkPortal ).NetworkPortal.WhiteList.Length = 0 ))
+            Assert.Empty( ( n :?> ConfNode_NetworkPortal ).NetworkPortal.WhiteList )
 
         let out_rs = CheckOutputMessage out_ms out_ws "NP" "IP white list cleared"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -1927,12 +1976,12 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, crnode1 ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True stat.IsSome
         Assert.True flg1
         match stat.Value with
         | ( _, _, n ) ->
-            Assert.True(( ( n :?> ConfNode_Controller ).GetConfigureData().RemoteCtrl.Value.WhiteList.Length = 0 ))
+            Assert.Empty( ( n :?> ConfNode_Controller ).GetConfigureData().RemoteCtrl.Value.WhiteList )
 
         let out_rs = CheckOutputMessage out_ms out_ws "CR" "IP white list cleared"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -1962,12 +2011,12 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, crnode2 ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True stat.IsSome
         Assert.True flg1
         match stat.Value with
         | ( _, _, n ) ->
-            Assert.True(( ( n :?> ConfNode_Controller ).GetConfigureData().RemoteCtrl.Value.WhiteList.Length = 0 ))
+            Assert.Empty( ( n :?> ConfNode_Controller ).GetConfigureData().RemoteCtrl.Value.WhiteList )
 
         let out_rs = CheckOutputMessage out_ms out_ws "CR" "IP white list cleared"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -1982,30 +2031,30 @@ type CommandRunner_Test3() =
         let mutable flg3 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode =  tgn))
+            Assert.Same( tgn, argnode )
             flg1 <- true
             Some tdn
         )
         ss.p_GetAncestorTargetGroup <- ( fun argnode ->
-            Assert.True(( argnode =  tgn))
+            Assert.Same( tgn, argnode )
             flg2 <- true
             Some tgn
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun _ _ -> Task.CompletedTask )
         cc.p_LoadTargetGroup <- ( fun argtdid argtgid ->
             flg3 <- true
-            Assert.True(( tdn.TargetDeviceID = argtdid ))
-            Assert.True(( tgn.TargetGroupID = argtgid ))
+            Assert.StrictEqual( argtdid, tdn.TargetDeviceID )
+            Assert.StrictEqual( argtgid, tgn.TargetGroupID )
             Task.FromResult ()
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ ->Task.FromResult [ tdn.TargetDeviceID ] )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
-        Assert.True(( flg3 ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
+        Assert.True( flg3 )
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "Loaded"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2017,12 +2066,9 @@ type CommandRunner_Test3() =
         ss.p_GetAncestorTargetDevice <- ( fun argnode -> None )
         ss.p_GetAncestorTargetGroup <- ( fun argnode -> None )
 
-        try
-            let _ = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
-            Assert.Fail __LINE__
-        with
-        | :? Xunit.Sdk.FailException -> reraise();
-        | _ -> ()
+        Assert.ThrowsAny( fun () ->
+            CallCommandLoop cr ( Some ( ss, cc, tgn ) ) |> ignore
+        ) |> ignore
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
 
     [<Fact>]
@@ -2032,27 +2078,24 @@ type CommandRunner_Test3() =
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let mutable flg1 = false
         let mutable flg2 = false
-        let mutable flg3 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode =  tgn))
+            Assert.Same( tgn, argnode )
             flg1 <- true
             Some tdn
         )
         ss.p_GetAncestorTargetGroup <- ( fun argnode ->
-            Assert.True(( argnode =  tgn))
+            Assert.Same( tgn, argnode )
             flg2 <- true
             Some tgn
         )
-        cc.p_LoadTargetGroup <- ( fun _ _ -> task { flg3 <- true } )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [] )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
-        Assert.False(( flg3 ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2068,9 +2111,27 @@ type CommandRunner_Test3() =
         ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "CMDMSG_CONFIG_MODIFIED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Load_005 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "load" )
+        let tdn =
+            CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+            |> _.SetModified()
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tgn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
@@ -2083,29 +2144,29 @@ type CommandRunner_Test3() =
         let mutable flg3 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode =  tgn))
+            Assert.Same( tgn, argnode )
             flg1 <- true
             Some tdn
         )
         ss.p_GetAncestorTargetGroup <- ( fun argnode ->
-            Assert.True(( argnode =  tgn))
+            Assert.Same( tgn, argnode )
             flg2 <- true
             Some tgn
         )
         cc.p_UnloadTargetGroup <- ( fun argtdid argtgid ->
             flg3 <- true
-            Assert.True(( tdn.TargetDeviceID = argtdid ))
-            Assert.True(( tgn.TargetGroupID = argtgid ))
+            Assert.StrictEqual( argtdid, tdn.TargetDeviceID )
+            Assert.StrictEqual( argtgid, tgn.TargetGroupID )
             Task.FromResult ()
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
-        Assert.True(( flg3 ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
+        Assert.True( flg3 )
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "Unloaded"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2117,12 +2178,9 @@ type CommandRunner_Test3() =
         ss.p_GetAncestorTargetDevice <- ( fun argnode -> None )
         ss.p_GetAncestorTargetGroup <- ( fun argnode -> None )
 
-        try
-            let _ = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
-            Assert.Fail __LINE__
-        with
-        | :? Xunit.Sdk.FailException -> reraise();
-        | _ -> ()
+        Assert.ThrowsAny( fun () ->
+            CallCommandLoop cr ( Some ( ss, cc, tgn ) ) |> ignore
+        ) |> ignore
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
 
     [<Fact>]
@@ -2132,27 +2190,42 @@ type CommandRunner_Test3() =
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let mutable flg1 = false
         let mutable flg2 = false
-        let mutable flg3 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode =  tgn))
+            Assert.Same( tgn, argnode )
             flg1 <- true
             Some tdn
         )
         ss.p_GetAncestorTargetGroup <- ( fun argnode ->
-            Assert.True(( argnode =  tgn))
+            Assert.Same( tgn, argnode )
             flg2 <- true
             Some tgn
         )
-        cc.p_UnloadTargetGroup <- ( fun _ _ -> task { flg3 <- true } )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [] )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
-        Assert.False(( flg3 ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Unload_004 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "unload" )
+        let tdn =
+            CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+            |> _.SetModified()
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tgn ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2166,29 +2239,29 @@ type CommandRunner_Test3() =
         let mutable flg3 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode =  tgn))
+            Assert.Same( tgn, argnode )
             flg1 <- true
             Some tdn
         )
         ss.p_GetAncestorTargetGroup <- ( fun argnode ->
-            Assert.True(( argnode =  tgn))
+            Assert.Same( tgn, argnode )
             flg2 <- true
             Some tgn
         )
         cc.p_ActivateTargetGroup <- ( fun argtdid argtgid ->
             flg3 <- true
-            Assert.True(( tdn.TargetDeviceID = argtdid ))
-            Assert.True(( tgn.TargetGroupID = argtgid ))
+            Assert.StrictEqual( argtdid, tdn.TargetDeviceID )
+            Assert.StrictEqual( argtgid, tgn.TargetGroupID )
             Task.FromResult ()
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
-        Assert.True(( flg3 ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
+        Assert.True( flg3 )
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "Activated"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2200,12 +2273,9 @@ type CommandRunner_Test3() =
         ss.p_GetAncestorTargetDevice <- ( fun argnode -> None )
         ss.p_GetAncestorTargetGroup <- ( fun argnode -> None )
 
-        try
-            let _ = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
-            Assert.Fail __LINE__
-        with
-        | :? Xunit.Sdk.FailException -> reraise();
-        | _ -> ()
+        Assert.ThrowsAny( fun () ->
+            CallCommandLoop cr ( Some ( ss, cc, tgn ) ) |> ignore
+        ) |> ignore
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
 
     [<Fact>]
@@ -2215,29 +2285,45 @@ type CommandRunner_Test3() =
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let mutable flg1 = false
         let mutable flg2 = false
-        let mutable flg3 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode =  tgn))
+            Assert.Same( tgn, argnode )
             flg1 <- true
             Some tdn
         )
         ss.p_GetAncestorTargetGroup <- ( fun argnode ->
-            Assert.True(( argnode =  tgn))
+            Assert.Same( tgn, argnode )
             flg2 <- true
             Some tgn
         )
-        cc.p_ActivateTargetGroup <- ( fun _ _ -> task { flg3 <- true } )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [] )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
-        Assert.False(( flg3 ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Activate_004 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "activate" )
+        let tdn =
+            CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+            |> _.SetModified()
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tgn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
 
     [<Fact>]
     member _.Inactivate_001 () =
@@ -2249,29 +2335,29 @@ type CommandRunner_Test3() =
         let mutable flg3 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode =  tgn))
+            Assert.Same( tgn, argnode )
             flg1 <- true
             Some tdn
         )
         ss.p_GetAncestorTargetGroup <- ( fun argnode ->
-            Assert.True(( argnode =  tgn))
+            Assert.Same( tgn, argnode )
             flg2 <- true
             Some tgn
         )
         cc.p_InactivateTargetGroup <- ( fun argtdid argtgid ->
             flg3 <- true
-            Assert.True(( tdn.TargetDeviceID = argtdid ))
-            Assert.True(( tgn.TargetGroupID = argtgid ))
+            Assert.StrictEqual( argtdid, tdn.TargetDeviceID )
+            Assert.StrictEqual( argtgid, tgn.TargetGroupID )
             Task.FromResult ()
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
-        Assert.True(( flg3 ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
+        Assert.True( flg3 )
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "Inactivated"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2283,12 +2369,9 @@ type CommandRunner_Test3() =
         ss.p_GetAncestorTargetDevice <- ( fun argnode -> None )
         ss.p_GetAncestorTargetGroup <- ( fun argnode -> None )
 
-        try
-            let _ = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
-            Assert.Fail __LINE__
-        with
-        | :? Xunit.Sdk.FailException -> reraise();
-        | _ -> ()
+        Assert.ThrowsAny( fun () ->
+            CallCommandLoop cr ( Some ( ss, cc, tgn ) ) |> ignore
+        ) |> ignore
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
 
@@ -2299,30 +2382,42 @@ type CommandRunner_Test3() =
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let mutable flg1 = false
         let mutable flg2 = false
-        let mutable flg3 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode =  tgn))
+            Assert.Same( tgn, argnode )
             flg1 <- true
             Some tdn
         )
         ss.p_GetAncestorTargetGroup <- ( fun argnode ->
-            Assert.True(( argnode =  tgn))
+            Assert.Same( tgn, argnode )
             flg2 <- true
             Some tgn
-        )
-        cc.p_InactivateTargetGroup <- ( fun argtdid argtgid ->
-            flg3 <- true
-            Task.FromResult ()
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [] )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
-        Assert.False(( flg3 ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Inactivate_004 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "inactivate" )
+        let tdn =
+            CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+            |> _.SetModified()
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tgn ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2335,22 +2430,22 @@ type CommandRunner_Test3() =
         let mutable flg2 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode =  tgn ))
+            Assert.Same( tgn, argnode )
             flg1 <- true
             Some tdn
         )
         ss.p_AddTargetNode <- ( fun argtgnode conf ->
-            Assert.True(( argtgnode = tgn ))
+            Assert.Same( tgn, argtgnode )
             flg2 <- true
             ( CommandRunner_Test1.m_TargetNode :?> ConfNode_Target )
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2404,26 +2499,26 @@ type CommandRunner_Test3() =
         cnr.AddRelation ( tgn2 :> IConfigureNode ).NodeID ( tn2 :> IConfigureNode ).NodeID
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode =  tgn1 ))
+            Assert.Same( tgn1, argnode )
             flg1 <- true
             Some tdn
         )
         ss.p_AddTargetNode <- ( fun argtgnode conf ->
-            Assert.True(( argtgnode = tgn1 ))
-            Assert.True(( conf.IdentNumber <> tn1.Values.IdentNumber ))
-            Assert.True(( conf.TargetName <> tn1.Values.TargetName ))
-            Assert.True(( conf.IdentNumber <> tn2.Values.IdentNumber ))
-            Assert.True(( conf.TargetName <> tn2.Values.TargetName ))
+            Assert.Same( tgn1, argtgnode )
+            Assert.NotStrictEqual( tn1.Values.IdentNumber, conf.IdentNumber )
+            Assert.NotStrictEqual( tn1.Values.TargetName, conf.TargetName )
+            Assert.NotStrictEqual( tn2.Values.IdentNumber, conf.IdentNumber )
+            Assert.NotStrictEqual( tn2.Values.TargetName, conf.TargetName )
             flg2 <- true
             ( CommandRunner_Test1.m_TargetNode :?> ConfNode_Target )
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn1 ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tgn1 ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2436,23 +2531,23 @@ type CommandRunner_Test3() =
         let mutable flg2 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode =  tgn ))
+            Assert.Same( tgn, argnode )
             flg1 <- true
             Some tdn
         )
         ss.p_AddTargetNode <- ( fun argtgnode conf ->
-            Assert.True(( argtgnode = tgn ))
-            Assert.True(( conf.TargetName = "aaa" ))
+            Assert.Same( tgn, argtgnode )
+            Assert.StrictEqual( "aaa", conf.TargetName )
             flg2 <- true
             ( CommandRunner_Test1.m_TargetNode :?> ConfNode_Target )
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2497,7 +2592,7 @@ type CommandRunner_Test3() =
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn1 ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tgn1 ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -2539,7 +2634,7 @@ type CommandRunner_Test3() =
         ss.p_GetAncestorTargetDevice <- ( fun argnode -> Some tdn )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn1 ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tgn1 ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "CMDMSG_TOO_MANY_CHILD"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -2553,27 +2648,27 @@ type CommandRunner_Test3() =
 
         ss.p_UpdateTargetNode <- ( fun argtnode conf ->
             flg1 <- true
-            Assert.True(( argtnode = tn1 ))
+            Assert.Same( tn1, argtnode )
             match conf.Auth with
             | TargetGroupConf.U_CHAP( x ) ->
-                Assert.True(( x.InitiatorAuth.UserName = "aaa" ))
-                Assert.True(( x.InitiatorAuth.Password = "bbb" ))
-                Assert.True(( x.TargetAuth.UserName = "ccc" ))
-                Assert.True(( x.TargetAuth.Password = "ddd" ))
+                Assert.StrictEqual( "aaa", x.InitiatorAuth.UserName )
+                Assert.StrictEqual( "bbb", x.InitiatorAuth.Password )
+                Assert.StrictEqual( "ccc", x.TargetAuth.UserName )
+                Assert.StrictEqual( "ddd", x.TargetAuth.Password )
             | _ -> Assert.Fail __LINE__
             tn2
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn1 ) )
-        Assert.True(( r ))
-        Assert.True(( stat.IsSome ))
+        Assert.True( r )
+        Assert.True( stat.IsSome )
         match stat.Value with
         | ( x_ss, x_cc, x_tn ) ->
-            Assert.True(( Functions.IsSame x_ss ss ))
-            Assert.True(( Functions.IsSame x_cc cc ))
-            Assert.True(( Functions.IsSame x_tn tn2 ))
-        Assert.True(( flg1 ))
+            Assert.Same( ss, x_ss )
+            Assert.Same( cc, x_cc )
+            Assert.Same( tn2, x_tn )
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "T " "Set CHAP authentication"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2588,22 +2683,22 @@ type CommandRunner_Test3() =
 
         ss.p_UpdateTargetNode <- ( fun argtnode conf ->
             flg1 <- true
-            Assert.True(( argtnode = tn ))
+            Assert.Same( tn, argtnode )
             match conf.Auth with
             | TargetGroupConf.U_CHAP( x ) ->
-                Assert.True(( x.InitiatorAuth.UserName = "aaa" ))
-                Assert.True(( x.InitiatorAuth.Password = "bbb" ))
-                Assert.True(( x.TargetAuth.UserName = "" ))
-                Assert.True(( x.TargetAuth.Password = "" ))
+                Assert.StrictEqual( "aaa", x.InitiatorAuth.UserName )
+                Assert.StrictEqual( "bbb", x.InitiatorAuth.Password )
+                Assert.StrictEqual( "", x.TargetAuth.UserName )
+                Assert.StrictEqual( "", x.TargetAuth.Password )
             | _ -> Assert.Fail __LINE__
             CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat.IsSome ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "T " "Set CHAP authentication"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2636,7 +2731,7 @@ type CommandRunner_Test3() =
 
         ss.p_UpdateTargetNode <- ( fun argtnode conf ->
             flg1 <- true
-            Assert.True(( argtnode = tn ))
+            Assert.Same( tn, argtnode )
             match conf.Auth with
             | TargetGroupConf.U_None( _ ) -> ()
             | _ -> Assert.Fail __LINE__
@@ -2645,9 +2740,9 @@ type CommandRunner_Test3() =
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "T " "Authentication reset"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2659,16 +2754,16 @@ type CommandRunner_Test3() =
 
         ss.p_AddBlockDeviceLUNode <- ( fun tnode lun luname mm otl ->
             flg1 <- true
-            Assert.True(( tnode = tn ))
+            Assert.Same( tn, tnode )
             Assert.True(( lun = lun_me.fromPrim 2UL ))
             CommandRunner_Test1.m_BlockDeviceLUNode :?>ConfNode_BlockDeviceLU
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "T " "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2677,7 +2772,7 @@ type CommandRunner_Test3() =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "create" )
         let tn = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tn ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_ADDPARAM_LUN"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -2690,18 +2785,18 @@ type CommandRunner_Test3() =
 
         ss.p_AddBlockDeviceLUNode <- ( fun tnode lun luname mm otl ->
             flg1 <- true
-            Assert.True(( tnode = tn ))
-            Assert.True(( lun = lun_me.fromPrim 3UL ))
-            Assert.True(( luname = "aaa" ))
-            Assert.True(( mm = Constants.LU_DEF_MULTIPLICITY ))
+            Assert.Same( tn, tnode )
+            Assert.StrictEqual( lun_me.fromPrim 3UL, lun )
+            Assert.StrictEqual( "aaa", luname )
+            Assert.StrictEqual( Constants.LU_DEF_MULTIPLICITY, mm )
             CommandRunner_Test1.m_BlockDeviceLUNode :?>ConfNode_BlockDeviceLU
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "T " "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2751,7 +2846,7 @@ type CommandRunner_Test3() =
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn1 ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tn1 ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "T " "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -2797,7 +2892,7 @@ type CommandRunner_Test3() =
             cnr.AddRelation tn1.NodeID n.NodeID
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn1 ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tn1 ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_TOO_MANY_CHILD"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -2811,15 +2906,15 @@ type CommandRunner_Test3() =
         let mutable flg1 = false
 
         ss.p_GetAncestorTargetGroup <- ( fun argnode ->
-            Assert.True(( argnode = tn ))
+            Assert.Same( tn, argnode )
             flg1 <- true
             Some tgn
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_ADDPARAM_LUN"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2846,15 +2941,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation ( tgn :> IConfigureNode ).NodeID ( tn :> IConfigureNode ).NodeID
 
         ss.p_GetAncestorTargetGroup <- ( fun argnode ->
-            Assert.True(( argnode = tn ))
+            Assert.Same( tn, argnode )
             flg1 <- true
             Some tgn
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_ADDPARAM_MISSING_LUN"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2887,22 +2982,22 @@ type CommandRunner_Test3() =
         cnr.AddRelation ( tn :> IConfigureNode ).NodeID ( lunode :> IConfigureNode ).NodeID
 
         ss.p_GetAncestorTargetGroup <- ( fun argnode ->
-            Assert.True(( argnode = tn ))
+            Assert.Same( tn, argnode )
             flg1 <- true
             Some tgn
         )
         ss.p_AddTargetLURelation <- ( fun tnode arglunode ->
             Assert.True(( tnode = tn ))
-            Assert.True(( arglunode = lunode ))
+            Assert.Same( lunode, arglunode )
             flg2 <- true
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tn ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
         let out_rs = CheckOutputMessage out_ms out_ws "T " "Attach LU"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2934,15 +3029,15 @@ type CommandRunner_Test3() =
         cnr.AddRelation ( tn :> IConfigureNode ).NodeID ( lunode :> IConfigureNode ).NodeID
 
         ss.p_GetAncestorTargetGroup <- ( fun argnode ->
-            Assert.True(( argnode = tn ))
+            Assert.Same( tn, argnode )
             flg1 <- true
             Some tgn
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tn ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_ADDPARAM_MISSING_LUN"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -3012,7 +3107,7 @@ type CommandRunner_Test3() =
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn2 ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tn2 ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "T " "Attach LU"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -3080,7 +3175,7 @@ type CommandRunner_Test3() =
 
         ss.p_GetAncestorTargetGroup <- ( fun argnode -> Some ( tgn :?> ConfNode_TargetGroup ) )
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn2 ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tn2 ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_TOO_MANY_CHILD"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -3091,7 +3186,7 @@ type CommandRunner_Test3() =
         let tn = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tn ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_ADDPARAM_LUN"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -3118,7 +3213,7 @@ type CommandRunner_Test3() =
         cnr.AddRelation ( tgn :> IConfigureNode ).NodeID ( tn :> IConfigureNode ).NodeID
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tn ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_ADDPARAM_MISSING_LUN"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -3151,16 +3246,16 @@ type CommandRunner_Test3() =
         cnr.AddRelation ( tn :> IConfigureNode ).NodeID ( lunode :> IConfigureNode ).NodeID
 
         ss.p_DeleteTargetLURelation <- ( fun tnode arglunode ->
-            Assert.True(( tnode = tn ))
-            Assert.True(( arglunode = lunode ))
+            Assert.Same( tn, tnode )
+            Assert.Same( lunode, arglunode )
             flg2 <- true
         )
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tn ) ))
-        Assert.True(( flg2 ))
+        Assert.True( flg2 )
         let out_rs = CheckOutputMessage out_ms out_ws "T " "Detach LU"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -3191,7 +3286,7 @@ type CommandRunner_Test3() =
         cnr.AddRelation ( tn :> IConfigureNode ).NodeID ( lunode :> IConfigureNode ).NodeID
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tn ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_ADDPARAM_MISSING_LUN"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -3205,14 +3300,14 @@ type CommandRunner_Test3() =
         let mutable flg2 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode = lunode ))
+            Assert.Same( lunode, argnode )
             flg1 <- true
             Some tdn
         )
 
         ss.p_AddPlainFileMediaNode <- ( fun argcn conf ->
-            Assert.True(( argcn = lunode ))
-            Assert.True(( conf.FileName = "aaa" ))
+            Assert.Same( lunode, argcn )
+            Assert.StrictEqual( "aaa", conf.FileName )
             flg2 <- true
             ( CommandRunner_Test1.m_PlainFileMediaNode :?> ConfNode_PlainFileMedia )
         )
@@ -3220,10 +3315,10 @@ type CommandRunner_Test3() =
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
         let out_rs = CheckOutputMessage out_ms out_ws "LU" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -3274,16 +3369,16 @@ type CommandRunner_Test3() =
         cnr.AddRelation lunode.NodeID dmn2.NodeID
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode = lunode ))
+            Assert.Same( lunode, argnode )
             flg1 <- true
             Some ( tdn :?> ConfNode_TargetDevice )
         )
 
         ss.p_AddPlainFileMediaNode <- ( fun argcn conf ->
-            Assert.True(( argcn = lunode ))
-            Assert.True(( conf.FileName = "a" ))
-            Assert.True(( conf.IdentNumber <> mediaidx_me.fromPrim 1u ))
-            Assert.True(( conf.IdentNumber <> mediaidx_me.fromPrim 2u ))
+            Assert.Same( lunode, argcn )
+            Assert.StrictEqual( "a", conf.FileName )
+            Assert.NotStrictEqual( mediaidx_me.fromPrim 1u, conf.IdentNumber )
+            Assert.NotStrictEqual( mediaidx_me.fromPrim 2u, conf.IdentNumber )
             flg2 <- true
             ( CommandRunner_Test1.m_PlainFileMediaNode :?> ConfNode_PlainFileMedia )
         )
@@ -3291,10 +3386,10 @@ type CommandRunner_Test3() =
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
         let out_rs = CheckOutputMessage out_ms out_ws "LU" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -3352,7 +3447,7 @@ type CommandRunner_Test3() =
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "LU" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -3407,7 +3502,7 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "LU" "CMDMSG_TOO_MANY_CHILD"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -3421,14 +3516,14 @@ type CommandRunner_Test3() =
         let mutable flg2 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode = lunode ))
+            Assert.Same( lunode, argnode )
             flg1 <- true
             Some tdn
         )
 
         ss.p_AddMemBufferMediaNode <- ( fun argcn conf ->
-            Assert.True(( argcn = lunode ))
-            Assert.True(( conf.BytesCount = 512UL ))
+            Assert.Same( lunode, argcn )
+            Assert.StrictEqual( 512UL, conf.BytesCount )
             flg2 <- true
             ( CommandRunner_Test1.m_MemBufferMediaNode :?> ConfNode_MemBufferMedia )
         )
@@ -3436,10 +3531,10 @@ type CommandRunner_Test3() =
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
         let out_rs = CheckOutputMessage out_ms out_ws "LU" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -3497,7 +3592,7 @@ type CommandRunner_Test3() =
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "LU" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -3552,7 +3647,7 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "LU" "CMDMSG_TOO_MANY_CHILD"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -3566,14 +3661,14 @@ type CommandRunner_Test3() =
         let mutable flg2 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode = lunode ))
+            Assert.Same( lunode, argnode )
             flg1 <- true
             Some tdn
         )
 
         ss.p_AddDebugMediaNode <- ( fun argcn ident name ->
-            Assert.True(( argcn = lunode ))
-            Assert.True(( name = "" ))
+            Assert.Same( lunode, argcn )
+            Assert.StrictEqual( "", name )
             flg2 <- true
             ( CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia )
         )
@@ -3581,10 +3676,10 @@ type CommandRunner_Test3() =
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
         let out_rs = CheckOutputMessage out_ms out_ws "LU" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -3642,7 +3737,7 @@ type CommandRunner_Test3() =
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "LU" "Created"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -3697,7 +3792,7 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "LU" "CMDMSG_TOO_MANY_CHILD"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -3709,16 +3804,16 @@ type CommandRunner_Test3() =
         let mutable flg1 = false
 
         cc.p_CreateMediaFile_PlainFile <- ( fun fname fsize ->
-            Assert.True(( fname = "a" ))
-            Assert.True(( fsize = 1L ))
+            Assert.StrictEqual( "a", fname )
+            Assert.StrictEqual( 1L, fsize )
             flg1 <- true
             Task.FromResult 0UL
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "LU" "Started"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -3734,9 +3829,9 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "LU" ""
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -3761,15 +3856,15 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
 
         out_ws.Flush()
         out_ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
         let out_rs = CheckOutputMessage out_ms out_ws "LU" "ProcID=0, NotStarted"
         let outline2 = ( out_rs.ReadLine() ).TrimStart()
-        Assert.True(( outline2.StartsWith "xxx" ))
+        Assert.StartsWith( "xxx", outline2 )
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -3794,9 +3889,9 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
 
         out_ws.Flush()
         out_ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
@@ -3825,9 +3920,9 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
 
         out_ws.Flush()
         out_ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
@@ -3855,9 +3950,9 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
 
         out_ws.Flush()
         out_ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
@@ -3885,9 +3980,9 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
 
         out_ws.Flush()
         out_ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
@@ -3901,15 +3996,15 @@ type CommandRunner_Test3() =
         let mutable flg1 = false
 
         cc.p_KillInitMediaProc <- ( fun pid ->
-            Assert.True(( pid = 5UL ))
+            Assert.StrictEqual( 5UL, pid )
             flg1 <- true
             Task.FromResult []
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
-        Assert.True(( flg1 ))
+        Assert.True( flg1 )
         let out_rs = CheckOutputMessage out_ms out_ws "LU" "Terminated"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -3942,6 +4037,22 @@ type CommandRunner_Test3() =
     [<Fact>]
     member _.Sessions_TargetDevice_003 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "sessions" )
+        let tdn =
+            CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+            |> _.SetModified()
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tdn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Sessions_TargetDevice_004 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "sessions" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let mutable flg3 = false
 
@@ -3950,7 +4061,7 @@ type CommandRunner_Test3() =
         cc.p_GetSession_InTargetDevice <- ( fun argtdid ->
             task {
                 flg3 <- true
-                Assert.True(( argtdid = tdn.TargetDeviceID ))
+                Assert.StrictEqual( tdn.TargetDeviceID, argtdid )
                 let sessList : TargetDeviceCtrlRes.T_Session list = [
                     {
                         TargetGroupID = tgid_me.fromPrim( 99u );
@@ -4056,8 +4167,8 @@ type CommandRunner_Test3() =
         cc.p_GetSession_InTargetGroup <- ( fun argtdid argtgid ->
             task {
                 flg3 <- true
-                Assert.True(( argtdid = tdn.TargetDeviceID ))
-                Assert.True(( argtgid = tgn.TargetGroupID ))
+                Assert.StrictEqual( tdn.TargetDeviceID, argtdid )
+                Assert.StrictEqual( tgn.TargetGroupID, argtgid )
                 let sessList : TargetDeviceCtrlRes.T_Session list = [
                     {
                         TargetGroupID = tgid_me.fromPrim( 99u );
@@ -4166,8 +4277,8 @@ type CommandRunner_Test3() =
         cc.p_GetSession_InTarget <- ( fun argtdid argtid ->
             task {
                 flg3 <- true
-                Assert.True(( argtdid = tdn.TargetDeviceID ))
-                Assert.True(( argtid = tn.Values.IdentNumber ))
+                Assert.StrictEqual( tdn.TargetDeviceID, argtdid )
+                Assert.StrictEqual( tn.Values.IdentNumber, argtid )
                 let sessList : TargetDeviceCtrlRes.T_Session list = [
                     {
                         TargetGroupID = tgid_me.fromPrim( 99u );
@@ -4215,7 +4326,7 @@ type CommandRunner_Test3() =
         let mutable flg2 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode = tdn ))
+            Assert.Same( tdn, argnode )
             flg1 <- true
             None
         )
@@ -4226,15 +4337,11 @@ type CommandRunner_Test3() =
             }
         )
 
-        try
-            let _ = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-            Assert.Fail __LINE__
-        with
-        | :? Xunit.Sdk.FailException -> reraise();
-        | _ as x ->
-            ()
-        Assert.True(( flg1 ))
-        Assert.True(( flg2 ))
+        Assert.ThrowsAny( fun () ->
+            CallCommandLoop cr ( Some ( ss, cc, tdn ) ) |> ignore
+        ) |> ignore
+        Assert.True( flg1 )
+        Assert.True( flg2 )
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
 
     [<Fact>]
@@ -4252,14 +4359,30 @@ type CommandRunner_Test3() =
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
-        Assert.True(( flg2 ))
+        Assert.True( flg2 )
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
     member _.SessKill_003 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "sesskill 1" )
+        let tdn =
+            CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+            |> _.SetModified()
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> task { return [ tdn.TargetDeviceID ] } )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tdn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.SessKill_004 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "sesskill 99" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let mutable flg3 = false
@@ -4267,16 +4390,16 @@ type CommandRunner_Test3() =
         ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
         cc.p_DestructSession <- ( fun argtdid argtsih ->
-            Assert.True(( argtdid = tdn.TargetDeviceID ))
-            Assert.True(( argtsih = tsih_me.fromPrim 99us ))
+            Assert.StrictEqual( tdn.TargetDeviceID, argtdid )
+            Assert.StrictEqual( tsih_me.fromPrim 99us, argtsih )
             flg3 <- true
             Task.FromResult ()
         )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tdn ) ))
-        Assert.True(( flg3 ))
+        Assert.True( flg3 )
         let out_rs = CheckOutputMessage out_ms out_ws "TD" "Session terminated"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -4287,7 +4410,7 @@ type CommandRunner_Test3() =
         let mutable flg1 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
-            Assert.True(( argnode = tdn ))
+            Assert.Same( tdn, argnode )
             flg1 <- true
             None
         )
@@ -4319,6 +4442,22 @@ type CommandRunner_Test3() =
 
     [<Fact>]
     member _.Connections_TargetDevice_003 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "connections" )
+        let tdn =
+            CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+            |> _.SetModified()
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tdn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Connections_TargetDevice_004 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "connections /s 1" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let mutable flg3 = false
@@ -4328,8 +4467,8 @@ type CommandRunner_Test3() =
         cc.p_GetConnection_InSession <- ( fun tdid tsih ->
             task {
                 flg3 <- true
-                Assert.True(( tdid = tdn.TargetDeviceID ))
-                Assert.True(( tsih = tsih_me.fromPrim 1us ))
+                Assert.StrictEqual( tdn.TargetDeviceID, tdid )
+                Assert.StrictEqual( tsih_me.fromPrim 1us, tsih )
                 return [
                     {
                         TSIH = tsih_me.fromPrim 1us;
@@ -4358,7 +4497,7 @@ type CommandRunner_Test3() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.Connections_TargetDevice_004 () =
+    member _.Connections_TargetDevice_005 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "connections" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let mutable flg3 = false
@@ -4368,7 +4507,7 @@ type CommandRunner_Test3() =
         cc.p_GetConnection_InTargetDevice <- ( fun tdid ->
             task {
                 flg3 <- true
-                Assert.True(( tdid = tdn.TargetDeviceID ))
+                Assert.StrictEqual( tdn.TargetDeviceID, tdid )
                 let conlist : TargetDeviceCtrlRes.T_Connection list = [
                     {
                         TSIH = tsih_me.fromPrim 1us;
@@ -4409,8 +4548,8 @@ type CommandRunner_Test3() =
         cc.p_GetConnection_InNetworkPortal <- ( fun tdid npid ->
             task {
                 flg3 <- true
-                Assert.True(( tdid = tdn.TargetDeviceID ))
-                Assert.True(( npid = npn.NetworkPortal.IdentNumber ))
+                Assert.StrictEqual( tdn.TargetDeviceID, tdid )
+                Assert.StrictEqual( npn.NetworkPortal.IdentNumber, npid )
                 return [
                     {
                         TSIH = tsih_me.fromPrim 1us;
@@ -4503,8 +4642,8 @@ type CommandRunner_Test3() =
         cc.p_GetConnection_InTargetGroup <- ( fun tdid tgid ->
             task {
                 flg3 <- true
-                Assert.True(( tdid = tdn.TargetDeviceID ))
-                Assert.True(( tgid = tgn.TargetGroupID ))
+                Assert.StrictEqual( tdn.TargetDeviceID, tdid )
+                Assert.StrictEqual( tgn.TargetGroupID, tgid )
                 return [
                     {
                         TSIH = tsih_me.fromPrim 1us;
@@ -4600,8 +4739,8 @@ type CommandRunner_Test3() =
         cc.p_GetConnection_InTarget <- ( fun tdid tid ->
             task {
                 flg3 <- true
-                Assert.True(( tdid = tdn.TargetDeviceID ))
-                Assert.True(( tid = tn.Values.IdentNumber ))
+                Assert.StrictEqual( tdn.TargetDeviceID, tdid )
+                Assert.StrictEqual( tn.Values.IdentNumber, tid )
                 return [
                     {
                         TSIH = tsih_me.fromPrim 1us;
@@ -4692,6 +4831,25 @@ type CommandRunner_Test3() =
     [<Fact>]
     member _.LUStatus_004 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lustatus" )
+        let tdn =
+            CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+            |> _.SetModified()
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> task { return [ tdn.TargetDeviceID ] } )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, lunode ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.LUStatus_005 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lustatus" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
@@ -4709,7 +4867,7 @@ type CommandRunner_Test3() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.LUStatus_005 () =
+    member _.LUStatus_006 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lustatus" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn =
@@ -4729,43 +4887,6 @@ type CommandRunner_Test3() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.LUStatus_006 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lustatus" )
-        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
-        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
-        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
-
-        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
-        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
-        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
-        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID = tgn.TargetGroupID; Name = "" } ] )
-
-        cc.p_GetLUStatus <- ( fun tdid lun -> task {
-            Assert.True(( tdid = tdn.TargetDeviceID ))
-            Assert.True(( lun = ( lunode :> ILUNode ).LUN ))
-            return {
-                ReadBytesCount = [];
-                WrittenBytesCount = [];
-                ReadTickCount = [];
-                WriteTickCount = [];
-                ACAStatus = None;
-                TaskDescriptions = [];
-            }
-        } )
-
-        let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
-        Assert.True(( stat = Some ( ss, cc, lunode ) ))
-
-        out_ws.Flush()
-        out_ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
-        let out_rs = CheckOutputMessage out_ms out_ws "LU" "LU Status"
-        let outline2 = ( out_rs.ReadLine() ).TrimStart()
-        Assert.True(( outline2.StartsWith "ACA : None" ))
-
-        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
-
-    [<Fact>]
     member _.LUStatus_007 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lustatus" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
@@ -4778,8 +4899,45 @@ type CommandRunner_Test3() =
         cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID = tgn.TargetGroupID; Name = "" } ] )
 
         cc.p_GetLUStatus <- ( fun tdid lun -> task {
-            Assert.True(( tdid = tdn.TargetDeviceID ))
-            Assert.True(( lun = ( lunode :> ILUNode ).LUN ))
+            Assert.StrictEqual( tdn.TargetDeviceID, tdid )
+            Assert.StrictEqual( ( lunode :> ILUNode ).LUN, lun )
+            return {
+                ReadBytesCount = [];
+                WrittenBytesCount = [];
+                ReadTickCount = [];
+                WriteTickCount = [];
+                ACAStatus = None;
+                TaskDescriptions = [];
+            }
+        } )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, lunode ) ))
+
+        out_ws.Flush()
+        out_ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "LU Status"
+        let outline2 = ( out_rs.ReadLine() ).TrimStart()
+        Assert.True(( outline2.StartsWith "ACA : None" ))
+
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.LUStatus_008 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lustatus" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID = tgn.TargetGroupID; Name = "" } ] )
+
+        cc.p_GetLUStatus <- ( fun tdid lun -> task {
+            Assert.StrictEqual( tdn.TargetDeviceID, tdid )
+            Assert.StrictEqual( ( lunode :> ILUNode ).LUN, lun )
             return {
                 ReadBytesCount = [];
                 WrittenBytesCount = [];
@@ -4802,14 +4960,14 @@ type CommandRunner_Test3() =
         } )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
-        Assert.True(( r ))
+        Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, lunode ) ))
 
         out_ws.Flush()
         out_ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
         let out_rs = CheckOutputMessage out_ms out_ws "LU" "LU Status"
         let outline2 = ( out_rs.ReadLine() ).TrimStart()
-        Assert.True(( outline2.StartsWith "ACA : {" ))
+        Assert.StartsWith( "ACA : {", outline2 )
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -4859,6 +5017,25 @@ type CommandRunner_Test3() =
     [<Fact>]
     member _.LUReset_004 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lureset" )
+        let tdn =
+            CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+            |> _.SetModified()
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> task { return [ tdn.TargetDeviceID ] } )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, lunode ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.LUReset_005 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lureset" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
@@ -4875,7 +5052,7 @@ type CommandRunner_Test3() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.LUReset_005 () =
+    member _.LUReset_006 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lureset" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn =
@@ -4895,7 +5072,7 @@ type CommandRunner_Test3() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.LUReset_006 () =
+    member _.LUReset_007 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "lureset" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
@@ -4909,7 +5086,7 @@ type CommandRunner_Test3() =
 
         cc.p_LUReset <- ( fun tdid lun -> task {
             Assert.StrictEqual( tdn.TargetDeviceID, tdid )
-            Assert.True(( lun = ( lunode :> ILUNode ).LUN ))
+            Assert.StrictEqual( ( lunode :> ILUNode ).LUN, lun )
             flg3 <- true
         })
 

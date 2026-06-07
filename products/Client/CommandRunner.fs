@@ -2303,13 +2303,19 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
         : Task =
 
         task {
-            match ss.GetAncestorTargetDevice cn with
-            | Some ( tdnode ) ->
+            let tdnode =
+                match ss.GetAncestorTargetDevice cn with
+                | Some x -> x
+                | None -> raise <| Exception "Unexpected error."
+            let modifiedflg = ( tdnode :> IConfigFileNode ).Modified.IsModified
+            let! tdlist = cc.GetTargetDeviceProcs()
+            if not modifiedflg && List.exists ( (=) tdnode.TargetDeviceID ) tdlist then
                 // Specified target device should be killed by the controller.
                 do! cc.KillTargetDeviceProc tdnode.TargetDeviceID
                 this.Output 0 ( sprintf "Killed : %s" ( tdnode :> IConfigureNode ).ShortDescriptString )
-            | _ ->
-                raise <| Exception "Unexpected error."
+            else
+                m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
+                |> this.Output 0
         }
 
     /// <summary>
@@ -2336,7 +2342,8 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
             // Check the target device is activated nor not.
             let! tdlist = cc.GetTargetDeviceProcs()
-            if List.exists ( (=) tdnode.TargetDeviceID ) tdlist then
+            let tdmodified = ( tdnode :> IConfigFileNode ).Modified.IsModified
+            if not tdmodified && List.exists ( (=) tdnode.TargetDeviceID ) tdlist then
 
                 // Get current effective log params
                 let! curparam = cc.GetLogParameters tdnode.TargetDeviceID
@@ -2386,7 +2393,8 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
             // Check the target device is activated nor not.
             let! tdlist = cc.GetTargetDeviceProcs()
-            if List.exists ( (=) tdnode.TargetDeviceID ) tdlist then
+            let tdmodified = ( tdnode :> IConfigFileNode ).Modified.IsModified
+            if not tdmodified && List.exists ( (=) tdnode.TargetDeviceID ) tdlist then
 
                 let! r = cc.GetLogParameters tdnode.TargetDeviceID
                 this.Output 0 ( sprintf "SoftLimit : %d" r.SoftLimit )
@@ -2648,8 +2656,9 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             | Some( td ), Some( tg ) ->
                 if ( tg :> IConfigFileNode ).Modified = ModifiedStatus.NotModified then
                     let! tdlist = cc.GetTargetDeviceProcs()
+                    let tdmodified = ( td :> IConfigFileNode ).Modified.IsModified
                     let tdNodeId = td.TargetDeviceID
-                    if List.exists ( (=) tdNodeId ) tdlist then
+                    if not tdmodified && List.exists ( (=) tdNodeId ) tdlist then
                         let tdid = td.TargetDeviceID
                         let tgid = tg.TargetGroupID
                         do! ss.CheckTargetGroupUnloaded cc tg
@@ -2687,8 +2696,9 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             let tgnode = ss.GetAncestorTargetGroup cn
             if tdnode.IsSome && tgnode.IsSome then
                 let! tdlist = cc.GetTargetDeviceProcs()
+                let tdmodified = ( tdnode.Value :> IConfigFileNode ).Modified.IsModified
                 let tdNodeId = tdnode.Value.TargetDeviceID
-                if List.exists ( (=) tdNodeId ) tdlist then
+                if not tdmodified && List.exists ( (=) tdNodeId ) tdlist then
                     do! cc.UnloadTargetGroup tdnode.Value.TargetDeviceID tgnode.Value.TargetGroupID
                     this.Output 0( sprintf "Unloaded : %s" ( tgnode.Value :> IConfigureNode ).ShortDescriptString )
                 else
@@ -2721,8 +2731,9 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             let tgnode = ss.GetAncestorTargetGroup cn
             if tdnode.IsSome && tgnode.IsSome then
                 let! tdlist = cc.GetTargetDeviceProcs()
+                let tdmodified = ( tdnode.Value :> IConfigFileNode ).Modified.IsModified
                 let tdNodeId = tdnode.Value.TargetDeviceID
-                if List.exists ( (=) tdNodeId ) tdlist then
+                if not tdmodified && List.exists ( (=) tdNodeId ) tdlist then
                     do! cc.ActivateTargetGroup tdnode.Value.TargetDeviceID tgnode.Value.TargetGroupID
                     this.Output 0 ( sprintf "Activated : %s" ( tgnode.Value :> IConfigureNode ).ShortDescriptString )
                 else
@@ -2755,8 +2766,9 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             let tgnode = ss.GetAncestorTargetGroup cn
             if tdnode.IsSome && tgnode.IsSome then
                 let! tdlist = cc.GetTargetDeviceProcs()
+                let tdmodified = ( tdnode.Value :> IConfigFileNode ).Modified.IsModified
                 let tdNodeId = tdnode.Value.TargetDeviceID
-                if List.exists ( (=) tdNodeId ) tdlist then
+                if not tdmodified && List.exists ( (=) tdNodeId ) tdlist then
                     do! cc.InactivateTargetGroup tdnode.Value.TargetDeviceID tgnode.Value.TargetGroupID
                     this.Output 0 ( sprintf "Inactivated : %s" ( tgnode.Value :> IConfigureNode ).ShortDescriptString )
                 else
@@ -3317,7 +3329,8 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
             // Check the target device is activated nor not.
             let! tdlist = cc.GetTargetDeviceProcs()
-            if List.exists ( (=) tdid ) tdlist then
+            let tdmodified = ( tdnode.Value :> IConfigFileNode ).Modified.IsModified
+            if not tdmodified && List.exists ( (=) tdid ) tdlist then
                 match cn with
                 | :? ConfNode_TargetDevice as x ->
                     let! sessList = cc.GetSession_InTargetDevice x.TargetDeviceID
@@ -3363,15 +3376,19 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
         : Task =
         task {
             // get current target device node.
-            let tdnoe = ss.GetAncestorTargetDevice cn
+            let tdnode = ss.GetAncestorTargetDevice cn
             let tsih = cmd.NamelessUInt32 0
             let! tdlist = cc.GetTargetDeviceProcs()
 
-            if tdnoe.IsNone || tsih.IsNone then
+            if tdnode.IsNone || tsih.IsNone then
                 raise <| Exception "Unexpected error."
-            elif List.exists ( (=) tdnoe.Value.TargetDeviceID ) tdlist then
+
+            let tdmodified = ( tdnode.Value :> IConfigFileNode ).Modified.IsModified
+            let tdid = tdnode.Value.TargetDeviceID
+            if not tdmodified && List.exists ( (=) tdid ) tdlist then
+
                 let tsihv = tsih_me.fromPrim ( uint16 tsih.Value )
-                do! cc.DestructSession tdnoe.Value.TargetDeviceID tsihv
+                do! cc.DestructSession tdid tsihv
                 this.Output 0( sprintf "Session terminated. TSIH : %d" tsih.Value )
             else
                 m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_NOT_RUNNING" )
@@ -3446,10 +3463,11 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             let tdnode = ss.GetAncestorTargetDevice cn
             if tdnode.IsNone then raise <| Exception "Unexpected error."
             let tdid = tdnode.Value.TargetDeviceID
+            let tdmodified = ( tdnode.Value :> IConfigFileNode ).Modified.IsModified
 
             // Check the target device is activated nor not.
             let! tdlist = cc.GetTargetDeviceProcs()
-            if List.exists ( (=) tdid ) tdlist then
+            if not tdmodified && List.exists ( (=) tdid ) tdlist then
                 let tsih = cmd.NamedUInt32 "/s"
 
                 if tsih.IsSome then
@@ -3516,11 +3534,12 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             let tgnode = ss.GetAncestorTargetGroup cn
             if tgnode.IsNone then raise <| Exception "Unexpected error."
             let tgid = tgnode.Value.TargetGroupID
-            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified <> ModifiedStatus.NotModified
+            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified.IsModified
 
             let! tdlist = cc.GetTargetDeviceProcs()
+            let tdmodified = ( tdnode.Value :> IConfigFileNode ).Modified.IsModified
 
-            if List.exists ( (=) tdid ) tdlist then
+            if not tdmodified && List.exists ( (=) tdid ) tdlist then
 
                 let! loadedtg = cc.GetLoadedTargetGroups tdid
                 let tgloaded =
@@ -3622,10 +3641,11 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             let tgnode = ss.GetAncestorTargetGroup cn
             if tgnode.IsNone then raise <| Exception "Unexpected error."
             let tgid = tgnode.Value.TargetGroupID
-            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified <> ModifiedStatus.NotModified
+            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified.IsModified
 
             let! tdlist = cc.GetTargetDeviceProcs()
-            if List.exists ( (=) tdid ) tdlist then
+            let tdmodified = ( tdnode.Value :> IConfigFileNode ).Modified.IsModified
+            if not tdmodified && List.exists ( (=) tdid ) tdlist then
 
                 let! loadedtg = cc.GetLoadedTargetGroups tdid
                 let tgloaded =
@@ -3681,9 +3701,10 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
             let tdid = tdnode.Value.TargetDeviceID
             let tgid = tgnode.Value.TargetGroupID
-            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified <> ModifiedStatus.NotModified
+            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified.IsModified
+            let tdmodified = ( tdnode.Value :> IConfigFileNode ).Modified.IsModified
 
-            if List.exists ( (=) tdid ) tdlist then
+            if not tdmodified && List.exists ( (=) tdid ) tdlist then
 
                 let! loadedtg = cc.GetLoadedTargetGroups tdid
                 let tgloaded =
@@ -3756,7 +3777,8 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
             let tdid = tdnode.Value.TargetDeviceID
             let tgid = tgnode.Value.TargetGroupID
-            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified <> ModifiedStatus.NotModified
+            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified.IsModified
+            let tdmodified = ( tdnode.Value :> IConfigFileNode ).Modified.IsModified
 
             let eventStr = cmd.DefaultNamedString "/e" ""
             let actionStr = cmd.DefaultNamedString "/a" ""
@@ -3794,7 +3816,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 else
                     raise <| Exception "Unexpected error."
 
-            if List.exists ( (=) tdid ) tdlist then
+            if not tdmodified && List.exists ( (=) tdid ) tdlist then
                 let! loadedtg = cc.GetLoadedTargetGroups tdid
                 let tgloaded =
                     loadedtg
@@ -3849,9 +3871,10 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
             let tdid = tdnode.Value.TargetDeviceID
             let tgid = tgnode.Value.TargetGroupID
-            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified <> ModifiedStatus.NotModified
+            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified.IsModified
+            let tdmodified = ( tdnode.Value :> IConfigFileNode ).Modified.IsModified
 
-            if List.exists ( (=) tdid ) tdlist then
+            if not tdmodified && List.exists ( (=) tdid ) tdlist then
                 let! loadedtg = cc.GetLoadedTargetGroups tdid
                 let tgloaded =
                     loadedtg
@@ -3906,9 +3929,10 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
             let tdid = tdnode.Value.TargetDeviceID
             let tgid = tgnode.Value.TargetGroupID
-            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified <> ModifiedStatus.NotModified
+            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified.IsModified
+            let tdmodified = ( tdnode.Value :> IConfigFileNode ).Modified.IsModified
 
-            if List.exists ( (=) tdid ) tdlist then
+            if not tdmodified && List.exists ( (=) tdid ) tdlist then
                 let! loadedtg = cc.GetLoadedTargetGroups tdid
                 let tgloaded =
                     loadedtg
@@ -3990,9 +4014,10 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
             let tdid = tdnode.Value.TargetDeviceID
             let tgid = tgnode.Value.TargetGroupID
-            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified <> ModifiedStatus.NotModified
+            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified.IsModified
+            let tdmodified = ( tdnode.Value :> IConfigFileNode ).Modified.IsModified
 
-            if List.exists ( (=) tdid ) tdlist then
+            if not tdmodified && List.exists ( (=) tdid ) tdlist then
                 let! loadedtg = cc.GetLoadedTargetGroups tdid
                 let tgloaded =
                     loadedtg
@@ -4050,9 +4075,10 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
             let tdid = tdnode.Value.TargetDeviceID
             let tgid = tgnode.Value.TargetGroupID
-            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified <> ModifiedStatus.NotModified
+            let tgmodified = ( tgnode.Value :> IConfigFileNode ).Modified.IsModified
+            let tdmodified = ( tdnode.Value :> IConfigFileNode ).Modified.IsModified
 
-            if List.exists ( (=) tdid ) tdlist then
+            if not tdmodified && List.exists ( (=) tdid ) tdlist then
                 let! loadedtg = cc.GetLoadedTargetGroups tdid
                 let tgloaded =
                     loadedtg

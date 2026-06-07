@@ -3544,12 +3544,13 @@ type ServerStatus_Test4() =
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 do! ss.LoadConfigure cc1 true
 
-                let tdNodes = ss.GetTargetDeviceNodes()
-                Assert.True(( tdNodes.Length = 1 ))
+                let tdid = GlbFunc.newTargetDeviceID()
+                let tdnode = ss.AddTargetDeviceNode tdid "a" false ServerStatus_Test1.defaultNego ServerStatus_Test1.defaultLP
+                Assert.True( ( tdnode :> IConfigFileNode ).Modified.IsModified )
 
                 let tgid = GlbFunc.newTargetGroupID()
-                let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true :> IConfigFileNode
-                Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
+                let tgNode = ss.AddTargetGroupNode tdnode tgid "xxyyzz" true :> IConfigFileNode
+                Assert.True( tgNode.Modified.IsModified )
 
                 do! ss.CheckTargetGroupUnloaded cc1 tgNode
             }
@@ -3563,6 +3564,37 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.CheckTargetGroupUnloaded_002() =
         let portNo, dname = ServerStatus_Test1.Init "CheckTargetGroupUnloaded_002"
+        [|
+            fun () -> task {
+                let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                c.Dispose()
+                sl.Stop()
+            };
+            fun () -> task {
+                let st = new StringTable( "" )
+                let ss = new ServerStatus( st )
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                do! ss.LoadConfigure cc1 true
+
+                let tdNodes = ss.GetTargetDeviceNodes()
+                Assert.StrictEqual( 1, tdNodes.Length )
+
+                let tgid = GlbFunc.newTargetGroupID()
+                let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true :> IConfigFileNode
+                Assert.True( tgNode.Modified.IsModified )
+
+                do! ss.CheckTargetGroupUnloaded cc1 tgNode
+            }
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        GlbFunc.DeleteDir dname
+
+    [<Fact>]
+    member _.CheckTargetGroupUnloaded_003() =
+        let portNo, dname = ServerStatus_Test1.Init "CheckTargetGroupUnloaded_003"
         [|
             fun () -> task {
                 let! sl, c, _, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
@@ -3581,17 +3613,16 @@ type ServerStatus_Test4() =
                 do! ss.LoadConfigure cc1 true
 
                 let tdNodes = ss.GetTargetDeviceNodes()
-                Assert.True(( tdNodes.Length = 1 ))
+                Assert.StrictEqual( 1, tdNodes.Length )
                 let tgNodes = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
-                Assert.True(( tgNodes.Length = 1 ))
-                Assert.True(( ( tgNodes.[0] :> IConfigFileNode ).Modified = ModifiedStatus.NotModified ))
+                Assert.StrictEqual( 1, tgNodes.Length )
+                Assert.True( ( tgNodes.[0] :> IConfigFileNode ).Modified.IsNotModified )
 
-                try
-                    do! ss.CheckTargetGroupUnloaded cc1 tgNodes.[0]
-                    Assert.Fail __LINE__
-                with
-                | :? EditError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_TARGET_GROUP_LOADED" ))
+                let! e =
+                    Assert.ThrowsAsync< EditError >( fun () -> task {
+                        do! ss.CheckTargetGroupUnloaded cc1 tgNodes.[0]
+                    } )
+                Assert.StartsWith( "ERRMSG_TARGET_GROUP_LOADED", e.Message )
             }
         |]
         |> Functions.RunTaskInPallalel

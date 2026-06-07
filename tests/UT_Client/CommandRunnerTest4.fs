@@ -160,6 +160,27 @@ type CommandRunner_Test4() =
     [<Fact>]
     member _.MediaStatus_005 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "mediastatus" )
+        let tdn =
+            CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+            |> _.SetModified()
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+        let medianode = CommandRunner_Test1.m_DummyMediaNode :?> ConfNode_DummyMedia
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        ss.p_GetAncestorLogicalUnit <- ( fun _ -> Some lunode )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> task { return [ tdn.TargetDeviceID ] } )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, medianode ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, medianode ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.MediaStatus_006 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "mediastatus" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
@@ -178,7 +199,7 @@ type CommandRunner_Test4() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.MediaStatus_006 () =
+    member _.MediaStatus_007 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "mediastatus" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn =
@@ -200,7 +221,7 @@ type CommandRunner_Test4() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.MediaStatus_007 () =
+    member _.MediaStatus_008 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "mediastatus" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
@@ -671,6 +692,29 @@ type CommandRunner_Test4() =
     [<Fact>]
     member _.AddTrap_015 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "add trap /e TestUnitReady /a Delay /ms 45" )
+        let tdn =
+            CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+            |> _.SetModified()
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+        let medianode = CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        ss.p_GetAncestorLogicalUnit <- ( fun _ -> Some lunode )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> task { return [ tdn.TargetDeviceID ]  } )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, medianode ) )
+
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, medianode ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+
+    [<Fact>]
+    member _.AddTrap_016 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "add trap /e TestUnitReady /a Delay /ms 45" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
@@ -690,7 +734,7 @@ type CommandRunner_Test4() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.AddTrap_016 () =
+    member _.AddTrap_017 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "add trap /e TestUnitReady /a Delay /ms 45" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = 
@@ -822,6 +866,28 @@ type CommandRunner_Test4() =
     [<Fact>]
     member _.ClearTrap_006 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "clear trap" )
+        let tdn =
+            CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+            |> _.SetModified()
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+        let medianode = CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        ss.p_GetAncestorLogicalUnit <- ( fun _ -> Some lunode )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> task { return [ tdn.TargetDeviceID ] } )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, medianode ) )
+
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, medianode ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.ClearTrap_007 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "clear trap" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
@@ -841,7 +907,7 @@ type CommandRunner_Test4() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.ClearTrap_007 () =
+    member _.ClearTrap_008 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "clear trap" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn =
@@ -1012,6 +1078,28 @@ type CommandRunner_Test4() =
     [<Fact>]
     member _.Traps_007 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "traps" )
+        let tdn =
+            CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+            |> _.SetModified()
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+        let medianode = CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        ss.p_GetAncestorLogicalUnit <- ( fun _ -> Some lunode )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> task { return [ tdn.TargetDeviceID ] } )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, medianode ) )
+
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, medianode ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Traps_008 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "traps" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
@@ -1031,7 +1119,7 @@ type CommandRunner_Test4() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.Traps_008 () =
+    member _.Traps_009 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "traps" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn =
@@ -1203,6 +1291,28 @@ type CommandRunner_Test4() =
     [<Fact>]
     member _.TaskList_007 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task list" )
+        let tdn =
+            CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+            |> _.SetModified()
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+        let medianode = CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        ss.p_GetAncestorLogicalUnit <- ( fun _ -> Some lunode )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> task { return [ tdn.TargetDeviceID ] } )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, medianode ) )
+
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, medianode ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.TaskList_008 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task list" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
@@ -1222,7 +1332,7 @@ type CommandRunner_Test4() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.TaskList_008 () =
+    member _.TaskList_009 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task list" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn =
@@ -1352,6 +1462,27 @@ type CommandRunner_Test4() =
     [<Fact>]
     member _.TaskResume_006 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume /t 0 /i 1" )
+        let tdn =
+            CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+            |> _.SetModified()
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+        let medianode = CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        ss.p_GetAncestorLogicalUnit <- ( fun _ -> Some lunode )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> task { return [ tdn.TargetDeviceID ] } )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, medianode ) )
+
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, medianode ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.TaskResume_007 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume /t 0 /i 1" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
@@ -1370,7 +1501,7 @@ type CommandRunner_Test4() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.TaskResume_007 () =
+    member _.TaskResume_008 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume /t 0 /i 1" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn =
