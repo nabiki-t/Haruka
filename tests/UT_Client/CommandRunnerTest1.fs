@@ -1456,7 +1456,7 @@ type CommandRunner_Test1() =
             flg1 <- true
             Some tdnode
         )
-
+        cc.p_GetTargetDeviceProcs <- ( fun () -> Task.FromResult [] )
         cc.p_StartTargetDeviceProc <- ( fun tdid ->
             Assert.StrictEqual( tdnode.TargetDeviceID, tdid )
             flg2 <- true

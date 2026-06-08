@@ -317,8 +317,12 @@
       <Value>Specified node ID({0}) is not target device.</Value>
     </Message>
     <Message>
+      <Name>ERRMSG_TARGET_DEVICE_MODIFIED</Name>
+      <Value>The target device has been modified.</Value>
+    </Message>
+    <Message>
       <Name>ERRMSG_TARGET_DEVICE_PROC_RUNNING</Name>
-      <Value>Target device process is runnning yet.</Value>
+      <Value>Target device process is running yet.</Value>
     </Message>
     <Message>
       <Name>ERRMSG_TARGET_DEVICE_RUNNING</Name>

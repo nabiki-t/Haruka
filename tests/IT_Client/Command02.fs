@@ -364,3 +364,123 @@ type Command02( fx : Command02_Fixture ) =
             m_Client.RunCommand "reload /y" "" "CR> "
         }
 
+    // A TargetDevice can be added if there are no other TargetDevices running.
+    [<Fact>]
+    member _.Create_TargetDevice_001 () =
+        task {
+            m_Client.RunCommand "create" "Created" "CR> "
+            let v = m_Client.RunCommandGetResp "list" "CR> "
+            Assert.StrictEqual( 2, v.Length )
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    // A TargetDevice can be added if another TargetDevice is already running.
+    [<Fact>]
+    member _.Create_TargetDevice_002 () =
+        task {
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "create" "Created" "CR> "
+            let v = m_Client.RunCommandGetResp "list" "CR> "
+            Assert.StrictEqual( 2, v.Length )
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    // Unloaded target devices can be deleted.
+    [<Fact>]
+    member _.Delete_TargetDevice_Unloaded_001 () =
+        task {
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "create" "Created" "CR> "
+            m_Client.RunCommand "select 1" "" "TD> "
+            let stat = m_Client.GetStatus "TD_00000002" "TD> "
+            Assert.StartsWith( "UNLOADED", stat )
+            m_Client.RunCommand "delete" "Deleted" "CR> "
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    // Unloaded target devices can be deleted.
+    [<Fact>]
+    member _.Delete_TargetDevice_Unloaded_002 () =
+        task {
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "create" "Created" "CR> "
+            m_Client.RunCommand "delete /i 1" "Deleted" "CR> "
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    // Unloaded target devices can be deleted.
+    [<Fact>]
+    member _.Delete_TargetDevice_UnloadedMod_001 () =
+        task {
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "create" "Created" "CR> "
+            m_Client.RunCommand "select 1" "" "TD> "
+            m_Client.RunCommand "set NAME aaaaa" "" "TD> "
+            let stat = m_Client.GetStatus "aaaaa" "TD> "
+            Assert.StartsWith( "UNLOADED(MOD)", stat )
+            m_Client.RunCommand "delete" "Deleted" "CR> "
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    // Unloaded target devices can be deleted.
+    [<Fact>]
+    member _.Delete_TargetDevice_UnloadedRMod_001 () =
+        task {
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "create" "Created" "CR> "
+            m_Client.RunCommand "select 1" "" "TD> "
+            m_Client.RunCommand "set NAME aaaaa" "" "TD> "
+            m_Client.RunCommand "set ID TD_00000001" "" "TD> "
+            let stat = m_Client.GetStatus "aaaaa" "TD> "
+            Assert.StartsWith( "UNLOAD(R-MOD)", stat )
+            m_Client.RunCommand "delete" "Deleted" "CR> "
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    // If the target device is unloaded, the target group can be deleted.
+    [<Fact>]
+    member _.Delete_TargetGroup_TDUnloaded_001 () =
+        task {
+            m_Client.RunCommand "select 0" "" "TD> "
+            let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
+            m_Client.RunCommand ( sprintf "select %d"  tgidx ) "" "TG> "
+            m_Client.RunCommand "delete" "Deleted" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    // If the target device is unloaded, the target group can be deleted.
+    [<Fact>]
+    member _.Delete_TargetGroup_TDUnloaded_002 () =
+        task {
+            m_Client.RunCommand "select 0" "" "TD> "
+            let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
+            m_Client.RunCommand ( sprintf "delete /i %d"  tgidx ) "Deleted" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }

@@ -845,6 +845,7 @@ type CommandRunner_Test3() =
             flg1 <- true
             Some td
         )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [] )
         cc.p_StartTargetDeviceProc <- ( fun argid ->
             Assert.StrictEqual( td.TargetDeviceID, argid )
             flg2 <- true
@@ -875,6 +876,36 @@ type CommandRunner_Test3() =
         ) |> ignore
         Assert.True( flg1 )
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_ms; ]
+
+    [<Fact>]
+    member _.Start_003 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "start" )
+        let td = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some td )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ td.TargetDeviceID ] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, td ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, td ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "ERRMSG_TARGET_DEVICE_RUNNING"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Start_004 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "start" )
+        let td =
+            CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+            |> _.SetModified()
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some td )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, td ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, td ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TD" "ERRMSG_TARGET_DEVICE_MODIFIED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
     member _.Kill_001 () =

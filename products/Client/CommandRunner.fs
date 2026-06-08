@@ -2262,10 +2262,21 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
         : Task =
 
         task {
-            // Show target device status
-            match ss.GetAncestorTargetDevice cn with
-            | Some ( tdnode ) ->
-                let tdid = tdnode.TargetDeviceID
+            let tdnode =
+                match ss.GetAncestorTargetDevice cn with
+                | Some x -> x
+                | None -> raise <| Exception "Unexpected error."
+
+            let tdid = tdnode.TargetDeviceID
+            let modifiedflg = ( tdnode :> IConfigFileNode ).Modified.IsModified
+            let! tdlist = cc.GetTargetDeviceProcs()
+            if modifiedflg then
+                m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_MODIFIED" )
+                |> this.Output 0
+            elif List.exists ( (=) tdnode.TargetDeviceID ) tdlist then
+                m_Messages.GetMessage( "ERRMSG_TARGET_DEVICE_RUNNING" )
+                |> this.Output 0
+            else
                 do! cc.StartTargetDeviceProc tdid
                 this.Output 0( sprintf "Started : %s" ( tdnode :> IConfigureNode ).ShortDescriptString )
 
@@ -2278,9 +2289,6 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                         // For Target Groups that are instructed to be enabled at startup, also activate them.
                         if ig.EnabledAtStart then
                             do! cc.ActivateTargetGroup tdid ig.TargetGroupID
-
-            | _ ->
-                raise <| Exception "Unexpected error."
         }
 
     /// <summary>
