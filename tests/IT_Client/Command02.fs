@@ -462,6 +462,18 @@ type Command02( fx : Command02_Fixture ) =
             m_Client.RunCommand "reload /y" "" "CR> "
         }
 
+    // Running target devices can not be deleted.
+    [<Fact>]
+    member _.Delete_TargetDevice_Running_001 () =
+        task {
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+            m_Client.RunCommand "delete" "Unexpected error" "TD> "
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
     // If the target device is unloaded, the target group can be deleted.
     [<Fact>]
     member _.Delete_TargetGroup_TDUnloaded_001 () =
@@ -481,6 +493,169 @@ type Command02( fx : Command02_Fixture ) =
             m_Client.RunCommand "select 0" "" "TD> "
             let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
             m_Client.RunCommand ( sprintf "delete /i %d"  tgidx ) "Deleted" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    // If the target device is unloaded, the target group can be deleted.
+    [<Fact>]
+    member _.Delete_TargetGroup_TDUnloaded_RMod_001 () =
+        task {
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "create" "Created" "CR> "
+            m_Client.RunCommand "select 1" "" "TD> "
+            m_Client.RunCommand "set NAME aaaaa" "" "TD> "
+            m_Client.RunCommand "set ID TD_00000001" "" "TD> "
+            let stat = m_Client.GetStatus "aaaaa" "TD> "
+            Assert.StartsWith( "UNLOAD(R-MOD)", stat )
+            m_Client.RunCommand "create targetgroup /n bbbbb" "Created" "TD> "
+            m_Client.RunCommand "select 0" "" "TG> "
+            let stat = m_Client.GetStatus "bbbbb" "TG> "
+            Assert.StartsWith( "UNLOADED(MOD)", stat )
+            m_Client.RunCommand "delete" "Deleted" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    // If the target device is unloaded, the target group can be deleted.
+    [<Fact>]
+    member _.Delete_TargetGroup_TDUnloaded_Mod_002 () =
+        task {
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "set NAME ggg" "" "TD> "
+            let stat = m_Client.GetStatus "ggg" "TD> "
+            Assert.StartsWith( "UNLOADED(MOD)", stat )
+            let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
+            m_Client.RunCommand ( sprintf "delete /i %d"  tgidx ) "Deleted" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    // If the target group is unloaded, the target group can be deleted.
+    [<Fact>]
+    member _.Delete_TargetGroup_Unloaded_Mod_001 () =
+        task {
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+            m_Client.RunCommand "create targetgroup /n TG003" "Created" "TD> "
+            let tgidx = m_Client.GetIndexNumber "TG003" "TD> "
+            m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+            let stat = m_Client.GetStatus "TG003" "TG> "
+            Assert.StartsWith( "UNLOADED(MOD)", stat )
+            m_Client.RunCommand "delete"  "Deleted" "TD> "
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    // If the target group is unloaded, the target group can be deleted.
+    [<Fact>]
+    member _.Delete_TargetGroup_Unloaded_001 () =
+        task {
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+            let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
+            m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+            m_Client.RunCommand "inactivate"  "Inactivated" "TG> "
+            m_Client.RunCommand "unload"  "Unloaded" "TG> "
+            let stat = m_Client.GetStatus "TG_00000001" "TG> "
+            Assert.StartsWith( "UNLOADED", stat )
+            m_Client.RunCommand "delete"  "Deleted" "TD> "
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    // If the target group is unloaded, the target group can be deleted.
+    [<Fact>]
+    member _.Delete_TargetGroup_Unloaded_LMod_001 () =
+        task {
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+
+            // Inactivate Targetgroup 1
+            let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
+            m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+            m_Client.RunCommand "inactivate"  "Inactivated" "TG> "
+            m_Client.RunCommand "unselect" "" "TD> "
+
+            // Unload Targetgroup 2 and edit ID
+            let tgidx = m_Client.GetIndexNumber "TG_00000002" "TD> "
+            m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+            m_Client.RunCommand "inactivate"  "Inactivated" "TG> "
+            m_Client.RunCommand "unload"  "Unloaded" "TG> "
+            m_Client.RunCommand "set ID TG_00000001"  "" "TG> "
+            m_Client.RunCommand "set NAME aaaaa"  "" "TG> "
+            let stat = m_Client.GetStatus "aaaaa" "TG> "
+            Assert.StartsWith( "UNLOAD(L-MOD)", stat )
+
+            // delete target group 2
+            m_Client.RunCommand "delete"  "Deleted" "TD> "
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    // If the target group is unloaded, the target group can be deleted.
+    [<Fact>]
+    member _.Delete_TargetGroup_Unloaded_AMod_001 () =
+        task {
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+
+            // Unload Targetgroup 2 and edit ID
+            let tgidx = m_Client.GetIndexNumber "TG_00000002" "TD> "
+            m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+            m_Client.RunCommand "inactivate"  "Inactivated" "TG> "
+            m_Client.RunCommand "unload"  "Unloaded" "TG> "
+            m_Client.RunCommand "set ID TG_00000001"  "" "TG> "
+            m_Client.RunCommand "set NAME aaaaa"  "" "TG> "
+            let stat = m_Client.GetStatus "aaaaa" "TG> "
+            Assert.StartsWith( "UNLOAD(A-MOD)", stat )
+
+            // delete target group 2
+            m_Client.RunCommand "delete"  "Deleted" "TD> "
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    // If the target group is not unloaded, the target group can not be deleted.
+    [<Fact>]
+    member _.Delete_TargetGroup_Loaded_001 () =
+        task {
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+            let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
+            m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+            m_Client.RunCommand "inactivate"  "Inactivated" "TG> "
+            let stat = m_Client.GetStatus "TG_00000001" "TG> "
+            Assert.StartsWith( "LOADED", stat )
+            m_Client.RunCommand "delete"  "Unexpected error" "TG> "
+            m_Client.RunCommand "unselect" "" "TD> "
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    // If the target group is not unloaded, the target group can not be deleted.
+    [<Fact>]
+    member _.Delete_TargetGroup_Active_001 () =
+        task {
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+            let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
+            m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+            let stat = m_Client.GetStatus "TG_00000001" "TG> "
+            Assert.StartsWith( "ACTIVE", stat )
+            m_Client.RunCommand "delete"  "Unexpected error" "TG> "
+            m_Client.RunCommand "unselect" "" "TD> "
+            m_Client.RunCommand "kill" "Killed" "TD> "
             m_Client.RunCommand "unselect" "" "CR> "
             m_Client.RunCommand "reload /y" "" "CR> "
         }

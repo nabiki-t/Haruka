@@ -1959,26 +1959,26 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 // Show target device status
                 let tdid = itrtd.TargetDeviceID
                 let tddesc = ( itrtd :> IConfigureNode ).ShortDescriptString
-                let isRunning = List.exists ( (=) tdid ) tdprocs
-                let ismodified = ( itrtd :> IConfigFileNode ).Modified = ModifiedStatus.Modified
-                if isRunning && not ismodified then
+                let isTdRunning = List.exists ( (=) tdid ) tdprocs
+                let isTdModified = ( itrtd :> IConfigFileNode ).Modified = ModifiedStatus.Modified
+                if isTdRunning && not isTdModified then
                     this.Output 1 ( sprintf "RUNNING      : %s" tddesc )
-                elif isRunning && ismodified then
+                elif isTdRunning && isTdModified then
                     this.Output 1 ( sprintf "UNLOAD(R-MOD): %s" tddesc )
-                elif not isRunning && ismodified then
+                elif not isTdRunning && isTdModified then
                     this.Output 1 ( sprintf "UNLOADED(MOD): %s" tddesc )
                 else
                     this.Output 1 ( sprintf "UNLOADED     : %s" tddesc )
 
                 // Show target group status
                 let! activeTgs =
-                    if isRunning then
+                    if isTdRunning && not isTdModified then
                         cc.GetActiveTargetGroups tdid
                     else
                         Task.FromResult []
                 let activeTgsHash = activeTgs |> Seq.map _.ID |> HashSet
                 let! loadedTgs =
-                    if isRunning then
+                    if isTdRunning && not isTdModified then
                         cc.GetLoadedTargetGroups tdid
                     else
                         Task.FromResult []
@@ -2090,28 +2090,27 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 let! tdprocs = cc.GetTargetDeviceProcs()
                 let tdid = tdnode.TargetDeviceID
                 let tddesc = ( tdnode :> IConfigureNode ).ShortDescriptString
-                let isRunning = List.exists ( (=) tdid ) tdprocs
-                let ismodified = ( tdnode :> IConfigFileNode ).Modified = ModifiedStatus.Modified
-                if isRunning && not ismodified then
+                let isTdRunning = List.exists ( (=) tdid ) tdprocs
+                let isTdModified = ( tdnode :> IConfigFileNode ).Modified = ModifiedStatus.Modified
+                if isTdRunning && not isTdModified then
                     this.Output 1 ( sprintf "RUNNING      : %s" tddesc )
-                elif isRunning && ismodified then
+                elif isTdRunning && isTdModified then
                     this.Output 1 ( sprintf "UNLOAD(R-MOD): %s" tddesc )
-                elif not isRunning && ismodified then
+                elif not isTdRunning && isTdModified then
                     this.Output 1 ( sprintf "UNLOADED(MOD): %s" tddesc )
                 else
                     this.Output 1 ( sprintf "UNLOADED     : %s" tddesc )
-
 
                 // Show target group status
                 match ss.GetAncestorTargetGroup cn with
                 | Some ( tgnode ) ->
                     let! activeTgs = 
-                        if isRunning then
+                        if isTdRunning && not isTdModified then
                             cc.GetActiveTargetGroups tdid
                         else
                             Task.FromResult []
                     let! loadedTgs =
-                        if isRunning then
+                        if isTdRunning && not isTdModified then
                             cc.GetLoadedTargetGroups tdid
                         else
                             Task.FromResult []
