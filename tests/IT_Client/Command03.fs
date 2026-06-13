@@ -279,3 +279,81 @@ type Command03( fx : Command03_Fixture ) =
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
 
+    [<Fact>]
+    member _.Create_NetworkPortal_Unloaded_001 () =
+        m_Client.RunCommand "select 0" "" "TD> "
+        let stat = m_Client.GetStatus "TD_00000001" "TD> "
+        Assert.StartsWith( "UNLOADED", stat )
+
+        // Add a Network Portal
+        m_Client.RunCommand "create networkportal" "Created" "TD> "
+
+        // Target Device will be in a modified state.
+        let stat = m_Client.GetStatus "TD_00000001" "TD> "
+        Assert.StartsWith( "UNLOADED(MOD)", stat )
+
+        m_Client.RunCommand "unselect" "" "CR> "
+        m_Client.RunCommand "reload /y" "" "CR> "
+
+    [<Fact>]
+    member _.Create_NetworkPortal_Running_001 () =
+        // start target device 1
+        m_Client.RunCommand "select 0" "" "TD> "
+        m_Client.RunCommand "start" "Started" "TD> "
+        let stat = m_Client.GetStatus "TD_00000001" "TD> "
+        Assert.StartsWith( "RUNNING", stat )
+
+        // try to add Network Portal, it failed.
+        m_Client.RunCommand "create networkportal" "Unexpected" "TD> "
+
+        // Stop target device
+        m_Client.RunCommand "kill" "Killed" "TD> "
+        m_Client.RunCommand "unselect" "" "CR> "
+        m_Client.RunCommand "reload /y" "" "CR> "
+
+    [<Fact>]
+    member _.Create_TargetGroup_Unloaded_001 () =
+        m_Client.RunCommand "select 0" "" "TD> "
+        let stat = m_Client.GetStatus "TD_00000001" "TD> "
+        Assert.StartsWith( "UNLOADED", stat )
+
+        m_Client.RunCommand "create targetgroup /n sss" "Created" "TD> "
+
+        // A Target Group in a modified state will be added.
+        let tgidx = m_Client.GetIndexNumber "sss" "TD> "
+        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+        let stat = m_Client.GetStatus "sss" "TG> "
+        Assert.StartsWith( "UNLOADED(MOD)", stat )
+        m_Client.RunCommand "unselect" "" "TD> "
+
+        // The state of the Target Device will not change.
+        let stat = m_Client.GetStatus "TD_00000001" "TD> "
+        Assert.StartsWith( "UNLOADED", stat )
+
+        m_Client.RunCommand "unselect" "" "CR> "
+        m_Client.RunCommand "reload /y" "" "CR> "
+
+    [<Fact>]
+    member _.Create_TargetGroup_Running_001 () =
+        // start target device 1
+        m_Client.RunCommand "select 0" "" "TD> "
+        m_Client.RunCommand "start" "Started" "TD> "
+        let stat = m_Client.GetStatus "TD_00000001" "TD> "
+        Assert.StartsWith( "RUNNING", stat )
+
+        m_Client.RunCommand "create targetgroup /n sss" "Created" "TD> "
+
+        // A Target Group in a modified state will be added.
+        let tgidx = m_Client.GetIndexNumber "sss" "TD> "
+        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+        let stat = m_Client.GetStatus "sss" "TG> "
+        Assert.StartsWith( "UNLOADED(MOD)", stat )
+        m_Client.RunCommand "unselect" "" "TD> "
+
+        // The state of the Target Device will not change.
+        let stat = m_Client.GetStatus "TD_00000001" "TD> "
+        Assert.StartsWith( "RUNNING", stat )
+
+        m_Client.RunCommand "kill" "Killed" "TD> "
+        m_Client.RunCommand "unselect" "" "CR> "
+        m_Client.RunCommand "reload /y" "" "CR> "

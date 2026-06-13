@@ -3817,6 +3817,7 @@ type CommandRunner_Test2() =
             Assert.True(( argesac ))
             CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         )
+        ss.p_GetNode <- ( fun _ -> cn )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
@@ -3852,6 +3853,7 @@ type CommandRunner_Test2() =
             Assert.False(( Seq.exists ( (=) tdName ) oldtdnameds ))
             CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         )
+        ss.p_GetNode <- ( fun _ -> cn )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
@@ -3882,6 +3884,7 @@ type CommandRunner_Test2() =
             Assert.True(( tdName = "aaa" ))
             CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         )
+        ss.p_GetNode <- ( fun _ -> cn )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
@@ -3903,6 +3906,7 @@ type CommandRunner_Test2() =
         ss.p_AddTargetDeviceNode <- ( fun newTdid tdName argesac newNegParam newLogParam ->
             CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         )
+        ss.p_GetNode <- ( fun _ -> cn )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))

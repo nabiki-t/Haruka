@@ -1372,6 +1372,7 @@ type CommandRunner_Test1() =
             flg2 <- true
             CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         )
+        ss.p_GetNode <- ( fun _ -> tnode )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tnode ) )
         Assert.True(( r ))
@@ -1462,6 +1463,7 @@ type CommandRunner_Test1() =
             flg2 <- true
             Task.FromResult ()
         )
+        ss.p_GetNode <- ( fun _ -> tnode )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tnode ) )
         Assert.True(( r ))
@@ -1504,6 +1506,7 @@ type CommandRunner_Test1() =
             flg2 <- true
             Task.FromResult ()
         )
+        ss.p_GetNode <- ( fun _ -> tnode )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tnode ) )
         Assert.True(( r ))
@@ -1554,6 +1557,7 @@ type CommandRunner_Test1() =
             }
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
+        ss.p_GetNode <- ( fun _ -> tdnode )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdnode ) )
         Assert.True(( r ))
@@ -1594,6 +1598,7 @@ type CommandRunner_Test1() =
             }
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
+        ss.p_GetNode <- ( fun _ -> tdnode )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdnode ) )
         Assert.True(( r ))
@@ -1629,6 +1634,7 @@ type CommandRunner_Test1() =
         ss.p_CheckTargetDeviceUnloaded <- ( fun cc node ->
             Task.FromResult ()
         )
+        ss.p_GetNode <- ( fun _ -> tdnode )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdnode ) )
         Assert.True(( r ))
@@ -1662,6 +1668,7 @@ type CommandRunner_Test1() =
             Assert.Same( argtdnode, tdnode )
             tgnode
         )
+        ss.p_GetNode <- ( fun _ -> tdnode )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tdnode ) )
         Assert.True(( r ))
@@ -1791,6 +1798,7 @@ type CommandRunner_Test1() =
             Task.FromResult ()
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
+        ss.p_GetNode <- ( fun _ -> cn )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
@@ -1842,6 +1850,7 @@ type CommandRunner_Test1() =
             Task.FromResult ()
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
+        ss.p_GetNode <- ( fun _ -> cn )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
@@ -1893,6 +1902,7 @@ type CommandRunner_Test1() =
             Task.FromResult ()
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
+        ss.p_GetNode <- ( fun _ -> cn )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
@@ -1944,6 +1954,7 @@ type CommandRunner_Test1() =
             Task.FromResult ()
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdnode.TargetDeviceID ] )
+        ss.p_GetNode <- ( fun _ -> cn )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
@@ -1986,6 +1997,7 @@ type CommandRunner_Test1() =
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node ->
             Task.FromResult ()
         )
+        ss.p_GetNode <- ( fun _ -> tgnode )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgnode ) )
         Assert.True(( r ))
@@ -2051,6 +2063,7 @@ type CommandRunner_Test1() =
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node ->
             Task.FromResult ()
         )
+        ss.p_GetNode <- ( fun _ -> tnode )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tnode ) )
         Assert.True(( r ))
@@ -2087,6 +2100,7 @@ type CommandRunner_Test1() =
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node ->
             Task.FromResult ()
         )
+        ss.p_GetNode <- ( fun _ -> tnode )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tnode ) )
         Assert.True(( r ))
@@ -2180,6 +2194,7 @@ type CommandRunner_Test1() =
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node ->
             Task.FromResult ()
         )
+        ss.p_GetNode <- ( fun _ -> cn )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
@@ -2216,6 +2231,7 @@ type CommandRunner_Test1() =
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node ->
             Task.FromResult ()
         )
+        ss.p_GetNode <- ( fun _ -> cn )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
@@ -2252,6 +2268,7 @@ type CommandRunner_Test1() =
         ss.p_CheckTargetGroupUnloaded <- ( fun cc node ->
             Task.FromResult ()
         )
+        ss.p_GetNode <- ( fun _ -> cn )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
         Assert.True(( r ))
