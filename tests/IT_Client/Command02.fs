@@ -363,20 +363,45 @@ type Command02( fx : Command02_Fixture ) =
     // A TargetDevice can be added if there are no other TargetDevices running.
     [<Fact>]
     member _.Create_TargetDevice_001 () =
-        m_Client.RunCommand "create" "Created" "CR> "
-        let v = m_Client.RunCommandGetResp "list" "CR> "
-        Assert.StrictEqual( 2, v.Length )
+        let v1 = m_Client.RunCommandGetResp "list" "CR> "
+
+        // create a target device
+        m_Client.RunCommand "create /n aaaa" "Created" "CR> "
+
+        let v2 = m_Client.RunCommandGetResp "list" "CR> "
+        Assert.StrictEqual( v2.Length, v1.Length + 1 )
+
+        let tgidx = m_Client.GetIndexNumber "aaaa" "CR> "
+        m_Client.RunCommand ( sprintf "select %d"  tgidx ) "" "TD> "
+        let stat = m_Client.GetStatus "aaaa" "TD> "
+        Assert.StartsWith( "UNLOADED(MOD)", stat )
+        m_Client.RunCommand "unselect" "" "CR> "
+
         m_Client.RunCommand "reload /y" "" "CR> "
 
     // A TargetDevice can be added if another TargetDevice is already running.
     [<Fact>]
     member _.Create_TargetDevice_002 () =
+        // Start existing target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "start" "Started" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
-        m_Client.RunCommand "create" "Created" "CR> "
-        let v = m_Client.RunCommandGetResp "list" "CR> "
-        Assert.StrictEqual( 2, v.Length )
+
+        let v1 = m_Client.RunCommandGetResp "list" "CR> "
+
+        // create new target device
+        m_Client.RunCommand "create /n aaaa" "Created" "CR> "
+
+        let v2 = m_Client.RunCommandGetResp "list" "CR> "
+        Assert.StrictEqual( v2.Length, v1.Length + 1 )
+
+        let tgidx = m_Client.GetIndexNumber "aaaa" "CR> "
+        m_Client.RunCommand ( sprintf "select %d"  tgidx ) "" "TD> "
+        let stat = m_Client.GetStatus "aaaa" "TD> "
+        Assert.StartsWith( "UNLOADED(MOD)", stat )
+        m_Client.RunCommand "unselect" "" "CR> "
+
+        // Stop running target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "kill" "Killed" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
@@ -385,14 +410,24 @@ type Command02( fx : Command02_Fixture ) =
     // Unloaded target devices can be deleted.
     [<Fact>]
     member _.Delete_TargetDevice_Unloaded_001 () =
+        // Start existing target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "start" "Started" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
+
+        // create new target device
         m_Client.RunCommand "create" "Created" "CR> "
+        let v1 = m_Client.RunCommandGetResp "list" "CR> "
         m_Client.RunCommand "select 1" "" "TD> "
         let stat = m_Client.GetStatus "TD_00000002" "TD> "
         Assert.StartsWith( "UNLOADED", stat )
+
+        // Delete target device
         m_Client.RunCommand "delete" "Deleted" "CR> "
+        let v2 = m_Client.RunCommandGetResp "list" "CR> "
+        Assert.StrictEqual( v2.Length + 1, v1.Length )
+
+        // Stop running target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "kill" "Killed" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
@@ -401,11 +436,21 @@ type Command02( fx : Command02_Fixture ) =
     // Unloaded target devices can be deleted.
     [<Fact>]
     member _.Delete_TargetDevice_Unloaded_002 () =
+        // Start existing target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "start" "Started" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
+
+        // create new target device
         m_Client.RunCommand "create" "Created" "CR> "
+        let v1 = m_Client.RunCommandGetResp "list" "CR> "
+
+        // Delete target device
         m_Client.RunCommand "delete /i 1" "Deleted" "CR> "
+        let v2 = m_Client.RunCommandGetResp "list" "CR> "
+        Assert.StrictEqual( v2.Length + 1, v1.Length )
+
+        // Stop running target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "kill" "Killed" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
@@ -414,15 +459,25 @@ type Command02( fx : Command02_Fixture ) =
     // Unloaded target devices can be deleted.
     [<Fact>]
     member _.Delete_TargetDevice_UnloadedMod_001 () =
+        // Start existing target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "start" "Started" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
+
+        // create new target device
         m_Client.RunCommand "create" "Created" "CR> "
+        let v1 = m_Client.RunCommandGetResp "list" "CR> "
         m_Client.RunCommand "select 1" "" "TD> "
         m_Client.RunCommand "set NAME aaaaa" "" "TD> "
         let stat = m_Client.GetStatus "aaaaa" "TD> "
         Assert.StartsWith( "UNLOADED(MOD)", stat )
+
+        // Delete the target device
         m_Client.RunCommand "delete" "Deleted" "CR> "
+        let v2 = m_Client.RunCommandGetResp "list" "CR> "
+        Assert.StrictEqual( v2.Length + 1, v1.Length )
+
+        // Stop running target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "kill" "Killed" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
@@ -431,16 +486,27 @@ type Command02( fx : Command02_Fixture ) =
     // Unloaded target devices can be deleted.
     [<Fact>]
     member _.Delete_TargetDevice_UnloadedRMod_001 () =
+
+        // Start existing target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "start" "Started" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
+
+        // create new target device
         m_Client.RunCommand "create" "Created" "CR> "
+        let v1 = m_Client.RunCommandGetResp "list" "CR> "
         m_Client.RunCommand "select 1" "" "TD> "
         m_Client.RunCommand "set NAME aaaaa" "" "TD> "
         m_Client.RunCommand "set ID TD_00000001" "" "TD> "
         let stat = m_Client.GetStatus "aaaaa" "TD> "
         Assert.StartsWith( "UNLOAD(R-MOD)", stat )
+
+        // Delete the target device
         m_Client.RunCommand "delete" "Deleted" "CR> "
+        let v2 = m_Client.RunCommandGetResp "list" "CR> "
+        Assert.StrictEqual( v2.Length + 1, v1.Length )
+
+        // Stop running target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "kill" "Killed" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
@@ -449,9 +515,20 @@ type Command02( fx : Command02_Fixture ) =
     // Running target devices can not be deleted.
     [<Fact>]
     member _.Delete_TargetDevice_Running_001 () =
+        let v1 = m_Client.RunCommandGetResp "list" "CR> "
+
+        // Start existing target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "start" "Started" "TD> "
+
+        // try to delete running target device, it failed.
         m_Client.RunCommand "delete" "Unexpected error" "TD> "
+        m_Client.RunCommand "unselect" "" "CR> "
+        let v2 = m_Client.RunCommandGetResp "list" "CR> "
+        Assert.StrictEqual( v2.Length, v1.Length )
+
+        // stop running target device
+        m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "kill" "Killed" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
@@ -460,9 +537,19 @@ type Command02( fx : Command02_Fixture ) =
     [<Fact>]
     member _.Delete_TargetGroup_TDUnloaded_001 () =
         m_Client.RunCommand "select 0" "" "TD> "
+        let stat = m_Client.GetStatus "TD_00000001" "TD> "
+        Assert.StartsWith( "UNLOADED", stat )
+        let v1 = m_Client.RunCommandGetResp "list" "TD> "
+
         let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
         m_Client.RunCommand ( sprintf "select %d"  tgidx ) "" "TG> "
         m_Client.RunCommand "delete" "Deleted" "TD> "
+
+        let stat = m_Client.GetStatus "TD_00000001" "TD> "
+        Assert.StartsWith( "UNLOADED", stat )
+        let v2 = m_Client.RunCommandGetResp "list" "TD> "
+        Assert.StrictEqual( v2.Length + 1, v1.Length )
+
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
 
@@ -470,8 +557,18 @@ type Command02( fx : Command02_Fixture ) =
     [<Fact>]
     member _.Delete_TargetGroup_TDUnloaded_002 () =
         m_Client.RunCommand "select 0" "" "TD> "
+        let stat = m_Client.GetStatus "TD_00000001" "TD> "
+        Assert.StartsWith( "UNLOADED", stat )
+        let v1 = m_Client.RunCommandGetResp "list" "TD> "
+
         let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
         m_Client.RunCommand ( sprintf "delete /i %d"  tgidx ) "Deleted" "TD> "
+
+        let stat = m_Client.GetStatus "TD_00000001" "TD> "
+        Assert.StartsWith( "UNLOADED", stat )
+        let v2 = m_Client.RunCommandGetResp "list" "TD> "
+        Assert.StrictEqual( v2.Length + 1, v1.Length )
+
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
 
