@@ -158,6 +158,9 @@ type Command03( fx : Command03_Fixture ) =
             Assert.StartsWith( "UNLOADED", stat )
             m_Client.RunCommand "start" "Started" "TD> "
 
+            let stat = m_Client.GetStatus "TD_00000001" "TD> "
+            Assert.StartsWith( "RUNNING", stat )
+
             let! r = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             do! r.Close()
 
@@ -176,6 +179,10 @@ type Command03( fx : Command03_Fixture ) =
         // try to start target device, it failed
         let v = m_Client.RunCommandGetResp "start" "TD> "
         Assert.False ( v.[0].StartsWith "Started" )         
+
+        let stat = m_Client.GetStatus "TD_00000001" "TD> "
+        Assert.StartsWith( "UNLOADED(MOD)", stat )
+
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
 
@@ -197,6 +204,10 @@ type Command03( fx : Command03_Fixture ) =
         // try to start target device 2, it failed
         let v = m_Client.RunCommandGetResp "start" "TD> "
         Assert.False ( v.[0].StartsWith "Started" )
+
+        let stat = m_Client.GetStatus "GGG" "TD> "
+        Assert.StartsWith( "UNLOAD(R-MOD)", stat )
+
         m_Client.RunCommand "delete"  "Deleted" "CR> "
 
         // stop target device 1
@@ -219,6 +230,9 @@ type Command03( fx : Command03_Fixture ) =
         let v = m_Client.RunCommandGetResp "start" "TD> "
         Assert.False ( v.[0].StartsWith "Started" )
 
+        let stat = m_Client.GetStatus "TD_00000001" "TD> "
+        Assert.StartsWith( "RUNNING", stat )
+
         m_Client.RunCommand "kill" "Killed" "TD> "
         let stat = m_Client.GetStatus "TD_00000001" "TD> "
         Assert.StartsWith( "UNLOADED", stat )
@@ -236,6 +250,9 @@ type Command03( fx : Command03_Fixture ) =
         let v = m_Client.RunCommandGetResp "kill" "TD> "
         Assert.False ( v.[0].StartsWith "Killed" )
 
+        let stat = m_Client.GetStatus "TD_00000001" "TD> "
+        Assert.StartsWith( "UNLOADED", stat )
+
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
 
@@ -249,6 +266,9 @@ type Command03( fx : Command03_Fixture ) =
         // try to stop target device, it failed
         let v = m_Client.RunCommandGetResp "kill" "TD> "
         Assert.False ( v.[0].StartsWith "Killed" )
+
+        let stat = m_Client.GetStatus "TD_00000001" "TD> "
+        Assert.StartsWith( "UNLOADED(MOD)", stat )
 
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
@@ -271,9 +291,12 @@ type Command03( fx : Command03_Fixture ) =
         // try to stop target device, it failed
         let v = m_Client.RunCommandGetResp "kill" "TD> "
         Assert.False ( v.[0].StartsWith "Killed" )
-        m_Client.RunCommand "unselect" "" "CR> "
+
+        let stat = m_Client.GetStatus "GGG" "TD> "
+        Assert.StartsWith( "UNLOAD(R-MOD)", stat )
 
         // stop target device 1
+        m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "kill" "Killed" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
@@ -285,8 +308,13 @@ type Command03( fx : Command03_Fixture ) =
         let stat = m_Client.GetStatus "TD_00000001" "TD> "
         Assert.StartsWith( "UNLOADED", stat )
 
+        let v = m_Client.RunCommandGetResp "list" "TD> "
+
         // Add a Network Portal
         m_Client.RunCommand "create networkportal" "Created" "TD> "
+
+        let v2 = m_Client.RunCommandGetResp "list" "TD> "
+        Assert.StrictEqual( v.Length + 1, v2.Length )
 
         // Target Device will be in a modified state.
         let stat = m_Client.GetStatus "TD_00000001" "TD> "
@@ -303,8 +331,13 @@ type Command03( fx : Command03_Fixture ) =
         let stat = m_Client.GetStatus "TD_00000001" "TD> "
         Assert.StartsWith( "RUNNING", stat )
 
+        let v = m_Client.RunCommandGetResp "list" "TD> "
+
         // try to add Network Portal, it failed.
         m_Client.RunCommand "create networkportal" "Unexpected" "TD> "
+
+        let v2 = m_Client.RunCommandGetResp "list" "TD> "
+        Assert.StrictEqual( v.Length , v2.Length )
 
         // Stop target device
         m_Client.RunCommand "kill" "Killed" "TD> "
@@ -317,7 +350,13 @@ type Command03( fx : Command03_Fixture ) =
         let stat = m_Client.GetStatus "TD_00000001" "TD> "
         Assert.StartsWith( "UNLOADED", stat )
 
+        let v = m_Client.RunCommandGetResp "list" "TD> "
+
+        // create target group
         m_Client.RunCommand "create targetgroup /n sss" "Created" "TD> "
+
+        let v2 = m_Client.RunCommandGetResp "list" "TD> "
+        Assert.StrictEqual( v.Length + 1, v2.Length )
 
         // A Target Group in a modified state will be added.
         let tgidx = m_Client.GetIndexNumber "sss" "TD> "
@@ -341,7 +380,12 @@ type Command03( fx : Command03_Fixture ) =
         let stat = m_Client.GetStatus "TD_00000001" "TD> "
         Assert.StartsWith( "RUNNING", stat )
 
+        let v = m_Client.RunCommandGetResp "list" "TD> "
+
         m_Client.RunCommand "create targetgroup /n sss" "Created" "TD> "
+
+        let v2 = m_Client.RunCommandGetResp "list" "TD> "
+        Assert.StrictEqual( v.Length + 1, v2.Length )
 
         // A Target Group in a modified state will be added.
         let tgidx = m_Client.GetIndexNumber "sss" "TD> "
