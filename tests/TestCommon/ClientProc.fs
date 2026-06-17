@@ -219,3 +219,20 @@ type ClientProc ( m_Proc : Process ) =
             raise <| TestException "Multiple objects apply."
         let idx =  v2.[0].Split ":" |> Array.map _.Trim()
         idx.[0]
+
+    /// <summary>
+    ///  Verify the status of the object.
+    /// </summary>
+    /// <param name="str">
+    ///  Criteria string.
+    /// </param>
+    /// <param name="expStat">
+    ///  expected status string.
+    /// </param>
+    /// <param name="nextPrompt">
+    ///  Specifies the expected next prompt.
+    /// </param>
+    member this.CheckStatus ( str : string ) ( expStat : string ) ( nextPrompt : string ) : unit =
+        let stat = this.GetStatus str nextPrompt
+        if stat <> expStat then
+            raise <| TestException ( sprintf "Status string mismatch. Expected=%s, Result=%s" expStat stat )

@@ -483,7 +483,8 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     | CommandVarb.Publish ->
                         do! ss.Publish cc
                         this.Output 0 ( m_Messages.GetMessage "CMDMSG_CONFIGURATION_PUBLISHED" )
-                        return struct( true, stat )
+                        let nextStat = Some( ss, cc, ss.GetNode cn.NodeID )
+                        return struct( true, nextStat )
 
                     | CommandVarb.Nop ->
                         do! cc.NoOperation()

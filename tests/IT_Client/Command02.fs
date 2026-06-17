@@ -186,8 +186,7 @@ type Command02( fx : Command02_Fixture ) =
         m_Client.RunCommand "select 1" "" "TD> "
         m_Client.RunCommand "set ID TD_00000001" "" "TD> "
         m_Client.RunCommand "set NAME AAAAA" "" "TD> "
-        let stat = m_Client.GetStatus "AAAAA" "TD> "
-        Assert.StartsWith( "UNLOAD(R-MOD)", stat )
+        m_Client.CheckStatus "AAAAA" "UNLOAD(R-MOD)" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "kill" "Killed" "TD> "
@@ -201,8 +200,7 @@ type Command02( fx : Command02_Fixture ) =
         m_Client.RunCommand "start" "Started" "TD> "
         let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
         m_Client.RunCommand ( sprintf "select %d"  tgidx ) "" "TG> "
-        let stat = m_Client.GetStatus "Target Group" "TG> "
-        Assert.StartsWith( "ACTIVE", stat )
+        m_Client.CheckStatus "Target Group" "ACTIVE" "TG> "
         m_Client.RunCommand "set NAME aaa" "Unexpected error" "TG> "
         m_Client.RunCommand "kill" "Killed" "TG> "
         m_Client.RunCommand "unselect" "" "TD> "
@@ -373,8 +371,7 @@ type Command02( fx : Command02_Fixture ) =
 
         let tgidx = m_Client.GetIndexNumber "aaaa" "CR> "
         m_Client.RunCommand ( sprintf "select %d"  tgidx ) "" "TD> "
-        let stat = m_Client.GetStatus "aaaa" "TD> "
-        Assert.StartsWith( "UNLOADED(MOD)", stat )
+        m_Client.CheckStatus "aaaa" "UNLOADED(MOD)" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
 
         m_Client.RunCommand "reload /y" "" "CR> "
@@ -397,8 +394,7 @@ type Command02( fx : Command02_Fixture ) =
 
         let tgidx = m_Client.GetIndexNumber "aaaa" "CR> "
         m_Client.RunCommand ( sprintf "select %d"  tgidx ) "" "TD> "
-        let stat = m_Client.GetStatus "aaaa" "TD> "
-        Assert.StartsWith( "UNLOADED(MOD)", stat )
+        m_Client.CheckStatus "aaaa" "UNLOADED(MOD)" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
 
         // Stop running target device
@@ -419,8 +415,7 @@ type Command02( fx : Command02_Fixture ) =
         m_Client.RunCommand "create" "Created" "CR> "
         let v1 = m_Client.RunCommandGetResp "list" "CR> "
         m_Client.RunCommand "select 1" "" "TD> "
-        let stat = m_Client.GetStatus "TD_00000002" "TD> "
-        Assert.StartsWith( "UNLOADED", stat )
+        m_Client.CheckStatus "TD_00000002" "UNLOADED(MOD)" "TD> "
 
         // Delete target device
         m_Client.RunCommand "delete" "Deleted" "CR> "
@@ -469,8 +464,7 @@ type Command02( fx : Command02_Fixture ) =
         let v1 = m_Client.RunCommandGetResp "list" "CR> "
         m_Client.RunCommand "select 1" "" "TD> "
         m_Client.RunCommand "set NAME aaaaa" "" "TD> "
-        let stat = m_Client.GetStatus "aaaaa" "TD> "
-        Assert.StartsWith( "UNLOADED(MOD)", stat )
+        m_Client.CheckStatus "aaaaa" "UNLOADED(MOD)" "TD> "
 
         // Delete the target device
         m_Client.RunCommand "delete" "Deleted" "CR> "
@@ -498,8 +492,7 @@ type Command02( fx : Command02_Fixture ) =
         m_Client.RunCommand "select 1" "" "TD> "
         m_Client.RunCommand "set NAME aaaaa" "" "TD> "
         m_Client.RunCommand "set ID TD_00000001" "" "TD> "
-        let stat = m_Client.GetStatus "aaaaa" "TD> "
-        Assert.StartsWith( "UNLOAD(R-MOD)", stat )
+        m_Client.CheckStatus "aaaaa" "UNLOAD(R-MOD)" "TD> "
 
         // Delete the target device
         m_Client.RunCommand "delete" "Deleted" "CR> "
@@ -537,16 +530,14 @@ type Command02( fx : Command02_Fixture ) =
     [<Fact>]
     member _.Delete_TargetGroup_TDUnloaded_001 () =
         m_Client.RunCommand "select 0" "" "TD> "
-        let stat = m_Client.GetStatus "TD_00000001" "TD> "
-        Assert.StartsWith( "UNLOADED", stat )
+        m_Client.CheckStatus "TD_00000001" "UNLOADED" "TD> "
         let v1 = m_Client.RunCommandGetResp "list" "TD> "
 
         let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
         m_Client.RunCommand ( sprintf "select %d"  tgidx ) "" "TG> "
         m_Client.RunCommand "delete" "Deleted" "TD> "
 
-        let stat = m_Client.GetStatus "TD_00000001" "TD> "
-        Assert.StartsWith( "UNLOADED", stat )
+        m_Client.CheckStatus "TD_00000001" "UNLOADED" "TD> "
         let v2 = m_Client.RunCommandGetResp "list" "TD> "
         Assert.StrictEqual( v2.Length + 1, v1.Length )
 
@@ -557,15 +548,13 @@ type Command02( fx : Command02_Fixture ) =
     [<Fact>]
     member _.Delete_TargetGroup_TDUnloaded_002 () =
         m_Client.RunCommand "select 0" "" "TD> "
-        let stat = m_Client.GetStatus "TD_00000001" "TD> "
-        Assert.StartsWith( "UNLOADED", stat )
+        m_Client.CheckStatus "TD_00000001" "UNLOADED" "TD> "
         let v1 = m_Client.RunCommandGetResp "list" "TD> "
 
         let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
         m_Client.RunCommand ( sprintf "delete /i %d"  tgidx ) "Deleted" "TD> "
 
-        let stat = m_Client.GetStatus "TD_00000001" "TD> "
-        Assert.StartsWith( "UNLOADED", stat )
+        m_Client.CheckStatus "TD_00000001" "UNLOADED" "TD> "
         let v2 = m_Client.RunCommandGetResp "list" "TD> "
         Assert.StrictEqual( v2.Length + 1, v1.Length )
 
@@ -585,14 +574,12 @@ type Command02( fx : Command02_Fixture ) =
         m_Client.RunCommand "select 1" "" "TD> "
         m_Client.RunCommand "set NAME aaaaa" "" "TD> "
         m_Client.RunCommand "set ID TD_00000001" "" "TD> "
-        let stat = m_Client.GetStatus "aaaaa" "TD> "
-        Assert.StartsWith( "UNLOAD(R-MOD)", stat )
+        m_Client.CheckStatus "aaaaa" "UNLOAD(R-MOD)" "TD> "
 
         // create a target group
         m_Client.RunCommand "create targetgroup /n bbbbb" "Created" "TD> "
         m_Client.RunCommand "select 0" "" "TG> "
-        let stat = m_Client.GetStatus "bbbbb" "TG> "
-        Assert.StartsWith( "UNLOADED(MOD)", stat )
+        m_Client.CheckStatus "bbbbb" "UNLOADED(MOD)" "TG> "
 
         // delete target group
         m_Client.RunCommand "delete" "Deleted" "TD> "
@@ -613,8 +600,7 @@ type Command02( fx : Command02_Fixture ) =
         // Modify target device config
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "set NAME ggg" "" "TD> "
-        let stat = m_Client.GetStatus "ggg" "TD> "
-        Assert.StartsWith( "UNLOADED(MOD)", stat )
+        m_Client.CheckStatus "ggg" "UNLOADED(MOD)" "TD> "
 
         let v = m_Client.RunCommandGetResp "list" "TD> "
 
@@ -637,14 +623,12 @@ type Command02( fx : Command02_Fixture ) =
 
         // create new target group
         m_Client.RunCommand "create targetgroup /n TG003" "Created" "TD> "
-        let stat = m_Client.GetStatus "TD_00000001" "TD> "
-        Assert.StartsWith( "RUNNING", stat )
+        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
         let tgidx = m_Client.GetIndexNumber "TG003" "TD> "
 
         let v = m_Client.RunCommandGetResp "list" "TD> "
         m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
-        let stat = m_Client.GetStatus "TG003" "TG> "
-        Assert.StartsWith( "UNLOADED(MOD)", stat )
+        m_Client.CheckStatus "TG003" "UNLOADED(MOD)" "TG> "
 
         // delete target group
         m_Client.RunCommand "delete"  "Deleted" "TD> "
@@ -652,8 +636,7 @@ type Command02( fx : Command02_Fixture ) =
         let v2 = m_Client.RunCommandGetResp "list" "TD> "
         Assert.StrictEqual( v.Length, v2.Length + 1 )
 
-        let stat = m_Client.GetStatus "TD_00000001" "TD> "
-        Assert.StartsWith( "RUNNING", stat )
+        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
 
         m_Client.RunCommand "kill" "Killed" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
@@ -674,18 +657,15 @@ type Command02( fx : Command02_Fixture ) =
         m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
         m_Client.RunCommand "inactivate"  "Inactivated" "TG> "
         m_Client.RunCommand "unload"  "Unloaded" "TG> "
-        let stat = m_Client.GetStatus "TG_00000001" "TG> "
-        Assert.StartsWith( "UNLOADED", stat )
-        let stat = m_Client.GetStatus "TD_00000001" "TG> "
-        Assert.StartsWith( "RUNNING", stat )
+        m_Client.CheckStatus "TG_00000001" "UNLOADED" "TG> "
+        m_Client.CheckStatus "TD_00000001" "RUNNING" "TG> "
 
         // Delete unloaded target group
         m_Client.RunCommand "delete"  "Deleted" "TD> "
 
         let v2 = m_Client.RunCommandGetResp "list" "TD> "
         Assert.StrictEqual( v.Length, v2.Length + 1 )
-        let stat = m_Client.GetStatus "TD_00000001" "TD> "
-        Assert.StartsWith( "RUNNING", stat )
+        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
 
         m_Client.RunCommand "kill" "Killed" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
@@ -714,19 +694,16 @@ type Command02( fx : Command02_Fixture ) =
         m_Client.RunCommand "unload"  "Unloaded" "TG> "
         m_Client.RunCommand "set ID TG_00000001"  "" "TG> "
         m_Client.RunCommand "set NAME aaaaa"  "" "TG> "
-        let stat = m_Client.GetStatus "aaaaa" "TG> "
-        Assert.StartsWith( "UNLOAD(L-MOD)", stat )
+        m_Client.CheckStatus "aaaaa" "UNLOAD(L-MOD)" "TG> "
 
-        let stat = m_Client.GetStatus "TD_00000001" "TG> "
-        Assert.StartsWith( "RUNNING", stat )
+        m_Client.CheckStatus "TD_00000001" "RUNNING" "TG> "
 
         // delete target group 2
         m_Client.RunCommand "delete"  "Deleted" "TD> "
 
         let v2 = m_Client.RunCommandGetResp "list" "TD> "
         Assert.StrictEqual( v.Length, v2.Length + 1 )
-        let stat = m_Client.GetStatus "TD_00000001" "TD> "
-        Assert.StartsWith( "RUNNING", stat )
+        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
 
         m_Client.RunCommand "kill" "Killed" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
@@ -748,16 +725,14 @@ type Command02( fx : Command02_Fixture ) =
         m_Client.RunCommand "unload"  "Unloaded" "TG> "
         m_Client.RunCommand "set ID TG_00000001"  "" "TG> "
         m_Client.RunCommand "set NAME aaaaa"  "" "TG> "
-        let stat = m_Client.GetStatus "aaaaa" "TG> "
-        Assert.StartsWith( "UNLOAD(A-MOD)", stat )
+        m_Client.CheckStatus "aaaaa" "UNLOAD(A-MOD)" "TG> "
 
         // delete target group 2
         m_Client.RunCommand "delete"  "Deleted" "TD> "
 
         let v2 = m_Client.RunCommandGetResp "list" "TD> "
         Assert.StrictEqual( v.Length, v2.Length + 1 )
-        let stat = m_Client.GetStatus "TD_00000001" "TD> "
-        Assert.StartsWith( "RUNNING", stat )
+        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
 
         m_Client.RunCommand "kill" "Killed" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
@@ -775,8 +750,7 @@ type Command02( fx : Command02_Fixture ) =
         let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
         m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
         m_Client.RunCommand "inactivate"  "Inactivated" "TG> "
-        let stat = m_Client.GetStatus "TG_00000001" "TG> "
-        Assert.StartsWith( "LOADED", stat )
+        m_Client.CheckStatus "TG_00000001" "LOADED" "TG> "
 
         // try to delete target group, it failed
         m_Client.RunCommand "delete"  "Unexpected error" "TG> "
@@ -785,8 +759,7 @@ type Command02( fx : Command02_Fixture ) =
 
         let v2 = m_Client.RunCommandGetResp "list" "TD> "
         Assert.StrictEqual( v.Length, v2.Length )
-        let stat = m_Client.GetStatus "TD_00000001" "TD> "
-        Assert.StartsWith( "RUNNING", stat )
+        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
 
         m_Client.RunCommand "kill" "Killed" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
@@ -803,8 +776,7 @@ type Command02( fx : Command02_Fixture ) =
 
         let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
         m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
-        let stat = m_Client.GetStatus "TG_00000001" "TG> "
-        Assert.StartsWith( "ACTIVE", stat )
+        m_Client.CheckStatus "TG_00000001" "ACTIVE" "TG> "
 
         // try to delete target group, it failed
         m_Client.RunCommand "delete"  "Unexpected error" "TG> "
@@ -813,10 +785,8 @@ type Command02( fx : Command02_Fixture ) =
 
         let v2 = m_Client.RunCommandGetResp "list" "TD> "
         Assert.StrictEqual( v.Length, v2.Length )
-        let stat = m_Client.GetStatus "TD_00000001" "TD> "
-        Assert.StartsWith( "RUNNING", stat )
+        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
 
         m_Client.RunCommand "kill" "Killed" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
-
