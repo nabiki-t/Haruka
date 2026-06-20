@@ -420,7 +420,8 @@ type StatusMaster_Test2 () =
                 match res1.Response with
                 | TargetDeviceCtrlRes.T_Response.U_InactivateTargetGroupResult( x ) ->
                     Assert.StrictEqual( tgid99, x.ID )
-                    Assert.True( x.Result )
+                    Assert.False( x.Result )
+                    Assert.StrictEqual( "Specified target group is missing.", x.ErrorMessage )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -430,6 +431,59 @@ type StatusMaster_Test2 () =
                 Assert.StrictEqual( 1, m_ActiveTargetGroups.Count )
                 Assert.True( m_ActiveTargetGroups.ContainsKey( tgid_me.toPrim tgid0 ) )
 
+                GlbFunc.AllDispose [ rq_out; rq_in; rs_out; rs_in; ]
+            };
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.TaskIgnore
+        |> Functions.RunTaskSynchronously
+
+        killer.NoticeTerminate()
+        GlbFunc.DeleteFile targetDeviceConfName
+        GlbFunc.DeleteFile targetGroupConfName0
+        GlbFunc.DeleteDir pDirName
+
+    [<Fact>]
+    member this.ProcCtrlReq_InactivateTargetGroup_003() =
+        let pDirName = this.GetTestDirName "ProcCtrlReq_InactivateTargetGroup_003"
+        GlbFunc.CreateDir pDirName |> ignore
+
+        let targetDeviceConfName = StatusMaster_Test1.CreateEmptyTDConf pDirName
+        let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
+        File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )    // Default target group will be disabled
+
+        let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
+        let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
+        let killer = new HKiller() :> IKiller
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+
+        [|
+            fun () -> task {
+                do! sm.ProcessControlRequest()
+            };
+            fun () -> task {
+                let s = new StreamWriter( rq_out )
+                let o = new StreamReader( rs_in )
+
+                let req1 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
+                    Request = TargetDeviceCtrlReq.T_Request.U_InactivateTargetGroup( tgid0 )
+                }
+                s.WriteLine( TargetDeviceCtrlReq.ReaderWriter.ToString req1 )
+                s.Flush()
+
+                let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
+                match res1.Response with
+                | TargetDeviceCtrlRes.T_Response.U_InactivateTargetGroupResult( x ) ->
+                    // Transitions to the same state are ignored and treated as normal.
+                    Assert.StrictEqual( tgid0, x.ID )
+                    Assert.True( x.Result )
+                | _ ->
+                    Assert.Fail __LINE__
+
+                let pc = PrivateCaller( sm )
+                let m_ActiveTargetGroups = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
+
+                Assert.StrictEqual( 0, m_ActiveTargetGroups.Count )
                 GlbFunc.AllDispose [ rq_out; rq_in; rs_out; rs_in; ]
             };
         |]
@@ -486,6 +540,44 @@ type StatusMaster_Test2 () =
                 Assert.StrictEqual( 1, m_ActiveTargetGroups.Count )
                 Assert.True( m_ActiveTargetGroups.ContainsKey( tgid_me.toPrim tgid0 ) )
 
+                GlbFunc.AllDispose [ rq_out; rq_in; rs_out; rs_in; ]
+            };
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.TaskIgnore
+        |> Functions.RunTaskSynchronously
+
+        killer.NoticeTerminate()
+        GlbFunc.DeleteFile targetDeviceConfName
+        GlbFunc.DeleteFile targetGroupConfName0
+        GlbFunc.DeleteDir pDirName
+
+    [<Fact>]
+    member this.ProcCtrlReq_ActivateTargetGroup_002() =
+        let pDirName = this.GetTestDirName "ProcCtrlReq_ActivateTargetGroup_002"
+        GlbFunc.CreateDir pDirName |> ignore
+
+        let targetDeviceConfName = StatusMaster_Test1.CreateEmptyTDConf pDirName
+        let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
+        File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )    // Default target group will be disabled
+
+        let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
+        let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
+        let killer = new HKiller() :> IKiller
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+
+        [|
+            fun () -> task {
+                do! sm.ProcessControlRequest()
+            };
+            fun () -> task {
+                let s = new StreamWriter( rq_out )
+                let o = new StreamReader( rs_in )
+
+                let pc = PrivateCaller( sm )
+                let m_ActiveTargetGroups = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
+                Assert.StrictEqual( 0, m_ActiveTargetGroups.Count )
+
                 let req2 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
                     Request = TargetDeviceCtrlReq.T_Request.U_ActivateTargetGroup( tgid99 )
                 }
@@ -498,6 +590,61 @@ type StatusMaster_Test2 () =
                     Assert.StrictEqual( tgid99, x.ID )
                     Assert.False( x.Result )
                     Assert.StrictEqual( "Specified target group is missing.", x.ErrorMessage )
+                | _ ->
+                    Assert.Fail __LINE__
+
+                Assert.StrictEqual( 0, m_ActiveTargetGroups.Count )
+                GlbFunc.AllDispose [ rq_out; rq_in; rs_out; rs_in; ]
+            };
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.TaskIgnore
+        |> Functions.RunTaskSynchronously
+
+        killer.NoticeTerminate()
+        GlbFunc.DeleteFile targetDeviceConfName
+        GlbFunc.DeleteFile targetGroupConfName0
+        GlbFunc.DeleteDir pDirName
+
+    [<Fact>]
+    member this.ProcCtrlReq_ActivateTargetGroup_003() =
+        let pDirName = this.GetTestDirName "ProcCtrlReq_ActivateTargetGroup_003"
+        GlbFunc.CreateDir pDirName |> ignore
+
+        let targetDeviceConfName = StatusMaster_Test1.CreateEmptyTDConf pDirName
+        let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
+        File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 true )    // Default target group will be enabled
+
+        let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
+        let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
+        let killer = new HKiller() :> IKiller
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+
+        [|
+            fun () -> task {
+                do! sm.ProcessControlRequest()
+            };
+            fun () -> task {
+                let s = new StreamWriter( rq_out )
+                let o = new StreamReader( rs_in )
+
+                let pc = PrivateCaller( sm )
+                let m_ActiveTargetGroups = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
+                Assert.StrictEqual( 1, m_ActiveTargetGroups.Count )
+
+                let req1 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
+                    Request = TargetDeviceCtrlReq.T_Request.U_ActivateTargetGroup( tgid0 )
+                }
+                s.WriteLine( TargetDeviceCtrlReq.ReaderWriter.ToString req1 )
+                s.Flush()
+
+                let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
+                match res1.Response with
+                | TargetDeviceCtrlRes.T_Response.U_ActivateTargetGroupResult( x ) ->
+                    // Transitions to the same state are ignored and treated as normal.
+                    Assert.StrictEqual( tgid0, x.ID )
+                    Assert.True( x.Result )
+                    Assert.StrictEqual( "", x.ErrorMessage )
                 | _ ->
                     Assert.Fail __LINE__
 
@@ -891,7 +1038,6 @@ type StatusMaster_Test2 () =
         GlbFunc.DeleteFile targetGroupConfName1
         GlbFunc.DeleteDir pDirName
 
-
     [<Fact>]
     member this.ProcCtrlReq_LoadTargetGroup_001() =
         let pDirName = this.GetTestDirName "ProcCtrlReq_LoadTargetGroup_001"
@@ -1071,6 +1217,66 @@ type StatusMaster_Test2 () =
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName0
         GlbFunc.DeleteFile targetGroupConfName1
+        GlbFunc.DeleteDir pDirName
+
+    [<Fact>]
+    member this.ProcCtrlReq_LoadTargetGroup_004() =
+        let pDirName = this.GetTestDirName "ProcCtrlReq_LoadTargetGroup_004"
+        GlbFunc.CreateDir pDirName |> ignore
+
+        let targetDeviceConfName = StatusMaster_Test1.CreateEmptyTDConf pDirName
+        let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
+        File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )    // Default target group will be disabled
+
+        let rq_out, rq_in = GlbFunc.CreateAnonymousPipe()
+        let rs_out, rs_in = GlbFunc.CreateAnonymousPipe()
+        let killer = new HKiller() :> IKiller
+        let sm = new StatusMaster( pDirName, true, killer, new StreamReader( rq_in ), new StreamWriter( rs_out ) ) :> IStatus
+
+        [|
+            fun () -> task {
+                do! sm.ProcessControlRequest()
+            };
+            fun () -> task {
+                let s = new StreamWriter( rq_out )
+                let o = new StreamReader( rs_in )
+
+                let pc = PrivateCaller( sm )
+                let m_ActiveTargetGroups = pc.GetField( "m_ActiveTargetGroups" ) :?> ConcurrentDictionary< uint32, unit >
+                Assert.StrictEqual( 0, m_ActiveTargetGroups.Count  )
+
+                let m_config = pc.GetField( "m_config" ) :?> IConfiguration
+                Assert.StrictEqual( 1, m_config.GetAllTargetGroupConf().Length )
+
+                let req1 : TargetDeviceCtrlReq.T_TargetDeviceCtrlReq = {
+                    Request = TargetDeviceCtrlReq.T_Request.U_LoadTargetGroup( tgid0 )
+                }
+                s.WriteLine( TargetDeviceCtrlReq.ReaderWriter.ToString req1 )
+                s.Flush()
+
+                let res1 = TargetDeviceCtrlRes.ReaderWriter.LoadString( o.ReadLine() )
+                match res1.Response with
+                | TargetDeviceCtrlRes.T_Response.U_LoadTargetGroupResult( x ) ->
+                    // Transitions to the same state are ignored and treated as normal.
+                    Assert.StrictEqual( tgid0, x.ID )
+                    Assert.True( x.Result )
+                    Assert.StrictEqual( "",  x.ErrorMessage )
+                | _ ->
+                    Assert.Fail __LINE__
+
+                Assert.StrictEqual( 0, m_ActiveTargetGroups.Count )
+                Assert.StrictEqual( 1, m_config.GetAllTargetGroupConf().Length )
+
+                GlbFunc.AllDispose [ rq_out; rq_in; rs_out; rs_in; ]
+            };
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.TaskIgnore
+        |> Functions.RunTaskSynchronously
+
+        killer.NoticeTerminate()
+        GlbFunc.DeleteFile targetDeviceConfName
+        GlbFunc.DeleteFile targetGroupConfName0
         GlbFunc.DeleteDir pDirName
         
     [<Fact>]

@@ -334,7 +334,7 @@
     </Message>
     <Message>
       <Name>ERRMSG_TARGET_GROUP_LOADED</Name>
-      <Value>Specified target group is still loaded.</Value>
+      <Value>Specified target group is loaded.</Value>
     </Message>
     <Message>
       <Name>ERRMSG_TARGET_GROUP_MODIFIED</Name>
@@ -342,7 +342,15 @@
     </Message>
     <Message>
       <Name>ERRMSG_TARGET_GROUP_UNLOADED</Name>
-      <Value>Target group is not loaded.</Value>
+      <Value>Specified target group is unloaded.</Value>
+    </Message>
+    <Message>
+      <Name>ERRMSG_TARGET_GROUP_ACTIVATED</Name>
+      <Value>Specified target group is activated.</Value>
+    </Message>
+    <Message>
+      <Name>ERRMSG_TARGET_GROUP_INACTIVATED</Name>
+      <Value>Specified target group is inactivated.</Value>
     </Message>
     <Message>
       <Name>ERRMSG_UNEXPECTED_RESPONSE</Name>

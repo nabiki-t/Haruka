@@ -175,6 +175,7 @@ type LogID =
     | I_CLEAR_ACA_AND_RESPONSE_CA           = 0x20006600
     | I_ISCSI_TASK_ABORTED                  = 0x20006700
     | I_ACKNOWLEDGE_CHECKER_STARTED         = 0x20006800
+    | I_TARGET_GROUP_ALREADY_LOADED         = 0x20006900
 
     | W_UNEXPECTED_ERROR                    = 0x30000000
     | W_DATA_DIGEST_ERROR                   = 0x30000100
@@ -1543,6 +1544,7 @@ type HLogger() =
             ( LogID.I_CLEAR_ACA_AND_RESPONSE_CA,        "Old ACA status cleared; CA response received." )
             ( LogID.I_ISCSI_TASK_ABORTED,               "iSCSI task is aborted. " )
             ( LogID.I_ACKNOWLEDGE_CHECKER_STARTED,      "Acknowledge checker will be started." )
+            ( LogID.I_TARGET_GROUP_ALREADY_LOADED,      "Specified target group is already loaded. Ignore request. TargetGroupID={0}" )
 
             ( LogID.W_UNEXPECTED_ERROR,                 "Unexpected error. Exception={0}, message={1}" )
             ( LogID.W_DATA_DIGEST_ERROR,                "Data digest error. Received PDU is discarded." )

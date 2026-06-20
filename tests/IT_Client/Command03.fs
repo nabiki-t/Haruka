@@ -535,8 +535,12 @@ type Command03( fx : Command03_Fixture ) =
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
 
-    [<Fact>]
-    member _.Load_TDUnloaded_001 () =
+    [<Theory>]
+    [<InlineData( "load" )>]
+    [<InlineData( "unload" )>]
+    [<InlineData( "activate" )>]
+    [<InlineData( "inactivate" )>]
+    member _.Load_TDUnloaded_001 ( cmd : string ) =
 
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.CheckStatus "TD_00000001" "UNLOADED" "TD> "
@@ -545,8 +549,8 @@ type Command03( fx : Command03_Fixture ) =
         m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
         m_Client.CheckStatus "TG_00000001" "UNLOADED" "TG> "
 
-        // try to load target group, it failed.
-        m_Client.RunCommand "load" "Target device process is not running" "TG> "
+        // try to load/unload/activate/inactivate target group, it failed.
+        m_Client.RunCommand cmd "Target device process is not running" "TG> "
         m_Client.CheckStatus "TG_00000001" "UNLOADED" "TG> "
         m_Client.CheckStatus "TD_00000001" "UNLOADED" "TG> "
 
@@ -554,8 +558,12 @@ type Command03( fx : Command03_Fixture ) =
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
 
-    [<Fact>]
-    member _.Load_TDUnloadedMod_001 () =
+    [<Theory>]
+    [<InlineData( "load" )>]
+    [<InlineData( "unload" )>]
+    [<InlineData( "activate" )>]
+    [<InlineData( "inactivate" )>]
+    member _.Load_TDUnloadedMod_001 ( cmd : string ) =
 
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "set NAME ggg" "" "TD> "
@@ -565,8 +573,8 @@ type Command03( fx : Command03_Fixture ) =
         m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
         m_Client.CheckStatus "TG_00000001" "UNLOADED" "TG> "
 
-        // try to load target group, it failed.
-        m_Client.RunCommand "load" "Target device process is not running" "TG> "
+        // try to load/unload/activate/inactivate target group, it failed.
+        m_Client.RunCommand cmd "Target device process is not running" "TG> "
         m_Client.CheckStatus "TG_00000001" "UNLOADED" "TG> "
         m_Client.CheckStatus "TD_00000001" "UNLOADED(MOD)" "TG> "
 
@@ -574,8 +582,12 @@ type Command03( fx : Command03_Fixture ) =
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
 
-    [<Fact>]
-    member _.Load_TDUnloadedRMod_001 () =
+    [<Theory>]
+    [<InlineData( "load" )>]
+    [<InlineData( "unload" )>]
+    [<InlineData( "activate" )>]
+    [<InlineData( "inactivate" )>]
+    member _.Load_TDUnloadedRMod_001 ( cmd : string ) =
 
         // create target device 2
         m_Client.RunCommand "create /n GGG" "Created" "CR> "
@@ -613,8 +625,8 @@ type Command03( fx : Command03_Fixture ) =
         m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
         m_Client.CheckStatus "TG_00000001" "UNLOADED" "TG> "
 
-        // try to load target group, it failed.
-        m_Client.RunCommand "load" "Target device process is not running" "TG> "
+        // try to load/unload/activate/inactivate target group, it failed.
+        m_Client.RunCommand cmd "Target device process is not running" "TG> "
         m_Client.CheckStatus "TG_00000001" "UNLOADED" "TG> "
 
         m_Client.RunCommand "unselect" "" "TD> "
@@ -631,8 +643,12 @@ type Command03( fx : Command03_Fixture ) =
 
         m_Client.RunCommand "reload /y" "" "CR> "
 
-    [<Fact>]
-    member _.Load_Unloaded_001 () =
+    [<Theory>]
+    [<InlineData( "load", "Loaded", "LOADED" )>]
+    [<InlineData( "unload", "Specified target group is", "UNLOADED" )>]
+    [<InlineData( "activate", "Specified target group is", "UNLOADED" )>]
+    [<InlineData( "inactivate", "Specified target group is", "UNLOADED" )>]
+    member _.Load_Unloaded_001 ( cmd : string ) ( expResp : string ) ( nextStat : string ) =
         // Start the target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "start" "Started" "TD> "
@@ -645,9 +661,9 @@ type Command03( fx : Command03_Fixture ) =
         m_Client.RunCommand "unload" "Unloaded" "TG> "
         m_Client.CheckStatus "TG_00000001" "UNLOADED" "TG> "
 
-        // load the target group
-        m_Client.RunCommand "load" "Loaded" "TG> "
-        m_Client.CheckStatus "TG_00000001" "LOADED" "TG> "
+        // load/unload/activate/inactivate the target group
+        m_Client.RunCommand cmd expResp "TG> "
+        m_Client.CheckStatus "TG_00000001" nextStat "TG> "
         m_Client.CheckStatus "TD_00000001" "RUNNING" "TG> "
 
         m_Client.RunCommand "unselect" "" "TD> "
@@ -655,8 +671,12 @@ type Command03( fx : Command03_Fixture ) =
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
 
-    [<Fact>]
-    member _.Load_UnloadedMod_001 () =
+    [<Theory>]
+    [<InlineData( "load" )>]
+    [<InlineData( "unload" )>]
+    [<InlineData( "activate" )>]
+    [<InlineData( "inactivate" )>]
+    member _.Load_UnloadedMod_001 ( cmd : string ) =
         // Start the target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "start" "Started" "TD> "
@@ -671,7 +691,7 @@ type Command03( fx : Command03_Fixture ) =
         m_Client.CheckStatus "TG_00000001" "UNLOADED(MOD)" "TG> "
 
         // try to load target group, it failed.
-        m_Client.RunCommand "load" "Configuration is modified" "TG> "
+        m_Client.RunCommand cmd "Configuration is modified" "TG> "
         m_Client.CheckStatus "TG_00000001" "UNLOADED(MOD)" "TG> "
         m_Client.CheckStatus "TD_00000001" "RUNNING" "TG> "
 
@@ -680,8 +700,12 @@ type Command03( fx : Command03_Fixture ) =
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
 
-    [<Fact>]
-    member _.Load_Loaded_001 () =
+    [<Theory>]
+    [<InlineData( "load", "Unexpected", "LOADED" )>]
+    [<InlineData( "unload", "Unloaded", "UNLOADED" )>]
+    [<InlineData( "activate", "Activated", "ACTIVE" )>]
+    [<InlineData( "inactivate", "Specified target group is", "LOADED" )>]
+    member _.Load_Loaded_001 ( cmd : string ) ( expResp : string ) ( nextStat : string ) =
         // Start the target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "start" "Started" "TD> "
@@ -693,9 +717,9 @@ type Command03( fx : Command03_Fixture ) =
         m_Client.RunCommand "inactivate" "Inactivated" "TG> "
         m_Client.CheckStatus "TG_00000001" "LOADED" "TG> "
 
-        // try to load target group, it failed.
-        m_Client.RunCommand "load" "Unexpected" "TG> "
-        m_Client.CheckStatus "TG_00000001" "LOADED" "TG> "
+        // load/unload/activate/inactivate the target group
+        m_Client.RunCommand cmd expResp "TG> "
+        m_Client.CheckStatus "TG_00000001" nextStat "TG> "
         m_Client.CheckStatus "TD_00000001" "RUNNING" "TG> "
 
         m_Client.RunCommand "unselect" "" "TD> "
@@ -703,8 +727,12 @@ type Command03( fx : Command03_Fixture ) =
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
 
-    [<Fact>]
-    member _.Load_Active_001 () =
+    [<Theory>]
+    [<InlineData( "load", "Unexpected", "ACTIVE" )>]
+    [<InlineData( "unload", "Specified target group is", "ACTIVE" )>]
+    [<InlineData( "activate", "Specified target group is", "ACTIVE" )>]
+    [<InlineData( "inactivate", "Inactivated", "LOADED" )>]
+    member _.Load_Active_001 ( cmd : string ) ( expResp : string ) ( nextStat : string ) =
         // Start the target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "start" "Started" "TD> "
@@ -716,11 +744,78 @@ type Command03( fx : Command03_Fixture ) =
         m_Client.CheckStatus "TG_00000001" "ACTIVE" "TG> "
 
         // try to load target group, it failed.
-        m_Client.RunCommand "load" "Unexpected" "TG> "
-        m_Client.CheckStatus "TG_00000001" "ACTIVE" "TG> "
+        m_Client.RunCommand cmd expResp "TG> "
+        m_Client.CheckStatus "TG_00000001" nextStat "TG> "
         m_Client.CheckStatus "TD_00000001" "RUNNING" "TG> "
 
         m_Client.RunCommand "unselect" "" "TD> "
         m_Client.RunCommand "kill" "Killed" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
+
+    [<Theory>]
+    [<InlineData( "load" )>]
+    [<InlineData( "unload" )>]
+    [<InlineData( "activate" )>]
+    [<InlineData( "inactivate" )>]
+    member _.Load_UnloadedAMod_001 ( cmd : string ) =
+        // Start the target device
+        m_Client.RunCommand "select 0" "" "TD> "
+        m_Client.RunCommand "start" "Started" "TD> "
+        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
+
+        // select and modify the target group 1
+        let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
+        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+        m_Client.RunCommand "inactivate" "Inactivated" "TG> "
+        m_Client.RunCommand "unload" "Unloaded" "TG> "
+        m_Client.RunCommand "set ID TG_00000002" "" "TG> "
+        m_Client.RunCommand "set NAME wwwwwwwww" "" "TG> "
+        m_Client.CheckStatus "wwwwwwwww" "UNLOAD(A-MOD)" "TG> "
+
+        // try to load target group, it failed.
+        m_Client.RunCommand cmd "Configuration is modified" "TG> "
+        m_Client.CheckStatus "wwwwwwwww" "UNLOAD(A-MOD)" "TG> "
+        m_Client.CheckStatus "TD_00000001" "RUNNING" "TG> "
+
+        m_Client.RunCommand "unselect" "" "TD> "
+        m_Client.RunCommand "kill" "Killed" "TD> "
+        m_Client.RunCommand "unselect" "" "CR> "
+        m_Client.RunCommand "reload /y" "" "CR> "
+
+    [<Theory>]
+    [<InlineData( "load" )>]
+    [<InlineData( "unload" )>]
+    [<InlineData( "activate" )>]
+    [<InlineData( "inactivate" )>]
+    member _.Load_UnloadedLMod_001 ( cmd : string ) =
+        // Start the target device
+        m_Client.RunCommand "select 0" "" "TD> "
+        m_Client.RunCommand "start" "Started" "TD> "
+        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
+
+        // Inactivate the target group 2
+        let tgidx = m_Client.GetIndexNumber "TG_00000002" "TD> "
+        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+        m_Client.RunCommand "inactivate" "Inactivated" "TG> "
+        m_Client.RunCommand "unselect" "" "TD> "
+
+        // select and modify the target group 1
+        let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
+        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+        m_Client.RunCommand "inactivate" "Inactivated" "TG> "
+        m_Client.RunCommand "unload" "Unloaded" "TG> "
+        m_Client.RunCommand "set ID TG_00000002" "" "TG> "
+        m_Client.RunCommand "set NAME wwwwwwwww" "" "TG> "
+        m_Client.CheckStatus "wwwwwwwww" "UNLOAD(L-MOD)" "TG> "
+
+        // try to load target group, it failed.
+        m_Client.RunCommand cmd "Configuration is modified" "TG> "
+        m_Client.CheckStatus "wwwwwwwww" "UNLOAD(L-MOD)" "TG> "
+        m_Client.CheckStatus "TD_00000001" "RUNNING" "TG> "
+
+        m_Client.RunCommand "unselect" "" "TD> "
+        m_Client.RunCommand "kill" "Killed" "TD> "
+        m_Client.RunCommand "unselect" "" "CR> "
+        m_Client.RunCommand "reload /y" "" "CR> "
+

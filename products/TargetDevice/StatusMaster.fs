@@ -729,18 +729,26 @@ type StatusMaster(
     /// </remarks>
     member private _.ProcReq_InactivateTargetGroup( id : TGID_T ) : Task<unit> =
         HLogger.Trace( LogID.V_CTRL_REQ_RECEIVED, fun g -> g.Gen1( m_ObjID, sprintf "InactivateTargetGroup(%s)" ( tgid_me.toString id ) ) )
-        let wresult = m_ActiveTargetGroups.TryRemove( id ) |> fst
+
+        let r, msg =
+            if m_config.GetTargetGroupConf( id ).IsSome then
+                if m_ActiveTargetGroups.TryRemove( id ) |> fst then
+                    HLogger.Trace( LogID.I_TARGET_GROUP_INACTIVATED, fun g -> g.Gen1( m_ObjID, tgid_me.toString id ) )
+                    true, ""
+                else
+                    HLogger.Trace( LogID.I_TARGET_GROUP_ALREADY_INACTIVE, fun g -> g.Gen1( m_ObjID, tgid_me.toString id ) )
+                    true, ""    // Transitions to the same state are ignored and treated as normal.
+            else
+                HLogger.Trace( LogID.I_TARGET_GROUP_MISSING, fun g -> g.Gen1( m_ObjID, tgid_me.toString id ) )
+                false, "Specified target group is missing."
+
         let res : TargetDeviceCtrlRes.T_TargetDeviceCtrlRes = {
             Response = TargetDeviceCtrlRes.U_InactivateTargetGroupResult( {
                 ID = id;
-                Result = true;
-                ErrorMessage = "";
+                Result = r;
+                ErrorMessage = msg;
             } )
         }
-        if wresult then
-            HLogger.Trace( LogID.I_TARGET_GROUP_INACTIVATED, fun g -> g.Gen1( m_ObjID, tgid_me.toString id ) )
-        else
-            HLogger.Trace( LogID.I_TARGET_GROUP_ALREADY_INACTIVE, fun g -> g.Gen1( m_ObjID, tgid_me.toString id ) )
 
         task {
             do! m_CtrlReqSink.WriteLineAsync( TargetDeviceCtrlRes.ReaderWriter.ToString res )
@@ -760,9 +768,12 @@ type StatusMaster(
         HLogger.Trace( LogID.V_CTRL_REQ_RECEIVED, fun g -> g.Gen1( m_ObjID, sprintf "ActivateTargetGroup(%s)" ( tgid_me.toString id ) ) )
         let r, msg =
             if m_config.GetTargetGroupConf( id ).IsSome then
-                m_ActiveTargetGroups.TryAdd( id, () ) |> ignore
-                HLogger.Trace( LogID.I_TARGET_GROUP_ACTIVATED, fun g -> g.Gen1( m_ObjID, tgid_me.toString id ) )
-                true, ""
+                if m_ActiveTargetGroups.TryAdd( id, () ) then
+                    HLogger.Trace( LogID.I_TARGET_GROUP_ACTIVATED, fun g -> g.Gen1( m_ObjID, tgid_me.toString id ) )
+                    true, ""
+                else
+                    HLogger.Trace( LogID.I_TARGET_GROUP_STILL_ACTIVE, fun g -> g.Gen1( m_ObjID, tgid_me.toString id ) )
+                    true, ""    // Transitions to the same state are ignored and treated as normal.
             else
                 HLogger.Trace( LogID.I_TARGET_GROUP_MISSING, fun g -> g.Gen1( m_ObjID, tgid_me.toString id ) )
                 false, "Specified target group is missing."
@@ -794,6 +805,9 @@ type StatusMaster(
             if m_ActiveTargetGroups.ContainsKey( id ) then
                 HLogger.Trace( LogID.I_TARGET_GROUP_STILL_ACTIVE, fun g -> g.Gen1( m_ObjID, tgid_me.toString id ) )
                 false, "Specified target group is still active."
+            elif m_config.GetTargetGroupConf( id ).IsNone then
+                HLogger.Trace( LogID.I_TARGET_GROUP_MISSING, fun g -> g.Gen1( m_ObjID, tgid_me.toString id ) )
+                true, ""       // Transitions to the same state are ignored and treated as normal.
             else
                 match m_config.GetTargetGroupConf( id ) with
                 | None ->
@@ -856,14 +870,16 @@ type StatusMaster(
             if m_ActiveTargetGroups.ContainsKey( id ) then
                 HLogger.Trace( LogID.I_TARGET_GROUP_STILL_ACTIVE, fun g -> g.Gen1( m_ObjID, tgid_me.toString id ) )
                 false, "Specified target group is still active."
+            elif m_config.GetTargetGroupConf( id ).IsSome then
+                HLogger.Trace( LogID.I_TARGET_GROUP_ALREADY_LOADED, fun g -> g.Gen1( m_ObjID, tgid_me.toString id ) )
+                true, ""    // Transitions to the same state are ignored and treated as normal.
+            elif m_config.LoadTargetGroup( id ) then
+                HLogger.Trace( LogID.V_CTRL_REQ_NORMAL_END, fun g -> g.Gen2( m_ObjID, "LoadTargetGroup", "" ) )
+                true, ""
             else
-                if m_config.LoadTargetGroup( id ) then
-                    HLogger.Trace( LogID.V_CTRL_REQ_NORMAL_END, fun g -> g.Gen2( m_ObjID, "LoadTargetGroup", "" ) )
-                    true, ""
-                else
-                    // log message for failed load configuration is witten in ConfigurationMaster.
-                    HLogger.Trace( LogID.W_CTRL_REQ_ERROR_END, fun g -> g.Gen2( m_ObjID, "LoadTargetGroup", "" ) )
-                    false , "Failed to load target group config."
+                // log message for failed load configuration is witten in ConfigurationMaster.
+                HLogger.Trace( LogID.W_CTRL_REQ_ERROR_END, fun g -> g.Gen2( m_ObjID, "LoadTargetGroup", "" ) )
+                false , "Failed to load target group config."
 
         let res : TargetDeviceCtrlRes.T_TargetDeviceCtrlRes =
             {

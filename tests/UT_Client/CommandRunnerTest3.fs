@@ -2211,20 +2211,18 @@ type CommandRunner_Test3() =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "unload" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
-        let mutable flg1 = false
-        let mutable flg2 = false
         let mutable flg3 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
             Assert.Same( tgn, argnode )
-            flg1 <- true
             Some tdn
         )
         ss.p_GetAncestorTargetGroup <- ( fun argnode ->
             Assert.Same( tgn, argnode )
-            flg2 <- true
             Some tgn
         )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID=tgn.TargetGroupID; Name=""; } ] )
+        cc.p_GetActiveTargetGroups <- ( fun _ -> Task.FromResult [] )
         cc.p_UnloadTargetGroup <- ( fun argtdid argtgid ->
             flg3 <- true
             Assert.StrictEqual( argtdid, tdn.TargetDeviceID )
@@ -2237,8 +2235,6 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
         Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
-        Assert.True( flg1 )
-        Assert.True( flg2 )
         Assert.True( flg3 )
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "Unloaded"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -2261,17 +2257,13 @@ type CommandRunner_Test3() =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "unload" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
-        let mutable flg1 = false
-        let mutable flg2 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
             Assert.Same( tgn, argnode )
-            flg1 <- true
             Some tdn
         )
         ss.p_GetAncestorTargetGroup <- ( fun argnode ->
             Assert.Same( tgn, argnode )
-            flg2 <- true
             Some tgn
         )
         cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [] )
@@ -2279,8 +2271,6 @@ type CommandRunner_Test3() =
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
         Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
-        Assert.True( flg1 )
-        Assert.True( flg2 )
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2303,38 +2293,87 @@ type CommandRunner_Test3() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
+    member _.Unload_005 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "unload" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn =
+            CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+            |> _.SetModified()
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tgn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "CMDMSG_CONFIG_MODIFIED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Unload_006 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "unload" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [] )
+        cc.p_GetActiveTargetGroups <- ( fun _ -> Task.FromResult [] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tgn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_GROUP_UNLOADED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Unload_007 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "unload" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID=tgn.TargetGroupID; Name=""; } ] )
+        cc.p_GetActiveTargetGroups <- ( fun _ -> Task.FromResult [ { ID=tgn.TargetGroupID; Name=""; } ] )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tgn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_GROUP_ACTIVATED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
     member _.Activate_001 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "activate" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
-        let mutable flg1 = false
-        let mutable flg2 = false
         let mutable flg3 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
             Assert.Same( tgn, argnode )
-            flg1 <- true
             Some tdn
         )
         ss.p_GetAncestorTargetGroup <- ( fun argnode ->
             Assert.Same( tgn, argnode )
-            flg2 <- true
             Some tgn
         )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID=tgn.TargetGroupID; Name=""; } ] )
+        cc.p_GetActiveTargetGroups <- ( fun _ -> Task.FromResult [] )
         cc.p_ActivateTargetGroup <- ( fun argtdid argtgid ->
             flg3 <- true
             Assert.StrictEqual( argtdid, tdn.TargetDeviceID )
             Assert.StrictEqual( argtgid, tgn.TargetGroupID )
             Task.FromResult ()
         )
-        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
         ss.p_GetNode <- ( fun _ -> tgn )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
         Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
-        Assert.True( flg1 )
-        Assert.True( flg2 )
         Assert.True( flg3 )
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "Activated"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -2398,40 +2437,90 @@ type CommandRunner_Test3() =
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
+    [<Fact>]
+    member _.Activate_005 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "activate" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn =
+            CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+            |> _.SetModified()
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tgn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "CMDMSG_CONFIG_MODIFIED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Activate_006 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "activate" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [] )
+        cc.p_GetActiveTargetGroups <- ( fun _ -> Task.FromResult [] )
+        ss.p_GetNode <- ( fun _ -> tgn )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tgn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_GROUP_UNLOADED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Activate_007 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "activate" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID=tgn.TargetGroupID; Name=""; } ] )
+        cc.p_GetActiveTargetGroups <- ( fun _ -> Task.FromResult [ { ID=tgn.TargetGroupID; Name=""; } ] )
+        ss.p_GetNode <- ( fun _ -> tgn )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tgn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_GROUP_ACTIVATED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
     member _.Inactivate_001 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "inactivate" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
-        let mutable flg1 = false
-        let mutable flg2 = false
         let mutable flg3 = false
 
         ss.p_GetAncestorTargetDevice <- ( fun argnode ->
             Assert.Same( tgn, argnode )
-            flg1 <- true
             Some tdn
         )
         ss.p_GetAncestorTargetGroup <- ( fun argnode ->
             Assert.Same( tgn, argnode )
-            flg2 <- true
             Some tgn
         )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID=tgn.TargetGroupID; Name=""; } ] )
+        cc.p_GetActiveTargetGroups <- ( fun _ -> Task.FromResult [ { ID=tgn.TargetGroupID; Name=""; } ] )
         cc.p_InactivateTargetGroup <- ( fun argtdid argtgid ->
             flg3 <- true
             Assert.StrictEqual( argtdid, tdn.TargetDeviceID )
             Assert.StrictEqual( argtgid, tgn.TargetGroupID )
             Task.FromResult ()
         )
-        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
         ss.p_GetNode <- ( fun _ -> tgn )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
         Assert.True( r )
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
-        Assert.True( flg1 )
-        Assert.True( flg2 )
         Assert.True( flg3 )
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "Inactivated"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
@@ -2495,6 +2584,62 @@ type CommandRunner_Test3() =
         Assert.True(( stat = Some ( ss, cc, tgn ) ))
         let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_DEVICE_NOT_RUNNING"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Inactivate_005 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "inactivate" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn =
+            CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+            |> _.SetModified()
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tgn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "CMDMSG_CONFIG_MODIFIED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Inactivate_006 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "inactivate" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [] )
+        cc.p_GetActiveTargetGroups <- ( fun _ -> Task.FromResult [] )
+        ss.p_GetNode <- ( fun _ -> tgn )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tgn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_GROUP_UNLOADED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Inactivate_007 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "inactivate" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
+
+        ss.p_GetAncestorTargetDevice <- ( fun _ -> Some tdn )
+        ss.p_GetAncestorTargetGroup <- ( fun _ -> Some tgn )
+        cc.p_GetTargetDeviceProcs <- ( fun _ -> Task.FromResult [ tdn.TargetDeviceID ] )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID=tgn.TargetGroupID; Name=""; } ] )
+        cc.p_GetActiveTargetGroups <- ( fun _ -> Task.FromResult [] )
+        ss.p_GetNode <- ( fun _ -> tgn )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tgn ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, tgn ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "TG" "ERRMSG_TARGET_GROUP_INACTIVATED"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
 
     [<Fact>]
     member _.Create_Target_001 () =

@@ -1294,6 +1294,7 @@ type CommandRunner_Test1() =
                 Assert.Same( cc, argcc )
             }
         )
+        ss.p_GetNode <- ( fun _ -> tnode )
 
         let r, stat = CallCommandLoop cr ( Some ( ss, cc, tnode ) )
         Assert.True(( r ))
@@ -1843,6 +1844,8 @@ type CommandRunner_Test1() =
             Assert.Same( cn, argcn )
             Some tgnode
         )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID=tgnode.TargetGroupID; Name=""; } ] )
+        cc.p_GetActiveTargetGroups <- ( fun _ -> Task.FromResult [] )
         cc.p_UnloadTargetGroup <- ( fun tdid tgid ->
             flg3 <- true
             Assert.StrictEqual( tdnode.TargetDeviceID, tdid )
@@ -1895,6 +1898,8 @@ type CommandRunner_Test1() =
             Assert.Same( cn, argcn )
             Some tgnode
         )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID=tgnode.TargetGroupID; Name=""; } ] )
+        cc.p_GetActiveTargetGroups <- ( fun _ -> Task.FromResult [] )
         cc.p_ActivateTargetGroup <- ( fun tdid tgid ->
             flg3 <- true
             Assert.StrictEqual( tdnode.TargetDeviceID, tdid )
@@ -1947,6 +1952,8 @@ type CommandRunner_Test1() =
             Assert.Same( cn, argcn )
             Some tgnode
         )
+        cc.p_GetLoadedTargetGroups <- ( fun _ -> Task.FromResult [ { ID=tgnode.TargetGroupID; Name=""; } ] )
+        cc.p_GetActiveTargetGroups <- ( fun _ -> Task.FromResult [ { ID=tgnode.TargetGroupID; Name=""; } ] )
         cc.p_InactivateTargetGroup <- ( fun tdid tgid ->
             flg3 <- true
             Assert.StrictEqual( tdnode.TargetDeviceID, tdid )
