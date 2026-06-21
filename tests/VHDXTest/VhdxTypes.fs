@@ -18,27 +18,27 @@ type FileSignature = {
 /// VHDX Header
 type VhdxHeader = {
     /// Signature "head"
-    Signature: uint32
+    Signature : uint32
     /// CRC-32C Checksum
-    Checksum: uint32
+    Checksum : uint32
     /// Sequence number
-    SequenceNumber: uint64
+    SequenceNumber : uint64
     /// File write GUID
-    FileWriteGuid: Guid
+    FileWriteGuid : Guid
     /// Data write GUID
-    DataWriteGuid: Guid
+    DataWriteGuid : Guid
     /// Log GUID
-    LogGuid: Guid
+    LogGuid : Guid
     /// Log version. Allways zero.
-    LogVersion: uint16
+    LogVersion : uint16
     /// VHDX format version. Always 1.
-    Version: uint16
+    Version : uint16
     /// Log area size in bytes.
-    LogLength: uint32
+    LogLength : uint32
     /// File offset in bytes where log area to be written.
-    LogOffset: uint64
+    LogOffset : uint64
     /// File offset in bytes where this header to be written.
-    Offset: uint64
+    Offset : uint64
     /// Index of this header ( 0 or 1 )
     Index : int;
 }
@@ -84,18 +84,18 @@ type LogDescriptor =
 /// Log entry
 type LogEntry = {
     /// Signature "loge"
-    Signature: uint32;
+    Signature : uint32;
     /// Checksum
-    Checksum: uint32;
+    Checksum : uint32;
     /// Size in bytes of log entry.
     /// It must be a multiple of 4KB.
-    EntryLength: uint32;
+    EntryLength : uint32;
     /// Tail
     Tail : uint32;
     /// Sequence number
-    SequenceNumber: uint32;
+    SequenceNumber : uint32;
     /// Number of descriptors in this log entry.
-    DescriptorCount: uint32;
+    DescriptorCount : uint32;
     /// Log GUID
     LogGuid : Guid;
     /// Flushed file offset
@@ -103,9 +103,9 @@ type LogEntry = {
     /// Last file offset
     LastFileOffset : uint64;
     /// List of descriptores
-    Descriptors: LogDescriptor list;
+    Descriptors : LogDescriptor list;
     /// Data sectores（1 data sector has 4084 bytes）
-    DataSectors: byte[] list;
+    DataSectors : byte[] list;
 }
 
 // ============================================================================
@@ -114,25 +114,25 @@ type LogEntry = {
 /// Region table entry
 type RegionEntry = {
     /// GUID representing the object type
-    Guid: Guid
+    Guid : Guid
     /// The offset in bytes within the file where the object was written.
-    FileOffset: uint64
+    FileOffset : uint64
     /// Number of bytes of the region.
-    Length: uint32
+    Length : uint32
     /// Required or not.
-    Required: bool
+    Required : bool
 }
 
 /// Region table
 type RegionTable = {
     /// Signature "regi"
-    Signature: uint32
+    Signature : uint32
     /// CRC-32C Checksum
-    Checksum: uint32
+    Checksum : uint32
     /// Entry count
-    EntryCount: uint32
+    EntryCount : uint32
     /// List of entries
-    Entries: RegionEntry list
+    Entries : RegionEntry list
 }
 
 // ============================================================================
@@ -141,20 +141,20 @@ type RegionTable = {
 /// Metadata table entry
 type MetadataTableEntry = {
     /// Metadata item ID.
-    ItemId: Guid
+    ItemId : Guid
     /// Offset within the metadata area. In bytes.
     /// Relative position from the beginning of the metadata area.
-    Offset: uint32
+    Offset : uint32
     /// Bytes count of metadata item.
-    Length: uint32
+    Length : uint32
     /// A-IsUser flag.
-    IsUser: bool
+    IsUser : bool
     /// B-IsVirtualDisk flag.
-    IsVirtualDisk: bool
+    IsVirtualDisk : bool
     /// C-IsRequired flag.
-    IsRequired: bool
+    IsRequired : bool
     /// Contains of metadata.
-    Data: byte[]
+    Data : byte[]
 }
 
 /// Virtual disk information.
@@ -166,13 +166,13 @@ type VirtualDiskInfo = {
     /// Does this file contain a parent VHDX file?
     HasParent : bool;
     /// Virtual disk size.(In bytes, Maxmum 64TB)
-    VirtualDiskSize: uint64;
+    VirtualDiskSize : uint64;
     /// Virtual disk ID
-    VirtualDiskId: Guid;
+    VirtualDiskId : Guid;
     /// Logical sector size(In bytes, 512 or 4096)
-    LogicalSectorSize: uint32;
+    LogicalSectorSize : uint32;
     /// Physical sector size(In bytes, 512 or 4096)
-    PhysicalSectorSize: uint32;
+    PhysicalSectorSize : uint32;
     /// Parent locator. Maxmum 65,535.
     ParentLocator : Map<string,string>;
 }

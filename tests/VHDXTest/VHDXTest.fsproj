@@ -9,11 +9,13 @@
     <Compile Include="GlbFunc.fs" />
     <Compile Include="VhdxTypes.fs" />
     <Compile Include="VhdxReader.fs" />
+    <Compile Include="VhdxHandler.fs" />
     <Compile Include="VhdxCorrupter.fs" />
     <Compile Include="VhdxToRaw.fs" />
     <Compile Include="VhdxXml.fs" />
-    <Compile Include="VhdxCreate.fs" />
-    <Compile Include="VhdxCheck.fs" />
+    <Compile Include="VhdxCreater.fs" />
+    <Compile Include="VhdxChecker.fs" />
+    <Compile Include="VhdxWriter.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

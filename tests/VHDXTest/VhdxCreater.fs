@@ -26,47 +26,6 @@ type VhdxCreator() =
         fs.Write( buf )
 
     /// <summary>
-    ///  Output header.
-    /// </param>
-    /// <param name="fs">
-    ///  File stream for the VHDX file.
-    /// </param>
-    /// <param name="logLength">
-    ///  Bytes length of the log area.
-    /// </param>
-    static member private WriteHeader ( fs : FileStream ) ( logLength : uint32 ) : unit =
-        let fileWriteGuid = Guid.NewGuid()
-        let dataWriteGuid = Guid.NewGuid()
-        let newSeqNum = 1UL
-        let hdrBuf1 : byte[] = Array.zeroCreate 4096
-
-        GlbFunc.WriteUInt32BE hdrBuf1 0u 0x68656164u    // Signature
-        GlbFunc.WriteUInt32LE hdrBuf1 4u 0u             // Checksum
-        GlbFunc.WriteUInt64LE hdrBuf1 8u 1UL            // Sequence number
-        GlbFunc.WriteGuid hdrBuf1 16u fileWriteGuid     // File Write GUID
-        GlbFunc.WriteGuid hdrBuf1 32u dataWriteGuid     // Data Write GUID
-        GlbFunc.WriteGuid hdrBuf1 48u ( Guid() )        // Log GUID
-        GlbFunc.WriteUInt16LE hdrBuf1 64u 0us           // Log version(Always 0)
-        GlbFunc.WriteUInt16LE hdrBuf1 66u 1us           // VHDX Format Version(Always 1)
-        GlbFunc.WriteUInt32LE hdrBuf1 68u logLength     // Log area length
-        GlbFunc.WriteUInt64LE hdrBuf1 72u 1048576UL     // Offset within the file for the area where the log is recorded.
-        let checkSum = Crc32C.Compute hdrBuf1           // Update checksum
-        GlbFunc.WriteUInt32LE hdrBuf1 4u checkSum
-
-        fs.Seek( 0x10000L, SeekOrigin.Begin ) |> ignore
-        fs.Write( hdrBuf1 )
-        fs.Flush()
-
-        GlbFunc.WriteUInt32LE hdrBuf1 4u 0u             // Checksum
-        GlbFunc.WriteUInt64LE hdrBuf1 8u 2UL            // Sequence number
-        let checkSum2 = Crc32C.Compute hdrBuf1          // Update checksum
-        GlbFunc.WriteUInt32LE hdrBuf1 4u checkSum2
-
-        fs.Seek( 0x20000L, SeekOrigin.Begin ) |> ignore
-        fs.Write( hdrBuf1 )
-        fs.Flush()
-
-    /// <summary>
     ///  Output region table.
     /// </summary>
     /// <param name="fs">
@@ -553,7 +512,21 @@ type VhdxCreator() =
         VhdxCreator.WriteFileTypeIdentifier fs
 
         // Header
-        VhdxCreator.WriteHeader fs logAreaSize
+        let header = {
+            Signature = 0x68656164u;
+            Checksum = 0u;              // unused
+            SequenceNumber = 1UL;
+            FileWriteGuid = Guid.NewGuid();
+            DataWriteGuid = Guid.NewGuid();
+            LogGuid = Guid()            // log is cleared
+            LogVersion = 0us;           // Always 0
+            Version = 1us;              // Always 1
+            LogLength = logAreaSize;
+            LogOffset = 1048576UL;
+            Offset = 0x10000UL;
+            Index = 0;                  // unused
+        }
+        VhdxHandler.UpdateHeader fs header |> ignore
 
         // Region table
         VhdxCreator.WriteRegionTable fs metadataStartPos batRegionStartPos batRegionSize

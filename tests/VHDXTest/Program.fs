@@ -10,6 +10,7 @@ let help() =
     printfn "  VHDXTest read <vhdx-file> <xml-output>"
     printfn "  VHDXTest toraw <vhdx-file> <raw-output>"
     printfn "  VHDXTest tovhdx <raw-file> <vhdx-output> --f [--log <log-size>] [--p <payload-block-size>] [--s <sectore-size>]"
+    printfn "  VHDXTest write <vhdx-file> <raw-file> --l <lba>"
     printfn "  VHDXTest corrupt <vhdx-input> <vhdx-output> --s <sector-indices> [--x <xml-output>]"
     printfn "  VHDXTest snapshot <parent-file> <vhdx-output> [--log <log-size>] [--p <payload-block-size>]"
     printfn "  VHDXTest create <vhdx-output> --f --v <virtual-disk-size> [--log <log-size>] [--p <payload-block-size>] [--s <sectore-size>]"
@@ -19,6 +20,7 @@ let help() =
     printfn "  read     Analyze the VHDX file and output the metadata as XML."
     printfn "  toraw    Extract a disk image in RAW format from an existing VHDX file."
     printfn "  tovhdx   Create a VHDX file from an existing RAW image file."
+    printfn "  write    Write RAW data to a specified LBA position in a VHDX file."
     printfn "  corrupt  Update existing VHDX files and fill specified 4K sectors with random numbers."
     printfn "  snapshot Create a child VHDX file using an existing VHDX file as the parent."
     printfn "  create   Create a new VHDX file."
@@ -81,6 +83,7 @@ type Command =
     | Read of vhdx:string * xml:string
     | ToRaw of vhdx:string * raw:string
     | ToVHDX of raw:string * vhdx:string * opts:ToVHDXOptions
+    | Write of vhdx:string * raw:string * lba:uint64
     | Corrupt of input:string * output:string * opts:CorruptOptions
     | Snapshot of parent:string * output:string * opts:SnapshotOptions
     | Create of output:string * opts:CreateOptions
@@ -96,6 +99,8 @@ let parseArgs ( argv: string[] ) : Command =
     let rec parseOptions ( map : Map< string, string option > ) ( args : string list ) =
         match args with
         | [] -> map
+        | "--l" :: v :: tail ->
+            parseOptions ( map.Add( "l", Some v ) ) tail
         | "--s" :: v :: tail ->
             parseOptions ( map.Add( "s", Some v ) ) tail
         | "--x" :: v :: tail ->
@@ -108,6 +113,8 @@ let parseArgs ( argv: string[] ) : Command =
             parseOptions ( map.Add( "v", Some v ) ) tail
         | "--f" :: tail ->
             parseOptions ( map.Add( "f", None ) ) tail
+        | "--l" :: tail ->
+            failwith "--l value is missing."
         | "--s" :: tail ->
             failwith "--s value is missing."
         | "--x" :: tail ->
@@ -165,6 +172,26 @@ let parseArgs ( argv: string[] ) : Command =
             SectorSize = sectorSize;
         }
         Command.ToVHDX( raw, vhdx, options )
+
+    | "write" ->
+        if rest.Length < 2 then
+            failwith "The argument for the write command is missing."
+        let vhdxFile = rest.[0]
+        let rawFile = rest.[1]
+        let opts =
+            rest
+            |> List.ofArray
+            |> List.skip 2
+            |> parseOptions Map.empty
+
+        let lba =
+            match opts.TryFind "l" with
+            | Some ( Some v ) ->
+                uint64 v
+            | _ ->
+                failwith "--l <lba> must be specified."
+
+        Command.Write( vhdxFile, rawFile, lba )
 
     | "corrupt" ->
         if rest.Length < 2 then
@@ -289,6 +316,9 @@ let main ( argv : string[] ) : int =
         let sectorekSize = ( Option.defaultValue 512u opt.SectorSize )
         VhdxCreator.RawToVHDX rawfile outfile logSize payloadBlockSize opt.Fixed sectorekSize
 
+    | Write( vhdxFile, rawFile, lba ) ->
+        VhdxWriter.Write vhdxFile rawFile lba
+
     | Corrupt( infile, outfile, opt ) ->
         let metadata = VhdxReader.ReadVhdx infile
         VhdxCorrupter.Inject metadata infile outfile opt.Sectors
@@ -308,6 +338,6 @@ let main ( argv : string[] ) : int =
         VhdxCreator.Create "" outfile logSize payloadBlockSize opt.Fixed vdiskSize sectorekSize
 
     | Check( infile ) ->
-        VhdxCheck.Check infile
+        VhdxChecker.Check infile
 
     0

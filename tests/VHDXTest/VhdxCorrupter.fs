@@ -127,53 +127,6 @@ type VhdxCorrupter() =
         logEntry
 
     /// <summary>
-    ///  Update header for log update.
-    /// </summary>
-    /// <param name="fs">
-    ///  File stream for VHDX file.
-    /// </param>
-    /// <param name="metadata">
-    ///  Metadata for the VHDX file.
-    /// </param>
-    /// <param name="newLogGuid">
-    ///  Log GUID value to be used.
-    /// </param>
-    static member UpdateHeader ( fs : FileStream ) ( metadata : VhdxMetadata ) ( newLogGuid : Guid ) : unit =
-        printfn "Update header LogGuid=%s" ( newLogGuid.ToString "D" )
-
-        let newFileWriteGuid = Guid.NewGuid()
-        let newSeqNum = metadata.Header.SequenceNumber + 1UL
-
-        let hdrBuf1 : byte[] = Array.zeroCreate 4096
-        GlbFunc.WriteUInt32BE hdrBuf1 0u metadata.Header.Signature
-        GlbFunc.WriteUInt32LE hdrBuf1 4u 0u
-        GlbFunc.WriteUInt64LE hdrBuf1 8u newSeqNum
-        GlbFunc.WriteGuid hdrBuf1 16u newFileWriteGuid
-        GlbFunc.WriteGuid hdrBuf1 32u metadata.Header.DataWriteGuid
-        GlbFunc.WriteGuid hdrBuf1 48u newLogGuid
-        GlbFunc.WriteUInt16LE hdrBuf1 64u metadata.Header.LogVersion
-        GlbFunc.WriteUInt16LE hdrBuf1 66u metadata.Header.Version
-        GlbFunc.WriteUInt32LE hdrBuf1 68u metadata.Header.LogLength
-        GlbFunc.WriteUInt64LE hdrBuf1 72u metadata.Header.LogOffset
-        let checkSum = Crc32C.Compute hdrBuf1
-        GlbFunc.WriteUInt32LE hdrBuf1 4u checkSum
-
-        // Update old header
-        let oldHeaderOffset = 0x30000UL - metadata.Header.Offset
-        fs.Seek( int64 oldHeaderOffset, SeekOrigin.Begin ) |> ignore
-        fs.Write( hdrBuf1 )
-        fs.Flush()
-
-        // Update new header
-        GlbFunc.WriteUInt32LE hdrBuf1 4u 0u
-        GlbFunc.WriteUInt64LE hdrBuf1 8u ( newSeqNum + 1UL )
-        let checkSum2 = Crc32C.Compute hdrBuf1
-        GlbFunc.WriteUInt32LE hdrBuf1 4u checkSum2
-        fs.Seek( int64 metadata.Header.Offset, SeekOrigin.Begin ) |> ignore
-        fs.Write( hdrBuf1 )
-        fs.Flush()
-
-    /// <summary>
     ///  Output log entry
     /// </summary>
     /// <param name="fs">
@@ -255,7 +208,13 @@ type VhdxCorrupter() =
 
         // Update header
         let newLogGuid = Guid.NewGuid()
-        VhdxCorrupter.UpdateHeader fs metadata newLogGuid
+        let newHeader = {
+            metadata.Header with
+                SequenceNumber = metadata.Header.SequenceNumber + 1UL;
+                FileWriteGuid = Guid.NewGuid();
+                LogGuid = newLogGuid;
+        }
+        VhdxHandler.UpdateHeader fs newHeader |> ignore
 
         // Fill the log area with random numbers.
         let logSecCnt = metadata.Header.LogLength / 4096u
