@@ -1540,35 +1540,24 @@ type CommandReader_Test() =
 
     [<Fact>]
     member _.Attach_001() =
-        let ms, ws, rs = GenCommandStream "attach"
+        let ms, ws, rs = GenCommandStream "attach 0"
         let accCommands = [| CommandReader.CmdRule_attach |]
         let r = RunInputCommandMethod rs accCommands
         Assert.True(( r.Varb = CommandVarb.Attach ))
-        Assert.True(( r.NamelessArgs.Length = 0 ))
+        Assert.True(( r.NamelessArgs.Length = 1 ))
+        Assert.True(( r.NamelessArgs.[0] = EV_LUN( lun_me.fromPrim 0UL ) ))
         Assert.True(( r.NamedArgs.Count = 0 ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
-    [<Fact>]
-    member _.Attach_002() =
-        let ms, ws, rs = GenCommandStream "attach /l 0"
-        let accCommands = [| CommandReader.CmdRule_attach |]
-        let r = RunInputCommandMethod rs accCommands
-        Assert.True(( r.Varb = CommandVarb.Attach ))
-        Assert.True(( r.NamelessArgs.Length = 0 ))
-        Assert.True(( r.NamedArgs.Count = 1 ))
-        Assert.True(( r.NamedArgs.[ "/l" ] = EV_LUN( lun_me.fromPrim 0UL ) ))
-        GlbFunc.AllDispose [ ms; ws; rs; ]
-
-    static member Attach_003_data : obj[][] = [|
-        [| "attach 0"; CIE_ErrorCode.InvalidArgCount; |];
-        [| "attach /x"; CIE_ErrorCode.InvalidArgCount; |];
-        [| "attach /l"; CIE_ErrorCode.LastArgValMissing; |];
-        [| "attach /l ***"; CIE_ErrorCode.InvalidArgValue "***"; |];
+    static member Attach_002_data : obj[][] = [|
+        [| "attach"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "attach 0 1"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "attach /x"; CIE_ErrorCode.NamelessPatternMismatch; |];
     |]
 
     [<Theory>]
-    [<MemberData( "Attach_003_data" )>]
-    member _.Attach_003 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
+    [<MemberData( "Attach_002_data" )>]
+    member _.Attach_002 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_attach |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -1576,35 +1565,24 @@ type CommandReader_Test() =
 
     [<Fact>]
     member _.Detach_001() =
-        let ms, ws, rs = GenCommandStream "detach"
+        let ms, ws, rs = GenCommandStream "detach 0"
         let accCommands = [| CommandReader.CmdRule_detach |]
         let r = RunInputCommandMethod rs accCommands
         Assert.True(( r.Varb = CommandVarb.Detach ))
-        Assert.True(( r.NamelessArgs.Length = 0 ))
+        Assert.True(( r.NamelessArgs.Length = 1 ))
+        Assert.True(( r.NamelessArgs.[0] = EV_LUN( lun_me.fromPrim 0UL ) ))
         Assert.True(( r.NamedArgs.Count = 0 ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
-    [<Fact>]
-    member _.Detach_002() =
-        let ms, ws, rs = GenCommandStream "detach /l 0"
-        let accCommands = [| CommandReader.CmdRule_detach |]
-        let r = RunInputCommandMethod rs accCommands
-        Assert.True(( r.Varb = CommandVarb.Detach ))
-        Assert.True(( r.NamelessArgs.Length = 0 ))
-        Assert.True(( r.NamedArgs.Count = 1 ))
-        Assert.True(( r.NamedArgs.[ "/l" ] = EV_LUN( lun_me.fromPrim 0UL ) ))
-        GlbFunc.AllDispose [ ms; ws; rs; ]
-
-    static member Detach_003_data : obj[][] = [|
-        [| "detach 0"; CIE_ErrorCode.InvalidArgCount; |];
-        [| "detach /x"; CIE_ErrorCode.InvalidArgCount; |];
-        [| "detach /l"; CIE_ErrorCode.LastArgValMissing; |];
-        [| "detach /l ***"; CIE_ErrorCode.InvalidArgValue "***"; |];
+    static member Detach_002_data : obj[][] = [|
+        [| "detach"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "detach 0 1"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "detach /x"; CIE_ErrorCode.NamelessPatternMismatch; |];
     |]
 
     [<Theory>]
-    [<MemberData( "Detach_003_data" )>]
-    member _.Detach_003 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
+    [<MemberData( "Detach_002_data" )>]
+    member _.Detach_002 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_detach |]
         RunInputCommandMethod_CommandInputError rs accCommands msgstr
@@ -1613,28 +1591,26 @@ type CommandReader_Test() =
     [<Fact>]
     member _.Create_Media_PlainFile_002() =
         let astr = String.replicate Constants.MAX_FILENAME_STR_LENGTH "a"
-        let ms, ws, rs = GenCommandStream ( "create plainfile /n " + astr )
+        let ms, ws, rs = GenCommandStream ( "create plainfile " + astr )
         let accCommands = [| CommandReader.CmdRule_create_Media_PlainFile |]
         let r = RunInputCommandMethod rs accCommands
         Assert.True(( r.Varb = CommandVarb.Create_Media_PlainFile ))
-        Assert.True(( r.NamelessArgs.Length = 0 ))
-        Assert.True(( r.NamedArgs.Count = 1 ))
-        Assert.True(( r.NamedArgs.["/n"] = EV_String( astr ) ))
+        Assert.True(( r.NamelessArgs.Length = 1 ))
+        Assert.True(( r.NamelessArgs.[0] = EV_String( astr ) ))
+        Assert.True(( r.NamedArgs.Count = 0 ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
     member _.Create_Media_PlainFile_003() =
         let astr = String.replicate ( Constants.MAX_FILENAME_STR_LENGTH + 1 ) "a"
-        let ms, ws, rs = GenCommandStream ( "create plainfile /n " + astr )
+        let ms, ws, rs = GenCommandStream ( "create plainfile " + astr )
         let accCommands = [| CommandReader.CmdRule_create_Media_PlainFile |]
-        RunInputCommandMethod_CommandInputError rs accCommands ( CIE_ErrorCode.InvalidArgValue astr )
+        RunInputCommandMethod_CommandInputError rs accCommands ( CIE_ErrorCode.NamelessPatternMismatch )
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     static member Create_Media_PlainFile_004_data : obj[][] = [|
-        [| "create plainfile"; CIE_ErrorCode.MissingMandatoryArg; |];
-        [| "create plainfile a"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "create plainfile"; CIE_ErrorCode.InvalidArgCount; |];
         [| "create plainfile 0 1"; CIE_ErrorCode.InvalidArgCount; |];
-        [| "create plainfile /n"; CIE_ErrorCode.LastArgValMissing; |];
     |]
 
     [<Theory>]
@@ -1649,23 +1625,22 @@ type CommandReader_Test() =
     [<InlineData( "0", 0UL )>]
     [<InlineData( "18446744073709551615", 18446744073709551615UL )>]
     member _.Create_Media_MemBuffer_001 ( cmdstr : string ) ( iv : uint64 ) =
-        let ms, ws, rs = GenCommandStream ( "create membuffer /s " + cmdstr )
+        let ms, ws, rs = GenCommandStream ( "create membuffer " + cmdstr )
         let accCommands = [| CommandReader.CmdRule_create_Media_MemBuffer |]
         let r = RunInputCommandMethod rs accCommands
         Assert.True(( r.Varb = CommandVarb.Create_Media_MemBuffer ))
-        Assert.True(( r.NamelessArgs.Length = 0 ))
-        Assert.True(( r.NamedArgs.Count = 1 ))
-        Assert.True(( r.NamedArgs.["/s"] = EV_uint64( iv ) ))
+        Assert.True(( r.NamelessArgs.Length = 1 ))
+        Assert.True(( r.NamelessArgs.[0] = EV_uint64( iv ) ))
+        Assert.True(( r.NamedArgs.Count = 0 ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     static member Create_Media_MemBuffer_002_data : obj[][] = [|
-        [| "create membuffer"; CIE_ErrorCode.MissingMandatoryArg; |];
-        [| "create membuffer a"; CIE_ErrorCode.InvalidArgCount; |];
-        [| "create membuffer 0 1"; CIE_ErrorCode.InvalidArgCount; |];
-        [| "create membuffer /s"; CIE_ErrorCode.LastArgValMissing; |];
-        [| "create membuffer /s ***"; CIE_ErrorCode.InvalidArgValue "***"; |];
-        [| "create membuffer /s -1"; CIE_ErrorCode.InvalidArgValue "-1" |];
-        [| "create membuffer /s 18446744073709551616"; CIE_ErrorCode.InvalidArgValue "18446744073709551616" |];
+        [| "create membuffer"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "create membuffer a"; CIE_ErrorCode.NamelessPatternMismatch; |];
+        [| "create membuffer 1 2"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "create membuffer -1"; CIE_ErrorCode.NamelessPatternMismatch |];
+        [| "create membuffer 18446744073709551616"; CIE_ErrorCode.NamelessPatternMismatch |];
+        [| "create membuffer /s"; CIE_ErrorCode.NamelessPatternMismatch |];
     |]
 
     [<Theory>]
@@ -2133,42 +2108,38 @@ type CommandReader_Test() =
 
     [<Fact>]
     member _.TaskRelease_001() =
-        let ms, ws, rs = GenCommandStream "task resume /t 0 /i 0"
+        let ms, ws, rs = GenCommandStream "task resume 0 0"
         let accCommands = [| CommandReader.CmdRule_task_resume |]
         let r = RunInputCommandMethod rs accCommands
         Assert.True(( r.Varb = CommandVarb.Task_Resume ))
-        Assert.True(( r.NamelessArgs.Length = 0 ))
-        Assert.True(( r.NamedArgs.Count = 2 ))
-        Assert.True(( r.NamedArgs.["/t"] = EV_uint32( 0u ) ))
-        Assert.True(( r.NamedArgs.["/i"] = EV_uint32( 0u ) ))
+        Assert.True(( r.NamelessArgs.Length = 2 ))
+        Assert.True(( r.NamelessArgs.[0] = EV_uint32( 0u ) ))
+        Assert.True(( r.NamelessArgs.[1] = EV_uint32( 0u ) ))
+        Assert.True(( r.NamedArgs.Count = 0 ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
     member _.TaskRelease_002() =
-        let ms, ws, rs = GenCommandStream "task resume /t 65535 /i 4294967295"
+        let ms, ws, rs = GenCommandStream "task resume 65535 4294967295"
         let accCommands = [| CommandReader.CmdRule_task_resume |]
         let r = RunInputCommandMethod rs accCommands
         Assert.True(( r.Varb = CommandVarb.Task_Resume ))
-        Assert.True(( r.NamelessArgs.Length = 0 ))
-        Assert.True(( r.NamedArgs.Count = 2 ))
-        Assert.True(( r.NamedArgs.["/t"] = EV_uint32( 65535u ) ))
-        Assert.True(( r.NamedArgs.["/i"] = EV_uint32( 4294967295u ) ))
+        Assert.True(( r.NamelessArgs.Length = 2 ))
+        Assert.True(( r.NamelessArgs.[0] = EV_uint32( 65535u ) ))
+        Assert.True(( r.NamelessArgs.[1] = EV_uint32( 4294967295u ) ))
+        Assert.True(( r.NamedArgs.Count = 0 ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     static member TaskResume_004_data : obj[][] = [|
-        [| "task resume"; CIE_ErrorCode.MissingMandatoryArg; |];
-        [| "task resume 1 2"; CIE_ErrorCode.InvalidArgCount; |];
-        [| "task resume /f"; CIE_ErrorCode.InvalidArgCount; |];
-        [| "task resume /t 0 /i"; CIE_ErrorCode.LastArgValMissing; |];
-        [| "task resume /i 0 /t"; CIE_ErrorCode.LastArgValMissing; |];
-        [| "task resume /t 0"; CIE_ErrorCode.MissingMandatoryArg; |];
-        [| "task resume /i 0"; CIE_ErrorCode.MissingMandatoryArg; |];
-        [| "task resume /t 0 /i -1"; CIE_ErrorCode.InvalidArgValue "-1"; |];
-        [| "task resume /t 0 /i 4294967296"; CIE_ErrorCode.InvalidArgValue "4294967296"; |];
-        [| "task resume /t -1 /i 0"; CIE_ErrorCode.InvalidArgValue "-1"; |];
-        [| "task resume /t 65536 /i 0"; CIE_ErrorCode.InvalidArgValue "65536"; |];
-        [| "task resume /t 0 /i a"; CIE_ErrorCode.InvalidArgValue "a"; |];
-        [| "task resume /t a /i 0"; CIE_ErrorCode.InvalidArgValue "a"; |];
+        [| "task resume"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "task resume 1"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "task resume 1 2 3"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "task resume a 2"; CIE_ErrorCode.NamelessPatternMismatch; |];
+        [| "task resume 1 a"; CIE_ErrorCode.NamelessPatternMismatch; |];
+        [| "task resume -1 2"; CIE_ErrorCode.NamelessPatternMismatch; |];
+        [| "task resume 65536 2"; CIE_ErrorCode.NamelessPatternMismatch; |];
+        [| "task resume 1 -1"; CIE_ErrorCode.NamelessPatternMismatch; |];
+        [| "task resume 1 4294967296"; CIE_ErrorCode.NamelessPatternMismatch; |];
     |]
 
     [<Theory>]

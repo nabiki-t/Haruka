@@ -172,7 +172,7 @@ type SCSI_PersistentReserveOut5_Fixture() =
         client.RunCommand "select 0" "" "LU> "
         client.RunCommand "create debug" "Created" "LU> "
         client.RunCommand "select 0" "" "MD> "
-        client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "MD> "
+        client.RunCommand ( sprintf "create membuffer %d" m_MediaSize ) "Created" "MD> "
         client.RunCommand "select 0" "" "MD> "
         client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSize ) "" "MD> "
         client.RunCommand "unselect" "" "MD> "
@@ -182,7 +182,7 @@ type SCSI_PersistentReserveOut5_Fixture() =
         client.RunCommand "create /n iqn.2020-05.example.com:target2" "Created" "TG> "
         client.RunCommand "select 1" "" "T > "
         client.RunCommand "set ID 2" "" "T > "
-        client.RunCommand "attach /l 1" "Attach LU" "T > "
+        client.RunCommand "attach 1" "Attach LU" "T > "
         client.RunCommand "select 0" "" "LU> "
         client.RunCommand "select 0" "" "MD> "
 
@@ -431,7 +431,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_read1 ) "Task(" "MD> "
             let! res_read1 = r1.WaitSCSIResponse itt_read1
             Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -514,7 +514,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_read1 ) "Task(" "MD> "
             let! res_read1 = r1.WaitSCSIResponse itt_read1
             Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -577,7 +577,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_read1 ) "Task(" "MD> "
             let! res_read1 = r1.WaitSCSIResponse itt_read1
             Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -638,7 +638,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_read1 ) "Task(" "MD> "
             let! res_read1 = r1.WaitSCSIResponse itt_read1
             Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -710,7 +710,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_read1 ) "Task(" "MD> "
             let! res_read1 = r1.WaitSCSIResponse itt_read1
             Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -790,7 +790,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_read1 ) "Task(" "MD> "
             let! res_read1 = r1.WaitSCSIResponse itt_read1
             Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -859,7 +859,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_read1 ) "Task(" "MD> "
             let! res_read1 = r1.WaitSCSIResponse itt_read1
             Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -928,7 +928,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_read1 ) "Task(" "MD> "
             let! res_read1 = r1.WaitSCSIResponse itt_read1
             Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -999,7 +999,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_read1 ) "Task(" "MD> "
             let! res_read1 = r1.WaitSCSIResponse itt_read1
             Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -1062,7 +1062,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_read1 ) "Task(" "MD> "
             let! res_read1 = r1.WaitSCSIResponse itt_read1
             Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -1127,7 +1127,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_read1 ) "Task(" "MD> "
             let! res_read1 = r1.WaitSCSIResponse itt_read1
             Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -1190,7 +1190,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_read1 ) "Task(" "MD> "
             let! res_read1 = r1.WaitSCSIResponse itt_read1
             Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -1251,7 +1251,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_read1 ) "Task(" "MD> "
             let! res_read1 = r1.WaitSCSIResponse itt_read1
             Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -1317,7 +1317,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_read1 ) "Task(" "MD> "
             let! res_read1 = r1.WaitSCSIResponse itt_read1
             Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -1389,7 +1389,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_read1 ) "Task(" "MD> "
             let! res_read1 = r1.WaitSCSIResponse itt_read1
             Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -1455,7 +1455,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_read1 ) "Task(" "MD> "
             let! res_read1 = r1.WaitSCSIResponse itt_read1
             Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -1518,7 +1518,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_read1 ) "Task(" "MD> "
             let! res_read1 = r1.WaitSCSIResponse itt_read1
             Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -1581,7 +1581,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_read1 ) "Task(" "MD> "
             let! res_read1 = r1.WaitSCSIResponse itt_read1
             Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -1646,7 +1646,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_read1 ) "Task(" "MD> "
             let! res_read1 = r1.WaitSCSIResponse itt_read1
             Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -1711,7 +1711,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_read1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_read1 ) "Task(" "MD> "
             let! res_read1 = r1.WaitSCSIResponse itt_read1
             Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 

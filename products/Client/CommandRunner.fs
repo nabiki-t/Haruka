@@ -3061,29 +3061,24 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             let tnode = cn :?> ConfNode_Target
             let tgnode = ss.GetAncestorTargetGroup tnode |> Option.get
             let lunodes = tgnode.GetAccessibleLUNodes()
-
-            match cmd.NamedLUN "/l" with
+            let lun = cmd.NamelessLUN 0 |> Option.get
+            match lunodes |> Seq.tryFind ( _.LUN >> (=) lun ) with
             | None ->
-                this.Output 0 ( m_Messages.GetMessage "CMDMSG_ADDPARAM_LUN" )
+                this.Output 0 ( m_Messages.GetMessage "CMDMSG_ADDPARAM_MISSING_LUN" )
                 return Some ( ss, cc, cn )
-            | Some lun ->
-                match lunodes |> Seq.tryFind ( _.LUN >> (=) lun ) with
-                | None ->
-                    this.Output 0 ( m_Messages.GetMessage "CMDMSG_ADDPARAM_MISSING_LUN" )
+            | Some x ->
+                let childCount = 
+                    ( tnode :> IConfigureNode ).GetChildNodes<IConfigureNode>()
+                    |> List.length
+                if childCount >= int ClientConst.MAX_CHILD_NODE_COUNT then
+                    m_Messages.GetMessage( "CMDMSG_TOO_MANY_CHILD" )
+                    |> this.Output 0
                     return Some ( ss, cc, cn )
-                | Some x ->
-                    let childCount = 
-                        ( tnode :> IConfigureNode ).GetChildNodes<IConfigureNode>()
-                        |> List.length
-                    if childCount >= int ClientConst.MAX_CHILD_NODE_COUNT then
-                        m_Messages.GetMessage( "CMDMSG_TOO_MANY_CHILD" )
-                        |> this.Output 0
-                        return Some ( ss, cc, cn )
-                    else
-                        do! ss.CheckTargetGroupUnloaded cc cn
-                        ss.AddTargetLURelation tnode x
-                        this.Output 0 ( sprintf "Attach LU : %s" ( tnode :> IConfigureNode ).ShortDescriptString )
-                        return Some ( ss, cc, ss.GetNode cn.NodeID )
+                else
+                    do! ss.CheckTargetGroupUnloaded cc cn
+                    ss.AddTargetLURelation tnode x
+                    this.Output 0 ( sprintf "Attach LU : %s" ( tnode :> IConfigureNode ).ShortDescriptString )
+                    return Some ( ss, cc, ss.GetNode cn.NodeID )
         }
 
     /// <summary>
@@ -3108,21 +3103,16 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
         task {
             let tnode = cn :?> ConfNode_Target
             let lunodes = ( tnode :> IConfigureNode ).GetChildNodes<ILUNode>()
-
-            match cmd.NamedLUN "/l" with
+            let lun = cmd.NamelessLUN 0 |> Option.get
+            match lunodes |> Seq.tryFind ( _.LUN >> (=) lun ) with
             | None ->
-                this.Output 0 ( m_Messages.GetMessage "CMDMSG_ADDPARAM_LUN" )
+                this.Output 0 ( m_Messages.GetMessage "CMDMSG_ADDPARAM_MISSING_LUN" )
                 return Some ( ss, cc, cn )
-            | Some lun ->
-                match lunodes |> Seq.tryFind ( _.LUN >> (=) lun ) with
-                | None ->
-                    this.Output 0 ( m_Messages.GetMessage "CMDMSG_ADDPARAM_MISSING_LUN" )
-                    return Some ( ss, cc, cn )
-                | Some x ->
-                    do! ss.CheckTargetGroupUnloaded cc cn
-                    ss.DeleteTargetLURelation tnode x
-                    this.Output 0 ( sprintf "Detach LU : %s" ( tnode :> IConfigureNode ).ShortDescriptString )
-                    return Some ( ss, cc, ss.GetNode cn.NodeID )
+            | Some x ->
+                do! ss.CheckTargetGroupUnloaded cc cn
+                ss.DeleteTargetLURelation tnode x
+                this.Output 0 ( sprintf "Detach LU : %s" ( tnode :> IConfigureNode ).ShortDescriptString )
+                return Some ( ss, cc, ss.GetNode cn.NodeID )
         }
 
     /// <summary>
@@ -3153,7 +3143,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 |> ConfNode_PlainFileMedia.GenNewID
 
             // get file name
-            let fname = cmd.DefaultNamedString "/n" ""
+            let fname = cmd.DefaultNamelessString 0 ""
 
             // check child node count
             let childCount =  cn.GetChildNodes<IConfigureNode>() |> List.length
@@ -3204,7 +3194,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 |> ConfNode_MemBufferMedia.GenNewID
 
             // get memory buffer size
-            let bcnt = cmd.DefaultNamedUInt64 "/s" 0UL
+            let bcnt = cmd.DefaultNamelessUInt64 0 0UL
 
             // check child node count
             let childCount =  cn.GetChildNodes<IConfigureNode>() |> List.length
@@ -4191,8 +4181,8 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     m_Messages.GetMessage( "ERRMSG_TARGET_GROUP_UNLOADED" )
                     |> this.Output 0
                 else
-                    let itt = cmd.DefaultNamedUInt32 "/i" 0u |> itt_me.fromPrim
-                    let tsih = cmd.DefaultNamedUInt32 "/t" 0u |> uint16 |> tsih_me.fromPrim
+                    let itt = cmd.DefaultNamelessUInt32 1 0u |> itt_me.fromPrim
+                    let tsih = cmd.DefaultNamelessUInt32 0 0u |> uint16 |> tsih_me.fromPrim
                     do! cc.DebugMedia_Resume tdid lunode.Value.LUN ( medianode :> IMediaNode ).IdentNumber tsih itt
                     this.Output 0 ( sprintf "Task( TSIH=%d, ITT=%d ) resumed." tsih itt )
             else

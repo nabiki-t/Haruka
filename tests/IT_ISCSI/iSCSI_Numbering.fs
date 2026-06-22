@@ -57,7 +57,7 @@ type iSCSI_Numbering_Fixture() =
         client.RunCommand "select 0" "" "LU> "
         client.RunCommand "create debug" "Created" "LU> "
         client.RunCommand "select 0" "" "MD> "
-        client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "MD> "
+        client.RunCommand ( sprintf "create membuffer %d" m_MediaSize ) "Created" "MD> "
         client.RunCommand "select 0" "" "MD> "
         client.RunCommand ( sprintf "set BlockSize %d" m_BlockSize ) "" "MD> "
         client.RunCommand "unselect" "" "MD> "

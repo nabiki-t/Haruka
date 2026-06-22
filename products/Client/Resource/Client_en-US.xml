@@ -1018,27 +1018,27 @@ The LUN must be a value between 1 and 255. Furthermore, it cannot be duplicated 
     </Message>
     <Message>
       <Name>ATTACH</Name>
-      <Value>attach /l LUN
+      <Value>attach LUN
 
-  /l    Specify the LUN.
+  LUN    Specify the LUN.
 
 This configures the currently selected Target to be able to access the LU of the specified LUN. Note that an attached LU will have multiple parents.
 </Value>
     </Message>
     <Message>
       <Name>DETACH</Name>
-      <Value>detach /l LUN
+      <Value>detach LUN
 
-  /l    Specify the LUN.
+  LUN    Specify the LUN.
 
 Unregister LU, who is registered as a child of target. If a specified LU becomes inaccessible from all Targets, that LU is deleted.
 </Value>
     </Message>
     <Message>
       <Name>CREATE_PLAINFILE</Name>
-      <Value>create plainfile /n FileName
+      <Value>create plainfile FileName
 
-  /n    Specify the file name to access.
+  FileName    Specify the file name to access.
 
 Register an object for accessing RAW files (regular files without a specific format) as a child of the currently selected object. All settings except the file name will be created with their default values. Note that default values ​​are not always practical; therefore, settings must be changed as needed.
 
@@ -1047,9 +1047,9 @@ The path name is represented by the path name in the system where the controller
     </Message>
     <Message>
       <Name>CREATE_MEMBUFFER</Name>
-      <Value>create membuffer /s size
+      <Value>create membuffer size
 
-  /s    Specify the media size in bytes.
+  size    Specify the media size in bytes.
 
 Registers an object that uses a memory buffer as its medium as a child of the currently selected object. All settings except the media size will be created with their default values. Note that default values ​​are not always practical; therefore, settings must be changed as needed.
 </Value>
@@ -1177,7 +1177,10 @@ This command displays a list of tasks that are waiting to run due to a Trap in D
     </Message>
     <Message>
       <Name>TASK_RESUME</Name>
-      <Value>task resume
+      <Value>task resume tsih itt
+
+  tsih   Specify the session to which the task that should be resumed belongs.
+  itt    Specify the initiator task tag of the task that should be resumed.
 
 This command resumes a task that has been stopped by a Trap in Debug Media that performs a Wait action. 
 </Value>

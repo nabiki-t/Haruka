@@ -1356,7 +1356,7 @@ type CommandRunner_Test4() =
 
     [<Fact>]
     member _.TaskResume_001 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume /t 0 /i 1" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume 0 1" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
@@ -1390,7 +1390,7 @@ type CommandRunner_Test4() =
 
     [<Fact>]
     member _.TaskResume_002 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume /t 0 /i 1" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume 0 1" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
@@ -1408,7 +1408,7 @@ type CommandRunner_Test4() =
 
     [<Fact>]
     member _.TaskResume_003 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume /t 0 /i 1" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume 0 1" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let medianode = CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia
@@ -1425,7 +1425,7 @@ type CommandRunner_Test4() =
 
     [<Fact>]
     member _.TaskResume_004 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume /t 0 /i 1" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume 0 1" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
         let medianode = CommandRunner_Test1.m_DebugMediaNode :?> ConfNode_DebugMedia
@@ -1442,7 +1442,7 @@ type CommandRunner_Test4() =
 
     [<Fact>]
     member _.TaskResume_005 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume /t 0 /i 1" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume 0 1" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
@@ -1461,7 +1461,7 @@ type CommandRunner_Test4() =
 
     [<Fact>]
     member _.TaskResume_006 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume /t 0 /i 1" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume 0 1" )
         let tdn =
             CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
             |> _.SetModified()
@@ -1482,7 +1482,7 @@ type CommandRunner_Test4() =
 
     [<Fact>]
     member _.TaskResume_007 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume /t 0 /i 1" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume 0 1" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
@@ -1502,7 +1502,7 @@ type CommandRunner_Test4() =
 
     [<Fact>]
     member _.TaskResume_008 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume /t 0 /i 1" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "task resume 0 1" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let tgn =
             CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup

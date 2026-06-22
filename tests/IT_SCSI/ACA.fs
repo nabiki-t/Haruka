@@ -57,7 +57,7 @@ type SCSI_ACACases_Fixture() =
         client.RunCommand "select 0" "" "LU> "
         client.RunCommand "create debug" "Created" "LU> "
         client.RunCommand "select 0" "" "MD> "
-        client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "MD> "
+        client.RunCommand ( sprintf "create membuffer %d" m_MediaSize ) "Created" "MD> "
         client.RunCommand "select 0" "" "MD> "
         client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSizse ) "" "MD> "
         client.RunCommand "unselect" "" "MD> "
@@ -65,7 +65,7 @@ type SCSI_ACACases_Fixture() =
         client.RunCommand "unselect" "" "T > "
         client.RunCommand "create /l 2" "Created" "T > "
         client.RunCommand "select 1" "" "LU> "
-        client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
+        client.RunCommand ( sprintf "create membuffer %d" m_MediaSize ) "Created" "LU> "
         client.RunCommand "select 0" "" "MD> "
         client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSizse ) "" "MD> "
         client.RunCommand "unselect" "" "LU> "
@@ -80,7 +80,7 @@ type SCSI_ACACases_Fixture() =
         client.RunCommand "select 0" "" "T > "
         client.RunCommand "create /l 3" "Created" "T > "
         client.RunCommand "select 0" "" "LU> "
-        client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
+        client.RunCommand ( sprintf "create membuffer %d" m_MediaSize ) "Created" "LU> "
         client.RunCommand "select 0" "" "MD> "
         client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSizse ) "" "MD> "
         client.RunCommand "unselect" "" "LU> "
@@ -102,7 +102,7 @@ type SCSI_ACACases_Fixture() =
         client.RunCommand "select 0" "" "T > "
         client.RunCommand "create /l 4" "Created" "T > "
         client.RunCommand "select 0" "" "LU> "
-        client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
+        client.RunCommand ( sprintf "create membuffer %d" m_MediaSize ) "Created" "LU> "
         client.RunCommand "select 0" "" "MD> "
         client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSizse ) "" "MD> "
         client.RunCommand "unselect" "" "LU> "
@@ -484,7 +484,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             // Resume write request 1, which should have failed.
             // Read requests 1 and 2 should be able to be executed once the previously submitted Head of Queue task ( write request 1 ) is completed, 
             // but because that task failed, they cannot be resumed.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_s1_w1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_s1_w1 ) "Task(" "MD> "
 
             // Check result the write request 1.
             let! res_s1_w1 = r1.WaitSCSIResponse itt_s1_w1
@@ -494,8 +494,8 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             do! r1.Send_StatusACK()
 
             // Resume write requests 3 and 4. They should complete successfully.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_s1_w3 ) "Task(" "MD> "
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r2.TSIH itt_s2_w4 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_s1_w3 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r2.TSIH itt_s2_w4 ) "Task(" "MD> "
 
             // Check result the write request 3 and 4.
             let! _ = r1.WaitSCSIResponseGoodStatus itt_s1_w3
@@ -802,7 +802,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             do! r1.Send_StatusACK()
 
             // Resume stucked task.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_w2_stuck ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_w2_stuck ) "Task(" "MD> "
             let! _ = r1.WaitSCSIResponseGoodStatus itt_w2_stuck
 
             // clear ACA
@@ -909,7 +909,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             let! itt_t2 = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 0u ) m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
 
             // Resume T1 HOQ task, and it raise ACA
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_t1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_t1 ) "Task(" "MD> "
 
             // Check result the T1.
             let! res_t1 = r1.WaitSCSIResponse itt_t1
@@ -923,7 +923,7 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             do! Task.Delay 10
             while ( ( GetStuckTasks() ).Length < 1 ) do
                 do! Task.Delay 10
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r1.TSIH itt_t3 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r1.TSIH itt_t3 ) "Task(" "MD> "
 
             let! res_t3 = r1.WaitSCSIResponse itt_t3
             Assert.True(( res_t3.Status = ScsiCmdStatCd.CHECK_CONDITION ))

@@ -2122,7 +2122,7 @@ type CommandRunner_Test1() =
     [<Fact>]
     member _.CommandLoop_attach_001 () =
         let st = new StringTable( "" )
-        let in_ms, in_ws, in_rs = GenCommandStream( "attach" )
+        let in_ms, in_ws, in_rs = GenCommandStream( "attach 9999" )
         let out_ms, out_ws = GenOutputStream()
         let cr = new CommandRunner( st, in_rs, out_ws )
         let ss = new ServerStatusStub( st )
@@ -2143,7 +2143,7 @@ type CommandRunner_Test1() =
         Assert.True(( flg1 ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        CheckPromptAndMessage out_rs "T " "CMDMSG_ADDPARAM_LUN"
+        CheckPromptAndMessage out_rs "T " "CMDMSG_ADDPARAM_MISSING_LUN"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2155,7 +2155,7 @@ type CommandRunner_Test1() =
     [<Fact>]
     member _.CommandLoop_detach_001 () =
         let st = new StringTable( "" )
-        let in_ms, in_ws, in_rs = GenCommandStream( "detach" )
+        let in_ms, in_ws, in_rs = GenCommandStream( "detach 9999" )
         let out_ms, out_ws = GenOutputStream()
         let cr = new CommandRunner( st, in_rs, out_ws )
         let ss = new ServerStatusStub( st )
@@ -2167,7 +2167,7 @@ type CommandRunner_Test1() =
         Assert.True(( stat = Some( ss, cc, tnode ) ))
 
         let out_rs = GenOutputStreamReader out_ms out_ws
-        CheckPromptAndMessage out_rs "T " "CMDMSG_ADDPARAM_LUN"
+        CheckPromptAndMessage out_rs "T " "CMDMSG_ADDPARAM_MISSING_LUN"
 
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
@@ -2180,7 +2180,7 @@ type CommandRunner_Test1() =
     [<MemberData( "m_CommandLoop_create_media_data" )>]
     member _.CommandLoop_create_media_001 ( node : obj ) ( prompt : obj ) =
         let st = new StringTable( "" )
-        let in_ms, in_ws, in_rs = GenCommandStream( "create plainfile /n a" )
+        let in_ms, in_ws, in_rs = GenCommandStream( "create plainfile a" )
         let out_ms, out_ws = GenOutputStream()
         let cr = new CommandRunner( st, in_rs, out_ws )
         let ss = new ServerStatusStub( st )
@@ -2217,7 +2217,7 @@ type CommandRunner_Test1() =
     [<MemberData( "m_CommandLoop_create_media_data" )>]
     member _.CommandLoop_create_media_002 ( node : obj ) ( prompt : obj ) =
         let st = new StringTable( "" )
-        let in_ms, in_ws, in_rs = GenCommandStream( "create membuffer /s 512" )
+        let in_ms, in_ws, in_rs = GenCommandStream( "create membuffer 512" )
         let out_ms, out_ws = GenOutputStream()
         let cr = new CommandRunner( st, in_rs, out_ws )
         let ss = new ServerStatusStub( st )
@@ -2869,7 +2869,7 @@ type CommandRunner_Test1() =
     [<MemberData( "m_CommandLoop_add_trap_data" )>]
     member _.CommandLoop_task_resume_001  ( node : obj ) ( prompt : obj ) =
         let st = new StringTable( "" )
-        let in_ms, in_ws, in_rs = GenCommandStream( "task resume /t 1 /i 2" )
+        let in_ms, in_ws, in_rs = GenCommandStream( "task resume 1 2" )
         let out_ms, out_ws = GenOutputStream()
         let cr = new CommandRunner( st, in_rs, out_ws )
         let ss = new ServerStatusStub( st )
@@ -2914,7 +2914,7 @@ type CommandRunner_Test1() =
     [<Theory>]
     [<MemberData( "m_CommandLoop_add_trap_error_data" )>]
     member _.CommandLoop_task_resume_002  ( node : obj ) ( prompt : obj ) =
-        CommandLoop_UnknownCommand "task resume /t 1 /i 2" ( node :?> IConfigureNode ) ( prompt :?> string )
+        CommandLoop_UnknownCommand "task resume 1 2" ( node :?> IConfigureNode ) ( prompt :?> string )
 
     [<Theory>]
     [<MemberData( "m_CommandLoop_exit_data" )>]     // same as test data for exit command

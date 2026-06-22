@@ -56,7 +56,7 @@ type SCSI_ModeParameter_Fixture() =
         client.RunCommand "set ID 1" "" "T > "
         client.RunCommand "create /l 1" "Created" "T > "
         client.RunCommand "select 0" "" "LU> "
-        client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
+        client.RunCommand ( sprintf "create membuffer %d" m_MediaSize ) "Created" "LU> "
         client.RunCommand "select 0" "" "MD> "
         client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSize ) "" "MD> "
         client.RunCommand "unselect" "" "LU> "

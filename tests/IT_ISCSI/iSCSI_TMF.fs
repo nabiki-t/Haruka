@@ -61,7 +61,7 @@ type iSCSI_TMF_Fixture() =
         client.RunCommand "select 0" "" "LU> "
         client.RunCommand "create debug" "Created" "LU> "
         client.RunCommand "select 0" "" "MD> "
-        client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "MD> "
+        client.RunCommand ( sprintf "create membuffer %d" m_MediaSize ) "Created" "MD> "
         client.RunCommand "select 0" "" "MD> "
         client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSizse ) "" "MD> "
         client.RunCommand "unselect" "" "MD> "
@@ -71,7 +71,7 @@ type iSCSI_TMF_Fixture() =
         client.RunCommand "select 1" "" "LU> "
         client.RunCommand "create debug" "Created" "LU> "
         client.RunCommand "select 0" "" "MD> "
-        client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "MD> "
+        client.RunCommand ( sprintf "create membuffer %d" m_MediaSize ) "Created" "MD> "
         client.RunCommand "select 0" "" "MD> "
         client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSizse ) "" "MD> "
         client.RunCommand "unselect" "" "MD> "
@@ -242,7 +242,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
     let ResumeStackedTask ( lu : int ) ( tsih : TSIH_T ) ( itt : ITT_T ) : unit =
         m_ClientProc.RunCommand ( sprintf "select %d" lu ) "" "LU> "
         m_ClientProc.RunCommand "select 0" "" "MD> "
-        m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" tsih itt ) "Task(" "MD> "
+        m_ClientProc.RunCommand ( sprintf "task resume %d %d" tsih itt ) "Task(" "MD> "
         m_ClientProc.RunCommand "unselect" "" "LU> "
         m_ClientProc.RunCommand "unselect" "" "T > "
 

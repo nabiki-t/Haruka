@@ -60,7 +60,7 @@ type SCSI_Configuration_Fixture() =
         for i = 1 to 16 do
             client.RunCommand ( sprintf "create /l %d" i ) "Created" "T > "
             client.RunCommand ( sprintf "select %d" ( i - 1 ) ) "" "LU> "
-            client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
+            client.RunCommand ( sprintf "create membuffer %d" m_MediaSize ) "Created" "LU> "
             client.RunCommand "select 0" "" "MD> "
             client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSize ) "" "MD> "
             client.RunCommand "unselect" "" "LU> "
@@ -73,7 +73,7 @@ type SCSI_Configuration_Fixture() =
         for i = 1 to 16 do
             client.RunCommand ( sprintf "create /l %d" ( i + 16 ) ) "Created" "T > "
             client.RunCommand ( sprintf "select %d" ( i - 1 ) ) "" "LU> "
-            client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
+            client.RunCommand ( sprintf "create membuffer %d" m_MediaSize ) "Created" "LU> "
             client.RunCommand "select 0" "" "MD> "
             client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSize ) "" "MD> "
             client.RunCommand "unselect" "" "LU> "
@@ -97,7 +97,7 @@ type SCSI_Configuration_Fixture() =
         for i = 1 to 16 do
             client.RunCommand ( sprintf "create /l %d" i ) "Created" "T > "
             client.RunCommand ( sprintf "select %d" ( i - 1 ) ) "" "LU> "
-            client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "LU> "
+            client.RunCommand ( sprintf "create membuffer %d" m_MediaSize ) "Created" "LU> "
             client.RunCommand "select 0" "" "MD> "
             client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSize ) "" "MD> "
             client.RunCommand "unselect" "" "LU> "
@@ -108,7 +108,7 @@ type SCSI_Configuration_Fixture() =
         client.RunCommand "create /n iqn.2020-05.example.com:target2" "Created" "TG> "
         client.RunCommand "select 1" "" "T > "
         for i = 1 to 16 do
-            client.RunCommand ( sprintf "attach /l %d" i ) "Attach LU" "T > "
+            client.RunCommand ( sprintf "attach %d" i ) "Attach LU" "T > "
         client.RunCommand "unselect" "" "TG> "
         client.RunCommand "unselect" "" "TD> "
         client.RunCommand "unselect" "" "CR> "

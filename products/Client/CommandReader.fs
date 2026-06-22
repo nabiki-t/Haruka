@@ -468,9 +468,9 @@ type CommandReader () =
     static member CmdRule_attach : AcceptableCommand< CommandVarb > = {
         Command = [| "ATTACH" |];
         Varb = CommandVarb.Attach;
-        NamedArgs = [| ( "/l", CRV_LUN ); |];
+        NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
-        NamelessArgs = Array.empty;
+        NamelessArgs = [| CRVM_LUN; |];
         HelpMsgName = "ATTACH";
     }
 
@@ -478,9 +478,9 @@ type CommandReader () =
     static member CmdRule_detach : AcceptableCommand< CommandVarb > = {
         Command = [| "DETACH" |];
         Varb = CommandVarb.Detach;
-        NamedArgs = [| ( "/l", CRV_LUN ); |];
+        NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
-        NamelessArgs = Array.empty;
+        NamelessArgs = [| CRVM_LUN; |];
         HelpMsgName = "DETACH";
     }
 
@@ -488,9 +488,9 @@ type CommandReader () =
     static member CmdRule_create_Media_PlainFile : AcceptableCommand< CommandVarb > = {
         Command = [| "CREATE"; "PLAINFILE" |];
         Varb = CommandVarb.Create_Media_PlainFile;
-        NamedArgs = [| ( "/n", CRVM_String( Constants.MAX_FILENAME_STR_LENGTH ) ); |];
+        NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
-        NamelessArgs = Array.empty;
+        NamelessArgs = [| CRVM_String( Constants.MAX_FILENAME_STR_LENGTH ) |];
         HelpMsgName = "CREATE_PLAINFILE";
     }
 
@@ -498,9 +498,9 @@ type CommandReader () =
     static member CmdRule_create_Media_MemBuffer : AcceptableCommand< CommandVarb > = {
         Command = [| "CREATE"; "MEMBUFFER" |];
         Varb = CommandVarb.Create_Media_MemBuffer;
-        NamedArgs = [| ( "/s", CRVM_uint64( 0UL, UInt64.MaxValue ) ); |];
+        NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
-        NamelessArgs = Array.empty;
+        NamelessArgs = [| CRVM_uint64( 0UL, UInt64.MaxValue ) |];
         HelpMsgName = "CREATE_MEMBUFFER";
     }
 
@@ -656,12 +656,9 @@ type CommandReader () =
     static member CmdRule_task_resume : AcceptableCommand< CommandVarb > = {
         Command = [| "TASK"; "RESUME"; |];
         Varb = CommandVarb.Task_Resume;
-        NamedArgs = [|
-            ( "/t", CRVM_uint32( 0u, uint32 UInt16.MaxValue ) );
-            ( "/i", CRVM_uint32( 0u, UInt32.MaxValue ) );
-        |];
+        NamedArgs = Array.empty;
         ValuelessArgs = Array.empty;
-        NamelessArgs = Array.empty;
+        NamelessArgs = [| CRVM_uint32( 0u, uint32 UInt16.MaxValue ); CRVM_uint32( 0u, UInt32.MaxValue ) |];
         HelpMsgName = "TASK_RESUME";
     }
 

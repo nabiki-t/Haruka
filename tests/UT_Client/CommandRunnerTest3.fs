@@ -3126,30 +3126,9 @@ type CommandRunner_Test3() =
         let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_TOO_MANY_CHILD"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
-
-    [<Fact>]
-    member _.Attach_001 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "attach" )
-        let tgn = CommandRunner_Test1.m_TargetGroupNode :?> ConfNode_TargetGroup
-        let tn = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
-        let mutable flg1 = false
-
-        ss.p_GetAncestorTargetGroup <- ( fun argnode ->
-            Assert.Same( tn, argnode )
-            flg1 <- true
-            Some tgn
-        )
-
-        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
-        Assert.True( r )
-        Assert.True(( stat = Some ( ss, cc, tn ) ))
-        Assert.True( flg1 )
-        let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_ADDPARAM_LUN"
-        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
-
     [<Fact>]
     member _.Attach_002 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "attach /l 1" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "attach 1" )
         let st = StringTable( "" )
         let cnr = new ConfNodeRelation()
         let tgn = new ConfNode_TargetGroup( st, cnr, cnr.NextID, GlbFunc.newTargetGroupID(), "", true, ModifiedStatus.NotModified )
@@ -3184,7 +3163,7 @@ type CommandRunner_Test3() =
 
     [<Fact>]
     member _.Attach_003 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "attach /l 1" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "attach 1" )
         let st = StringTable( "" )
         let cnr = new ConfNodeRelation()
         let tgn = new ConfNode_TargetGroup( st, cnr, cnr.NextID, GlbFunc.newTargetGroupID(), "", true, ModifiedStatus.NotModified )
@@ -3233,7 +3212,7 @@ type CommandRunner_Test3() =
 
     [<Fact>]
     member _.Attach_004 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "attach /l 99" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "attach 99" )
         let st = StringTable( "" )
         let cnr = new ConfNodeRelation()
         let tgn = new ConfNode_TargetGroup( st, cnr, cnr.NextID, GlbFunc.newTargetGroupID(), "", true, ModifiedStatus.NotModified )
@@ -3273,7 +3252,7 @@ type CommandRunner_Test3() =
 
     [<Fact>]
     member _.Attach_005 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "attach /l 1" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "attach 1" )
         let st = StringTable( "" )
         let cnr = new ConfNodeRelation()
         let tdn =
@@ -3345,7 +3324,7 @@ type CommandRunner_Test3() =
 
     [<Fact>]
     member _.Attach_006 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "attach /l 1" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "attach 1" )
         let st = StringTable( "" )
         let cnr = new ConfNodeRelation()
         let tdn =
@@ -3412,19 +3391,8 @@ type CommandRunner_Test3() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
-    member _.Detach_001 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "detach" )
-        let tn = CommandRunner_Test1.m_TargetNode :?> ConfNode_Target
-
-        let r, stat = CallCommandLoop cr ( Some ( ss, cc, tn ) )
-        Assert.True( r )
-        Assert.True(( stat = Some ( ss, cc, tn ) ))
-        let out_rs = CheckOutputMessage out_ms out_ws "T " "CMDMSG_ADDPARAM_LUN"
-        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
-
-    [<Fact>]
     member _.Detach_002 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "detach /l 1" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "detach 1" )
         let st = StringTable( "" )
         let cnr = new ConfNodeRelation()
         let tgn = new ConfNode_TargetGroup( st, cnr, cnr.NextID, GlbFunc.newTargetGroupID(), "", true, ModifiedStatus.NotModified )
@@ -3451,7 +3419,7 @@ type CommandRunner_Test3() =
 
     [<Fact>]
     member _.Detach_003 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "detach /l 1" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "detach 1" )
         let st = StringTable( "" )
         let cnr = new ConfNodeRelation()
         let tgn = new ConfNode_TargetGroup( st, cnr, cnr.NextID, GlbFunc.newTargetGroupID(), "", true, ModifiedStatus.NotModified )
@@ -3493,7 +3461,7 @@ type CommandRunner_Test3() =
 
     [<Fact>]
     member _.Detach_004 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "detach /l 99" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "detach 99" )
         let st = StringTable( "" )
         let cnr = new ConfNodeRelation()
         let tgn = new ConfNode_TargetGroup( st, cnr, cnr.NextID, GlbFunc.newTargetGroupID(), "", true, ModifiedStatus.NotModified )
@@ -3525,7 +3493,7 @@ type CommandRunner_Test3() =
 
     [<Fact>]
     member _.Create_Media_PlainFile_001 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "create plainfile /n aaa" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "create plainfile aaa" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
         let mutable flg1 = false
@@ -3557,7 +3525,7 @@ type CommandRunner_Test3() =
 
     [<Fact>]
     member _.Create_Media_PlainFile_002 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "create plainfile /n a" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "create plainfile a" )
         let st = StringTable( "" )
         let cnr = new ConfNodeRelation()
         let tdn =
@@ -3629,7 +3597,7 @@ type CommandRunner_Test3() =
 
     [<Fact>]
     member _.Create_Media_PlainFile_003 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "create plainfile /n a" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "create plainfile a" )
         let st = StringTable( "" )
         let cnr = new ConfNodeRelation()
 
@@ -3689,7 +3657,7 @@ type CommandRunner_Test3() =
 
     [<Fact>]
     member _.Create_Media_PlainFile_004 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "create plainfile /n a" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "create plainfile a" )
         let st = StringTable( "" )
         let cnr = new ConfNodeRelation()
 
@@ -3744,7 +3712,7 @@ type CommandRunner_Test3() =
 
     [<Fact>]
     member _.Create_Media_MemBuffer_001 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "create membuffer /s 512" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "create membuffer 512" )
         let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
         let mutable flg1 = false
@@ -3776,7 +3744,7 @@ type CommandRunner_Test3() =
 
     [<Fact>]
     member _.Create_Media_MemBuffer_002 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "create membuffer /s 512" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "create membuffer 512" )
         let st = StringTable( "" )
         let cnr = new ConfNodeRelation()
 
@@ -3836,7 +3804,7 @@ type CommandRunner_Test3() =
 
     [<Fact>]
     member _.Create_Media_MemBuffer_003 () =
-        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "create membuffer /s 512" )
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "create membuffer 512" )
         let st = StringTable( "" )
         let cnr = new ConfNodeRelation()
 

@@ -54,7 +54,7 @@ type SCSI_PersistentReserveOut1_Fixture() =
         client.RunCommand "select 0" "" "LU> "
         client.RunCommand "create debug" "Created" "LU> "
         client.RunCommand "select 0" "" "MD> "
-        client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "MD> "
+        client.RunCommand ( sprintf "create membuffer %d" m_MediaSize ) "Created" "MD> "
         client.RunCommand "select 0" "" "MD> "
         client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSize ) "" "MD> "
         client.RunCommand "unselect" "" "MD> "
@@ -64,7 +64,7 @@ type SCSI_PersistentReserveOut1_Fixture() =
         client.RunCommand "create /n iqn.2020-05.example.com:target2" "Created" "TG> "
         client.RunCommand "select 1" "" "T > "
         client.RunCommand "set ID 2" "" "T > "
-        client.RunCommand "attach /l 1" "Attach LU" "T > "
+        client.RunCommand "attach 1" "Attach LU" "T > "
         client.RunCommand "select 0" "" "LU> "
         client.RunCommand "select 0" "" "MD> "
 

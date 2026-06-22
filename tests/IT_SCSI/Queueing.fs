@@ -55,7 +55,7 @@ type SCSI_Queueing_Fixture() =
         client.RunCommand "select 0" "" "LU> "
         client.RunCommand "create debug" "Created" "LU> "
         client.RunCommand "select 0" "" "MD> "
-        client.RunCommand ( sprintf "create membuffer /s %d" m_MediaSize ) "Created" "MD> "
+        client.RunCommand ( sprintf "create membuffer %d" m_MediaSize ) "Created" "MD> "
         client.RunCommand "select 0" "" "MD> "
         client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSize ) "" "MD> "
         client.RunCommand "unselect" "" "MD> "
@@ -237,8 +237,8 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r2 ) ) tasks ))
 
             // Resume execution of a waiting task
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r2 ) "Task(" "MD> "
 
             // Receive responses of above two tasks
             let! result_r1 = r.WaitSCSIResponseGoodStatus itt_r1
@@ -289,7 +289,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r1 ) ) tasks ))
 
             // Resume execution of the task 1.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r1 ) "Task(" "MD> "
 
             // Receive response of the task 1.
             let! result_r1 = r.WaitSCSIResponseGoodStatus itt_r1
@@ -304,7 +304,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r2 ) ) tasks ))
 
             // Resume execution of the task 2.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r2 ) "Task(" "MD> "
 
             // Receive response of the task 2.
             let! result_r2 = r.WaitSCSIResponseGoodStatus itt_r2
@@ -364,7 +364,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r3 ) ) tasks ))
 
             // Resume execution of the HEAD OF QUEUE 1 task.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r1 ) "Task(" "MD> "
 
             // Receive response of the HEAD OF QUEUE 1 task.
             let! result_r1 = r.WaitSCSIResponseGoodStatus itt_r1
@@ -382,7 +382,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r3 ) ) tasks ))
 
             // Resume execution of the HEAD OF QUEUE 3 task.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r3 ) "Task(" "MD> "
 
             // Receive response of the HEAD OF QUEUE 3 task.
             let! result_r3 = r.WaitSCSIResponseGoodStatus itt_r3
@@ -400,8 +400,8 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r4 ) ) tasks ))
 
             // Resume execution of the SIMPLE 2 and 4 tasks.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r4 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r2 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r4 ) "Task(" "MD> "
 
             // Receive response of the SIMPLE task.
             let! result_r2 = r.WaitSCSIResponseGoodStatus itt_r2
@@ -463,7 +463,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r3 ) ) tasks ))
 
             // Resume execution of the HEAD OF QUEUE 3 task.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r3 ) "Task(" "MD> "
 
             // Receive response of the HEAD OF QUEUE 1 task.
             let! result_r3 = r.WaitSCSIResponseGoodStatus itt_r3
@@ -476,7 +476,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r1 ) ) tasks ))
 
             // Resume execution of the HEAD OF QUEUE 1 task.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r1 ) "Task(" "MD> "
 
             // Receive response of the HEAD OF QUEUE 1 task.
             let! result_r1 = r.WaitSCSIResponseGoodStatus itt_r1
@@ -494,8 +494,8 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r4 ) ) tasks ))
 
             // Resume execution of the SIMPLE 2 and 4 tasks.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r4 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r2 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r4 ) "Task(" "MD> "
 
             // Receive response of the SIMPLE task.
             let! result_r2 = r.WaitSCSIResponseGoodStatus itt_r2
@@ -542,7 +542,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r2 ) ) tasks ))
 
             // Resume execution of the SIMPLE task.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r1 ) "Task(" "MD> "
             let! result_r1 = r.WaitSCSIResponseGoodStatus itt_r1
             result_r1.Return()
 
@@ -553,7 +553,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r2 ) ) tasks ))
 
             // Resume execution of the SIMPLE task.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r2 ) "Task(" "MD> "
             let! result_r2 = r.WaitSCSIResponseGoodStatus itt_r2
             result_r2.Return()
 
@@ -563,7 +563,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of the ORDERED task.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r3 ) "Task(" "MD> "
             let! result_r3 = r.WaitSCSIResponseGoodStatus itt_r3
             result_r3.Return()
 
@@ -605,7 +605,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r1 ) ) tasks ))
 
             // Resume execution of the ORDERED task.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r1 ) "Task(" "MD> "
             let! result_r1 = r.WaitSCSIResponseGoodStatus itt_r1
             result_r1.Return()
 
@@ -619,10 +619,10 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r3 ) ) tasks ))
 
             // Resume execution of two SIMPLE tasks.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r2 ) "Task(" "MD> "
             let! result_r2 = r.WaitSCSIResponseGoodStatus itt_r2
             result_r2.Return()
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r3 ) "Task(" "MD> "
             let! result_r3 = r.WaitSCSIResponseGoodStatus itt_r3
             result_r3.Return()
 
@@ -681,10 +681,10 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r3 ) ) tasks ))
 
             // Resume execution of two SIMPLE tasks.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r1 ) "Task(" "MD> "
             let! result_r1 = r.WaitSCSIResponseGoodStatus itt_r1
             result_r1.Return()
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r3 ) "Task(" "MD> "
             let! result_r3 = r.WaitSCSIResponseGoodStatus itt_r3
             result_r3.Return()
 
@@ -733,7 +733,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r3 ) ) tasks ))
 
             // Resume execution of the HOQ task.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r3 ) "Task(" "MD> "
             let! result_r3 = r.WaitSCSIResponseGoodStatus itt_r3
             result_r3.Return()
 
@@ -744,7 +744,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r1 ) ) tasks ))
 
             // Resume execution of the ORDERED 1 task.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r1 ) "Task(" "MD> "
             let! result_r1 = r.WaitSCSIResponseGoodStatus itt_r1
             result_r1.Return()
 
@@ -757,7 +757,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r2 ) ) tasks ))
 
             // Resume execution of ORDERED 2 task.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r2 ) "Task(" "MD> "
             let! result_r2 = r.WaitSCSIResponseGoodStatus itt_r2
             result_r2.Return()
 
@@ -816,7 +816,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r3 ) ) tasks ))
 
             // Resume execution of the ORDERED 1 task.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r1 ) "Task(" "MD> "
             let! result_r1 = r.WaitSCSIResponseGoodStatus itt_r1
             result_r1.Return()
 
@@ -825,10 +825,10 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Wait_Order_2_task r itt_r2 itt_r3
 
             // Resume execution of HOQ and ORDERED 2 task.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r2 ) "Task(" "MD> "
             let! result_r2 = r.WaitSCSIResponseGoodStatus itt_r2
             result_r2.Return()
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r3 ) "Task(" "MD> "
             let! result_r3 = r.WaitSCSIResponseGoodStatus itt_r3
             result_r3.Return()
             
@@ -918,7 +918,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r1 ) "Task(" "MD> "
             let! result_r1 = r.WaitSCSIResponse itt_r1
             Assert.True(( result_r1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -939,7 +939,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r4 ) ) tasks ))
 
             // Resume execution of ACA task.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r4 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r4 ) "Task(" "MD> "
             let! result_r4 = r.WaitSCSIResponseGoodStatus itt_r4
             result_r4.Return()
 
@@ -957,7 +957,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r2 ) ) tasks ))
 
             // Resume execution of SIMPLE or ORDERED task.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r2 ) "Task(" "MD> "
             let! result_r2 = r.WaitSCSIResponseGoodStatus itt_r2
             result_r2.Return()
 
@@ -997,7 +997,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 do! Task.Delay 5
 
             // Resume execution of ORDERED 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r1 ) "Task(" "MD> "
             let! result_r1 = r.WaitSCSIResponse itt_r1
             Assert.True(( result_r1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -1011,7 +1011,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < 1 ) do
                 do! Task.Delay 5
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r3 ) "Task(" "MD> "
             let! result_r3 = r.WaitSCSIResponse itt_r3
             Assert.True(( result_r3.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -1024,7 +1024,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r2 ) ) tasks ))
 
             // Resume execution of SIMPLE or ORDERED task.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r2 ) "Task(" "MD> "
             let! result_r2 = r.WaitSCSIResponseGoodStatus itt_r2
             result_r2.Return()
 
@@ -1065,7 +1065,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r2 ) ) tasks ))
 
             // Resume execution of SIMPLE 1 task. ACA status is established.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r1 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r1 ) "Task(" "MD> "
             let! result_r1 = r.WaitSCSIResponse itt_r1
             Assert.True(( result_r1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
 
@@ -1081,7 +1081,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r2 ) ) tasks ))
 
             // Resume execution of SIMPLE 2 task.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r2 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r2 ) "Task(" "MD> "
             let! result_r2 = r.WaitSCSIResponseGoodStatus itt_r2
             result_r2.Return()
 
@@ -1094,7 +1094,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
             Assert.True(( Array.exists( (=) ( "READ", r.TSIH, itt_r3 ) ) tasks ))
 
             // Resume execution of the ORDERED task.
-            m_ClientProc.RunCommand ( sprintf "task resume /t %d /i %d" r.TSIH itt_r3 ) "Task(" "MD> "
+            m_ClientProc.RunCommand ( sprintf "task resume %d %d" r.TSIH itt_r3 ) "Task(" "MD> "
             let! result_r3 = r.WaitSCSIResponseGoodStatus itt_r3
             result_r3.Return()
 
