@@ -12,6 +12,7 @@
     <Compile Include="Command01.fs" />
     <Compile Include="Command02.fs" />
     <Compile Include="Command03.fs" />
+    <Compile Include="Command04.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
 

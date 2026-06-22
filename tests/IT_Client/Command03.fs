@@ -633,7 +633,7 @@ type Command03( fx : Command03_Fixture ) =
         m_Client.CheckStatus "TD_00000002" "UNLOAD(R-MOD)" "TD> "
         m_Client.RunCommand "set ID TD_00000001" "" "TD> "
 
-        // atop and delete target device 2
+        // stop and delete target device 2
         m_Client.RunCommand "unselect" "" "CR> "
         let tgidx = m_Client.GetIndexNumber "TD_00000002" "CR> "
         m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TD> "
