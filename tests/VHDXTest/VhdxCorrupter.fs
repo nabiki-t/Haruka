@@ -14,7 +14,7 @@ type VhdxCorrupter() =
     ///  Generate data descriptors for log entries
     /// </summary>
     /// <param name="offset">
-    //// The location in the file where the data to be updated is recorded.
+    /// The location in the file where the data to be updated is recorded.
     /// </param>
     /// <param name="">
     ///  Updated data. Must be 4096 bytes.
@@ -68,7 +68,7 @@ type VhdxCorrupter() =
     ///  Created bytes array of the log log entry.
     /// </returns>
     static member CreateLogEntry
-            ( data : ( uint64 * byte[] ) list )
+            ( data : struct ( uint64 * byte[] ) list )
             ( tail : uint32 )
             ( secnum : uint64 )
             ( logGuid : Guid )
@@ -106,12 +106,12 @@ type VhdxCorrupter() =
 
         // descriptors
         data
-        |> List.map ( fun ( o, d ) -> VhdxCorrupter.CreateLogEntry_DataSector o d secnum )
+        |> List.map ( fun struct ( o, d ) -> VhdxCorrupter.CreateLogEntry_DataSector o d secnum )
         |> List.iteri ( fun idx itr -> Array.blit itr 0 logEntry ( 64 + idx * 32 ) 32 )
 
         // Data sectores
         data
-        |> List.iteri ( fun idx ( _, itr ) ->
+        |> List.iteri ( fun idx struct ( _, itr ) ->
             let pos = descSecLen + uint32( idx * 4096 )
             Array.blit ( Encoding.UTF8.GetBytes "data" ) 0 logEntry ( int pos ) 4
             GlbFunc.WriteUInt32LE logEntry ( pos + 4u ) ( uint32 ( secnum >>> 32 ) )
@@ -178,9 +178,6 @@ type VhdxCorrupter() =
     ///  Update the VHDX file, writing random numbers to the specified sectors
     ///  while recording the original data as an unprocessed log.
     /// </summary>
-    /// <param name="metadata">
-    ///  Metadata for the VHDX file.
-    /// </param>
     /// <param name="inputPath">
     ///  Input file name.
     /// </param>
@@ -190,7 +187,9 @@ type VhdxCorrupter() =
     /// <param name="sectorIndices">
     ///  The index number of the 4K sector where random data should be written.
     /// </param>
-    static member Inject( metadata : VhdxMetadata ) ( inputPath : string ) ( outputPath : string ) ( sectorIndices : int64 list ) : unit =
+    static member Inject ( inputPath : string ) ( outputPath : string ) ( sectorIndices : int64 list ) : unit =
+
+        let metadata = VhdxReader.ReadVhdx inputPath
 
         printfn "========================================================"
         printfn "VHDX file inconsistent injection"
@@ -236,7 +235,7 @@ type VhdxCorrupter() =
                     |> List.map ( fun itr ->
                         let rnddata = Array.zeroCreate<byte> 4096
                         Random.Shared.NextBytes rnddata
-                        ( uint64 itr * 4096UL, rnddata )
+                        struct ( uint64 itr * 4096UL, rnddata )
                     )
         ]
 
@@ -253,7 +252,7 @@ type VhdxCorrupter() =
                 fs.ReadExactly readdata
                 fs.Seek( offset, SeekOrigin.Begin ) |> ignore
                 fs.Write rnddata
-                yield ( uint64 offset, readdata )
+                yield struct ( uint64 offset, readdata )
         ]
 
         // Determine the log writing location.

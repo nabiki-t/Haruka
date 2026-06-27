@@ -149,6 +149,9 @@ type VhdxHandler() =
                         loop ( idx + 1 )
             else
                 // Not found (this pattern shouldn't exist)
+                printfn "**** Specified LBA missing ****"
+                printfn "  LBA : %d" lba
+                printfn "  idx : %d" idx
                 raise <| Exception "Unexpected error."
         loop 0
 
@@ -266,5 +269,193 @@ type VhdxHandler() =
                 raise <| Exception( sprintf "The logical sector size of the parent (%d) does not match." i )
             if vdi0.PhysicalSectorSize <> vdix.PhysicalSectorSize then
                 raise <| Exception( sprintf "The physical sector size of the parent (%d) does not match." i )
+        
+        printfn " ReadAllMetadata success"
+        printfn " Read file count : %d" rv.Length
+        printfn "================================================================"
+
         rv
 
+    /// <summary>
+    ///  Create a file filled with random bytes.
+    /// </summary>
+    /// <param name="fname">
+    ///  Output file name.
+    ///  If specified file already exists, it will be overwitten.
+    /// </param>
+    /// <param name="fsizemb">
+    ///  File size in MB.
+    /// </param>
+    static member CreateRandomFile ( fname : string ) ( fsizemb : uint64 ) : unit =
+        use fs = File.OpenWrite fname
+        let buf = Array.zeroCreate<byte> 1048576
+
+        let rec loop ( cnt : uint64 ) =
+            if cnt < fsizemb then
+                Random.Shared.NextBytes buf
+                fs.Write buf
+                loop ( cnt + 1UL )
+            else
+                ()
+        loop 0UL
+
+        fs.Flush()
+        fs.Close()
+        fs.Dispose()
+
+    /// <summary>
+    ///  Compare the contents of two RAW files.
+    /// </summary>
+    /// <param name="fname1">
+    ///  RAW file 1.
+    /// </param>
+    /// <param name="fname2">
+    ///  RAW file 2.
+    /// </param>
+    /// <returns>
+    ///  Returns true if the contents match, or false otherwise.
+    /// </returns>
+    static member CompareRAW_RAW ( fname1 : string ) ( fname2 : string ) : bool =
+        use fs1 = File.OpenRead fname1
+        use fs2 = File.OpenRead fname2
+        if fs1.Length <> fs2.Length then
+            false
+        else
+            let buf1 = Array.zeroCreate<byte> 1048576
+            let buf2 = Array.zeroCreate<byte> 1048576
+            let rec loop ( pos : int64 ) =
+                if pos < fs1.Length then
+                    let wlen = min 1048576L ( fs1.Length - pos ) |> int
+                    fs1.ReadExactly buf1
+                    fs2.ReadExactly buf2
+                    if buf1 <> buf2 then
+                        false
+                    else
+                        loop ( pos + int64 wlen )
+                else
+                    true
+            loop 0L
+
+    /// <summary>
+    ///  Compare the contents of VHDX file and RAW file.
+    /// </summary>
+    /// <param name="fname1">
+    ///  VHDX file 1.
+    /// </param>
+    /// <param name="fname2">
+    ///  RAW file 2.
+    /// </param>
+    /// <returns>
+    ///  Returns true if the contents match, or false otherwise.
+    /// </returns>
+    static member CompareVHDX_RAW ( fname1 : string ) ( fname2 : string ) : bool =
+        let vfiles, metadatas =
+            VhdxHandler.ReadAllMetadata fname1
+            |> Array.unzip
+            |> fun ( f, m ) -> ( f |> Array.map File.OpenRead, m )
+        use fs2 = File.OpenRead fname2
+        try
+            let sectorSize = metadatas.[0].VirtualDiskInfo.LogicalSectorSize
+            let virtualDiskSize = metadatas.[0].VirtualDiskInfo.VirtualDiskSize
+            let sectorCount = virtualDiskSize / uint64 sectorSize
+            if fs2.Length <> int64 virtualDiskSize then
+                false
+            else
+                let buf1 = Array.zeroCreate<byte>( int sectorSize )
+                let buf2 = Array.zeroCreate<byte>( int sectorSize )
+
+                let rec loop ( cnt : uint64 ) =
+                    if cnt < sectorCount then
+                        fs2.ReadExactly buf2
+
+                        let struct( fileidx, offset ) =
+                            VhdxHandler.ResolvLBA cnt metadatas
+                        match offset with
+                        | ValueSome ( o ) ->
+                            vfiles.[ fileidx ].Seek( int64 o, SeekOrigin.Begin ) |> ignore
+                            vfiles.[ fileidx ].ReadExactly buf1
+                        | ValueNone ->
+                            Array.fill buf1 0 ( int sectorSize ) 0uy
+                        if buf1 <> buf2 then
+                            false
+                        else
+                            loop ( cnt + 1UL )
+                    else
+                        true
+                loop 0UL
+        finally
+            vfiles
+            |> Array.iter _.Dispose()
+           
+    /// <summary>
+    ///  Compare the contents of two VHDX files.
+    /// </summary>
+    /// <param name="fname1">
+    ///  VHDX file 1.
+    /// </param>
+    /// <param name="fname2">
+    ///  VHDX file 2.
+    /// </param>
+    /// <returns>
+    ///  Returns true if the contents match, or false otherwise.
+    /// </returns>
+    static member CompareVHDX_VHDX ( fname1 : string ) ( fname2 : string ) : bool =
+        // read metadata for fname1
+        let vfiles1, metadatas1 =
+            VhdxHandler.ReadAllMetadata fname1
+            |> Array.unzip
+            |> fun ( f, m ) -> ( f |> Array.map File.OpenRead, m )
+
+        // read metadata for fname2
+        let vfiles2, metadatas2 =
+            VhdxHandler.ReadAllMetadata fname1
+            |> Array.unzip
+            |> fun ( f, m ) -> ( f |> Array.map File.OpenRead, m )
+        try
+            let sectorSize1 = metadatas1.[0].VirtualDiskInfo.LogicalSectorSize
+            let virtualDiskSize1 = metadatas1.[0].VirtualDiskInfo.VirtualDiskSize
+            let sectorSize2 = metadatas2.[0].VirtualDiskInfo.LogicalSectorSize
+            let virtualDiskSize2 = metadatas2.[0].VirtualDiskInfo.VirtualDiskSize
+            let sectorCount = virtualDiskSize1 / uint64 sectorSize1
+
+            if sectorSize1 <> sectorSize2 || virtualDiskSize1 <> virtualDiskSize2 then
+                // sector size or disk size mismatch.
+                false
+            else
+                let buf1 = Array.zeroCreate<byte>( int sectorSize1 )
+                let buf2 = Array.zeroCreate<byte>( int sectorSize1 )
+
+                let rec loop ( cnt : uint64 ) =
+                    if cnt < sectorCount then
+
+                        // read file1
+                        let struct( fileidx1, offset1 ) = VhdxHandler.ResolvLBA cnt metadatas1
+                        match offset1 with
+                        | ValueSome ( o ) ->
+                            vfiles1.[ fileidx1 ].Seek( int64 o, SeekOrigin.Begin ) |> ignore
+                            vfiles1.[ fileidx1 ].ReadExactly buf1
+                        | ValueNone ->
+                            Array.fill buf1 0 ( int sectorSize1 ) 0uy
+
+                        // read file2
+                        let struct( fileidx2, offset2 ) = VhdxHandler.ResolvLBA cnt metadatas2
+                        match offset2 with
+                        | ValueSome ( o ) ->
+                            vfiles2.[ fileidx2 ].Seek( int64 o, SeekOrigin.Begin ) |> ignore
+                            vfiles2.[ fileidx2 ].ReadExactly buf2
+                        | ValueNone ->
+                            Array.fill buf2 0 ( int sectorSize1 ) 0uy
+
+                        if buf1 <> buf2 then
+                            false
+                        else
+                            loop ( cnt + 1UL )
+                    else
+                        true
+                loop 0UL
+
+        finally
+            vfiles1
+            |> Array.iter _.Dispose()
+            vfiles2
+            |> Array.iter _.Dispose()

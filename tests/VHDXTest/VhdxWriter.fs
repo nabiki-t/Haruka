@@ -11,13 +11,13 @@ open System.Collections.Generic
 type VhdxWriter() =
 
     /// <summary>
-    ///  Extract used regions from payload BAT entries.
+    ///  使用中領域を抽出
     /// </summary>
     /// <param name="payloads">
-    ///  Payload BAT entries.
+    ///  Payload BAT entries
     /// </param>
     /// <returns>
-    ///  Array of file offsets for allocated payload blocks, sorted in ascending order.
+    ///  Array of used range offsets
     /// </returns>
     static member getUsedRegions ( payloads : PayloadBATEntry[] ) : uint64 [] =
         payloads
@@ -31,25 +31,40 @@ type VhdxWriter() =
         )
         |> Array.sort
 
-    /// <summary>
-    ///  Merge overlapping or adjacent intervals.
+    /// <sumary>
+    ///  区間のマージ
     /// </summary>
-    /// <param name="payloadBlockSize">
-    ///  Payload block size in bytes.
-    /// </param>
     /// <param name="intervals">
-    ///  Array of starting offsets of payload blocks.
     /// </param>
-    /// <returns>
-    ///  List of merged intervals as struct tuples (start, end).
-    /// </returns>
-    static member mergeIntervals ( payloadBlockSize : uint64 ) ( intervals : uint64 [] ) : struct( uint64 * uint64 ) list =
-        intervals
-        |> Array.fold ( fun acc s ->
-            let e = s + payloadBlockSize
+    /// <param name="payloadBlockSize">
+    ///  Payload block size.
+    /// </param>
+    static member mergeIntervals ( metadata : VhdxMetadata ) ( intervals : uint64 [] ) : struct ( uint64 * uint64 ) list =
+        let payloadBlockSize = metadata.VirtualDiskInfo.PayloadBlockSize |> uint64
+        let initial =
+            [
+                // header
+                struct( 0UL, 1048575UL );
+                // log
+                struct( metadata.Header.LogOffset, metadata.Header.LogOffset + uint64 metadata.Header.LogLength - 1UL )
+                // Regions( metadata, BAT, etc. )
+                for i in metadata.RegionTables.Entries do
+                    struct( i.FileOffset, i.FileOffset + uint64 i.Length - 1UL )
+                // Sector bitmap
+                for i in metadata.BatEntries.SectorBitmap do
+                    if i.SBState = BatEntryStateSB.SectorBitmapPresent then
+                        struct( i.FileOffset, i.FileOffset + 1048575UL );
+                // payload block
+                for i in intervals do
+                        struct( i, i + 1048575UL );
+            ]
+
+        initial
+        |> List.sortBy ( fun struct( a, _ ) -> a )
+        |> List.fold ( fun acc struct( s, e ) ->
             match acc with
             | [] -> [ struct( s, e ) ]
-            | struct( ps, pe ) :: rest ->
+            | ( ps, pe ) :: rest ->
                 if s <= pe then
                     struct( ps, max pe e ) :: rest
                 else
@@ -57,51 +72,52 @@ type VhdxWriter() =
         ) []
         |> List.rev
 
-    /// <summary>
-    ///  Calculate free regions available for payload block allocation.
-    /// </summary>
-    /// <param name="payloads">
-    ///  Payload BAT entries.
-    /// </param>
-    /// <param name="payloadBlockSize">
-    ///  Payload block size in bytes.
-    /// </param>
-    /// <param name="currentFileSize">
-    ///  Current file size in bytes.
-    /// </param>
-    /// <returns>
-    ///  List of file offsets where new payload blocks can be allocated.
-    /// </returns>
+    /// 空き領域を計算
     static member BuildFreeList
-        ( payloads : PayloadBATEntry[] )
-        ( payloadBlockSize : uint64 )
+        ( metadata : VhdxMetadata )
         ( currentFileSize : uint64 )
         : uint64 list =
 
-        // Subtract used regions to find free regions
+        let payloads = metadata.BatEntries.Payloads
+        let payloadBlockSize = metadata.VirtualDiskInfo.PayloadBlockSize |> uint64
+
+        // 使用中領域を差し引いて空き領域を求める
         let freeRanges =
             payloads
-            |> VhdxWriter.getUsedRegions 
-            |> VhdxWriter.mergeIntervals payloadBlockSize
-            |> List.fold ( fun struct( prevEnd, acc ) struct( s, e ) -> 
+            |> VhdxWriter.getUsedRegions
+            |> ( fun d ->
+                printfn "--- Allocated payloads ---"
+                for i = 0 to d.Length - 1 do
+                    printfn "  %d : %d" i d.[i]
+                d
+            )
+            |> VhdxWriter.mergeIntervals metadata
+            |> ( fun d ->
+                printfn "--- Used regions ---"
+                for i = 0 to d.Length - 1 do
+                    let struct( x, y ) = d.[i]
+                    printfn "  %d : %d .. %d " i x y
+                d
+            )
+            |> List.fold ( fun struct ( prevEnd, acc ) struct ( s, e ) -> 
                 let acc =
                     if prevEnd < s then
-                        struct( prevEnd, s ) :: acc
+                        struct ( prevEnd, s ) :: acc
                     else
                         acc
-                struct( e, acc )
-            ) ( struct( 0UL, [] ) )
-            |> ( fun struct( lastEnd, acc ) ->
+                struct ( e, acc )
+            ) ( struct ( 0UL, [] ) )
+            |> ( fun struct ( lastEnd, acc ) ->
                 if lastEnd < currentFileSize then
-                    struct( lastEnd, currentFileSize ) :: acc
+                    struct ( lastEnd, currentFileSize ) :: acc
                 else
                     acc
             )
             |> List.rev
 
-        // Split into aligned payload block units
+        // アライメントと PayloadBlockSize 単位で分割
         freeRanges
-        |> List.collect ( fun struct( start, endPos ) ->
+        |> List.collect ( fun struct ( start, endPos ) ->
             let alignedStart =
                 let s = ( ( start + 1048576UL - 1UL) / 1048576UL ) * 1048576UL
                 max s start
@@ -139,7 +155,7 @@ type VhdxWriter() =
     /// <returns>
     ///  Pair of BAT updated 4K sector numbers and the file size required after allocation.
     /// </returns>
-    static member AllocatePayloadBlock ( currentFileSize : uint64 ) ( metadata : VhdxMetadata ) ( lba : uint64 ) ( cnt : uint64 ) : struct( uint64 [] * uint64 ) =
+    static member AllocatePayloadBlock ( currentFileSize : uint64 ) ( metadata : VhdxMetadata ) ( lba : uint64 ) ( cnt : uint64 ) : struct ( uint64 [] * uint64 ) =
         let hasParent = metadata.VirtualDiskInfo.HasParent
         let pbSize = uint64 metadata.VirtualDiskInfo.PayloadBlockSize
         let allocPBStat = 
@@ -149,8 +165,18 @@ type VhdxWriter() =
                 PayloadFullyPresent;
         let updated4KSecs = HashSet<uint64>()
 
+        printfn "--------------"
+        printfn "  AllocatePayloadBlock"
+        printfn "  hasParent : %b" hasParent
+        printfn "  Payload Block Size : %d" pbSize
+        printfn "  Allocated initially payload block status : %s" ( allocPBStat.ToString() )
+
         // build free list
-        let freeList = VhdxWriter.BuildFreeList metadata.BatEntries.Payloads pbSize currentFileSize
+        let freeList = VhdxWriter.BuildFreeList metadata currentFileSize
+
+        printfn "  Free area list"
+        for i in freeList do
+            printfn "    %d .. %d" i ( i + pbSize - 1UL )
 
         // allocate space and update BAT entry
         let rec loop ( wcnt : uint64 ) ( restFreeList : uint64 list ) ( gfs : uint64 ) : uint64 =
@@ -179,10 +205,16 @@ type VhdxWriter() =
                                 FileOffset = fileoffset;
                         }
 
-                    // calculate updated 4K sector index
+                    // calculate update 4A sector index
                     let fpos = metadata.BatEntries.BATRegionOffset + uint64 ( 8 * int pbidx )
                     let secidx = fpos / 4096UL
                     updated4KSecs.Add secidx |> ignore
+
+                    printfn "  Allocate payload block"
+                    printfn "    File offset : %d" fileoffset
+                    printfn "    LBA : %d" ( lba + wcnt )
+                    printfn "    Payload block index : %d" pbidx
+                    printfn "    Updated 4K sector number : %d" secidx
 
                     // To next LBA block
                     loop ( wcnt + 1UL ) nextFL nextgfs
@@ -194,7 +226,11 @@ type VhdxWriter() =
             else
                 gfs
         let requiredFileSize = loop 0UL freeList currentFileSize
-        struct( Array.ofSeq updated4KSecs, requiredFileSize )
+
+        printfn "  All payload block allocated."
+        printfn "  Required File Sizse : %d" requiredFileSize
+
+        struct ( Seq.toArray updated4KSecs, requiredFileSize )
 
     /// <summary>
     ///  Mark the sector bitmap corresponding to the area to be updated as used.
@@ -210,13 +246,18 @@ type VhdxWriter() =
     ///  The number of logical sectors in the area to be written to.
     /// </param>
     /// <returns>
-    ///  Array of pairs of 4K sector numbers and updated bitmap data segments.
+    ///  BAT updated 4K sector numbers
     /// </returns>
     /// <remarks>
     ///  The VHDX file must have a parent file.
     /// </remarks>
     static member UpdateSectorBitmap ( metadata : VhdxMetadata ) ( lba : uint64 ) ( cnt : uint64 )
         : struct( uint64 * ArraySegment<byte> ) [] =
+
+        printfn "--------------"
+        printfn "  UpdateSectorBitmap"
+        printfn "  LBA : %d" lba
+        printfn "  sector count : %d" cnt
 
         let updated4KSecs = Dictionary< uint64, ArraySegment<byte> >()
         let rec loop ( wcnt : uint64 ) =
@@ -225,12 +266,14 @@ type VhdxWriter() =
                     VhdxHandler.LBAtoSectorBitmapIndex ( lba + wcnt ) metadata
                 let sbEntry = metadata.BatEntries.SectorBitmap.[ int sbIdx ]
                 let sb = sbEntry.Bitmap
+                let sbFileOffset = sbEntry.FileOffset
                 let bytePos = bitmapIdx >>> 3
                 let bitPos = bitmapIdx &&& 7u
                 let bitValue = ( sb.[ int bytePos ] >>> ( int bitPos ) ) &&& 1uy
                 if bitValue = 0uy then
                     sb.[ int bytePos ] <- sb.[ int bytePos ] ||| ( 1uy <<< ( int bitPos ) )
                     let s = ( sbEntry.FileOffset + ( uint64 bytePos ) ) / 4096UL
+                    let o = ( sbEntry.FileOffset + ( uint64 bytePos ) ) - ( s * 4096UL ) |> int
                     updated4KSecs.TryAdd( s, ArraySegment( sb, 0, 4096 ) ) |> ignore
                 loop ( wcnt + 1UL )
             else
@@ -241,13 +284,13 @@ type VhdxWriter() =
         |> Seq.toArray
 
     /// <summary>
-    ///  Calculate the required log region size based on the number of 4K sectors.
+    ///  Calculate the required log region size based on the number of 4K sectores.
     /// </summary>
     /// <param name="entries">
-    ///  Number of 4K sectors where update information should be recorded.
+    ///  Number of 4K sectors where update information should be recorded
     /// </param>
     /// <returns>
-    ///  Required log region size in bytes.
+    ///  Required log region size.
     /// </returns>
     static member LogCapacityFrom4KSecCount ( entries : uint32 ) : uint32 =
         let headerRaw = 64u + entries * 32u
@@ -260,7 +303,7 @@ type VhdxWriter() =
     ///  based on the size of the log area.
     /// </summary>
     /// <param name="capacity">
-    ///  Log region size in bytes. It must be greater than 1MB and multiple of 1MB.
+    ///  Log region size. It msut be greater than 1MB and multiple of 1MB.
     /// </param>
     /// <returns>
     ///  The number of 4K entries that can be recorded using a single log entry.
@@ -271,11 +314,11 @@ type VhdxWriter() =
             let headerRaw = 64u + 32u * nApprox
             ( headerRaw + 4095u ) / 4096u
         let n1 = ( 4096u * k - 64u ) / 32u
-        let n2 = VhdxWriter.LogCapacityFrom4KSecCount nApprox / 4096u - k
+        let n2 = ( VhdxWriter.LogCapacityFrom4KSecCount nApprox ) / 4096u - k
         min n1 n2
 
     /// <summary>
-    ///  Write PayloadBATEntry data to the buffer.
+    ///  Write PayloadBATEntry data to the buffer
     /// </summary>
     /// <param name="buf">
     ///  Buffer where data will be written.
@@ -283,10 +326,10 @@ type VhdxWriter() =
     /// <param name="offset">
     ///  The offset in the buffer where the data will be written.
     /// </param>
-    /// <param name="e">
+    /// <param name="">
     ///  The payload BAT entry that should be written to the buffer.
     /// </param>
-    static member PayloadBlockEntryToBytes ( buf : byte[] ) ( offset : int ) ( e : PayloadBATEntry ) : unit =
+    static member PayloadBlockEntryToBytes ( buf : byte[] ) ( offset : uint32 ) ( e : PayloadBATEntry ) : unit =
         let a =
             match e.State with
             | PayloadNotPresent ->
@@ -302,10 +345,10 @@ type VhdxWriter() =
             | PayloadPartiallyPresent ->
                 7UL
         let d = e.FileOffset ||| a
-        GlbFunc.WriteUInt64LE buf ( uint32 offset ) d
+        GlbFunc.WriteUInt64LE buf offset d
 
     /// <summary>
-    ///  Write SectorBitmapBATEntry data to the buffer.
+    ///  Write SectorBitmapBATEntry data to the buffer
     /// </summary>
     /// <param name="buf">
     ///  Buffer where data will be written.
@@ -313,18 +356,18 @@ type VhdxWriter() =
     /// <param name="offset">
     ///  The offset in the buffer where the data will be written.
     /// </param>
-    /// <param name="e">
+    /// <param name="">
     ///  The sector bitmap BAT entry that should be written to the buffer.
     /// </param>
-    static member SectorBitmapEntryToBytes ( buf : byte[] ) ( offset : int ) ( e : SectorBitmapBATEntry ) : unit =
+    static member SectorBitmapEntryToBytes ( buf : byte[] ) ( offset : uint32 ) ( e : SectorBitmapBATEntry ) : unit =
         let a =
             match e.SBState with
-            | SectorBitmapNotPresent ->
+            | BatEntryStateSB.SectorBitmapNotPresent ->
                 0UL
-            | SectorBitmapPresent ->
+            | BatEntryStateSB.SectorBitmapPresent ->
                 6UL
         let d = e.FileOffset ||| a
-        GlbFunc.WriteUInt64LE buf ( uint32 offset ) d
+        GlbFunc.WriteUInt64LE buf offset d
 
     /// <summary>
     ///  Create BAT table from 4K sector number.
@@ -336,9 +379,9 @@ type VhdxWriter() =
     ///  4K sector number that was updated.
     /// </param>
     /// <returns>
-    ///  BAT entry data that will be written to the file.
+    ///  BAT entrie data that will be write to the file.
     /// </returns>
-    static member CreateBATEntryTableFrom4KSectorNumber ( bat : BatEntries ) ( secnum : uint32 ) : byte[] =
+    static member CreateBATEntryTableFrom4KSectorNumber ( bat : BatEntries ) ( secnum : uint64 ) : byte[] =
         let chunkRatio = int bat.ChunkRatio
         let buffer = Array.zeroCreate<byte> 4096
 
@@ -346,27 +389,27 @@ type VhdxWriter() =
         let count = 4096UL / 8UL
 
         // Index of the BAT entry that will be the starting position of the output
-        let sBATIdx = ( uint64 secnum - ( bat.BATRegionOffset / 4096UL ) ) * count
+        let sBATIdx = ( secnum - ( bat.BATRegionOffset / 4096UL ) ) * count
 
         // Number of BAT entries to be output
         let count2 = ( min ( sBATIdx + count ) bat.BatEntryCount ) - sBATIdx
 
         for i = 0 to int count2 - 1 do
-            let idx = int sBATIdx + i
+            let idx = int sBATIdx + i - 1
             if ( idx + 1 ) % ( chunkRatio + 1 ) = 0 then
                 let sbidx = idx / ( chunkRatio + 1 )
-                VhdxWriter.SectorBitmapEntryToBytes buffer ( i * 8 ) bat.SectorBitmap.[ sbidx ]
+                VhdxWriter.SectorBitmapEntryToBytes buffer ( uint32 i * 8u ) bat.SectorBitmap.[ sbidx ]
             else
                 let pbidx =
                     let w = idx / ( chunkRatio + 1 )
                     let w2 = w * chunkRatio
                     let w3 = idx % ( chunkRatio + 1 )
                     w2 + w3
-                VhdxWriter.PayloadBlockEntryToBytes buffer ( i * 8 ) bat.Payloads.[ pbidx ]
+                VhdxWriter.PayloadBlockEntryToBytes buffer ( uint32 i * 8u ) bat.Payloads.[ pbidx ]
         buffer
 
     /// <summary>
-    ///  Output the updated BAT entry data through log.
+    ///  Output the updated BATEntry
     /// </summary>
     /// <param name="fs">
     ///  File stream for the VHDX file.
@@ -375,7 +418,7 @@ type VhdxWriter() =
     ///  Metadata for the VHDX file.
     /// </param>
     /// <param name="sec4Ks">
-    ///  4K sector numbers representing the updated range within the BAT entry.
+    ///  4K sector number representing the updated range within the BAT entry.
     /// </param>
     /// <param name="reqFileSize">
     ///  File size required after update.
@@ -388,7 +431,7 @@ type VhdxWriter() =
         let logEntryUnit =
             VhdxWriter.Max4KSectorCountFromLogCapacity metadata.Header.LogLength
             |> int
-        let logOutputPos = uint32 ( metadata.Header.LogOffset )
+        let logOutputPos = metadata.Header.LogOffset
         let cycleCount = ( sec4Ks.Length + ( logEntryUnit - 1 ) ) / logEntryUnit
 
         printfn "====================="
@@ -413,28 +456,18 @@ type VhdxWriter() =
                 printfn " widx : %d" widx
                 printfn " currentFileSize : %d" currentFileSize
 
-                // Write log entry for each 4K sector to be updated
-                let logEntries =
-                    List.init wcnt ( fun j -> 
-                        let sequenceNumber = uint64 j + 1UL
-                        let sector4KNumber = sec4Ks.[ widx + j ] |> uint32
+                // Write log entry
+                let listSec4K_BatData =
+                    Seq.init wcnt ( fun j ->
+                        let sector4KNumber = sec4Ks.[ widx + j ]
                         let data =
                             VhdxWriter.CreateBATEntryTableFrom4KSectorNumber metadata.BatEntries sector4KNumber
-                        struct( uint64 ( int64 sector4KNumber * 4096L ), data )
+                        struct ( sector4KNumber, data )
                     )
-
-                // Build log entry using CreateLogEntry
-                let newLogEntry =
-                    VhdxCorrupter.CreateLogEntry
-                        ( List.map ( fun struct( o, d ) -> ( o, d ) ) logEntries )
-                        0u
-                        ( headerSeq + 1UL )
-                        newLogGuid
-                        currentFileSize
-                        currentFileSize
-
-                // Write the log entry to file
-                VhdxCorrupter.WriteLogEntry fs metadata logOutputPos [] newLogEntry
+                    |> Seq.toList
+                let logEntries =
+                    VhdxCorrupter.CreateLogEntry listSec4K_BatData 0u 1UL newLogGuid currentFileSize reqFileSize
+                VhdxCorrupter.WriteLogEntry fs metadata 0u [] logEntries
 
                 // Update header( Update LogGuid )
                 let hd1 = {
@@ -444,21 +477,21 @@ type VhdxWriter() =
                 }
                 let nextsn1 = VhdxHandler.UpdateHeader fs hd1
 
-                // Set file size if needed
+                // Set file size
                 if currentFileSize < reqFileSize then
                     fs.SetLength( int64 reqFileSize )
                     fs.Flush()
 
-                // Write BAT data to file at the specified 4K sector positions
-                logEntries
-                |> List.iteri ( fun i struct( offset, data ) ->
-                    let fpos = int64 offset
+                // Write metadata to file
+                listSec4K_BatData
+                |> List.iter ( fun struct ( sec4k, batData ) ->
+                    let fpos = sec4k * 4096UL |> int64
                     fs.Seek( fpos, SeekOrigin.Begin ) |> ignore
-                    fs.Write( data )
-                ) 
+                    fs.Write( batData )
+                )
                 fs.Flush()
 
-                // Invalidate the log by clearing LogGuid
+                // Update header ( Set LogGuid to zero )
                 let hd2 = {
                     metadata.Header with
                         LogGuid = Guid();
@@ -470,7 +503,7 @@ type VhdxWriter() =
         loop 0 metadata.Header.SequenceNumber
 
     /// <summary>
-    ///  Output the updated sector bitmap data through log.
+    ///  Output the updated sector bitmap data.
     /// </summary>
     /// <param name="fs">
     ///  File stream for the VHDX file.
@@ -479,7 +512,7 @@ type VhdxWriter() =
     ///  Metadata for the VHDX file.
     /// </param>
     /// <param name="sec4Ks">
-    ///  The updated sector bitmap data and the 4K sector numbers where they will be written.
+    ///  The updated sector bitmap and the 4K sector number to which the output will be located.
     /// </param>
     /// <returns>
     ///  Next header sequence number.
@@ -489,7 +522,7 @@ type VhdxWriter() =
         let logEntryUnit =
             VhdxWriter.Max4KSectorCountFromLogCapacity metadata.Header.LogLength
             |> int
-        let logOutputPos = uint32 ( metadata.Header.LogOffset )
+        let logOutputPos = metadata.Header.LogOffset
         let cycleCount = ( sec4Ks.Length + ( logEntryUnit - 1 ) ) / logEntryUnit
 
         printfn "====================="
@@ -513,29 +546,14 @@ type VhdxWriter() =
                 printfn " widx : %d" widx
                 printfn " currentFileSize : %d" currentFileSize
 
-                // Write log entry for each 4K sector to be updated
+                // Write log entry
+                let listSec4K_SBData =
+                        sec4Ks.[ widx .. widx + wcnt - 1 ]
+                        |> Array.map ( fun struct( s, d ) -> struct( s, d.ToArray() ) )
+                        |> Array.toList
                 let logEntries =
-                    List.init wcnt ( fun j -> 
-                        let sequenceNumber = uint64 j + 1UL
-                        let struct( sector4KNumber, data ) = sec4Ks.[ widx + j ]
-                        let offset = uint64 ( int64 sector4KNumber * 4096L )
-                        let dataArray = Array.zeroCreate<byte> 4096
-                        Array.blit data.Array 0 dataArray 0 data.Count
-                        struct( offset, dataArray )
-                    )
-
-                // Build log entry using CreateLogEntry
-                let newLogEntry =
-                    VhdxCorrupter.CreateLogEntry
-                        ( List.map ( fun struct( o, d ) -> ( o, d ) ) logEntries )
-                        0u
-                        ( headerSeq + 1UL )
-                        newLogGuid
-                        currentFileSize
-                        currentFileSize
-
-                // Write the log entry to file
-                VhdxCorrupter.WriteLogEntry fs metadata logOutputPos [] newLogEntry
+                    VhdxCorrupter.CreateLogEntry listSec4K_SBData 0u 1UL newLogGuid currentFileSize currentFileSize
+                VhdxCorrupter.WriteLogEntry fs metadata 0u [] logEntries
 
                 // Update header( Update LogGuid )
                 let hd1 = {
@@ -545,16 +563,16 @@ type VhdxWriter() =
                 }
                 let nextsn1 = VhdxHandler.UpdateHeader fs hd1
 
-                // Write sector bitmap data to file at the specified 4K sector positions
-                logEntries
-                |> List.iteri ( fun i struct( offset, data ) ->
-                    let fpos = int64 offset
+                // Write metadata to file
+                listSec4K_SBData
+                |> List.iter ( fun struct ( sec4k, sbData ) ->
+                    let fpos = sec4k * 4096UL |> int64
                     fs.Seek( fpos, SeekOrigin.Begin ) |> ignore
-                    fs.Write( data )
-                ) 
+                    fs.Write( sbData )
+                )
                 fs.Flush()
 
-                // Invalidate the log by clearing LogGuid
+                // Update header ( Set LogGuid to zero )
                 let hd2 = {
                     metadata.Header with
                         LogGuid = Guid();
@@ -564,54 +582,52 @@ type VhdxWriter() =
             else
                 headerSeq
         loop 0 metadata.Header.SequenceNumber
-
+   
     /// <summary>
-    ///  Write the RAW data to the allocated payload blocks.
+    ///  Write the RAW data to the allocated payload block.
     /// </summary>
     /// <param name="rawfs">
     ///  File stream for the RAW data file.
     /// </param>
     /// <param name="vhdxfs">
-    ///  File stream for the VHDX file.
-    /// </param>
-    /// <param name="metadata">
-    ///  VHDX metadata with updated BAT entries.
+    ///  File stream for the HDX file.
     /// </param>
     /// <param name="lba">
-    ///  Starting LBA position in the virtual disk.
+    ///  Location where RAW data is written.
     /// </param>
-    static member OutputRawData ( rawfs : FileStream ) ( vhdxfs : FileStream ) ( metadata : VhdxMetadata ) ( lba : uint64 ) ( rawDataSec : uint64 ) : unit =
-
-        let sectorSize = int metadata.VirtualDiskInfo.LogicalSectorSize
-        let buffer = Array.zeroCreate<byte> sectorSize
+    /// <param name="metadata">
+    ///  Metadata of VHDX file.
+    /// </param>
+    static member OutputRawData ( rawfs : FileStream ) ( vhdxfs : FileStream ) ( lba : uint64 ) ( metadata : VhdxMetadata ) =
+        let sectorSize = metadata.VirtualDiskInfo.LogicalSectorSize
+        let rawDataSec = uint64 rawfs.Length / uint64 sectorSize
+        let buffer = Array.zeroCreate< byte >( int sectorSize )
         rawfs.Seek( 0L, SeekOrigin.Begin ) |> ignore
 
-        // Write each sector from the raw file to the VHDX at position lba + i
-        let rec loop ( i : uint64 ) =
-            if i < rawDataSec then
-                let targetLba = lba + i
-                let struct( badIndex, offsetInBat ) = VhdxHandler.LBAtoPayloadBlockIndex targetLba metadata
+        let rec loop ( curlba : uint64 ) =
+            if curlba < lba + rawDataSec then
+                let struct( badIndex, offsetInBat ) = VhdxHandler.LBAtoPayloadBlockIndex curlba metadata
                 let pbStartPos = metadata.BatEntries.Payloads.[ int badIndex ].FileOffset
                 let offsetInPB = ( uint64 offsetInBat ) * ( uint64 sectorSize )
-                rawfs.ReadExactly( buffer, 0, sectorSize )
+                rawfs.ReadExactly( buffer, 0, int sectorSize )
                 vhdxfs.Seek( int64 ( pbStartPos + offsetInPB ), SeekOrigin.Begin ) |> ignore
                 vhdxfs.Write( buffer )
-                loop ( i + 1UL )
             else
                 ()
-        loop 0UL
+        loop lba
+
 
     /// <summary>
     ///  Write RAW data to VHDX file.
     /// </summary>
     /// <param name="vhdxFileName">
-    ///  VHDX file to be updated.
+    ///  VHDX file what to be updated.
     /// </param>
     /// <param name="rawFileName">
-    ///  RAW data file to be written.
+    ///  RAW data file what to be wrote.
     /// </param>
     /// <param name="lba">
-    ///  Address in virtual disk where raw data will be written.
+    ///  Address in virtual disk whete raw data to be wrote.
     /// </param>
     static member Write ( vhdxFileName : string ) ( rawFileName : string ) ( lba : uint64 ) : unit =
 
@@ -623,6 +639,7 @@ type VhdxWriter() =
         let rawDataLength = rawfs.Length |> uint64
         let rawDataSec = rawDataLength / uint64 sectorSize
 
+        printfn ""
         printfn "========================================================"
         printfn "Write raw data to VHDX file"
         printfn "VHDX file name : %s" vhdxFileName
@@ -630,9 +647,10 @@ type VhdxWriter() =
         printfn "LBA : %d" lba
         printfn "RAW data length(byte) : %d" rawDataLength
         printfn "RAW data length(sector) : %d" rawDataSec
-        printfn "VHDX sector size : %d" sectorSize
+        printfn "VHDX sector sizse : %d" sectorSize
         printfn "Virtual Disk Size(byte) : %d" vdsb
         printfn "Virtual Disk Size(sector) : %d" vdss
+        printfn "========================================================"
 
         if ( rawDataSec * uint64 sectorSize ) <> rawDataLength then
             raise <| Exception( "RAW data length must be multiple of sector size." )
@@ -643,11 +661,12 @@ type VhdxWriter() =
         if rawDataSec + lba > vdss then
             raise <| Exception( "RAW data length + LBA must be less than or equals virtual disk size." )
 
-        // Flash log entries if any exist
+        // Flash log entries
         let wSecNum =
             if metadata.LogInfo.Length > 0 then
-                printfn "Replay log."
+                printfn "=== Need to replay log. ==="
                 VhdxChecker.Check vhdxFileName
+                printfn "=== Replay log complete. ==="
                 metadata.Header.SequenceNumber + 2UL
             else
                 metadata.Header.SequenceNumber
@@ -656,35 +675,67 @@ type VhdxWriter() =
         use vhdxfs = new FileStream( vhdxFileName, FileMode.Open, FileAccess.ReadWrite, FileShare.None )
 
         // Update FileWriteGuid and DataWriteGuid
-        let hd1 = {
-            metadata.Header with
-                FileWriteGuid = Guid.NewGuid();
-                DataWriteGuid = Guid.NewGuid();
-                SequenceNumber = wSecNum + 1UL;
-        }
-        let nextsn1 = VhdxHandler.UpdateHeader vhdxfs hd1
+        printfn "=== Update FileWriteGuid and DataWriteGuid. ==="
+        let metadata2 =
+            let hd = {
+                metadata.Header with
+                    FileWriteGuid = Guid.NewGuid();
+                    DataWriteGuid = Guid.NewGuid();
+                    LogGuid = Guid();
+                    SequenceNumber = wSecNum + 1UL;
+            }
+            printfn "  FileWriteGuid : %s" ( hd.FileWriteGuid.ToString "D" )
+            printfn "  DataWriteGuid : %s" ( hd.DataWriteGuid.ToString "D" )
+            printfn "  SequenceNumber : %d" ( hd.SequenceNumber )
+            let nextsn = VhdxHandler.UpdateHeader vhdxfs hd
+            printfn "  Next sequence number : %d" nextsn
+            {
+                metadata with
+                    Header = {
+                        metadata.Header with
+                            SequenceNumber = nextsn;    // Set the next sequence number to use.
+                }
+            }
 
         // Allocate Payload block
+        printfn "=== Allocate Payload block ==="
         let struct( updated4KSecsForBAT, requiredFileSize ) =
-            VhdxWriter.AllocatePayloadBlock ( uint64 vhdxfs.Length ) metadata lba rawDataSec
+            VhdxWriter.AllocatePayloadBlock ( uint64 vhdxfs.Length ) metadata2 lba rawDataSec
 
-        // Update sector bitmap if the VHDX has a parent
+        // Update sector bitmap
         let updated4KSecsForSB =
-            if metadata.VirtualDiskInfo.HasParent then
-                VhdxWriter.UpdateSectorBitmap metadata lba rawDataSec
+            if metadata2.VirtualDiskInfo.HasParent then
+                printfn "=== Update sector bitmap ==="
+                VhdxWriter.UpdateSectorBitmap metadata2 lba rawDataSec
             else
                 Array.empty
 
-        // Output the updated BAT entry data through log
-        let nextsn2 = VhdxWriter.WriteUpdatedBAT vhdxfs metadata updated4KSecsForBAT requiredFileSize
+        // Output the updated BATEntry
+        printfn "=== Output the updated BATEntry ==="
+        let metadata3 =
+            let nextsn = VhdxWriter.WriteUpdatedBAT vhdxfs metadata2 updated4KSecsForBAT requiredFileSize
+            {
+                metadata with
+                    Header = {
+                        metadata.Header with
+                            SequenceNumber = nextsn;    // Set the next sequence number to use.
+                    }
+            }
 
-        // Output the updated sector bitmap data through log (only for differential VHDX)
-        let nextsn3 =
-            if metadata.VirtualDiskInfo.HasParent then
-                VhdxWriter.WriteUpdatedSB vhdxfs metadata updated4KSecsForSB
+        let metadata4 =
+            if updated4KSecsForSB.Length > 0 then
+                printfn "=== Output the updated sector bitmap ==="
+                let nextsn = VhdxWriter.WriteUpdatedSB vhdxfs metadata3 updated4KSecsForSB
+                {
+                    metadata with
+                        Header = {
+                            metadata.Header with
+                                SequenceNumber = nextsn;    // Set the next sequence number to use.
+                        }
+                }
             else
-                nextsn2
+                metadata3
 
-        // Output RAW data to the allocated payload blocks
-        VhdxWriter.OutputRawData rawfs vhdxfs metadata lba rawDataSec
+        // Output RAW data
+        VhdxWriter.OutputRawData rawfs vhdxfs lba metadata4
 
