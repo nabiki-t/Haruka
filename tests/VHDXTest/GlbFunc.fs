@@ -4,6 +4,224 @@ open System
 open System.IO
 open System.Buffers.Binary
 open System.Runtime.Intrinsics.X86
+open System.Runtime.CompilerServices
+
+/// Define possible block sizes
+[<Struct; IsReadOnly>]
+type Blocksize =
+    | BS_512
+    | BS_4096
+
+    /// <summary>
+    /// Get string name value corresponging to Blocksize value.
+    /// </summary>
+    static member toStringName : ( Blocksize -> string ) =
+        function
+        | Blocksize.BS_512 -> "512"
+        | Blocksize.BS_4096 -> "4096"
+
+    /// <summary>
+    /// Get Blocksize value corresponging to specified string value. If argument is unexpected string, 512 bytes is returned.
+    /// </summary>
+    static member fromStringValue : ( string -> Blocksize ) =
+        function
+        | "512" -> Blocksize.BS_512
+        | "4096" -> Blocksize.BS_4096
+        | _ -> Blocksize.BS_512
+
+    /// <summary>
+    /// Get uint16 valuee corresponging to Blocksize value.
+    /// </summary>
+    static member toUInt16 ( v : Blocksize ) : uint16 =
+        match v with
+        | Blocksize.BS_512 -> 512us
+        | Blocksize.BS_4096 -> 4096us
+
+    /// <summary>
+    /// Get uint32 valuee corresponging to Blocksize value.
+    /// </summary>
+    static member toUInt32 ( v : Blocksize ) : uint32 =
+        match v with
+        | Blocksize.BS_512 -> 512u
+        | Blocksize.BS_4096 -> 4096u
+
+    /// <summary>
+    /// Get uint32 valuee corresponging to Blocksize value.
+    /// </summary>
+    static member toUInt64 ( v : Blocksize ) : uint64 =
+        match v with
+        | Blocksize.BS_512 -> 512UL
+        | Blocksize.BS_4096 -> 4096UL
+
+    /// <summary>
+    ///  All of values.
+    /// </summary>
+    static member Values : Blocksize [] = [|
+        Blocksize.BS_512;
+        Blocksize.BS_4096;
+    |]
+
+
+/// Data type that represents block count
+[<Measure>]
+type blkcnt_me =
+
+    /// <summary>
+    ///  Convert to a primitive uint64 value.
+    /// </summary>
+    /// <param name="v">
+    ///  Block count value by blkcnt_me.
+    /// </param>
+    /// <returns>
+    ///  Converted uint64 value.
+    /// </returns>
+    static member inline toUInt64( v : uint64<blkcnt_me> ) : uint64 =
+        uint64 v
+
+    /// <summary>
+    ///  Convert a primitive uint64 value to a Block count value by blkcnt_me.
+    /// </summary>
+    /// <param name="v">
+    ///  primitive uint64 value.
+    /// </param>
+    /// <returns>
+    ///  Converted blkcnt_me value.
+    /// </returns>
+    static member inline ofUInt64( v : uint64 ) : uint64<blkcnt_me> =
+        v * 1UL<blkcnt_me>
+
+    /// <summary>
+    ///  Convert to a primitive uint32 value.
+    /// </summary>
+    /// <param name="v">
+    ///  Block count value by blkcnt_me.
+    /// </param>
+    /// <returns>
+    ///  Converted uint32 value.
+    /// </returns>
+    static member inline toUInt32( v : uint32<blkcnt_me> ) : uint32 =
+        uint32 v
+
+    /// <summary>
+    ///  Convert a primitive uint32 value to a Block count value by blkcnt_me.
+    /// </summary>
+    /// <param name="v">
+    ///  primitive uint32 value.
+    /// </param>
+    /// <returns>
+    ///  Converted blkcnt_me value.
+    /// </returns>
+    static member inline ofUInt32( v : uint32 ) : uint32<blkcnt_me> =
+        v * 1u<blkcnt_me>
+
+    /// <summary>
+    ///  Convert to a primitive uint16 value.
+    /// </summary>
+    /// <param name="v">
+    ///  Block count value by blkcnt_me.
+    /// </param>
+    /// <returns>
+    ///  Converted uint16 value.
+    /// </returns>
+    static member inline toUInt16( v : uint16<blkcnt_me> ) : uint16 =
+        uint16 v
+
+    /// <summary>
+    ///  Convert a primitive uint16 value to a Block count value by blkcnt_me.
+    /// </summary>
+    /// <param name="v">
+    ///  primitive uint16 value.
+    /// </param>
+    /// <returns>
+    ///  Converted blkcnt_me value.
+    /// </returns>
+    static member inline ofUInt16( v : uint16 ) : uint16<blkcnt_me> =
+        v * 1us<blkcnt_me>
+
+    /// <summary>
+    ///  Convert to a primitive uint8 value.
+    /// </summary>
+    /// <param name="v">
+    ///  Block count value by blkcnt_me.
+    /// </param>
+    /// <returns>
+    ///  Converted uint16 value.
+    /// </returns>
+    static member inline toUInt8( v : uint8<blkcnt_me> ) : uint8 =
+        uint8 v
+
+    /// <summary>
+    ///  Convert a primitive uint8 value to a Block count value by blkcnt_me.
+    /// </summary>
+    /// <param name="v">
+    ///  primitive uint8 value.
+    /// </param>
+    /// <returns>
+    ///  Converted blkcnt_me value.
+    /// </returns>
+    static member inline ofUInt8( v : uint8 ) : uint8<blkcnt_me> =
+        v * 1uy<blkcnt_me>
+
+    /// zero value by uint8
+    static member zero8 = 0uy<blkcnt_me>
+
+    /// zero value by uint16
+    static member zero16 = 0us<blkcnt_me>
+
+    /// zero value by uint32
+    static member zero32 = 0u<blkcnt_me>
+
+    /// zero value by uint64
+    static member zero64 = 0UL<blkcnt_me>
+
+/// Data type that uses uint8 to represent the number of blocks
+type BLKCNT8_T = uint8<blkcnt_me>
+
+/// Data type that uses uint16 to represent the number of blocks
+type BLKCNT16_T = uint16<blkcnt_me>
+
+/// Data type that uses uint32 to represent the number of blocks
+type BLKCNT32_T = uint32<blkcnt_me>
+
+/// Data type that uses uint64 to represent the number of blocks
+type BLKCNT64_T = uint64<blkcnt_me>
+
+
+/// Data type that represents 4K sector number.
+[<Measure>]
+type sec4k_me =
+
+    /// <summary>
+    ///  Convert to a primitive uint64 value.
+    /// </summary>
+    /// <param name="v">
+    ///  Block count value by sec4k_me.
+    /// </param>
+    /// <returns>
+    ///  Converted uint64 value.
+    /// </returns>
+    static member inline toUInt64( v : uint64<sec4k_me> ) : uint64 =
+        uint64 v
+
+    /// <summary>
+    ///  Convert a primitive uint64 value to a Block count value by sec4k_me.
+    /// </summary>
+    /// <param name="v">
+    ///  primitive uint64 value.
+    /// </param>
+    /// <returns>
+    ///  Converted sec4k_me value.
+    /// </returns>
+    static member inline ofUInt64( v : uint64 ) : uint64<sec4k_me> =
+        v * 1UL<sec4k_me>
+
+    /// zero value by uint64
+    static member zero64 = 0UL<sec4k_me>
+
+
+/// Data type that uses uint64 to represent the 4K sector number
+type SEC4K_T = uint64<sec4k_me>
+
 
 
 /// CRC-32C Checksum Calculation

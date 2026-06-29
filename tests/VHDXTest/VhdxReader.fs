@@ -878,8 +878,8 @@ type VhdxReader() =
             HasParent = hasParent;
             VirtualDiskSize = virtualDiskSize;
             VirtualDiskId = VirtualDiskId;
-            LogicalSectorSize = logicalSectorSize;
-            PhysicalSectorSize = physicalSectorSize;
+            LogicalSectorSize = if logicalSectorSize = 512u then BS_512 else BS_4096;
+            PhysicalSectorSize = if physicalSectorSize = 512u then BS_512 else BS_4096;
             ParentLocator = parentLocator;
         }
 
@@ -983,7 +983,7 @@ type VhdxReader() =
         : BatEntries =
 
         let fileData = ReadBytesWithLog logInfo fs batRegion.FileOffset batRegion.Length
-        let chunkSize = 0x800000UL * uint64 virtualDiskInfo.LogicalSectorSize
+        let chunkSize = 0x800000UL * Blocksize.toUInt64 virtualDiskInfo.LogicalSectorSize
         let chunkRatio = chunkSize / uint64 virtualDiskInfo.PayloadBlockSize
         let payloadBlockCount = ( virtualDiskInfo.VirtualDiskSize - 1UL ) / uint64 virtualDiskInfo.PayloadBlockSize + 1UL
         let sectorBitmapBlockCount = ( payloadBlockCount - 1UL ) / chunkRatio + 1UL

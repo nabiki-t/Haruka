@@ -63,7 +63,7 @@ type ToVHDXOptions =
         Fixed   : bool
         LogSize : uint32
         Payload : uint32
-        SectorSize : uint32
+        SectorSize : Blocksize
     }
 
 type CreateOptions =
@@ -72,7 +72,7 @@ type CreateOptions =
         VirtualSize : uint64
         LogSize : uint32
         Payload : uint32
-        SectorSize : uint32
+        SectorSize : Blocksize
     }
 
 type FileType =
@@ -83,11 +83,11 @@ type Command =
     | Read of vhdx:string * xml:string
     | ToRaw of vhdx:string * raw:string
     | ToVHDX of raw:string * vhdx:string * opts:ToVHDXOptions
-    | Corrupt of input:string * output:string * sectors:int64 list
+    | Corrupt of input:string * output:string * sectors:SEC4K_T list
     | Snapshot of parent:string * output:string * LogSize:uint32 * Payload:uint32
     | Create of output:string * opts:CreateOptions
     | Check of input:string
-    | Write of raw:string * vhdx:string * lba:uint64
+    | Write of raw:string * vhdx:string * lba:BLKCNT64_T
     | Random of raw:string * fsize:uint64
     | Compare of file1:string * f1type:FileType * file2:string * f2type:FileType
 
@@ -166,7 +166,15 @@ let parseArgs ( argv : string[] ) : Command =
                 opts.TryFind "s"
                 |> Option.bind id
                 |> Option.map uint32
-                |> Option.defaultValue 512u;
+                |> Option.defaultValue 512u
+                |> ( fun v -> 
+                    if v = 512u then
+                        BS_512
+                    elif v = 4096u then
+                        BS_4096
+                    else
+                        failwith "Sector size must be 512 or 4096."
+                );
         }
         Command.ToVHDX( rest.[0], rest.[1], options )
 
@@ -185,7 +193,7 @@ let parseArgs ( argv : string[] ) : Command =
             match opts.TryFind "s" with
             | Some ( Some v ) ->
                 v.Split(',')
-                |> Array.map int64
+                |> Array.map ( fun s -> uint64 s |> sec4k_me.ofUInt64 )
                 |> Array.toList
             | _ ->
                 failwith "--s <idx1,idx2,...> must be specified."
@@ -246,7 +254,15 @@ let parseArgs ( argv : string[] ) : Command =
                 opts.TryFind "s"
                 |> Option.bind id
                 |> Option.map uint32
-                |> Option.defaultValue 512u;
+                |> Option.defaultValue 512u
+                |> ( fun v -> 
+                    if v = 512u then
+                        BS_512
+                    elif v = 4096u then
+                        BS_4096
+                    else
+                        failwith "Sector size must be 512 or 4096."
+                );
         }
         Command.Create( rest.[0], options )
 
@@ -269,6 +285,7 @@ let parseArgs ( argv : string[] ) : Command =
             |> Option.bind id
             |> Option.map uint64
             |> Option.defaultValue 0UL
+            |> blkcnt_me.ofUInt64
 
         Command.Write( rest.[1], rest.[0], lba )
 
@@ -357,7 +374,7 @@ let main ( argv : string[] ) : int =
         VhdxCorrupter.Inject infile outfile sectors
 
     | Snapshot( parent, outfile, logSize, payload ) ->
-        VhdxCreator.Create parent outfile ( logSize * 1048576u ) ( payload * 1048576u ) false 0UL 0u
+        VhdxCreator.Create parent outfile ( logSize * 1048576u ) ( payload * 1048576u ) false 0UL Blocksize.BS_512
 
     | Create( outfile, opt ) ->
         VhdxCreator.Create "" outfile ( opt.LogSize * 1048576u ) ( opt.Payload * 1048576u ) opt.Fixed ( opt.VirtualSize * 1048576UL ) opt.SectorSize

@@ -16,7 +16,7 @@ type VhdxCorrupter() =
     /// <param name="offset">
     /// The location in the file where the data to be updated is recorded.
     /// </param>
-    /// <param name="">
+    /// <param name="data">
     ///  Updated data. Must be 4096 bytes.
     /// </param>
     /// <param name="sequenceNumber">
@@ -25,7 +25,7 @@ type VhdxCorrupter() =
     /// <returns>
     ///  Bytes array of the data sector.
     /// </returns>
-    static member CreateLogEntry_DataSector ( offset : uint64 ) ( data : byte[] ) ( sequenceNumber : uint64 ) : byte[] =
+    static member CreateLogEntry_DataSector ( offset : SEC4K_T ) ( data : byte[] ) ( sequenceNumber : uint64 ) : byte[] =
         let v = Array.zeroCreate<byte> 32
         let TrailingBytes = data.[ data.Length - 4 .. ]
         let LeadingBytes = data.[ 0 .. 7 ]
@@ -39,7 +39,7 @@ type VhdxCorrupter() =
         Array.blit ( Encoding.UTF8.GetBytes "desc" ) 0 v 0 4
         Array.blit TrailingBytes 0 v 4 4
         Array.blit LeadingBytes 0 v 8 8
-        GlbFunc.WriteUInt64LE v 16u offset
+        GlbFunc.WriteUInt64LE v 16u ( uint64 offset * 4096UL )
         GlbFunc.WriteUInt64LE v 24u sequenceNumber
         v
 
@@ -68,7 +68,7 @@ type VhdxCorrupter() =
     ///  Created bytes array of the log log entry.
     /// </returns>
     static member CreateLogEntry
-            ( data : struct ( uint64 * byte[] ) list )
+            ( data : struct ( SEC4K_T * byte[] ) list )
             ( tail : uint32 )
             ( secnum : uint64 )
             ( logGuid : Guid )
@@ -187,7 +187,7 @@ type VhdxCorrupter() =
     /// <param name="sectorIndices">
     ///  The index number of the 4K sector where random data should be written.
     /// </param>
-    static member Inject ( inputPath : string ) ( outputPath : string ) ( sectorIndices : int64 list ) : unit =
+    static member Inject ( inputPath : string ) ( outputPath : string ) ( sectorIndices : SEC4K_T list ) : unit =
 
         let metadata = VhdxReader.ReadVhdx inputPath
 
@@ -235,7 +235,7 @@ type VhdxCorrupter() =
                     |> List.map ( fun itr ->
                         let rnddata = Array.zeroCreate<byte> 4096
                         Random.Shared.NextBytes rnddata
-                        struct ( uint64 itr * 4096UL, rnddata )
+                        struct ( itr, rnddata )
                     )
         ]
 
@@ -245,14 +245,14 @@ type VhdxCorrupter() =
             let rnddata = Array.zeroCreate<byte> 4096
             Random.Shared.NextBytes rnddata
             for itr in sectorIndices do
-                let offset = itr * 4096L
+                let offset = int64 itr * 4096L
                 printfn "Replace 4K sectore(%d, %d)" itr offset
                 let readdata = Array.zeroCreate<byte> 4096
                 fs.Seek( offset, SeekOrigin.Begin ) |> ignore
                 fs.ReadExactly readdata
                 fs.Seek( offset, SeekOrigin.Begin ) |> ignore
                 fs.Write rnddata
-                yield struct ( uint64 offset, readdata )
+                yield struct ( itr, readdata )
         ]
 
         // Determine the log writing location.

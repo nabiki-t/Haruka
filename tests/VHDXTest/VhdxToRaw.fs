@@ -42,11 +42,11 @@ type VhdxToRaw() =
 
         let zeroBuffer = Array.zeroCreate<byte>( int vMD.[0].VirtualDiskInfo.PayloadBlockSize )
         let readPBBuf = Array.zeroCreate<byte>( int vMD.[0].VirtualDiskInfo.PayloadBlockSize )
-        let readSecBuf = Array.zeroCreate<byte>( int vMD.[0].VirtualDiskInfo.LogicalSectorSize )
+        let readSecBuf = Array.zeroCreate<byte>( vMD.[0].VirtualDiskInfo.LogicalSectorSize |> Blocksize.toUInt32 |> int )
 
         // Calculate number of sectors in a payload block.
         let secCntInPB =
-            int vMD.[0].VirtualDiskInfo.PayloadBlockSize / int vMD.[0].VirtualDiskInfo.LogicalSectorSize
+            vMD.[0].VirtualDiskInfo.PayloadBlockSize / ( vMD.[0].VirtualDiskInfo.LogicalSectorSize |> Blocksize.toUInt32 ) |> int
 
         vMD.[0].BatEntries.Payloads
         |> Array.iteri ( fun pbIdx pbItr ->
@@ -70,12 +70,12 @@ type VhdxToRaw() =
                 // The sector bitmap needs to be inspected.
                 printfn "Payload block %d : Copy sector by sector" pbIdx
                 for secIdxInPB = 0 to secCntInPB - 1 do
-                    let lba = uint64 ( pbIdx * secCntInPB + secIdxInPB )
-                    let struct( fsidx2, fpos ) = VhdxHandler.ResolvLBA lba vMD
-                    if fpos.IsSome then
-                        vFiles.[fsidx2].Seek( int64 fpos.Value, SeekOrigin.Begin ) |> ignore
+                    let lba = uint64 ( pbIdx * secCntInPB + secIdxInPB ) |> blkcnt_me.ofUInt64
+                    match VhdxHandler.ResolvLBA lba vMD with
+                    | ValueSome( struct( fsidx2, fpos ) ) ->
+                        vFiles.[fsidx2].Seek( int64 fpos, SeekOrigin.Begin ) |> ignore
                         vFiles.[fsidx2].Read( readSecBuf ) |> ignore
-                    else
+                    | _ ->
                         Array.fill readSecBuf 0 readSecBuf.Length 0uy
                     outfile.Write( readSecBuf )
         )

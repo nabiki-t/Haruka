@@ -119,7 +119,7 @@ type VhdxCreator() =
         ( hasParent : bool )
         ( virtualDiskSize : uint64 )
         ( virtualDiskID : Guid )
-        ( sectorSize : uint32 )
+        ( sectorSize : Blocksize )
         ( parentDataWriteGuid : Guid )
         ( parentFileName : string )
         : unit =
@@ -151,13 +151,13 @@ type VhdxCreator() =
         // Logical sector size
         let lssParamBuf = Array.zeroCreate<byte> 4
         let lssParamStartPos = ms.Length |> uint32
-        GlbFunc.WriteUInt32LE lssParamBuf 0u sectorSize
+        GlbFunc.WriteUInt32LE lssParamBuf 0u ( Blocksize.toUInt32 sectorSize )
         ms.Write( lssParamBuf )
 
         // Physical sector size
         let pssParamBuf = Array.zeroCreate<byte> 4
         let pssParamStartPos = ms.Length |> uint32
-        GlbFunc.WriteUInt32LE pssParamBuf 0u sectorSize
+        GlbFunc.WriteUInt32LE pssParamBuf 0u ( Blocksize.toUInt32 sectorSize )
         ms.Write( pssParamBuf )
 
         // Parent locator
@@ -416,7 +416,7 @@ type VhdxCreator() =
         ( payloadBlockSize : uint32 )
         ( isFixed : bool )
         ( virtualDiskSize : uint64 )
-        ( sectorSize : uint32 ) : unit =
+        ( sectorSize : Blocksize ) : unit =
 
         // Read parent VHDX file metadata
         let parentMetadata =
@@ -467,7 +467,7 @@ type VhdxCreator() =
         printfn "DataWriteGuid of parent disk : %s" ( parentDataWriteGuid.ToString "b" )
         printfn "Virtual disk size : %d" efVirtualDiskSize
         printfn "Virtual disk ID : %s" ( efVirtualDiskID.ToString "D" )
-        printfn "Sector size : %d" efSectorSize
+        printfn "Sector size : %s" ( Blocksize.toStringName efSectorSize )
 
         if logAreaSize &&& 0x000FFFFFu <> 0u then
             raise <| Exception "Log are size must be multiples of 1MB."
@@ -479,10 +479,10 @@ type VhdxCreator() =
             raise <| Exception( "The virtual disk size must be 64TB or less." )
         if efVirtualDiskSize = 0UL then
             raise <| Exception( "The virtual disk size must be at least 1 byte." )
-        if efVirtualDiskSize % uint64 efSectorSize <> 0UL then
+        if efVirtualDiskSize % Blocksize.toUInt64 efSectorSize <> 0UL then
             raise <| Exception( "The virtual disk size must be a multiple of the sector length." )
 
-        let chunkSize = uint64 efSectorSize * 8388608UL
+        let chunkSize = Blocksize.toUInt64 efSectorSize * 8388608UL
         let chunkRate = chunkSize / uint64 payloadBlockSize
         let payloadBlockCount =
             ( efVirtualDiskSize + ( uint64 payloadBlockSize - 1UL ) ) / ( uint64 payloadBlockSize )
@@ -570,7 +570,7 @@ type VhdxCreator() =
         ( logAreaSize : uint32 )
         ( payloadBlockSize : uint32 )
         ( isFixed : bool )
-        ( sectorSize : uint32 ) : unit =
+        ( sectorSize : Blocksize ) : unit =
 
         // Get length of input raw file.
         use rawfs = new FileStream( inputPath, FileMode.Open, FileAccess.Read, FileShare.None )
@@ -584,7 +584,7 @@ type VhdxCreator() =
         printfn "Payload block length : %d" payloadBlockSize
         printfn "Fix format : %b" isFixed
         printfn "Virtual disk size : %d" virtualDiskSize
-        printfn "Sector length : %d" sectorSize
+        printfn "Sector length : %s" ( Blocksize.toStringName sectorSize )
 
         // Create empty VHDX file.
         VhdxCreator.Create "" outputPath logAreaSize payloadBlockSize isFixed virtualDiskSize sectorSize

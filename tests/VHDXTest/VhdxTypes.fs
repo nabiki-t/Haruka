@@ -170,9 +170,9 @@ type VirtualDiskInfo = {
     /// Virtual disk ID
     VirtualDiskId : Guid;
     /// Logical sector size(In bytes, 512 or 4096)
-    LogicalSectorSize : uint32;
+    LogicalSectorSize : Blocksize;
     /// Physical sector size(In bytes, 512 or 4096)
-    PhysicalSectorSize : uint32;
+    PhysicalSectorSize : Blocksize;
     /// Parent locator. Maxmum 65,535.
     ParentLocator : Map<string,string>;
 }

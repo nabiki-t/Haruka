@@ -6,39 +6,6 @@ open System.Text
 open System.Xml
 
 
-(*
-        // Display the correspondence of 4K sector numbers for each payload BAT entry.
-        printfn "================================================================"
-        printfn " Payload entry - 4K sector list"
-        printfn "Payload idx - BAT idx - FilePos - 4K Sec"
-        for i = 0 to batEntries.Payloads.Length - 1 do
-            let itr = batEntries.Payloads.[i]
-            let fpos = batEntries.BATRegionOffset + uint64 ( 8 * i )
-            let secidx = fpos / 4096UL
-            printfn "%d - %d - %d - %d" i itr.BatEntryIndex fpos secidx
-        printfn ""
-*)
-(*
-        // Create BAT table from 4K sector number.
-        let secnum = 768UL
-        let count = 4096 / 8
-        let sBATIdx = ( secnum - ( batEntries.BATRegionOffset / 4096UL ) ) * uint64 count
-        let count2 = ( min ( sBATIdx + uint64 count ) batEntries.BatEntryCount ) - sBATIdx
-        let chunkRatio = int batEntries.ChunkRatio
-        for i = 1 to int count2 do
-            if i % ( chunkRatio + 1 ) = 0 then
-                let sbidx = ( i - 1 ) / ( chunkRatio + 1 )
-                printfn "%d SectorBitmap(%d) " ( i - 1 ) sbidx
-            else
-                let pbidx =
-                    let w = ( i - 1 ) / ( chunkRatio + 1 )
-                    let w2 = w * chunkRatio
-                    let w3 = ( i - 1 ) % ( chunkRatio + 1 )
-                    w2 + w3
-                printfn "%d Payload(%d) " ( i - 1 ) pbidx
-*)
-
-
 /// <summary>
 ///  Defines functions for handling VHDX files.
 /// </summary>
@@ -101,18 +68,18 @@ type VhdxHandler() =
     /// <returns>
     ///  Pair of file index(​​in the array meta) and byte offset in the VHDX file.
     /// </returns>
-    static member ResolvLBA( lba : uint64 ) ( meta : VhdxMetadata[] ) : struct( int * uint64 voption ) =
+    static member ResolvLBA( lba : BLKCNT64_T ) ( meta : VhdxMetadata[] ) : struct( int * uint64 ) voption =
         let rec loop ( idx : int ) =
             if idx < meta.Length then
                 let pbSize =
                     meta.[idx].VirtualDiskInfo.PayloadBlockSize |> uint64       // Payload Block Size
                 let logiSecSize =
-                    meta.[idx].VirtualDiskInfo.LogicalSectorSize |> uint64      // Logical Sector Size
+                    Blocksize.toUInt64 meta.[idx].VirtualDiskInfo.LogicalSectorSize // Logical Sector Size
                 let chunkRatio =
                     meta.[idx].BatEntries.ChunkRatio |> uint64                  // Chunk Ratio
                 let secCntInPB = pbSize / logiSecSize                           // Number of sectors in a payload block.
-                let pbIdx = lba / secCntInPB                                    // Payload block index
-                let secIdxInPB = lba % secCntInPB                               // Sector index within payload block
+                let pbIdx = ( blkcnt_me.toUInt64 lba ) / secCntInPB             // Payload block index
+                let secIdxInPB = ( blkcnt_me.toUInt64 lba ) % secCntInPB        // Sector index within payload block
                 let sbIdx = pbIdx / chunkRatio                                  // Index of sector bitmap BAT entries
                 let pbIdxInSB = pbIdx % chunkRatio                              // Index of payload blocks within a sector bitmap BAT entry
                 let byteIdxInSB =
@@ -129,12 +96,12 @@ type VhdxHandler() =
                 | PayloadZero
                 | PayloadUnapped ->
                     // No block allocation
-                    struct( idx, ValueNone )
+                    ValueNone
 
                 | PayloadFullyPresent ->
                     // The data to be accessed resides in this file.
                     let posInFile = pbEntry.FileOffset + secIdxInPB * logiSecSize
-                    struct( idx, ValueSome posInFile )
+                    struct( idx, posInFile ) |> ValueSome
 
                 | PayloadPartiallyPresent ->
                     // The sector bitmap BAT entries need to be examined.
@@ -143,16 +110,13 @@ type VhdxHandler() =
                     if bitValue = 1uy then
                         // The data to be accessed resides in this file.
                         let posInFile = pbEntry.FileOffset + secIdxInPB * logiSecSize
-                        struct( idx, ValueSome posInFile )
+                        struct( idx, posInFile ) |> ValueSome
                     else
                         // The data to be accessed resides in the parent file.
                         loop ( idx + 1 )
             else
-                // Not found (this pattern shouldn't exist)
-                printfn "**** Specified LBA missing ****"
-                printfn "  LBA : %d" lba
-                printfn "  idx : %d" idx
-                raise <| Exception "Unexpected error."
+                // No block allocation
+                ValueNone
         loop 0
 
     /// <summary>
@@ -167,13 +131,13 @@ type VhdxHandler() =
     /// <returns>
     ///  Pair of payload block BAT entry index and sector index within the payload block.
     /// </returns>
-    static member LBAtoPayloadBlockIndex ( lba : uint64 ) ( metadata : VhdxMetadata ) : struct( uint32 * uint32 ) =
+    static member LBAtoPayloadBlockIndex ( lba : BLKCNT64_T ) ( metadata : VhdxMetadata ) : struct( uint32 * BLKCNT32_T ) =
         let pbsize = metadata.VirtualDiskInfo.PayloadBlockSize
-        let secsize = metadata.VirtualDiskInfo.LogicalSectorSize
+        let secsize = metadata.VirtualDiskInfo.LogicalSectorSize |> Blocksize.toUInt32
         let secCntInPb = pbsize / secsize |> uint64
-        let pbIndex = lba / secCntInPb |> uint32
-        let secIndex = lba % secCntInPb |> uint32
-        struct( pbIndex, secIndex )
+        let pbIndex = ( blkcnt_me.toUInt64 lba ) / secCntInPb |> uint32
+        let secIndex = ( blkcnt_me.toUInt64 lba ) % secCntInPb |> uint32
+        struct( pbIndex, blkcnt_me.ofUInt32 secIndex )
 
     /// <summary>
     ///  From the LBA, calculate sector bitmap BAT entry index and bit position within the sector bitmap.
@@ -187,9 +151,9 @@ type VhdxHandler() =
     /// <returns>
     ///  Pair of the sector bitmap BAT entry index and bit position within the payload block.
     /// </returns>
-    static member LBAtoSectorBitmapIndex ( lba : uint64 ) ( metadata : VhdxMetadata ) : struct( uint32 * uint32 ) =
-        let sbindex = lba / 8388608UL |> uint32
-        let bitpos = lba % 8388608UL |> uint32
+    static member LBAtoSectorBitmapIndex ( lba : BLKCNT64_T ) ( metadata : VhdxMetadata ) : struct( uint32 * uint32 ) =
+        let sbindex = ( blkcnt_me.toUInt64 lba ) / 8388608UL |> uint32
+        let bitpos = ( blkcnt_me.toUInt64 lba ) % 8388608UL |> uint32
         struct( sbindex, bitpos )
 
     /// <summary>
@@ -355,34 +319,32 @@ type VhdxHandler() =
             |> fun ( f, m ) -> ( f |> Array.map File.OpenRead, m )
         use fs2 = File.OpenRead fname2
         try
-            let sectorSize = metadatas.[0].VirtualDiskInfo.LogicalSectorSize
+            let sectorSize = metadatas.[0].VirtualDiskInfo.LogicalSectorSize |> Blocksize.toUInt64
             let virtualDiskSize = metadatas.[0].VirtualDiskInfo.VirtualDiskSize
-            let sectorCount = virtualDiskSize / uint64 sectorSize
+            let sectorCount = virtualDiskSize / sectorSize |> blkcnt_me.ofUInt64
             if fs2.Length <> int64 virtualDiskSize then
                 false
             else
                 let buf1 = Array.zeroCreate<byte>( int sectorSize )
                 let buf2 = Array.zeroCreate<byte>( int sectorSize )
 
-                let rec loop ( cnt : uint64 ) =
+                let rec loop ( cnt : BLKCNT64_T ) =
                     if cnt < sectorCount then
                         fs2.ReadExactly buf2
 
-                        let struct( fileidx, offset ) =
-                            VhdxHandler.ResolvLBA cnt metadatas
-                        match offset with
-                        | ValueSome ( o ) ->
-                            vfiles.[ fileidx ].Seek( int64 o, SeekOrigin.Begin ) |> ignore
+                        match VhdxHandler.ResolvLBA cnt metadatas with
+                        | ValueSome ( struct( fileidx, offset ) ) ->
+                            vfiles.[ fileidx ].Seek( int64 offset, SeekOrigin.Begin ) |> ignore
                             vfiles.[ fileidx ].ReadExactly buf1
                         | ValueNone ->
                             Array.fill buf1 0 ( int sectorSize ) 0uy
                         if buf1 <> buf2 then
                             false
                         else
-                            loop ( cnt + 1UL )
+                            loop ( cnt + blkcnt_me.ofUInt64 1UL )
                     else
                         true
-                loop 0UL
+                loop blkcnt_me.zero64
         finally
             vfiles
             |> Array.iter _.Dispose()
@@ -408,15 +370,15 @@ type VhdxHandler() =
 
         // read metadata for fname2
         let vfiles2, metadatas2 =
-            VhdxHandler.ReadAllMetadata fname1
+            VhdxHandler.ReadAllMetadata fname2
             |> Array.unzip
             |> fun ( f, m ) -> ( f |> Array.map File.OpenRead, m )
         try
-            let sectorSize1 = metadatas1.[0].VirtualDiskInfo.LogicalSectorSize
+            let sectorSize1 = metadatas1.[0].VirtualDiskInfo.LogicalSectorSize |> Blocksize.toUInt64
             let virtualDiskSize1 = metadatas1.[0].VirtualDiskInfo.VirtualDiskSize
-            let sectorSize2 = metadatas2.[0].VirtualDiskInfo.LogicalSectorSize
+            let sectorSize2 = metadatas2.[0].VirtualDiskInfo.LogicalSectorSize |> Blocksize.toUInt64
             let virtualDiskSize2 = metadatas2.[0].VirtualDiskInfo.VirtualDiskSize
-            let sectorCount = virtualDiskSize1 / uint64 sectorSize1
+            let sectorCount = virtualDiskSize1 / sectorSize1 |> blkcnt_me.ofUInt64
 
             if sectorSize1 <> sectorSize2 || virtualDiskSize1 <> virtualDiskSize2 then
                 // sector size or disk size mismatch.
@@ -425,23 +387,21 @@ type VhdxHandler() =
                 let buf1 = Array.zeroCreate<byte>( int sectorSize1 )
                 let buf2 = Array.zeroCreate<byte>( int sectorSize1 )
 
-                let rec loop ( cnt : uint64 ) =
+                let rec loop ( cnt : BLKCNT64_T ) =
                     if cnt < sectorCount then
 
                         // read file1
-                        let struct( fileidx1, offset1 ) = VhdxHandler.ResolvLBA cnt metadatas1
-                        match offset1 with
-                        | ValueSome ( o ) ->
-                            vfiles1.[ fileidx1 ].Seek( int64 o, SeekOrigin.Begin ) |> ignore
+                        match VhdxHandler.ResolvLBA cnt metadatas1 with
+                        | ValueSome ( struct( fileidx1, offset1 ) ) ->
+                            vfiles1.[ fileidx1 ].Seek( int64 offset1, SeekOrigin.Begin ) |> ignore
                             vfiles1.[ fileidx1 ].ReadExactly buf1
                         | ValueNone ->
                             Array.fill buf1 0 ( int sectorSize1 ) 0uy
 
                         // read file2
-                        let struct( fileidx2, offset2 ) = VhdxHandler.ResolvLBA cnt metadatas2
-                        match offset2 with
-                        | ValueSome ( o ) ->
-                            vfiles2.[ fileidx2 ].Seek( int64 o, SeekOrigin.Begin ) |> ignore
+                        match VhdxHandler.ResolvLBA cnt metadatas2 with
+                        | ValueSome ( struct( fileidx2, offset2 ) ) ->
+                            vfiles2.[ fileidx2 ].Seek( int64 offset2, SeekOrigin.Begin ) |> ignore
                             vfiles2.[ fileidx2 ].ReadExactly buf2
                         | ValueNone ->
                             Array.fill buf2 0 ( int sectorSize1 ) 0uy
@@ -449,10 +409,10 @@ type VhdxHandler() =
                         if buf1 <> buf2 then
                             false
                         else
-                            loop ( cnt + 1UL )
+                            loop ( cnt + blkcnt_me.ofUInt64 1UL )
                     else
                         true
-                loop 0UL
+                loop blkcnt_me.zero64
 
         finally
             vfiles1
