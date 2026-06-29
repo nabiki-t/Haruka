@@ -163,6 +163,23 @@ type Command04( fx : Command04_Fixture ) =
         MaxRecvDataSegmentLength_T = Constants.NEGOPARAM_DEF_MaxRecvDataSegmentLength;
     }
 
+// Check session counts
+    let CheckSessionCount ( expcnt : int ) ( expPrompt : string ) =
+        let mutable loopcnt = 0
+        while loopcnt < 10 do
+            Thread.Sleep 10
+            let sesscnt =
+                m_Client.RunCommandGetResp "sessions" expPrompt
+                |> Array.filter _.Contains( "Session(" )
+                |> Array.length
+            if sesscnt = expcnt then
+                loopcnt <- 99
+            else
+                loopcnt <- loopcnt + 1
+        Assert.StrictEqual( 99, loopcnt )
+
+
+
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
 
@@ -818,4 +835,163 @@ type Command04( fx : Command04_Fixture ) =
         let fdata = File.ReadAllBytes fname
         Assert.StrictEqual( 65536, fdata.Length )
         File.Delete fname
+
+    [<Fact>]
+    member _.InitiMedia_PlainFile_002 () =
+        let fname = Path.Combine( Path.GetTempPath(), Path.GetRandomFileName() )
+        File.WriteAllBytes( fname, [| 0uy |] )
+        Assert.True( File.Exists fname )
+
+        let v = m_Client.RunCommandGetResp "imstatus" "CR> "
+        Assert.Empty v
+
+        m_Client.RunCommand ( sprintf "initmedia plainfile %s 65536" fname ) "Started" "CR> "
+
+        let mutable flg = true
+        while flg do
+            Thread.Sleep 10
+            let v = m_Client.RunCommandGetResp "imstatus" "CR> "
+            if v.Length > 0 then
+                flg <- v.[0].Contains "Failed" |> not
+
+        Assert.True( File.Exists fname )
+        let fdata = File.ReadAllBytes fname
+        Assert.StrictEqual( 1, fdata.Length )
+        File.Delete fname
+
+    [<Fact>]
+    member _.Sessions_TargetDevice_001 () =
+        task {
+            // Start target device
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+
+            // connect to target 1
+            let! r1 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target1" } m_defaultConnParam
+            CheckSessionCount 1 "TD> "
+
+            // connect to target 2
+            let! r2 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target2" } m_defaultConnParam
+            CheckSessionCount 2 "TD> "
+
+            // connect to target 3
+            let! r3 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target3" } m_defaultConnParam
+            CheckSessionCount 3 "TD> "
+
+            // Disconnect r2
+            do! r2.Close()
+            CheckSessionCount 2 "TD> "
+
+            // Disconnect r3
+            do! r3.Close()
+            CheckSessionCount 1 "TD> "
+
+            // Disconnect r1
+            do! r1.Close()
+            CheckSessionCount 0 "TD> "
+
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    [<Fact>]
+    member _.Sessions_TargetGroup_001 () =
+        task {
+            // Start target device
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+            let tgidx = m_Client.GetIndexNumber "TG_00000002" "TD> "
+            m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+
+            // connect to target 1
+            let! r1 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target1" } m_defaultConnParam
+            CheckSessionCount 0 "TG> "
+
+            // connect to target 2
+            let! r2 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target2" } m_defaultConnParam
+            CheckSessionCount 1 "TG> "
+
+            // connect to target 3
+            let! r3 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target3" } m_defaultConnParam
+            CheckSessionCount 2 "TG> "
+
+            // Disconnect r2
+            do! r2.Close()
+            CheckSessionCount 1 "TG> "
+
+            // Disconnect r3
+            do! r3.Close()
+            CheckSessionCount 0 "TG> "
+
+            // Disconnect r1
+            do! r1.Close()
+            CheckSessionCount 0 "TG> "
+
+            m_Client.RunCommand "unselect" "" "TD> "
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    [<Fact>]
+    member _.Sessions_Target_001 () =
+        task {
+            // Start target device
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+            let tgidx = m_Client.GetIndexNumber "TG_00000002" "TD> "
+            m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+            let tgidx = m_Client.GetIndexNumber "target2" "TG> "
+            m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "T > "
+
+            // connect to target 1
+            let! r1 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target1" } m_defaultConnParam
+            CheckSessionCount 0 "T > "
+
+            // connect to target 2
+            let! r2 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target2" } m_defaultConnParam
+            CheckSessionCount 1 "T > "
+
+            // connect to target 3
+            let! r3 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target3" } m_defaultConnParam
+            CheckSessionCount 1 "T > "
+
+            // Disconnect r3
+            do! r3.Close()
+            CheckSessionCount 1 "T > "
+
+            // Disconnect r1
+            do! r1.Close()
+            CheckSessionCount 1 "T > "
+
+            // Disconnect r2
+            do! r2.Close()
+            CheckSessionCount 0 "T > "
+
+            m_Client.RunCommand "unselect" "" "TG> "
+            m_Client.RunCommand "unselect" "" "TD> "
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    [<Fact>]
+    member _.Sesskill_001 () =
+        task {
+            // Start target device
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+
+            // connect to target 1
+            let! r1 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target1" } m_defaultConnParam
+            CheckSessionCount 1 "TD> "
+
+            m_Client.RunCommand ( sprintf "sesskill %d" r1.TSIH ) "Session terminated" "TD> "
+            CheckSessionCount 0 "TD> "
+
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
 
