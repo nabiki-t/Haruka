@@ -14,7 +14,7 @@ let help() =
     printfn "  VHDXTest snapshot <parent-vhdx-input> <vhdx-output> [--log <log-size>] [--p <payload-block-size>]"
     printfn "  VHDXTest create <vhdx-output> [--v <virtual-disk-size>] [--f] [--log <log-size>] [--p <payload-block-size>] [--s <sectore-size>]"
     printfn "  VHDXTest check <vhdx-input>"
-    printfn "  VHDXTest write <raw-input> <vhdx-update> [--l <logical-block-address>]"
+    printfn "  VHDXTest write <raw-input> <vhdx-update> [--l <logical-block-address>] [--int <step>]"
     printfn "  VHDXTest random <raw-output> [--v <file-size>]"
     printfn "  VHDXTest compare <input1> <intput2> [--t1 <input1-type>] [--t2 <input2-type>]"
     printfn ""
@@ -49,6 +49,7 @@ let help() =
     printfn "  --s <sectore-size>          Sector size. Specify either 512 or 4096. Default is 512 bytes."
     printfn "  write command :"
     printfn "  --l <logical-block-address> The logical block address on the virtual disk where data is to be written. Default is 0."
+    printfn "  --int <step>                The stage at which processing is interrupted. 1 to 8."
     printfn "  random command :"
     printfn "  --v <file-size>             File size in MB. Default is 64MB."
     printfn "  compare command :"
@@ -87,7 +88,7 @@ type Command =
     | Snapshot of parent:string * output:string * LogSize:uint32 * Payload:uint32
     | Create of output:string * opts:CreateOptions
     | Check of input:string
-    | Write of raw:string * vhdx:string * lba:BLKCNT64_T
+    | Write of raw:string * vhdx:string * lba:BLKCNT64_T * ex:int
     | Random of raw:string * fsize:uint64
     | Compare of file1:string * f1type:FileType * file2:string * f2type:FileType
 
@@ -113,6 +114,8 @@ let parseArgs ( argv : string[] ) : Command =
             parseOptions ( map.Add( "v", Some v ) ) tail
         | "--l" :: v :: tail ->
             parseOptions ( map.Add( "l", Some v ) ) tail
+        | "--int" :: v :: tail ->
+            parseOptions ( map.Add( "int", Some v ) ) tail
         | "--f" :: tail ->
             parseOptions ( map.Add( "f", None ) ) tail
         | "--s" :: tail ->
@@ -127,6 +130,8 @@ let parseArgs ( argv : string[] ) : Command =
             failwith "--v value is missing."
         | "--l" :: tail ->
             failwith "--l value is missing."
+        | "--int" :: tail ->
+            failwith "--int value is missing."
         | x :: _ ->
             failwithf "Unknown option : %s" x
 
@@ -286,8 +291,13 @@ let parseArgs ( argv : string[] ) : Command =
             |> Option.map uint64
             |> Option.defaultValue 0UL
             |> blkcnt_me.ofUInt64
+        let exint =
+            opts.TryFind "int"
+            |> Option.bind id
+            |> Option.map int
+            |> Option.defaultValue 0
 
-        Command.Write( rest.[1], rest.[0], lba )
+        Command.Write( rest.[1], rest.[0], lba, exint )
 
     | "RANDOM" ->
         if rest.Length < 1 then
@@ -382,8 +392,8 @@ let main ( argv : string[] ) : int =
     | Check( infile ) ->
         VhdxChecker.Check infile
 
-    | Write( rawfile, vhdxfile, lba ) ->
-        VhdxWriter.Write rawfile vhdxfile lba
+    | Write( rawfile, vhdxfile, lba, ex ) ->
+        VhdxWriter.Write rawfile vhdxfile lba ex
 
     | Random( rawfile, fsizemb ) ->
         VhdxHandler.CreateRandomFile rawfile fsizemb
