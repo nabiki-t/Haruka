@@ -306,11 +306,17 @@ type VhdxWriter() =
                         // Unless the current byte is 0xFF, the payload BAT entry will not become PayloadFullyPresent.
                         loop ( wcnt + blkcnt_me.ofUInt64 1UL )
                     else
-                        // 当該LBAが属するペイロードブロックBATエントリに属する、全てのセクタービットマップが1になったか否かを判断したい。
-                        let sbBytesCntPerPB = 1048576UL / metadata.BatEntries.ChunkRatio |> int         // PB1個に対応するビットマップのバイト長
-                        let startSBPosAtCurPB = ( int bytePos / sbBytesCntPerPB ) * sbBytesCntPerPB     // 当該LBAが属するPB BATエントリに対応する、ビットマップの開始位置
-                            
-                        if ArraySegment( sb, startSBPosAtCurPB, sbBytesCntPerPB ) |> Seq.exists ( (<>) 0xFFuy ) then
+                        // Determine whether all sector bitmaps belonging to the payload block BAT entry associated with the LBA in question have been set to 1.
+
+                        // Bitmap byte length corresponding to one PB
+                        let sbBytesCntPerPB = 1048576UL / metadata.BatEntries.ChunkRatio |> int
+
+                        // The starting position of the bitmap corresponding to the PB BAT entry to which the LBA in question belongs.
+                        let startSBPosAtCurPB = ( int bytePos / sbBytesCntPerPB ) * sbBytesCntPerPB
+                        
+                        let span = ReadOnlySpan<byte>( sb, startSBPosAtCurPB, sbBytesCntPerPB )
+                        if span.IndexOfAnyExcept( 0xFFuy ) <> -1 then
+                        //if ArraySegment( sb, startSBPosAtCurPB, sbBytesCntPerPB ) |> Seq.exists ( (<>) 0xFFuy ) then
                             // There are still unused logical sectors.
                             loop ( wcnt + blkcnt_me.ofUInt64 1UL )
                         else

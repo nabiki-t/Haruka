@@ -38,9 +38,9 @@ type VhdxXmlSerializer() =
         use writer = XmlWriter.Create( sb, XmlWriterSettings( Indent = true, Encoding = Encoding.UTF8 ) )
         writer.WriteStartDocument()
         writer.WriteStartElement( "VhdxMetadata" )
-            
+
         // File type identifier
-        writer.WriteStartElement( "FileType" )
+        writer.WriteStartElement( "FileTypeIdentifier" )
         writer.WriteString( metadata.Creator )
         writer.WriteEndElement()
             
@@ -58,7 +58,45 @@ type VhdxXmlSerializer() =
         writer.WriteElementString( "Offset", string metadata.Header.Offset )
         writer.WriteElementString( "Index", string metadata.Header.Index )
         writer.WriteEndElement()
-            
+
+        // Log
+        writer.WriteStartElement( "LogEntries" )
+        metadata.LogInfo
+        |> List.iter ( fun ( e : LogEntry ) ->
+            writer.WriteStartElement( "LogEntry" )
+            writer.WriteElementString( "Checksum", "0x" + e.Checksum.ToString("X8") )
+            writer.WriteElementString( "EntryLength", e.EntryLength.ToString() )
+            writer.WriteElementString( "Tail", "0x" + e.Tail.ToString("X8")  )
+            writer.WriteElementString( "SequenceNumber", e.SequenceNumber.ToString() )
+            writer.WriteElementString( "DescriptorCount", e.DescriptorCount.ToString() )
+            writer.WriteElementString( "LogGuid", e.LogGuid.ToString "D" )
+            writer.WriteElementString( "FlushedFileOffset", e.FlushedFileOffset.ToString() )
+            writer.WriteElementString( "LastFileOffset", e.LastFileOffset.ToString() )
+            writer.WriteStartElement( "Descriptors" )
+            e.Descriptors
+            |> List.iter ( fun ( d : LogDescriptor ) ->
+                match d with
+                | LogDescriptor.Data( x ) ->
+                    writer.WriteStartElement( "DataDescriptor" )
+                    writer.WriteElementString( "TrailingBytes", VhdxXmlSerializer.bytesToHex x.TrailingBytes )
+                    writer.WriteElementString( "LeadingBytes", VhdxXmlSerializer.bytesToHex x.LeadingBytes )
+                    writer.WriteElementString( "FileOffset", x.FileOffset.ToString() )
+                    writer.WriteElementString( "SequenceNumber", x.SequenceNumber.ToString() )
+                    writer.WriteElementString( "DataDescriptorIndex", x.ddIndex.ToString() )
+                    writer.WriteEndElement()
+                | LogDescriptor.Zero( x ) ->
+                    writer.WriteStartElement( "ZeroDescriptor" )
+                    writer.WriteElementString( "ZeroLength", x.ZeroLength.ToString() )
+                    writer.WriteElementString( "FileOffset", x.FileOffset.ToString() )
+                    writer.WriteElementString( "SequenceNumber", x.SequenceNumber.ToString() )
+                    writer.WriteEndElement()
+            )
+            writer.WriteEndElement()
+            writer.WriteElementString( "DataSectors.Length", e.DataSectors.Length.ToString() )
+            writer.WriteEndElement()
+        )
+        writer.WriteEndElement()
+
         // Region table
         writer.WriteStartElement( "RegionTable" )
         writer.WriteElementString( "Checksum", "0x" + metadata.RegionTables.Checksum.ToString("X8") )
@@ -93,20 +131,40 @@ type VhdxXmlSerializer() =
         writer.WriteElementString( "VirtualDiskId", string metadata.VirtualDiskInfo.VirtualDiskId )
         writer.WriteElementString( "LogicalSectorSize", string metadata.VirtualDiskInfo.LogicalSectorSize )
         writer.WriteElementString( "PhysicalSectorSize", string metadata.VirtualDiskInfo.PhysicalSectorSize )
+        writer.WriteStartElement( "ParentLocators" )
         for itr in metadata.VirtualDiskInfo.ParentLocator do
             writer.WriteStartElement( "ParentLocator" )
             writer.WriteElementString( "Key", itr.Key )
             writer.WriteElementString( "Value", itr.Value )
             writer.WriteEndElement()
         writer.WriteEndElement()
+        writer.WriteEndElement()
 
         // BAT entry
         writer.WriteStartElement( "BatEntries" )
+        writer.WriteElementString( "BATRegionOffset", string metadata.BatEntries.BATRegionOffset )
+        writer.WriteElementString( "BATRegionLength", string metadata.BatEntries.BATRegionLength )
         writer.WriteElementString( "ChunkSize", string metadata.BatEntries.ChunkSize )
         writer.WriteElementString( "ChunkRatio", string metadata.BatEntries.ChunkRatio )
         writer.WriteElementString( "PayloadBlockCount", string metadata.BatEntries.PayloadBlockCount )
         writer.WriteElementString( "SectorBitmapBlockCount", string metadata.BatEntries.SectorBitmapBlockCount )
         writer.WriteElementString( "BatEntryCount", string metadata.BatEntries.BatEntryCount )
+        writer.WriteStartElement( "Payloads" )
+        for itr in metadata.BatEntries.Payloads do
+            writer.WriteStartElement( "Payload" )
+            writer.WriteElementString( "BatEntryIndex", string itr.BatEntryIndex )
+            writer.WriteElementString( "State", string itr.State )
+            writer.WriteElementString( "FileOffset", string itr.FileOffset )
+            writer.WriteEndElement()
+        writer.WriteEndElement()
+        writer.WriteStartElement( "SectorBitmaps" )
+        for itr in metadata.BatEntries.SectorBitmap do
+            writer.WriteStartElement( "SectorBitmap" )
+            writer.WriteElementString( "BatEntryIndex", string itr.BatEntryIndex )
+            writer.WriteElementString( "SBState", string itr.SBState )
+            writer.WriteElementString( "FileOffset", string itr.FileOffset )
+            writer.WriteEndElement()
+        writer.WriteEndElement()
         writer.WriteEndElement()
 
         writer.WriteEndElement()

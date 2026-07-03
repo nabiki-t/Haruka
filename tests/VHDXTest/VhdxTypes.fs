@@ -6,15 +6,6 @@ open System.IO
 // ============================================================================
 // File header
 
-/// File type identifier
-type FileSignature = {
-    /// Signature "vhdxfile"
-    Signature : uint64
-    /// UTF16 creator string
-    Creator : string
-}
-
-
 /// VHDX Header
 type VhdxHeader = {
     /// Signature "head"
@@ -250,6 +241,8 @@ type VhdxMetadata = {
     Header : VhdxHeader;
     /// Log
     LogInfo : LogEntry list;
+    /// Expected file size
+    LastFileSize : uint64;
     /// Regio table
     RegionTables : RegionTable;
     /// Virtual disk infomation.

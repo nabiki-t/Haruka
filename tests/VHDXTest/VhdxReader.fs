@@ -407,8 +407,8 @@ type VhdxReader() =
                     else
                         // Retrieve the data sector
                         let dataSectores = [
-                            for i = 0 to int dataSectorCount - 1 do
-                                let d = ReadLogDataSector logEntryData ( dataSectorPos + uint32 i * 4096u ) sequenceNumber
+                            for i in 0u .. dataSectorCount - 1u do
+                                let d = ReadLogDataSector logEntryData ( dataSectorPos + i * 4096u ) sequenceNumber
                                 if d.Length = 4084 then
                                     d
                         ]
@@ -593,11 +593,10 @@ type VhdxReader() =
             None
         else
             // Interpretation of Region table entries.
-            let entryCountInt = int entryCount
             let entries =
                 [
-                    for i = 0 to entryCountInt - 1 do
-                        let entryOffset = 16u + uint32 i * 32u
+                    for i in 0u .. entryCount - 1u do
+                        let entryOffset = 16u + i * 32u
                         let guid = GlbFunc.ReadGuid data entryOffset
                         let fileOffsetBytes = GlbFunc.ReadUInt64LE data ( entryOffset + 16u )
                         let lengthBytes = GlbFunc.ReadUInt32LE data ( entryOffset + 24u )
@@ -634,7 +633,7 @@ type VhdxReader() =
                     itr.[1].FileOffset < ( itr.[0].FileOffset + uint64 itr.[0].Length ) 
                 )
                 |> not
-            if entries.Length <> entryCountInt || not entries_Check then
+            if entries.Length <> int entryCount || not entries_Check then
                 None
             else
                 {
@@ -671,8 +670,8 @@ type VhdxReader() =
         // Metadata entries
         let metadataItems =
             [
-                for i in 0 .. int mtEntryCount - 1 do
-                    let eo = 32u + uint32 i * 32u
+                for i in 0u .. uint32 mtEntryCount - 1u do
+                    let eo = 32u + i * 32u
                     let itemId = GlbFunc.ReadGuid data eo
                     let offset = GlbFunc.ReadUInt32LE data ( eo + 16u );
                     let length = GlbFunc.ReadUInt32LE data ( eo + 20u );
@@ -826,8 +825,8 @@ type VhdxReader() =
                 let data = parLocItem.Value.Data
                 let dlen = data.Length |> uint32
                 let parLocEntry = [
-                    for i = 0 to int keyValueCount - 1 do
-                        let wpos = 20 + i * 12 |> uint32
+                    for i in 0u .. uint32 keyValueCount - 1u do
+                        let wpos = 20u + i * 12u
                         let keyOffset = GlbFunc.ReadUInt32LE data wpos
                         let valueOffset = GlbFunc.ReadUInt32LE data ( wpos + 4u )
                         let keyLength = GlbFunc.ReadUInt16LE data ( wpos + 8u )
@@ -899,8 +898,6 @@ type VhdxReader() =
     ///  Retrieved payload BAT Entry.
     /// </returns>
     static let GetPayloadBlockEntry ( batData : byte[] ) ( chunkRatio : uint64 ) ( pbIndex : uint64 ) : PayloadBATEntry =
-        if pbIndex >= uint64 batData.Length then
-            raise <| Exception "Index value is excessive"
         let idx = ( pbIndex / chunkRatio ) * ( chunkRatio + 1UL ) + ( pbIndex % chunkRatio )
         let entry = GlbFunc.ReadUInt64LE batData ( uint32 idx * 8u )
         let state =
@@ -940,8 +937,6 @@ type VhdxReader() =
     /// pair of status of the sector bitmap and file offset of the sector bitmap data.
     /// </returns>
     static let GetSectorBitmapBlockEntry ( batData : byte[] ) ( chunkRatio : uint64 ) ( sbbIndex : uint64 ) : struct( uint64 * BatEntryStateSB * uint64 ) =
-        if sbbIndex >= uint64 batData.Length then
-            raise <| Exception "The index value of the sector bitmap BAT entry is excessive."
         let idx = sbbIndex * ( chunkRatio + 1UL ) + chunkRatio
         let entry = GlbFunc.ReadUInt64LE batData ( uint32 idx * 8u )
         let state =
@@ -1003,30 +998,32 @@ type VhdxReader() =
             raise <| Exception "The BAT entry has insufficient data length."
 
         // Read payload BAT entries
-        let payloads = Array.zeroCreate<PayloadBATEntry>( int payloadBlockCount )
-        for i = 0 to int payloadBlockCount - 1 do
-            payloads.[i] <- GetPayloadBlockEntry fileData chunkRatio ( uint64 i )
+        let payloads = [|
+            for i in 0UL .. payloadBlockCount - 1UL ->
+                GetPayloadBlockEntry fileData chunkRatio i
+        |]
 
         // Read sector bitmap blocks
-        let sectorBitmapBlock = Array.zeroCreate<SectorBitmapBATEntry>( int sectorBitmapBlockCount )
-        for i = 0 to int sectorBitmapBlockCount - 1 do
-            let struct( idx, stat, pos ) = GetSectorBitmapBlockEntry fileData chunkRatio ( uint64 i )
-            sectorBitmapBlock.[i] <-
-                match stat with
-                | BatEntryStateSB.SectorBitmapNotPresent ->
+        let sectorBitmapBlock = [|
+            for i in  0UL .. sectorBitmapBlockCount - 1UL do
+                if not virtualDiskInfo.HasParent then
+                    // For dynamic or fixed VHDX files, the final sector bitmap block BAT entry is not recorded on the media.
+                    // Since no sector bitmap is allocated in this case, the reading of the sector bitmap block BAT entry is skipped.
                     {
-                        BatEntryIndex = idx;
-                        SBState = stat;
-                        FileOffset = pos;
+                        BatEntryIndex = i * ( chunkRatio + 1UL ) + chunkRatio;
+                        SBState = BatEntryStateSB.SectorBitmapNotPresent;
+                        FileOffset = 0UL;
                         Bitmap = Array.empty;
                     }
-                | BatEntryStateSB.SectorBitmapPresent ->
+                else
+                    let struct( idx, stat, pos ) = GetSectorBitmapBlockEntry fileData chunkRatio ( uint64 i )
                     {
                         BatEntryIndex = idx;
                         SBState = stat;
                         FileOffset = pos;
                         Bitmap = ReadBytesWithLog logInfo fs pos 0x100000u;
                     }
+        |]
 
         {
             BATRegionOffset = batRegion.FileOffset;
@@ -1079,6 +1076,12 @@ type VhdxReader() =
                 e
             else
                 []
+
+        let lastFileSize =
+            if logInfo.Length > 0 then
+                ( logInfo |> List.last ).LastFileOffset
+            else
+                fs.Length |> uint64
 
         printfn "Number of log entries retrieved : %d" logInfo.Length
         for itr in logInfo do
@@ -1193,6 +1196,7 @@ type VhdxReader() =
             Creator = creator;
             Header = currentHeader;
             LogInfo = logInfo;
+            LastFileSize = lastFileSize;
             RegionTables = currentRegionTable;
             VirtualDiskInfo = virtualDiskInfo;
             BatEntries = batEntries;
