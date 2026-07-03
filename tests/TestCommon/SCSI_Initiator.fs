@@ -2387,7 +2387,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
                 Status = pdu.Status;
                 ResData = 
                     if pdu.SenseData.Count <= 0 then 
-                        SCSIDataInPDU.AppendDataInList pdu.ResponseData dataInPdus ( int edtl )
+                        SCSIDataInPDU.AppendDataInList pdu.ResponseData dataInPdus ( int32 edtl )
                     else
                         PooledBuffer.Empty;
                 Sense = 
@@ -2500,7 +2500,7 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
                     |> List.map ( fun ( idx, struct( s, l , f ) ) -> struct( idx, s, l, f ) )
 
                 for struct( idx, s, l, f ) in segs do
-                    let sendData = PooledBuffer.Rent( v, int s, int l )
+                    let sendData = PooledBuffer.Rent( v, int32 s, int32 l )
                     let datasn = datasn_me.fromPrim ( uint32 idx )
                     do! m_ISCIInitiator.SendSCSIDataOutPDU m_CID ( BitF.ofBool f ) pdu.InitiatorTaskTag pdu.LUN pdu.TargetTransferTag datasn s sendData
                     sendData.Return()

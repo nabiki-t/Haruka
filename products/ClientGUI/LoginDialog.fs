@@ -231,7 +231,7 @@ type LoginDialog( m_Config : GUIConfig ) as this =
     member private _.Login ( hostName : string ) ( portNo : uint16 ) ( forceFlg : bool ) : Task<unit> =
         task {
             try
-                let! t = CtrlConnection.Connect( m_Config.ClientCLIText ) hostName ( int portNo ) forceFlg
+                let! t = CtrlConnection.Connect( m_Config.ClientCLIText ) hostName ( int32 portNo ) forceFlg
                 m_Window.Dispatcher.InvokeAsync ( fun () ->
                     m_Result <- DialogResult.Ok( t )
                     m_CloseReason <- WinCloseReason.Internal

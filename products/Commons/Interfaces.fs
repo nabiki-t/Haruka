@@ -529,7 +529,7 @@ type IMedia =
     ///  Read data is must be written to a part of in memory buffer, range (C), that is represented by buffer.Offset and buffer.Count.
     /// </code>
     /// </remarks>
-    abstract Read : initiatorTaskTag:ITT_T -> source:CommandSourceInfo -> argLBA:BLKCNT64_T -> buffer:ArraySegment<byte> -> Task<int>
+    abstract Read : initiatorTaskTag:ITT_T -> source:CommandSourceInfo -> argLBA:BLKCNT64_T -> buffer:ArraySegment<byte> -> Task<int32>
 
     // ------------------------------------------------------------------------
     /// <summary>
@@ -571,7 +571,7 @@ type IMedia =
     ///     Range (C) is the part of (B), and that starts at argLBA*(Block Size) and length is buffer.Count bytes.
     ///   </code>
     /// </remarks>
-    abstract Write : initiatorTaskTag:ITT_T -> source:CommandSourceInfo -> argLBA:BLKCNT64_T -> offset:uint64 -> data:ArraySegment<byte> -> Task<int>
+    abstract Write : initiatorTaskTag:ITT_T -> source:CommandSourceInfo -> argLBA:BLKCNT64_T -> offset:uint64 -> data:ArraySegment<byte> -> Task<int32>
 
     // ------------------------------------------------------------------------
     /// <summary>

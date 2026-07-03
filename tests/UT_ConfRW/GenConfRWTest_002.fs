@@ -1427,7 +1427,7 @@ type GenConfRW_Test_002 () =
             let r = ConfRW_004_002.ReaderWriter.LoadString ( s.ToString() )
             match r.C with
             | ConfRW_004_002.U_D_int_min( x ) ->
-                Assert.True(( x = int Constants.MAX_TARGET_DEVICE_COUNT ))
+                Assert.True(( x = int32 Constants.MAX_TARGET_DEVICE_COUNT ))
             | _ ->
                 Assert.Fail("")
         with
@@ -1437,7 +1437,7 @@ type GenConfRW_Test_002 () =
     [<Fact>]
     member _.RefConstants_Value_int_003 () =
         let v : ConfRW_004_002.T_Test = {
-            C = ConfRW_004_002.T_C.U_D_int_min( int ( Constants.MAX_TARGET_DEVICE_COUNT - 1 ) )
+            C = ConfRW_004_002.T_C.U_D_int_min( int32 ( Constants.MAX_TARGET_DEVICE_COUNT - 1 ) )
         }
 
         try
@@ -1452,7 +1452,7 @@ type GenConfRW_Test_002 () =
     [<Fact>]
     member _.RefConstants_Value_int_004 () =
         let v : ConfRW_004_002.T_Test = {
-            C = ConfRW_004_002.T_C.U_D_int_min( int Constants.MAX_TARGET_DEVICE_COUNT )
+            C = ConfRW_004_002.T_C.U_D_int_min( int32 Constants.MAX_TARGET_DEVICE_COUNT )
         }
         let s = new StringBuilder()
         s.Append "<Test><C><D_int_min>" |> ignore
@@ -1477,7 +1477,7 @@ type GenConfRW_Test_002 () =
             let r = ConfRW_004_002.ReaderWriter.LoadString ( s.ToString() )
             match r.C with
             | ConfRW_004_002.U_D_int_max( x ) ->
-                Assert.True(( x = int Constants.MAX_TARGET_DEVICE_COUNT ))
+                Assert.True(( x = int32 Constants.MAX_TARGET_DEVICE_COUNT ))
             | _ ->
                 Assert.Fail("")
         with
@@ -1503,7 +1503,7 @@ type GenConfRW_Test_002 () =
     [<Fact>]
     member _.RefConstants_Value_int_007 () =
         let v : ConfRW_004_002.T_Test = {
-            C = ConfRW_004_002.T_C.U_D_int_max( int Constants.MAX_TARGET_DEVICE_COUNT )
+            C = ConfRW_004_002.T_C.U_D_int_max( int32 Constants.MAX_TARGET_DEVICE_COUNT )
         }
         let s = new StringBuilder()
         s.Append "<Test><C><D_int_max>" |> ignore
@@ -1520,7 +1520,7 @@ type GenConfRW_Test_002 () =
     [<Fact>]
     member _.RefConstants_Value_int_008 () =
         let v : ConfRW_004_002.T_Test = {
-            C = ConfRW_004_002.T_C.U_D_int_max( int ( Constants.MAX_TARGET_DEVICE_COUNT + 1 ) )
+            C = ConfRW_004_002.T_C.U_D_int_max( int32 ( Constants.MAX_TARGET_DEVICE_COUNT + 1 ) )
         }
 
         try
@@ -1559,7 +1559,7 @@ type GenConfRW_Test_002 () =
             let r = ConfRW_004_002.ReaderWriter.LoadString ( s.ToString() )
             match r.C with
             | ConfRW_004_002.U_D_unsignedInt_min( x ) ->
-                Assert.True(( x = uint Constants.MAX_TARGET_DEVICE_COUNT ))
+                Assert.True(( x = uint32 Constants.MAX_TARGET_DEVICE_COUNT ))
             | _ ->
                 Assert.Fail("")
         with
@@ -1569,7 +1569,7 @@ type GenConfRW_Test_002 () =
     [<Fact>]
     member _.RefConstants_Value_unsignedInt_003 () =
         let v : ConfRW_004_002.T_Test = {
-            C = ConfRW_004_002.T_C.U_D_unsignedInt_min( uint ( Constants.MAX_TARGET_DEVICE_COUNT - 1 ) )
+            C = ConfRW_004_002.T_C.U_D_unsignedInt_min( uint32 ( Constants.MAX_TARGET_DEVICE_COUNT - 1 ) )
         }
 
         try
@@ -1584,7 +1584,7 @@ type GenConfRW_Test_002 () =
     [<Fact>]
     member _.RefConstants_Value_unsignedInt_004 () =
         let v : ConfRW_004_002.T_Test = {
-            C = ConfRW_004_002.T_C.U_D_unsignedInt_min( uint Constants.MAX_TARGET_DEVICE_COUNT )
+            C = ConfRW_004_002.T_C.U_D_unsignedInt_min( uint32 Constants.MAX_TARGET_DEVICE_COUNT )
         }
         let s = new StringBuilder()
         s.Append "<Test><C><D_unsignedInt_min>" |> ignore
@@ -1609,7 +1609,7 @@ type GenConfRW_Test_002 () =
             let r = ConfRW_004_002.ReaderWriter.LoadString ( s.ToString() )
             match r.C with
             | ConfRW_004_002.U_D_unsignedInt_max( x ) ->
-                Assert.True(( x = uint Constants.MAX_TARGET_DEVICE_COUNT ))
+                Assert.True(( x = uint32 Constants.MAX_TARGET_DEVICE_COUNT ))
             | _ ->
                 Assert.Fail("")
         with
@@ -1635,7 +1635,7 @@ type GenConfRW_Test_002 () =
     [<Fact>]
     member _.RefConstants_Value_unsignedInt_007 () =
         let v : ConfRW_004_002.T_Test = {
-            C = ConfRW_004_002.T_C.U_D_unsignedInt_max( uint Constants.MAX_TARGET_DEVICE_COUNT )
+            C = ConfRW_004_002.T_C.U_D_unsignedInt_max( uint32 Constants.MAX_TARGET_DEVICE_COUNT )
         }
         let s = new StringBuilder()
         s.Append "<Test><C><D_unsignedInt_max>" |> ignore
@@ -1652,7 +1652,7 @@ type GenConfRW_Test_002 () =
     [<Fact>]
     member _.RefConstants_Value_unsignedInt_008 () =
         let v : ConfRW_004_002.T_Test = {
-            C = ConfRW_004_002.T_C.U_D_unsignedInt_max( uint ( Constants.MAX_TARGET_DEVICE_COUNT + 1 ) )
+            C = ConfRW_004_002.T_C.U_D_unsignedInt_max( uint32 ( Constants.MAX_TARGET_DEVICE_COUNT + 1 ) )
         }
 
         try

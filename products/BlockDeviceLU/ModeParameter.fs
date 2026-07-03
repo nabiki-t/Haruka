@@ -448,7 +448,7 @@ type ModeParameter
     /// <param name="itt">
     /// Initiator Task Tag value of SCSI command.
     /// </param>
-    member this.Select6 ( v : PooledBuffer ) ( parameterLength : int ) ( pf : bool ) ( sp : bool ) ( source : CommandSourceInfo ) ( itt : ITT_T ) : unit =
+    member this.Select6 ( v : PooledBuffer ) ( parameterLength : int32 ) ( pf : bool ) ( sp : bool ) ( source : CommandSourceInfo ) ( itt : ITT_T ) : unit =
         let loginfo = struct ( m_ObjID, ValueSome source, ValueSome itt, ValueSome m_LUN )
 
         if sp then
@@ -470,8 +470,8 @@ type ModeParameter
                 errmsg
             )
 
-        let mediumType = int v.[1]
-        let blockDescriptorLength = int v.[3]
+        let mediumType = int32 v.[1]
+        let blockDescriptorLength = int32 v.[3]
 
         if mediumType <> 0 then
             let errmsg = sprintf "Invalid MEDIUM TYPE value(%d), in MODE SELECT(6) parameter list." mediumType
@@ -518,11 +518,11 @@ type ModeParameter
                 let next =
                     match v.[s] &&& 0x3Fuy with
                     | 0x08uy -> // Cache mode page
-                        this.ReadCacheModePageByteData v s ( int parameterLength ) source itt
+                        this.ReadCacheModePageByteData v s ( int32 parameterLength ) source itt
                     | 0x0Auy -> // Control mode page
-                        this.ReadControlModePageByteData v s ( int parameterLength ) source itt
+                        this.ReadControlModePageByteData v s ( int32 parameterLength ) source itt
                     | 0x1Cuy -> // Informational Exceptions Control mode page
-                        this.ReadInformationalExceptionsControlModePageByteData v s ( int parameterLength ) source itt
+                        this.ReadInformationalExceptionsControlModePageByteData v s ( int32 parameterLength ) source itt
                     | _ ->      // Unknown
                         let errmsg = sprintf "Unsupported page code value(0x%02X), in MODE SELECT(6) parameter list." ( v.[s] &&& 0x3Fuy )
                         HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST, errmsg )
@@ -534,7 +534,7 @@ type ModeParameter
 
                 if next < parameterLength then
                     loop next
-            loop ( int blockDescriptorLength + 4 )
+            loop ( int32 blockDescriptorLength + 4 )
 
 
     /// <summary>
@@ -656,7 +656,7 @@ type ModeParameter
     /// <param name="itt">
     /// Initiator Task Tag value of SCSI command.
     /// </param>
-    member this.Select10 ( v: PooledBuffer ) ( parameterLength : int ) ( pf : bool ) ( sp : bool ) ( source : CommandSourceInfo ) ( itt : ITT_T ) : unit =
+    member this.Select10 ( v: PooledBuffer ) ( parameterLength : int32 ) ( pf : bool ) ( sp : bool ) ( source : CommandSourceInfo ) ( itt : ITT_T ) : unit =
         let loginfo = struct ( m_ObjID, ValueSome source, ValueSome itt, ValueSome m_LUN )
 
         if sp then
@@ -678,8 +678,8 @@ type ModeParameter
                 errmsg
             )
 
-        let mediumType = int v.[2]
-        let blockDescriptorLength = Functions.NetworkBytesToUInt16_InPooledBuffer v 6 |> int
+        let mediumType = int32 v.[2]
+        let blockDescriptorLength = Functions.NetworkBytesToUInt16_InPooledBuffer v 6 |> int32
         let longLBA = Functions.CheckBitflag v.[4] 0x01uy
 
         if mediumType <> 0 then
@@ -750,11 +750,11 @@ type ModeParameter
                 let next =
                     match v.[s] &&& 0x3Fuy with
                     | 0x08uy -> // Cache mode page
-                        this.ReadCacheModePageByteData v s ( int parameterLength ) source itt
+                        this.ReadCacheModePageByteData v s ( int32 parameterLength ) source itt
                     | 0x0Auy -> // Control mode page
-                        this.ReadControlModePageByteData v s ( int parameterLength ) source itt
+                        this.ReadControlModePageByteData v s ( int32 parameterLength ) source itt
                     | 0x1Cuy -> // Informational Exceptions Control mode page
-                        this.ReadInformationalExceptionsControlModePageByteData v s ( int parameterLength ) source itt
+                        this.ReadInformationalExceptionsControlModePageByteData v s ( int32 parameterLength ) source itt
                     | _ ->      // Unknown
                         let errmsg = sprintf "Unsupported page code value(0x%02X), in MODE SELECT(10) parameter list." ( v.[s] &&& 0x3Fuy )
                         HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST, errmsg )
@@ -766,7 +766,7 @@ type ModeParameter
 
                 if next < parameterLength then
                     loop next
-            loop ( int blockDescriptorLength + 8 )
+            loop ( int32 blockDescriptorLength + 8 )
 
     /// <summary>
     /// Get mode parameter values by MODE SENSE(10) command.
@@ -1127,7 +1127,7 @@ type ModeParameter
     /// <returns>
     ///  Next data position.
     /// </returns>
-    member private this.ReadCacheModePageByteData ( v : PooledBuffer ) ( s : int ) ( len : int ) ( source : CommandSourceInfo ) ( itt:ITT_T ) : int =
+    member private this.ReadCacheModePageByteData ( v : PooledBuffer ) ( s : int32 ) ( len : int32 ) ( source : CommandSourceInfo ) ( itt:ITT_T ) : int32 =
         let loginfo = struct ( m_ObjID, ValueSome source, ValueSome itt, ValueSome m_LUN )
 
         if s + 20 > len then
@@ -1188,7 +1188,7 @@ type ModeParameter
     /// <returns>
     ///  Next data position.
     /// </returns>
-    member private this.ReadControlModePageByteData ( v : PooledBuffer ) ( s : int ) ( len : int ) ( source : CommandSourceInfo ) ( itt:ITT_T ) : int =
+    member private this.ReadControlModePageByteData ( v : PooledBuffer ) ( s : int32 ) ( len : int32 ) ( source : CommandSourceInfo ) ( itt:ITT_T ) : int32 =
         let loginfo = struct ( m_ObjID, ValueSome source, ValueSome itt, ValueSome m_LUN )
 
         if s + 12 > len then
@@ -1269,7 +1269,7 @@ type ModeParameter
     /// <returns>
     ///  Next data position.
     /// </returns>
-    member private this.ReadInformationalExceptionsControlModePageByteData ( v : PooledBuffer ) ( s : int ) ( len : int ) ( source : CommandSourceInfo ) ( itt:ITT_T ) : int =
+    member private this.ReadInformationalExceptionsControlModePageByteData ( v : PooledBuffer ) ( s : int32 ) ( len : int32 ) ( source : CommandSourceInfo ) ( itt:ITT_T ) : int32 =
         let loginfo = struct ( m_ObjID, ValueSome source, ValueSome itt, ValueSome m_LUN )
 
         if s + 12 > len then

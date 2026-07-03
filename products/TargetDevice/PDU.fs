@@ -124,13 +124,13 @@ type PDU() =
 
                 // Check the TotalAHSLength
                 if ( wbufBHS.[4] &&& 0x03uy ) > 0uy then
-                    let msg = sprintf "Invalid TotalAHSLength(%d). TotalAHSLength should be padded in 4 bytes word." ( int wbufBHS.[4] )
+                    let msg = sprintf "Invalid TotalAHSLength(%d). TotalAHSLength should be padded in 4 bytes word." ( int32 wbufBHS.[4] )
                     HLogger.Trace( LogID.E_ISCSI_FORMAT_ERROR, fun g -> g.Gen1( loginfo, msg ) )
                     raise <| SessionRecoveryException ( msg, tsih_me.fromValOpt 0us argTSIH )
 
                 // receive all of AHS data
-                let wbufAllAHS = PooledBuffer.Rent( int wbufBHS.[4] )
-                do! PDU.ReceiveBytes( sock, wbufAllAHS.Array, ( int wbufBHS.[4] ), argTSIH, argCID, argCounter, objid )
+                let wbufAllAHS = PooledBuffer.Rent( int32 wbufBHS.[4] )
+                do! PDU.ReceiveBytes( sock, wbufAllAHS.Array, ( int32 wbufBHS.[4] ), argTSIH, argCID, argCounter, objid )
 
                 // receive HeaderDigest if digest is suppied
                 let headerDigestLen = if argHeaderDigest = DigestType.DST_CRC32C then 4 else 0
@@ -157,11 +157,11 @@ type PDU() =
                     raise <| SessionRecoveryException ( msg, tsih_me.fromValOpt 0us argTSIH )
 
                 // receive DataSegment
-                let wbufDataSegment = PooledBuffer.Rent ( int wDataSegmentLength )
-                do! PDU.ReceiveBytes( sock, wbufDataSegment.Array, ( int wDataSegmentLength ), argTSIH, argCID, argCounter, objid )
+                let wbufDataSegment = PooledBuffer.Rent ( int32 wDataSegmentLength )
+                do! PDU.ReceiveBytes( sock, wbufDataSegment.Array, ( int32 wDataSegmentLength ), argTSIH, argCID, argCounter, objid )
 
                 // receive DataSegment padding bytes
-                let dataSegmentPaddingLen = int wDataSegmentLengthWithPadd - int wDataSegmentLength
+                let dataSegmentPaddingLen = int32 wDataSegmentLengthWithPadd - int32 wDataSegmentLength
                 let wbufDataSegmentPadding = Array.zeroCreate<byte> dataSegmentPaddingLen
                 if dataSegmentPaddingLen > 0 then
                     do! PDU.ReceiveBytes( sock, wbufDataSegmentPadding, dataSegmentPaddingLen, argTSIH, argCID, argCounter, objid )
@@ -293,14 +293,14 @@ type PDU() =
             (
                 ( s : Stream ),
                 ( buf : byte[] ),
-                ( count : int ),
+                ( count : int32 ),
                 ( argTSIH : TSIH_T ValueOption ),
                 ( argCID : CID_T ValueOption ) ,
                 ( argConCounter : CONCNT_T ValueOption ),
                 ( argObjID : OBJIDX_T ) ,
                 [<CallerMemberName>] ?fnname : string,
                 [<CallerFilePath>] ?source : string,
-                [<CallerLineNumber>] ?line: int
+                [<CallerLineNumber>] ?line: int32
             ) : Task<unit> =
 
         task {
@@ -355,12 +355,12 @@ type PDU() =
         ( argObjID : OBJIDX_T ) : AHS[] =
 
         let loginfo = struct( argObjID, argCID, argCounter, argTSIH, ValueNone, ValueNone )
-        let rec loop ( pos : int ) ( cont : AHS list -> AHS list )  =
+        let rec loop ( pos : int32 ) ( cont : AHS list -> AHS list )  =
             // get AHSLength value
             let wAHSLength = ( uint16 argAHSBuf.[ pos + 0 ] <<< 8 ) + uint16 argAHSBuf.[ pos + 1 ]
 
             // Add padding count and other field length to AHSLength
-            let wAHSLengthWithPadd : int = int ( Functions.AddPaddingLengthUInt16 ( wAHSLength + 3us ) 4us )
+            let wAHSLengthWithPadd : int32 = int32 ( Functions.AddPaddingLengthUInt16 ( wAHSLength + 3us ) 4us )
                 
             let wAHSType = Constants.byteToAHSTypeCd argAHSBuf.[ pos + 2 ] ( fun v ->
                 let msg = sprintf "Invalid AHSType(%d) value in AHS." v
@@ -394,7 +394,7 @@ type PDU() =
                 AHSLength = wAHSLength;
                 AHSType = wAHSType;
                 AHSSpecific1 = argAHSBuf.[ pos + 3 ];
-                AHSSpecific2 = argAHSBuf.Array.[ pos + 4 .. pos + 3 + int wAHSLength - 1 ];
+                AHSSpecific2 = argAHSBuf.Array.[ pos + 4 .. pos + 3 + int32 wAHSLength - 1 ];
             }
             if pos + wAHSLengthWithPadd < argAHSBuf.Length then
                 loop ( pos + wAHSLengthWithPadd ) ( fun wl -> cont( ahs :: wl ) )
@@ -588,7 +588,7 @@ type PDU() =
             else
                 0us
 
-        if a.m_DataSegment.Count > 0 && ( int wSenseLength > a.m_DataSegment.Count - 2 ) then
+        if a.m_DataSegment.Count > 0 && ( int32 wSenseLength > a.m_DataSegment.Count - 2 ) then
             let msg =
                 sprintf
                     "In SCSI Response PDU, SenseLength(%d) must be less than data segment length(%d) - 2 bytes."
@@ -599,12 +599,12 @@ type PDU() =
 
         let wSenseData =
             if wSenseLength > 0us then
-                a.m_DataSegment.GetArraySegment 2 ( int wSenseLength )
+                a.m_DataSegment.GetArraySegment 2 ( int32 wSenseLength )
             else
                 ArraySegment.Empty
         let wResponseData =
-            if int wSenseLength + 2 < a.m_DataSegment.Count then
-                a.m_DataSegment.GetArraySegment ( int wSenseLength + 2 ) ( a.m_DataSegment.Count - ( int wSenseLength + 2 ) )
+            if int32 wSenseLength + 2 < a.m_DataSegment.Count then
+                a.m_DataSegment.GetArraySegment ( int32 wSenseLength + 2 ) ( a.m_DataSegment.Count - ( int32 wSenseLength + 2 ) )
             else
                 ArraySegment.Empty
 
@@ -972,13 +972,12 @@ type PDU() =
                 0us
         let wSenseData =
             if wSenseLength > 0us then
-                a.m_DataSegment.GetPartialBytes 2 ( int wSenseLength + 1 ) 
+                a.m_DataSegment.GetPartialBytes 2 ( int32 wSenseLength + 1 ) 
             else
                 Array.empty
         let wISCSIEventData =
-            if int wSenseLength + 2 < a.m_DataSegment.Count then
-                a.m_DataSegment.GetPartialBytes ( int wSenseLength + 2 ) ( a.m_DataSegment.Count - 1 ) 
-                //a.m_DataSegment.[ int wSenseLength + 2 .. ]
+            if int32 wSenseLength + 2 < a.m_DataSegment.Count then
+                a.m_DataSegment.GetPartialBytes ( int32 wSenseLength + 2 ) ( a.m_DataSegment.Count - 1 ) 
             else
                 Array.empty
 
@@ -1570,7 +1569,7 @@ type PDU() =
     /// <returns>
     ///   Written bytes count.
     /// </returns>
-    static member private WriteAHSDataToBuffer ( argAHS : AHS ) ( argBuf : byte[] ) ( s : int ) : int =
+    static member private WriteAHSDataToBuffer ( argAHS : AHS ) ( argBuf : byte[] ) ( s : int32 ) : int32 =
         Functions.UInt16ToNetworkBytes argBuf ( s + 0 ) argAHS.AHSLength
         argBuf.[ s + 2 ] <- (byte argAHS.AHSType )
         argBuf.[ s + 3 ] <- argAHS.AHSSpecific1
@@ -1755,7 +1754,7 @@ type PDU() =
         task {
             if v.Count > 0 then
                 let paddBytesCount = ( Functions.AddPaddingLengthUInt32 ( uint32 v.Count ) 4u ) - uint32 v.Count
-                let paddBytes : byte[] = Array.zeroCreate( int paddBytesCount )
+                let paddBytes : byte[] = Array.zeroCreate( int32 paddBytesCount )
 
                 // Start sending data segment
                 let! dataSegSentLen =
@@ -2398,7 +2397,7 @@ type PDU() =
 
                     // Send padding bytes
                     let paddBytesCount = ( Functions.AddPaddingLengthUInt32 wDataSegmentLength 4u ) - wDataSegmentLength
-                    let paddBytes : byte[] = Array.zeroCreate( int paddBytesCount )
+                    let paddBytes : byte[] = Array.zeroCreate( int32 paddBytesCount )
                     let! padLen = PDU.SendBytes( sock, paddBytes, argTSIH, argCID, argCounter, objid )
 
                     // Calc data digest
@@ -2998,7 +2997,7 @@ type PDU() =
                 else
                     // Send DataSegment
                     let paddBytesCount = ( Functions.AddPaddingLengthUInt32 wDataSegmentLength 4u ) - wDataSegmentLength
-                    let paddBytes : byte[] = Array.zeroCreate( int paddBytesCount )
+                    let paddBytes : byte[] = Array.zeroCreate( int32 paddBytesCount )
                     let SenseDataLengthBytes = Functions.UInt16ToNetworkBytes_NewVec( uint16 argPDU.SenseData.Length )
 
                     let! senseDataLengthLen = PDU.SendBytes( sock, SenseDataLengthBytes, argTSIH, argCID, argCounter, objid )

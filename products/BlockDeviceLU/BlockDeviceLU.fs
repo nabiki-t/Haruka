@@ -561,9 +561,9 @@ type BlockDeviceLU
 
         // ------------------------------------------------------------------------
         //   Get used count of the task queue.
-        override _.GetTaskQueueUsage ( tsih : TSIH_T ) : int =
+        override _.GetTaskQueueUsage ( tsih : TSIH_T ) : int32 =
             let q = m_TaskSet.Queue
-            let rec loop ( cnt : int ) ( sum : int ) =
+            let rec loop ( cnt : int32 ) ( sum : int32 ) =
                 if cnt < q.Length then
                     let t = BDTaskStat.getTask q.[ cnt ]
                     let nsum =
@@ -727,8 +727,8 @@ type BlockDeviceLU
     /// <remarks>
     ///   Call this method in critical section at task set lock.
     /// </remarks>
-    static member private FindQueueByITT ( q : ImmutableArray< BDTaskStat > ) ( source : CommandSourceInfo ) ( itt : ITT_T ) : int =
-        let rec loop ( cnt : int ) : int =
+    static member private FindQueueByITT ( q : ImmutableArray< BDTaskStat > ) ( source : CommandSourceInfo ) ( itt : ITT_T ) : int32 =
+        let rec loop ( cnt : int32 ) : int32 =
             if cnt < q.Length then
                 let t1 = q.[ cnt ] |> BDTaskStat.getTask
                 if itt = t1.InitiatorTaskTag && ITNexus.Equals( t1.Source.I_TNexus, source.I_TNexus )  then
@@ -749,12 +749,12 @@ type BlockDeviceLU
     /// <param name="data">
     ///  List of SCSI Data-Out PDUs.
     /// </param>
-    static member private ReturnDataSegment ( command : SCSICommandPDU ) ( data : SCSIDataOutPDU list ) : uint =
+    static member private ReturnDataSegment ( command : SCSICommandPDU ) ( data : SCSIDataOutPDU list ) : uint32 =
         data
         |> List.map _.DataSegment
         |> List.insertAt 0 command.DataSegment
         |> List.fold ( fun sum itr ->
-            let ns = sum + ( PooledBuffer.length itr |> uint )
+            let ns = sum + ( PooledBuffer.length itr |> uint32 )
             PooledBuffer.Return itr
             ns
         ) 0u
@@ -811,7 +811,7 @@ type BlockDeviceLU
                             m_StatusMaster,
                             source,
                             { command with DataSegment = PooledBuffer.Empty },  // for safety
-                            uint recvDataLen,
+                            uint32 recvDataLen,
                             this,
                             m_ModeParameter.D_SENSE,
                             iScsiSvcRespCd.COMMAND_COMPLETE,
@@ -1007,7 +1007,7 @@ type BlockDeviceLU
     ///   Call this method in critical section at task set lock.
     /// </remarks>
     member private _.CheckDuplicateACATask ( argQ : ImmutableArray< BDTaskStat > ) : bool =
-        let rec loop ( cnt : int ) =
+        let rec loop ( cnt : int32 ) =
             if cnt < argQ.Length then
                 let t = BDTaskStat.getTask argQ.[ cnt ]
                 if t.TaskType = BlockDeviceTaskType.ScsiTask && t.SCSICommand.ATTR = TaskATTRCd.ACA_TASK then
@@ -1250,7 +1250,7 @@ type BlockDeviceLU
                         ( source : CommandSourceInfo )
                         ( ex : SCSIACAException )
                         ( command : SCSICommandPDU )
-                        ( recvDataLen : uint )
+                        ( recvDataLen : uint32 )
                         ( naca : bool )
                         ( taskType : BlockDeviceTaskType )
                         ( curTS : TaskSet ) : TaskSet =

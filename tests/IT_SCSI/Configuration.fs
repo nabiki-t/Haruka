@@ -226,7 +226,7 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
     [<InlineData( "iqn.2020-05.example.com:target2", 16UL, 0, 1 )>]   // Target Device 1, Target 2
     [<InlineData( "iqn.2020-05.example.com:target1", 0UL, 2, 3 )>]    // Target Device 2, Target 1
     [<InlineData( "iqn.2020-05.example.com:target2", 0UL, 2, 3 )>]    // Target Device 2, Target 2
-    member _.ReportLUNs_001 ( target : string ) ( lub : uint64 ) ( port1 : int ) ( port2 : int ) =
+    member _.ReportLUNs_001 ( target : string ) ( lub : uint64 ) ( port1 : int32 ) ( port2 : int32 ) =
         task {
             let nport = [| iSCSIPortNo1; iSCSIPortNo2; iSCSIPortNo3; iSCSIPortNo4 |]
             let sessconf = { m_defaultSessParam1 with TargetName = target }
@@ -289,7 +289,7 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
     [<InlineData( "iqn.2020-05.example.com:target1", "iqn.2020-05.example.com:target1", 0, 1, 1UL, 16UL )>]
     [<InlineData( "iqn.2020-05.example.com:target2", "iqn.2020-05.example.com:target2", 0, 1, 17UL, 32UL )>]
     [<InlineData( "iqn.2020-05.example.com:target1", "iqn.2020-05.example.com:target2", 2, 3, 1UL, 16UL )>]
-    member _.LUAccess_001 ( target1 : string ) ( target2 : string ) ( port1 : int ) ( port2 : int ) ( vlun1 : uint64 ) ( vlun2 : uint64 ) =
+    member _.LUAccess_001 ( target1 : string ) ( target2 : string ) ( port1 : int32 ) ( port2 : int32 ) ( vlun1 : uint64 ) ( vlun2 : uint64 ) =
         task {
             let nport = [| iSCSIPortNo1; iSCSIPortNo2; iSCSIPortNo3; iSCSIPortNo4 |]
             let sessconf1 = { m_defaultSessParam1 with TargetName = target1 }
@@ -334,7 +334,7 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
     [<InlineData( "iqn.2020-05.example.com:target1", "iqn.2020-05.example.com:target1", 0, 1, 0UL, 16UL )>]
     [<InlineData( "iqn.2020-05.example.com:target2", "iqn.2020-05.example.com:target2", 0, 1, 17UL, 32UL )>]
     [<InlineData( "iqn.2020-05.example.com:target1", "iqn.2020-05.example.com:target2", 2, 3, 0UL, 16UL )>]
-    member _.LUAccess_002 ( target1 : string ) ( target2 : string ) ( port1 : int ) ( port2 : int ) ( vlun1 : uint64 ) ( vlun2 : uint64 ) =
+    member _.LUAccess_002 ( target1 : string ) ( target2 : string ) ( port1 : int32 ) ( port2 : int32 ) ( vlun1 : uint64 ) ( vlun2 : uint64 ) =
         task {
             let nport = [| iSCSIPortNo1; iSCSIPortNo2; iSCSIPortNo3; iSCSIPortNo4 |]
             let sessconf1 = { m_defaultSessParam1 with TargetName = target1 }
@@ -383,7 +383,7 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
     [<Theory>]
     [<InlineData( 0UL, 26 )>]
     [<InlineData( 1UL, 37 )>]
-    member _.GetOpcode_001 ( argLUN : uint64 ) ( exp : int ) =
+    member _.GetOpcode_001 ( argLUN : uint64 ) ( exp : int32 ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam1 m_defaultConnParam1
             let lun = lun_me.fromPrim argLUN
@@ -518,7 +518,7 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
     // Check the operation codes not supported
     [<Theory>]
     [<MemberData( "NotSupportedOperationCode_001_data" )>]
-    member _.NotSupportedOperationCode_001 ( argLUN : uint64 ) ( ctrlpos : int ) ( cdbparam : byte[] ) =
+    member _.NotSupportedOperationCode_001 ( argLUN : uint64 ) ( ctrlpos : int32 ) ( cdbparam : byte[] ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam1 m_defaultConnParam1
 

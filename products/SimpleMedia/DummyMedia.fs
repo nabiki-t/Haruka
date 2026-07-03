@@ -95,7 +95,7 @@ type DummyMedia
             ( source : CommandSourceInfo )
             ( _ : BLKCNT64_T )
             ( _ : ArraySegment<byte> )
-            : Task<int> =
+            : Task<int32> =
 
             let loginfo = struct ( m_ObjID, ValueSome( source ), ValueSome( initiatorTaskTag ), ValueSome( m_LUN ) )
             if HLogger.IsVerbose then
@@ -115,7 +115,7 @@ type DummyMedia
             ( _ : BLKCNT64_T )
             ( _ : uint64 )
             ( _ : ArraySegment<byte> )
-            : Task<int> =
+            : Task<int32> =
 
             let loginfo = struct ( m_ObjID, ValueSome( source ), ValueSome( initiatorTaskTag ), ValueSome( m_LUN ) )
             if HLogger.IsVerbose then

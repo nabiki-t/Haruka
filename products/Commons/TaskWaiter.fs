@@ -33,7 +33,7 @@ type private TaskState<'TR, 'TT> =
 /// <example>
 /// <code>
 /// <![CDATA[
-/// let w = TaskWaiter< int, int >()
+/// let w = TaskWaiter< int32, int32 >()
 /// (* When Notify is called after Wait, in which case the call to Wait will not return until Notify is called. *)
 /// (* thread 1 *)
 /// let th1 = fun () -> task {

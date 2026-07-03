@@ -23,8 +23,8 @@ open Haruka.Constants
 // Type definition
 
 type [<NoComparison>]T_Test = {
-    C : int list;
-    D : int list;
+    C : int32 list;
+    D : int32 list;
 }
 
 //=============================================================================
@@ -198,7 +198,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_Test_toString ( indent : int ) ( indentStep : int ) ( elem : T_Test ) ( elemName : string ) : seq<string> = 
+    static member private T_Test_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_Test ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {

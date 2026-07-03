@@ -2568,13 +2568,13 @@ type ScsiTask_Test () =
             Assert.True(( recvdl = 30u ))
             Assert.True(( resp = iScsiSvcRespCd.COMMAND_COMPLETE ))
             Assert.True(( stat = ScsiCmdStatCd.GOOD ))
-            Assert.True(( indata.Length = ( int blockSize ) * 3 ))
-            Assert.True(( alloclen = ( uint blockSize ) * 3u ))
+            Assert.True(( indata.Length = ( int32 blockSize ) * 3 ))
+            Assert.True(( alloclen = ( uint32 blockSize ) * 3u ))
         )
         mediaStub.p_Read <- ( fun itt source lba buf ->
             Assert.True(( itt = itt_me.fromPrim 0u ))
             Assert.True(( lba = blkcnt_me.ofUInt64 0xAABBUL ))
-            Assert.True(( buf.Count = ( int blockSize ) * 3 ))
+            Assert.True(( buf.Count = ( int32 blockSize ) * 3 ))
             Task.FromResult( buf.Count )
         )
         ilu.p_NotifyTerminateTask <- ( fun argTask ->
@@ -2617,14 +2617,14 @@ type ScsiTask_Test () =
         mediaStub.p_Read <- ( fun itt source lba buf ->
             Assert.True(( itt = itt_me.fromPrim 0u ))
             Assert.True(( lba = blkcnt_me.ofUInt64 0xAABBUL ))
-            Assert.True(( buf.Count = int wDataLen ))
+            Assert.True(( buf.Count = int32 wDataLen ))
             Task.FromResult( buf.Count )
         )
         ilu.p_NotifyTerminateTask <- ( fun argTask ->
             cnt1 <- cnt1 + 1
         )
         ilu.p_NotifyReadBytesCount <- ( fun _ s ->
-            Assert.True(( s = int wDataLen ))
+            Assert.True(( s = int32 wDataLen ))
         )
 
         stask.NotifyTerminate false
@@ -2668,7 +2668,7 @@ type ScsiTask_Test () =
         mediaStub.p_Read <- ( fun itt source lba buf ->
             Assert.True(( itt = itt_me.fromPrim 0u ))
             Assert.True(( lba = blkcnt_me.ofUInt64 0xAABBUL ))
-            Assert.True(( buf.Count = int wDataLen ))
+            Assert.True(( buf.Count = int32 wDataLen ))
             Task.FromResult( buf.Count )
         )
         ilu.p_NotifyTerminateTaskWithException <- ( fun argTask argEx ->
@@ -2682,7 +2682,7 @@ type ScsiTask_Test () =
                 Assert.Fail __LINE__
         )
         ilu.p_NotifyReadBytesCount <- ( fun _ s ->
-            Assert.True(( s = int wDataLen ))
+            Assert.True(( s = int32 wDataLen ))
         )
         ilu.p_NotifyReadTickCount <- ( fun _ _ -> () )
 
@@ -4611,7 +4611,7 @@ type ScsiTask_Test () =
 
     [<Theory>]
     [<MemberData( "AbortTasksFromSpecifiedITNexus_002_data" )>]
-    member _.AbortTasksFromSpecifiedITNexus_002 ( prtype : PR_TYPE ) ( resvkey : uint64 ) ( exp5 : int ) ( expql : int ) =
+    member _.AbortTasksFromSpecifiedITNexus_002 ( prtype : PR_TYPE ) ( resvkey : uint64 ) ( exp5 : int32 ) ( expql : int32 ) =
         let s = { OperationCode = 00uy; Control = 0uy; }
         let self, ilu = createDefScsiTask defaultSCSICommandPDU s [] false
         let itn1 = ITNexus( "INIT1", isid_me.zero, "TARG1", tpgt_me.fromPrim 0us );
@@ -4622,7 +4622,7 @@ type ScsiTask_Test () =
         let source2 = { self.Source with I_TNexus = itn2 }
         let source3 = { self.Source with I_TNexus = itn3 }
         let source4 = { self.Source with I_TNexus = itn4 }
-        let vcnt = Array.zeroCreate<int> 6
+        let vcnt = Array.zeroCreate<int32> 6
 
         let testTasks = [|
             yield BDTaskStat.TASK_STAT_Running( self )

@@ -370,7 +370,7 @@ type iSCSI_Initiator(
     /// </returns>
     member this.SendSCSICommandPDU_Test
         ( updater : SCSICommandPDU -> SCSICommandPDU )
-        ( fuz : ( uint * uint ) voption )
+        ( fuz : ( uint32 * uint32 ) voption )
         ( cid : CID_T )
         ( argI : BitI )
         ( argF : BitF )
@@ -459,7 +459,7 @@ type iSCSI_Initiator(
     /// </returns>
     member this.SendTaskManagementFunctionRequestPDU_Test
         ( updater : TaskManagementFunctionRequestPDU -> TaskManagementFunctionRequestPDU )
-        ( fuz : ( uint * uint ) voption )
+        ( fuz : ( uint32 * uint32 ) voption )
         ( cid : CID_T )
         ( argI : BitI )
         ( argFunction : TaskMgrReqCd )
@@ -542,7 +542,7 @@ type iSCSI_Initiator(
     /// </returns>
     member this.SendSCSIDataOutPDU_Test
         ( updater : SCSIDataOutPDU -> SCSIDataOutPDU )
-        ( fuz : ( uint * uint ) voption )
+        ( fuz : ( uint32 * uint32 ) voption )
         ( cid : CID_T )
         ( argF : BitF )
         ( itt : ITT_T )
@@ -621,7 +621,7 @@ type iSCSI_Initiator(
     /// </returns>
     member this.SendTextRequestPDU_Test
         ( updater : TextRequestPDU -> TextRequestPDU )
-        ( fuz : ( uint * uint ) voption )
+        ( fuz : ( uint32 * uint32 ) voption )
         ( cid : CID_T )
         ( argI : BitI )
         ( argF : BitF )
@@ -698,7 +698,7 @@ type iSCSI_Initiator(
     /// </returns>
     member this.SendLogoutRequestPDU_Test
         ( updater : LogoutRequestPDU -> LogoutRequestPDU )
-        ( fuz : ( uint * uint ) voption )
+        ( fuz : ( uint32 * uint32 ) voption )
         ( cid : CID_T )
         ( argI : BitI )
         ( argReasonCode : LogoutReqReasonCd )
@@ -772,7 +772,7 @@ type iSCSI_Initiator(
     /// </returns>
     member this.SendSNACKRequestPDU_Test
         ( updater : SNACKRequestPDU -> SNACKRequestPDU )
-        ( fuz : ( uint * uint ) voption )
+        ( fuz : ( uint32 * uint32 ) voption )
         ( cid : CID_T )
         ( argType : SnackReqTypeCd )
         ( argLUN : LUN_T )
@@ -843,7 +843,7 @@ type iSCSI_Initiator(
     /// </remarks>
     member this.SendNOPOut_PingRequest_Test
         ( updater : NOPOutPDU -> NOPOutPDU )
-        ( fuz : ( uint * uint ) voption )
+        ( fuz : ( uint32 * uint32 ) voption )
         ( cid : CID_T )
         ( argI : BitI )
         ( argLUN : LUN_T )
@@ -916,7 +916,7 @@ type iSCSI_Initiator(
     /// </remarks>
     member this.SendNOPOut_PingResponse_Test
         ( updater : NOPOutPDU -> NOPOutPDU )
-        ( fuz : ( uint * uint ) voption )
+        ( fuz : ( uint32 * uint32 ) voption )
         ( cid : CID_T )
         ( argLUN : LUN_T )
         ( argTargetTransferTag : TTT_T )
@@ -1103,7 +1103,7 @@ type iSCSI_Initiator(
     member this.ReadMediaData ( cid : CID_T ) ( lun : LUN_T ) ( lba : BLKCNT32_T ) ( blockCount : BLKCNT16_T ) ( blockLength : uint32 ) : Task<byte[]> =
         task {
             let accessLength = ( blockCount |> blkcnt_me.toUInt16 |> uint32 ) * blockLength
-            let rBuffer = Array.zeroCreate<byte>( int accessLength )
+            let rBuffer = Array.zeroCreate<byte>( int32 accessLength )
             let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F lba 0uy blockCount NACA.F LINK.F
             let! itt, _ = this.SendSCSICommandPDU cid BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK lun accessLength readCDB PooledBuffer.Empty 0u
 
@@ -1114,7 +1114,7 @@ type iSCSI_Initiator(
                     | :? SCSIDataInPDU as x ->
                         if x.InitiatorTaskTag <> itt then
                             raise <| SessionRecoveryException( "Unexpedted ITT", m_SessParams.TSIH )
-                        x.DataSegment.CopyTo( rBuffer, int x.BufferOffset )
+                        x.DataSegment.CopyTo( rBuffer, int32 x.BufferOffset )
                         return true
                     | :? SCSIResponsePDU as x ->
                         if x.InitiatorTaskTag <> itt then
@@ -1152,7 +1152,7 @@ type iSCSI_Initiator(
     /// </param>
     member this.WriteMediaData ( cid : CID_T ) ( lun : LUN_T ) ( lba : BLKCNT32_T ) ( blockLength : uint32 ) ( bytesData : byte[] ) : Task<unit> =
         task {
-            let blockCount = uint16 ( bytesData.Length / int blockLength ) |> blkcnt_me.ofUInt16
+            let blockCount = uint16 ( bytesData.Length / int32 blockLength ) |> blkcnt_me.ofUInt16
             let mbl = m_SessParams.MaxBurstLength
             let mrdsl = m_Connections.[cid].Params.MaxRecvDataSegmentLength_T
             let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F lba 0uy blockCount NACA.F LINK.F
@@ -1172,7 +1172,7 @@ type iSCSI_Initiator(
                             |> List.map ( fun ( idx, struct( s, l , f ) ) -> struct( idx, s, l, f ) )
 
                         for struct( idx, s, l, f ) in segs do
-                            let sendData = PooledBuffer.Rent( bytesData, int s, int l )
+                            let sendData = PooledBuffer.Rent( bytesData, int32 s, int32 l )
                             let datasn = datasn_me.fromPrim ( uint32 idx )
                             do! this.SendSCSIDataOutPDU cid ( BitF.ofBool f ) itt lun x.TargetTransferTag datasn s sendData
                             sendData.Return()
@@ -1210,7 +1210,7 @@ type iSCSI_Initiator(
 
         let buildResult ( respKeyVal : string[][] ) : Dictionary< string, string[] > =
             let rd = Dictionary< string, List<string> >()
-            let rec loop ( targetName : string ) ( idx : int ) =
+            let rec loop ( targetName : string ) ( idx : int32 ) =
                 if idx < respKeyVal.Length then
                     if respKeyVal.[idx].[0] = "TargetName" then
                         loop respKeyVal.[idx].[1] ( idx + 1 )
@@ -1292,7 +1292,7 @@ type iSCSI_Initiator(
             ( argDataDigest : DigestType )
             ( sock : Stream )
             ( argPDU : ILogicalPDU )
-            ( fuz : ( uint * uint ) voption ) : Task<unit> =
+            ( fuz : ( uint32 * uint32 ) voption ) : Task<unit> =
         task {
             match fuz with
             | ValueSome( off, len ) ->
@@ -2159,7 +2159,7 @@ type iSCSI_Initiator(
                             T = if cBitValue then false else argT;
                             NSG = if cBitValue || not argT then LoginReqStateCd.SEQURITY else defLoginReqPDU.NSG;   // If T is 0, NSG is reserved
                             CmdSN = getCmdSN();
-                            ExpStatSN = statsn_me.incr ( uint i ) nextExpStatSN;
+                            ExpStatSN = statsn_me.incr ( uint32 i ) nextExpStatSN;
                             TextRequest = sendTextResponses.[i];
                     }
                 let! _ = PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objID, conn, loginRequest )
@@ -2181,7 +2181,7 @@ type iSCSI_Initiator(
                         let msg = sprintf "Unexpected login response status(%s) was received." ( stat.ToString() )
                         raise <| SessionRecoveryException ( msg, tsih_me.zero )
 
-            let lastSendExpStatSN = statsn_me.incr ( uint sendTextResponses.Length - 1u ) nextExpStatSN
+            let lastSendExpStatSN = statsn_me.incr ( uint32 sendTextResponses.Length - 1u ) nextExpStatSN
             return lastSendExpStatSN
         }
 

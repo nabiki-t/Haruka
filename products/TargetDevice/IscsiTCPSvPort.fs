@@ -193,7 +193,7 @@ type IscsiTCPSvPort
         try
             addr
             |> Array.map( fun itr ->
-                let l = new TcpListener( itr, int portNum )
+                let l = new TcpListener( itr, int32 portNum )
                 if confAddr.Length <= 0 then
                     l.Server.SetSocketOption( SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, 0 )
                 HLogger.Trace( LogID.I_CREATE_TCP_SERVER_PORT, fun g -> g.Gen2( objid, confAddr, portNum ) )

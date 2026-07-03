@@ -153,7 +153,7 @@ let CreateDefaultConfig ( st : StringTable ) ( cmd : CommandParser<CtrlCmdType> 
             Directory.CreateDirectory logDirName |> ignore
 
 [<EntryPoint>]
-let main ( args : string[] ) : int =
+let main ( args : string[] ) : int32 =
     let st = StringTable( "Controller" )
     let exitStatus =
         try

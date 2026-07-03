@@ -814,7 +814,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_TargetGroup_toString ( indent : int ) ( indentStep : int ) ( elem : T_TargetGroup ) ( elemName : string ) : seq<string> = 
+    static member private T_TargetGroup_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_TargetGroup ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -855,7 +855,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_Target_toString ( indent : int ) ( indentStep : int ) ( elem : T_Target ) ( elemName : string ) : seq<string> = 
+    static member private T_Target_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_Target ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -906,7 +906,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_Auth_toString ( indent : int ) ( indentStep : int ) ( elem : T_Auth ) ( elemName : string ) : seq<string> = 
+    static member private T_Auth_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_Auth ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -937,7 +937,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_CHAP_toString ( indent : int ) ( indentStep : int ) ( elem : T_CHAP ) ( elemName : string ) : seq<string> = 
+    static member private T_CHAP_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_CHAP ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -965,7 +965,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_InitiatorAuth_toString ( indent : int ) ( indentStep : int ) ( elem : T_InitiatorAuth ) ( elemName : string ) : seq<string> = 
+    static member private T_InitiatorAuth_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_InitiatorAuth ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -1005,7 +1005,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_TargetAuth_toString ( indent : int ) ( indentStep : int ) ( elem : T_TargetAuth ) ( elemName : string ) : seq<string> = 
+    static member private T_TargetAuth_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_TargetAuth ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -1045,7 +1045,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_LogicalUnit_toString ( indent : int ) ( indentStep : int ) ( elem : T_LogicalUnit ) ( elemName : string ) : seq<string> = 
+    static member private T_LogicalUnit_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_LogicalUnit ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -1087,7 +1087,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_DEVICE_toString ( indent : int ) ( indentStep : int ) ( elem : T_DEVICE ) ( elemName : string ) : seq<string> = 
+    static member private T_DEVICE_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_DEVICE ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -1118,7 +1118,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_BlockDevice_toString ( indent : int ) ( indentStep : int ) ( elem : T_BlockDevice ) ( elemName : string ) : seq<string> = 
+    static member private T_BlockDevice_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_BlockDevice ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -1146,7 +1146,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_MEDIA_toString ( indent : int ) ( indentStep : int ) ( elem : T_MEDIA ) ( elemName : string ) : seq<string> = 
+    static member private T_MEDIA_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_MEDIA ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -1181,7 +1181,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_PlainFile_toString ( indent : int ) ( indentStep : int ) ( elem : T_PlainFile ) ( elemName : string ) : seq<string> = 
+    static member private T_PlainFile_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_PlainFile ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -1220,7 +1220,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_MemBuffer_toString ( indent : int ) ( indentStep : int ) ( elem : T_MemBuffer ) ( elemName : string ) : seq<string> = 
+    static member private T_MemBuffer_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_MemBuffer ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -1254,7 +1254,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_DummyMedia_toString ( indent : int ) ( indentStep : int ) ( elem : T_DummyMedia ) ( elemName : string ) : seq<string> = 
+    static member private T_DummyMedia_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_DummyMedia ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -1286,7 +1286,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_DebugMedia_toString ( indent : int ) ( indentStep : int ) ( elem : T_DebugMedia ) ( elemName : string ) : seq<string> = 
+    static member private T_DebugMedia_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_DebugMedia ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {

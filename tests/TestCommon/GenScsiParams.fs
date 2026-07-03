@@ -533,9 +533,9 @@ type GenScsiParams() =
                 else
                     0uy;
             IdentifierDescriptor =
-                let rec loop ( s : int ) ( acc : DeviceIdentifierDesc list ) =
+                let rec loop ( s : int32 ) ( acc : DeviceIdentifierDesc list ) =
                     if pv.Length >= s + 4 then
-                        let wIdentifierLength = int ( pv.Array.[ s + 3 ] )
+                        let wIdentifierLength = int32 ( pv.Array.[ s + 3 ] )
                         let wCodeSet = pv.Array.[ s ] &&& 0x0Fuy
                         let r = {
                             ProtocolIdentifier = ( pv.Array.[ s ] >>> 4 ) &&& 0x0fuy;
@@ -1057,9 +1057,9 @@ type GenScsiParams() =
                     }
                 else
                     None;
-            Control = GenScsiParams.BytesToControlModePage pv ( 4 + int blockDescLength );
-            Cache = GenScsiParams.BytesToCacheModePage pv ( 4 + int blockDescLength );
-            InformationalExceptionsControl = GenScsiParams.BytesToInformationalExceptionsControlModePage pv ( 4 + int blockDescLength );
+            Control = GenScsiParams.BytesToControlModePage pv ( 4 + int32 blockDescLength );
+            Cache = GenScsiParams.BytesToCacheModePage pv ( 4 + int32 blockDescLength );
+            InformationalExceptionsControl = GenScsiParams.BytesToInformationalExceptionsControlModePage pv ( 4 + int32 blockDescLength );
         }
 
     /// <summary>
@@ -1129,9 +1129,9 @@ type GenScsiParams() =
                         }
                     else
                         None;
-            Control = GenScsiParams.BytesToControlModePage pv ( 8 + int blockDescLength );
-            Cache = GenScsiParams.BytesToCacheModePage pv ( 8 + int blockDescLength );
-            InformationalExceptionsControl = GenScsiParams.BytesToInformationalExceptionsControlModePage pv ( 8 + int blockDescLength );
+            Control = GenScsiParams.BytesToControlModePage pv ( 8 + int32 blockDescLength );
+            Cache = GenScsiParams.BytesToCacheModePage pv ( 8 + int32 blockDescLength );
+            InformationalExceptionsControl = GenScsiParams.BytesToInformationalExceptionsControlModePage pv ( 8 + int32 blockDescLength );
         }
 
     /// <summary>
@@ -1146,8 +1146,8 @@ type GenScsiParams() =
     /// <returns>
     ///  Converted Control Mode Page data or, if missing it returns None.
     /// </returns>
-    static member private BytesToControlModePage ( pv : PooledBuffer ) ( s : int ) : ControlModePage option =
-        let rec loop ( p : int ) : ControlModePage option =
+    static member private BytesToControlModePage ( pv : PooledBuffer ) ( s : int32 ) : ControlModePage option =
+        let rec loop ( p : int32 ) : ControlModePage option =
             if pv.Length < p + 12 then
                 None
             elif ( pv.Array.[ p + 0 ] &&& 0x7Fuy ) = 0x0Auy then
@@ -1174,7 +1174,7 @@ type GenScsiParams() =
             else
                 let wPageLength = pv.Array.[ p + 1 ] + 2uy
                 if wPageLength > 0uy then
-                    loop ( p + int wPageLength )
+                    loop ( p + int32 wPageLength )
                 else
                     None
         loop s
@@ -1191,8 +1191,8 @@ type GenScsiParams() =
     /// <returns>
     ///  Converted Cache Mode Page data or, if missing it returns None.
     /// </returns>
-    static member private BytesToCacheModePage ( pv : PooledBuffer ) ( s : int ) : CacheModePage option =
-        let rec loop ( p : int ) : CacheModePage option =
+    static member private BytesToCacheModePage ( pv : PooledBuffer ) ( s : int32 ) : CacheModePage option =
+        let rec loop ( p : int32 ) : CacheModePage option =
             if pv.Length < p + 20 then
                 None
             elif ( pv.Array.[ p + 0 ] &&& 0x7Fuy ) = 0x08uy then
@@ -1224,7 +1224,7 @@ type GenScsiParams() =
             else
                 let wPageLength = pv.Array.[ p + 1 ] + 2uy
                 if wPageLength > 0uy then
-                    loop ( p + int wPageLength )
+                    loop ( p + int32 wPageLength )
                 else
                     None
         loop s
@@ -1241,8 +1241,8 @@ type GenScsiParams() =
     /// <returns>
     ///  Converted Informational Exceptions Control Mode Page data or, if missing it returns None.
     /// </returns>
-    static member private BytesToInformationalExceptionsControlModePage ( pv : PooledBuffer ) ( s : int ) : InformationalExceptionsControlModePage option =
-        let rec loop ( p : int ) : InformationalExceptionsControlModePage option =
+    static member private BytesToInformationalExceptionsControlModePage ( pv : PooledBuffer ) ( s : int32 ) : InformationalExceptionsControlModePage option =
+        let rec loop ( p : int32 ) : InformationalExceptionsControlModePage option =
             if pv.Length < p + 12 then
                 None
             elif ( pv.Array.[ p + 0 ] &&& 0x7Fuy ) = 0x1Cuy then
@@ -1263,7 +1263,7 @@ type GenScsiParams() =
             else
                 let wPageLength = pv.Array.[ p + 1 ] + 2uy
                 if wPageLength > 0uy then
-                    loop ( p + int wPageLength )
+                    loop ( p + int32 wPageLength )
                 else
                     None
         loop s
@@ -1293,7 +1293,7 @@ type GenScsiParams() =
             ReservationKey =
                 if pv.Length >= 16 then
                     [|
-                        let cnt = ( min ( pv.Length - 8 ) ( int wAdditionalLength ) ) / 8;
+                        let cnt = ( min ( pv.Length - 8 ) ( int32 wAdditionalLength ) ) / 8;
                         for i = 0 to cnt - 1 do
                             Functions.NetworkBytesToUInt64_InPooledBuffer pv ( i * 8 + 8 ) |> resvkey_me.fromPrim
                     |];
@@ -1440,8 +1440,8 @@ type GenScsiParams() =
                     0u;
             AdditionalLength = wAdditionalLength;
             FullStatusDescriptor =
-                let wlen = min ( int wAdditionalLength + 7 ) pv.Length
-                let rec loop ( s : int ) ( acc : PR_ReadFullStatus_FullStatusDesc list ) =
+                let wlen = min ( int32 wAdditionalLength + 7 ) pv.Length
+                let rec loop ( s : int32 ) ( acc : PR_ReadFullStatus_FullStatusDesc list ) =
                     if s < wlen then
                         let wAdditionalDescriptorLength =
                                 if wlen >= s + 24  then
@@ -1502,8 +1502,8 @@ type GenScsiParams() =
                                     0us;
                             iSCSIName =
                                 if wlen > s + 28 && wAdditionalLength > 0us then
-                                    let wnextpos1 = s + 24 + int wAdditionalDescriptorLength
-                                    let wnextpos2 = s + 28 + int wAdditionalLength
+                                    let wnextpos1 = s + 24 + int32 wAdditionalDescriptorLength
+                                    let wnextpos2 = s + 28 + int32 wAdditionalLength
                                     let epos = ( min wnextpos1 wnextpos2 ) - 1
                                     pv.Array.[ s + 28 .. epos ]
                                     |> Array.takeWhile ( (<) 0uy )
@@ -1512,7 +1512,7 @@ type GenScsiParams() =
                                     "";
                         }
                         if wAdditionalDescriptorLength > 0u then
-                            loop ( s + 24 + int wAdditionalDescriptorLength ) ( desc :: acc )
+                            loop ( s + 24 + int32 wAdditionalDescriptorLength ) ( desc :: acc )
                         else
                             desc :: acc
                     else

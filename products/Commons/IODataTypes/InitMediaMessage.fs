@@ -253,7 +253,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_OutputLine_toString ( indent : int ) ( indentStep : int ) ( elem : T_OutputLine ) ( elemName : string ) : seq<string> = 
+    static member private T_OutputLine_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_OutputLine ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -280,7 +280,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_LineType_toString ( indent : int ) ( indentStep : int ) ( elem : T_LineType ) ( elemName : string ) : seq<string> = 
+    static member private T_LineType_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_LineType ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {

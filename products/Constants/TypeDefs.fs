@@ -61,7 +61,7 @@ type LogLevel =
         | _         -> false, LOGLEVEL_INFO
 
     /// convert LogLevel value to interger value
-    static member toInt : ( LogLevel -> int ) =
+    static member toInt : ( LogLevel -> int32 ) =
         function
         | LOGLEVEL_VERBOSE  -> 1
         | LOGLEVEL_INFO     -> 2
@@ -71,7 +71,7 @@ type LogLevel =
         | LOGLEVEL_OFF      -> 99
 
     /// convert interger value to LogLevel value
-    static member fromInt : ( int -> LogLevel ) =
+    static member fromInt : ( int32 -> LogLevel ) =
         function
         | 1     -> LOGLEVEL_VERBOSE
         | 2     -> LOGLEVEL_INFO
@@ -194,7 +194,7 @@ type AuthMethodCandidateValue =
     /// <summary>
     /// Get integer value corresponging to specified AuthMethodCandidateValue value.
     /// </summary>
-    static member toNumericValue : ( AuthMethodCandidateValue -> int ) =
+    static member toNumericValue : ( AuthMethodCandidateValue -> int32 ) =
         function
         | AMC_None  -> 0
         | AMC_CHAP  -> 1
@@ -407,7 +407,7 @@ type BlocksizePolicy =
 type objidx_me =
 
     /// <summary>Generate new object ID.</summary>
-    static member inline NewID () : uint<objidx_me> =
+    static member inline NewID () : uint32<objidx_me> =
         let g = Guid.NewGuid()
         let v = g.ToByteArray()
         let u1 = BitConverter.ToUInt32( v, 0 )
@@ -416,11 +416,11 @@ type objidx_me =
         let u4 = BitConverter.ToUInt32( v, 12 )
         ( u1 ^^^ u2 ^^^ u3 ^^^ u4 ) * 1u<objidx_me>
 
-    static member inline ToString( v : uint<objidx_me> ) : string =
+    static member inline ToString( v : uint32<objidx_me> ) : string =
         String.Format( "0x{0:X8}", v )
 
 /// Data types of objidx_me
-type OBJIDX_T = uint<objidx_me>
+type OBJIDX_T = uint32<objidx_me>
 
 
 /// Measure for network portal index number in configuration data.
@@ -588,7 +588,7 @@ type lun_me =
     /// <param name="v">Bytes array to which written converted result.</param>
     /// <param name="p">The position in array v where the conversion result is written.</param>
     /// <param name="lun">LUN value</param>
-    static member inline toBytes ( v : byte[] ) ( p : int ) ( lun : uint64<lun_me> ) : unit =
+    static member inline toBytes ( v : byte[] ) ( p : int32 ) ( lun : uint64<lun_me> ) : unit =
         let lval = lun_me.toPrim lun
         v.[ p + 1 ] <- ( lval        ) |> byte
         v.[ p + 0 ] <- ( lval >>> 8  ) |> byte
@@ -617,7 +617,7 @@ type lun_me =
     /// <param name="v">Bytes array/</param>
     /// <param name="p">The position in array v where the LUN value has been written.</param>
     /// <returns>Translated LUN value</returns>
-    static member inline fromBytes ( v : byte[] ) ( p : int ) : uint64<lun_me> =
+    static member inline fromBytes ( v : byte[] ) ( p : int32 ) : uint64<lun_me> =
         (   uint64 v.[ p + 1 ]          ) |||
         ( ( uint64 v.[ p + 0 ] ) <<< 8  ) |||
         ( ( uint64 v.[ p + 3 ] ) <<< 16 ) |||
@@ -639,17 +639,17 @@ type itt_me =
     /// <summary>Convert itt_me value to primitive value.</summary>
     /// <param name="v">itt_me value to be converted.</param>
     /// <returns>Converted value.</returns>
-    static member inline toPrim( v : uint<itt_me> ) : uint =
+    static member inline toPrim( v : uint32<itt_me> ) : uint32 =
         uint32 v
 
     /// <summary>Convert primitive value to itt_me value.</summary>
     /// <param name="v">Primitive value to be converted.</param>
     /// <returns>Converted value.</returns>
-    static member inline fromPrim( v : uint ) : uint<itt_me> =
+    static member inline fromPrim( v : uint32 ) : uint32<itt_me> =
         v * 1u<itt_me>
 
 /// Data types of InitiatorTaskTag
-type ITT_T = uint<itt_me>
+type ITT_T = uint32<itt_me>
 
 
 /// Measure for TargetTransferTag
@@ -658,17 +658,17 @@ type ttt_me =
     /// <summary>Convert ttt_me value to primitive value.</summary>
     /// <param name="v">ttt_me value to be converted.</param>
     /// <returns>Converted value.</returns>
-    static member inline toPrim( v : uint<ttt_me> ) : uint =
+    static member inline toPrim( v : uint32<ttt_me> ) : uint32 =
         uint32 v
 
     /// <summary>Convert primitive value to ttt_me value.</summary>
     /// <param name="v">Primitive value to be converted.</param>
     /// <returns>Converted value.</returns>
-    static member inline fromPrim( v : uint ) : uint<ttt_me> =
+    static member inline fromPrim( v : uint32 ) : uint32<ttt_me> =
         v * 1u<ttt_me>
 
 /// Data types of TargetTransferTag
-type TTT_T = uint<ttt_me>
+type TTT_T = uint32<ttt_me>
 
 
 /// Measure for TSIH
@@ -714,7 +714,7 @@ type tsih_me =
     /// <returns>
     ///  If a less than b, -1 is returned. If a greater than b, 1 is returned. Otherwise 0 is returned.
     /// </returns>
-    static member inline Compare ( a : uint16<tsih_me> ) ( b : uint16<tsih_me> ) : int =
+    static member inline Compare ( a : uint16<tsih_me> ) ( b : uint16<tsih_me> ) : int32 =
         if a < b then -1
         elif a > b then 1
         else 0
@@ -770,14 +770,14 @@ type concnt_me =
     /// <summary>Convert concnt_me value to primitive value.</summary>
     /// <param name="v">concnt_me value to be converted.</param>
     /// <returns>Converted value.</returns>
-    static member inline toPrim( v : int<concnt_me> ) : int =
-        int v
+    static member inline toPrim( v : int32<concnt_me> ) : int32 =
+        int32 v
 
     /// <summary>Convert primitive value to concnt_me value.</summary>
     /// <param name="v">Primitive value to be converted.</param>
     /// <returns>Converted value.</returns>
-    static member inline fromPrim( v : int ) : int<concnt_me> =
-        ( int v ) * 1<concnt_me>
+    static member inline fromPrim( v : int32 ) : int32<concnt_me> =
+        ( int32 v ) * 1<concnt_me>
 
     /// zero value fo cid_me
     static member zero = 0<concnt_me>
@@ -786,7 +786,7 @@ type concnt_me =
     /// <param name="def">Default value that is returned, when optv is None.</param>
     /// <param name="optv">Optional value.</param>
     /// <returns>Value of optv, or def.</returns>
-    static member inline fromOpt ( def : int ) ( optv : int<concnt_me> option ) : int<concnt_me> =
+    static member inline fromOpt ( def : int32 ) ( optv : int32<concnt_me> option ) : int32<concnt_me> =
         match optv with
         | None -> concnt_me.fromPrim def
         | Some( x ) -> x
@@ -801,7 +801,7 @@ type concnt_me =
     ///  If ( acid, aconcnt ) greater than ( bcid, bconcnt ), 1 will be returned.
     ///  Otherwise, 0 will be returned.
     /// </returns>
-    static member inline Compare ( acid : CID_T ) ( aconcnt : int<concnt_me> ) ( bcid : CID_T ) ( bconcnt : int<concnt_me> ) : int =
+    static member inline Compare ( acid : CID_T ) ( aconcnt : int32<concnt_me> ) ( bcid : CID_T ) ( bconcnt : int32<concnt_me> ) : int32 =
         if acid < bcid then -1
         elif acid > bcid then 1
         elif aconcnt < bconcnt then -1
@@ -809,7 +809,7 @@ type concnt_me =
         else 0
 
 /// Data types of Connection Counter
-type CONCNT_T = int<concnt_me>
+type CONCNT_T = int32<concnt_me>
 
 /// Measure for CmdSN
 [<Measure>]
@@ -817,13 +817,13 @@ type cmdsn_me =
     /// <summary>Convert cmdsn_me value to primitive value.</summary>
     /// <param name="v">cmdsn_me value to be converted.</param>
     /// <returns>Converted value.</returns>
-    static member inline toPrim( v : uint<cmdsn_me> ) : uint =
+    static member inline toPrim( v : uint32<cmdsn_me> ) : uint32 =
         uint32 v
 
     /// <summary>Convert primitive value to cmdsn_me value.</summary>
     /// <param name="v">Primitive value to be converted.</param>
     /// <returns>Converted value.</returns>
-    static member inline fromPrim( v : uint ) : uint<cmdsn_me> =
+    static member inline fromPrim( v : uint32 ) : uint32<cmdsn_me> =
         v * 1u<cmdsn_me>
 
     /// zero value fo cmdsn_me
@@ -833,7 +833,7 @@ type cmdsn_me =
     /// <param name="def">Default value that is returned, when optv is None.</param>
     /// <param name="optv">Optional value.</param>
     /// <returns>Value of optv, or def.</returns>
-    static member inline fromOpt ( def : uint32 ) ( optv : uint<cmdsn_me> option ) : uint<cmdsn_me> =
+    static member inline fromOpt ( def : uint32 ) ( optv : uint32<cmdsn_me> option ) : uint32<cmdsn_me> =
         match optv with
         | None -> cmdsn_me.fromPrim def
         | Some( x ) -> x
@@ -842,7 +842,7 @@ type cmdsn_me =
     /// <param name="s1">left value.</param>
     /// <param name="s2">right value.</param>
     /// <returns>If s1 is less than s2 in serial number arithmetic, it returns true.</returns>
-    static member inline lessThan ( s1 : uint<cmdsn_me> ) ( s2 : uint<cmdsn_me> ) : bool =
+    static member inline lessThan ( s1 : uint32<cmdsn_me> ) ( s2 : uint32<cmdsn_me> ) : bool =
         let i1 = cmdsn_me.toPrim s1
         let i2 = cmdsn_me.toPrim s2
         ( ( i1 < i2 ) && ( ( i2 - i1 ) <  0x80000000u ) ) || ( ( i1 > i2 ) && ( ( i1 - i2 ) > 0x80000000u ) )
@@ -855,7 +855,7 @@ type cmdsn_me =
     ///   if s2 is less than s1 in serial number arithmetic, it returns 1,
     ///   otherwise it returns zero.
     /// </returns>
-    static member inline compare ( s1 : uint<cmdsn_me> ) ( s2 : uint<cmdsn_me> ) : int =
+    static member inline compare ( s1 : uint32<cmdsn_me> ) ( s2 : uint32<cmdsn_me> ) : int32 =
         if cmdsn_me.lessThan s1 s2 then
             -1
         elif cmdsn_me.lessThan s2 s1 then
@@ -878,7 +878,7 @@ type cmdsn_me =
     /// <returns>
     ///  Current CmdSN + 1.
     /// </returns>
-    static member inline next ( s1 : uint<cmdsn_me> ) : uint<cmdsn_me> =
+    static member inline next ( s1 : uint32<cmdsn_me> ) : uint32<cmdsn_me> =
         s1 + ( cmdsn_me.fromPrim 1u )
 
     /// <summary>
@@ -893,7 +893,7 @@ type cmdsn_me =
     /// <returns>
     ///  s1 + v
     /// </returns>
-    static member inline incr ( v : uint ) ( s1 : uint<cmdsn_me> ) : uint<cmdsn_me> =
+    static member inline incr ( v : uint32 ) ( s1 : uint32<cmdsn_me> ) : uint32<cmdsn_me> =
         s1 + ( cmdsn_me.fromPrim v )
 
     /// <summary>
@@ -908,12 +908,12 @@ type cmdsn_me =
     /// <returns>
     ///  s1 + v
     /// </returns>
-    static member inline decr ( v : uint ) ( s1 : uint<cmdsn_me> ) : uint<cmdsn_me> =
+    static member inline decr ( v : uint32 ) ( s1 : uint32<cmdsn_me> ) : uint32<cmdsn_me> =
         s1 - ( cmdsn_me.fromPrim v )
 
 
 /// Data types of CmdSN
-type CMDSN_T = uint<cmdsn_me>
+type CMDSN_T = uint32<cmdsn_me>
 
 
 /// Measure for StatSN
@@ -922,13 +922,13 @@ type statsn_me =
     /// <summary>Convert statsn_me value to primitive value.</summary>
     /// <param name="v">statsn_me value to be converted.</param>
     /// <returns>Converted value.</returns>
-    static member inline toPrim( v : uint<statsn_me> ) : uint =
+    static member inline toPrim( v : uint32<statsn_me> ) : uint32 =
         uint32 v
 
     /// <summary>Convert primitive value to statsn_me value.</summary>
     /// <param name="v">Primitive value to be converted.</param>
     /// <returns>Converted value.</returns>
-    static member inline fromPrim( v : uint ) : uint<statsn_me> =
+    static member inline fromPrim( v : uint32 ) : uint32<statsn_me> =
         v * 1u<statsn_me>
 
     /// zero value fo statsn_me
@@ -938,7 +938,7 @@ type statsn_me =
     /// <param name="def">Default value that is returned, when optv is None.</param>
     /// <param name="optv">Optional value.</param>
     /// <returns>Value of optv, or def.</returns>
-    static member inline fromOpt ( def : uint32 ) ( optv : uint<statsn_me> option ) : uint<statsn_me> =
+    static member inline fromOpt ( def : uint32 ) ( optv : uint32<statsn_me> option ) : uint32<statsn_me> =
         match optv with
         | None -> statsn_me.fromPrim def
         | Some( x ) -> x
@@ -947,7 +947,7 @@ type statsn_me =
     /// <param name="s1">left value.</param>
     /// <param name="s2">right value.</param>
     /// <returns>If s1 is less than s2 in serial number arithmetic, it returns true.</returns>
-    static member inline lessThan ( s1 : uint<statsn_me> ) ( s2 : uint<statsn_me> ) : bool =
+    static member inline lessThan ( s1 : uint32<statsn_me> ) ( s2 : uint32<statsn_me> ) : bool =
         let i1 = statsn_me.toPrim s1
         let i2 = statsn_me.toPrim s2
         ( ( i1 < i2 ) && ( ( i2 - i1 ) <  0x80000000u ) ) || ( ( i1 > i2 ) && ( ( i1 - i2 ) > 0x80000000u ) )
@@ -960,7 +960,7 @@ type statsn_me =
     ///   if s2 is less than s1 in serial number arithmetic, it returns 1,
     ///   otherwise it returns zero.
     /// </returns>
-    static member inline compare ( s1 : uint<statsn_me> ) ( s2 : uint<statsn_me> ) : int =
+    static member inline compare ( s1 : uint32<statsn_me> ) ( s2 : uint32<statsn_me> ) : int32 =
         if statsn_me.lessThan s1 s2 then
             -1
         elif statsn_me.lessThan s2 s1 then
@@ -983,7 +983,7 @@ type statsn_me =
     /// <returns>
     ///  Current StatSN + 1.
     /// </returns>
-    static member inline next ( s1 : uint<statsn_me> ) : uint<statsn_me> =
+    static member inline next ( s1 : uint32<statsn_me> ) : uint32<statsn_me> =
         s1 + ( statsn_me.fromPrim 1u )
 
     /// <summary>
@@ -998,7 +998,7 @@ type statsn_me =
     /// <returns>
     ///  s1 + v
     /// </returns>
-    static member inline incr ( v : uint ) ( s1 : uint<statsn_me> ) : uint<statsn_me> =
+    static member inline incr ( v : uint32 ) ( s1 : uint32<statsn_me> ) : uint32<statsn_me> =
         s1 + ( statsn_me.fromPrim v )
 
     /// <summary>
@@ -1013,11 +1013,11 @@ type statsn_me =
     /// <returns>
     ///  s1 + v
     /// </returns>
-    static member inline decr ( v : uint ) ( s1 : uint<statsn_me> ) : uint<statsn_me> =
+    static member inline decr ( v : uint32 ) ( s1 : uint32<statsn_me> ) : uint32<statsn_me> =
         s1 - ( statsn_me.fromPrim v )
 
 /// Data types of StatSN
-type STATSN_T = uint<statsn_me>
+type STATSN_T = uint32<statsn_me>
 
 
 /// Measure for DataSN / R2TSN
@@ -1026,13 +1026,13 @@ type datasn_me =
     /// <summary>Convert datasn_me value to primitive value.</summary>
     /// <param name="v">datasn_me value to be converted.</param>
     /// <returns>Converted value.</returns>
-    static member inline toPrim( v : uint<datasn_me> ) : uint =
+    static member inline toPrim( v : uint32<datasn_me> ) : uint32 =
         uint32 v
 
     /// <summary>Convert primitive value to datasn_me value.</summary>
     /// <param name="v">Primitive value to be converted.</param>
     /// <returns>Converted value.</returns>
-    static member inline fromPrim( v : uint ) : uint<datasn_me> =
+    static member inline fromPrim( v : uint32 ) : uint32<datasn_me> =
         v * 1u<datasn_me>
 
     /// zero value fo datasn_me
@@ -1042,7 +1042,7 @@ type datasn_me =
     /// <param name="def">Default value that is returned, when optv is None.</param>
     /// <param name="optv">Optional value.</param>
     /// <returns>Value of optv, or def.</returns>
-    static member inline fromOpt ( def : uint32 ) ( optv : uint<datasn_me> option ) : uint<datasn_me> =
+    static member inline fromOpt ( def : uint32 ) ( optv : uint32<datasn_me> option ) : uint32<datasn_me> =
         match optv with
         | None -> datasn_me.fromPrim def
         | Some( x ) -> x
@@ -1051,7 +1051,7 @@ type datasn_me =
     /// <param name="s1">left value.</param>
     /// <param name="s2">right value.</param>
     /// <returns>If s1 is less than s2 in serial number arithmetic, it returns true.</returns>
-    static member inline lessThan ( s1 : uint<datasn_me> ) ( s2 : uint<datasn_me> ) : bool =
+    static member inline lessThan ( s1 : uint32<datasn_me> ) ( s2 : uint32<datasn_me> ) : bool =
         let i1 = datasn_me.toPrim s1
         let i2 = datasn_me.toPrim s2
         ( ( i1 < i2 ) && ( ( i2 - i1 ) <  0x80000000u ) ) || ( ( i1 > i2 ) && ( ( i1 - i2 ) > 0x80000000u ) )
@@ -1064,7 +1064,7 @@ type datasn_me =
     ///   if s2 is less than s1 in serial number arithmetic, it returns 1,
     ///   otherwise it returns zero.
     /// </returns>
-    static member inline compare ( s1 : uint<datasn_me> ) ( s2 : uint<datasn_me> ) : int =
+    static member inline compare ( s1 : uint32<datasn_me> ) ( s2 : uint32<datasn_me> ) : int32 =
         if datasn_me.lessThan s1 s2 then
             -1
         elif datasn_me.lessThan s2 s1 then
@@ -1087,7 +1087,7 @@ type datasn_me =
     /// <returns>
     ///  Current DataSN + 1.
     /// </returns>
-    static member inline next ( s1 : uint<datasn_me> ) : uint<datasn_me> =
+    static member inline next ( s1 : uint32<datasn_me> ) : uint32<datasn_me> =
         s1 + ( datasn_me.fromPrim 1u )
 
     /// <summary>
@@ -1102,7 +1102,7 @@ type datasn_me =
     /// <returns>
     ///  s1 + v
     /// </returns>
-    static member inline incr ( v : uint ) ( s1 : uint<datasn_me> ) : uint<datasn_me> =
+    static member inline incr ( v : uint32 ) ( s1 : uint32<datasn_me> ) : uint32<datasn_me> =
         s1 + ( datasn_me.fromPrim v )
 
     /// <summary>
@@ -1117,11 +1117,11 @@ type datasn_me =
     /// <returns>
     ///  s1 + v
     /// </returns>
-    static member inline decr ( v : uint ) ( s1 : uint<datasn_me> ) : uint<datasn_me> =
+    static member inline decr ( v : uint32 ) ( s1 : uint32<datasn_me> ) : uint32<datasn_me> =
         s1 - ( datasn_me.fromPrim v )
 
 /// Data types of DataSN / R2TSN
-type DATASN_T = uint<datasn_me>
+type DATASN_T = uint32<datasn_me>
 
 /// Measure for SNACKTag
 [<Measure>]
@@ -1129,20 +1129,20 @@ type snacktag_me =
     /// <summary>Convert snacktag_me value to primitive value.</summary>
     /// <param name="v">snacktag_me value to be converted.</param>
     /// <returns>Converted value.</returns>
-    static member inline toPrim( v : uint<snacktag_me> ) : uint =
+    static member inline toPrim( v : uint32<snacktag_me> ) : uint32 =
         uint32 v
 
     /// <summary>Convert primitive value to snacktag_me value.</summary>
     /// <param name="v">Primitive value to be converted.</param>
     /// <returns>Converted value.</returns>
-    static member inline fromPrim( v : uint ) : uint<snacktag_me> =
+    static member inline fromPrim( v : uint32 ) : uint32<snacktag_me> =
         v * 1u<snacktag_me>
 
     /// zero value fo snacktag_me
     static member zero = 0u<snacktag_me>
 
 /// Data types of SNACKTag
-type SNACKTAG_T = uint<snacktag_me>
+type SNACKTAG_T = uint32<snacktag_me>
 
 /// Measure for reservation key number in PRManager.
 [<Measure>]
@@ -1358,7 +1358,7 @@ type tdid_me =
         else
             let oldTDIDs = oldtds |> Seq.map tdid_me.toPrim |> Seq.toArray
             let maxTDIDs = Array.max oldTDIDs
-            let rec loop ( cnt : int ) ( vn : uint32 ) =
+            let rec loop ( cnt : int32 ) ( vn : uint32 ) =
                 if cnt > oldTDIDs.Length then
                     tdid_me.Zero
                 else
@@ -1427,7 +1427,7 @@ type tgid_me =
         else
             let oldTDIDs = oldtds |> Seq.map tgid_me.toPrim |> Seq.toArray
             let maxTDIDs = Array.max oldTDIDs
-            let rec loop ( cnt : int ) ( vn : uint32 ) : uint32<tgid_me> =
+            let rec loop ( cnt : int32 ) ( vn : uint32 ) : uint32<tgid_me> =
                 if cnt > oldTDIDs.Length then
                     tgid_me.Zero
                 else
@@ -1623,7 +1623,7 @@ type CtrlSessionID( m_ID : Guid ) =
     // imprementation of IComparable interface
     interface System.IComparable<CtrlSessionID> with
         /// CompareTo method
-        member _.CompareTo( v : CtrlSessionID ) : int =
+        member _.CompareTo( v : CtrlSessionID ) : int32 =
             m_ID.CompareTo v.Value   
 
     // imprementation of IEquatable interface
@@ -1636,11 +1636,11 @@ type CtrlSessionID( m_ID : Guid ) =
         member _.Equals ( v1 : CtrlSessionID, v2 : CtrlSessionID ) : bool =
             v1.Value.Equals v2.Value
 
-        member _.GetHashCode ( v : CtrlSessionID ): int = 
+        member _.GetHashCode ( v : CtrlSessionID ): int32 = 
             v.GetHashCode()
 
     interface IComparer<CtrlSessionID> with
-        member _.Compare( v1 : CtrlSessionID, v2 : CtrlSessionID ) : int =
+        member _.Compare( v1 : CtrlSessionID, v2 : CtrlSessionID ) : int32 =
             v1.Value.CompareTo v2.Value
 
     /// Compare
@@ -1651,7 +1651,7 @@ type CtrlSessionID( m_ID : Guid ) =
         | _ -> false
 
     /// Hash code
-    override _.GetHashCode() : int =
+    override _.GetHashCode() : int32 =
         m_ID.GetHashCode()
 
     /// Return string value of session ID.

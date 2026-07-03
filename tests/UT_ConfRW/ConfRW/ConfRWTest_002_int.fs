@@ -23,14 +23,14 @@ open Haruka.Constants
 // Type definition
 
 type [<NoComparison>]T_Test = {
-    D1 : int;
-    D2 : int list;
-    D3 : int option;
-    D4 : int;
-    D5 : int;
-    D6 : int;
-    D7 : int;
-    D8 : int;
+    D1 : int32;
+    D2 : int32 list;
+    D3 : int32 option;
+    D4 : int32;
+    D5 : int32;
+    D6 : int32;
+    D7 : int32;
+    D8 : int32;
 }
 
 //=============================================================================
@@ -242,7 +242,7 @@ type ConfRW_UT002_int() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_Test_toString ( indent : int ) ( indentStep : int ) ( elem : T_Test ) ( elemName : string ) : seq<string> = 
+    static member private T_Test_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_Test ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {

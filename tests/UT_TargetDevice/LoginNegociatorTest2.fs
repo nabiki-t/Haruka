@@ -206,7 +206,7 @@ type LoginNegociator_Test2 () =
             Assert.True( recvPDU3L.StatSN = statsn_me.fromPrim 1u )
         }
 
-    let initiatorLogoutSequense ( mrdsl : uint32 ) ( cp : NetworkStream ) ( pduCnt : int ) =
+    let initiatorLogoutSequense ( mrdsl : uint32 ) ( cp : NetworkStream ) ( pduCnt : int32 ) =
         task {
             // send logout request
             do! PDU.SendPDU( mrdsl, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
@@ -232,8 +232,8 @@ type LoginNegociator_Test2 () =
             Assert.True( recvPDU5L.StatSN = statsn_me.fromPrim ( uint32 pduCnt + 3u ) )
         }
 
-    let receiveResultLoop struct ( cnt : int, vResult : byte[][], mrdsl : uint32, cp : NetworkStream ) :
-            Task<LoopState< struct( int * byte[][] * uint32 * NetworkStream ), int > > =
+    let receiveResultLoop struct ( cnt : int32, vResult : byte[][], mrdsl : uint32, cp : NetworkStream ) :
+            Task<LoopState< struct( int32 * byte[][] * uint32 * NetworkStream ), int32 > > =
         task {
             // receive result PDU
             let! recvPDU4 = PDU.Receive( mrdsl, DigestType.DST_None, DigestType.DST_None, ValueSome tsih_me.zero, ValueSome cid_me.zero, ValueSome concnt_me.zero, cp, Standpoint.Initiator )

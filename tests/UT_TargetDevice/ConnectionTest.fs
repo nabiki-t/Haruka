@@ -2229,7 +2229,7 @@ type Connection_Test () =
         Assert.True(( rStatSN = statsn_me.zero ))
         Assert.True(( ( rPDU :?> SCSIResponsePDU ).Status = ScsiCmdStatCd.GOOD ))
 
-        Assert.True(( ( pc.GetField( "m_StatSN" ) :?> uint ) = 1u ))
+        Assert.True(( ( pc.GetField( "m_StatSN" ) :?> uint32 ) = 1u ))
 
         let rpdu =
             PDU.Receive( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, cp, Standpoint.Initiator )
@@ -2273,7 +2273,7 @@ type Connection_Test () =
         let struct( rStatSN, rPDU ) = m_SentRespPDUs.[0]
         Assert.True(( rStatSN = statsn_me.zero ))
         Assert.True(( ( rPDU :?> SCSIResponsePDU ).Status = ScsiCmdStatCd.GOOD ))
-        Assert.True(( ( pc.GetField( "m_StatSN" ) :?> uint ) = 1u ))
+        Assert.True(( ( pc.GetField( "m_StatSN" ) :?> uint32 ) = 1u ))
 
         let rpdu =
             PDU.Receive( 4096u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, cp, Standpoint.Initiator )

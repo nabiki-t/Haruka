@@ -127,7 +127,7 @@ type ScsiTask
             this.GetSCSICommand()
 
         /// Return total received data length in bytes.
-        override this.ReceivedDataLength : uint =
+        override this.ReceivedDataLength : uint32 =
             this.GetReceivedDataLength()
 
         /// Return CDB of this object
@@ -179,7 +179,7 @@ type ScsiTask
         m_Command
 
     /// Get total received data length in bytes.
-    member _.GetReceivedDataLength() : uint =
+    member _.GetReceivedDataLength() : uint32 =
         let len1 = PooledBuffer.length m_Command.DataSegment |> uint32
         let len2 =
             m_DataOut
@@ -473,7 +473,7 @@ type ScsiTask
     member _.LU : IInternalLU =
         m_LU
 
-    member _.SetTerminateFlag ( flg : int ) : int * int =
+    member _.SetTerminateFlag ( flg : int32 ) : int32 * int32 =
         Interlocked.CompareExchange( &m_TerminateFlag, flg, 0 ), m_TerminateFlag
 
     member _.GetObjID() : OBJIDX_T =
@@ -687,7 +687,7 @@ type ScsiTask
                 |]
 
         // SPC-3 4.3.4.6 ( The following conditions will never be met )
-        if inData.Length > int UInt16.MaxValue then
+        if inData.Length > int32 UInt16.MaxValue then
             let errmsg = "The parameter data length exceeds 65535 bytes."
             HLogger.ACAException( m_LogInfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
             raise <| SCSIACAException ( m_Source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
@@ -718,13 +718,13 @@ type ScsiTask
         assert( m_CDB.Type = ModeSelect )
         assert( match m_CDB with | :? ModeSelectCDB -> true | _ -> false )
         let cdb = m_CDB :?> ModeSelectCDB
-        let parameterList = SCSIDataOutPDU.AppendParamList m_Command.DataSegment m_DataOut ( int cdb.ParameterListLength )
+        let parameterList = SCSIDataOutPDU.AppendParamList m_Command.DataSegment m_DataOut ( int32 cdb.ParameterListLength )
 
         match cdb.OperationCode with
         | 0x15uy -> // MODE SELECT(6)
-            m_ModeParameter.Select6 parameterList ( int cdb.ParameterListLength ) cdb.PF cdb.SP m_Source m_ITT
+            m_ModeParameter.Select6 parameterList ( int32 cdb.ParameterListLength ) cdb.PF cdb.SP m_Source m_ITT
         | 0x55uy -> // MODE SELECT(10)
-            m_ModeParameter.Select10 parameterList ( int cdb.ParameterListLength ) cdb.PF cdb.SP m_Source m_ITT
+            m_ModeParameter.Select10 parameterList ( int32 cdb.ParameterListLength ) cdb.PF cdb.SP m_Source m_ITT
         | _ ->
             HLogger.Trace( LogID.F_ERROR_EXIT, fun g -> g.Gen1( m_LogInfo, sprintf "Invalid OPERATION CODE(0x%02X)" cdb.OperationCode ) )
             exit( 1 )
@@ -823,7 +823,7 @@ type ScsiTask
                 )
 
         // SPC-3 4.3.4.6
-        if paramdata.Length > int UInt16.MaxValue then
+        if paramdata.Length > int32 UInt16.MaxValue then
             let errmsg = "The parameter data length exceeds 65535 bytes."
             HLogger.ACAException( m_LogInfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
             raise <| SCSIACAException ( m_Source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
@@ -854,7 +854,7 @@ type ScsiTask
         assert( m_CDB.Type = PersistentReserveOut )
         assert( match m_CDB with | :? PersistentReserveOutCDB -> true | _ -> false )
         let cdb = m_CDB :?> PersistentReserveOutCDB
-        let parameterList = SCSIDataOutPDU.AppendParamList m_Command.DataSegment m_DataOut ( int cdb.ParameterListLength )
+        let parameterList = SCSIDataOutPDU.AppendParamList m_Command.DataSegment m_DataOut ( int32 cdb.ParameterListLength )
 
         // ****************************************************************
         // This method is called in critical section of BlockDeviceLU task set lock.
@@ -1315,7 +1315,7 @@ type ScsiTask
 
         // SPC-3 4.3.4.6
         // Note that the maximum length of sense data is 252 bytes, so the following conditions are theoretically not true.
-        if result.Length > int UInt16.MaxValue then
+        if result.Length > int32 UInt16.MaxValue then
             let errmsg = "The parameter data length exceeds 256 bytes."
             HLogger.ACAException( m_LogInfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
             raise <| SCSIACAException ( m_Source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_CDB, errmsg )
@@ -1488,7 +1488,7 @@ type ScsiTask
                 raise <| SCSIACAException ( m_Source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE, errmsg )
 
             let bufLen = ( uint64 cdb.TransferLength ) * wBlkSize
-            let buf = PooledBuffer.Rent ( int bufLen )
+            let buf = PooledBuffer.Rent ( int32 bufLen )
             try
                 // read from media
                 let! readSize =
@@ -1693,7 +1693,7 @@ type ScsiTask
                         let! writtenCount =
                             let struct( lbaOffset, remainder ) = UInt64.DivRem( wBufferOffset, wBlkSize )
                             let writePosAdr = cdb.LogicalBlockAddress + ( blkcnt_me.ofUInt64 lbaOffset )
-                            m_Media.Write m_ITT m_Source writePosAdr remainder ( wDataSegment.GetArraySegment 0 ( int wCount ) )
+                            m_Media.Write m_ITT m_Source writePosAdr remainder ( wDataSegment.GetArraySegment 0 ( int32 wCount ) )
 
                         // Notify written bytes count to LU for usage counter
                         m_LU.NotifyWrittenBytesCount DateTime.UtcNow ( int64 writtenCount )

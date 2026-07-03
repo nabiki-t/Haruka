@@ -39,7 +39,7 @@ type Functions_Test () =
     [<InlineData( 1, 4, 4 )>]
     [<InlineData( 4, 4, 4 )>]
     [<InlineData( 5, 4, 8 )>]
-    member _.AddPaddingLength_001 ( v1 : int ) ( v2 : int ) ( v3 : int ) =
+    member _.AddPaddingLength_001 ( v1 : int32 ) ( v2 : int32 ) ( v3 : int32 ) =
         Assert.True( Functions.AddPaddingLengthInt32 v1 v2 = v3 )
 
     [<Theory>]
@@ -499,7 +499,7 @@ type Functions_Test () =
     [<Fact>]
     member _.TruncateSeq_uint32_002() =
         let s = seq{ 1; 2; 3; 4; 5; 6; 7; 8 }
-        let ex : int seq = Seq.empty
+        let ex : int32 seq = Seq.empty
         let r = Functions.TruncateSeq_uint32 0u s
         Assert.True( Seq.toArray ex = Seq.toArray r )
 
@@ -519,15 +519,15 @@ type Functions_Test () =
 
     [<Fact>]
     member _.TruncateSeq_uint32_005() =
-        let s : int seq = Seq.empty
-        let ex : int seq = Seq.empty
+        let s : int32 seq = Seq.empty
+        let ex : int32 seq = Seq.empty
         let r = Functions.TruncateSeq_uint32 5u s
         Assert.True( Seq.toArray ex = Seq.toArray r )
 
     [<Fact>]
     member _.TruncateSeq_uint32_006() =
-        let s : int seq = Seq.empty
-        let ex : int seq = Seq.empty
+        let s : int32 seq = Seq.empty
+        let ex : int32 seq = Seq.empty
         let r = Functions.TruncateSeq_uint32 0u s
         Assert.True( Seq.toArray ex = Seq.toArray r )
 
@@ -1427,20 +1427,20 @@ type Functions_Test () =
 
     [<Fact>]
     member _.loopAsyncWithState_001() =
-        let f2 ( a : int ) = Task.FromResult struct( false, 0 )
+        let f2 ( a : int32 ) = Task.FromResult struct( false, 0 )
         let r = ( Functions.loopAsyncWithState f2 0 ).Result
         Assert.True(( r = 0 ))
 
     [<Fact>]
     member _.loopAsyncWithState_002() =
-        let f2 ( a : int ) =
+        let f2 ( a : int32 ) =
             Task.FromResult( if a = 3 then struct( false, a ) else struct( true, a + 1 ) )
         let r = ( Functions.loopAsyncWithState f2 0 ).Result
         Assert.True(( r = 3 ))
 
     [<Fact>]
     member _.loopAsyncWithState_003() =
-        let f2 ( a : struct {| a1 : int; a2 : int list |} ) =
+        let f2 ( a : struct {| a1 : int32; a2 : int32 list |} ) =
             Task.FromResult( struct( ( a.a1 < 10 ), struct {| a1 = a.a1 + 1; a2 = a.a1 :: a.a2 |} ) )
         let r = ( Functions.loopAsyncWithState f2 ( struct {| a1 = 0; a2 = [] |} ) ).Result
         Assert.True(( r.a1 = 11 ))
@@ -1448,7 +1448,7 @@ type Functions_Test () =
 
     [<Fact>]
     member _.loopAsyncWithState_004() =
-        let f2 ( a : int, b : int ) =
+        let f2 ( a : int32, b : int32 ) =
             Task.FromResult struct( ( a < 5 ), ( a + 1, b + 2 ) )
         let r1, r2 = ( Functions.loopAsyncWithState f2 ( 0, 1 ) ).Result
         Assert.True(( r1 = 6 ))
@@ -1456,7 +1456,7 @@ type Functions_Test () =
 
     [<Fact>]
     member _.loopAsyncWithState_005() =
-        let f2 ( a : int ) =
+        let f2 ( a : int32 ) =
             task {
                 raise <| Exception "abcd"
                 return struct( false, 0 )
@@ -1471,7 +1471,7 @@ type Functions_Test () =
     [<Fact>]
     member _.loopAsyncWithState_006() =
         let mutable s = 0
-        let f2 ( a : int ) =
+        let f2 ( a : int32 ) =
             task {
                 s <- s + 1
                 if a = 3 then
@@ -1488,7 +1488,7 @@ type Functions_Test () =
 
     [<Fact>]
     member _.loopAsync_001() =
-        let mutable s : int = 0
+        let mutable s : int32 = 0
         let f2 () =
             task {
                 s <- s + 1
@@ -1499,7 +1499,7 @@ type Functions_Test () =
 
     [<Fact>]
     member _.loopAsync_002() =
-        let mutable s : int = 0
+        let mutable s : int32 = 0
         let f2 () =
             task {
                 s <- s + 1
@@ -1524,7 +1524,7 @@ type Functions_Test () =
 
     [<Fact>]
     member _.loopAsync_004() =
-        let mutable s : int = 0
+        let mutable s : int32 = 0
         let f2 () =
             task {
                 s <- s + 1
@@ -1542,13 +1542,13 @@ type Functions_Test () =
 
     [<Fact>]
     member _.RunTaskSynchronously_001() =
-        let t : Task<int> = Task.FromResult 99
+        let t : Task<int32> = Task.FromResult 99
         let a = Functions.RunTaskSynchronously t
         Assert.True(( a = 99 ))
 
     [<Fact>]
     member _.RunTaskSynchronously_002() =
-        let t : Task<int> =
+        let t : Task<int32> =
             task {
                 raise <| IOException "abc"
                 return 99
@@ -1842,13 +1842,13 @@ type Functions_Test () =
 
     [<Fact>]
     member _.PairByIndex_001() =
-        let v : ( int * int ) seq [] = Array.empty
+        let v : ( int32 * int32 ) seq [] = Array.empty
         let r = Functions.PairByIndex v fst snd
         Assert.True(( Seq.length r = 0 ))
 
     [<Fact>]
     member _.PairByIndex_002() =
-        let s1 : ( int * int ) seq = Array.empty
+        let s1 : ( int32 * int32 ) seq = Array.empty
         let v = [| s1 |]
         let r = Functions.PairByIndex v fst snd
         Assert.True(( Seq.length r = 0 ))
@@ -2021,27 +2021,27 @@ type Functions_Test () =
 
     [<Fact>]
     member _.SearchAndConvert_001() =
-        let d = new Dictionary< int, int >()
+        let d = new Dictionary< int32, int32 >()
         let r = Functions.SearchAndConvert d 0 id -1
         Assert.True(( r = -1 ))
 
     [<Fact>]
     member _.SearchAndConvert_002() =
-        let d = new Dictionary< int, int >()
+        let d = new Dictionary< int32, int32 >()
         d.Add( 1, 1 )
         let r = Functions.SearchAndConvert d 0 id -1
         Assert.True(( r = -1 ))
 
     [<Fact>]
     member _.SearchAndConvert_003() =
-        let d = new Dictionary< int, int >()
+        let d = new Dictionary< int32, int32 >()
         d.Add( 1, 1 )
         let r = Functions.SearchAndConvert d 1 ( fun i -> i / 0 ) -1
         Assert.True(( r = -1 ))
 
     [<Fact>]
     member _.SearchAndConvert_004() =
-        let d = new Dictionary< int, int >()
+        let d = new Dictionary< int32, int32 >()
         d.Add( 1, 1 )
         let r = Functions.SearchAndConvert d 1 ( fun i -> i + 1 ) 2
         Assert.True(( r = 2 ))

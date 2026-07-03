@@ -277,7 +277,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
         MaxRecvDataSegmentLength_T = Constants.NEGOPARAM_DEF_MaxRecvDataSegmentLength;
     }
 
-    let GetSortedISID ( cnt : int ) =
+    let GetSortedISID ( cnt : int32 ) =
         Array.init cnt ( fun _ -> GlbFunc.newISID() )
         |> Array.sortBy isid_me.toPrim
 
@@ -366,7 +366,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
                 Some( m.Groups.[1].Value, m.Groups.[2].Value )
         )
 
-    let GetDormantTaskCount() : int =
+    let GetDormantTaskCount() : int32 =
         GetTaskSetStatus()
         |> Array.sumBy ( fun ( s, _ ) -> if s = "Dormant" then 1 else 0 )
  
@@ -378,7 +378,7 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             Assert.True(( res_tmf1 = TaskMgrResCd.FUNCTION_COMPLETE ))
         }
 
-    let WaitTaskStucked ( cnt : int ) =
+    let WaitTaskStucked ( cnt : int32 ) =
         task {
             do! Task.Delay 5
             while ( ( GetStuckTasks() ).Length < cnt ) do

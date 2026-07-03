@@ -321,7 +321,7 @@ type IscsiTaskTextNegociation
             let mrds_i =
                 match connection with
                 | ValueNone -> 512
-                | ValueSome( c ) -> (int)( c.CurrentParams.MaxRecvDataSegmentLength_I )
+                | ValueSome( c ) -> (int32)( c.CurrentParams.MaxRecvDataSegmentLength_I )
 
             // Create sending text key bytes array
             let sendBytes, nextValues, nextStatus =

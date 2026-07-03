@@ -20,7 +20,7 @@ open System.Windows
 
 [<EntryPoint>]
 [<STAThread>]
-let main ( argv : string[] ) : int =
+let main ( argv : string[] ) : int32 =
     let curExeDir = 
         let curExeName = System.Reflection.Assembly.GetEntryAssembly()
         Path.GetDirectoryName curExeName.Location

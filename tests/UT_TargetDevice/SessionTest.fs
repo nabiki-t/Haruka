@@ -5508,7 +5508,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
     [<Theory>]
     [<InlineData( 16u, 32, 16u, 32 )>] // Originally, o and O should be 1.
     [<InlineData( 16u, 8, 16u, 8 )>] // Originally, u and U should be 1.
-    member _.SendSCSIResponse_019 ( edtl : uint ) ( recvLen : int ) ( berdl : uint )  ( respLen : int ) =
+    member _.SendSCSIResponse_019 ( edtl : uint32 ) ( recvLen : int ) ( berdl : uint32 )  ( respLen : int32 ) =
         // Create session object
         let sess, pc, killer, smStub, luStub, sp, cp =
             Session_Test.CreateDefaultSessionObject
@@ -5892,7 +5892,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             scsicmd
             ( cid_me.fromPrim 1us )
             ( concnt_me.fromPrim 1 )
-            ( scsicmd.DataSegment |> PooledBuffer.length |> uint )
+            ( scsicmd.DataSegment |> PooledBuffer.length |> uint32 )
             iScsiSvcRespCd.COMMAND_COMPLETE
             ScsiCmdStatCd.CHECK_CONDITION
             PooledBuffer.Empty
@@ -5966,7 +5966,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             scsicmd
             ( cid_me.fromPrim 1us )
             ( concnt_me.fromPrim 1 )
-            ( scsicmd.DataSegment |> PooledBuffer.length |> uint )
+            ( scsicmd.DataSegment |> PooledBuffer.length |> uint32 )
             iScsiSvcRespCd.COMMAND_COMPLETE
             ScsiCmdStatCd.CHECK_CONDITION
             PooledBuffer.Empty
@@ -6040,7 +6040,7 @@ type Session_Test ( m_TestLogWriter : ITestOutputHelper ) =
             scsicmd
             ( cid_me.fromPrim 1us )
             ( concnt_me.fromPrim 1 )
-            ( scsicmd.DataSegment |> PooledBuffer.length |> uint )
+            ( scsicmd.DataSegment |> PooledBuffer.length |> uint32 )
             iScsiSvcRespCd.COMMAND_COMPLETE
             ScsiCmdStatCd.CHECK_CONDITION
             PooledBuffer.Empty

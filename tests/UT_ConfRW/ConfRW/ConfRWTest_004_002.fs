@@ -33,8 +33,8 @@ and [<NoComparison>]T_C =
     | U_D_byte_max of sbyte
     | U_D_unsignedByte_min of uint8
     | U_D_unsignedByte_max of uint8
-    | U_D_int_min of int
-    | U_D_int_max of int
+    | U_D_int_min of int32
+    | U_D_int_max of int32
     | U_D_unsignedInt_min of uint32
     | U_D_unsignedInt_max of uint32
     | U_D_long_min of int64
@@ -418,7 +418,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_Test_toString ( indent : int ) ( indentStep : int ) ( elem : T_Test ) ( elemName : string ) : seq<string> = 
+    static member private T_Test_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_Test ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -445,7 +445,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_C_toString ( indent : int ) ( indentStep : int ) ( elem : T_C ) ( elemName : string ) : seq<string> = 
+    static member private T_C_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_C ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {

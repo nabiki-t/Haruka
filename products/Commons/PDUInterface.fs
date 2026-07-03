@@ -561,7 +561,7 @@ type SCSIDataOutPDU =
     /// <returns>
     ///  parameter data bytes array. The buffer is allocaled by ArrayPool. It must be returned to ArrayPool.
     /// </returns>
-    static member AppendParamList ( cmdPduData : PooledBuffer ) ( dout : SCSIDataOutPDU list ) ( maxlen : int ) : PooledBuffer =
+    static member AppendParamList ( cmdPduData : PooledBuffer ) ( dout : SCSIDataOutPDU list ) ( maxlen : int32 ) : PooledBuffer =
         if maxlen <= 0 then
             PooledBuffer.Empty
         else
@@ -578,14 +578,14 @@ type SCSIDataOutPDU =
                 let paramlength =
                     let struct( wOffset, wDataSeg ) =
                         seglist
-                        |> Array.maxBy( fun struct ( bOffset, dataSeg ) -> bOffset + (uint)dataSeg.Count )
-                    min ( wOffset + wDataSeg.uCount ) ( uint maxlen )
-                let wv = PooledBuffer.Rent( int paramlength )
+                        |> Array.maxBy( fun struct ( bOffset, dataSeg ) -> bOffset + (uint32)dataSeg.Count )
+                    min ( wOffset + wDataSeg.uCount ) ( uint32 maxlen )
+                let wv = PooledBuffer.Rent( int32 paramlength )
 
                 for struct ( bOffset, dataSeg ) in seglist do
                     if bOffset < paramlength && dataSeg.Count > 0 then
                         let wcnt =  ( min ( bOffset + dataSeg.uCount ) paramlength ) - bOffset
-                        Array.blit dataSeg.Array 0 wv.Array ( int bOffset ) ( int wcnt )
+                        Array.blit dataSeg.Array 0 wv.Array ( int32 bOffset ) ( int32 wcnt )
                 wv
 
 /// <summary>
@@ -721,7 +721,7 @@ type SCSIDataInPDU =
     /// <returns>
     ///  parameter data bytes array. The buffer is allocaled by ArrayPool. It must be returned to ArrayPool.
     /// </returns>
-    static member AppendDataInList ( respPduData : ArraySegment<byte> ) ( dins : SCSIDataInPDU list ) ( maxlen : int ) : PooledBuffer =
+    static member AppendDataInList ( respPduData : ArraySegment<byte> ) ( dins : SCSIDataInPDU list ) ( maxlen : int32 ) : PooledBuffer =
         if maxlen <= 0 then
             PooledBuffer.Empty
         else
@@ -738,14 +738,14 @@ type SCSIDataInPDU =
                 let datalength =
                     let struct( wOffset, wDataSeg ) =
                         seglist
-                        |> Array.maxBy( fun struct ( bOffset, dataSeg ) -> bOffset + (uint)dataSeg.Count )
-                    min ( wOffset + ( uint wDataSeg.Count ) ) ( uint maxlen )
-                let wv = PooledBuffer.Rent( int datalength )
+                        |> Array.maxBy( fun struct ( bOffset, dataSeg ) -> bOffset + (uint32)dataSeg.Count )
+                    min ( wOffset + ( uint32 wDataSeg.Count ) ) ( uint32 maxlen )
+                let wv = PooledBuffer.Rent( int32 datalength )
 
                 for struct ( bOffset, dataSeg ) in seglist do
                     if bOffset < datalength && dataSeg.Count > 0 then
-                        let wcnt =  ( min ( bOffset + ( uint dataSeg.Count ) ) datalength ) - bOffset
-                        Array.blit dataSeg.Array dataSeg.Offset wv.Array ( int bOffset ) ( int wcnt )
+                        let wcnt =  ( min ( bOffset + ( uint32 dataSeg.Count ) ) datalength ) - bOffset
+                        Array.blit dataSeg.Array dataSeg.Offset wv.Array ( int32 bOffset ) ( int32 wcnt )
                 wv
 
 

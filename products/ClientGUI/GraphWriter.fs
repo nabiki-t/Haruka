@@ -74,8 +74,8 @@ type GraphWriter(
         SolidColorBrush( Color.FromRgb( 0xF0uy, 0xD0uy, 0xF0uy ) );
     |]
 
-    let m_GraphColor_Dark = m_AllColors.[ int m_ColorIndex ]
-    let m_GraphColor_Light = m_AllLightColors.[ int m_ColorIndex ]
+    let m_GraphColor_Dark = m_AllColors.[ int32 m_ColorIndex ]
+    let m_GraphColor_Light = m_AllLightColors.[ int32 m_ColorIndex ]
     let m_GraphLeftBorder = new Line( Stroke = m_GraphColor_Dark, StrokeThickness = 0.8 )
     let m_GraphTopBorder = new Line( Stroke = m_GraphColor_Dark, StrokeThickness = 0.8 )
     let m_GraphRightBorder = new Line( Stroke = m_GraphColor_Dark, StrokeThickness = 0.8 )

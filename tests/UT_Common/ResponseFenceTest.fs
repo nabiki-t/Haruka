@@ -30,7 +30,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_WF() =  // W->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -58,7 +58,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_WRFF() =  // W->R->F->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -106,7 +106,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_WRRFFF() =  // W->R->R->F->F->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -174,7 +174,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_WRWFFF() =  // W->R->W->F->F->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -242,7 +242,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_WWFF() =  // W->W->F->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -290,7 +290,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_WWRFFF() =  // W->W->R->F->F->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -359,7 +359,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_WWWFFF() =  // W->W->W->F->F->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -429,7 +429,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_RF() =  // R->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -457,7 +457,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_RRFF() =  // R->R->F->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -505,7 +505,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_RRRFFF() =  // R->R->R->F->F->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -574,7 +574,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_RRWFFF() =  // R->R->W->F->F->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -642,7 +642,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_RWFF() =  // R->W->F->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -690,7 +690,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_RWRFFF() =  // R->W->R->F->F->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -758,7 +758,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_RWWFFF() =  // R->W->W->F->F->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -826,7 +826,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_WFWF() =  // W->F->W->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -874,7 +874,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_WFRF() =  // W->F->R->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -922,7 +922,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_RFWF() =  // R->F->W->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -970,7 +970,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_RFRF() =  // R->F->R->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -1018,7 +1018,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_WWFWFF() =  // W->W->F->W->F->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -1086,7 +1086,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_WWFRFF() =  // W->W->F->R->F->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -1154,7 +1154,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_WRFWFF() =  // W->R->F->W->F->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -1222,7 +1222,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_WRFRFF() =  // W->R->F->R->F->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -1290,7 +1290,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_RWFWFF() =  // R->W->F->W->F->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -1358,7 +1358,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_RWFRFF() =  // R->W->F->R->F->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -1426,7 +1426,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_RRFWFF() =  // R->R->F->W->F->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -1494,7 +1494,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_RRFRFF() =  // R->R->F->R->F->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -1562,7 +1562,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_WFFWF() =  // W->F->F->W->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -1620,7 +1620,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_WFFRF() =  // W->F->F->R->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -1678,7 +1678,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_RFFWF() =  // R->F->F->W->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -1736,7 +1736,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Test_RFFRF() =  // R->F->F->R->F
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
 
         let struct( tick0, _, _ ) = rfl.LockStatus
@@ -1794,7 +1794,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Lock_Irrelevant_001() =
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
         rfl.Lock ResponseFenceNeedsFlag.Irrelevant ( fun () -> wli.Add 0 )
         Assert.True(( wli.Count = 0 ))
@@ -1802,7 +1802,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Lock_Immediately_001() =
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
         rfl.Lock ResponseFenceNeedsFlag.Immediately ( fun () -> wli.Add 0 )
         Assert.True(( wli.Count = 1 ))
@@ -1810,7 +1810,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Lock_R_Mode_001() =
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
         rfl.Lock ResponseFenceNeedsFlag.R_Mode ( fun () -> wli.Add 0 )
         Assert.True(( wli.Count = 1 ))
@@ -1818,7 +1818,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Lock_W_Mode_001() =
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( true )
         rfl.Lock ResponseFenceNeedsFlag.W_Mode ( fun () -> wli.Add 0 )
         Assert.True(( wli.Count = 1 ))
@@ -1826,7 +1826,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Lock_IsNeedRF_001() =
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( false )
         rfl.Lock ResponseFenceNeedsFlag.Irrelevant ( fun () -> wli.Add 0 )
         Assert.True(( wli.Count = 0 ))
@@ -1834,7 +1834,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Lock_IsNeedRF_002() =
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( false )
         rfl.Lock ResponseFenceNeedsFlag.Immediately ( fun () -> wli.Add 0 )
         Assert.True(( wli.Count = 1 ))
@@ -1842,7 +1842,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Lock_IsNeedRF_003() =
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( false )
         rfl.Lock ResponseFenceNeedsFlag.R_Mode ( fun () -> wli.Add 0 )
         Assert.True(( wli.Count = 1 ))
@@ -1850,7 +1850,7 @@ type ResponseFence_Test1() =
 
     [<Fact>]
     member _.Lock_IsNeedRF_004() =
-        let wli = List<int>()
+        let wli = List<int32>()
         let rfl = ResponseFence( false )
         rfl.Lock ResponseFenceNeedsFlag.W_Mode ( fun () -> wli.Add 0 )
         Assert.True(( wli.Count = 1 ))

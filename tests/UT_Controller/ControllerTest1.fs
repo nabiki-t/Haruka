@@ -105,7 +105,7 @@ type Controller_Test1 () =
         let luWorkDirName = Functions.AppendPathName dname ( lun_me.WorkDirName( lun_me.fromPrim 1UL ) )
         Directory.CreateDirectory luWorkDirName |> ignore
 
-    static member CreateDefaultCtrlConf ( p : string ) ( adr : string ) ( portNum : int ) =
+    static member CreateDefaultCtrlConf ( p : string ) ( adr : string ) ( portNum : int32 ) =
         let fname = Functions.AppendPathName p Constants.CONTROLLER_CONF_FILE_NAME
         let conf : HarukaCtrlConf.T_HarukaCtrl = {
             RemoteCtrl = Some {
@@ -1998,7 +1998,7 @@ type Controller_Test1 () =
             match res.Response with
             | HarukaCtrlerCtrlRes.T_Response.U_TargetGroupID( x ) ->
                 Assert.True(( x.TargetDeviceID = wtdid ))
-                let w = vtgid |> List.truncate ( int Constants.MAX_TARGET_GROUP_COUNT_IN_TD )
+                let w = vtgid |> List.truncate ( int32 Constants.MAX_TARGET_GROUP_COUNT_IN_TD )
                 Assert.True(( x.TargetGroupID = w ))
                 Assert.True(( x.ErrorMessage = "" ))
             | _ ->

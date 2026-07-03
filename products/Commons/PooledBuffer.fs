@@ -27,7 +27,7 @@ open System.Threading
 /// <param name="argLength">
 ///  The size requested when allocating the buffer, which may differ from the size actually allocated.
 /// </param>
-type PooledBuffer private ( argBuffer : byte[], argLength : int ) =
+type PooledBuffer private ( argBuffer : byte[], argLength : int32 ) =
 
     /// Allocated buffer. After release, it references an array of length 0.
     let mutable m_Buffer = argBuffer
@@ -58,7 +58,7 @@ type PooledBuffer private ( argBuffer : byte[], argLength : int ) =
     /// <returns>
     ///  Duplicated array. This array is not allocated by ArrayBuffer.
     /// </returns>
-    member _.GetPartialBytes ( s : int ) ( e : int ) : byte[] =
+    member _.GetPartialBytes ( s : int32 ) ( e : int32 ) : byte[] =
         m_Buffer.[ s .. e ]
 
     /// <summary>
@@ -73,7 +73,7 @@ type PooledBuffer private ( argBuffer : byte[], argLength : int ) =
     /// <returns>
     ///  An ArraySegment that references the specified range of the buffer.
     /// </returns>
-    member _.GetArraySegment ( s : int ) ( len : int ) : ArraySegment<byte> =
+    member _.GetArraySegment ( s : int32 ) ( len : int32 ) : ArraySegment<byte> =
         ArraySegment<byte>( m_Buffer, s, len )
 
     /// Returns a reference to the buffer.
@@ -97,7 +97,7 @@ type PooledBuffer private ( argBuffer : byte[], argLength : int ) =
     member _.ArraySegment = ArraySegment<byte>( m_Buffer, 0, m_Length )
 
     /// Accessing elements of a buffer.
-    member _.Item with get ( idx : int ) = m_Buffer.[ idx ]
+    member _.Item with get ( idx : int32 ) = m_Buffer.[ idx ]
 
     /// Buffer is allocated of not.
     member _.IsEmpty() = ( Array.isEmpty m_Buffer )
@@ -112,7 +112,7 @@ type PooledBuffer private ( argBuffer : byte[], argLength : int ) =
     ///  If the value of s is greater than the buffer length (request size), nothing is done.
     ///  If it is less than 0, the buffer length is truncated to 0.
     /// </remarks>
-    member this.Truncate ( s : int ) : unit =
+    member this.Truncate ( s : int32 ) : unit =
         let o = m_Length    // old value
         let n =
             min o s     // new value
@@ -132,7 +132,7 @@ type PooledBuffer private ( argBuffer : byte[], argLength : int ) =
     /// <returns>
     ///  The length requested when allocating the buffer.
     /// </returns>
-    static member length ( v : PooledBuffer ) : int =
+    static member length ( v : PooledBuffer ) : int32 =
         v.Length
 
     /// <summary>
@@ -165,7 +165,7 @@ type PooledBuffer private ( argBuffer : byte[], argLength : int ) =
         else
             let s1 = Seq.truncate v1.Length v1.Array
             let s2 = Seq.truncate v2.Length v2.Array
-            0 = Seq.compareWith ( fun a1 a2 -> int ( a1 - a2 ) ) s1 s2
+            0 = Seq.compareWith ( fun a1 a2 -> int32 ( a1 - a2 ) ) s1 s2
 
     /// <summary>
     ///  Whether the individual values ​​in the buffer match.
@@ -184,7 +184,7 @@ type PooledBuffer private ( argBuffer : byte[], argLength : int ) =
             false
         else
             let s1 = Seq.truncate v1.Length v1.Array
-            0 = Seq.compareWith ( fun a1 a2 -> int ( a1 - a2 ) ) s1 v2
+            0 = Seq.compareWith ( fun a1 a2 -> int32 ( a1 - a2 ) ) s1 v2
 
     /// <summary>
     ///  Get buffer from ArrayPool
@@ -198,7 +198,7 @@ type PooledBuffer private ( argBuffer : byte[], argLength : int ) =
     /// <remarks>
     ///  If the requested buffer length is less than 0, a zero-length buffer is allocated.
     /// </remarks>
-    static member Rent ( s : int ) : PooledBuffer =
+    static member Rent ( s : int32 ) : PooledBuffer =
         if s <= 0 then
             PooledBuffer.Empty
         else
@@ -214,7 +214,7 @@ type PooledBuffer private ( argBuffer : byte[], argLength : int ) =
     ///  Allocated and zero cleared buffer.
     ///  If the requested buffer length is less than 0, a zero-length buffer is allocated.
     /// </returns>
-    static member RentAndInit ( s : int ) : PooledBuffer =
+    static member RentAndInit ( s : int32 ) : PooledBuffer =
         if s <= 0 then
             PooledBuffer.Empty
         else
@@ -257,7 +257,7 @@ type PooledBuffer private ( argBuffer : byte[], argLength : int ) =
     ///  The expanded part is not initialized.
     ///  If the requested buffer length is less than 0, a zero-length buffer is allocated.
     /// </remarks>
-    static member Rent ( v : byte[], nlen : int ) : PooledBuffer =
+    static member Rent ( v : byte[], nlen : int32 ) : PooledBuffer =
         PooledBuffer.Rent ( v, 0, nlen )
 
     /// <summary>
@@ -280,7 +280,7 @@ type PooledBuffer private ( argBuffer : byte[], argLength : int ) =
     ///  The expanded part is not initialized.
     ///  If the requested buffer length is less than 0, a zero-length buffer is allocated.
     /// </remarks>
-    static member Rent ( v : byte[], spos : int, nlen : int ) : PooledBuffer =
+    static member Rent ( v : byte[], spos : int32, nlen : int32 ) : PooledBuffer =
         if nlen <= 0 then
             PooledBuffer.Empty
         else
@@ -307,7 +307,7 @@ type PooledBuffer private ( argBuffer : byte[], argLength : int ) =
     ///  The expanded part is not initialized.
     ///  If the requested buffer length is less than 0, a zero-length buffer is allocated.
     /// </remarks>
-    static member Rent ( v : PooledBuffer, nlen : int ) : PooledBuffer =
+    static member Rent ( v : PooledBuffer, nlen : int32 ) : PooledBuffer =
         PooledBuffer.Rent( v, 0, nlen )
 
     /// <summary>
@@ -330,7 +330,7 @@ type PooledBuffer private ( argBuffer : byte[], argLength : int ) =
     ///  The expanded part is not initialized.
     ///  If the requested buffer length is less than 0, a zero-length buffer is allocated.
     /// </remarks>
-    static member Rent ( v : PooledBuffer, spos : int, nlen : int ) : PooledBuffer =
+    static member Rent ( v : PooledBuffer, spos : int32, nlen : int32 ) : PooledBuffer =
         if nlen <= 0 then
             PooledBuffer.Empty
         else

@@ -286,9 +286,9 @@ type TaskRouter
 
         // ------------------------------------------------------------------------
         // Get used count of the task queue.
-        override _.GetTaskQueueUsage() : int =
+        override _.GetTaskQueueUsage() : int32 =
             m_LUN
-            |> Seq.fold ( fun ( m : int ) lun ->
+            |> Seq.fold ( fun ( m : int32 ) lun ->
                 if lun = lun_me.zero then
                     m
                 else

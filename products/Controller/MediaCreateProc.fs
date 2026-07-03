@@ -164,7 +164,7 @@ type MediaCreateProc(
     /// <param name="ec">
     ///  Exit code of media creation process.
     /// </param>
-    let procOnExitMediaCreate ( ec : int ) : unit =
+    let procOnExitMediaCreate ( ec : int32 ) : unit =
         if ec = 0 then
             HLogger.Trace( LogID.I_INITMEDIA_PROC_NORMAL_END, fun g -> g.Gen0 m_ObjID )
             m_Progress <- MC_PROGRESS.NormalEnd( DateTime.UtcNow )

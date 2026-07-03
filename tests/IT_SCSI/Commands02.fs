@@ -169,7 +169,7 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
     [<InlineData( 0UL, 4u,  4,  0 )>]
     [<InlineData( 0UL, 8u,  8,  0 )>]
     [<InlineData( 0UL, 12u, 12, 1 )>]
-    member _.ReportSupportedOperationCodes_AllCommand_001 ( lu : uint64 ) ( allen : uint32 ) ( exlen : int ) ( cdbcnt : int ) =
+    member _.ReportSupportedOperationCodes_AllCommand_001 ( lu : uint64 ) ( allen : uint32 ) ( exlen : int32 ) ( cdbcnt : int32 ) =
         task {
             let lun = lun_me.fromPrim lu
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
@@ -461,7 +461,7 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
             let! itt = r1.Send_RequestSense TaskATTRCd.SIMPLE_TASK lun ( DESC.ofBool desc ) allen NACA.T
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.GOOD ))
-            Assert.True(( res.ResData.Length = int allen ))
+            Assert.True(( res.ResData.Length = int32 allen ))
 
             let! itt = r1.Send_RequestSense TaskATTRCd.SIMPLE_TASK lun DESC.F 255uy NACA.T
             let! res = r1.WaitSCSIResponse itt

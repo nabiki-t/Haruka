@@ -919,7 +919,7 @@ type SCSI_Commands01( fx : SCSI_Commands01_Fixture ) =
 
     [<Theory>]
     [<MemberData( "ReadCapacity16_001_data" )>]
-    member _.ReadCapacity16_001 ( allen : uint32 ) ( retlen : int ) ( blkcnt : uint64 ) ( blksize : uint32 ) =
+    member _.ReadCapacity16_001 ( allen : uint32 ) ( retlen : int32 ) ( blkcnt : uint64 ) ( blksize : uint32 ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! itt = r1.Send_ReadCapacity16 TaskATTRCd.SIMPLE_TASK g_LUN1 allen NACA.T

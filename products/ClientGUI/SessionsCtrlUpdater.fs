@@ -92,7 +92,7 @@ type SessionsCtrlUpdater(
 
         sess
         |> Seq.sortWith ( fun a b -> tsih_me.Compare a.TSIH b.TSIH )
-        |> Seq.fold ( fun ( idx : int ) sinfo ->
+        |> Seq.fold ( fun ( idx : int32 ) sinfo ->
             let wc =
                 match wConn.TryGetValue sinfo.TSIH with
                 | true, w -> w
@@ -191,7 +191,7 @@ type SessionsCtrlUpdater(
 
 
         conn
-        |> Seq.fold ( fun ( idx : int ) ( itr : TargetDeviceCtrlRes.T_Connection ) ->
+        |> Seq.fold ( fun ( idx : int32 ) ( itr : TargetDeviceCtrlRes.T_Connection ) ->
             
 
             // Normalize connection usage data

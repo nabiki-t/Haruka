@@ -1414,9 +1414,9 @@ module Constants =
     let constants_type_maker = typeof<TypeMarker>.DeclaringType
 
     // Values ​​used in test cases
-    let NUM_16 : int = 16
-    let NUM_512 : int = 512
-    let NUM_4096 : int = 4096
+    let NUM_16 : int32 = 16
+    let NUM_512 : int32 = 512
+    let NUM_4096 : int32 = 4096
 
     //=============================================================================
     // Persistently stable constatns.
@@ -1567,7 +1567,7 @@ module Constants =
         new Regex( ISCSI_TEXT_LIST_OF_VALUES_REGEX_STR, RegexOptions.Compiled )
 
     /// Maximum "iSCSI-name-value" length. Reffer RFC 3720 3.2.6.2.
-    let ISCSI_TEXT_MAX_ISCSI_NAME_LENGTH : int =
+    let ISCSI_TEXT_MAX_ISCSI_NAME_LENGTH : int32 =
         223
 
     /// Data format of "iSCSI-name-value" used at iSCSI text request/responce. Reffer RFC 3720 5.1 Text Format.
@@ -1606,11 +1606,11 @@ module Constants =
     // Constants definitions. Thay my be changed in the future.
 
     /// Product version number ( mejor )
-    let MAJOR_VERSION : uint =
+    let MAJOR_VERSION : uint32 =
         1u
 
     /// Product version number ( minor )
-    let MINOR_VERSION : uint =
+    let MINOR_VERSION : uint32 =
         0u
 
     /// Product version number ( rivision )
@@ -1820,47 +1820,47 @@ module Constants =
         256u
 
     /// Max network portal count in target device.
-    let MAX_NETWORK_PORTAL_COUNT : int =
+    let MAX_NETWORK_PORTAL_COUNT : int32 =
         16
 
     /// Maximum string length that can be used in the TCP incoming standby address in controller.
-    let MAX_CTRL_ADDRESS_STR_LENGTH : int =
+    let MAX_CTRL_ADDRESS_STR_LENGTH : int32 =
         256
 
     /// Maximum string length that can be used in the TCP incoming standby address in target.
-    let MAX_TARGET_ADDRESS_STR_LENGTH : int =
+    let MAX_TARGET_ADDRESS_STR_LENGTH : int32 =
         32768
 
     /// Maximum string length allowed in target device name.
-    let MAX_DEVICE_NAME_STR_LENGTH : int =
+    let MAX_DEVICE_NAME_STR_LENGTH : int32 =
         512
 
     /// Maximum string length allowed in target group name.
-    let MAX_TARGET_GROUP_NAME_STR_LENGTH : int =
+    let MAX_TARGET_GROUP_NAME_STR_LENGTH : int32 =
         256
 
     /// Maximum string length allowed in target alias name.
-    let MAX_TARGET_ALIAS_STR_LENGTH : int =
+    let MAX_TARGET_ALIAS_STR_LENGTH : int32 =
         256
 
     /// Maximum string length allowed in LU name.
-    let MAX_LU_NAME_STR_LENGTH : int =
+    let MAX_LU_NAME_STR_LENGTH : int32 =
         256
 
     /// Maximum string length allowed in media name.
-    let MAX_MEDIA_NAME_STR_LENGTH : int =
+    let MAX_MEDIA_NAME_STR_LENGTH : int32 =
         256
 
     /// Maximum string length allowed in CHAP user name.
-    let MAX_USER_NAME_STR_LENGTH : int =
+    let MAX_USER_NAME_STR_LENGTH : int32 =
         256
 
     /// Maximum string length allowed in CHAP password.
-    let MAX_PASSWORD_STR_LENGTH : int =
+    let MAX_PASSWORD_STR_LENGTH : int32 =
         256
 
     /// Maximum string length allowed in file names.
-    let MAX_FILENAME_STR_LENGTH : int =
+    let MAX_FILENAME_STR_LENGTH : int32 =
         256
 
     let USER_NAME_REGEX_STR : string =
@@ -1876,21 +1876,21 @@ module Constants =
         new Regex( PASSWORD_REGEX_STR, RegexOptions.Compiled )
 
     /// Max target device count in on haruka controller configuration.
-    let MAX_TARGET_DEVICE_COUNT : int =
+    let MAX_TARGET_DEVICE_COUNT : int32 =
         16
 
     /// Max target group count in one target device configuration.
-    let MAX_TARGET_GROUP_COUNT_IN_TD : int =
+    let MAX_TARGET_GROUP_COUNT_IN_TD : int32 =
         255
 
     /// Max target count in one target device.
     /// (= This value is same as maximum target count in one target group.)
-    let MAX_TARGET_COUNT_IN_TD : int =
+    let MAX_TARGET_COUNT_IN_TD : int32 =
         255
 
     /// Max LU count in one target device.
     /// (= This value is same as maximum LU count in one target group.)
-    let MAX_LOGICALUNIT_COUNT_IN_TD : int =
+    let MAX_LOGICALUNIT_COUNT_IN_TD : int32 =
         255
     
     /// Buffer line size of Memory buffer media in byte count.
@@ -1898,7 +1898,7 @@ module Constants =
         67108864UL
 
     /// A constant that indicates the maximum number of persistent reservation registrations that can be registered.
-    let PRDATA_MAX_REGISTRATION_COUNT : int =
+    let PRDATA_MAX_REGISTRATION_COUNT : int32 =
         65535
 
     /// iSCSI default port number.
@@ -1914,15 +1914,15 @@ module Constants =
         180.0
 
     /// Maximum number of attempts to restart a child process in a given time period.
-    let MAX_CHILD_PROC_RESTART_COUNT : int =
+    let MAX_CHILD_PROC_RESTART_COUNT : int32 =
         3
 
     /// Default ReceiveBufferSize of network portal configuration.
-    let DEF_RECEIVE_BUFFER_SIZE_IN_NP : int =
+    let DEF_RECEIVE_BUFFER_SIZE_IN_NP : int32 =
         262144
 
     /// Default SendBufferSize of network portal configuration.
-    let DEF_SEND_BUFFER_SIZE_IN_NP : int =
+    let DEF_SEND_BUFFER_SIZE_IN_NP : int32 =
         262144
 
     /// Default DisableNagle of network portal configuration.
@@ -1946,19 +1946,19 @@ module Constants =
         "en-US"
 
     /// Maximum number of InitMedia processes that can run simultaneously.
-    let INITMEDIA_MAX_MULTIPLICITY : int =
+    let INITMEDIA_MAX_MULTIPLICITY : int32 =
         4
 
     /// Maximum number of seconds that a terminated InitMedia process remains.
-    let INITMEDIA_MAX_REMAIN_TIME : int =
+    let INITMEDIA_MAX_REMAIN_TIME : int32 =
         3600
 
     /// Maximum length of a error message that is wrote by InitMedia process.
-    let INITMEDIA_MAX_ERRMSG_LENGTH : int =
+    let INITMEDIA_MAX_ERRMSG_LENGTH : int32 =
         256
 
     /// Maximum number of error messages that is wrote by InitMedia process.
-    let INITMEDIA_MAX_ERRMSG_COUNT : int =
+    let INITMEDIA_MAX_ERRMSG_COUNT : int32 =
         16
 
     /// Resource counter unit time in second.
@@ -1975,30 +1975,30 @@ module Constants =
 
     /// Muximum session count in the target device
     /// Even in the maximum configuration, a minimum of two logins per target are allowed.
-    let MAX_SESSION_COUNT_IN_TD : int =
+    let MAX_SESSION_COUNT_IN_TD : int32 =
         MAX_TARGET_COUNT_IN_TD * 2
 
     /// Muximum connection count in the target device
-    let MAX_CONNECTION_COUNT_IN_TD : int =
-        MAX_SESSION_COUNT_IN_TD * ( int NEGOPARAM_MaxConnections )
+    let MAX_CONNECTION_COUNT_IN_TD : int32 =
+        MAX_SESSION_COUNT_IN_TD * ( int32 NEGOPARAM_MaxConnections )
 
     /// Maximum number of sessions per target.
-    let MAX_SESSION_COUNT_IN_TARGET : int =
+    let MAX_SESSION_COUNT_IN_TARGET : int32 =
         16
 
     /// Maximum number of sessions per LU
     /// Even in the maximum configuration, a minimum of two logins per target are allowed.
-    let MAX_SESSION_COUNT_IN_LU : int =
+    let MAX_SESSION_COUNT_IN_LU : int32 =
         MAX_TARGET_COUNT_IN_TD * 2
 
     /// Maximum IP white list conditions count
-    let MAX_IP_WHITELIST_COUNT : int =
+    let MAX_IP_WHITELIST_COUNT : int32 =
         16
 
-    let DEBUG_MEDIA_MAX_TRAP_COUNT : int =
+    let DEBUG_MEDIA_MAX_TRAP_COUNT : int32 =
         16
 
-    let DEBUG_MEDIA_MAX_TASK_WAIT_STATUS : int =
+    let DEBUG_MEDIA_MAX_TASK_WAIT_STATUS : int32 =
         256
 
     /// Minimum number of concurrent SCSI tasks within a LU

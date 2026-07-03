@@ -92,7 +92,7 @@ type ServerStatus_Test1() =
     ////////////////////////////////////////////////////////////////////////////
     // Stub procedure for server.
 
-    static member StubLogin ( portNo : int ) =
+    static member StubLogin ( portNo : int32 ) =
         task {
             let sl = new TcpListener( IPAddress.Parse "::1", portNo )
             sl.Start ()
@@ -124,7 +124,7 @@ type ServerStatus_Test1() =
 
     static member RespDefaultCtrlConf
             ( c : NetworkStream )
-            ( portNo : int ) =
+            ( portNo : int32 ) =
         task {
             let! _ = Functions.FramingReceiver c
             let ctrlConf : HarukaCtrlConf.T_HarukaCtrl = {
@@ -274,7 +274,7 @@ type ServerStatus_Test1() =
     ////////////////////////////////////////////////////////////////////////////
     // Write configuration files.
 
-    static member WriteCtrlConfig ( dname : string ) ( portno : int ) =
+    static member WriteCtrlConfig ( dname : string ) ( portno : int32 ) =
         let ctrlConfFName = Functions.AppendPathName dname Constants.CONTROLLER_CONF_FILE_NAME
         let ctrlConf : HarukaCtrlConf.T_HarukaCtrl = {
             RemoteCtrl = Some {
@@ -287,7 +287,7 @@ type ServerStatus_Test1() =
         }
         HarukaCtrlConf.ReaderWriter.WriteFile ctrlConfFName ctrlConf
 
-    static member WriteTargetDeviceConfig ( dname : string ) ( portno : int ) ( tdid : TDID_T ) =
+    static member WriteTargetDeviceConfig ( dname : string ) ( portno : int32 ) ( tdid : TDID_T ) =
         let tdConfDName = Functions.AppendPathName dname ( tdid_me.toString tdid )
         let tdConfFName = Functions.AppendPathName tdConfDName ( Constants.TARGET_DEVICE_CONF_FILE_NAME )
         let tdConf : TargetDeviceConf.T_TargetDevice = {

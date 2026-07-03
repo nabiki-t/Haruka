@@ -165,7 +165,7 @@ type BlockDeviceLU_Test () =
             br.SignalAndWait()
         )
 
-        let cnt = Array.zeroCreate<int> 10
+        let cnt = Array.zeroCreate<int32> 10
         let tasks = [|
             new CBlockDeviceTask_Stub(
                 p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
@@ -525,7 +525,7 @@ type BlockDeviceLU_Test () =
             sema1.Release() |> ignore
         )
 
-        let cnt = Array.zeroCreate<int> 10
+        let cnt = Array.zeroCreate<int32> 10
         let tasks = [|
             BDTaskStat.TASK_STAT_Running(
                 new CBlockDeviceTask_Stub(
@@ -932,7 +932,7 @@ type BlockDeviceLU_Test () =
             sema1.Release() |> ignore
         )
 
-        let cnt = Array.zeroCreate<int> 10
+        let cnt = Array.zeroCreate<int32> 10
         let testTasks1 = [|
             new CBlockDeviceTask_Stub(
                 p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
@@ -1318,7 +1318,7 @@ type BlockDeviceLU_Test () =
             sema1.Release() |> ignore
         )
 
-        let cnt = Array.zeroCreate<int> 10
+        let cnt = Array.zeroCreate<int32> 10
         let testTasks1 = [|
             new CBlockDeviceTask_Stub(
                 p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
@@ -1644,7 +1644,7 @@ type BlockDeviceLU_Test () =
             sema1.Release() |> ignore
         )
 
-        let cnt = Array.zeroCreate<int> 10
+        let cnt = Array.zeroCreate<int32> 10
         let testTasks1 = [|
             new CBlockDeviceTask_Stub(
                 p_GetTaskType = ( fun () -> BlockDeviceTaskType.ScsiTask ),
@@ -2246,7 +2246,7 @@ type BlockDeviceLU_Test () =
             for i = 0 to 15 do
                 yield new CBlockDeviceTask_Stub(
                     dummy = box i,
-                    p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim ( uint i ) ),
+                    p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim ( uint32 i ) ),
                     p_GetSource = ( fun () -> source )
                 );
         |]
@@ -2268,10 +2268,10 @@ type BlockDeviceLU_Test () =
             for i = 0 to 14 do
                 if i < j then
                     let witt = ( BDTaskStat.getTask  queue2.Queue.[i] ).InitiatorTaskTag
-                    Assert.True(( witt = itt_me.fromPrim ( uint i ) ))
+                    Assert.True(( witt = itt_me.fromPrim ( uint32 i ) ))
                 if i >= j then
                     let witt = ( BDTaskStat.getTask queue2.Queue.[i] ).InitiatorTaskTag
-                    Assert.True(( witt = itt_me.fromPrim ( uint i + 1u ) ))
+                    Assert.True(( witt = itt_me.fromPrim ( uint32 i + 1u ) ))
 
     [<Fact>]
     member this.DeleteTask_002() =
@@ -2997,7 +2997,7 @@ type BlockDeviceLU_Test () =
                 yield
                     BDTaskStat.TASK_STAT_Running(
                         new CBlockDeviceTask_Stub(
-                            p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim ( uint i ) ),
+                            p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim ( uint32 i ) ),
                             p_GetTaskType = ( fun () -> BlockDeviceTaskType.InternalTask ),
                             p_GetSource = ( fun () -> source ),
                             p_NotifyTerminate = ( fun flg ->
@@ -3031,7 +3031,7 @@ type BlockDeviceLU_Test () =
                 yield
                     BDTaskStat.TASK_STAT_Running(
                         new CBlockDeviceTask_Stub(
-                            p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim ( uint i ) ),
+                            p_GetInitiatorTaskTag = ( fun () -> itt_me.fromPrim ( uint32 i ) ),
                             p_GetTaskType = ( fun () -> BlockDeviceTaskType.InternalTask ),
                             p_GetSource = ( fun () -> source ),
                             p_NotifyTerminate = ( fun flg ->
@@ -5095,7 +5095,7 @@ type BlockDeviceLU_Test () =
     [<InlineData( 123, TaskATTRCd.ACA_TASK,           TaskATTRCd.ACA_TASK,          TaskATTRCd.HEAD_OF_QUEUE_TASK,true,  true,  true )>]
     [<InlineData( 124, TaskATTRCd.ACA_TASK,           TaskATTRCd.ACA_TASK,          TaskATTRCd.ACA_TASK,          true,  true,  true )>]
     member this.StartExecutableSCSITasks_013
-                ( caseIdx : int )
+                ( caseIdx : int32 )
                 ( attr1 : TaskATTRCd )
                 ( attr2 : TaskATTRCd )
                 ( attr3 : TaskATTRCd )
@@ -5389,7 +5389,7 @@ type BlockDeviceLU_Test () =
     [<InlineData( 123, TaskATTRCd.ACA_TASK,           TaskATTRCd.ACA_TASK,          TaskATTRCd.HEAD_OF_QUEUE_TASK,true,  true )>]
     [<InlineData( 124, TaskATTRCd.ACA_TASK,           TaskATTRCd.ACA_TASK,          TaskATTRCd.ACA_TASK,          true,  true )>]
     member this.StartExecutableSCSITasks_014
-                ( caseIdx : int )
+                ( caseIdx : int32 )
                 ( attr1 : TaskATTRCd )
                 ( attr2 : TaskATTRCd )
                 ( attr3 : TaskATTRCd )
@@ -5651,7 +5651,7 @@ type BlockDeviceLU_Test () =
     [<InlineData( 123, TaskATTRCd.ACA_TASK,           TaskATTRCd.ACA_TASK,          TaskATTRCd.HEAD_OF_QUEUE_TASK,true,  true,  true )>]
     [<InlineData( 124, TaskATTRCd.ACA_TASK,           TaskATTRCd.ACA_TASK,          TaskATTRCd.ACA_TASK,          true,  true,  true )>]
     member this.StartExecutableSCSITasks_015
-                ( caseIdx : int )
+                ( caseIdx : int32 )
                 ( attr1 : TaskATTRCd )
                 ( attr2 : TaskATTRCd )
                 ( attr3 : TaskATTRCd )

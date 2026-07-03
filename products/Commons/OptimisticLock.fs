@@ -45,7 +45,7 @@ type OptimisticLock< 'T when 'T : not struct >( init : 'T ) =
     /// <remarks>
     /// <code>
     /// <![CDATA[
-    ///  type ExpRec = { A1 : int }
+    ///  type ExpRec = { A1 : int32 }
     ///  let theObj = OptimisticExclusion <ExpRec>( { A1 = 0 } )
     ///  let struct( oldOne, newOne ) =
     ///    theObj.Update ( fun oldVal -> { A1 = oldVal.A1 + 1 } )
@@ -88,7 +88,7 @@ type OptimisticLock< 'T when 'T : not struct >( init : 'T ) =
     /// <remarks>
     /// <code>
     /// <![CDATA[
-    ///  type ExpRec = { A1 : int }
+    ///  type ExpRec = { A1 : int32 }
     ///  let theObj = OptimisticExclusion<ExpRec>( { A1 = 0 } )
     ///  let work =                 // Any value returned by the function specified in the argument is returned.
     ///    theObj.Update ( fun oldVal ->
@@ -135,7 +135,7 @@ type OptimisticLock< 'T when 'T : not struct >( init : 'T ) =
     /// <remarks>
     /// <code>
     /// <![CDATA[
-    ///  type ExpRec = { A1 : int }
+    ///  type ExpRec = { A1 : int32 }
     ///  let r = OptimisticExclusion<ExpRec>( { A1 = 0 } )
     ///  r.Update( fun oldVal retryStat ->
     ///      let nextRetryStat =

@@ -68,8 +68,8 @@ type VhdxHandler() =
     /// <returns>
     ///  Pair of file index(​​in the array meta) and byte offset in the VHDX file.
     /// </returns>
-    static member ResolvLBA( lba : BLKCNT64_T ) ( meta : VhdxMetadata[] ) : struct( int * uint64 ) voption =
-        let rec loop ( idx : int ) =
+    static member ResolvLBA( lba : BLKCNT64_T ) ( meta : VhdxMetadata[] ) : struct( int32 * uint64 ) voption =
+        let rec loop ( idx : int32 ) =
             if idx < meta.Length then
                 let pbSize =
                     meta.[idx].VirtualDiskInfo.PayloadBlockSize |> uint64       // Payload Block Size
@@ -85,7 +85,7 @@ type VhdxHandler() =
                 let byteIdxInSB =
                     ( pbIdxInSB * secCntInPB / 8UL) + ( secIdxInPB / 8UL )      // Byte position within a sector bitmap BAT entry
                 let bitIdx = secIdxInPB % 8UL                                   // Bit position within a byte
-                let pbEntry = meta.[idx].BatEntries.Payloads.[ int pbIdx ]      // Payload BAT Entry
+                let pbEntry = meta.[idx].BatEntries.Payloads.[ int32 pbIdx ]      // Payload BAT Entry
 
                 match pbEntry.State with
                 | PayloadNotPresent ->
@@ -105,8 +105,8 @@ type VhdxHandler() =
 
                 | PayloadPartiallyPresent ->
                     // The sector bitmap BAT entries need to be examined.
-                    let sb = meta.[idx].BatEntries.SectorBitmap[ int sbIdx ].Bitmap
-                    let bitValue = ( sb.[ int byteIdxInSB ] >>> ( int bitIdx ) ) &&& 1uy
+                    let sb = meta.[idx].BatEntries.SectorBitmap[ int32 sbIdx ].Bitmap
+                    let bitValue = ( sb.[ int32 byteIdxInSB ] >>> ( int32 bitIdx ) ) &&& 1uy
                     if bitValue = 1uy then
                         // The data to be accessed resides in this file.
                         let posInFile = pbEntry.FileOffset + secIdxInPB * logiSecSize
@@ -325,8 +325,8 @@ type VhdxHandler() =
             if fs2.Length <> int64 virtualDiskSize then
                 false
             else
-                let buf1 = Array.zeroCreate<byte>( int sectorSize )
-                let buf2 = Array.zeroCreate<byte>( int sectorSize )
+                let buf1 = Array.zeroCreate<byte>( int32 sectorSize )
+                let buf2 = Array.zeroCreate<byte>( int32 sectorSize )
 
                 let rec loop ( cnt : BLKCNT64_T ) =
                     if cnt < sectorCount then
@@ -337,7 +337,7 @@ type VhdxHandler() =
                             vfiles.[ fileidx ].Seek( int64 offset, SeekOrigin.Begin ) |> ignore
                             vfiles.[ fileidx ].ReadExactly buf1
                         | ValueNone ->
-                            Array.fill buf1 0 ( int sectorSize ) 0uy
+                            Array.fill buf1 0 ( int32 sectorSize ) 0uy
                         if buf1 <> buf2 then
                             false
                         else
@@ -384,8 +384,8 @@ type VhdxHandler() =
                 // sector size or disk size mismatch.
                 false
             else
-                let buf1 = Array.zeroCreate<byte>( int sectorSize1 )
-                let buf2 = Array.zeroCreate<byte>( int sectorSize1 )
+                let buf1 = Array.zeroCreate<byte>( int32 sectorSize1 )
+                let buf2 = Array.zeroCreate<byte>( int32 sectorSize1 )
 
                 let rec loop ( cnt : BLKCNT64_T ) =
                     if cnt < sectorCount then
@@ -396,7 +396,7 @@ type VhdxHandler() =
                             vfiles1.[ fileidx1 ].Seek( int64 offset1, SeekOrigin.Begin ) |> ignore
                             vfiles1.[ fileidx1 ].ReadExactly buf1
                         | ValueNone ->
-                            Array.fill buf1 0 ( int sectorSize1 ) 0uy
+                            Array.fill buf1 0 ( int32 sectorSize1 ) 0uy
 
                         // read file2
                         match VhdxHandler.ResolvLBA cnt metadatas2 with
@@ -404,7 +404,7 @@ type VhdxHandler() =
                             vfiles2.[ fileidx2 ].Seek( int64 offset2, SeekOrigin.Begin ) |> ignore
                             vfiles2.[ fileidx2 ].ReadExactly buf2
                         | ValueNone ->
-                            Array.fill buf2 0 ( int sectorSize1 ) 0uy
+                            Array.fill buf2 0 ( int32 sectorSize1 ) 0uy
 
                         if buf1 <> buf2 then
                             false

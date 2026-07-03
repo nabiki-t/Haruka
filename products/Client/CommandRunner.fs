@@ -379,7 +379,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
     /// <param name="msg">
     ///  Specify the message to be output.
     /// </param>
-    member private _.Output ( indent : int ) ( msg : string ) =
+    member private _.Output ( indent : int32 ) ( msg : string ) =
         for _ = 0 to indent do
             m_OutFile.Write( "  " )
         m_OutFile.WriteLine( msg )
@@ -881,7 +881,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             |> this.Output 0
             Some ( ss, cc, cn )
         else
-            Some ( ss, cc, child.[ int idx ] )
+            Some ( ss, cc, child.[ int32 idx ] )
 
     /// <summary>
     ///  Execute unselect command.
@@ -915,7 +915,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             // Nothing to do
             Some ( ss, cc, cn )
         else
-            Some ( ss, cc, parent.[ int idx ] )
+            Some ( ss, cc, parent.[ int32 idx ] )
 
     /// <summary>
     ///  Execute list command.
@@ -2037,7 +2037,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             let tdName = cmd.DefaultNamedString "/n" defTDName
 
             // check child node count
-            if List.length( oldtds ) >= int ClientConst.MAX_CHILD_NODE_COUNT then
+            if List.length( oldtds ) >= int32 ClientConst.MAX_CHILD_NODE_COUNT then
                 m_Messages.GetMessage( "CMDMSG_TOO_MANY_CHILD" )
                 |> this.Output 0
                 return Some ( ss, cc, cn )
@@ -2167,27 +2167,27 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             match cmd.NamedUInt32 "/i" with
             | Some objidx ->
                 let child = cn.GetChildNodes<IConfigureNode>()
-                if objidx >= uint child.Length then
+                if objidx >= uint32 child.Length then
                     m_Messages.GetMessage( "CMDMSG_MISSING_NODE", sprintf "%d" objidx )
                     |> this.Output 0
                     return Some ( ss, cc, cn )
                 else
-                    match child.[ int objidx ] with
+                    match child.[ int32 objidx ] with
                     | :? ConfNode_Controller as x ->
                         m_Messages.GetMessage( "CMDMSG_CTRL_NODE_NOT_DELETABLE" )
                         |> this.Output 0
                     | :? ConfNode_TargetDevice as x ->
                         do! ss.CheckTargetDeviceUnloaded cc x
                         ss.DeleteTargetDeviceNode x
-                        this.Output 0 ( sprintf "Deleted : %s" child.[ int objidx ].ShortDescriptString )
+                        this.Output 0 ( sprintf "Deleted : %s" child.[ int32 objidx ].ShortDescriptString )
                     | :? ConfNode_NetworkPortal as x ->
                         do! ss.CheckTargetDeviceUnloaded cc x
                         ss.DeleteNetworkPortalNode x
-                        this.Output 0 ( sprintf "Deleted : %s" child.[ int objidx ].ShortDescriptString )
+                        this.Output 0 ( sprintf "Deleted : %s" child.[ int32 objidx ].ShortDescriptString )
                     | :? ConfNode_TargetGroup as x ->
                         do! ss.CheckTargetGroupUnloaded cc x
                         ss.DeleteTargetGroupNode x
-                        this.Output 0( sprintf "Deleted : %s" child.[ int objidx ].ShortDescriptString )
+                        this.Output 0( sprintf "Deleted : %s" child.[ int32 objidx ].ShortDescriptString )
                     | :? ConfNode_Target
                     | :? ConfNode_BlockDeviceLU
                     | :? ConfNode_DummyDeviceLU
@@ -2197,7 +2197,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     | :? ConfNode_DebugMedia as x ->
                         do! ss.CheckTargetGroupUnloaded cc x
                         ss.DeleteNodeInTargetGroup x
-                        this.Output 0 ( sprintf "Deleted : %s" child.[ int objidx ].ShortDescriptString )
+                        this.Output 0 ( sprintf "Deleted : %s" child.[ int32 objidx ].ShortDescriptString )
                     | _ ->
                         raise <| Exception "Unexpected error."
                     return Some ( ss, cc, ss.GetNode cn.NodeID )
@@ -2460,7 +2460,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             let childCount = 
                 ( tdnode :> IConfigureNode ).GetChildNodes<IConfigureNode>()
                 |> List.length
-            if childCount >= int ClientConst.MAX_CHILD_NODE_COUNT then
+            if childCount >= int32 ClientConst.MAX_CHILD_NODE_COUNT then
                 m_Messages.GetMessage( "CMDMSG_TOO_MANY_CHILD" )
                 |> this.Output 0
                 return Some ( ss, cc, cn )
@@ -2517,7 +2517,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             let childCount = 
                 ( tdnode :> IConfigureNode ).GetChildNodes<IConfigureNode>()
                 |> List.length
-            if childCount >= int ClientConst.MAX_CHILD_NODE_COUNT then
+            if childCount >= int32 ClientConst.MAX_CHILD_NODE_COUNT then
                 m_Messages.GetMessage( "CMDMSG_TOO_MANY_CHILD" )
                 |> this.Output 0
                 return Some ( ss, cc, cn )
@@ -2901,7 +2901,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             let childCount = 
                 ( tgnode :> IConfigureNode ).GetChildNodes<IConfigureNode>()
                 |> List.length
-            if childCount >= int ClientConst.MAX_CHILD_NODE_COUNT then
+            if childCount >= int32 ClientConst.MAX_CHILD_NODE_COUNT then
                 m_Messages.GetMessage( "CMDMSG_TOO_MANY_CHILD" )
                 |> this.Output 0
                 return Some ( ss, cc, cn )
@@ -3024,7 +3024,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 let childCount = 
                     ( tnode :> IConfigureNode ).GetChildNodes<IConfigureNode>()
                     |> List.length
-                if childCount >= int ClientConst.MAX_CHILD_NODE_COUNT then
+                if childCount >= int32 ClientConst.MAX_CHILD_NODE_COUNT then
                     m_Messages.GetMessage( "CMDMSG_TOO_MANY_CHILD" )
                     |> this.Output 0
                     return Some ( ss, cc, cn )
@@ -3070,7 +3070,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 let childCount = 
                     ( tnode :> IConfigureNode ).GetChildNodes<IConfigureNode>()
                     |> List.length
-                if childCount >= int ClientConst.MAX_CHILD_NODE_COUNT then
+                if childCount >= int32 ClientConst.MAX_CHILD_NODE_COUNT then
                     m_Messages.GetMessage( "CMDMSG_TOO_MANY_CHILD" )
                     |> this.Output 0
                     return Some ( ss, cc, cn )
@@ -3147,7 +3147,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
             // check child node count
             let childCount =  cn.GetChildNodes<IConfigureNode>() |> List.length
-            if childCount >= int ClientConst.MAX_CHILD_NODE_COUNT then
+            if childCount >= int32 ClientConst.MAX_CHILD_NODE_COUNT then
                 m_Messages.GetMessage( "CMDMSG_TOO_MANY_CHILD" )
                 |> this.Output 0
                 return Some ( ss, cc, cn )
@@ -3198,7 +3198,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
             // check child node count
             let childCount =  cn.GetChildNodes<IConfigureNode>() |> List.length
-            if childCount >= int ClientConst.MAX_CHILD_NODE_COUNT then
+            if childCount >= int32 ClientConst.MAX_CHILD_NODE_COUNT then
                 m_Messages.GetMessage( "CMDMSG_TOO_MANY_CHILD" )
                 |> this.Output 0
                 return Some ( ss, cc, cn )
@@ -3245,7 +3245,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
             // check child node count
             let childCount =  cn.GetChildNodes<IConfigureNode>() |> List.length
-            if childCount >= int ClientConst.MAX_CHILD_NODE_COUNT then
+            if childCount >= int32 ClientConst.MAX_CHILD_NODE_COUNT then
                 m_Messages.GetMessage( "CMDMSG_TOO_MANY_CHILD" )
                 |> this.Output 0
                 return Some ( ss, cc, cn )

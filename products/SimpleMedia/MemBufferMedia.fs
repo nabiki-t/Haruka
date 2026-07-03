@@ -78,7 +78,7 @@ type MemBufferMedia
         let struct( d, r ) = Math.DivRem( m_BlockCount * m_BlockSize, m_BufferLineSize )
         let d2 = if r > 0UL then d + 1UL else d
         // d2 never exceeds Array.MaxLength.
-        Array.zeroCreate< byte[] >( int d2 )
+        Array.zeroCreate< byte[] >( int32 d2 )
 
     /// Resource counter for read data
     let m_ReadBytesCounter = new ResCounter( Constants.RECOUNTER_SPAN_SEC, Constants.RESCOUNTER_LENGTH_SEC )
@@ -165,7 +165,7 @@ type MemBufferMedia
             ( source : CommandSourceInfo )
             ( argLBA : BLKCNT64_T )
             ( buffer : ArraySegment<byte> )
-            : Task<int> =
+            : Task<int32> =
 
             let sw = new Stopwatch()
             sw.Start()
@@ -230,7 +230,7 @@ type MemBufferMedia
             ( argLBA : BLKCNT64_T )
             ( offset : uint64 )
             ( data : ArraySegment<byte> )
-            : Task<int> =
+            : Task<int32> =
 
             assert( offset < m_BlockSize )
             let sw = new Stopwatch()
@@ -414,10 +414,10 @@ type MemBufferMedia
     ///  If specified m_Buffer.[ lineIdx ] is no allocated, zeros are written to the destination bytes array.
     /// </remarks>
     member private _.RefBuffer ( lineIdx : uint64 ) ( srcPos : uint64 ) ( dstBuf : byte[] ) ( dstPos : uint64 ) ( length : uint64 ) : unit =
-        if m_Buffer.[ int lineIdx ] = null then
-            Array.Clear( dstBuf, int dstPos, int length )
+        if m_Buffer.[ int32 lineIdx ] = null then
+            Array.Clear( dstBuf, int32 dstPos, int32 length )
         else
-            Array.blit m_Buffer.[ int lineIdx ]  ( int srcPos ) dstBuf ( int dstPos ) ( int length )
+            Array.blit m_Buffer.[ int32 lineIdx ]  ( int32 srcPos ) dstBuf ( int32 dstPos ) ( int32 length )
 
     /// <summary>
     ///  Copy bytes array containts to m_Buffer.
@@ -441,7 +441,7 @@ type MemBufferMedia
     ///  If specified m_Buffer.[ lineIdx ] is no allocated, newly allocated memory buffer.
     /// </remarks>
     member private _.WriteBuffer ( srcBuf : byte[] ) ( srcPos : uint64 ) ( lineIdx : uint64 ) ( dstPos : uint64 ) ( length : uint64 ) : unit =
-        Array.blit srcBuf ( int srcPos ) m_Buffer.[ int lineIdx ] ( int dstPos ) ( int length )
+        Array.blit srcBuf ( int32 srcPos ) m_Buffer.[ int32 lineIdx ] ( int32 dstPos ) ( int32 length )
 
     /// Reffer buffer line size
     member _.BufferLineSize = m_BufferLineSize
@@ -472,4 +472,4 @@ type MemBufferMedia
                         bufferLineSize
                 else
                     bufferLineSize
-            buffer.[i] <- Array.zeroCreate< byte > ( int reqBufSize )
+            buffer.[i] <- Array.zeroCreate< byte > ( int32 reqBufSize )

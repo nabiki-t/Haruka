@@ -71,7 +71,7 @@ type ClientProc ( m_Proc : Process ) =
     /// <param name="workPath">
     ///  Working directory path name.
     /// </param>
-    new ( address : string, portNumber : int, workPath : string ) =
+    new ( address : string, portNumber : int32, workPath : string ) =
         let bc = Thread.CurrentThread.CurrentCulture
         Thread.CurrentThread.CurrentCulture <- Globalization.CultureInfo( "en-US" )
         let p = new Process(
@@ -173,7 +173,7 @@ type ClientProc ( m_Proc : Process ) =
     member _.RunCommandForTerminate ( command : string ) : unit =
         m_Proc.StandardInput.WriteLine command
 
-        let rec loop ( cnt : int ) =
+        let rec loop ( cnt : int32 ) =
             if cnt < 10 then
                 Thread.Sleep 10
                 if not m_Proc.HasExited then
@@ -191,7 +191,7 @@ type ClientProc ( m_Proc : Process ) =
     /// <param name="nextPrompt">
     ///  Specifies the expected next prompt.
     /// </param>
-    member this.GetIndexNumber ( str : string ) ( nextPrompt : string ) : int =
+    member this.GetIndexNumber ( str : string ) ( nextPrompt : string ) : int32 =
         let v = this.RunCommandGetResp "list" nextPrompt
         let v2 = v |> Array.filter ( fun itr -> itr.Contains str )
         if v2.Length = 0 then

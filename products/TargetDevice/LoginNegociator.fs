@@ -678,11 +678,11 @@ type LoginNegociator
 
             // Divite bytes array into MaxRecvDataSegmentLength_I bytes unit.
             let sendTextResponses =
-                let v = Array.chunkBySize ( int mrdsl_I ) sendBytes
+                let v = Array.chunkBySize ( int32 mrdsl_I ) sendBytes
                 if v.Length > 0 then v else [| Array.empty |]
 
-            let cbitloop struct( idx : int, recvPDU2 : TextRequestPDU ) :
-                    Task< LoopState< struct( int * TextRequestPDU ), unit > > =
+            let cbitloop struct( idx : int32, recvPDU2 : TextRequestPDU ) :
+                    Task< LoopState< struct( int32 * TextRequestPDU ), unit > > =
                 task {
                     // Decide C bit value
                     let cBitValue = ( idx < sendTextResponses.Length - 1 )

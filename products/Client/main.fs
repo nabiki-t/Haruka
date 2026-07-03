@@ -61,7 +61,7 @@ let login ( cr : CommandRunner ) ( force : bool ) ( host : string ) ( portStr : 
         cr.RunWithLogin force host port
 
 [<EntryPoint>]
-let main ( argv : string [] ) : int =
+let main ( argv : string [] ) : int32 =
     let st = new StringTable( "Client" )
     let cr = new CommandRunner( st, stdin, stdout )
     let defHostName = "::1"

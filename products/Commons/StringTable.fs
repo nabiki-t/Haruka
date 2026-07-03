@@ -86,7 +86,7 @@ type StringTable( m_ResName : string ) =
     /// <returns>
     ///  Defined message string. If specified message ID is missing, it returns default message string.
     /// </returns>
-    member private _.GetResourceString( s : string ) ( n : string ) ( argcnt : int ) : string =
+    member private _.GetResourceString( s : string ) ( n : string ) ( argcnt : int32 ) : string =
         let follbackArg =
             match argcnt with
             | 0 -> ""

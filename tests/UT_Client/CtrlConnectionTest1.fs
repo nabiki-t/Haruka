@@ -35,7 +35,7 @@ type CtrlConnection_Test1() =
     ///////////////////////////////////////////////////////////////////////////
     // Common definition
     
-    static member CreateDefaultCtrlConf ( p : string ) ( adr : string ) ( portNum : int ) =
+    static member CreateDefaultCtrlConf ( p : string ) ( adr : string ) ( portNum : int32 ) =
         let fname = Functions.AppendPathName p Constants.CONTROLLER_CONF_FILE_NAME
         let conf : HarukaCtrlConf.T_HarukaCtrl = {
             RemoteCtrl = Some {
@@ -63,7 +63,7 @@ type CtrlConnection_Test1() =
         ( portNo, dname, k, st, tdid )
 
 
-    static member StubLogin ( portNo : int ) =
+    static member StubLogin ( portNo : int32 ) =
         task {
             let sl = new TcpListener( IPAddress.Parse "::1", portNo )
             sl.Start ()

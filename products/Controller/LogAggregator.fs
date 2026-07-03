@@ -82,7 +82,7 @@ type LogAggregator (
         argKiller : IKiller
     ) =
         let dateGetter() : DateTime = DateTime.UtcNow
-        let tickCounter() : int = Environment.TickCount
+        let tickCounter() : int32 = Environment.TickCount
         LogAggregator( argLogDirPath, argConfig, argKiller, dateGetter, tickCounter )
 
     //-------------------------------------------------------------------------
@@ -236,6 +236,6 @@ type LogAggregator (
             let v1 =
                 Directory.GetFiles m_LogDirPath
                 |> Array.sort
-            Array.iter File.Delete v1.[ int x.MaxFileCount .. ]
+            Array.iter File.Delete v1.[ int32 x.MaxFileCount .. ]
         | HarukaCtrlConf.U_ToStdout( _ ) ->
             ()

@@ -29,7 +29,7 @@ type TaskWaiter_Test() =
 
     [<Fact>]
     member _.Wait_Notify_Reset_001() =
-        let w = TaskWaiter<int, int>()
+        let w = TaskWaiter<int32, int32>()
         Assert.True(( w.Count = 0 ))
 
         [|
@@ -53,7 +53,7 @@ type TaskWaiter_Test() =
 
     [<Fact>]
     member _.Wait_Notify_Reset_002() =
-        let w = TaskWaiter<int, int>()
+        let w = TaskWaiter<int32, int32>()
         Assert.True(( w.Count = 0 ))
         [|
             fun () -> task {
@@ -83,7 +83,7 @@ type TaskWaiter_Test() =
 
     [<Fact>]
     member _.Wait_Notify_Notify_Reset_001() =
-        let w = TaskWaiter<int, int>()
+        let w = TaskWaiter<int32, int32>()
         Assert.True(( w.Count = 0 ))
 
         [|
@@ -111,7 +111,7 @@ type TaskWaiter_Test() =
 
     [<Fact>]
     member _.Wait_Wait_Notify_001() =
-        let w = TaskWaiter<int, int>()
+        let w = TaskWaiter<int32, int32>()
         Assert.True(( w.Count = 0 ))
 
         [|
@@ -136,7 +136,7 @@ type TaskWaiter_Test() =
 
     [<Fact>]
     member _.Wait_Exception_Reset_001() =
-        let w = TaskWaiter<int, int>()
+        let w = TaskWaiter<int32, int32>()
         Assert.True(( w.Count = 0 ))
         [|
             fun () -> task {
@@ -163,7 +163,7 @@ type TaskWaiter_Test() =
 
     [<Fact>]
     member _.Wait_Exception_Reset_002() =
-        let w = TaskWaiter<int, int>()
+        let w = TaskWaiter<int32, int32>()
         Assert.True(( w.Count = 0 ))
         [|
             fun () -> task {
@@ -207,7 +207,7 @@ type TaskWaiter_Test() =
 
     [<Fact>]
     member _.Wait_Exception_Reset_003() =
-        let w = TaskWaiter<int, int>()
+        let w = TaskWaiter<int32, int32>()
         Assert.True(( w.Count = 0 ))
         [|
             fun () -> task {
@@ -249,7 +249,7 @@ type TaskWaiter_Test() =
 
     [<Fact>]
     member _.Wait_Exception_Exception_Reset_001() =
-        let w = TaskWaiter<int, int>()
+        let w = TaskWaiter<int32, int32>()
         Assert.True(( w.Count = 0 ))
 
         [|
@@ -286,7 +286,7 @@ type TaskWaiter_Test() =
     [<Fact>]
     member _.Notify_Wait_Reset_001() =
         task {
-            let w = TaskWaiter<int, int>()
+            let w = TaskWaiter<int32, int32>()
             Assert.True(( w.Count = 0 ))
 
             w.Notify( 1, 100 )
@@ -303,7 +303,7 @@ type TaskWaiter_Test() =
     [<Fact>]
     member _.Notify_Wait_Reset_002() =
         task {
-            let w = TaskWaiter<int, int>()
+            let w = TaskWaiter<int32, int32>()
             Assert.True(( w.Count = 0 ))
 
             w.Notify( 1, 100 )
@@ -328,7 +328,7 @@ type TaskWaiter_Test() =
     [<Fact>]
     member _.Notify_Wait_Wait_Reset_001() =
         task {
-            let w = TaskWaiter<int, int>()
+            let w = TaskWaiter<int32, int32>()
             Assert.True(( w.Count = 0 ))
 
             w.Notify( 1, 100 )
@@ -349,7 +349,7 @@ type TaskWaiter_Test() =
     [<Fact>]
     member _.Notify_Notify_Wait_Reset_001() =
         task {
-            let w = TaskWaiter<int, int>()
+            let w = TaskWaiter<int32, int32>()
             Assert.True(( w.Count = 0 ))
 
             w.Notify( 1, 100 )
@@ -369,7 +369,7 @@ type TaskWaiter_Test() =
     [<Fact>]
     member _.Exception_Wait_Reset_001() =
         task {
-            let w = TaskWaiter<int, int>()
+            let w = TaskWaiter<int32, int32>()
             Assert.True(( w.Count = 0 ))
 
             w.SetException( 0, ArgumentException "aaaa" )
@@ -390,7 +390,7 @@ type TaskWaiter_Test() =
     [<Fact>]
     member _.Exception_Wait_Reset_002() =
         task {
-            let w = TaskWaiter<int, int>()
+            let w = TaskWaiter<int32, int32>()
             Assert.True(( w.Count = 0 ))
 
             w.SetException( 1, ArgumentException "1111" )
@@ -430,7 +430,7 @@ type TaskWaiter_Test() =
     [<Fact>]
     member _.Exception_Wait_Reset_003() =
         task {
-            let w = TaskWaiter<int, int>()
+            let w = TaskWaiter<int32, int32>()
             Assert.True(( w.Count = 0 ))
 
             w.SetExceptionForAll ( ArgumentException "aaaa" )
@@ -450,7 +450,7 @@ type TaskWaiter_Test() =
     [<Fact>]
     member _.Exception_Wait_Wait_Reset_001() =
         task {
-            let w = TaskWaiter<int, int>()
+            let w = TaskWaiter<int32, int32>()
             Assert.True(( w.Count = 0 ))
 
             w.SetException( 0, ArgumentException "aaaa" )
@@ -479,7 +479,7 @@ type TaskWaiter_Test() =
     [<Fact>]
     member _.Notify_Exception_Wait_Reset_001() =
         task {
-            let w = TaskWaiter<int, int>()
+            let w = TaskWaiter<int32, int32>()
             Assert.True(( w.Count = 0 ))
 
             w.Notify( 1, 100 )
@@ -499,7 +499,7 @@ type TaskWaiter_Test() =
     [<Fact>]
     member _.Notify_Exception_Wait_Reset_002() =
         task {
-            let w = TaskWaiter<int, int>()
+            let w = TaskWaiter<int32, int32>()
             Assert.True(( w.Count = 0 ))
 
             w.Notify( 1, 100 )
@@ -529,7 +529,7 @@ type TaskWaiter_Test() =
     [<Fact>]
     member _.Notify_Exception_Wait_Reset_003() =
         task {
-            let w = TaskWaiter<int, int>()
+            let w = TaskWaiter<int32, int32>()
             Assert.True(( w.Count = 0 ))
 
             w.Notify( 1, 100 )
@@ -557,7 +557,7 @@ type TaskWaiter_Test() =
     [<Fact>]
     member _.Exception_Notify_Wait_Reset_001() =
         task {
-            let w = TaskWaiter<int, int>()
+            let w = TaskWaiter<int32, int32>()
             Assert.True(( w.Count = 0 ))
 
             w.SetException( 1, ArgumentException "1111" )
@@ -581,7 +581,7 @@ type TaskWaiter_Test() =
     [<Fact>]
     member _.Exception_Notify_Wait_Reset_002() =
         task {
-            let w = TaskWaiter<int, int>()
+            let w = TaskWaiter<int32, int32>()
             Assert.True(( w.Count = 0 ))
 
             w.SetException( 1, ArgumentException "1111" )
@@ -625,14 +625,14 @@ type TaskWaiter_Test() =
 
     [<Fact>]
     member _.Reset_001() =
-        let w = TaskWaiter<int, int>()
+        let w = TaskWaiter<int32, int32>()
         Assert.True(( w.Count = 0 ))
         w.Reset 1
         Assert.True(( w.Count = 0 ))
 
     [<Fact>]
     member _.Reset_002() =
-        let w = TaskWaiter<int, int>()
+        let w = TaskWaiter<int32, int32>()
         Assert.True(( w.Count = 0 ))
         w.Notify( 99, 99 )
         Assert.True(( w.Count = 1 ))
@@ -641,7 +641,7 @@ type TaskWaiter_Test() =
 
     [<Fact>]
     member _.Reset_003() =
-        let w = TaskWaiter<int, int>()
+        let w = TaskWaiter<int32, int32>()
         Assert.True(( w.Count = 0 ))
         w.Notify( 99, 99 )
         Assert.True(( w.Count = 1 ))
@@ -651,7 +651,7 @@ type TaskWaiter_Test() =
     [<Fact>]
     member _.WaitAndReset_001() =
         task {
-            let w = TaskWaiter<int, int>()
+            let w = TaskWaiter<int32, int32>()
             Assert.True(( w.Count = 0 ))
             w.Notify( 99, 99 )
             Assert.True(( w.Count = 1 ))
@@ -662,13 +662,13 @@ type TaskWaiter_Test() =
 
     [<Fact>]
     member _.Registered_001() =
-        let w = TaskWaiter<int, int>()
+        let w = TaskWaiter<int32, int32>()
         let r = w.Registered
         Assert.True(( r.Length = 0 ))
 
     [<Fact>]
     member _.Registered_002() =
-        let w = TaskWaiter<int, int>()
+        let w = TaskWaiter<int32, int32>()
         w.Notify( 0, 0 )
         let r = w.Registered
         Assert.True(( r.Length = 1 ))
@@ -676,7 +676,7 @@ type TaskWaiter_Test() =
 
     [<Fact>]
     member _.Registered_003() =
-        let w = TaskWaiter<int, int>()
+        let w = TaskWaiter<int32, int32>()
         w.SetException( 0, ArgumentException "1111" )
         let r = w.Registered
         Assert.True(( r.Length = 1 ))
@@ -684,7 +684,7 @@ type TaskWaiter_Test() =
 
     [<Fact>]
     member _.Registered_004() =
-        let w = TaskWaiter<int, int>()
+        let w = TaskWaiter<int32, int32>()
         [|
             fun () -> task {
                 let! _ = w.Wait( 0 )

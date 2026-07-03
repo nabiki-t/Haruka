@@ -70,7 +70,7 @@ type iSCSI_LoginTest2_Fixture() =
         client.RunCommand "select 0" "" "TG> "
 
         // target1-255, LU=1-255
-        for i = 1 to ( int m_TargetCount ) do
+        for i = 1 to ( int32 m_TargetCount ) do
             client.RunCommand ( sprintf "create /n iqn.2020-05.example.com:target%d" i ) "Created" "TG> "
             client.RunCommand ( sprintf "select %d" ( i - 1 ) ) "" "T > "
             client.RunCommand ( sprintf "create /l %d" i ) "Created" "T > "
@@ -236,7 +236,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let wv = Array.zeroCreate<iSCSI_Initiator> testSessCount
 
             for i = 0 to testSessCount - 1 do
-                let targetnamenum = ( i % int m_TargetCount ) + 1
+                let targetnamenum = ( i % int32 m_TargetCount ) + 1
                 let sessParam1 = {
                     m_defaultSessParam with
                         TargetName = sprintf "iqn.2020-05.example.com:target%d" targetnamenum
@@ -271,7 +271,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam connParam1
 
             // add connection 1 to 16
-            for i = 2 to int m_defaultSessParam.MaxConnections do
+            for i = 2 to int32 m_defaultSessParam.MaxConnections do
                 let cp = {
                     m_defaultConnParam with
                         CID = cid_me.fromPrim( uint16 i )
@@ -302,7 +302,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // login for network portal 0 to 16
             for i = 0 to wv.Length - 1 do
-                let targetnamenum = ( i % int m_TargetCount ) + 1
+                let targetnamenum = ( i % int32 m_TargetCount ) + 1
                 let sessParam1 = {
                     m_defaultSessParam with
                         TargetName = sprintf "iqn.2020-05.example.com:target%d" targetnamenum
@@ -317,7 +317,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // Nop-Out
             for i = 0 to wv.Length - 1 do
-                let lun = ( i % int m_TargetCount ) + 1 |> uint64 |> lun_me.fromPrim
+                let lun = ( i % int32 m_TargetCount ) + 1 |> uint64 |> lun_me.fromPrim
                 let! _ = wv.[i].SendNOPOut_PingRequest g_CID0 BitI.F lun g_DefTTT PooledBuffer.Empty
                 let! rpdu3 = wv.[i].ReceiveSpecific<NOPInPDU> g_CID0
                 rpdu3.PingData.Return()
@@ -339,7 +339,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam connParam1
 
             // add connection for network portal 1 to 16
-            let wconcnt = min m_TD0_iSCSIPortNo.Length ( int m_defaultSessParam.MaxConnections )
+            let wconcnt = min m_TD0_iSCSIPortNo.Length ( int32 m_defaultSessParam.MaxConnections )
             for i = 1 to wconcnt - 1 do
                 let connParam2 = {
                     m_defaultConnParam with
@@ -411,7 +411,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
                     MaxRecvDataSegmentLength_T = 8192u;
             }
             let! r1 = iSCSI_Initiator.QueryTargetNames connParam1 "All"
-            Assert.True(( r1.Count = int m_TargetCount ))
+            Assert.True(( r1.Count = int32 m_TargetCount ))
 
             let expectTargetAddress =
                 [|
@@ -419,7 +419,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
                 |]
                 |> Array.sort
 
-            for i = 1 to int m_TargetCount do
+            for i = 1 to int32 m_TargetCount do
                 let targetName = sprintf "iqn.2020-05.example.com:target%d" i
                 let v1 = r1.[ targetName ]
                 Assert.True(( v1.Length = expectTargetAddress.Length ))
@@ -619,7 +619,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = Constants.NEGOPARAM_MAX_MaxRecvDataSegmentLength ))
 
             // Nop-Out ( Negociated MaxRecvDataSegmentLength )
-            let buf1 = PooledBuffer.Rent( int mrdsl_i )
+            let buf1 = PooledBuffer.Rent( int32 mrdsl_i )
             rand.NextBytes( buf1.ArraySegment.AsSpan() )
             let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf1
             let! rpdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -628,11 +628,11 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             rpdu3.PingData.Return()
 
             // Nop-Out ( Negociated MaxRecvDataSegmentLength + 1 )
-            let buf2 = PooledBuffer.Rent( int mrdsl_i + 1 )
+            let buf2 = PooledBuffer.Rent( int32 mrdsl_i + 1 )
             rand.NextBytes( buf2.ArraySegment.AsSpan() )
             let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf2
             let! rpdu4 = r1.ReceiveSpecific<NOPInPDU> g_CID0
-            let buf2_2 = PooledBuffer.Rent( buf2, int mrdsl_i )
+            let buf2_2 = PooledBuffer.Rent( buf2, int32 mrdsl_i )
             Assert.True(( PooledBuffer.ValueEquals rpdu4.PingData buf2_2 ))
             buf2.Return()
             rpdu4.PingData.Return()
@@ -657,7 +657,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = Constants.NEGOPARAM_MAX_MaxRecvDataSegmentLength ))
 
             // Nop-Out ( Negociated MaxRecvDataSegmentLength - 1 )
-            let buf1 = PooledBuffer.Rent( int mrdsl_i - 1 )
+            let buf1 = PooledBuffer.Rent( int32 mrdsl_i - 1 )
             rand.NextBytes( buf1.ArraySegment.AsSpan() )
             let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf1
             let! rpdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -666,7 +666,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             rpdu3.PingData.Return()
 
             // Nop-Out ( Negociated MaxRecvDataSegmentLength )
-            let buf2 = PooledBuffer.Rent( int mrdsl_i )
+            let buf2 = PooledBuffer.Rent( int32 mrdsl_i )
             rand.NextBytes( buf2.ArraySegment.AsSpan() )
             let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf2
             let! rpdu4 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -675,11 +675,11 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             rpdu4.PingData.Return()
 
             // Nop-Out ( Negociated MaxRecvDataSegmentLength + 1 )
-            let buf3 = PooledBuffer.Rent( int mrdsl_i + 1 )
+            let buf3 = PooledBuffer.Rent( int32 mrdsl_i + 1 )
             rand.NextBytes( buf3.ArraySegment.AsSpan() )
             let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf3
             let! rpdu5 = r1.ReceiveSpecific<NOPInPDU> g_CID0
-            let buf3_2 = PooledBuffer.Rent( buf3, int mrdsl_i )
+            let buf3_2 = PooledBuffer.Rent( buf3, int32 mrdsl_i )
             Assert.True(( PooledBuffer.ValueEquals rpdu5.PingData buf3_2 ))
             buf3.Return()
             rpdu5.PingData.Return()
@@ -704,7 +704,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = Constants.NEGOPARAM_MAX_MaxRecvDataSegmentLength ))
 
             // Nop-Out ( Negociated MaxRecvDataSegmentLength - 1 )
-            let buf1 = PooledBuffer.Rent( int mrdsl_i - 1 )
+            let buf1 = PooledBuffer.Rent( int32 mrdsl_i - 1 )
             rand.NextBytes( buf1.ArraySegment.AsSpan() )
             let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf1
             let! rpdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -713,7 +713,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             rpdu3.PingData.Return()
 
             // Nop-Out ( Negociated MaxRecvDataSegmentLength )
-            let buf2 = PooledBuffer.Rent( int mrdsl_i )
+            let buf2 = PooledBuffer.Rent( int32 mrdsl_i )
             rand.NextBytes( buf2.ArraySegment.AsSpan() )
             let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf2
             let! rpdu4 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -746,7 +746,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = Constants.NEGOPARAM_MIN_MaxRecvDataSegmentLength ))
 
             // Nop-Out ( Negociated NEGOPARAM_MIN_MaxRecvDataSegmentLength - 1 )
-            let buf1 = PooledBuffer.Rent( int Constants.NEGOPARAM_MIN_MaxRecvDataSegmentLength - 1 )
+            let buf1 = PooledBuffer.Rent( int32 Constants.NEGOPARAM_MIN_MaxRecvDataSegmentLength - 1 )
             rand.NextBytes( buf1.ArraySegment.AsSpan() )
             let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf1
             let! rpdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -755,7 +755,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             rpdu3.PingData.Return()
 
             // Nop-Out ( Negociated NEGOPARAM_MIN_MaxRecvDataSegmentLength )
-            let buf2 = PooledBuffer.Rent( int Constants.NEGOPARAM_MIN_MaxRecvDataSegmentLength )
+            let buf2 = PooledBuffer.Rent( int32 Constants.NEGOPARAM_MIN_MaxRecvDataSegmentLength )
             rand.NextBytes( buf2.ArraySegment.AsSpan() )
             let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf2
             let! rpdu4 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -788,7 +788,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.True(( r1.Connection( g_CID0 ).Params.MaxRecvDataSegmentLength_T = Constants.NEGOPARAM_MIN_MaxRecvDataSegmentLength ))
 
             // Nop-Out ( Negociated NEGOPARAM_MIN_MaxRecvDataSegmentLength - 1 )
-            let buf1 = PooledBuffer.Rent( int Constants.NEGOPARAM_MIN_MaxRecvDataSegmentLength - 1 )
+            let buf1 = PooledBuffer.Rent( int32 Constants.NEGOPARAM_MIN_MaxRecvDataSegmentLength - 1 )
             rand.NextBytes( buf1.ArraySegment.AsSpan() )
             let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf1
             let! rpdu3 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -797,7 +797,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             rpdu3.PingData.Return()
 
             // Nop-Out ( Negociated NEGOPARAM_MIN_MaxRecvDataSegmentLength )
-            let buf2 = PooledBuffer.Rent( int Constants.NEGOPARAM_MIN_MaxRecvDataSegmentLength )
+            let buf2 = PooledBuffer.Rent( int32 Constants.NEGOPARAM_MIN_MaxRecvDataSegmentLength )
             rand.NextBytes( buf2.ArraySegment.AsSpan() )
             let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf2
             let! rpdu4 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -810,7 +810,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
                 r1.Connection( g_CID0 ).Params with
                     MaxRecvDataSegmentLength_T = 0xFFFFFFFFu;
             }
-            let buf3 = PooledBuffer.Rent( int Constants.NEGOPARAM_MIN_MaxRecvDataSegmentLength + 1 )
+            let buf3 = PooledBuffer.Rent( int32 Constants.NEGOPARAM_MIN_MaxRecvDataSegmentLength + 1 )
             rand.NextBytes( buf3.ArraySegment.AsSpan() )
             try
                 let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT buf3
@@ -839,7 +839,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 blockSize writeCDB PooledBuffer.Empty 0u
 
             // SCSI Data-Out
-            let sendData = PooledBuffer.RentAndInit ( int blockSize )
+            let sendData = PooledBuffer.RentAndInit ( int32 blockSize )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T itt g_LUN1 g_DefTTT datasn_me.zero 0u sendData
             sendData.Return()
 
@@ -874,7 +874,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.True(( rpdu2.DesiredDataTransferLength = blockSize ))
 
             // SCSI Data-Out
-            let sendData = PooledBuffer.RentAndInit ( int blockSize )
+            let sendData = PooledBuffer.RentAndInit ( int32 blockSize )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T itt g_LUN1 rpdu2.TargetTransferTag datasn_me.zero 0u sendData
             sendData.Return()
 
@@ -900,7 +900,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // SCSI Write
             let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 1us ) NACA.T LINK.F
-            let sendData = PooledBuffer.RentAndInit ( int blockSize )
+            let sendData = PooledBuffer.RentAndInit ( int32 blockSize )
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 blockSize writeCDB sendData 0u
             sendData.Return()
 
@@ -929,7 +929,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 blockSize writeCDB PooledBuffer.Empty 0u
 
             // SCSI Data-Out
-            let sendData = PooledBuffer.RentAndInit ( int blockSize )
+            let sendData = PooledBuffer.RentAndInit ( int32 blockSize )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T itt g_LUN1 g_DefTTT datasn_me.zero 0u sendData
             sendData.Return()
 
@@ -958,7 +958,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 blockSize writeCDB PooledBuffer.Empty 0u
 
             // SCSI Data-Out
-            let sendData = PooledBuffer.RentAndInit ( int blockSize )
+            let sendData = PooledBuffer.RentAndInit ( int32 blockSize )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T itt g_LUN1 g_DefTTT datasn_me.zero 0u sendData
             sendData.Return()
 
@@ -984,7 +984,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // SCSI Write
             let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 1us ) NACA.T LINK.F
-            let sendData = PooledBuffer.RentAndInit ( int blockSize )
+            let sendData = PooledBuffer.RentAndInit ( int32 blockSize )
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 blockSize writeCDB sendData 0u
             sendData.Return()
 
@@ -1011,7 +1011,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // SCSI Write
             let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 2us ) NACA.T LINK.F   // 2block
-            let sendData = PooledBuffer.RentAndInit ( int blockSize )
+            let sendData = PooledBuffer.RentAndInit ( int32 blockSize )
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( blockSize * 2u ) writeCDB sendData 0u
             sendData.Return()
 
@@ -1023,7 +1023,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.True(( rpdu2.DesiredDataTransferLength = blockSize ))
 
             // SCSI Data-Out
-            let sendData = PooledBuffer.RentAndInit ( int blockSize )
+            let sendData = PooledBuffer.RentAndInit ( int32 blockSize )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T itt g_LUN1 rpdu2.TargetTransferTag datasn_me.zero blockSize sendData
             sendData.Return()
 
@@ -1059,7 +1059,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.True(( rpdu2.DesiredDataTransferLength = blockSize * 2u ))
 
             // SCSI Data-Out
-            let sendData = PooledBuffer.RentAndInit ( int blockSize * 2 )
+            let sendData = PooledBuffer.RentAndInit ( int32 blockSize * 2 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T itt g_LUN1 rpdu2.TargetTransferTag datasn_me.zero 0u sendData
             sendData.Return()
 
@@ -1095,7 +1095,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.True(( rpdu2.DesiredDataTransferLength = blockSize * 2u ))
 
             // SCSI Data-Out
-            let sendData = PooledBuffer.RentAndInit ( int blockSize * 2 )
+            let sendData = PooledBuffer.RentAndInit ( int32 blockSize * 2 )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T itt g_LUN1 rpdu2.TargetTransferTag datasn_me.zero 0u sendData
             sendData.Return()
 
@@ -1120,7 +1120,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // SCSI Write
             let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy ( blkcnt_me.ofUInt16 2us ) NACA.T LINK.F   // 2block
-            let sendData = PooledBuffer.RentAndInit ( int m_MediaBlockSize )
+            let sendData = PooledBuffer.RentAndInit ( int32 m_MediaBlockSize )
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( m_MediaBlockSize * 2u ) writeCDB sendData 0u
             sendData.Return()
 
@@ -1170,7 +1170,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
                 Assert.True(( rpdu2.DesiredDataTransferLength = mbl ))
 
                 // SCSI Data-Out
-                let sendData = PooledBuffer.RentAndInit ( int rpdu2.DesiredDataTransferLength )
+                let sendData = PooledBuffer.RentAndInit ( int32 rpdu2.DesiredDataTransferLength )
                 let datasn = datasn_me.zero
                 do! r1.SendSCSIDataOutPDU g_CID0 BitF.T itt g_LUN1 rpdu2.TargetTransferTag datasn rpdu2.BufferOffset sendData
                 sendData.Return()
@@ -1214,7 +1214,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.True(( rpdu2.DesiredDataTransferLength = accessLength ))
 
             // SCSI Data-Out
-            let sendData = PooledBuffer.RentAndInit ( int rpdu2.DesiredDataTransferLength )
+            let sendData = PooledBuffer.RentAndInit ( int32 rpdu2.DesiredDataTransferLength )
             let datasn = datasn_me.zero
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T itt g_LUN1 rpdu2.TargetTransferTag datasn rpdu2.BufferOffset sendData
             sendData.Return()
@@ -1285,7 +1285,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
                             dataSegLen
                     let offset = offsetInSeq + rpdu2.BufferOffset
                     let datasn = datasn_me.fromPrim j
-                    let sendData = PooledBuffer.RentAndInit ( int sendLength )
+                    let sendData = PooledBuffer.RentAndInit ( int32 sendLength )
                     do! r1.SendSCSIDataOutPDU g_CID0 finalFlg itt g_LUN1 rpdu2.TargetTransferTag datasn offset sendData
                     sendData.Return()
 
@@ -1328,7 +1328,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
                 Assert.True(( rpdu2.F ))
                 Assert.True(( rpdu2.DataSN = datasn_me.fromPrim i ))
                 Assert.True(( rpdu2.BufferOffset = i * 512u ))
-                Assert.True(( rpdu2.DataSegment.Count = int mbl ))
+                Assert.True(( rpdu2.DataSegment.Count = int32 mbl ))
 
             // SCSI Response
             let! rpdu3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
@@ -1374,9 +1374,9 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
                 Assert.True(( rpdu2.DataSN = datasn_me.fromPrim i ))
                 Assert.True(( rpdu2.BufferOffset = mrdsl_i * i ))
                 if mrdsl_i * ( i + 1u ) > accessLength then
-                    Assert.True(( rpdu2.DataSegment.Count = int ( accessLength - ( mrdsl_i * i ) ) ))
+                    Assert.True(( rpdu2.DataSegment.Count = int32 ( accessLength - ( mrdsl_i * i ) ) ))
                 else
-                    Assert.True(( rpdu2.DataSegment.Count = int mrdsl_i ))
+                    Assert.True(( rpdu2.DataSegment.Count = int32 mrdsl_i ))
 
             // SCSI Response
             let! rpdu3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
@@ -1440,7 +1440,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.True(( rpdu2.DesiredDataTransferLength = accessLength - 512u ))
 
             // SCSI Data-Out
-            let sendData2 = PooledBuffer.RentAndInit ( int accessLength - 512 )
+            let sendData2 = PooledBuffer.RentAndInit ( int32 accessLength - 512 )
             let datasn = datasn_me.zero
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T itt g_LUN1 rpdu2.TargetTransferTag datasn rpdu2.BufferOffset sendData2
             sendData2.Return()
@@ -1491,7 +1491,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.True(( rpdu2.DesiredDataTransferLength = accessLength - 512u ))
 
             // SCSI Data-Out
-            let sendData2 = PooledBuffer.RentAndInit ( int accessLength - 512 )
+            let sendData2 = PooledBuffer.RentAndInit ( int32 accessLength - 512 )
             let datasn = datasn_me.zero
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T itt g_LUN1 rpdu2.TargetTransferTag datasn rpdu2.BufferOffset sendData2
             sendData2.Return()
@@ -1529,7 +1529,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB sendData 0u
 
             // SCSI Data-Out PDU
-            let sendData2 = PooledBuffer.RentAndInit ( int accessLength )
+            let sendData2 = PooledBuffer.RentAndInit ( int32 accessLength )
             let datasn = datasn_me.zero
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T itt g_LUN1 g_DefTTT datasn 0u sendData2
             sendData2.Return()
@@ -1575,7 +1575,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.True(( rpdu2.DesiredDataTransferLength = accessLength ))
 
             // SCSI Data-Out
-            let sendData2 = PooledBuffer.RentAndInit ( int accessLength )
+            let sendData2 = PooledBuffer.RentAndInit ( int32 accessLength )
             let datasn = datasn_me.zero
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T itt g_LUN1 rpdu2.TargetTransferTag datasn rpdu2.BufferOffset sendData2
             sendData2.Return()
@@ -1614,7 +1614,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let! itt, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB sendData 0u
 
             // SCSI Data-Out PDU
-            let sendData2 = PooledBuffer.RentAndInit ( int accessLength - 512 )
+            let sendData2 = PooledBuffer.RentAndInit ( int32 accessLength - 512 )
             let datasn = datasn_me.zero
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T itt g_LUN1 g_DefTTT datasn 512u sendData2
             sendData2.Return()
@@ -1659,8 +1659,8 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             // *** Haruka does not check MaxBurstLength and FirstBurstLength limits ***
             let sendData2 = PooledBuffer.RentAndInit 512
             for i = 0 to 7 do
-                let datasn = datasn_me.fromPrim ( uint i )
-                let offset = 512u * uint i
+                let datasn = datasn_me.fromPrim ( uint32 i )
+                let offset = 512u * uint32 i
                 let fFlag = i >= 7 |> BitF.ofBool
                 do! r1.SendSCSIDataOutPDU g_CID0 fFlag itt g_LUN1 g_DefTTT datasn offset sendData2
             sendData2.Return()
@@ -1798,7 +1798,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             let! rpdu2 = r1.ReceiveSpecific<R2TPDU> g_CID0
 
             // SCSI Data-Out PDU ( 0 - 2047, F=true )
-            let sendData2 = PooledBuffer.RentAndInit ( int accessLength - 2048 )
+            let sendData2 = PooledBuffer.RentAndInit ( int32 accessLength - 2048 )
             let datasn = datasn_me.zero
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T itt g_LUN1 rpdu2.TargetTransferTag datasn 0u sendData2
             sendData2.Return()
@@ -1839,7 +1839,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.True(( rpdu2.DesiredDataTransferLength = 4096u ))
 
             // SCSI Data-Out PDU ( 0 - 2047, F=true )
-            let sendData2 = PooledBuffer.RentAndInit ( int accessLength - 2048 )
+            let sendData2 = PooledBuffer.RentAndInit ( int32 accessLength - 2048 )
             let datasn = datasn_me.zero
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T itt g_LUN1 rpdu2.TargetTransferTag datasn 0u sendData2
             sendData2.Return()
@@ -1852,7 +1852,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             Assert.True(( rpdu3.DesiredDataTransferLength = 2048u ))
 
             // SCSI Data-Out PDU ( 2048 - 4095, F=true )
-            let sendData3 = PooledBuffer.RentAndInit ( int accessLength - 2048 )
+            let sendData3 = PooledBuffer.RentAndInit ( int32 accessLength - 2048 )
             let datasn = datasn_me.fromPrim 1u
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T itt g_LUN1 rpdu3.TargetTransferTag datasn 2048u sendData3
             sendData3.Return()
@@ -1897,8 +1897,8 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
                 // Receive R2T PDU
                 let! rpdu2 = r1.ReceiveSpecific<R2TPDU> g_CID0
                 Assert.True(( rpdu2.InitiatorTaskTag = itt ))
-                Assert.True(( rpdu2.R2TSN = datasn_me.fromPrim ( uint i ) ))
-                Assert.True(( rpdu2.BufferOffset = 512u * ( uint i ) ))
+                Assert.True(( rpdu2.R2TSN = datasn_me.fromPrim ( uint32 i ) ))
+                Assert.True(( rpdu2.BufferOffset = 512u * ( uint32 i ) ))
                 Assert.True(( rpdu2.DesiredDataTransferLength = 512u ))
 
                 // Immidiate NOP-Out
@@ -1907,7 +1907,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
                 // SCSI Data-Out PDU
                 let sendData2 = PooledBuffer.RentAndInit 512
-                let datasn = datasn_me.fromPrim ( uint i )
+                let datasn = datasn_me.fromPrim ( uint32 i )
                 do! r1.SendSCSIDataOutPDU g_CID0 BitF.T itt g_LUN1 rpdu2.TargetTransferTag datasn rpdu2.BufferOffset sendData2
                 sendData2.Return()
 
@@ -1964,8 +1964,8 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
                 let! rpdu3 = r1.ReceiveSpecific<R2TPDU> g_CID0
                 vR2TPDU.[i] <- rpdu3
                 Assert.True(( rpdu3.InitiatorTaskTag = itt ))
-                Assert.True(( rpdu3.R2TSN = datasn_me.fromPrim ( uint i ) ))
-                Assert.True(( rpdu3.BufferOffset = 512u * ( uint i ) ))
+                Assert.True(( rpdu3.R2TSN = datasn_me.fromPrim ( uint32 i ) ))
+                Assert.True(( rpdu3.BufferOffset = 512u * ( uint32 i ) ))
                 Assert.True(( rpdu3.DesiredDataTransferLength = 512u ))
 
             // Nop-In PDU, Response for Immidiate NOP-Out
@@ -1974,7 +1974,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
             // send SCSI Data-Out PDUs
             for i= 0 to 15 do
                 let sendData2 = PooledBuffer.RentAndInit 512
-                let datasn = datasn_me.fromPrim ( uint i )
+                let datasn = datasn_me.fromPrim ( uint32 i )
                 do! r1.SendSCSIDataOutPDU g_CID0 BitF.T itt g_LUN1 vR2TPDU.[i].TargetTransferTag datasn vR2TPDU.[i].BufferOffset sendData2
                 sendData2.Return()
 
@@ -2078,7 +2078,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
                     TaskReporting = TaskReportingType.TR_RFC3720;
             }
             let! r1 = iSCSI_Initiator.CreateInitialSession sessp m_defaultConnParam
-            let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
+            let sendData = PooledBuffer.Rent ( int32 m_MediaBlockSize )
 
             // Send Nop PDU
             let! ittNOP_1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -2087,7 +2087,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // Send SCSI write command to LU 1, this command establlish ACA.
             let writeCDB1_lu1 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F ( blkcnt_me.ofUInt32 0xFFFFFFFEu ) 0uy ( blkcnt_me.ofUInt16 1us ) NACA.T LINK.F
-            let! ittWrite1_lu1, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB1_lu1 sendData 0u
+            let! ittWrite1_lu1, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint32 m_MediaBlockSize ) writeCDB1_lu1 sendData 0u
 
             // Receive NOP-In
             let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0
@@ -2117,7 +2117,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
                     TaskReporting = TaskReportingType.TR_ResponseFence;
             }
             let! r1 = iSCSI_Initiator.CreateInitialSession sessp m_defaultConnParam
-            let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
+            let sendData = PooledBuffer.Rent ( int32 m_MediaBlockSize )
 
             // Send Nop-Out PDU 1
             let! ittNOP_1, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -2126,7 +2126,7 @@ type iSCSI_LoginTest2( fx : iSCSI_LoginTest2_Fixture ) =
 
             // Send SCSI write command to LU 1, this command establlish ACA.
             let writeCDB1_lu1 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F ( blkcnt_me.ofUInt32 0xFFFFFFFEu ) 0uy ( blkcnt_me.ofUInt16 1us ) NACA.T LINK.F
-            let! ittWrite1_lu1, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB1_lu1 sendData 0u
+            let! ittWrite1_lu1, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint32 m_MediaBlockSize ) writeCDB1_lu1 sendData 0u
 
             // Receive NOP-In
             let! nopinPDU_1 = r1.ReceiveSpecific<NOPInPDU> g_CID0

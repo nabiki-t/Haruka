@@ -27,8 +27,8 @@ type [<NoComparison>]T_Test = {
 }
 
 and [<NoComparison>]T_R019_1 = {
-    D1 : int;
-    D2 : int list;
+    D1 : int32;
+    D2 : int32 list;
 }
 
 //=============================================================================
@@ -218,7 +218,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_Test_toString ( indent : int ) ( indentStep : int ) ( elem : T_Test ) ( elemName : string ) : seq<string> = 
+    static member private T_Test_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_Test ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -245,7 +245,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_R019_1_toString ( indent : int ) ( indentStep : int ) ( elem : T_R019_1 ) ( elemName : string ) : seq<string> = 
+    static member private T_R019_1_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_R019_1 ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {

@@ -176,7 +176,7 @@ type SCSI_Queueing( fx : SCSI_Queueing_Fixture ) =
                 Some( m.Groups.[1].Value, m.Groups.[2].Value )
         )
 
-    let GetDormantTaskCount() : int =
+    let GetDormantTaskCount() : int32 =
         GetTaskSetStatus()
         |> Array.sumBy ( fun ( s, _ ) -> if s = "Dormant" then 1 else 0 )
 

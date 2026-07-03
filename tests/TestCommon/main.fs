@@ -25,7 +25,7 @@ open System.Diagnostics
 // Defines a process to be used as a stub for MediaCreateProc.
 // It impersonates the real MediaCreateProc and responds to standard input/output and standard error output.
 // To access input and output from this process from your test cases, use the StubProcCtrl class.
-let MediaCreateProcStub( args : string[] ) : int =
+let MediaCreateProcStub( args : string[] ) : int32 =
 
     let argsDebugFileName = Environment.GetEnvironmentVariable GlbFunc.ARGS_DEBUG_FILE
     let stdinDebugPipeName = Environment.GetEnvironmentVariable GlbFunc.STDIN_DEBUG_PIPE
@@ -89,7 +89,7 @@ let MediaCreateProcStub( args : string[] ) : int =
 // Since it monitors standard input, if the parent process terminates, it can detect this and terminate the Controller.
 // However, if this process is killed directly ( Process.Kill() is called ), the Controller cannot be terminated.
 // The controller can be stopped by closing the standard input before terminating this process.
-let ControllerStarter( workPath : string ) : int =
+let ControllerStarter( workPath : string ) : int32 =
 
     let controllerExeName = GlbFunc.controllerExePath
     let stdOutLogName = Functions.AppendPathName workPath "stdout.txt"
@@ -184,7 +184,7 @@ let ControllerStarter( workPath : string ) : int =
     0
 
 [<EntryPoint>]
-let main ( args : string [] ) : int =
+let main ( args : string [] ) : int32 =
 
     let argStubProcType = Environment.GetEnvironmentVariable GlbFunc.STUB_PROC_TYPE
     match argStubProcType with

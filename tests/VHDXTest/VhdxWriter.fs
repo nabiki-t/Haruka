@@ -144,7 +144,7 @@ type VhdxWriter() =
                 let length = alignedEnd - alignedStart
                 let blockCount = length / payloadBlockSize
 
-                List.init ( int blockCount ) ( fun i ->
+                List.init ( int32 blockCount ) ( fun i ->
                     alignedStart + uint64 i * payloadBlockSize
                 )
         )
@@ -197,7 +197,7 @@ type VhdxWriter() =
         let rec loop ( wcnt : BLKCNT64_T ) ( restFreeList : uint64 list ) ( gfs : uint64 ) : uint64 =
             if wcnt < cnt then
                 let struct( pbidx, _ ) = VhdxHandler.LBAtoPayloadBlockIndex ( lba + wcnt ) metadata
-                let pb = metadata.BatEntries.Payloads.[ int pbidx ]
+                let pb = metadata.BatEntries.Payloads.[ int32 pbidx ]
                 match pb.State with
                 | PayloadNotPresent
                 | PayloadUndefined
@@ -213,7 +213,7 @@ type VhdxWriter() =
                             a, b, gfs
 
                     // update payload block BAT entry
-                    metadata.BatEntries.Payloads.[ int pbidx ] <-
+                    metadata.BatEntries.Payloads.[ int32 pbidx ] <-
                         {
                             pb with
                                 State = allocPBStat;
@@ -221,7 +221,7 @@ type VhdxWriter() =
                         }
 
                     // calculate update 4A sector index
-                    let fpos = metadata.BatEntries.BATRegionOffset + uint64 ( 8 * int pbidx )
+                    let fpos = metadata.BatEntries.BATRegionOffset + uint64 ( 8 * int32 pbidx )
                     let secidx = fpos / 4096UL |> sec4k_me.ofUInt64
                     updated4KSecs.Add secidx |> ignore
 
@@ -284,35 +284,35 @@ type VhdxWriter() =
                 ()
             else
                 let struct( sbIdx, bitmapIdx ) = VhdxHandler.LBAtoSectorBitmapIndex ( lba + wcnt ) metadata
-                let sbEntry = metadata.BatEntries.SectorBitmap.[ int sbIdx ]
+                let sbEntry = metadata.BatEntries.SectorBitmap.[ int32 sbIdx ]
                 let sb = sbEntry.Bitmap
                 let sbFileOffset = sbEntry.FileOffset
                 let bytePos = bitmapIdx >>> 3
                 let bitPos = bitmapIdx &&& 7u
-                let bitValue = ( sb.[ int bytePos ] >>> ( int bitPos ) ) &&& 1uy
+                let bitValue = ( sb.[ int32 bytePos ] >>> ( int32 bitPos ) ) &&& 1uy
 
                 if bitValue <> 0uy then
                     // If it is already marked as in use, there is nothing to do.
                     loop ( wcnt + blkcnt_me.ofUInt64 1UL )
                 else
                     // Set the bit flag to indicate that it is in use.
-                    sb.[ int bytePos ] <- sb.[ int bytePos ] ||| ( 1uy <<< ( int bitPos ) )
+                    sb.[ int32 bytePos ] <- sb.[ int32 bytePos ] ||| ( 1uy <<< ( int32 bitPos ) )
 
                     // Record information on updated 4K sectors.
                     let s = ( sbFileOffset + ( uint64 bytePos ) ) / 4096UL |> sec4k_me.ofUInt64
                     updatedSB4K.TryAdd( s, ArraySegment( sb, 0, 4096 ) ) |> ignore
 
-                    if sb.[ int bytePos ] <> 0xFFuy then
+                    if sb.[ int32 bytePos ] <> 0xFFuy then
                         // Unless the current byte is 0xFF, the payload BAT entry will not become PayloadFullyPresent.
                         loop ( wcnt + blkcnt_me.ofUInt64 1UL )
                     else
                         // Determine whether all sector bitmaps belonging to the payload block BAT entry associated with the LBA in question have been set to 1.
 
                         // Bitmap byte length corresponding to one PB
-                        let sbBytesCntPerPB = 1048576UL / metadata.BatEntries.ChunkRatio |> int
+                        let sbBytesCntPerPB = 1048576UL / metadata.BatEntries.ChunkRatio |> int32
 
                         // The starting position of the bitmap corresponding to the PB BAT entry to which the LBA in question belongs.
-                        let startSBPosAtCurPB = ( int bytePos / sbBytesCntPerPB ) * sbBytesCntPerPB
+                        let startSBPosAtCurPB = ( int32 bytePos / sbBytesCntPerPB ) * sbBytesCntPerPB
                         
                         let span = ReadOnlySpan<byte>( sb, startSBPosAtCurPB, sbBytesCntPerPB )
                         if span.IndexOfAnyExcept( 0xFFuy ) <> -1 then
@@ -321,14 +321,14 @@ type VhdxWriter() =
                             loop ( wcnt + blkcnt_me.ofUInt64 1UL )
                         else
                             let struct( pbidx, _ ) = VhdxHandler.LBAtoPayloadBlockIndex ( lba + wcnt ) metadata
-                            metadata.BatEntries.Payloads.[ int pbidx ] <-
+                            metadata.BatEntries.Payloads.[ int32 pbidx ] <-
                                 {
-                                    metadata.BatEntries.Payloads.[ int pbidx ] with
+                                    metadata.BatEntries.Payloads.[ int32 pbidx ] with
                                         State = PayloadFullyPresent;
                                 }
 
                             // calculate update 4K sector index
-                            let fpos = metadata.BatEntries.BATRegionOffset + uint64 ( 8 * int pbidx )
+                            let fpos = metadata.BatEntries.BATRegionOffset + uint64 ( 8 * int32 pbidx )
                             let secidx = fpos / 4096UL |> sec4k_me.ofUInt64
                             updatedPB4K.Add secidx |> ignore
 
@@ -460,14 +460,14 @@ type VhdxWriter() =
             let idx = sBATIdx + i
             if ( idx + 1UL ) % ( chunkRatio + 1UL ) = 0UL then
                 let sbidx = idx / ( chunkRatio + 1UL )
-                VhdxWriter.SectorBitmapEntryToBytes buffer ( uint32 i * 8u ) bat.SectorBitmap.[ int sbidx ]
+                VhdxWriter.SectorBitmapEntryToBytes buffer ( uint32 i * 8u ) bat.SectorBitmap.[ int32 sbidx ]
             else
                 let pbidx =
                     let w = idx / ( chunkRatio + 1UL )
                     let w2 = w * chunkRatio
                     let w3 = idx % ( chunkRatio + 1UL )
                     w2 + w3
-                    |> int
+                    |> int32
                 printfn "bat.Payloads.Length=%d, idx=%d, pbidx=%d, chunkRatio=%d " bat.Payloads.Length idx pbidx chunkRatio
                 if pbidx < bat.Payloads.Length then
                     VhdxWriter.PayloadBlockEntryToBytes buffer ( uint32 i * 8u ) bat.Payloads.[ pbidx ]
@@ -491,7 +491,7 @@ type VhdxWriter() =
     /// <returns>
     ///  Next header sequence number.
     /// </returns>
-    static member WriteUpdatedBAT ( fs : FileStream ) ( metadata : VhdxMetadata ) ( sec4Ks : SEC4K_T[] ) ( reqFileSize : uint64 ) ( ex : int ) : uint64 =
+    static member WriteUpdatedBAT ( fs : FileStream ) ( metadata : VhdxMetadata ) ( sec4Ks : SEC4K_T[] ) ( reqFileSize : uint64 ) ( ex : int32 ) : uint64 =
 
         let logEntryUnit = VhdxWriter.Max4KSectorCountFromLogCapacity metadata.Header.LogLength |> int
         let logOutputPos = metadata.Header.LogOffset
@@ -505,7 +505,7 @@ type VhdxWriter() =
         printfn " logOutputPos : %d" logOutputPos
         printfn " cycleCount : %d" cycleCount
 
-        let rec loop ( cycle : int ) ( headerSeq : uint64 ) =
+        let rec loop ( cycle : int32 ) ( headerSeq : uint64 ) =
             if cycle < cycleCount then
                 let widx = cycle * logEntryUnit
                 let wcnt = min logEntryUnit ( sec4Ks.Length - widx )
@@ -619,7 +619,7 @@ type VhdxWriter() =
         printfn " logOutputPos : %d" logOutputPos
         printfn " cycleCount : %d" cycleCount
 
-        let rec loop ( cycle : int ) ( headerSeq : uint64 ) =
+        let rec loop ( cycle : int32 ) ( headerSeq : uint64 ) =
             if cycle < cycleCount then
                 let widx = cycle * logEntryUnit
                 let wcnt = min logEntryUnit ( sec4Ks.Length - widx )
@@ -687,15 +687,15 @@ type VhdxWriter() =
     static member OutputRawData ( rawfs : FileStream ) ( vhdxfs : FileStream ) ( lba : BLKCNT64_T ) ( metadata : VhdxMetadata ) =
         let sectorSize = metadata.VirtualDiskInfo.LogicalSectorSize |> Blocksize.toUInt64
         let rawDataSec = uint64 rawfs.Length / sectorSize |> blkcnt_me.ofUInt64
-        let buffer = Array.zeroCreate< byte >( int sectorSize )
+        let buffer = Array.zeroCreate< byte >( int32 sectorSize )
         rawfs.Seek( 0L, SeekOrigin.Begin ) |> ignore
 
         let rec loop ( curlba : BLKCNT64_T ) =
             if curlba < lba + rawDataSec then
                 let struct( badIndex, offsetInBat ) = VhdxHandler.LBAtoPayloadBlockIndex curlba metadata
-                let pbStartPos = metadata.BatEntries.Payloads.[ int badIndex ].FileOffset
+                let pbStartPos = metadata.BatEntries.Payloads.[ int32 badIndex ].FileOffset
                 let offsetInPB = ( uint64 offsetInBat ) * ( uint64 sectorSize )
-                rawfs.ReadExactly( buffer, 0, int sectorSize )
+                rawfs.ReadExactly( buffer, 0, int32 sectorSize )
                 vhdxfs.Seek( int64 ( pbStartPos + offsetInPB ), SeekOrigin.Begin ) |> ignore
                 vhdxfs.Write( buffer )
                 loop ( curlba + blkcnt_me.ofUInt64 1UL )
@@ -716,7 +716,7 @@ type VhdxWriter() =
     /// <param name="lba">
     ///  Address in virtual disk whete raw data to be wrote.
     /// </param>
-    static member Write ( vhdxFileName : string ) ( rawFileName : string ) ( lba : BLKCNT64_T ) ( ex : int ) : unit =
+    static member Write ( vhdxFileName : string ) ( rawFileName : string ) ( lba : BLKCNT64_T ) ( ex : int32 ) : unit =
 
         let metadata = VhdxReader.ReadVhdx vhdxFileName
         let sectorSize = metadata.VirtualDiskInfo.LogicalSectorSize |> Blocksize.toUInt64

@@ -100,7 +100,7 @@ type StubProcCtrl( dirName : string ) =
     member _.GetArguments() : string[] =
         File.ReadAllLines m_ArgsDebugFileName
 
-    member _.Terminate( e : int ) : unit =
+    member _.Terminate( e : int32 ) : unit =
         m_TermWaitStream.WriteLine( sprintf "%d" e )
         m_TermWaitStream.Flush()
 

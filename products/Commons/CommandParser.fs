@@ -39,18 +39,18 @@ type CommandInputError( cd : CIE_ErrorCode ) =
 /// Validation type
 [<NoComparison>]
 type CRValidateType =
-    | CRV_int32 of ( int * int )        // ( min_value, max_value ), Optional
-    | CRV_uint32 of ( uint * uint )     // ( min_value, max_value ), Optional
+    | CRV_int32 of ( int32 * int32 )        // ( min_value, max_value ), Optional
+    | CRV_uint32 of ( uint32 * uint32 )     // ( min_value, max_value ), Optional
     | CRV_int64 of ( int64 * int64 )    // ( min_value, max_value ), Optional
     | CRV_uint64 of ( uint64 * uint64 ) // ( min_value, max_value ), Optional
-    | CRV_String of int                 // max length, Optional
+    | CRV_String of int32                 // max length, Optional
     | CRV_Regex of Regex                // Regular Expression, Optional
     | CRV_LUN                           // LUN, Optional
-    | CRVM_int32 of ( int * int )        // ( min_value, max_value ), Mandatory
-    | CRVM_uint32 of ( uint * uint )     // ( min_value, max_value ), Mandatory
+    | CRVM_int32 of ( int32 * int32 )        // ( min_value, max_value ), Mandatory
+    | CRVM_uint32 of ( uint32 * uint32 )     // ( min_value, max_value ), Mandatory
     | CRVM_int64 of ( int64 * int64 )    // ( min_value, max_value ), Mandatory
     | CRVM_uint64 of ( uint64 * uint64 ) // ( min_value, max_value ), Mandatory
-    | CRVM_String of int                 // max length, Mandatory
+    | CRVM_String of int32                 // max length, Mandatory
     | CRVM_Regex of Regex                // Regular Expression, Mandatory
     | CRVM_LUN                           // LUN, Mandatory
 
@@ -312,7 +312,7 @@ type CommandParser<'a> (
     /// </returns>
     static member SearchCommand ( args : string[] ) ( cmds : AcceptableCommand<'a> array ) : AcceptableCommand<'a> option =
 
-        let rec loop ( idx : int ) ( argcmds : AcceptableCommand<'a> array ) : AcceptableCommand<'a> option =
+        let rec loop ( idx : int32 ) ( argcmds : AcceptableCommand<'a> array ) : AcceptableCommand<'a> option =
             // Find exact match
             let r =
                 argcmds
@@ -450,7 +450,7 @@ type CommandParser<'a> (
     /// </returns>
     static member private ValidateNamelessValues ( arglist : string list ) ( cond : CRValidateType[] ) : EnteredValue[] voption =
     
-        let rec matchNext ( wArgList : string list ) ( condIdx : int ) ( acc : EnteredValue list ) : EnteredValue list voption =
+        let rec matchNext ( wArgList : string list ) ( condIdx : int32 ) ( acc : EnteredValue list ) : EnteredValue list voption =
 
             match wArgList with
             | [] ->
@@ -694,7 +694,7 @@ type CommandParser<'a> (
     /// <returns>
     ///  Entered argument value or default value.
     /// </returns>
-    member _.DefaultNamelessInt32 ( idx : int ) ( d : int32 ) : int32 =
+    member _.DefaultNamelessInt32 ( idx : int32 ) ( d : int32 ) : int32 =
         if idx < 0 || m_NamelessArgs.Length <= idx then
             d
         else
@@ -711,7 +711,7 @@ type CommandParser<'a> (
     /// <returns>
     ///  Entered argument value or None.
     /// </returns>
-    member _.NamelessInt32 ( idx : int ) : int32 option =
+    member _.NamelessInt32 ( idx : int32 ) : int32 option =
         if idx < 0 || m_NamelessArgs.Length <= idx then
             None
         else
@@ -731,7 +731,7 @@ type CommandParser<'a> (
     /// <returns>
     ///  Entered argument value or default value.
     /// </returns>
-    member _.DefaultNamelessUInt32 ( idx : int ) ( d : uint32 ) : uint32 =
+    member _.DefaultNamelessUInt32 ( idx : int32 ) ( d : uint32 ) : uint32 =
         if idx < 0 || m_NamelessArgs.Length <= idx then
             d
         else
@@ -748,7 +748,7 @@ type CommandParser<'a> (
     /// <returns>
     ///  Entered argument value or None.
     /// </returns>
-    member _.NamelessUInt32 ( idx : int ) : uint32 option =
+    member _.NamelessUInt32 ( idx : int32 ) : uint32 option =
         if idx < 0 || m_NamelessArgs.Length <= idx then
             None
         else
@@ -768,7 +768,7 @@ type CommandParser<'a> (
     /// <returns>
     ///  Entered argument value or default value.
     /// </returns>
-    member _.DefaultNamelessInt64 ( idx : int ) ( d : int64 ) : int64 =
+    member _.DefaultNamelessInt64 ( idx : int32 ) ( d : int64 ) : int64 =
         if idx < 0 || m_NamelessArgs.Length <= idx then
             d
         else
@@ -785,7 +785,7 @@ type CommandParser<'a> (
     /// <returns>
     ///  Entered argument value or None.
     /// </returns>
-    member _.NamelessInt64 ( idx : int ) : int64 option =
+    member _.NamelessInt64 ( idx : int32 ) : int64 option =
         if idx < 0 || m_NamelessArgs.Length <= idx then
             None
         else
@@ -805,7 +805,7 @@ type CommandParser<'a> (
     /// <returns>
     ///  Entered argument value or default value.
     /// </returns>
-    member _.DefaultNamelessUInt64 ( idx : int ) ( d : uint64 ) : uint64 =
+    member _.DefaultNamelessUInt64 ( idx : int32 ) ( d : uint64 ) : uint64 =
         if idx < 0 || m_NamelessArgs.Length <= idx then
             d
         else
@@ -822,7 +822,7 @@ type CommandParser<'a> (
     /// <returns>
     ///  Entered argument value or None.
     /// </returns>
-    member _.NamelessUInt64 ( idx : int ) : uint64 option =
+    member _.NamelessUInt64 ( idx : int32 ) : uint64 option =
         if idx < 0 || m_NamelessArgs.Length <= idx then
             None
         else
@@ -842,7 +842,7 @@ type CommandParser<'a> (
     /// <returns>
     ///  Entered argument value or default value.
     /// </returns>
-    member _.DefaultNamelessString ( idx : int ) ( d : string ) : string =
+    member _.DefaultNamelessString ( idx : int32 ) ( d : string ) : string =
         if idx < 0 || m_NamelessArgs.Length <= idx then
             d
         else
@@ -859,7 +859,7 @@ type CommandParser<'a> (
     /// <returns>
     ///  Entered argument value or None.
     /// </returns>
-    member _.NamelessString ( idx : int ) : string option =
+    member _.NamelessString ( idx : int32 ) : string option =
         if idx < 0 || m_NamelessArgs.Length <= idx then
             None
         else
@@ -879,7 +879,7 @@ type CommandParser<'a> (
     /// <returns>
     ///  Entered argument value or default value.
     /// </returns>
-    member _.DefaultNamelessLUN ( idx : int ) ( d : LUN_T ) : LUN_T =
+    member _.DefaultNamelessLUN ( idx : int32 ) ( d : LUN_T ) : LUN_T =
         if idx < 0 || m_NamelessArgs.Length <= idx then
             d
         else
@@ -896,7 +896,7 @@ type CommandParser<'a> (
     /// <returns>
     ///  Entered argument value or None.
     /// </returns>
-    member _.NamelessLUN ( idx : int ) : LUN_T option =
+    member _.NamelessLUN ( idx : int32 ) : LUN_T option =
         if idx < 0 || m_NamelessArgs.Length <= idx then
             None
         else

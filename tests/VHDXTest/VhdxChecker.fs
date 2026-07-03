@@ -40,12 +40,12 @@ type VhdxChecker() =
                 | LogDescriptor.Data x ->
                     fs.Seek( int64 x.FileOffset, SeekOrigin.Begin ) |> ignore
                     fs.Write( x.LeadingBytes, 0, 8 )
-                    fs.Write( itrLE.DataSectors.[ int x.ddIndex ], 0, 4084 )
+                    fs.Write( itrLE.DataSectors.[ int32 x.ddIndex ], 0, 4084 )
                     fs.Write( x.TrailingBytes, 0, 4 )
 
                 | LogDescriptor.Zero x ->
                     fs.Seek( int64 x.FileOffset, SeekOrigin.Begin ) |> ignore
-                    for i = 0 to int x.ZeroLength - 1 do
+                    for i = 0 to int32 x.ZeroLength - 1 do
                         fs.WriteByte( 0uy )
 
 

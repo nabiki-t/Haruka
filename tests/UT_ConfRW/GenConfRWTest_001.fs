@@ -83,7 +83,7 @@ type GenConfRW_Test_001 () =
     [<InlineData( "<Test><Dummy>-1</Dummy></Test>", -1 )>]
     [<InlineData( "<Test><Dummy>-2147483648</Dummy></Test>", -2147483648 )>]
     [<InlineData( "<Test><Dummy>2147483647</Dummy></Test>", 2147483647 )>]
-    member this.FileRead_003 ( s : string ) ( exr : int ) =
+    member this.FileRead_003 ( s : string ) ( exr : int32 ) =
         let pDirName = this.CreateTestDir()
         let fname = Functions.AppendPathName pDirName "FileRead_003.txt"
         File.WriteAllText( fname, s )
@@ -168,7 +168,7 @@ type GenConfRW_Test_001 () =
     [<InlineData( "<Test><D1>3</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 3 )>]
     [<InlineData( "<Test><D1>4</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 4 )>]
     [<InlineData( "<Test><D1>5</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 5 )>]
-    member _.SingleValue_Int_002 ( s : string ) ( exr : int ) =
+    member _.SingleValue_Int_002 ( s : string ) ( exr : int32 ) =
         let r = ConfRW_002_int.ConfRW_UT002_int.LoadString s
         Assert.True( r.D1 = exr )
 
@@ -179,7 +179,7 @@ type GenConfRW_Test_001 () =
 
     [<Theory>]
     [<MemberData( "m_SingleValue_Int_003_data" )>]
-    member _.SingleValue_Int_003 ( s : string ) ( exr : int list ) =
+    member _.SingleValue_Int_003 ( s : string ) ( exr : int32 list ) =
         let r = ConfRW_002_int.ConfRW_UT002_int.LoadString s
         Assert.True( r.D2 = exr )
 
@@ -190,7 +190,7 @@ type GenConfRW_Test_001 () =
 
     [<Theory>]
     [<MemberData( "m_SingleValue_Int_004_data" )>]
-    member _.SingleValue_Int_004 ( s : string ) ( exr : int option ) =
+    member _.SingleValue_Int_004 ( s : string ) ( exr : int32 option ) =
         let r = ConfRW_002_int.ConfRW_UT002_int.LoadString s
         Assert.True( r.D3 = exr )
 
@@ -202,7 +202,7 @@ type GenConfRW_Test_001 () =
 
     [<Theory>]
     [<MemberData( "m_SingleValue_Int_005_data" )>]
-    member _.SingleValue_Int_005 ( s : string ) ( exr_D7 : int ) ( exr_D8 : int ) =
+    member _.SingleValue_Int_005 ( s : string ) ( exr_D7 : int32 ) ( exr_D8 : int32 ) =
         let r = ConfRW_002_int.ConfRW_UT002_int.LoadString s
         Assert.True( r.D4 = 0 )
         Assert.True( r.D5 = 99 )
@@ -281,7 +281,7 @@ type GenConfRW_Test_001 () =
     [<Theory>]
     [<InlineData( "<Test><D1>1</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 1u )>]
     [<InlineData( "<Test><D1>2</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 2u )>]
-    member _.SingleValue_UInt_002 ( s : string ) ( exr : uint ) =
+    member _.SingleValue_UInt_002 ( s : string ) ( exr : uint32 ) =
         let r = ConfRW_002_unsignedInt.ConfRW_UT002_unsignedInt.LoadString s
         Assert.True( r.D1 = exr )
 
@@ -292,7 +292,7 @@ type GenConfRW_Test_001 () =
 
     [<Theory>]
     [<MemberData( "m_SingleValue_UInt_003_data" )>]
-    member _.SingleValue_UInt_003 ( s : String ) ( exr : uint list ) =
+    member _.SingleValue_UInt_003 ( s : String ) ( exr : uint32 list ) =
         let r = ConfRW_002_unsignedInt.ConfRW_UT002_unsignedInt.LoadString s
         Assert.True( r.D2 = exr )
 
@@ -304,7 +304,7 @@ type GenConfRW_Test_001 () =
 
     [<Theory>]
     [<MemberData( "m_SingleValue_UInt_004_data" )>]
-    member _.SingleValue_UInt_004 ( s : String ) ( exr : uint option ) =
+    member _.SingleValue_UInt_004 ( s : String ) ( exr : uint32 option ) =
         let r = ConfRW_002_unsignedInt.ConfRW_UT002_unsignedInt.LoadString s
         Assert.True( r.D3 = exr )
 
@@ -315,7 +315,7 @@ type GenConfRW_Test_001 () =
 
     [<Theory>]
     [<MemberData( "m_SingleValue_UInt_005_data" )>]
-    member _.SingleValue_UInt_005 ( s : string ) ( exr_D7 : uint ) ( exr_D8 : uint ) =
+    member _.SingleValue_UInt_005 ( s : string ) ( exr_D7 : uint32 ) ( exr_D8 : uint32 ) =
         let r = ConfRW_002_unsignedInt.ConfRW_UT002_unsignedInt.LoadString s
         Assert.True( r.D4 = 0u )
         Assert.True( r.D5 = 99u )
@@ -3171,7 +3171,7 @@ type GenConfRW_Test_001 () =
     [<InlineData( "<Test><D1>3</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 3 )>]
     [<InlineData( "<Test><D1>4</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 4 )>]
     [<InlineData( "<Test><D1>5</D1><D2>0</D2><D2>0</D2><D3>0</D3></Test>", 5 )>]
-    member _.SingleValue_CONCNT_002 ( s : string ) ( exr : int ) =
+    member _.SingleValue_CONCNT_002 ( s : string ) ( exr : int32 ) =
         let r = ConfRW_002_CONCNT_T.ConfRW_UT002_CONCNT_T.LoadString s
         Assert.True( r.D1 = concnt_me.fromPrim exr )
 
@@ -3198,7 +3198,7 @@ type GenConfRW_Test_001 () =
         Assert.True( r.D3 = exr )
 
     static member m_SingleValue_CONCNT_005_data = [|
-        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2></Test>" :> obj; concnt_me.fromPrim 98 :> obj; concnt_me.fromPrim ( int Constants.MAX_TARGET_DEVICE_COUNT ) :> obj; |];
+        [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2></Test>" :> obj; concnt_me.fromPrim 98 :> obj; concnt_me.fromPrim ( int32 Constants.MAX_TARGET_DEVICE_COUNT ) :> obj; |];
         [| "<Test><D1>2</D1><D2>0</D2><D2>1</D2><D7>4</D7><D8>5</D8></Test>" :> obj; concnt_me.fromPrim 4 :> obj; concnt_me.fromPrim 5 :> obj; |];
     |]
 
@@ -3208,7 +3208,7 @@ type GenConfRW_Test_001 () =
         let r = ConfRW_002_CONCNT_T.ConfRW_UT002_CONCNT_T.LoadString s
         Assert.True( r.D4 = concnt_me.fromPrim 0; )
         Assert.True( r.D5 = concnt_me.fromPrim 99; )
-        Assert.True( r.D6 = concnt_me.fromPrim ( int Constants.MAX_TARGET_DEVICE_COUNT ) )
+        Assert.True( r.D6 = concnt_me.fromPrim ( int32 Constants.MAX_TARGET_DEVICE_COUNT ) )
         Assert.True( r.D7 = exr_D7 )
         Assert.True( r.D8 = exr_D8 )
 

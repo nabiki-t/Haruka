@@ -192,10 +192,10 @@ type Functions() =
     /// <remarks>
     ///   Software imprementation of CRC32 algorithm.
     /// </remarks>
-    static member private CRC32_soft ( init : uint32 ) ( v : byte[] ) ( s : int ) ( cnt : int ) : uint32 =
+    static member private CRC32_soft ( init : uint32 ) ( v : byte[] ) ( s : int32 ) ( cnt : int32 ) : uint32 =
         let rec loop idx a =
             if idx < cnt then
-                loop ( idx + 1 ) ( ( a >>> 8 ) ^^^ Functions.C32Tbl.[ int( a &&& 0xFFu ) ^^^ int ( v.[ s + idx ] ) ] )
+                loop ( idx + 1 ) ( ( a >>> 8 ) ^^^ Functions.C32Tbl.[ int32( a &&& 0xFFu ) ^^^ int32 ( v.[ s + idx ] ) ] )
             else
                 a
         loop 0 init 
@@ -219,11 +219,11 @@ type Functions() =
     /// <remarks>
     ///   This function must be used at x86-64 processor that support SSE4.2.
     /// </remarks>
-    static member private CRC32_x64 ( init : uint32 ) ( v : byte[] ) ( s : int ) ( cnt : int ) : uint32 =
+    static member private CRC32_x64 ( init : uint32 ) ( v : byte[] ) ( s : int32 ) ( cnt : int32 ) : uint32 =
         let mutable r2 = init
         let lcnt1 = cnt / 8
         for i = 0 to lcnt1 - 1 do
-            r2 <- uint <| Sse42.X64.Crc32( ( uint64 r2 ), BitConverter.ToUInt64( v, i * 8 + s ) )
+            r2 <- uint32 <| Sse42.X64.Crc32( ( uint64 r2 ), BitConverter.ToUInt64( v, i * 8 + s ) )
         for i = lcnt1 * 8 to cnt - 1 do
             r2 <- Sse42.Crc32( r2, v.[ i + s ] )
         r2
@@ -247,7 +247,7 @@ type Functions() =
     /// <remarks>
     ///   This function must be used at x86 processor that support SSE4.2.
     /// </remarks>
-    static member private CRC32_x86 ( init : uint32 ) ( v : byte[] ) ( s : int ) ( cnt : int ) : uint32 =
+    static member private CRC32_x86 ( init : uint32 ) ( v : byte[] ) ( s : int32 ) ( cnt : int32 ) : uint32 =
         let mutable r2 = init
         let lcnt1 = cnt / 4
         for i = 0 to lcnt1 - 1 do
@@ -260,7 +260,7 @@ type Functions() =
     /// <summary>
     ///   CRC32 internal function.
     /// </summary>
-    static member private CRC32_Auto : uint32 -> byte[] -> int -> int -> uint32 =
+    static member private CRC32_Auto : uint32 -> byte[] -> int32 -> int32 -> uint32 =
         if Sse42.IsSupported then
             if Sse42.X64.IsSupported then
                 Functions.CRC32_x64
@@ -341,7 +341,7 @@ type Functions() =
     /// <returns>
     ///   Obtainded number data.
     /// </returns>
-    static member NetworkBytesToInt16 ( buf : byte[] ) ( s : int ) : int16 =
+    static member NetworkBytesToInt16 ( buf : byte[] ) ( s : int32 ) : int16 =
         BitConverter.ToInt16( buf, s )
         |> IPAddress.NetworkToHostOrder
         |> int16
@@ -360,7 +360,7 @@ type Functions() =
     /// <returns>
     ///   Obtainded number data.
     /// </returns>
-    static member NetworkBytesToInt16_InPooledBuffer ( buf : PooledBuffer ) ( s : int ) : int16 =
+    static member NetworkBytesToInt16_InPooledBuffer ( buf : PooledBuffer ) ( s : int32 ) : int16 =
         Functions.NetworkBytesToInt16 buf.Array s
 
     // ----------------------------------------------------------------------------
@@ -377,7 +377,7 @@ type Functions() =
     /// <returns>
     ///   Obtainded number data.
     /// </returns>
-    static member NetworkBytesToUInt16 ( buf : byte[] ) ( s : int ) : uint16 =
+    static member NetworkBytesToUInt16 ( buf : byte[] ) ( s : int32 ) : uint16 =
         BitConverter.ToInt16( buf, s )
         |> IPAddress.NetworkToHostOrder
         |> uint16
@@ -396,7 +396,7 @@ type Functions() =
     /// <returns>
     ///   Obtainded number data.
     /// </returns>
-    static member NetworkBytesToUInt16_InPooledBuffer ( buf : PooledBuffer ) ( s : int ) : uint16 =
+    static member NetworkBytesToUInt16_InPooledBuffer ( buf : PooledBuffer ) ( s : int32 ) : uint16 =
         Functions.NetworkBytesToUInt16 buf.Array s
 
     // ----------------------------------------------------------------------------
@@ -413,7 +413,7 @@ type Functions() =
     /// <returns>
     ///   Obtainded number data.
     /// </returns>
-    static member NetworkBytesToInt32 ( buf : byte[] ) ( s : int ) : int32 =
+    static member NetworkBytesToInt32 ( buf : byte[] ) ( s : int32 ) : int32 =
         BitConverter.ToInt32( buf, s )
         |> IPAddress.NetworkToHostOrder
         |> int32
@@ -432,7 +432,7 @@ type Functions() =
     /// <returns>
     ///   Obtainded number data.
     /// </returns>
-    static member NetworkBytesToInt32_InPooledBuffer ( buf : PooledBuffer ) ( s : int ) : int32 =
+    static member NetworkBytesToInt32_InPooledBuffer ( buf : PooledBuffer ) ( s : int32 ) : int32 =
         Functions.NetworkBytesToInt32 buf.Array s
 
     // ----------------------------------------------------------------------------
@@ -449,7 +449,7 @@ type Functions() =
     /// <returns>
     ///   Obtainded number data.
     /// </returns>
-    static member NetworkBytesToUInt32 ( buf : byte[] ) ( s : int ) : uint32 =
+    static member NetworkBytesToUInt32 ( buf : byte[] ) ( s : int32 ) : uint32 =
         BitConverter.ToInt32( buf, s )
         |> IPAddress.NetworkToHostOrder
         |> uint32
@@ -468,7 +468,7 @@ type Functions() =
     /// <returns>
     ///   Obtainded number data.
     /// </returns>
-    static member NetworkBytesToUInt32_InPooledBuffer ( buf : PooledBuffer ) ( s : int ) : uint32 =
+    static member NetworkBytesToUInt32_InPooledBuffer ( buf : PooledBuffer ) ( s : int32 ) : uint32 =
         Functions.NetworkBytesToUInt32 buf.Array s
 
     // ----------------------------------------------------------------------------
@@ -485,7 +485,7 @@ type Functions() =
     /// <returns>
     ///   Obtainded number data.
     /// </returns>
-    static member NetworkBytesToInt64 ( buf : byte[] ) ( s : int ) : int64 =
+    static member NetworkBytesToInt64 ( buf : byte[] ) ( s : int32 ) : int64 =
         BitConverter.ToInt64( buf, s )
         |> IPAddress.NetworkToHostOrder
         |> int64
@@ -504,7 +504,7 @@ type Functions() =
     /// <returns>
     ///   Obtainded number data.
     /// </returns>
-    static member NetworkBytesToInt64_InPooledBuffer ( buf : PooledBuffer ) ( s : int ) : int64 =
+    static member NetworkBytesToInt64_InPooledBuffer ( buf : PooledBuffer ) ( s : int32 ) : int64 =
         Functions.NetworkBytesToInt64 buf.Array s
 
     // ----------------------------------------------------------------------------
@@ -521,7 +521,7 @@ type Functions() =
     /// <returns>
     ///   Obtainded number data.
     /// </returns>
-    static member NetworkBytesToUInt64 ( buf : byte[] ) ( s : int ) : uint64 =
+    static member NetworkBytesToUInt64 ( buf : byte[] ) ( s : int32 ) : uint64 =
         BitConverter.ToInt64( buf, s )
         |> IPAddress.NetworkToHostOrder
         |> uint64
@@ -540,7 +540,7 @@ type Functions() =
     /// <returns>
     ///   Obtainded number data.
     /// </returns>
-    static member NetworkBytesToUInt64_InPooledBuffer ( buf : PooledBuffer ) ( s : int ) : uint64 =
+    static member NetworkBytesToUInt64_InPooledBuffer ( buf : PooledBuffer ) ( s : int32 ) : uint64 =
         Functions.NetworkBytesToUInt64 buf.Array s
 
     // ----------------------------------------------------------------------------
@@ -605,7 +605,7 @@ type Functions() =
     /// <param name="v">
     ///   An integer value that will be converted.
     /// </param>
-    static member Int16ToNetworkBytes ( buf : byte[] ) ( s : int ) ( v : int16 ) : unit =
+    static member Int16ToNetworkBytes ( buf : byte[] ) ( s : int32 ) ( v : int16 ) : unit =
         let v2 = v |> IPAddress.HostToNetworkOrder
         BitConverter.TryWriteBytes( Span( buf, s, 2 ), v2 ) |> ignore
 
@@ -623,7 +623,7 @@ type Functions() =
     /// <param name="v">
     ///   An integer value that will be converted.
     /// </param>
-    static member UInt16ToNetworkBytes ( buf : byte[] ) ( s : int ) ( v : uint16 ) : unit =
+    static member UInt16ToNetworkBytes ( buf : byte[] ) ( s : int32 ) ( v : uint16 ) : unit =
         let v2 = v |> int16 |> IPAddress.HostToNetworkOrder
         BitConverter.TryWriteBytes( Span( buf, s, 2 ), v2 ) |> ignore
 
@@ -641,7 +641,7 @@ type Functions() =
     /// <param name="v">
     ///   An integer value that will be converted.
     /// </param>
-    static member Int32ToNetworkBytes ( buf : byte[] ) ( s : int ) ( v : int32 ) : unit =
+    static member Int32ToNetworkBytes ( buf : byte[] ) ( s : int32 ) ( v : int32 ) : unit =
         let v2 = v |> IPAddress.HostToNetworkOrder
         BitConverter.TryWriteBytes( Span( buf, s, 4 ), v2 ) |> ignore
 
@@ -659,7 +659,7 @@ type Functions() =
     /// <param name="v">
     ///   An integer value that will be converted.
     /// </param>
-    static member UInt32ToNetworkBytes ( buf : byte[] ) ( s : int ) ( v : uint32 ) : unit =
+    static member UInt32ToNetworkBytes ( buf : byte[] ) ( s : int32 ) ( v : uint32 ) : unit =
         let v2 = v |> int32 |> IPAddress.HostToNetworkOrder
         BitConverter.TryWriteBytes( Span( buf, s, 4 ), v2 ) |> ignore
 
@@ -677,7 +677,7 @@ type Functions() =
     /// <param name="v">
     ///   An integer value that will be converted.
     /// </param>
-    static member Int64ToNetworkBytes ( buf : byte[] ) ( s : int ) ( v : int64 ) : unit =
+    static member Int64ToNetworkBytes ( buf : byte[] ) ( s : int32 ) ( v : int64 ) : unit =
         let v2 = v |> IPAddress.HostToNetworkOrder
         BitConverter.TryWriteBytes( Span( buf, s, 8 ), v2 ) |> ignore
 
@@ -695,7 +695,7 @@ type Functions() =
     /// <param name="v">
     ///   An integer value that will be converted.
     /// </param>
-    static member UInt64ToNetworkBytes ( buf : byte[] ) ( s : int ) ( v : uint64 ) : unit =
+    static member UInt64ToNetworkBytes ( buf : byte[] ) ( s : int32 ) ( v : uint64 ) : unit =
         let v2 = v |> int64 |> IPAddress.HostToNetworkOrder
         BitConverter.TryWriteBytes( Span( buf, s, 8 ), v2 ) |> ignore
 
@@ -876,7 +876,7 @@ type Functions() =
     /// <param name="v">
     ///   A bytes array.
     /// </param>
-    static member PadBytesArray ( u : int ) ( m : int ) ( v : byte[] ) : byte [] =
+    static member PadBytesArray ( u : int32 ) ( m : int32 ) ( v : byte[] ) : byte [] =
         let wl = Functions.AddPaddingLengthInt32 v.Length u
         let wa : byte[] = Array.zeroCreate( min wl m )
         Array.blit v 0 wa 0 ( min wa.Length v.Length )
@@ -1003,7 +1003,7 @@ type Functions() =
     ///  Execution result of function f, or error message.
     /// </returns>
     static member RetryAsync1 ( f : unit -> Task<Result<'a, string>> ) ( e : Exception -> bool ) : Task<Result<'a, string>> =
-        let rec loop ( cnt : int ) =
+        let rec loop ( cnt : int32 ) =
             task {
                 try
                     match! f() with
@@ -1323,7 +1323,7 @@ type Functions() =
     ///   Last status value, it returns with false at boolean value.
     /// </returns>
     /// <code>
-    ///   > let f2 ( a : int ) =
+    ///   > let f2 ( a : int32 ) =
     ///       task {
     ///         do! Task.Delay 100
     ///         printfn "a=%d" a
@@ -1334,7 +1334,7 @@ type Functions() =
     ///   a=1
     ///   a=2
     ///   a=3
-    ///   val it: int = 4
+    ///   val it: int32 = 4
     /// </code>
     static member loopAsyncWithState ( f : ( 'a -> Task<struct( bool * 'a )> ) ) ( init : 'a ) : Task<'a> =
         task {
@@ -1396,7 +1396,7 @@ type Functions() =
     /// </returns>
     /// <code>
     /// <![CDATA[
-    ///   let loop1 ( s : int ) : Task<LoopState<int, string>> =
+    ///   let loop1 ( s : int32 ) : Task<LoopState<int32, string>> =
     ///     task {
     ///       if s &lt; 10 then
     ///         return Continue( s + 1 )
@@ -1513,9 +1513,9 @@ type Functions() =
     /// <returns>
     ///  Received bytes array.
     /// </returns>
-    static member ReceiveBytesFromNetwork ( s : Stream ) ( len : int ) : Task< byte array > =
+    static member ReceiveBytesFromNetwork ( s : Stream ) ( len : int32 ) : Task< byte array > =
         let buf = Array.zeroCreate<byte>( len )
-        let readPartData ( stat : int ) =
+        let readPartData ( stat : int32 ) =
             task {
                 let! ww = s.ReadAsync( buf, stat, len - stat )
                 if ww = 0 then
@@ -1655,13 +1655,13 @@ type Functions() =
     /// </returns>
     /// <code>
     ///  > Functions.GenUniqueNumber ( (+) 1 ) 0 [| 0; 1; 2 |];;
-    ///  val it: int = 3
+    ///  val it: int32 = 3
     ///  > GenUniqueNumber ( (+) 1uy ) 10uy [| 0uy .. 255uy |];;
     ///  val it: byte = 10uy
     /// </code>
     static member GenUniqueNumber ( addr : 'a -> 'a ) ( d : 'a ) ( v : 'a seq ) : 'a =
         let vlen = Seq.length v
-        let rec loop ( cnt : int ) ( i : 'a ) =
+        let rec loop ( cnt : int32 ) ( i : 'a ) =
             if cnt >= vlen then
                 d
             elif Seq.contains i v then
@@ -1709,7 +1709,7 @@ type Functions() =
     /// </returns>
     static member FramingReceiver ( s : Stream ) : Task<string> =
         task {
-            let! headerBytes = Functions.ReceiveBytesFromNetwork s ( sizeof<int> )
+            let! headerBytes = Functions.ReceiveBytesFromNetwork s ( sizeof<int32> )
             let dataLen =
                 BitConverter.ToInt32( headerBytes, 0 )
                 |> IPAddress.NetworkToHostOrder
@@ -1810,16 +1810,16 @@ type Functions() =
     /// </returns>
     /// <code>
     ///  CompareMultiLevelKey [| "a" |] [| "a" |];;
-    ///  val it: int = 0
+    ///  val it: int32 = 0
     ///  CompareMultiLevelKey [| "b" |] [| "a" |];;
-    ///  val it: int = 1
+    ///  val it: int32 = 1
     ///  CompareMultiLevelKey [| "a"; "c" |] [| "a" |];;
-    ///  val it: int = 1
+    ///  val it: int32 = 1
     ///  CompareMultiLevelKey [| "a" |] [| "a"; "c" |];;
-    ///  val it: int = -1
+    ///  val it: int32 = -1
     /// </code>
-    static member CompareMultiLevelKey ( a : string seq ) ( b : string seq ) : int =
-        let rec loop ( ae : IEnumerator<string> ) ( be : IEnumerator<string> ) : int =
+    static member CompareMultiLevelKey ( a : string seq ) ( b : string seq ) : int32 =
+        let rec loop ( ae : IEnumerator<string> ) ( be : IEnumerator<string> ) : int32 =
             match ae.MoveNext(), be.MoveNext() with
             | false, false ->
                 0
@@ -2006,8 +2006,8 @@ type Functions() =
     /// <returns>
     ///  Returns a TcpClient object with an established connection.
     /// </returns>
-    static member ConnectToServer ( host : string ) ( port : int ) ( timeoutMS : int ) ( intervalMS : int ) ( retry : int ) : Task<TcpClient> =
-        let rec loop ( cnt : int ) : Task<TcpClient option> =
+    static member ConnectToServer ( host : string ) ( port : int32 ) ( timeoutMS : int32 ) ( intervalMS : int32 ) ( retry : int32 ) : Task<TcpClient> =
+        let rec loop ( cnt : int32 ) : Task<TcpClient option> =
             task {
                 if cnt < retry then
                     if cnt > 0 then

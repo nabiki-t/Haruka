@@ -23,7 +23,7 @@ open Haruka.Constants
 // Type definition
 
 type [<NoComparison>]T_Test = {
-    D1 : int;
+    D1 : int32;
     D2 : T_T032_1;
 }
 
@@ -32,7 +32,7 @@ and [<NoComparison>]T_T032_1 = {
 }
 
 and [<NoComparison>]T_R032_1 = 
-    | U_D3 of int
+    | U_D3 of int32
     | U_D4 of T_T032_2
 
 and [<NoComparison>]T_T032_2 = {
@@ -40,7 +40,7 @@ and [<NoComparison>]T_T032_2 = {
 }
 
 and [<NoComparison>]T_R032_2 = 
-    | U_D5 of int
+    | U_D5 of int32
     | U_D6 of T_T032_1
 
 //=============================================================================
@@ -301,7 +301,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_Test_toString ( indent : int ) ( indentStep : int ) ( elem : T_Test ) ( elemName : string ) : seq<string> = 
+    static member private T_Test_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_Test ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -329,7 +329,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_T032_1_toString ( indent : int ) ( indentStep : int ) ( elem : T_T032_1 ) ( elemName : string ) : seq<string> = 
+    static member private T_T032_1_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_T032_1 ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -356,7 +356,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_R032_1_toString ( indent : int ) ( indentStep : int ) ( elem : T_R032_1 ) ( elemName : string ) : seq<string> = 
+    static member private T_R032_1_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_R032_1 ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -387,7 +387,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_T032_2_toString ( indent : int ) ( indentStep : int ) ( elem : T_T032_2 ) ( elemName : string ) : seq<string> = 
+    static member private T_T032_2_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_T032_2 ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -414,7 +414,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_R032_2_toString ( indent : int ) ( indentStep : int ) ( elem : T_R032_2 ) ( elemName : string ) : seq<string> = 
+    static member private T_R032_2_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_R032_2 ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {

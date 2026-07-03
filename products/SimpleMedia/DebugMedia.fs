@@ -42,8 +42,8 @@ type private DebugEvent =
 type private DebugAction =
     | ACA of string
     | LUReset of string
-    | Count of ( int * int[] )
-    | Delay of int  // ignored for TestUnitReady and ReadCapacity event.
+    | Count of ( int32 * int[] )
+    | Delay of int32  // ignored for TestUnitReady and ReadCapacity event.
     | Wait          // ignored for TestUnitReady and ReadCapacity event.
 
 [<NoComparison>]
@@ -89,7 +89,7 @@ type DebugMedia
     let m_Peripheral = m_StatusMaster.CreateMedia m_Config.Peripheral m_LUN m_Multiplicity m_Killer
 
     /// Debug actions
-    let m_Action = OptimisticLock( Map< int, DebugRegist > [||] )
+    let m_Action = OptimisticLock( Map< int32, DebugRegist > [||] )
 
     /// An object for waiting on tasks.
     let m_TaskWaiter = OptimisticLock( ImmutableDictionary< TSIH_T, TaskWaiterWithTag<ITT_T,unit,string> >.Empty )
@@ -126,7 +126,7 @@ type DebugMedia
                     let loginfo = struct( m_ObjID, ValueNone, ValueNone, ValueSome( m_LUN ) )
                     g.Gen1( loginfo, "DebugMedia.Initialize." )
                 )
-            m_Action.Update ( fun _ -> Map< int, DebugRegist > [||] ) |> ignore
+            m_Action.Update ( fun _ -> Map< int32, DebugRegist > [||] ) |> ignore
             m_Peripheral.Initialize()
 
         // ------------------------------------------------------------------------
@@ -137,7 +137,7 @@ type DebugMedia
                     let loginfo = struct( m_ObjID, ValueNone, ValueNone, ValueSome( m_LUN ) )
                     g.Gen1( loginfo, "DebugMedia.Closing." )
                 )
-            m_Action.Update ( fun _ -> Map< int, DebugRegist > [||] ) |> ignore
+            m_Action.Update ( fun _ -> Map< int32, DebugRegist > [||] ) |> ignore
             m_Peripheral.Closing()
 
         // ------------------------------------------------------------------------
@@ -187,7 +187,7 @@ type DebugMedia
             ( source : CommandSourceInfo )
             ( argLBA : BLKCNT64_T )
             ( buffer : ArraySegment<byte> )
-            : Task<int> =
+            : Task<int32> =
 
             task {
                 let lbau64 = blkcnt_me.toUInt64 argLBA
@@ -225,7 +225,7 @@ type DebugMedia
             ( argLBA : BLKCNT64_T )
             ( offset : uint64 )
             ( data : ArraySegment<byte> )
-            : Task<int> =
+            : Task<int32> =
 
             task {
                 let loginfo = struct ( m_ObjID, ValueSome( source ), ValueSome( initiatorTaskTag ), ValueSome( m_LUN ) )
@@ -483,7 +483,7 @@ type DebugMedia
     ///  Response data that will be returned to client.
     /// </returns>
     member private _.MediaControl_ClearTraps () : MediaCtrlRes.T_Debug =
-        m_Action.Update ( fun _ -> Map< int, DebugRegist > [||] ) |> ignore
+        m_Action.Update ( fun _ -> Map< int32, DebugRegist > [||] ) |> ignore
         MediaCtrlRes.U_ClearTrapsResult( {
             Result = true;
             ErrorMessage = "";
@@ -502,7 +502,7 @@ type DebugMedia
     ///  If there is no counter that matches the index value, -1 is returned.
     ///  If there are multiple counters that match the index value, the first counter value is returned.
     /// </remarks>
-    member private _.MediaControl_GetCounterValue ( index : int ) : MediaCtrlRes.T_Debug =
+    member private _.MediaControl_GetCounterValue ( index : int32 ) : MediaCtrlRes.T_Debug =
         let act = m_Action.obj
         let r =
             act.Values

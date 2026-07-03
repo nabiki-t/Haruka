@@ -587,7 +587,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_TargetDeviceCtrlReq_toString ( indent : int ) ( indentStep : int ) ( elem : T_TargetDeviceCtrlReq ) ( elemName : string ) : seq<string> = 
+    static member private T_TargetDeviceCtrlReq_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_TargetDeviceCtrlReq ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -614,7 +614,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_Request_toString ( indent : int ) ( indentStep : int ) ( elem : T_Request ) ( elemName : string ) : seq<string> = 
+    static member private T_Request_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_Request ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -681,7 +681,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_SetLogParameters_toString ( indent : int ) ( indentStep : int ) ( elem : T_SetLogParameters ) ( elemName : string ) : seq<string> = 
+    static member private T_SetLogParameters_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_SetLogParameters ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -718,7 +718,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_GetSession_toString ( indent : int ) ( indentStep : int ) ( elem : T_GetSession ) ( elemName : string ) : seq<string> = 
+    static member private T_GetSession_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_GetSession ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -753,7 +753,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_GetConnection_toString ( indent : int ) ( indentStep : int ) ( elem : T_GetConnection ) ( elemName : string ) : seq<string> = 
+    static member private T_GetConnection_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_GetConnection ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -792,7 +792,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_GetMediaStatus_toString ( indent : int ) ( indentStep : int ) ( elem : T_GetMediaStatus ) ( elemName : string ) : seq<string> = 
+    static member private T_GetMediaStatus_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_GetMediaStatus ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -824,7 +824,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_MediaControlRequest_toString ( indent : int ) ( indentStep : int ) ( elem : T_MediaControlRequest ) ( elemName : string ) : seq<string> = 
+    static member private T_MediaControlRequest_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_MediaControlRequest ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {

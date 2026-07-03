@@ -40,13 +40,13 @@ type VhdxToRaw() =
         File.Delete outputPath
         use outfile = new FileStream( outputPath, FileMode.Create, FileAccess.Write, FileShare.None )
 
-        let zeroBuffer = Array.zeroCreate<byte>( int vMD.[0].VirtualDiskInfo.PayloadBlockSize )
-        let readPBBuf = Array.zeroCreate<byte>( int vMD.[0].VirtualDiskInfo.PayloadBlockSize )
-        let readSecBuf = Array.zeroCreate<byte>( vMD.[0].VirtualDiskInfo.LogicalSectorSize |> Blocksize.toUInt32 |> int )
+        let zeroBuffer = Array.zeroCreate<byte>( int32 vMD.[0].VirtualDiskInfo.PayloadBlockSize )
+        let readPBBuf = Array.zeroCreate<byte>( int32 vMD.[0].VirtualDiskInfo.PayloadBlockSize )
+        let readSecBuf = Array.zeroCreate<byte>( vMD.[0].VirtualDiskInfo.LogicalSectorSize |> Blocksize.toUInt32 |> int32 )
 
         // Calculate number of sectors in a payload block.
         let secCntInPB =
-            vMD.[0].VirtualDiskInfo.PayloadBlockSize / ( vMD.[0].VirtualDiskInfo.LogicalSectorSize |> Blocksize.toUInt32 ) |> int
+            vMD.[0].VirtualDiskInfo.PayloadBlockSize / ( vMD.[0].VirtualDiskInfo.LogicalSectorSize |> Blocksize.toUInt32 ) |> int32
 
         vMD.[0].BatEntries.Payloads
         |> Array.iteri ( fun pbIdx pbItr ->

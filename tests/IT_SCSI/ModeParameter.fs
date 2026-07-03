@@ -174,7 +174,7 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
     [<InlineData( 1UL, 4uy, 4 )>]
     [<InlineData( 1UL, 12uy, 12 )>]
     [<InlineData( 1UL, 255uy, 56 )>]
-    member _.ModeSense6_001 ( lu : uint64 ) ( allen : byte ) ( explen : int ) =
+    member _.ModeSense6_001 ( lu : uint64 ) ( allen : byte ) ( explen : int32 ) =
         task {
             let lun = lun_me.fromPrim lu
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
@@ -508,7 +508,7 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
     [<InlineData( 1UL, true,  8us, 8 )>]
     [<InlineData( 1UL, true,  24us, 24 )>]
     [<InlineData( 1UL, true,  255us, 68 )>]
-    member _.ModeSense10_001 ( lu : uint64 ) ( llbaa : bool ) ( allen : uint16 ) ( explen : int ) =
+    member _.ModeSense10_001 ( lu : uint64 ) ( llbaa : bool ) ( allen : uint16 ) ( explen : int32 ) =
         task {
             let lun = lun_me.fromPrim lu
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
@@ -921,7 +921,7 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
     [<InlineData( 4,  false )>]
     [<InlineData( 11, false )>]
     [<InlineData( 12, true  )>]
-    member _.ModeSelect6_Block_InvalidLength_001 ( paramlen : int ) ( exp : bool ) =
+    member _.ModeSelect6_Block_InvalidLength_001 ( paramlen : int32 ) ( exp : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
@@ -980,7 +980,7 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
     [<InlineData( 5,  false )>]
     [<InlineData( 15, false )>]
     [<InlineData( 16, true  )>]
-    member _.ModeSelect6_Control_InvalidLength_001 ( paramlen : int ) ( exp : bool ) =
+    member _.ModeSelect6_Control_InvalidLength_001 ( paramlen : int32 ) ( exp : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
@@ -1056,7 +1056,7 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
     [<InlineData( 5,  false )>]
     [<InlineData( 23, false )>]
     [<InlineData( 24, true  )>]
-    member _.ModeSelect6_Cache_InvalidLength_001 ( paramlen : int ) ( exp : bool ) =
+    member _.ModeSelect6_Cache_InvalidLength_001 ( paramlen : int32 ) ( exp : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
@@ -1134,7 +1134,7 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
     [<InlineData( 5,  false )>]
     [<InlineData( 15, false )>]
     [<InlineData( 16, true  )>]
-    member _.ModeSelect6_InformationalExceptionsControl_InvalidLength_001 ( paramlen : int ) ( exp : bool ) =
+    member _.ModeSelect6_InformationalExceptionsControl_InvalidLength_001 ( paramlen : int32 ) ( exp : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
@@ -1359,7 +1359,7 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
     [<InlineData( false, 16, true  )>]
     [<InlineData( true,  23, false )>]
     [<InlineData( true,  24, true  )>]
-    member _.ModeSelect10_Block_InvalidLength_001 ( longlba : bool ) ( paramlen : int ) ( exp : bool ) =
+    member _.ModeSelect10_Block_InvalidLength_001 ( longlba : bool ) ( paramlen : int32 ) ( exp : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
@@ -1422,7 +1422,7 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
     [<InlineData( 9,  false )>]
     [<InlineData( 19, false )>]
     [<InlineData( 20, true  )>]
-    member _.ModeSelect10_Control_InvalidLength_001 ( paramlen : int ) ( exp : bool ) =
+    member _.ModeSelect10_Control_InvalidLength_001 ( paramlen : int32 ) ( exp : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
@@ -1498,7 +1498,7 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
     [<InlineData( 9,  false )>]
     [<InlineData( 27, false )>]
     [<InlineData( 28, true  )>]
-    member _.ModeSelect10_Cache_InvalidLength_001 ( paramlen : int ) ( exp : bool ) =
+    member _.ModeSelect10_Cache_InvalidLength_001 ( paramlen : int32 ) ( exp : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
@@ -1576,7 +1576,7 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
     [<InlineData( 9,  false )>]
     [<InlineData( 19, false )>]
     [<InlineData( 20, true  )>]
-    member _.ModeSelect10_InformationalExceptionsControl_InvalidLength_001 ( paramlen : int ) ( exp : bool ) =
+    member _.ModeSelect10_InformationalExceptionsControl_InvalidLength_001 ( paramlen : int32 ) ( exp : bool ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 

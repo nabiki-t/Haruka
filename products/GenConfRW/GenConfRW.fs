@@ -105,7 +105,7 @@ let getAttributeStr ( elem : XElement ) ( name : string ) : string option =
 /// <summary>
 ///  Get mincount attribute value.
 ///  If the above value is not specified, it is assumed that 1 is specified.
-///  If that value is not uint value, it is assumed that constant value defined in Haruka.Constants.Constants class.
+///  If that value is not uint32 value, it is assumed that constant value defined in Haruka.Constants.Constants class.
 /// </summary>
 /// <param name="elem">
 ///  XML element that will have mincount.
@@ -113,7 +113,7 @@ let getAttributeStr ( elem : XElement ) ( name : string ) : string option =
 /// <returns>
 ///  mincount value.
 /// </returns>
-let getMinCountAttbValue ( elem : XElement ) : uint =
+let getMinCountAttbValue ( elem : XElement ) : uint32 =
     match getAttributeStr elem "mincount" with
     | Some( x ) ->
         match System.UInt32.TryParse x with
@@ -128,7 +128,7 @@ let getMinCountAttbValue ( elem : XElement ) : uint =
 /// <summary>
 ///  Get maxcount attribute value.
 ///  If the above value is not specified, it is assumed that 1 is specified.
-///  If that value is not uint value, it is assumed that constant value defined in Haruka.Constants.Constants class.
+///  If that value is not uint32 value, it is assumed that constant value defined in Haruka.Constants.Constants class.
 /// </summary>
 /// <param name="elem">
 ///  XML element that will have maxcount.
@@ -136,7 +136,7 @@ let getMinCountAttbValue ( elem : XElement ) : uint =
 /// <returns>
 ///  maxcount value.
 /// </returns>
-let getMaxCountAttbValue ( elem : XElement ) : uint =
+let getMaxCountAttbValue ( elem : XElement ) : uint32 =
     match getAttributeStr elem "maxcount" with
     | Some( x ) ->
         match System.UInt32.TryParse x with
@@ -151,7 +151,7 @@ let getMaxCountAttbValue ( elem : XElement ) : uint =
 /// <summary>
 ///  Get minvalue attribute value.
 ///  If the above value is not specified, it returns None.
-///  If that value is not uint value, it is assumed that constant value defined in Haruka.Constants.Constants class.
+///  If that value is not uint32 value, it is assumed that constant value defined in Haruka.Constants.Constants class.
 /// </summary>
 /// <param name="elem">
 ///  XML element that will have minvalue.
@@ -175,7 +175,7 @@ let getMinValueAttbValue ( elem : XElement ) : int64 option =
 /// <summary>
 ///  Get maxvalue attribute value.
 ///  If the above value is not specified, it is assumed that 1 is specified.
-///  If that value is not uint value, it is assumed that constant value defined in Haruka.Constants.Constants class.
+///  If that value is not uint32 value, it is assumed that constant value defined in Haruka.Constants.Constants class.
 /// </summary>
 /// <param name="elem">
 ///  XML element that will have maxvalue.
@@ -206,7 +206,7 @@ let getMaxValueAttbValue ( elem : XElement ) : int64 option =
 /// <returns>
 ///  pair of mincount and maxcount value.
 /// </returns>
-let getMinMaxCount ( elem : XElement ) : ( uint * uint ) =
+let getMinMaxCount ( elem : XElement ) : ( uint32 * uint32 ) =
     let minCount = getMinCountAttbValue elem
     let maxCount = getMaxCountAttbValue elem
     if minCount > maxCount then
@@ -225,7 +225,7 @@ let GetPrimeTypeName( tName : string ) : string =
     | "string" -> "string"
     | "byte" -> "sbyte"
     | "unsignedByte" -> "uint8"
-    | "int" -> "int"
+    | "int" -> "int32"
     | "unsignedInt" -> "uint32"
     | "long" -> "int64"
     | "unsignedLong" -> "uint64"
@@ -413,7 +413,7 @@ let GenElementTagStr ( refType : string ) ( elem : XElement ) ( ignoreCount : bo
 /// <returns>
 ///   Close tag string that must be appended after generating the XSD string for the child node.
 /// </returns>
-let OutputOwnNode ( outfile : TextWriter ) ( elem : XElement ) ( indent : int ) ( parentIsSelection : bool ) : ( string * bool ) =
+let OutputOwnNode ( outfile : TextWriter ) ( elem : XElement ) ( indent : int32 ) ( parentIsSelection : bool ) : ( string * bool ) =
     let indentStr = String.replicate indent " "
     let nameStr = elem.Attribute( XName.Get "name" ).Value
 
@@ -733,7 +733,7 @@ let OutputOwnNode ( outfile : TextWriter ) ( elem : XElement ) ( indent : int ) 
 /// <param name="parentIsSelection">
 ///   Whether the parent node is a selection.
 /// </param>
-let rec OutputXSD ( outfile : TextWriter ) ( isroot : bool ) ( elem : XElement ) ( indent : int ) ( parentIsSelection : bool ) : unit =
+let rec OutputXSD ( outfile : TextWriter ) ( isroot : bool ) ( elem : XElement ) ( indent : int32 ) ( parentIsSelection : bool ) : unit =
     let closeTag, currentIsSelection =
         if isroot then
             // If specified node is the root node, output XML header string
@@ -1212,7 +1212,7 @@ let rec OutputReaderCode ( outfile : TextWriter ) ( className : string ) ( elem 
 /// <returns>
 ///   Generated string.
 /// </returns>
-let callWriteFuncStr ( outfile : TextWriter ) ( indent : int ) ( className : string ) ( elemName : string ) ( elemCallName : string ) ( elem : XElement ) : unit =
+let callWriteFuncStr ( outfile : TextWriter ) ( indent : int32 ) ( className : string ) ( elemName : string ) ( elemCallName : string ) ( elem : XElement ) : unit =
     let constraintStr = elem.Attribute( XName.Get "constraint" ).Value
     let indentStr = String.replicate indent " "
     match constraintStr with
@@ -1493,7 +1493,7 @@ let rec OutputWriterCode ( outfile : TextWriter ) ( className : string ) ( elem 
         fprintfn outfile "    /// <returns>"
         fprintfn outfile "    ///  Array of the generated string." 
         fprintfn outfile "    /// </returns>"
-        fprintfn outfile "    static member private T_%s_toString ( indent : int ) ( indentStep : int ) ( elem : T_%s ) ( elemName : string ) : seq<string> = " itemName itemName
+        fprintfn outfile "    static member private T_%s_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_%s ) ( elemName : string ) : seq<string> = " itemName itemName
         fprintfn outfile "        let indentStr = String.replicate ( indent * indentStep ) \" \""
         fprintfn outfile "        let singleIndent = String.replicate ( indentStep ) \" \""
         fprintfn outfile "        seq {"
@@ -1565,7 +1565,7 @@ let rec OutputWriterCode ( outfile : TextWriter ) ( className : string ) ( elem 
         OutputWriterCode outfile className itr
 
 
-let Convert ( infile : TextReader ) ( outfile : TextWriter ) : int =
+let Convert ( infile : TextReader ) ( outfile : TextWriter ) : int32 =
     let confSchemaSet =
         use xsdStream =
             let bt = Encoding.GetEncoding( "utf-8" ).GetBytes inputXSD
@@ -1749,7 +1749,7 @@ let Convert ( infile : TextReader ) ( outfile : TextWriter ) : int =
 
     0
 
-let ConvertFiles ( inDir : string ) ( outDir : string ) : int =
+let ConvertFiles ( inDir : string ) ( outDir : string ) : int32 =
     let c = Path.DirectorySeparatorChar
     let rep = new RegularExpressions.Regex( sprintf @"^(.*)\%c([^\%c][^\%c]*)\.xml$" c c c )
     Directory.GetFiles inDir
@@ -1775,7 +1775,7 @@ let ConvertFiles ( inDir : string ) ( outDir : string ) : int =
 
 /// entry point.
 [<EntryPoint>]
-let main : ( string[] -> int  )=
+let main : ( string[] -> int32  )=
     function
     | [||] ->
         Convert stdin stdout

@@ -219,7 +219,7 @@ type CtrlConnectionStub( st : StringTable ) =
     let mutable m_DebugMedia_GetAllTraps : ( TDID_T -> LUN_T -> MEDIAIDX_T -> Task< MediaCtrlRes.T_Trap list > ) option = None
     let mutable m_DebugMedia_AddTrap : ( TDID_T -> LUN_T -> MEDIAIDX_T -> MediaCtrlReq.T_Event -> MediaCtrlReq.T_Action -> Task ) option = None
     let mutable m_DebugMedia_ClearTraps : ( TDID_T -> LUN_T -> MEDIAIDX_T -> Task ) option = None
-    let mutable m_DebugMedia_GetCounterValue : ( TDID_T -> LUN_T -> MEDIAIDX_T -> int -> Task< int > ) option = None
+    let mutable m_DebugMedia_GetCounterValue : ( TDID_T -> LUN_T -> MEDIAIDX_T -> int32 -> Task< int32 > ) option = None
     let mutable m_DebugMedia_GetTaskWaitStatus : ( TDID_T -> LUN_T -> MEDIAIDX_T -> Task< MediaCtrlRes.T_TaskWaitStatus list > ) option = None
     let mutable m_DebugMedia_Resume : ( TDID_T -> LUN_T -> MEDIAIDX_T -> TSIH_T -> ITT_T -> Task ) option = None
 

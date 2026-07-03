@@ -121,7 +121,7 @@ type GlbFunc() =
     static member WAIT_DEBUG_PIPE : string = "WAIT_DEBUG_PIPE"
 
     /// Get the next TCP port number to use.
-    static member nextTcpPortNo() : int =
+    static member nextTcpPortNo() : int32 =
         let v = portCounter.Next()
         let portNum = v % 22768UL + 10000UL
         portNum |> int
@@ -158,7 +158,7 @@ type GlbFunc() =
     /// <remarks>
     ///   The address used for listening is IPv6 loopback.
     /// </remarks>
-    static member WaitConnect ( port : int ) : NetworkStream =
+    static member WaitConnect ( port : int32 ) : NetworkStream =
         let m_Listener = new TcpListener( IPAddress.IPv6Loopback, port )
         m_Listener.Start ()
         let r = new NetworkStream( m_Listener.AcceptSocket () )
@@ -177,7 +177,7 @@ type GlbFunc() =
     /// <remarks>
     ///   The destination address is IPv6 loopback.
     /// </remarks>
-    static member ConnectToServer ( port : int ) : TcpClient =
+    static member ConnectToServer ( port : int32 ) : TcpClient =
         Functions.ConnectToServer "::1" port 1000 100 50
         |> Functions.RunTaskSynchronously
 
@@ -214,7 +214,7 @@ type GlbFunc() =
     /// <returns>
     ///   A tuple containing two arrays of NetworkStreams, one for the server and one for the client.
     /// </returns>
-    static member GetNetConnV( cnt : int ) : ( NetworkStream[] * NetworkStream[] ) =
+    static member GetNetConnV( cnt : int32 ) : ( NetworkStream[] * NetworkStream[] ) =
         [|
             for i = 1 to cnt do
                 yield GlbFunc.GetNetConn()
@@ -492,7 +492,7 @@ type GlbFunc() =
     /// <returns>
     ///   True if the byte arrays are equal, false otherwise.
     /// </returns>
-    static member Compare ( v1 : byte[] ) ( s1 : int ) ( v2 : byte[] ) ( s2 : int ) ( len : int ) : bool =
+    static member Compare ( v1 : byte[] ) ( s1 : int32 ) ( v2 : byte[] ) ( s2 : int32 ) ( len : int32 ) : bool =
         let d = len / 8
         let mutable flg = true
         for i = 0 to d - 1 do
@@ -515,7 +515,7 @@ type GlbFunc() =
     /// <returns>
     ///   The string read from the StreamReader.
     /// </returns>
-    static member ReadString ( s : StreamReader ) ( len : int ) : string =
+    static member ReadString ( s : StreamReader ) ( len : int32 ) : string =
         let buf = Array.zeroCreate< char > len
         let mutable cnt = 0
         while cnt < len do
@@ -539,7 +539,7 @@ type GlbFunc() =
             with
             | _ ->
                 None
-        let rec loop ( cnt : int ) : byte[] option =
+        let rec loop ( cnt : int32 ) : byte[] option =
             if cnt >= 30 then
                 None
             else

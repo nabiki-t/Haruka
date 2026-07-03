@@ -171,7 +171,7 @@ type Controller (
         try
             addr
             |> Array.map ( fun itr ->
-                let l = new TcpListener( itr, int conf.PortNum )
+                let l = new TcpListener( itr, int32 conf.PortNum )
                 if conf.Address.Length <= 0 then
                     l.Server.SetSocketOption( SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, 0 )
                 HLogger.Trace( LogID.I_CREATE_TCP_SERVER_PORT, fun g -> g.Gen2( m_ObjID, conf.Address, conf.PortNum ) )

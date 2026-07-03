@@ -103,7 +103,7 @@ type ScsiTaskForDummyDevice
             base.GetSCSICommand()
 
         /// Return total received data length in bytes.
-        override this.ReceivedDataLength : uint =
+        override this.ReceivedDataLength : uint32 =
             base.GetReceivedDataLength()
 
         /// Return CDB of this object

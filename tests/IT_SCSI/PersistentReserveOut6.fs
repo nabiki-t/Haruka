@@ -162,7 +162,7 @@ type SCSI_PersistentReserveOut6( fx : SCSI_PersistentReserveOut6_Fixture ) =
         MaxRecvDataSegmentLength_T = Constants.NEGOPARAM_DEF_MaxRecvDataSegmentLength;
     }
 
-    let GetSortedISID ( cnt : int ) =
+    let GetSortedISID ( cnt : int32 ) =
         Array.init cnt ( fun _ -> GlbFunc.newISID() )
         |> Array.sortBy isid_me.toPrim
 

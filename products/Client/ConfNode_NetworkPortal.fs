@@ -218,8 +218,8 @@ type ConfNode_NetworkPortal(
                 yield sprintf "  TargetAddress(string) : %s" m_NetworkPortal.TargetAddress
                 yield sprintf "  PortNumber(uint16) : %d" m_NetworkPortal.PortNumber
                 yield sprintf "  DisableNagle(bool) : %b" m_NetworkPortal.DisableNagle
-                yield sprintf "  ReceiveBufferSize(int) : %d" m_NetworkPortal.ReceiveBufferSize
-                yield sprintf "  SendBufferSize(int) : %d" m_NetworkPortal.SendBufferSize
+                yield sprintf "  ReceiveBufferSize(int32) : %d" m_NetworkPortal.ReceiveBufferSize
+                yield sprintf "  SendBufferSize(int32) : %d" m_NetworkPortal.SendBufferSize
                 yield sprintf "  WhiteList : "
                 for cond in m_NetworkPortal.WhiteList do
                     yield sprintf "    %s " ( IPCondition.ToString cond )

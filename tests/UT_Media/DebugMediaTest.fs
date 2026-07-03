@@ -68,7 +68,7 @@ type DebugMedia_Test () =
         | _ ->
             Assert.Fail __LINE__
 
-    let AddCounterAction ( num : int ) ( a : MediaCtrlReq.T_Event ) ( media : IMedia ) =
+    let AddCounterAction ( num : int32 ) ( a : MediaCtrlReq.T_Event ) ( media : IMedia ) =
         AddTrap media ( {
             Event = a;
             Action = MediaCtrlReq.U_Count( num );
@@ -83,7 +83,7 @@ type DebugMedia_Test () =
             Assert.Fail __LINE__
             []
 
-    let GetCounterValue ( num : int ) ( media : IMedia ) =
+    let GetCounterValue ( num : int32 ) ( media : IMedia ) =
         let r1 =
             SendMediaCtrl media ( MediaCtrlReq.U_GetCounterValue ( num ) )
 

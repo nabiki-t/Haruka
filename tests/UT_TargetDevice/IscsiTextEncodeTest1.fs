@@ -498,29 +498,29 @@ type IscsiTextEncode1_Test () =
 
     static member ListOfValuesBytes2uint32_001_data = [|
         [|  "0,1,2,3,4" :> obj; ValueSome( [| 0u; 1u; 2u; 3u; 4u; |] ) :> obj; |];
-        [|  "0,1,2,3," :> obj; ( ValueNone : uint [] voption ) :> obj; |];
+        [|  "0,1,2,3," :> obj; ( ValueNone : uint32 [] voption ) :> obj; |];
         [|  "0,1,2,3" :> obj; ValueSome( [| 0u; 1u; 2u; 3u; |] ) :> obj; |];
-        [|  "0,1,2," :> obj; ( ValueNone : uint [] voption ) :> obj; |];
+        [|  "0,1,2," :> obj; ( ValueNone : uint32 [] voption ) :> obj; |];
         [|  "0,1,2" :> obj; ValueSome( [| 0u; 1u; 2u; |] ) :> obj; |];
-        [|  "0,1," :> obj; ( ValueNone : uint [] voption ) :> obj; |];
+        [|  "0,1," :> obj; ( ValueNone : uint32 [] voption ) :> obj; |];
         [| "0,1" :> obj; ValueSome( [| 0u; 1u; |] ) :> obj; |];
-        [| "0," :> obj; ( ValueNone : uint [] voption ) :> obj; |];
+        [| "0," :> obj; ( ValueNone : uint32 [] voption ) :> obj; |];
         [| "0" :> obj; ValueSome( [| 0u; |] ) :> obj; |];
-        [| ",10" :> obj; ( ValueNone : uint [] voption ) :> obj; |];
-        [| "abc,10" :> obj; ( ValueNone : uint [] voption ) :> obj; |];
-        [| "" :> obj; ( ValueNone : uint [] voption ) :> obj; |];
+        [| ",10" :> obj; ( ValueNone : uint32 [] voption ) :> obj; |];
+        [| "abc,10" :> obj; ( ValueNone : uint32 [] voption ) :> obj; |];
+        [| "" :> obj; ( ValueNone : uint32 [] voption ) :> obj; |];
         [| "4294967295,4294967294,4294967293" :> obj; ValueSome( [| 4294967295u; 4294967294u; 4294967293u; |] ) :> obj; |];
-        [| "4294967296,4294967295,4294967294" :> obj; ( ValueNone : uint [] voption ) :> obj; |];
-        [| "-1,10" :> obj; ( ValueNone : uint [] voption ) :> obj; |];
-        [| "7,-8,9" :> obj; ( ValueNone : uint [] voption ) :> obj; |];
-        [| "0xFF,8,9" :> obj; ( ValueNone : uint [] voption ) :> obj; |];
+        [| "4294967296,4294967295,4294967294" :> obj; ( ValueNone : uint32 [] voption ) :> obj; |];
+        [| "-1,10" :> obj; ( ValueNone : uint32 [] voption ) :> obj; |];
+        [| "7,-8,9" :> obj; ( ValueNone : uint32 [] voption ) :> obj; |];
+        [| "0xFF,8,9" :> obj; ( ValueNone : uint32 [] voption ) :> obj; |];
     |]
 
     [<Theory>]
     [<MemberData( "ListOfValuesBytes2uint32_001_data" )>]
     member _.ListOfValuesBytes2uint32_001 ( o1 : obj ) ( o2 : obj ) =
         let v1 = o1 :?> string
-        let v2 = o2 :?> uint [] voption
+        let v2 = o2 :?> uint32 [] voption
         Assert.True( IscsiTextEncode.ListOfValuesBytes2uint32 <| Encoding.UTF8.GetBytes v1 = v2 )
 
     static member uint32ToListOfValuesBytes_001_data = [|
@@ -529,14 +529,14 @@ type IscsiTextEncode1_Test () =
         [| [| 0u; 1u; 2u; |] :> obj; "0,1,2" :> obj; |];
         [| [| 0u; 1u; |] :> obj; "0,1" :> obj; |];
         [| [| 0u; |] :> obj; "0" :> obj; |];
-        [| ( Array.empty : uint[] ) :> obj; "" :> obj; |];
+        [| ( Array.empty : uint32[] ) :> obj; "" :> obj; |];
         [| [| 4294967295u; 4294967294u; 4294967293u; |] :> obj; "4294967295,4294967294,4294967293" :> obj; |];
     |]
 
     [<Theory>]
     [<MemberData( "uint32ToListOfValuesBytes_001_data" )>]
     member _.uint32ToListOfValuesBytes_001 ( o1 : obj ) ( o2 : obj ) =
-        let v1 = o1 :?> uint[]
+        let v1 = o1 :?> uint32[]
         let v2 = o2 :?> string
         Assert.True( ( IscsiTextEncode.uint32ToListOfValuesBytes <| v1 ) = Encoding.UTF8.GetBytes v2 )
 

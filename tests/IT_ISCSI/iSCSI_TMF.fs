@@ -103,7 +103,7 @@ type iSCSI_TMF_Fixture() =
     member _.clientProc = m_Client
     member _.iSCSIPortNo = m_iSCSIPortNo
     member _.MediaSize = m_MediaSize
-    member _.MediaBlockSize = uint m_MediaBlockSizse
+    member _.MediaBlockSize = uint32 m_MediaBlockSizse
 
 
 [<Collection( "iSCSI_TMF" )>]     // Reuse existing test fixtures
@@ -168,7 +168,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
     let receiveTMFResponse ( r1 : iSCSI_Initiator ) =
         // Continue sending NOP-Out until a TMF response is received
-        let rec loop ( tmf : TaskManagementFunctionResponsePDU voption, scnt : int, rcnt : int ) =
+        let rec loop ( tmf : TaskManagementFunctionResponsePDU voption, scnt : int32, rcnt : int32 ) =
             task {
                 let! pdu = r1.Receive g_CID0
                 match pdu with
@@ -191,7 +191,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
         Functions.loopAsyncWithState loop ( ValueNone, 1, 0 )
 
     // Get a list of tasks that are stalled by the debug media wait action.
-    let GetStuckTasks ( lu : int ) : ( string * TSIH_T * ITT_T ) array =
+    let GetStuckTasks ( lu : int32 ) : ( string * TSIH_T * ITT_T ) array =
         let rx = Regex( "^ *([^ ]*) *\( *TSIH *= *([0-9]*) *, *ITT *= *([0-9]*) *\) *$" )
         m_ClientProc.RunCommand ( sprintf "select %d" lu ) "" "LU> "
         m_ClientProc.RunCommand "select 0" "" "MD> "
@@ -211,21 +211,21 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
         m_ClientProc.RunCommand "unselect" "" "T > "
         r
 
-    let SetDebugTrap ( lu : int ) : unit =
+    let SetDebugTrap ( lu : int32 ) : unit =
         m_ClientProc.RunCommand ( sprintf "select %d" lu ) "" "LU> "
         m_ClientProc.RunCommand "select 0" "" "MD> "
         m_ClientProc.RunCommand "add trap /e Format /a Wait" "Trap added." "MD> "
         m_ClientProc.RunCommand "unselect" "" "LU> "
         m_ClientProc.RunCommand "unselect" "" "T > "
 
-    let ClearDebugTrap ( lu : int ) : unit =
+    let ClearDebugTrap ( lu : int32 ) : unit =
         m_ClientProc.RunCommand ( sprintf "select %d" lu ) "" "LU> "
         m_ClientProc.RunCommand "select 0" "" "MD> "
         m_ClientProc.RunCommand "clear trap" "Traps cleared" "MD> "
         m_ClientProc.RunCommand "unselect" "" "LU> "
         m_ClientProc.RunCommand "unselect" "" "T > "
 
-    let GetTaskSetStatus ( lu : int ) : ( string * string ) [] =
+    let GetTaskSetStatus ( lu : int32 ) : ( string * string ) [] =
         let rx = Regex( "^ *(Running|Dormant) : (.*)$" )
         m_ClientProc.RunCommand ( sprintf "select %d" lu ) "" "LU> "
         let stat = m_ClientProc.RunCommandGetResp "LUSTATUS" "LU> "
@@ -239,7 +239,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
                 Some( m.Groups.[1].Value, m.Groups.[2].Value )
         )
 
-    let ResumeStackedTask ( lu : int ) ( tsih : TSIH_T ) ( itt : ITT_T ) : unit =
+    let ResumeStackedTask ( lu : int32 ) ( tsih : TSIH_T ) ( itt : ITT_T ) : unit =
         m_ClientProc.RunCommand ( sprintf "select %d" lu ) "" "LU> "
         m_ClientProc.RunCommand "select 0" "" "MD> "
         m_ClientProc.RunCommand ( sprintf "task resume %d %d" tsih itt ) "Task(" "MD> "
@@ -258,7 +258,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // Send SCSI write command
             let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy m_BlkCnt1 NACA.T LINK.F
-            let! ittWrite, cmdSNWrite = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
+            let! ittWrite, cmdSNWrite = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint32 m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
 
             // Nop-Out 1
             let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -273,7 +273,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // SCSI read
             let! readData1 = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData1.Length = int m_MediaBlockSize ))
+            Assert.True(( readData1.Length = int32 m_MediaBlockSize ))
 
             do! r1.CloseSession g_CID0 BitI.F
         }
@@ -286,7 +286,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // Send SCSI write command ( Immidiate command )
             let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy m_BlkCnt1 NACA.T LINK.F
-            let! ittWrite, _ = r1.SendSCSICommandPDU g_CID0 BitI.T BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
+            let! ittWrite, _ = r1.SendSCSICommandPDU g_CID0 BitI.T BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint32 m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
 
             // Nop-Out 1
             let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
@@ -301,7 +301,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // SCSI read
             let! readData1 = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 ( blkcnt_me.ofUInt16 1us ) m_MediaBlockSize
-            Assert.True(( readData1.Length = int m_MediaBlockSize ))
+            Assert.True(( readData1.Length = int32 m_MediaBlockSize ))
 
             do! r1.CloseSession g_CID0 BitI.F
         }
@@ -333,7 +333,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // SCSI read
             let! readData1 = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData1.Length = int m_MediaBlockSize ))
+            Assert.True(( readData1.Length = int32 m_MediaBlockSize ))
 
             do! r1.CloseSession g_CID0 BitI.F
             ClearDebugTrap 0
@@ -366,7 +366,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // SCSI read
             let! readData1 = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData1.Length = int m_MediaBlockSize ))
+            Assert.True(( readData1.Length = int32 m_MediaBlockSize ))
 
             do! r1.CloseSession g_CID0 BitI.F
             ClearDebugTrap 0
@@ -380,7 +380,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // Send SCSI write command
             let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy m_BlkCnt1 NACA.T LINK.F
-            let! ittWrite, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
+            let! ittWrite, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint32 m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
 
             // Send Abort Task TMF request for itself
             let updater = fun ( oldpdu : TaskManagementFunctionRequestPDU ) ->
@@ -396,7 +396,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             Assert.True(( tmfRespPdu.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
 
             // Send Data-Out PDU
-            let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
+            let sendData = PooledBuffer.Rent ( int32 m_MediaBlockSize )
             let! _ = r1.SendSCSIDataOutPDU g_CID0 BitF.T ittWrite g_LUN1 g_DefTTT datasn_me.zero 0u sendData
             sendData.Return()
 
@@ -408,7 +408,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // SCSI read
             let! readData1 = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData1.Length = int m_MediaBlockSize ))
+            Assert.True(( readData1.Length = int32 m_MediaBlockSize ))
 
             do! r1.CloseSession g_CID0 BitI.F
         }
@@ -430,7 +430,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // SCSI read
             let! readData1 = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData1.Length = int m_MediaBlockSize ))
+            Assert.True(( readData1.Length = int32 m_MediaBlockSize ))
 
             do! r1.CloseSession g_CID0 BitI.F
         }
@@ -443,14 +443,14 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // Send SCSI write command to LU 1
             let writeCDB_lu1 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy m_BlkCnt1 NACA.T LINK.F
-            let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB_lu1 PooledBuffer.Empty 0u
+            let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint32 m_MediaBlockSize ) writeCDB_lu1 PooledBuffer.Empty 0u
 
             // Send Nop-Out 1 to LU 1
             let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Send SCSI write command to LU 2
             let writeCDB_lu2 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy m_BlkCnt1 NACA.T LINK.F
-            let! ittWrite_lu2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN2 ( uint m_MediaBlockSize ) writeCDB_lu2 PooledBuffer.Empty 0u
+            let! ittWrite_lu2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN2 ( uint32 m_MediaBlockSize ) writeCDB_lu2 PooledBuffer.Empty 0u
 
             // Send Abort Task Set TMF request to LU 1
             let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.ABORT_TASK_SET g_LUN1 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
@@ -461,7 +461,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             Assert.True(( tmfRespPdu.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
 
             // Send SCSI Data-Out PDU for LU2
-            let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
+            let sendData = PooledBuffer.Rent ( int32 m_MediaBlockSize )
             let! _ = r1.SendSCSIDataOutPDU g_CID0 BitF.T ittWrite_lu2 g_LUN2 g_DefTTT datasn_me.zero 0u sendData
             sendData.Return()
 
@@ -473,11 +473,11 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // SCSI read from LU 1
             let! readData1 = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData1.Length = int m_MediaBlockSize ))
+            Assert.True(( readData1.Length = int32 m_MediaBlockSize ))
 
             // SCSI read from LU 2
             let! readData2 = r1.ReadMediaData g_CID0 g_LUN2 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData2.Length = int m_MediaBlockSize ))
+            Assert.True(( readData2.Length = int32 m_MediaBlockSize ))
 
             do! r1.CloseSession g_CID0 BitI.F
         }
@@ -537,11 +537,11 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // SCSI read from LU 1
             let! readData1 = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData1.Length = int m_MediaBlockSize ))
+            Assert.True(( readData1.Length = int32 m_MediaBlockSize ))
 
             // SCSI read from LU 2
             let! readData2 = r1.ReadMediaData g_CID0 g_LUN2 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData2.Length = int m_MediaBlockSize ))
+            Assert.True(( readData2.Length = int32 m_MediaBlockSize ))
 
             do! r1.CloseSession g_CID0 BitI.F
             do! r2.CloseSession g_CID1 BitI.F
@@ -554,11 +554,11 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
     member _.TMF_ClearACA_001 () =
         task{
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
-            let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
+            let sendData = PooledBuffer.Rent ( int32 m_MediaBlockSize )
 
             // Send SCSI write command to LU 1, this command establlish ACA.
             let writeCDB1_lu1 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F ( blkcnt_me.ofUInt32 0xFFFFFFFEu ) 0uy m_BlkCnt1 NACA.T LINK.F
-            let! ittWrite1_lu1, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB1_lu1 sendData 0u
+            let! ittWrite1_lu1, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint32 m_MediaBlockSize ) writeCDB1_lu1 sendData 0u
 
             // Receive SCSI response PDU from LU 1
             let! scsiRespPdu1_lu1 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
@@ -568,7 +568,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // Send SCSI write command to LU 2, this command establlish ACA.
             let writeCDB1_lu2 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F ( blkcnt_me.ofUInt32 0xFFFFFFFEu ) 0uy m_BlkCnt1 NACA.T LINK.F
-            let! ittWrite1_lu2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN2 ( uint m_MediaBlockSize ) writeCDB1_lu2 sendData 0u
+            let! ittWrite1_lu2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN2 ( uint32 m_MediaBlockSize ) writeCDB1_lu2 sendData 0u
 
             // Receive SCSI response PDU from LU 2
             let! scsiRespPdu1_lu2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
@@ -578,11 +578,11 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // Send SCSI write command to LU 1
             let writeCDB2_lu1 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy m_BlkCnt1 NACA.T LINK.F
-            let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.ACA_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB2_lu1 PooledBuffer.Empty 0u
+            let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.ACA_TASK g_LUN1 ( uint32 m_MediaBlockSize ) writeCDB2_lu1 PooledBuffer.Empty 0u
 
             // Send SCSI write command to LU 2
             let writeCDB2_lu2 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy m_BlkCnt1 NACA.T LINK.F
-            let! ittWrite2_lu2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.ACA_TASK g_LUN2 ( uint m_MediaBlockSize ) writeCDB2_lu2 PooledBuffer.Empty 0u
+            let! ittWrite2_lu2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.ACA_TASK g_LUN2 ( uint32 m_MediaBlockSize ) writeCDB2_lu2 PooledBuffer.Empty 0u
 
             // Send Clear ACA TMF request to LU 1
             let! ittTMF_lu1, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.CLEAR_ACA g_LUN1 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
@@ -603,7 +603,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // SCSI read from LU 1
             let! readData1 = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData1.Length = int m_MediaBlockSize ))
+            Assert.True(( readData1.Length = int32 m_MediaBlockSize ))
 
             // Send Clear ACA TMF request to LU 2
             let! ittTMF_lu2, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.CLEAR_ACA g_LUN2 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
@@ -615,7 +615,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // SCSI read from LU 2
             let! readData2 = r1.ReadMediaData g_CID0 g_LUN2 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData2.Length = int m_MediaBlockSize ))
+            Assert.True(( readData2.Length = int32 m_MediaBlockSize ))
 
             do! r1.CloseSession g_CID0 BitI.F
             sendData.Return()
@@ -628,11 +628,11 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             SetDebugTrap 0
             SetDebugTrap 1
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
-            let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
+            let sendData = PooledBuffer.Rent ( int32 m_MediaBlockSize )
 
             // Send SCSI write command to LU 1, this command establlish ACA.
             let writeCDB1_lu1 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F ( blkcnt_me.ofUInt32 0xFFFFFFFEu ) 0uy m_BlkCnt1 NACA.T LINK.F
-            let! ittWrite1_lu1, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB1_lu1 sendData 0u
+            let! ittWrite1_lu1, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint32 m_MediaBlockSize ) writeCDB1_lu1 sendData 0u
 
             // Receive SCSI response PDU from LU 1
             let! scsiRespPdu1_lu1 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
@@ -642,7 +642,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // Send SCSI write command to LU 2, this command establlish ACA.
             let writeCDB1_lu2 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F ( blkcnt_me.ofUInt32 0xFFFFFFFEu ) 0uy m_BlkCnt1 NACA.T LINK.F
-            let! ittWrite1_lu2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN2 ( uint m_MediaBlockSize ) writeCDB1_lu2 sendData 0u
+            let! ittWrite1_lu2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN2 ( uint32 m_MediaBlockSize ) writeCDB1_lu2 sendData 0u
 
             // Receive SCSI response PDU from LU 2
             let! scsiRespPdu1_lu2 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
@@ -686,7 +686,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // SCSI read from LU 1
             let! readData1 = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData1.Length = int m_MediaBlockSize ))
+            Assert.True(( readData1.Length = int32 m_MediaBlockSize ))
 
             // Send Clear ACA TMF request to LU 2
             let! ittTMF_lu2, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.CLEAR_ACA g_LUN2 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
@@ -698,7 +698,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // SCSI read from LU 2
             let! readData2 = r1.ReadMediaData g_CID0 g_LUN2 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData2.Length = int m_MediaBlockSize ))
+            Assert.True(( readData2.Length = int32 m_MediaBlockSize ))
 
             do! r1.CloseSession g_CID0 BitI.F
             sendData.Return()
@@ -714,14 +714,14 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // Send SCSI write command to LU 1
             let writeCDB_lu1 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy m_BlkCnt1 NACA.T LINK.F
-            let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB_lu1 PooledBuffer.Empty 0u
+            let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint32 m_MediaBlockSize ) writeCDB_lu1 PooledBuffer.Empty 0u
 
             // Send Nop-Out 1 to LU 1
             let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Send SCSI write command to LU 2
             let writeCDB_lu2 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy m_BlkCnt1 NACA.T LINK.F
-            let! ittWrite_lu2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN2 ( uint m_MediaBlockSize ) writeCDB_lu2 PooledBuffer.Empty 0u
+            let! ittWrite_lu2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN2 ( uint32 m_MediaBlockSize ) writeCDB_lu2 PooledBuffer.Empty 0u
 
             // Send Clear Task Set TMF request to LU 1
             let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.CLEAR_TASK_SET g_LUN1 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
@@ -732,7 +732,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             Assert.True(( tmfRespPdu.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
 
             // Send SCSI Data-Out PDU for LU2
-            let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
+            let sendData = PooledBuffer.Rent ( int32 m_MediaBlockSize )
             let! _ = r1.SendSCSIDataOutPDU g_CID0 BitF.T ittWrite_lu2 g_LUN2 g_DefTTT datasn_me.zero 0u sendData
             sendData.Return()
 
@@ -744,11 +744,11 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // SCSI read from LU 1
             let! readData1 = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData1.Length = int m_MediaBlockSize ))
+            Assert.True(( readData1.Length = int32 m_MediaBlockSize ))
 
             // SCSI read from LU 2
             let! readData2 = r1.ReadMediaData g_CID0 g_LUN2 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData2.Length = int m_MediaBlockSize ))
+            Assert.True(( readData2.Length = int32 m_MediaBlockSize ))
 
             do! r1.CloseSession g_CID0 BitI.F
         }
@@ -807,15 +807,15 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // SCSI read from LU 1 on session 1
             let! readData_s1l1 = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData_s1l1.Length = int m_MediaBlockSize ))
+            Assert.True(( readData_s1l1.Length = int32 m_MediaBlockSize ))
 
             // SCSI read from LU 1 on session 2
             let! readData_s2l1 = r2.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData_s2l1.Length = int m_MediaBlockSize ))
+            Assert.True(( readData_s2l1.Length = int32 m_MediaBlockSize ))
 
             // SCSI read from LU 2
             let! readData_s1l2 = r1.ReadMediaData g_CID0 g_LUN2 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData_s1l2.Length = int m_MediaBlockSize ))
+            Assert.True(( readData_s1l2.Length = int32 m_MediaBlockSize ))
 
             do! r1.CloseSession g_CID0 BitI.F
             do! r2.CloseSession g_CID0 BitI.F
@@ -831,14 +831,14 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // Send SCSI write command to LU 1
             let writeCDB_lu1 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy m_BlkCnt1 NACA.T LINK.F
-            let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB_lu1 PooledBuffer.Empty 0u
+            let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint32 m_MediaBlockSize ) writeCDB_lu1 PooledBuffer.Empty 0u
 
             // Send Nop-Out 1 to LU 1
             let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
 
             // Send SCSI write command to LU 2
             let writeCDB_lu2 = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy m_BlkCnt1 NACA.T LINK.F
-            let! ittWrite_lu2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN2 ( uint m_MediaBlockSize ) writeCDB_lu2 PooledBuffer.Empty 0u
+            let! ittWrite_lu2, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN2 ( uint32 m_MediaBlockSize ) writeCDB_lu2 PooledBuffer.Empty 0u
 
             // Send Logical Unit Reset TMF request to LU 1
             let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T TaskMgrReqCd.LOGICAL_UNIT_RESET g_LUN1 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
@@ -849,7 +849,7 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
             Assert.True(( tmfRespPdu.Response = TaskMgrResCd.FUNCTION_COMPLETE ))
 
             // Send SCSI Data-Out PDU for LU2
-            let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
+            let sendData = PooledBuffer.Rent ( int32 m_MediaBlockSize )
             let! _ = r1.SendSCSIDataOutPDU g_CID0 BitF.T ittWrite_lu2 g_LUN2 g_DefTTT datasn_me.zero 0u sendData
             sendData.Return()
 
@@ -861,11 +861,11 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // SCSI read from LU 1
             let! readData1 = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData1.Length = int m_MediaBlockSize ))
+            Assert.True(( readData1.Length = int32 m_MediaBlockSize ))
 
             // SCSI read from LU 2
             let! readData2 = r1.ReadMediaData g_CID0 g_LUN2 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData2.Length = int m_MediaBlockSize ))
+            Assert.True(( readData2.Length = int32 m_MediaBlockSize ))
 
             do! r1.CloseSession g_CID0 BitI.F
         }
@@ -923,15 +923,15 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // SCSI read from LU 1 on session 1
             let! readData_s1l1 = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData_s1l1.Length = int m_MediaBlockSize ))
+            Assert.True(( readData_s1l1.Length = int32 m_MediaBlockSize ))
 
             // SCSI read from LU 1 on session 2
             let! readData_s2l1 = r2.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData_s2l1.Length = int m_MediaBlockSize ))
+            Assert.True(( readData_s2l1.Length = int32 m_MediaBlockSize ))
 
             // SCSI read from LU 2
             let! readData_s1l2 = r1.ReadMediaData g_CID0 g_LUN2 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData_s1l2.Length = int m_MediaBlockSize ))
+            Assert.True(( readData_s1l2.Length = int32 m_MediaBlockSize ))
 
             do! r1.CloseSession g_CID0 BitI.F
             do! r2.CloseSession g_CID0 BitI.F
@@ -990,11 +990,11 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // SCSI read from LU 1
             let! readData_s1l1 = r3.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData_s1l1.Length = int m_MediaBlockSize ))
+            Assert.True(( readData_s1l1.Length = int32 m_MediaBlockSize ))
 
             // SCSI read from LU 2
             let! readData_s1l2 = r3.ReadMediaData g_CID0 g_LUN2 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData_s1l2.Length = int m_MediaBlockSize ))
+            Assert.True(( readData_s1l2.Length = int32 m_MediaBlockSize ))
 
             do! r3.CloseSession g_CID0 BitI.F
         }
@@ -1004,18 +1004,18 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
     [<InlineData( TaskMgrReqCd.TARGET_COLD_RESET )>]
     member _.TMF_TargetReset_001 ( tmr : TaskMgrReqCd ) =
         task{
-            let sendData = PooledBuffer.Rent ( int m_MediaBlockSize )
+            let sendData = PooledBuffer.Rent ( int32 m_MediaBlockSize )
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
             let! r2 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // Send SCSI write command to LU 1 and 2 on session 1
             let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy m_BlkCnt1 NACA.T LINK.F
-            let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
-            let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN2 ( uint m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
+            let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint32 m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
+            let! _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN2 ( uint32 m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
 
             // Send SCSI write command to LU 1 and 2 on session 2
-            let! ittWrite_s2l1, _ = r2.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
-            let! ittWrite_s2l2, _ = r2.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN2 ( uint m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
+            let! ittWrite_s2l1, _ = r2.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 ( uint32 m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
+            let! ittWrite_s2l2, _ = r2.SendSCSICommandPDU g_CID0 BitI.F BitF.F BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN2 ( uint32 m_MediaBlockSize ) writeCDB PooledBuffer.Empty 0u
 
             // Send Target Reset TMF request to LU 1
             let! ittTMF, _ = r1.SendTaskManagementFunctionRequestPDU g_CID0 BitI.T tmr g_LUN1 g_DefITT ( ValueSome cmdsn_me.zero ) datasn_me.zero
@@ -1045,15 +1045,15 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // SCSI read from LU 1 and 2 on session 1
             let! readData_s1l1 = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData_s1l1.Length = int m_MediaBlockSize ))
+            Assert.True(( readData_s1l1.Length = int32 m_MediaBlockSize ))
             let! readData_s1l2 = r1.ReadMediaData g_CID0 g_LUN2 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData_s1l2.Length = int m_MediaBlockSize ))
+            Assert.True(( readData_s1l2.Length = int32 m_MediaBlockSize ))
 
             // SCSI read from LU 1 and 2 on session 2
             let! readData_s2l1 = r2.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData_s2l1.Length = int m_MediaBlockSize ))
+            Assert.True(( readData_s2l1.Length = int32 m_MediaBlockSize ))
             let! readData_s2l2 = r2.ReadMediaData g_CID0 g_LUN2 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData_s2l2.Length = int m_MediaBlockSize ))
+            Assert.True(( readData_s2l2.Length = int32 m_MediaBlockSize ))
 
             sendData.Return()
             do! r1.CloseSession g_CID0 BitI.F
@@ -1110,15 +1110,15 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
 
             // SCSI read from LU 1 and 2 on session 1
             let! readData_s1l1 = r1.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData_s1l1.Length = int m_MediaBlockSize ))
+            Assert.True(( readData_s1l1.Length = int32 m_MediaBlockSize ))
             let! readData_s1l2 = r1.ReadMediaData g_CID0 g_LUN2 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData_s1l2.Length = int m_MediaBlockSize ))
+            Assert.True(( readData_s1l2.Length = int32 m_MediaBlockSize ))
 
             // SCSI read from LU 1 and 2 on session 2
             let! readData_s2l1 = r2.ReadMediaData g_CID0 g_LUN1 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData_s2l1.Length = int m_MediaBlockSize ))
+            Assert.True(( readData_s2l1.Length = int32 m_MediaBlockSize ))
             let! readData_s2l2 = r2.ReadMediaData g_CID0 g_LUN2 blkcnt_me.zero32 m_BlkCnt1 m_MediaBlockSize
-            Assert.True(( readData_s2l2.Length = int m_MediaBlockSize ))
+            Assert.True(( readData_s2l2.Length = int32 m_MediaBlockSize ))
 
             do! r1.CloseSession g_CID0 BitI.F
             do! r2.CloseSession g_CID0 BitI.F

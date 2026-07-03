@@ -43,7 +43,7 @@ let help() : unit =
 ///   Always return 0. It has no meenings.
 /// </returns>
 [<EntryPoint>]
-let main ( argv : string[] ) : int = 
+let main ( argv : string[] ) : int32 = 
     let objid = objidx_me.NewID()
 
     // Initialize HLogger object

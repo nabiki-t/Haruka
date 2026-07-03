@@ -158,7 +158,7 @@ type TargetDevicePropPage(
         m_SessionsExpander.IsExpanded <- UserOpeStat.GetExpanded "TargetDevicePropPage" m_SessionsExpander.Name
         m_ConfigurationExpander.IsExpanded <- UserOpeStat.GetExpanded "TargetDevicePropPage" m_ConfigurationExpander.Name
 
-        m_Timer.Interval <- new TimeSpan( 0, 0, int Constants.RECOUNTER_SPAN_SEC )
+        m_Timer.Interval <- new TimeSpan( 0, 0, int32 Constants.RECOUNTER_SPAN_SEC )
         m_Timer.Start()
 
     ///////////////////////////////////////////////////////////////////////////

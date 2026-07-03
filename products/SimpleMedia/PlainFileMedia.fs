@@ -149,7 +149,7 @@ type PlainFileMedia
             ( source : CommandSourceInfo )
             ( argLBA : BLKCNT64_T )
             ( buffer : ArraySegment<byte> )
-            : Task<int> =
+            : Task<int32> =
 
             let sw = new Stopwatch()
             sw.Start()
@@ -209,7 +209,7 @@ type PlainFileMedia
             ( argLBA : BLKCNT64_T )
             ( offset : uint64 )
             ( data : ArraySegment<byte> )
-            : Task<int> =
+            : Task<int32> =
 
             assert( offset < m_BlockSize )
             let sw = new Stopwatch()

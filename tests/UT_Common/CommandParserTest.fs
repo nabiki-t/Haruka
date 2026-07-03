@@ -815,7 +815,7 @@ type CommandParser_Test1() =
     [<InlineData( "exit /a -100", -100 )>]
     [<InlineData( "exit /a 0", 0 )>]
     [<InlineData( "exit /a 100", 100 )>]
-    member _.ValidateValue_int32_002( ecmd : string, eval : int ) =
+    member _.ValidateValue_int32_002( ecmd : string, eval : int32 ) =
         let accCommands = exitAccCmd [| ( "/a", CRV_int32( -100, 100 ) ); |] Array.empty Array.empty
         let r = CommandParser.FromString accCommands ecmd
         Assert.True(( r.Varb = testVerb.Exit ))
@@ -844,7 +844,7 @@ type CommandParser_Test1() =
     [<InlineData( "exit /a -100", -100 )>]
     [<InlineData( "exit /a 0", 0 )>]
     [<InlineData( "exit /a 100", 100 )>]
-    member _.ValidateValue_int32_m_002( ecmd : string, eval : int ) =
+    member _.ValidateValue_int32_m_002( ecmd : string, eval : int32 ) =
         let accCommands = exitAccCmd [| ( "/a", CRVM_int32( -100, 100 ) ); |] Array.empty Array.empty
         let r = CommandParser.FromString accCommands ecmd
         Assert.True(( r.Varb = testVerb.Exit ))

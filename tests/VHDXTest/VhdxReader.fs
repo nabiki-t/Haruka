@@ -71,7 +71,7 @@ type VhdxReader() =
             let c2 = header0.Version = 1us
             let c3 = header0.LogLength &&& 0x000FFFFFu = 0u             // Multiples of 1MB
             let c4 = header0.LogOffset &&& 0x00000000000FFFFFUL = 0UL   // Multiples of 1MB
-            let c5 = ( int header0.LogLength ) >= 0
+            let c5 = ( int32 header0.LogLength ) >= 0
             let c6 = ( int64 header0.LogOffset ) >= 0L
             let c7 = ( int64 header0.LogOffset ) + ( int64 header0.LogLength ) <= fs.Length
             let c8 = header0.LogOffset + ( uint64 header0.LogLength ) <= 0x0000400000000000UL   // 64TB or less
@@ -113,7 +113,7 @@ type VhdxReader() =
             let c2 = header1.Version = 1us
             let c3 = header1.LogLength &&& 0x000FFFFFu = 0u             // Multiples of 1MB
             let c4 = header1.LogOffset &&& 0x00000000000FFFFFUL = 0UL   // Multiples of 1MB
-            let c5 = ( int header1.LogLength ) >= 0
+            let c5 = ( int32 header1.LogLength ) >= 0
             let c6 = ( int64 header1.LogOffset ) >= 0L
             let c7 = ( int64 header1.LogOffset ) + ( int64 header1.LogLength ) <= fs.Length
             let c8 = header1.LogOffset + ( uint64 header1.LogLength ) <= 0x0000400000000000UL   // 64TB or less
@@ -182,7 +182,7 @@ type VhdxReader() =
         if not signeture_Check || not sequenceHigh_Check || not sequenceLow_Check then
             [||]
         else
-            data.[ int offset + 8 .. int offset + 4091 ]
+            data.[ int32 offset + 8 .. int32 offset + 4091 ]
 
     /// <summary>
     ///  Read log descriptor.
@@ -243,8 +243,8 @@ type VhdxReader() =
 
         // Data descriptor
         elif signeture = 0x64657363u then
-            let trailingBytes = data.[ int offset + 4 .. int offset + 7 ]
-            let leadingBytes = data.[ int offset + 8 .. int offset + 15 ]
+            let trailingBytes = data.[ int32 offset + 4 .. int32 offset + 7 ]
+            let leadingBytes = data.[ int32 offset + 8 .. int32 offset + 15 ]
             let fileOffset = GlbFunc.ReadUInt64LE data ( offset + 16u )
             let sequenceNumber = GlbFunc.ReadUInt64LE data ( offset + 24u )
 
@@ -332,15 +332,15 @@ type VhdxReader() =
 
         // Verify whether the entry length is correct.
         let entryLength_Check =
-            ( int entryLength ) >= 0 && int entryLength <= logData.Length && ( entryLength &&& 0x00000FFFu ) = 0u
+            ( int32 entryLength ) >= 0 && int32 entryLength <= logData.Length && ( entryLength &&& 0x00000FFFu ) = 0u
         if not entryLength_Check then printfn "  Invalid entry length"
 
         // Verify whether the tail is correct.
-        let tail_Check = ( int tail ) >= 0 && int tail < logData.Length && ( tail &&& 0x00000FFFu ) = 0u
+        let tail_Check = ( int32 tail ) >= 0 && int32 tail < logData.Length && ( tail &&& 0x00000FFFu ) = 0u
         if not tail_Check then printfn "  Invalid tail"
 
         // Verify whether the number of descriptors is correct.
-        let descriptorCount_Check = ( int descriptorCount ) >= 0 && ( 64u + descriptorCount * 32u ) <= uint32 entryLength
+        let descriptorCount_Check = ( int32 descriptorCount ) >= 0 && ( 64u + descriptorCount * 32u ) <= uint32 entryLength
         if not descriptorCount_Check then printfn "  Invalid descriptors count"
 
         // Check if the log GUID is equal to the one in the header.
@@ -361,9 +361,9 @@ type VhdxReader() =
             None
         else
             // Retrieve all log entry data
-            let logEntryData = Array.zeroCreate<byte>( int entryLength )
-            for i = 0 to int ( entryLength / 4096u ) - 1 do
-                let srcidx = GlbFunc.RapInt32 ( int wpos + i * 4096 ) 0x000FFFFF
+            let logEntryData = Array.zeroCreate<byte>( int32 entryLength )
+            for i = 0 to int32 ( entryLength / 4096u ) - 1 do
+                let srcidx = GlbFunc.RapInt32 ( int32 wpos + i * 4096 ) 0x000FFFFF
                 Array.blit logData srcidx logEntryData ( i * 4096 ) 4096
 
             /// Verify whether the checksum is correct.
@@ -386,7 +386,7 @@ type VhdxReader() =
                     else
                         ( List.rev r ), ddcnt
                 let logDescriptors, dataDescCount = loop 0u 0u []
-                if logDescriptors.Length <> int descriptorCount then
+                if logDescriptors.Length <> int32 descriptorCount then
                     printfn "Failed to retrieve the descriptor"
                     None
                 else
@@ -412,7 +412,7 @@ type VhdxReader() =
                                 if d.Length = 4084 then
                                     d
                         ]
-                        if dataSectores.Length <> int dataSectorCount then
+                        if dataSectores.Length <> int32 dataSectorCount then
                             printfn "Failed ReadLogDataSector function"
                             None
                         else
@@ -549,16 +549,16 @@ type VhdxReader() =
                     match itrDE with
                     | LogDescriptor.Data x ->
                         if offset <= x.FileOffset && x.FileOffset < offset + uint64 length then
-                            let dstPos = x.FileOffset - offset |> int
+                            let dstPos = x.FileOffset - offset |> int32
                             Array.blit x.LeadingBytes 0 buf dstPos 8
-                            Array.blit itrLE.DataSectors.[ int x.ddIndex ] 0 buf ( dstPos + 8 ) 4084
+                            Array.blit itrLE.DataSectors.[ int32 x.ddIndex ] 0 buf ( dstPos + 8 ) 4084
                             Array.blit x.TrailingBytes 0 buf ( dstPos + 4092 ) 4
                     | LogDescriptor.Zero x ->
                         let startIdx = max offset x.FileOffset
                         let endIdx = min ( offset + uint64 length ) ( x.FileOffset + uint64 x.ZeroLength )
                         if endIdx > startIdx then
-                            let targetIndex = startIdx - offset |> int
-                            let targetLength = endIdx - startIdx |> int
+                            let targetIndex = startIdx - offset |> int32
+                            let targetLength = endIdx - startIdx |> int32
                             Array.fill buf targetIndex targetLength 0uy
             buf
 
@@ -633,7 +633,7 @@ type VhdxReader() =
                     itr.[1].FileOffset < ( itr.[0].FileOffset + uint64 itr.[0].Length ) 
                 )
                 |> not
-            if entries.Length <> int entryCount || not entries_Check then
+            if entries.Length <> int32 entryCount || not entries_Check then
                 None
             else
                 {
@@ -675,7 +675,7 @@ type VhdxReader() =
                     let itemId = GlbFunc.ReadGuid data eo
                     let offset = GlbFunc.ReadUInt32LE data ( eo + 16u );
                     let length = GlbFunc.ReadUInt32LE data ( eo + 20u );
-                    let b = data.[ int eo + 24 ]
+                    let b = data.[ int32 eo + 24 ]
                     let isUser = ( b &&& 0x01uy ) <> 0uy
                     let isVirtualDisk = ( b &&& 0x02uy ) <> 0uy
                     let isRequired = ( b &&& 0x04uy ) <> 0uy
@@ -711,10 +711,10 @@ type VhdxReader() =
                             IsUser = isUser;
                             IsVirtualDisk = isVirtualDisk;
                             IsRequired = isRequired;
-                            Data = data.[ int offset .. int offset + int length - 1 ];
+                            Data = data.[ int32 offset .. int32 offset + int32 length - 1 ];
                         }
             ]
-        if metadataItems.Length <> int mtEntryCount then
+        if metadataItems.Length <> int32 mtEntryCount then
             raise <| Exception( "Invalid metadata entry" )
 
         let userEntCount =
@@ -838,22 +838,22 @@ type VhdxReader() =
                         if keyOffset = 0u || valueOffset = 0u || keyLength = 0us || valueLength = 0us ||
                             dlen < keyOffset + uint32 keyLength ||
                             dlen < valueOffset + uint32 valueLength ||
-                            ( int keyOffset ) <= 0 || ( int valueOffset ) <= 0 then
+                            ( int32 keyOffset ) <= 0 || ( int32 valueOffset ) <= 0 then
                                 printfn "  Invalid parent locator(%d) values. Ignore this entry." i
                         else
                             let lpkey =
-                                data.[ int keyOffset .. int keyOffset + int keyLength - 1 ]
+                                data.[ int32 keyOffset .. int32 keyOffset + int32 keyLength - 1 ]
                                 |> Encoding.Unicode.GetString
                                 |> _.ToLower()
                             let lpval =
-                                data.[ int valueOffset .. int valueOffset + int valueLength - 1 ]
+                                data.[ int32 valueOffset .. int32 valueOffset + int32 valueLength - 1 ]
                                 |> Encoding.Unicode.GetString
 
                             printfn "  Parent locator %d : %s  %s" i lpkey lpval
 
                             yield ( lpkey, lpval )
                 ]
-                if parLocEntry.Length <> int keyValueCount then
+                if parLocEntry.Length <> int32 keyValueCount then
                     raise <| Exception( "Invalid metadata item(Parent locator)" )
                 let m = parLocEntry |> Map
                 if m.ContainsKey "parent_linkage" |> not then
@@ -1179,7 +1179,7 @@ type VhdxReader() =
             batEntries.Payloads
             |> Array.filter ( _.State.IsPayloadPartiallyPresent )
             |> Array.iteri ( fun idx itr ->
-                let j = idx / int batEntries.ChunkRatio  // Index of sector bitmap BAT entry
+                let j = idx / int32 batEntries.ChunkRatio  // Index of sector bitmap BAT entry
                 if batEntries.SectorBitmap.[j].Bitmap.Length = 0 then
                     raise <| Exception "There is no sector bitmap BAT entry corresponding to the payload BAT entry for PartiallyPresent."
             )

@@ -2882,7 +2882,7 @@ type ReassignBlocksCDB =
                 this.LONGLIST
 
 /// <summary>
-///   START STOP UINT command data structure.
+///   START STOP UNIT command data structure.
 /// </summary>
 type StartStopUnitCDB =
     {

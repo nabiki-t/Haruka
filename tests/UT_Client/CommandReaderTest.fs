@@ -314,7 +314,7 @@ type CommandReader_Test() =
         let r = RunInputCommandMethod rs accCommands
         Assert.True(( r.Varb = CommandVarb.Select ))
         Assert.True(( r.NamelessArgs.Length = 1 ))
-        Assert.True(( r.NamelessArgs.[0] = EV_uint32( uint ClientConst.MAX_CHILD_NODE_COUNT - 1u ) ))
+        Assert.True(( r.NamelessArgs.[0] = EV_uint32( uint32 ClientConst.MAX_CHILD_NODE_COUNT - 1u ) ))
         Assert.True(( r.NamedArgs.Count = 0 ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
@@ -369,7 +369,7 @@ type CommandReader_Test() =
         Assert.True(( r.Varb = CommandVarb.UnSelect ))
         Assert.True(( r.NamelessArgs.Length = 0 ))
         Assert.True(( r.NamedArgs.Count = 1 ))
-        Assert.True(( r.NamedArgs.["/p"] = EV_uint32( uint ClientConst.MAX_CHILD_NODE_COUNT - 1u ) ))
+        Assert.True(( r.NamedArgs.["/p"] = EV_uint32( uint32 ClientConst.MAX_CHILD_NODE_COUNT - 1u ) ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     static member UnSelect_004_data : obj[][] = [|
@@ -712,7 +712,7 @@ type CommandReader_Test() =
         Assert.True(( r.Varb = CommandVarb.Delete ))
         Assert.True(( r.NamelessArgs.Length = 0 ))
         Assert.True(( r.NamedArgs.Count = 1 ))
-        Assert.True(( r.NamedArgs.[ "/i" ]= EV_uint32( uint ClientConst.MAX_CHILD_NODE_COUNT - 1u ) ))
+        Assert.True(( r.NamedArgs.[ "/i" ]= EV_uint32( uint32 ClientConst.MAX_CHILD_NODE_COUNT - 1u ) ))
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
@@ -2005,7 +2005,7 @@ type CommandReader_Test() =
     [<InlineData( "add trap /e TestUnitReady /a ACA /idx 2147483647", "/idx", 2147483647 )>]
     [<InlineData( "add trap /e TestUnitReady /a ACA /ms 0", "/ms", 0 )>]
     [<InlineData( "add trap /e TestUnitReady /a ACA /ms 2147483647", "/ms", 2147483647 )>]
-    member _.AddTrap_007 ( cmdstr : string ) ( argname : string ) ( varg : int ) =
+    member _.AddTrap_007 ( cmdstr : string ) ( argname : string ) ( varg : int32 ) =
         let ms, ws, rs = GenCommandStream cmdstr
         let accCommands = [| CommandReader.CmdRule_add_trap |]
         let r = RunInputCommandMethod rs accCommands

@@ -42,7 +42,7 @@ type PlainFileMedia_Test () =
             SessionKiller = k
         }
 
-    let CreateZeroFile ( fname : string ) ( len : int ) =
+    let CreateZeroFile ( fname : string ) ( len : int32 ) =
         use s = File.CreateText( fname )
         s.Write( Array.zeroCreate<char>( len ) )
         s.Close()
@@ -178,7 +178,7 @@ type PlainFileMedia_Test () =
     [<InlineData( 0UL, 9 )>]
     [<InlineData( 0xFFFFFFFFFFFFFFFFUL, 2 )>]
     [<InlineData( 0x7FFFFFFFFFFFFFFFUL, 2 )>]
-    member this.Read_OutOfRange_001 ( lba : uint64 ) ( cnt : int ) =
+    member this.Read_OutOfRange_001 ( lba : uint64 ) ( cnt : int32 ) =
         task {
             let pDirName = this.CreateTestDir "Read_OutOfRange_001"
             let testfname = Functions.AppendPathName pDirName "a.txt"
@@ -210,7 +210,7 @@ type PlainFileMedia_Test () =
     [<InlineData( 8UL, 0 )>]
     [<InlineData( 7UL, 1 )>]
     [<InlineData( 0UL, 8 )>]
-    member this.Read_Suceed_001 ( lba : uint64 ) ( cnt : int ) =
+    member this.Read_Suceed_001 ( lba : uint64 ) ( cnt : int32 ) =
         task {
             let pDirName = this.CreateTestDir "Read_Suceed_001"
             let testfname = Functions.AppendPathName pDirName "a.txt"
@@ -228,7 +228,7 @@ type PlainFileMedia_Test () =
             let f = new PlainFileMedia( stat_stub, conf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
             let buf = Array.zeroCreate<byte>( cnt * wBlockSize )
             let! r = f.Read ( itt_me.fromPrim 0u ) src ( blkcnt_me.ofUInt64 lba ) ( ArraySegment buf )
-            Assert.True( ( buf = wrotedata.[ int lba * wBlockSize .. ( int lba + cnt ) * wBlockSize - 1 ] ))
+            Assert.True( ( buf = wrotedata.[ int32 lba * wBlockSize .. ( int32 lba + cnt ) * wBlockSize - 1 ] ))
             Assert.True(( r = buf.Length ))
 
             k1.NoticeTerminate()
@@ -309,7 +309,7 @@ type PlainFileMedia_Test () =
     [<InlineData( 0xFFFFFFFFFFFFFFFFUL, 0UL, 2 )>]
     [<InlineData( 0x7FFFFFFFFFFFFFFFUL, 0UL, 2 )>]
     [<InlineData( 0UL, 1UL, 8 )>]
-    member this.Write_OutOfRange_001 ( lba : uint64 ) ( offset : uint64 ) ( cnt : int ) =
+    member this.Write_OutOfRange_001 ( lba : uint64 ) ( offset : uint64 ) ( cnt : int32 ) =
         task {
             let pDirName = this.CreateTestDir "Write_OutOfRange_001"
             let testfname = Functions.AppendPathName pDirName "a.txt"
@@ -341,7 +341,7 @@ type PlainFileMedia_Test () =
     [<InlineData( 7UL, 0UL, 1 )>]
     [<InlineData( 0UL, 0UL, 8 )>]
     [<InlineData( 0UL, 1UL, 7 )>]
-    member this.Write_Suceed_001 ( lba : uint64 ) ( offset : uint64 ) ( cnt : int ) =
+    member this.Write_Suceed_001 ( lba : uint64 ) ( offset : uint64 ) ( cnt : int32 ) =
         task {
             let pDirName = this.CreateTestDir "Write_Suceed_001"
             let testfname = Functions.AppendPathName pDirName "a.txt"
@@ -361,7 +361,7 @@ type PlainFileMedia_Test () =
             f.Closing()
 
             let compbuf = File.ReadAllBytes testfname
-            Assert.True( ( compbuf.[ int lba * wBlockSize + int offset .. ( int lba + cnt ) * wBlockSize + int offset - 1 ] = buf ))
+            Assert.True( ( compbuf.[ int32 lba * wBlockSize + int32 offset .. ( int32 lba + cnt ) * wBlockSize + int32 offset - 1 ] = buf ))
 
             k1.NoticeTerminate()
             GlbFunc.DeleteFile( testfname )

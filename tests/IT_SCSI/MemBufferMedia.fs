@@ -194,12 +194,12 @@ type SCSI_MemBufferMedia( fx : SCSI_MemBufferMedia_Fixture ) =
 
     [<Theory>]
     [<MemberData( "ReadWrite_001_data" )>]
-    member _.ReadWrite_001 ( lu : uint64 ) ( lba : uint32 ) ( blkcnt : int ) =
+    member _.ReadWrite_001 ( lu : uint64 ) ( lba : uint32 ) ( blkcnt : int32 ) =
         task {
             let! r = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let lun = lun_me.fromPrim lu
 
-            let v = PooledBuffer.Rent ( int ( Blocksize.toUInt32 m_BlockSize1 ) * blkcnt )
+            let v = PooledBuffer.Rent ( int32 ( Blocksize.toUInt32 m_BlockSize1 ) * blkcnt )
             Random.Shared.NextBytes( v.ArraySegment )
             let! itt_w = r.Send_Write10 TaskATTRCd.SIMPLE_TASK lun ( blkcnt_me.ofUInt32 lba ) m_BlockSize1 v NACA.T 
             let! _ = r.WaitSCSIResponseGoodStatus itt_w
@@ -217,7 +217,7 @@ type SCSI_MemBufferMedia( fx : SCSI_MemBufferMedia_Fixture ) =
         task {
             let! r = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
-            let v = PooledBuffer.Rent ( int ( Blocksize.toUInt32 m_BlockSize1 ) )
+            let v = PooledBuffer.Rent ( int32 ( Blocksize.toUInt32 m_BlockSize1 ) )
             Random.Shared.NextBytes( v.ArraySegment )
             let! itt_w = r.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_BlockSize1 v NACA.T
             let! _ = r.WaitSCSIResponseGoodStatus itt_w
@@ -240,7 +240,7 @@ type SCSI_MemBufferMedia( fx : SCSI_MemBufferMedia_Fixture ) =
         task {
             let! r = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
-            let v = PooledBuffer.Rent ( int ( Blocksize.toUInt32 m_BlockSize1 ) )
+            let v = PooledBuffer.Rent ( int32 ( Blocksize.toUInt32 m_BlockSize1 ) )
             Random.Shared.NextBytes( v.ArraySegment )
             let! itt_w = r.Send_Write10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_BlockSize1 v NACA.T
             let! _ = r.WaitSCSIResponseGoodStatus itt_w

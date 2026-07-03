@@ -101,7 +101,7 @@ type ITNexus(
         /// <returns>
         ///  Calculated hash value.
         /// </returns>
-        member _.GetHashCode ( v : ITNexus ): int = 
+        member _.GetHashCode ( v : ITNexus ): int32 = 
             v.I_TNexusStr.GetHashCode()
 
 
@@ -117,7 +117,7 @@ type ITNexus(
         | _ -> false
 
     /// Get hash code
-    override _.GetHashCode() : int =
+    override _.GetHashCode() : int32 =
         m_I_T_Nexus.GetHashCode()
 
     /// Convert to string
@@ -294,5 +294,5 @@ type ITNexus(
     ///  If a is less than b, it returns negative value.
     ///  Otherwise, it returns 0.
     /// </returns>
-    static member Compare ( a : ITNexus ) ( b : ITNexus ) : int =
+    static member Compare ( a : ITNexus ) ( b : ITNexus ) : int32 =
         String.Compare( a.I_TNexusStr, b.I_TNexusStr, StringComparison.Ordinal )

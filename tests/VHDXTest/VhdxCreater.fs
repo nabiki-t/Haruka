@@ -318,8 +318,8 @@ type VhdxCreator() =
             if isFixed then
                 // Fixed VHDX file.
                 printfn "Write BAT entries for fixed VHDX file."
-                for i = 1 to ( int batEntryCount ) do
-                    if i % ( int chunkRate + 1 ) = 0 then
+                for i = 1 to ( int32 batEntryCount ) do
+                    if i % ( int32 chunkRate + 1 ) = 0 then
                         // sector bitmat BAT entry
                         printfn "Entry(%d) : Sector bitmap Offset=0" i
                         GlbFunc.WriteUInt64LE entrybuf 0u 0UL
@@ -339,8 +339,8 @@ type VhdxCreator() =
             elif hasParent then
                 // Differential VHDX file
                 printfn "Write BAT entries for differential VHDX file."
-                for i = 1 to ( int batEntryCount ) do
-                    if i % ( int chunkRate + 1 ) = 0 then
+                for i = 1 to ( int32 batEntryCount ) do
+                    if i % ( int32 chunkRate + 1 ) = 0 then
                         // Sector bitmap BAT entry
                         let sbPos =
                             batRegionStartPos + batRegionSize +
@@ -362,8 +362,8 @@ type VhdxCreator() =
             else
                 // Dynamic VHDX file.
                 printfn "Write BAT entries for dynamic VHDX file."
-                for i = 1 to ( int batEntryCount ) do
-                    if i % ( int chunkRate + 1 ) = 0 then
+                for i = 1 to ( int32 batEntryCount ) do
+                    if i % ( int32 chunkRate + 1 ) = 0 then
                         // Sector bitmap BAT entry
                         printfn "Entry(%d) : Sector bitmap Offset=0" i
                         GlbFunc.WriteUInt64LE entrybuf 0u 0UL
@@ -614,11 +614,11 @@ type VhdxCreator() =
         use outfs = new FileStream( outputPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None )
 
         // Output payloag blocks
-        let buf = Array.zeroCreate<byte>( int payloadBlockSize )
-        for i = 0 to ( int metadata.BatEntries.PayloadBlockCount - 1 ) do
+        let buf = Array.zeroCreate<byte>( int32 payloadBlockSize )
+        for i = 0 to ( int32 metadata.BatEntries.PayloadBlockCount - 1 ) do
             let ent = metadata.BatEntries.Payloads.[i]
             let spos = ( uint64 i ) * ( uint64 payloadBlockSize )
-            let len = min ( int payloadBlockSize ) ( int ( virtualDiskSize - spos ) )
+            let len = min ( int32 payloadBlockSize ) ( int32 ( virtualDiskSize - spos ) )
             rawfs.Seek( int64 spos, SeekOrigin.Begin ) |> ignore
             rawfs.ReadExactly( buf, 0, len )
             outfs.Seek( int64 ent.FileOffset, SeekOrigin.Begin ) |> ignore

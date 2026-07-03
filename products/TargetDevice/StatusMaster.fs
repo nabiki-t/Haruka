@@ -207,7 +207,7 @@ type StatusMaster(
         // Implementation of IStatus.GenNewTSIH
         override _.GenNewTSIH() : TSIH_T =
             let rSess = m_Sessions.obj
-            let rec loop ( cnt : int ) =
+            let rec loop ( cnt : int32 ) =
 
                 // Get next candidate value
                 let next = 
@@ -1242,7 +1242,7 @@ type StatusMaster(
                                         Description = d;
                                     } : TargetDeviceCtrlRes.T_TaskDescriptions
                                 )
-                                |> Seq.truncate ( int Constants.BDLU_MAX_TASKSET_SIZE )
+                                |> Seq.truncate ( int32 Constants.BDLU_MAX_TASKSET_SIZE )
                                 |> Seq.toList
                         }
                     }

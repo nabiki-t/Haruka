@@ -278,7 +278,7 @@ type LogID =
     | F_LURESET_REQ_TO_DUMMY_LU             = 0x50000800
 
 [<Struct; IsReadOnly>]
-type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcName : string, m_ProcID : int ) =
+type GenLogMsg( m_LogID : LogID, m_LogLevel : int32, m_MsgFormat : string, m_ProcName : string, m_ProcID : int32 ) =
 
     // --------------------------------------------------------------------
     /// <summary>
@@ -298,7 +298,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
     member public this.Gen0( objId, cid, conCounter, tsih, itt, lun, ?dummy : unit,
                                     [<CallerMemberName; Optional; DefaultParameterValue("")>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, "", "", "", "", "", "", "", "", "", "" )
         this.GenMessage( objId, cid, conCounter, tsih, itt, lun, msg, fnname, source, line )
 
@@ -314,7 +314,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
     member public this.Gen0( struct ( objId, cid, conCounter, tsih, itt, lun ), ?dummy : unit,
                                     [<CallerMemberName; Optional; DefaultParameterValue("")>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, "", "", "", "", "", "", "", "", "", "" )
         this.GenMessage( objId, cid, conCounter, tsih, itt, lun, msg, fnname, source, line )
 
@@ -334,7 +334,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
     member public this.Gen0( objId, cmdSource, itt, lun, ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, "", "", "", "", "", "", "", "", "", "" )
         this.GenMessage( objId, cmdSource, itt, lun, msg, fnname, source, line )
 
@@ -350,7 +350,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
     member public this.Gen0( struct ( objId, cmdSource, itt, lun ), ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, "", "", "", "", "", "", "", "", "", "" )
         this.GenMessage( objId, cmdSource, itt, lun, msg, fnname, source, line )
 
@@ -367,7 +367,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
     member public this.Gen0( objId, ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, "", "", "", "", "", "", "", "", "", "" )
         this.GenMessage( objId, ValueNone, ValueNone, ValueNone, msg, fnname, source, line )
 
@@ -391,7 +391,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
     member public this.Gen1( objId, cid, conCounter, tsih, itt, lun, a0 : obj, ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, "", "", "", "", "", "", "", "", "" )
         this.GenMessage( objId, cid, conCounter, tsih, itt, lun, msg, fnname, source, line )
 
@@ -409,7 +409,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
     member public this.Gen1( struct ( objId, cid, conCounter, tsih, itt, lun ), a0 : obj, ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, "", "", "", "", "", "", "", "", "" )
         this.GenMessage( objId, cid, conCounter, tsih, itt, lun, msg, fnname, source, line )
 
@@ -431,7 +431,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
     member public this.Gen1( objId, cmdSource, itt, lun, a0 : obj, ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, "", "", "", "", "", "", "", "", "" )
         this.GenMessage( objId, cmdSource, itt, lun, msg, fnname, source, line )
 
@@ -448,7 +448,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
     member public this.Gen1( struct ( objId, cmdSource, itt, lun ), a0 : obj, ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, "", "", "", "", "", "", "", "", "" )
         this.GenMessage( objId, cmdSource, itt, lun, msg, fnname, source, line )
 
@@ -466,7 +466,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
     member public this.Gen1( objId, a0 : obj, ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, "", "", "", "", "", "", "", "", "" )
         this.GenMessage( objId, ValueNone, ValueNone, ValueNone, msg, fnname, source, line )
 
@@ -493,7 +493,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, "", "", "", "", "", "", "", "" )
         this.GenMessage( objId, cid, conCounter, tsih, itt, lun, msg, fnname, source, line )
 
@@ -514,7 +514,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, "", "", "", "", "", "", "", "" )
         this.GenMessage( objId, cid, conCounter, tsih, itt, lun, msg, fnname, source, line )
 
@@ -539,7 +539,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, "", "", "", "", "", "", "", "" )
         this.GenMessage( objId, cmdSource, itt, lun, msg, fnname, source, line )
 
@@ -560,7 +560,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, "", "", "", "", "", "", "", "" )
         this.GenMessage( objId, cmdSource, itt, lun, msg, fnname, source, line )
 
@@ -582,7 +582,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, "", "", "", "", "", "", "", "" )
         this.GenMessage( objId, ValueNone, ValueNone, ValueNone, msg, fnname, source, line )
 
@@ -611,7 +611,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, a2, "", "", "", "", "", "", "" )
         this.GenMessage( objId, cid, conCounter, tsih, itt, lun, msg, fnname, source, line )
 
@@ -634,7 +634,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, a2, "", "", "", "", "", "", "" )
         this.GenMessage( objId, cid, conCounter, tsih, itt, lun, msg, fnname, source, line )
 
@@ -661,7 +661,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, a2, "", "", "", "", "", "", "" )
         this.GenMessage( objId, cmdSource, itt, lun, msg, fnname, source, line )
 
@@ -684,7 +684,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, a2, "", "", "", "", "", "", "" )
         this.GenMessage( objId, cmdSource, itt, lun, msg, fnname, source, line )
 
@@ -708,7 +708,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, a2, "", "", "", "", "", "", "" )
         this.GenMessage( objId, ValueNone, ValueNone, ValueNone, msg, fnname, source, line )
 
@@ -739,7 +739,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, a2, a3, "", "", "", "", "", "" )
         this.GenMessage( objId, cid, conCounter, tsih, itt, lun, msg, fnname, source, line )
 
@@ -764,7 +764,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, a2, a3, "", "", "", "", "", "" )
         this.GenMessage( objId, cid, conCounter, tsih, itt, lun, msg, fnname, source, line )
 
@@ -793,7 +793,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, a2, a3, "", "", "", "", "", "" )
         this.GenMessage( objId, cmdSource, itt, lun, msg, fnname, source, line )
 
@@ -818,7 +818,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, a2, a3, "", "", "", "", "", "" )
         this.GenMessage( objId, cmdSource, itt, lun, msg, fnname, source, line )
 
@@ -844,7 +844,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, a2, a3, "", "", "", "", "", "" )
         this.GenMessage( objId, ValueNone, ValueNone, ValueNone, msg, fnname, source, line )
 
@@ -877,7 +877,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, a2, a3, a4, "", "", "", "", "" )
         this.GenMessage( objId, cid, conCounter, tsih, itt, lun, msg, fnname, source, line )
 
@@ -904,7 +904,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, a2, a3, a4, "", "", "", "", "" )
         this.GenMessage( objId, cid, conCounter, tsih, itt, lun, msg, fnname, source, line )
 
@@ -935,7 +935,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, a2, a3, a4, "", "", "", "", "" )
         this.GenMessage( objId, cmdSource, itt, lun, msg, fnname, source, line )
 
@@ -962,7 +962,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, a2, a3, a4, "", "", "", "", "" )
         this.GenMessage( objId, cmdSource, itt, lun, msg, fnname, source, line )
 
@@ -990,7 +990,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, a2, a3, a4, "", "", "", "", "" )
         this.GenMessage( objId, ValueNone, ValueNone, ValueNone, msg, fnname, source, line )
 
@@ -1026,7 +1026,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, a2, a3, a4, a5, "", "", "", "" )
         this.GenMessage( objId, cid, conCounter, tsih, itt, lun, msg, fnname, source, line )
 
@@ -1056,7 +1056,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, a2, a3, a4, a5, "", "", "", "" )
         this.GenMessage( objId, cid, conCounter, tsih, itt, lun, msg, fnname, source, line )
 
@@ -1090,7 +1090,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, a2, a3, a4, a5, "", "", "", "" )
         this.GenMessage( objId, cmdSource, itt, lun, msg, fnname, source, line )
 
@@ -1119,7 +1119,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, a2, a3, a4, a5, "", "", "", "" )
         this.GenMessage( objId, cmdSource, itt, lun, msg, fnname, source, line )
 
@@ -1149,7 +1149,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     ?dummy : unit,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let msg = String.Format( m_MsgFormat, a0, a1, a2, a3, a4, a5, "", "", "", "" )
         this.GenMessage( objId, ValueNone, ValueNone, ValueNone, msg, fnname, source, line )
 
@@ -1170,7 +1170,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
                                     msg : string,
                                     fnname : string option,
                                     source : string option,
-                                    line: int option ) : string =
+                                    line: int32 option ) : string =
         let p1 = Constants.getSenseKeyNameFromValue senseKey
         let p2 = Constants.getAscAndAscqNameFromValue acc
         let wmsg = String.Format( m_MsgFormat, p1, p2, msg )
@@ -1195,7 +1195,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
     member public this.GenExp( objId, cid, conCounter, tsih, itt, lun, e : Exception, 
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let tn, msg =
             if e.InnerException <> null then
                 let ie = e.InnerException
@@ -1217,7 +1217,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
     member public this.GenExp( struct ( objId, cid, conCounter, tsih, itt, lun ), e : Exception, 
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let tn, msg =
             if e.InnerException <> null then
                 let ie = e.InnerException
@@ -1243,7 +1243,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
     member public this.GenExp( objId, cmdSource, itt, lun, e : Exception, 
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let tn, msg =
             if e.InnerException <> null then
                 let ie = e.InnerException
@@ -1265,7 +1265,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
     member public this.GenExp( struct ( objId, cmdSource, itt, lun ), e : Exception, 
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let tn, msg =
             if e.InnerException <> null then
                 let ie = e.InnerException
@@ -1288,7 +1288,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
     member public this.GenExp( objId, e : Exception, 
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : string =
+                                    [<CallerLineNumber>] ?line: int32 ) : string =
         let tn, msg =
             if e.InnerException <> null then
                 let ie = e.InnerException
@@ -1310,7 +1310,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
             message : string,
             fnname : string option,
             source : string option,
-            line : int option
+            line : int32 option
         ) : string =
             let dayTime = System.DateTime.UtcNow
             let w_fnname = Option.defaultValue "" fnname
@@ -1333,7 +1333,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
             let lunStr = if lun.IsSome then String.Format( "LUN={0}", lun.Value ) else ""
 
             String.Format( "{0:o}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t0x{7:X8}\tobj={8}\t{9}\t{10}\t{11}\t{12}\t{13}\t{14}",
-                dayTime, m_ProcName, m_ProcID, w_source, w_line, w_fnname, w_level_c, int m_LogID, 
+                dayTime, m_ProcName, m_ProcID, w_source, w_line, w_fnname, w_level_c, int32 m_LogID, 
                 objIdStr, cidStr, conCounterStr, tsihStr, ittStr, lunStr, message.Replace( '\n', ' ' ) 
             )
 
@@ -1346,7 +1346,7 @@ type GenLogMsg( m_LogID : LogID, m_LogLevel : int, m_MsgFormat : string, m_ProcN
             msg : string,
             fnname : string option,
             source : string option,
-            line : int option
+            line : int32 option
         ) : string =
         match cmdSource with
         | ValueNone ->
@@ -1728,7 +1728,7 @@ type HLogger() =
                                     msg : string,
                                     [<CallerMemberName>] ?fnname : string,
                                     [<CallerFilePath>] ?source : string,
-                                    [<CallerLineNumber>] ?line: int ) : unit =
+                                    [<CallerLineNumber>] ?line: int32 ) : unit =
         let f ( g : GenLogMsg ) =
             g.GenACA( struct ( objId, cmdSource, itt, lun ), senseKey, acc, msg, fnname, source, line )
         HLogger.Trace( LogID.E_SCSI_ACA_EXCEPTION_RAISED, f )
@@ -1764,7 +1764,7 @@ type HLogger() =
         if sourceLevel >= conf.m_LogOutputLevel then
             try
                 // decide write log or not
-                let rec loop( cnt : int ) =
+                let rec loop( cnt : int32 ) =
                     let savedTimeSlot = uint64 ( uint32 Environment.TickCount / conf.m_OutputCycle )
                     let init = Interlocked.Read( &m_OutputCounter )
 
@@ -1844,8 +1844,8 @@ type HLogger() =
     /// <summary>
     /// convert from LogID to SourceLevels and TraceEventType
     /// </summary>
-    static member private LogIDtoLevel ( id : LogID ) : int =
-        ( ( int id ) >>> 28 ) &&& 0x0000000F
+    static member private LogIDtoLevel ( id : LogID ) : int32 =
+        ( ( int32 id ) >>> 28 ) &&& 0x0000000F
 
     // ------------------------------------------------------------------------
     /// <summary>

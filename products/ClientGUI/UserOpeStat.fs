@@ -27,21 +27,21 @@ type UserOpeStat() =
         @"Software\nabiki_t\Haruka\ClientGUI"
 
     static member MainWindowWidth
-        with get() : int =
+        with get() : int32 =
             UserOpeStat.GetValue_DWORD "MainWindowWidth" 640
-        and set ( x : int ) : unit =
+        and set ( x : int32 ) : unit =
             UserOpeStat.SetValue_DWORD "MainWindowWidth" x
 
     static member MainWindowHeight
-        with get() : int =
+        with get() : int32 =
             UserOpeStat.GetValue_DWORD "MainWindowHeight" 500
-        and set ( x : int ) : unit =
+        and set ( x : int32 ) : unit =
             UserOpeStat.SetValue_DWORD "MainWindowHeight" x
 
     static member LoginDialog_Type
-        with get() : int =
+        with get() : int32 =
             UserOpeStat.GetValue_DWORD "LoginDialog_Type" 0
-        and set ( x : int ) : unit =
+        and set ( x : int32 ) : unit =
             UserOpeStat.SetValue_DWORD "LoginDialog_Type" x
 
     static member LoginDialog_Directory

@@ -167,7 +167,7 @@ type SCSI_PersistentReserveIn( fx : SCSI_PersistentReserveIn_Fixture ) =
         MaxRecvDataSegmentLength_T = Constants.NEGOPARAM_DEF_MaxRecvDataSegmentLength;
     }
 
-    let GetSortedISID ( cnt : int ) =
+    let GetSortedISID ( cnt : int32 ) =
         Array.init cnt ( fun _ -> GlbFunc.newISID() )
         |> Array.sortBy isid_me.toPrim
 
@@ -270,7 +270,7 @@ type SCSI_PersistentReserveIn( fx : SCSI_PersistentReserveIn_Fixture ) =
     [<InlineData( 16us, true,  16u, 1 )>]
     [<InlineData( 20us, true,  16u, 1 )>]
     [<InlineData( 24us, true,  16u, 2 )>]
-    member _.ReadKeys_003 ( len : uint16 ) ( prg : bool ) ( al : uint32 ) ( cnt : int ) =
+    member _.ReadKeys_003 ( len : uint16 ) ( prg : bool ) ( al : uint32 ) ( cnt : int32 ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! r2 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
@@ -666,7 +666,7 @@ type SCSI_PersistentReserveIn( fx : SCSI_PersistentReserveIn_Fixture ) =
     [<InlineData( 8us,  true,  true,  0, 0UL )>]
     [<InlineData( 12us, true,  true,  1, 0UL )>]
     [<InlineData( 16us, true,  true,  1, 1UL )>]
-    member _.ReadFullStatus_006 ( acl : uint16 ) ( expPRG : bool ) ( expADL : bool ) ( expFDCnt : int ) ( expRESVK : uint64 ) =
+    member _.ReadFullStatus_006 ( acl : uint16 ) ( expPRG : bool ) ( expADL : bool ) ( expFDCnt : int32 ) ( expRESVK : uint64 ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             do! PR_Register r1 g_LUN1 g_ResvKey1

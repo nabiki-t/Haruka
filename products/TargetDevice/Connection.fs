@@ -488,7 +488,7 @@ type Connection
             |> Array.sortWith ( fun struct( _, a_datasn, _ ) struct( _, b_datasn, _ ) ->
                 datasn_me.compare a_datasn b_datasn
             )
-            |> if runlength > 0u then Array.truncate ( int runlength ) else id
+            |> if runlength > 0u then Array.truncate ( int32 runlength ) else id
             |> Array.map ( fun struct( _, _, pdu ) -> pdu )
 
         // ------------------------------------------------------------------------
@@ -584,7 +584,7 @@ type Connection
                     // Search SCSI Response PDU by specified ITT
                     let wr =
                         let srp = oldStat.m_SentRespPDUs
-                        let rec loop ( cnt : int ) : bool =
+                        let rec loop ( cnt : int32 ) : bool =
                             if cnt < srp.Length then
                                 let struct( _, itr_PDU ) = srp.[cnt]
                                 match itr_PDU with
@@ -640,7 +640,7 @@ type Connection
     // static method
 
     static member private SearchImmutableArray<'T> ( v : ImmutableArray< 'T > ) ( sf : ( 'T -> bool ) ) : 'T voption =
-        let rec loop ( cnt : int ) =
+        let rec loop ( cnt : int32 ) =
             if cnt < v.Length then
                 if sf v.[cnt] then
                     ValueSome v.[cnt]

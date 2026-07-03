@@ -36,8 +36,8 @@ and [<NoComparison>]T_NetworkPortal = {
     TargetAddress : string;
     PortNumber : uint16;
     DisableNagle : bool;
-    ReceiveBufferSize : int;
-    SendBufferSize : int;
+    ReceiveBufferSize : int32;
+    SendBufferSize : int32;
     WhiteList : IPCondition list;
 }
 
@@ -460,7 +460,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_TargetDevice_toString ( indent : int ) ( indentStep : int ) ( elem : T_TargetDevice ) ( elemName : string ) : seq<string> = 
+    static member private T_TargetDevice_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_TargetDevice ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -500,7 +500,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_NetworkPortal_toString ( indent : int ) ( indentStep : int ) ( elem : T_NetworkPortal ) ( elemName : string ) : seq<string> = 
+    static member private T_NetworkPortal_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_NetworkPortal ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -553,7 +553,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_NegotiableParameters_toString ( indent : int ) ( indentStep : int ) ( elem : T_NegotiableParameters ) ( elemName : string ) : seq<string> = 
+    static member private T_NegotiableParameters_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_NegotiableParameters ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -609,7 +609,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_LogParameters_toString ( indent : int ) ( indentStep : int ) ( elem : T_LogParameters ) ( elemName : string ) : seq<string> = 
+    static member private T_LogParameters_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_LogParameters ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {

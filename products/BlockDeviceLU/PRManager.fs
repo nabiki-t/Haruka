@@ -160,9 +160,6 @@ type PRManager(
                 let loginfo = struct ( m_ObjID, ValueNone, ValueNone, ValueSome( m_LUN ) )
                 g.Gen1( loginfo, "Notify terminate" )
             )
-            // Post dummy value to the queue
-            //( m_SavePRReqQueue :> ITargetBlock< int > ).Post( 2 ) |> ignore
-            //m_SavePRReqQueue.Complete()
             m_SavePRReqQueue.Stop()
 
 
@@ -233,7 +230,7 @@ type PRManager(
             else
                 // SAM-2 5.9.1.5.1, SPC-3 5.6.10.5 a) B)
                 let wcdb = cdb :?> PersistentReserveOutCDB
-                let parameterList = SCSIDataOutPDU.AppendParamList cmdPduData data ( int wcdb.ParameterListLength )
+                let parameterList = SCSIDataOutPDU.AppendParamList cmdPduData data ( int32 wcdb.ParameterListLength )
                 let basicParam = PRManager.paramDataToBasicParameterList source m_ObjID lun itt wcdb.ParameterListLength parameterList
                 parameterList.Return()
                 ( fitnResvKey = basicParam.ServiceActionReservationKey )
@@ -606,7 +603,7 @@ type PRManager(
                 // prepare initiator name bytes array for TransportID
                 let initiatorPortNameStr = Encoding.UTF8.GetBytes iITN.InitiatorPortName
                 let initiatorPortNameBytesLen = Functions.AddPaddingLengthUInt32 ( uint32 initiatorPortNameStr.Length + 1u ) 4u
-                let buf = Array.zeroCreate<byte> ( int initiatorPortNameBytesLen )
+                let buf = Array.zeroCreate<byte> ( int32 initiatorPortNameBytesLen )
                 Array.blit initiatorPortNameStr 0 buf 0 initiatorPortNameStr.Length
 
                 // ADDITIONAL DESCRIPTOR LENGTH
@@ -1920,7 +1917,7 @@ type PRManager(
             ( param : PooledBuffer ) : BasicParameterList =
         let loginfo = struct ( objID, ValueSome( source ), ValueSome( itt ), ValueSome( lun ) )
 
-        if paramLen <  24u || param.Count < (int)paramLen || (int)paramLen < 0 then
+        if paramLen <  24u || param.Count < (int32)paramLen || (int32)paramLen < 0 then
             let msg = "Parameter length in PERSISTENT RESERVE OUT is too short."
             HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.PARAMETER_LIST_LENGTH_ERROR, msg )
             raise <| SCSIACAException (
@@ -2015,7 +2012,7 @@ type PRManager(
             ( param : PooledBuffer ) : MoveParameterList =
         let loginfo = struct ( objID, ValueSome( source ), ValueSome( itt ), ValueSome( lun ) )
 
-        if paramLen < 48u || param.Count < (int)paramLen || (int)paramLen < 0 then
+        if paramLen < 48u || param.Count < (int32)paramLen || (int32)paramLen < 0 then
             let msg = "Parameter length in PERSISTENT RESERVE OUT is too short."
             HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.PARAMETER_LIST_LENGTH_ERROR, msg )
             raise <| SCSIACAException (
@@ -2097,15 +2094,15 @@ type PRManager(
             ( itt : ITT_T )
             ( paramLen : uint32 )
             ( param : PooledBuffer )
-            ( startPos : int ) : ( string * ISID_T option ) [] = 
+            ( startPos : int32 ) : ( string * ISID_T option ) [] = 
 
-        assert( ( int paramLen ) >= 0 )
+        assert( ( int32 paramLen ) >= 0 )
         assert( paramLen >=  24u )
         assert( param.uCount >= paramLen )
         let loginfo = struct ( objID, ValueSome( source ), ValueSome( itt ), ValueSome( lun ) )
 
-        let rec loop ( pos : int ) cont =
-            if pos = ( int paramLen ) then
+        let rec loop ( pos : int32 ) cont =
+            if pos = ( int32 paramLen ) then
                 cont []
             else
                 let formatCode = param.[pos] >>> 6
@@ -2129,7 +2126,7 @@ type PRManager(
                         msg
                     )
 
-                if pos + 24 > ( int paramLen ) then
+                if pos + 24 > ( int32 paramLen ) then
                     let msg = "Invalid TransportID length in PERSISTENT RESERVE OUT command parameter list."
                     HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.PARAMETER_LIST_LENGTH_ERROR, msg )
                     raise <| SCSIACAException (
@@ -2138,8 +2135,8 @@ type PRManager(
                         msg
                     )
 
-                let additionalLength = int( Functions.NetworkBytesToUInt16_InPooledBuffer param ( pos + 2 ) )
-                if pos + 4 + additionalLength > ( int paramLen ) || additionalLength < 20 || additionalLength % 4 <> 0 then
+                let additionalLength = int32( Functions.NetworkBytesToUInt16_InPooledBuffer param ( pos + 2 ) )
+                if pos + 4 + additionalLength > ( int32 paramLen ) || additionalLength < 20 || additionalLength % 4 <> 0 then
                     let msg = sprintf "Invalid  ADDITIONAL LENGTH value(%d) in PERSISTENT RESERVE OUT command parameter list." additionalLength
                     HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.PARAMETER_LIST_LENGTH_ERROR, msg )
                     raise <| SCSIACAException (

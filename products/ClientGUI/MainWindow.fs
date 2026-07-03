@@ -168,7 +168,7 @@ type MainWindow( m_ExeDir : string ) as this =
     /// <summary>
     ///  Logout event handler.
     /// </summary>
-    let m_UnloadEventHandler = new Dictionary< int, ( unit -> unit ) >()
+    let m_UnloadEventHandler = new Dictionary< int32, ( unit -> unit ) >()
 
     // Initialize procedure for window.
     do
@@ -442,13 +442,13 @@ type MainWindow( m_ExeDir : string ) as this =
             this.UpdateForUnloaded()
 
         // register logout event handler
-        override this.SubscribeLogoutEvent ( e : ( unit -> unit ) ) : int =
-            let n = Functions.GenUniqueNumber<int> ( (+) 1 ) 0 m_UnloadEventHandler.Keys
+        override this.SubscribeLogoutEvent ( e : ( unit -> unit ) ) : int32 =
+            let n = Functions.GenUniqueNumber<int32> ( (+) 1 ) 0 m_UnloadEventHandler.Keys
             m_UnloadEventHandler.Add( n, e )
             n
 
         // unregister logout event handler
-        override this.UnsubscribeLogoutEvent ( idx : int ) : unit =
+        override this.UnsubscribeLogoutEvent ( idx : int32 ) : unit =
             m_UnloadEventHandler.Remove idx |> ignore
 
         // Set progress bar to enable or disable.
@@ -526,7 +526,7 @@ type MainWindow( m_ExeDir : string ) as this =
     /// <remarks>
     ///  This method will not return until the window is closed.
     /// </remarks>
-    member _.Show ( apl : Application ) : int =
+    member _.Show ( apl : Application ) : int32 =
         apl.ShutdownMode <- ShutdownMode.OnMainWindowClose
         apl.Run m_Window
 
@@ -1741,8 +1741,8 @@ type MainWindow( m_ExeDir : string ) as this =
     ///  Main window will close.
     /// </summary>
     member private this.OnClosing ( sender : obj ) ( e : CancelEventArgs ) =
-        UserOpeStat.MainWindowWidth <- int m_Window.Width
-        UserOpeStat.MainWindowHeight <- int m_Window.Height
+        UserOpeStat.MainWindowWidth <- int32 m_Window.Width
+        UserOpeStat.MainWindowHeight <- int32 m_Window.Height
 
     ///////////////////////////////////////////////////////////////////////////
     // Private method

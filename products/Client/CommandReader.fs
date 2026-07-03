@@ -144,7 +144,7 @@ type CommandReader () =
         Varb = CommandVarb.Select;
         NamedArgs = Array.empty
         ValuelessArgs = Array.empty;
-        NamelessArgs = [| CRVM_uint32( 0u, uint ClientConst.MAX_CHILD_NODE_COUNT - 1u ); |];
+        NamelessArgs = [| CRVM_uint32( 0u, uint32 ClientConst.MAX_CHILD_NODE_COUNT - 1u ); |];
         HelpMsgName = "SELECT";
     }
 
@@ -152,7 +152,7 @@ type CommandReader () =
     static member CmdRule_unselect : AcceptableCommand< CommandVarb > = {
         Command = [| "UNSELECT" |];
         Varb = CommandVarb.UnSelect;
-        NamedArgs = [| ( "/p", CRV_uint32( 0u, uint ClientConst.MAX_CHILD_NODE_COUNT - 1u ) ); |];
+        NamedArgs = [| ( "/p", CRV_uint32( 0u, uint32 ClientConst.MAX_CHILD_NODE_COUNT - 1u ) ); |];
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
         HelpMsgName = "UNSELECT";
@@ -273,7 +273,7 @@ type CommandReader () =
         Command = [| "DELETE" |];
         Varb = CommandVarb.Delete;
         NamedArgs =
-            [| ( "/i", CRV_uint32( 0u, uint ClientConst.MAX_CHILD_NODE_COUNT - 1u ) ); |];
+            [| ( "/i", CRV_uint32( 0u, uint32 ClientConst.MAX_CHILD_NODE_COUNT - 1u ) ); |];
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
         HelpMsgName = "DELETE";

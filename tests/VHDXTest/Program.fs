@@ -358,7 +358,7 @@ let parseArgs ( argv : string[] ) : Command =
         failwithf "Unknown command : %s" cmd
 
 [< EntryPoint >]
-let main ( argv : string[] ) : int =
+let main ( argv : string[] ) : int32 =
     let cmd =
         try
             parseArgs argv

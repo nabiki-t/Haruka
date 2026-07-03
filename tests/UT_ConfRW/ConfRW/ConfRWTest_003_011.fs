@@ -38,8 +38,8 @@ and [<NoComparison>]T_D5 =
     | U_D5_2 of T_T029_1
 
 and [<NoComparison>]T_T029_1 = {
-    D1 : int;
-    D2 : int;
+    D1 : int32;
+    D2 : int32;
 }
 
 //=============================================================================
@@ -279,7 +279,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_Test_toString ( indent : int ) ( indentStep : int ) ( elem : T_Test ) ( elemName : string ) : seq<string> = 
+    static member private T_Test_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_Test ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -308,7 +308,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_D4_toString ( indent : int ) ( indentStep : int ) ( elem : T_D4 ) ( elemName : string ) : seq<string> = 
+    static member private T_D4_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_D4 ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -336,7 +336,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_D5_toString ( indent : int ) ( indentStep : int ) ( elem : T_D5 ) ( elemName : string ) : seq<string> = 
+    static member private T_D5_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_D5 ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -367,7 +367,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_T029_1_toString ( indent : int ) ( indentStep : int ) ( elem : T_T029_1 ) ( elemName : string ) : seq<string> = 
+    static member private T_T029_1_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_T029_1 ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {

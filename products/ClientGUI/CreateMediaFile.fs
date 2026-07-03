@@ -151,14 +151,14 @@ type StatusListType( stat : HarukaCtrlerCtrlRes.T_Procs ) =
     /// <returns>
     ///  Progress value shown in the status list.
     /// </returns>
-    static member private GetProgressValue ( s : HarukaCtrlerCtrlRes.T_Status ) : int =
+    static member private GetProgressValue ( s : HarukaCtrlerCtrlRes.T_Status ) : int32 =
         match s with
         | HarukaCtrlerCtrlRes.U_NotStarted() ->
             0
         | HarukaCtrlerCtrlRes.U_ProgressCreation x ->
-            int x
+            int32 x
         | HarukaCtrlerCtrlRes.U_Recovery x ->
-            int x
+            int32 x
         | HarukaCtrlerCtrlRes.U_NormalEnd() ->
             0
         | HarukaCtrlerCtrlRes.U_AbnormalEnd() ->

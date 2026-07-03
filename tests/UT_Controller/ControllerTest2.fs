@@ -2610,7 +2610,7 @@ type Controller_Test2 () =
         let currentSec = ( let a = DateTime.UtcNow in a.Ticks % 600000000L ) / 10000000L |> float
         let maxWaitTime = 0.5 * ( float Constants.MAX_CHILD_PROC_RESTART_COUNT + 1.0 )
         if currentSec > 60.0 - maxWaitTime then
-            Thread.Sleep( int ( 60.0 - currentSec ) * 1000 )
+            Thread.Sleep( int32 ( 60.0 - currentSec ) * 1000 )
 
         let dname = Controller_Test1.CreateTestDir "OnExitChildProc_003"
         let portNum = GlbFunc.nextTcpPortNo()

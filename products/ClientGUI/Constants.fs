@@ -61,8 +61,8 @@ type GuiConst() =
     static member SOURCE_ICO_HEIGHT : float =
         64.0
 
-    static member USAGE_GRAPH_PNT_CNT : int =
-        int ( Constants.RESCOUNTER_LENGTH_SEC / Constants.RECOUNTER_SPAN_SEC )
+    static member USAGE_GRAPH_PNT_CNT : int32 =
+        int32 ( Constants.RESCOUNTER_LENGTH_SEC / Constants.RECOUNTER_SPAN_SEC )
 
 /// <summary>
 ///  Datatype for parameter list view

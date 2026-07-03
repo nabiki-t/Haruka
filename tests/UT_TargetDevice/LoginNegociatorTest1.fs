@@ -132,7 +132,7 @@ type LoginNegociator_Test1 () =
             }
 
         let k1 = new HKiller() :> IKiller
-        let rec loop ( cnt : int ) ( k : IKiller ) =
+        let rec loop ( cnt : int32 ) ( k : IKiller ) =
             if k1.IsNoticed then
                 true
             else

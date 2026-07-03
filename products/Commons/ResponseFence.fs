@@ -262,7 +262,7 @@ type ResponseFence( m_IsNeedRF : bool ) =
         |> Array.iter ( fun itr -> itr() )
 
     /// Get queued task count.
-    member _.TaskCount : int =
+    member _.TaskCount : int32 =
         m_Stat.obj.m_QueuedTaskCount
 
     /// Get lock counter
@@ -271,6 +271,6 @@ type ResponseFence( m_IsNeedRF : bool ) =
 
     /// Get lock status
     /// It returns conbination of tick ​​count, lock counter, queued task count.
-    member _.LockStatus : struct( int64 * int64 * int ) =
+    member _.LockStatus : struct( int64 * int64 * int32 ) =
         let r = m_Stat.obj
         struct( r.m_Tick, r.m_LockCounter, r.m_QueuedTaskCount )

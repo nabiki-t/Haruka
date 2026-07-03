@@ -148,7 +148,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
         MaxRecvDataSegmentLength_T = 4096u;
     }
 
-    let CreateSession ( argErrorRecoveryLevel : byte ) ( argMaxBurstLength : uint ) ( argMaxRecvDataSegmentLength_I : uint ) : Task<iSCSI_Initiator> =
+    let CreateSession ( argErrorRecoveryLevel : byte ) ( argMaxBurstLength : uint32 ) ( argMaxRecvDataSegmentLength_I : uint32 ) : Task<iSCSI_Initiator> =
         task {
             let sessParam = {
                 m_defaultSessParam with
@@ -178,7 +178,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             // Not-Out
             for i = 0 to 9 do
                 let! _, cmdsn = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
-                Assert.True(( cmdsn = cmdsn_me.fromPrim( uint i ) ))
+                Assert.True(( cmdsn = cmdsn_me.fromPrim( uint32 i ) ))
                 let! _ = r1.ReceiveSpecific<NOPInPDU> g_CID0
                 ()
 
@@ -321,11 +321,11 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 // Send immidiate Nop-Out PDU
                 let! _, _ = r1.SendNOPOut_PingRequest g_CID0 BitI.T g_LUN1 g_DefTTT PooledBuffer.Empty
                 let! pdu2 = r1.ReceiveSpecific<NOPInPDU> g_CID0
-                Assert.True(( pdu2.ExpCmdSN = cmdsn_me.incr ( uint i ) pdu1_1.ExpCmdSN ))
+                Assert.True(( pdu2.ExpCmdSN = cmdsn_me.incr ( uint32 i ) pdu1_1.ExpCmdSN ))
                 Assert.True(( pdu2.MaxCmdSN = pdu1_1.MaxCmdSN ))
 
             // Send Data-Out PDUs and receive SCSI Response PDUs
-            let sendData = PooledBuffer.RentAndInit( int m_MediaBlockSize )
+            let sendData = PooledBuffer.RentAndInit( int32 m_MediaBlockSize )
             for i = 0 to pduCount - 1 do
                 do! r1.SendSCSIDataOutPDU g_CID0 BitF.T vitt.[i] g_LUN1 g_DefTTT datasn_me.zero 0u sendData
                 let! _ = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
@@ -367,7 +367,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             r1.RewindCmdSN ( cmdsn_me.fromPrim 1u )
 
             // Send Data-Out PDUs and receive SCSI Response PDUs
-            let sendData = PooledBuffer.RentAndInit( int m_MediaBlockSize )
+            let sendData = PooledBuffer.RentAndInit( int32 m_MediaBlockSize )
             for i = 0 to pduCount - 1 do
                 do! r1.SendSCSIDataOutPDU g_CID0 BitF.T vitt.[i] g_LUN1 g_DefTTT datasn_me.zero 0u sendData
                 let! _ = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
@@ -1258,7 +1258,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     [<Fact>]
     member _.StatSN_CheckCondition_001() =
         task {
-            let sendData = PooledBuffer.Rent( int m_MediaBlockSize )
+            let sendData = PooledBuffer.Rent( int32 m_MediaBlockSize )
             let! r1 = iSCSI_Initiator.CreateInitialSession m_defaultSessParam m_defaultConnParam
 
             // SCSI Write command ( failed )
@@ -1322,7 +1322,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( rpdu2.InitiatorTaskTag = itt ))
             Assert.True(( rpdu2.DataSN = datasn_me.zero ))
             Assert.True(( rpdu2.BufferOffset = 0u ))
-            Assert.True(( rpdu2.DataSegment.Count = int accessLength ))
+            Assert.True(( rpdu2.DataSegment.Count = int32 accessLength ))
 
             // SCSI Response
             let! rpdu3 = r1.ReceiveSpecific<SCSIResponsePDU> g_CID0
@@ -1544,7 +1544,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             |]
 
             // Send SCSI write
-            let writeData = Array.zeroCreate ( int accessLength )
+            let writeData = Array.zeroCreate ( int32 accessLength )
             Random.Shared.NextBytes( writeData.AsSpan() )
             let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
@@ -1598,7 +1598,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 Assert.True(( rpdu2.BufferOffset = expOffset ))
                 Assert.True(( rpdu2.DataSegment.Count = expLength ))
                 let recvData = rpdu2.DataSegment.ToArray()
-                let expData = writeData.[ int expOffset .. int expOffset + expLength - 1 ]
+                let expData = writeData.[ int32 expOffset .. int32 expOffset + expLength - 1 ]
                 Assert.True(( recvData = expData ))
 
                 if expdn = 2u then
@@ -1658,7 +1658,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 Assert.True(( rpdu5.BufferOffset = expOffset ))
                 Assert.True(( rpdu5.DataSegment.Count = expLength ))
                 let recvData = rpdu5.DataSegment.ToArray()
-                let expData = writeData.[ int expOffset .. int expOffset + expLength - 1 ]
+                let expData = writeData.[ int32 expOffset .. int32 expOffset + expLength - 1 ]
                 Assert.True(( recvData = expData ))
 
             // SCSI Response
@@ -1690,7 +1690,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             |]
 
             // Send SCSI write
-            let writeData = Array.zeroCreate ( int accessLength )
+            let writeData = Array.zeroCreate ( int32 accessLength )
             Random.Shared.NextBytes( writeData.AsSpan() )
             let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F blkcnt_me.zero32 0uy trBlockCnt NACA.F LINK.F
             let! writeITT, _ = r1.SendSCSICommandPDU g_CID0 BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK g_LUN1 accessLength writeCDB PooledBuffer.Empty 0u
@@ -1744,7 +1744,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 Assert.True(( rpdu2.BufferOffset = expOffset ))
                 Assert.True(( rpdu2.DataSegment.Count = expLength ))
                 let recvData = rpdu2.DataSegment.ToArray()
-                let expData = writeData.[ int expOffset .. int expOffset + expLength - 1 ]
+                let expData = writeData.[ int32 expOffset .. int32 expOffset + expLength - 1 ]
                 Assert.True(( recvData = expData ))
 
             // SCSI Response
@@ -1800,7 +1800,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 Assert.True(( rpdu5.BufferOffset = expOffset ))
                 Assert.True(( rpdu5.DataSegment.Count = expLength ))
                 let recvData = rpdu5.DataSegment.ToArray()
-                let expData = writeData.[ int expOffset .. int expOffset + expLength - 1 ]
+                let expData = writeData.[ int32 expOffset .. int32 expOffset + expLength - 1 ]
                 Assert.True(( recvData = expData ))
 
             // SCSI Response
@@ -1877,7 +1877,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( r2tPDU.DesiredDataTransferLength = accessLength ))
 
             // Send data-Out PDU ( write random data )
-            let writtenData = PooledBuffer.Rent( int accessLength )
+            let writtenData = PooledBuffer.Rent( int32 accessLength )
             Random.Shared.NextBytes( writtenData.Array )
             do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 r2tPDU.TargetTransferTag datasn_me.zero 0u writtenData
 
@@ -1900,68 +1900,68 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
     static member m_R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_001_data = [|
         [|
             [|//  DataSN  TTT                F       Data Start  Data End  Fake data
-                ( 0u,     Option<uint>.None, BitF.F, 0,          1023,     false );
-                ( 1u,     Option<uint>.None, BitF.F, 1024,       2047,     false );
-                ( 2u,     Option<uint>.None, BitF.F, 2048,       3071,     false );
-                ( 3u,     Option<uint>.None, BitF.T, 3072,       4095,     false );
+                ( 0u,     Option<uint32>.None, BitF.F, 0,          1023,     false );
+                ( 1u,     Option<uint32>.None, BitF.F, 1024,       2047,     false );
+                ( 2u,     Option<uint32>.None, BitF.F, 2048,       3071,     false );
+                ( 3u,     Option<uint32>.None, BitF.T, 3072,       4095,     false );
             |] :> obj;
             0u :> obj;  // Residual Count
         |];
         [|
             [|//  DataSN  TTT                F       Data Start  Data End  Fake data
-                ( 1u,     Option<uint>.None, BitF.F, 2048,       3071,     false );
-                ( 0u,     Option<uint>.None, BitF.F, 0,          1023,     false );
-                ( 3u,     Option<uint>.None, BitF.F, 3072,       4095,     false );
-                ( 2u,     Option<uint>.None, BitF.T, 1024,       2047,     false );
+                ( 1u,     Option<uint32>.None, BitF.F, 2048,       3071,     false );
+                ( 0u,     Option<uint32>.None, BitF.F, 0,          1023,     false );
+                ( 3u,     Option<uint32>.None, BitF.F, 3072,       4095,     false );
+                ( 2u,     Option<uint32>.None, BitF.T, 1024,       2047,     false );
             |] :> obj;
             0u :> obj;  // Residual Count
         |];
         [|
             [|//  DataSN  TTT                F       Data Start  Data End  Fake data
-                ( 0u,     Option<uint>.None, BitF.F, 0,          2047,     false );
-                ( 1u,     Option<uint>.None, BitF.F, 1024,       3071,     false );
-                ( 2u,     Option<uint>.None, BitF.T, 2048,       4095,     false );
+                ( 0u,     Option<uint32>.None, BitF.F, 0,          2047,     false );
+                ( 1u,     Option<uint32>.None, BitF.F, 1024,       3071,     false );
+                ( 2u,     Option<uint32>.None, BitF.T, 2048,       4095,     false );
             |] :> obj;
             2048u :> obj;// Haruka considers this to be an overflow because the initiator sent too many data.
         |];
         [|
             [|//  DataSN  TTT                F       Data Start  Data End  Fake data
-                ( 0u,     Option<uint>.None, BitF.F, 0,          -1,       false );    // Empty Data-Out PDU
-                ( 1u,     Option<uint>.None, BitF.F, 0,          1023,     false );
-                ( 2u,     Option<uint>.None, BitF.F, 1024,       1023,     false );    // Empty Data-Out PDU
-                ( 3u,     Option<uint>.None, BitF.F, 1024,       2047,     false );
-                ( 4u,     Option<uint>.None, BitF.F, 2048,       2047,     false );    // Empty Data-Out PDU
-                ( 5u,     Option<uint>.None, BitF.F, 2048,       3071,     false );
-                ( 6u,     Option<uint>.None, BitF.F, 3072,       3071,     false );    // Empty Data-Out PDU
-                ( 7u,     Option<uint>.None, BitF.F, 3072,       4095,     false );
-                ( 8u,     Option<uint>.None, BitF.T, 4096,       4095,     false );    // Empty Data-Out PDU
+                ( 0u,     Option<uint32>.None, BitF.F, 0,          -1,       false );    // Empty Data-Out PDU
+                ( 1u,     Option<uint32>.None, BitF.F, 0,          1023,     false );
+                ( 2u,     Option<uint32>.None, BitF.F, 1024,       1023,     false );    // Empty Data-Out PDU
+                ( 3u,     Option<uint32>.None, BitF.F, 1024,       2047,     false );
+                ( 4u,     Option<uint32>.None, BitF.F, 2048,       2047,     false );    // Empty Data-Out PDU
+                ( 5u,     Option<uint32>.None, BitF.F, 2048,       3071,     false );
+                ( 6u,     Option<uint32>.None, BitF.F, 3072,       3071,     false );    // Empty Data-Out PDU
+                ( 7u,     Option<uint32>.None, BitF.F, 3072,       4095,     false );
+                ( 8u,     Option<uint32>.None, BitF.T, 4096,       4095,     false );    // Empty Data-Out PDU
             |] :> obj;
             0u :> obj;  // Residual Count
         |];
         [|
             [|//  DataSN  TTT                F       Data Start  Data End  Fake data
-                ( 99u,    Option<uint>.None, BitF.F, 0,          1023,     false );
-                ( 50u,    Option<uint>.None, BitF.F, 1024,       2047,     false );
-                ( 99u,    Option<uint>.None, BitF.F, 2048,       3071,     false );
-                ( 4u,     Option<uint>.None, BitF.T, 3072,       4095,     false );
+                ( 99u,    Option<uint32>.None, BitF.F, 0,          1023,     false );
+                ( 50u,    Option<uint32>.None, BitF.F, 1024,       2047,     false );
+                ( 99u,    Option<uint32>.None, BitF.F, 2048,       3071,     false );
+                ( 4u,     Option<uint32>.None, BitF.T, 3072,       4095,     false );
             |] :> obj;
             0u :> obj;  // Residual Count
         |];
         [|
             [|//  DataSN  TTT                  F       Data Start  Data End  Fake data
-                ( 0u,     Option<uint>.None,   BitF.F, 0,          1023,     false );
-                ( 1u,     Option<uint>.None,   BitF.F, 1024,       2047,     false );
+                ( 0u,     Option<uint32>.None,   BitF.F, 0,          1023,     false );
+                ( 1u,     Option<uint32>.None,   BitF.F, 1024,       2047,     false );
                 ( 2u,     Some( 0xFFFFFFFFu ), BitF.F, 2048,       3071,     false );    // Received as is as unsolicited data.
-                ( 3u,     Option<uint>.None,   BitF.T, 3072,       4095,     false );
+                ( 3u,     Option<uint32>.None,   BitF.T, 3072,       4095,     false );
             |] :> obj;
             0u :> obj;  // Residual Count
         |];
         [|
             [|//  DataSN  TTT                  F       Data Start  Data End  Fake data
                 ( 0u,     Some( 0x11111111u ), BitF.F, 0,          4095,     true  );   // ignored
-                ( 1u,     Option<uint>.None,   BitF.F, 0,          4095,     false );
+                ( 1u,     Option<uint32>.None,   BitF.F, 0,          4095,     false );
                 ( 2u,     Some( 0x22222222u ), BitF.F, 0,          4095,     true  );   // ignored
-                ( 3u,     Option<uint>.None,   BitF.T, 4096,       4095,     false );
+                ( 3u,     Option<uint32>.None,   BitF.T, 4096,       4095,     false );
             |] :> obj;
             0u :> obj;  // Residual Count
         |];
@@ -1969,7 +1969,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
     [<Theory>]
     [<MemberData( "m_R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_001_data" )>]
-    member _.R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_001( v : ( uint * uint option * BitF * int * int * bool )[] ) ( expResidualCount : uint32 ) =
+    member _.R2T_NoUnsolicitedData_1R2T_MultiDataOutPDU_001( v : ( uint32 * uint32 option * BitF * int32 * int32 * bool )[] ) ( expResidualCount : uint32 ) =
         task {
             let! r1 = CreateSession 0uy 16384u 16384u
             let accessLength = 4096u
@@ -1987,7 +1987,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( r2tPDU.BufferOffset = 0u ))
             Assert.True(( r2tPDU.DesiredDataTransferLength = accessLength ))
 
-            let writtenData = Array.zeroCreate( int accessLength )
+            let writtenData = Array.zeroCreate( int32 accessLength )
             Random.Shared.NextBytes( writtenData )
 
             // Send data-Out PDU
@@ -2038,7 +2038,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( r2tPDU.BufferOffset = 0u ))
             Assert.True(( r2tPDU.DesiredDataTransferLength = accessLength ))
 
-            let writtenData = Array.zeroCreate( int accessLength )
+            let writtenData = Array.zeroCreate( int32 accessLength )
             Random.Shared.NextBytes( writtenData )
 
             // Send data-Out PDU 1
@@ -2092,7 +2092,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( r2tPDU.BufferOffset = 0u ))
             Assert.True(( r2tPDU.DesiredDataTransferLength = accessLength ))
 
-            let writtenData = Array.zeroCreate( int accessLength )
+            let writtenData = Array.zeroCreate( int32 accessLength )
             Random.Shared.NextBytes( writtenData )
 
             // Send data-Out PDU 1
@@ -2136,7 +2136,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( r2tPDU.BufferOffset = 0u ))
             Assert.True(( r2tPDU.DesiredDataTransferLength = accessLength ))
 
-            let writtenData = Array.zeroCreate( int accessLength )
+            let writtenData = Array.zeroCreate( int32 accessLength )
             Random.Shared.NextBytes( writtenData )
 
             // Send data-Out PDU 1
@@ -2199,7 +2199,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 Assert.True(( r2tPDU.DesiredDataTransferLength = 4096u ))
                 vTTT.[i] <- r2tPDU.TargetTransferTag
 
-            let writtenData = Array.zeroCreate( int accessLength )
+            let writtenData = Array.zeroCreate( int32 accessLength )
             Random.Shared.NextBytes( writtenData )
 
             // Send data-Out PDU 0 for R2T 0
@@ -2260,7 +2260,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 Assert.True(( r2tPDU.DesiredDataTransferLength = 4096u ))
                 vTTT.[i] <- r2tPDU.TargetTransferTag
 
-            let writtenData = Array.zeroCreate( int accessLength )
+            let writtenData = Array.zeroCreate( int32 accessLength )
             Random.Shared.NextBytes( writtenData )
 
             // Send data-Out PDU 0 for R2T 0
@@ -2341,7 +2341,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 Assert.True(( r2tPDU.DesiredDataTransferLength = 4096u ))
                 vTTT.[i] <- r2tPDU.TargetTransferTag
 
-            let writtenData = Array.zeroCreate( int accessLength )
+            let writtenData = Array.zeroCreate( int32 accessLength )
             Random.Shared.NextBytes( writtenData )
 
             // Send data-Out PDU 0 for R2T 0 ( F=1 )
@@ -2416,7 +2416,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                 Assert.True(( r2tPDU.DesiredDataTransferLength = 4096u ))
                 vTTT.[i] <- r2tPDU.TargetTransferTag
 
-            let writtenData = Array.zeroCreate( int accessLength )
+            let writtenData = Array.zeroCreate( int32 accessLength )
             Random.Shared.NextBytes( writtenData )
 
             // Send data-Out PDU 0 for R2T 0 ( F=1 )
@@ -2505,7 +2505,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             Assert.True(( r2tPDU2.DesiredDataTransferLength = 4096u ))
             Assert.True(( r2tPDU2.TargetTransferTag = vTTT.[0] ))
 
-            let writtenData = Array.zeroCreate( int accessLength )
+            let writtenData = Array.zeroCreate( int32 accessLength )
             Random.Shared.NextBytes( writtenData )
 
             // Send data-Out PDU 0 for R2T 0
@@ -2582,7 +2582,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let accessLength = 4096u
             let accessBlockCount = accessLength / m_MediaBlockSize
             let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
-            let writtenData = Array.zeroCreate( int accessLength )
+            let writtenData = Array.zeroCreate( int32 accessLength )
             Random.Shared.NextBytes( writtenData )
 
             // Send SCSI write
@@ -2646,7 +2646,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
                     Assert.True(( rr2tPDU2.R2TSN = datasn_me.fromPrim 2u ))
 
                     // Send all of solicited Data
-                    let writtenData5 = PooledBuffer.Rent( writtenData, int rr2tPDU2.BufferOffset, int rr2tPDU2.DesiredDataTransferLength )
+                    let writtenData5 = PooledBuffer.Rent( writtenData, int32 rr2tPDU2.BufferOffset, int32 rr2tPDU2.DesiredDataTransferLength )
                     do! r1.SendSCSIDataOutPDU g_CID0 BitF.T writeITT g_LUN1 rr2tPDU2.TargetTransferTag datasn_me.zero rr2tPDU2.BufferOffset writtenData5
                     writtenData5.Return()
 
@@ -2724,13 +2724,13 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
 
     [<Theory>]
     [<MemberData( "m_UnsolicitedData_VariousDataOutPDU_001_data" )>]
-    member _.UnsolicitedData_VariousDataOutPDU_001 ( v : ( uint * uint * BitF * int * int * bool )[] ) ( expResidualCount : uint32 ) =
+    member _.UnsolicitedData_VariousDataOutPDU_001 ( v : ( uint32 * uint32 * BitF * int32 * int32 * bool )[] ) ( expResidualCount : uint32 ) =
         task {
             let! r1 = CreateSession 1uy 4096u 4096u
             let accessLength = 4096u
             let accessBlockCount = accessLength / m_MediaBlockSize
             let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
-            let writtenData = Array.zeroCreate( int accessLength )
+            let writtenData = Array.zeroCreate( int32 accessLength )
             Random.Shared.NextBytes( writtenData )
 
             // Send SCSI write
@@ -2768,7 +2768,7 @@ type iSCSI_Numbering( fx : iSCSI_Numbering_Fixture ) =
             let accessLength = 4096u
             let accessBlockCount = accessLength / m_MediaBlockSize
             let trBlockCnt = accessBlockCount |> uint16 |> blkcnt_me.ofUInt16
-            let writtenData = Array.zeroCreate( int accessLength )
+            let writtenData = Array.zeroCreate( int32 accessLength )
             Random.Shared.NextBytes( writtenData )
 
             let oldITT = r1.ITT

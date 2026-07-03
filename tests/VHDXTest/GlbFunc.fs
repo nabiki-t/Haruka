@@ -234,24 +234,24 @@ type Crc32C =
                     i [| 0 .. 7 |]
         |]
         
-    static let CRC32_soft ( init : uint32 ) ( v : byte[] ) ( s : int ) ( cnt : int ) : uint32 =
+    static let CRC32_soft ( init : uint32 ) ( v : byte[] ) ( s : int32 ) ( cnt : int32 ) : uint32 =
         let rec loop idx a =
             if idx < cnt then
-                loop ( idx + 1 ) ( ( a >>> 8 ) ^^^ Table.[ int( a &&& 0xFFu ) ^^^ int ( v.[ s + idx ] ) ] )
+                loop ( idx + 1 ) ( ( a >>> 8 ) ^^^ Table.[ int( a &&& 0xFFu ) ^^^ int32 ( v.[ s + idx ] ) ] )
             else
                 a
         loop 0 init
 
-    static let CRC32_x64 ( init : uint32 ) ( v : byte[] ) ( s : int ) ( cnt : int ) : uint32 =
+    static let CRC32_x64 ( init : uint32 ) ( v : byte[] ) ( s : int32 ) ( cnt : int32 ) : uint32 =
         let mutable r2 = init
         let lcnt1 = cnt / 8
         for i = 0 to lcnt1 - 1 do
-            r2 <- uint <| Sse42.X64.Crc32( ( uint64 r2 ), BitConverter.ToUInt64( v, i * 8 + s ) )
+            r2 <- uint32 <| Sse42.X64.Crc32( ( uint64 r2 ), BitConverter.ToUInt64( v, i * 8 + s ) )
         for i = lcnt1 * 8 to cnt - 1 do
             r2 <- Sse42.Crc32( r2, v.[ i + s ] )
         r2
 
-    static let CRC32_x86 ( init : uint32 ) ( v : byte[] ) ( s : int ) ( cnt : int ) : uint32 =
+    static let CRC32_x86 ( init : uint32 ) ( v : byte[] ) ( s : int32 ) ( cnt : int32 ) : uint32 =
         let mutable r2 = init
         let lcnt1 = cnt / 4
         for i = 0 to lcnt1 - 1 do
@@ -260,7 +260,7 @@ type Crc32C =
             r2 <- Sse42.Crc32( r2, v.[ i + s ] )
         r2
 
-    static let CRC32_Auto : uint32 -> byte[] -> int -> int -> uint32 =
+    static let CRC32_Auto : uint32 -> byte[] -> int32 -> int32 -> uint32 =
         if Sse42.IsSupported then
             if Sse42.X64.IsSupported then
                 CRC32_x64
@@ -316,7 +316,7 @@ type GlbFunc() =
     ///  Retrieved GUID value.
     /// </returns>
     static member ReadGuid( bytes : byte[] ) ( offset : uint32 ) : Guid =
-        System.Guid( bytes.[ int offset .. int offset + 15 ] )
+        System.Guid( bytes.[ int32 offset .. int32 offset + 15 ] )
 
     /// <summary>
     ///  Read a uint32 value from byte array in little-endian format.
@@ -331,7 +331,7 @@ type GlbFunc() =
     ///  Retrieved uint32 value.
     /// </returns>
     static member ReadUInt32LE( bytes : byte[] ) ( offset : uint32 ) : uint32 =
-        BinaryPrimitives.ReadUInt32LittleEndian( ReadOnlySpan( bytes, int offset, 4 ) )
+        BinaryPrimitives.ReadUInt32LittleEndian( ReadOnlySpan( bytes, int32 offset, 4 ) )
 
     /// <summary>
     ///  Read a uint32 value from byte array in big-endian format.
@@ -346,7 +346,7 @@ type GlbFunc() =
     ///  Retrieved uint32 value.
     /// </returns>
     static member ReadUInt32BE( bytes : byte[] ) ( offset : uint32 ) : uint32 =
-        BinaryPrimitives.ReadUInt32BigEndian( ReadOnlySpan( bytes, int offset, 4 ) )
+        BinaryPrimitives.ReadUInt32BigEndian( ReadOnlySpan( bytes, int32 offset, 4 ) )
 
     /// <summary>
     ///  Read a uint16 value from byte array in little-endian format.
@@ -361,7 +361,7 @@ type GlbFunc() =
     ///  Retrieved uint16 value.
     /// </returns>
     static member ReadUInt16LE( bytes : byte[] ) ( offset : uint32 ) : uint16 =
-        BinaryPrimitives.ReadUInt16LittleEndian( ReadOnlySpan( bytes, int offset, 2 ) )
+        BinaryPrimitives.ReadUInt16LittleEndian( ReadOnlySpan( bytes, int32 offset, 2 ) )
 
     /// <summary>
     ///  Read a uint64 value from byte array in little-endian format.
@@ -376,7 +376,7 @@ type GlbFunc() =
     ///  Retrieved uint64 value.
     /// </returns>
     static member ReadUInt64LE( bytes : byte[] ) ( offset : uint32 ) : uint64 =
-        BinaryPrimitives.ReadUInt64LittleEndian( ReadOnlySpan( bytes, int offset, 8 ) )
+        BinaryPrimitives.ReadUInt64LittleEndian( ReadOnlySpan( bytes, int32 offset, 8 ) )
 
     /// <summary>
     ///  Read a uint64 value from byte array in big-endian format.
@@ -391,7 +391,7 @@ type GlbFunc() =
     ///  Retrieved uint64 value.
     /// </returns>
     static member ReadUInt64BE( bytes : byte[] ) ( offset : uint32 ) : uint64 =
-        BinaryPrimitives.ReadUInt64BigEndian( ReadOnlySpan( bytes, int offset, 8 ) )
+        BinaryPrimitives.ReadUInt64BigEndian( ReadOnlySpan( bytes, int32 offset, 8 ) )
 
     /// <summary>
     ///  Write a GUID value to byte array.
@@ -406,7 +406,7 @@ type GlbFunc() =
     ///  The GUID value to be written.
     /// </param>
     static member WriteGuid( bytes : byte[] ) ( offset : uint32 ) ( v : Guid ) : unit =
-        Array.blit ( v.ToByteArray() ) 0 bytes ( int offset ) 16
+        Array.blit ( v.ToByteArray() ) 0 bytes ( int32 offset ) 16
 
     /// <summary>
     ///  Write a uint32 value to byte array in little-endian format.
@@ -421,7 +421,7 @@ type GlbFunc() =
     ///  The uint32 value to be written.
     /// </param>
     static member WriteUInt32LE( buffer : byte[] ) ( offset : uint32 ) ( v : uint32 ) : unit =
-        BinaryPrimitives.WriteUInt32LittleEndian( Span( buffer, int offset, 4 ), v )
+        BinaryPrimitives.WriteUInt32LittleEndian( Span( buffer, int32 offset, 4 ), v )
 
     /// <summary>
     ///  Write a uint32 value to byte array in big-endian format.
@@ -436,7 +436,7 @@ type GlbFunc() =
     ///  The uint32 value to be written.
     /// </param>
     static member WriteUInt32BE( buffer : byte[] ) ( offset : uint32 ) ( v : uint32 ) : unit =
-        BinaryPrimitives.WriteUInt32BigEndian( Span( buffer, int offset, 4 ), v )
+        BinaryPrimitives.WriteUInt32BigEndian( Span( buffer, int32 offset, 4 ), v )
 
     /// <summary>
     ///  Write a uint16 value to byte array in little-endian format.
@@ -451,7 +451,7 @@ type GlbFunc() =
     ///  The uint16 value to be written.
     /// </param>
     static member WriteUInt16LE( buffer : byte[] ) ( offset : uint32 ) ( v : uint16 ) : unit =
-        BinaryPrimitives.WriteUInt16LittleEndian( Span( buffer, int offset, 2 ), v )
+        BinaryPrimitives.WriteUInt16LittleEndian( Span( buffer, int32 offset, 2 ), v )
 
     /// <summary>
     ///  Write a uint64 value to byte array in little-endian format.
@@ -466,7 +466,7 @@ type GlbFunc() =
     ///  The uint64 value to be written.
     /// </param>
     static member WriteUInt64LE( buffer : byte[] ) ( offset : uint32 ) ( v : uint64 ) : unit =
-        BinaryPrimitives.WriteUInt64LittleEndian( Span( buffer, int offset, 8 ), v )
+        BinaryPrimitives.WriteUInt64LittleEndian( Span( buffer, int32 offset, 8 ), v )
 
     /// <summary>
     ///  Write a uint64 value to byte array in big-endian format.
@@ -481,7 +481,7 @@ type GlbFunc() =
     ///  The uint64 value to be written.
     /// </param>
     static member WriteUInt64BE( buffer : byte[] ) ( offset : uint32 ) ( v : uint64 ) : unit =
-        BinaryPrimitives.WriteUInt64BigEndian( Span( buffer, int offset, 8 ), v )
+        BinaryPrimitives.WriteUInt64BigEndian( Span( buffer, int32 offset, 8 ), v )
 
     /// <summary>
     ///  Verify the checksum of the header.
@@ -550,8 +550,8 @@ type GlbFunc() =
     ///  Loaded data.
     /// </returns>
     static member ReadBytes ( fs : FileStream ) ( offset : uint64 ) ( length : uint32 ) : byte[] =
-        let b = Array.zeroCreate<byte>( int length )
+        let b = Array.zeroCreate<byte>( int32 length )
         fs.Seek( int64 offset, SeekOrigin.Begin ) |> ignore
-        fs.ReadExactly( b, 0, int length )
+        fs.ReadExactly( b, 0, int32 length )
         b
 

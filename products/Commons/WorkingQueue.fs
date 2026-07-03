@@ -33,8 +33,8 @@ open System.Threading.Tasks.Dataflow
 /// Simple usage example.
 /// <code>
 /// <![CDATA[
-///  let wf( v : int ) = task { printfn "--%d--" v }
-///  let w = new WorkingTaskQueue<int>( wf )
+///  let wf( v : int32 ) = task { printfn "--%d--" v }
+///  let w = new WorkingTaskQueue<int32>( wf )
 ///  w.Enqueue( 0 ) // "--0--" is printed.
 /// ]]>
 /// </code>
@@ -42,13 +42,13 @@ open System.Threading.Tasks.Dataflow
 ///  If an exception is raised, process is terminated.
 /// <code>
 /// <![CDATA[
-///  let wf( v : int ) = task { raise <| Exception( "" ) }
-///  let w = new WorkingTaskQueue<int>( wf )
+///  let wf( v : int32 ) = task { raise <| Exception( "" ) }
+///  let w = new WorkingTaskQueue<int32>( wf )
 ///  w.Enqueue( 0 ) // When the task is executed, the process is killed.
 /// ]]>
 /// </code>
 /// </remarks>
-type WorkingTaskQueue<'T>( m_WorkFunc : ( 'T -> Task<unit> ), m_ConsCount : uint ) as this =
+type WorkingTaskQueue<'T>( m_WorkFunc : ( 'T -> Task<unit> ), m_ConsCount : uint32 ) as this =
 
     /// the task queue
     let m_SendRespQueue = new BufferBlock< 'T voption >()
@@ -125,7 +125,7 @@ type WorkingTaskQueue<'T>( m_WorkFunc : ( 'T -> Task<unit> ), m_ConsCount : uint
         ( m_SendRespQueue :> ITargetBlock< 'T voption > ).Post ValueNone |> ignore
 
     /// Get the number of tasks in the queue. Does not include running tasks.
-    member _.Count : int =
+    member _.Count : int32 =
         m_SendRespQueue.Count
 
     /// Get the number of tasks that are not running or are running.
@@ -149,7 +149,7 @@ type WorkingTaskQueue<'T>( m_WorkFunc : ( 'T -> Task<unit> ), m_ConsCount : uint
 ///  w.Enqueue ( fun () -> task { printfn "AAA" } ) // "AAA" printed
 /// </code>
 /// </remarks>
-type TaskQueue( m_ConsCount : uint ) =
+type TaskQueue( m_ConsCount : uint32 ) =
     inherit WorkingTaskQueue< unit -> Task<unit> >( ( fun ( w : ( unit -> Task<unit> ) ) -> w() ), m_ConsCount )
 
     /// <summary>
@@ -169,7 +169,7 @@ type TaskQueue( m_ConsCount : uint ) =
 /// <remarks>
 /// <code>
 /// <![CDATA[
-///  let q = new TaskQueueWithState<int>( 0 )
+///  let q = new TaskQueueWithState<int32>( 0 )
 ///  q.Enqueue( fun stat -> task {
 ///    printfn "%d" stat
 ///    return ( statu + 1 )
@@ -226,8 +226,8 @@ type TaskQueueWithState< 'A >( init : 'A ) =
 /// Simple usage example.
 /// <code>
 /// <![CDATA[
-///  let wf( v : int ) = printfn "--%d--" v
-///  let w = new WorkingLambdaQueue<int>( wf )
+///  let wf( v : int32 ) = printfn "--%d--" v
+///  let w = new WorkingLambdaQueue<int32>( wf )
 ///  w.Enqueue( 0 ) // "--0--" is printed.
 /// ]]>
 /// </code>
@@ -235,13 +235,13 @@ type TaskQueueWithState< 'A >( init : 'A ) =
 ///  If an exception is raised, process is terminated.
 /// <code>
 /// <![CDATA[
-///  let wf( v : int ) = raise( Exception( "" ) )
-///  let w = new WorkingLambdaQueue<int>( wf )
+///  let wf( v : int32 ) = raise( Exception( "" ) )
+///  let w = new WorkingLambdaQueue<int32>( wf )
 ///  w.Enqueue( 0 ) // When the task is executed, the process is killed.
 /// ]]>
 /// </code>
 /// </remarks>
-type WorkingLambdaQueue<'T>( m_WorkFunc : ( 'T -> unit ), m_ConsCount : uint ) as this =
+type WorkingLambdaQueue<'T>( m_WorkFunc : ( 'T -> unit ), m_ConsCount : uint32 ) as this =
 
     /// the task queue
     let m_SendRespQueue = new BufferBlock< 'T voption >()
@@ -318,7 +318,7 @@ type WorkingLambdaQueue<'T>( m_WorkFunc : ( 'T -> unit ), m_ConsCount : uint ) a
         ( m_SendRespQueue :> ITargetBlock< 'T voption > ).Post ValueNone |> ignore
 
     /// Get the number of tasks in the queue. Does not include running tasks.
-    member _.Count : int =
+    member _.Count : int32 =
         m_SendRespQueue.Count
 
     /// Get the number of tasks that are not running or are running.
@@ -341,7 +341,7 @@ type WorkingLambdaQueue<'T>( m_WorkFunc : ( 'T -> unit ), m_ConsCount : uint ) a
 ///  w.Enqueue ( fun () -> printfn "AAA" ) // "AAA" printed
 /// </code>
 /// </remarks>
-type LambdaQueue( m_ConsCount : uint ) =
+type LambdaQueue( m_ConsCount : uint32 ) =
     inherit WorkingLambdaQueue< unit -> unit >( ( fun ( w : ( unit -> unit ) ) -> w() ), m_ConsCount )
 
     /// <summary>

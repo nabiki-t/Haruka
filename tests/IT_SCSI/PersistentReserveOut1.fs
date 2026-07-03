@@ -682,7 +682,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
                     if s <> 0 then
                         s
                     else
-                        ( int i1.RelativeTargetPortIdentifier ) - ( int i2.RelativeTargetPortIdentifier )
+                        ( int32 i1.RelativeTargetPortIdentifier ) - ( int32 i2.RelativeTargetPortIdentifier )
                 )
             Assert.True(( fsd2.Length = 4 ))
             Assert.True(( fsd2.[0].ReservationKey = g_ResvKey1 ))
@@ -799,7 +799,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
                     if s <> 0 then
                         s
                     else
-                        ( int i1.RelativeTargetPortIdentifier ) - ( int i2.RelativeTargetPortIdentifier )
+                        ( int32 i1.RelativeTargetPortIdentifier ) - ( int32 i2.RelativeTargetPortIdentifier )
                 )
             Assert.True(( fsd2.Length = 6 ))
             Assert.True(( fsd2.[0].ReservationKey = g_ResvKey1 ))
@@ -840,7 +840,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
                     if s <> 0 then
                         s
                     else
-                        ( int i1.RelativeTargetPortIdentifier ) - ( int i2.RelativeTargetPortIdentifier )
+                        ( int32 i1.RelativeTargetPortIdentifier ) - ( int32 i2.RelativeTargetPortIdentifier )
                 )
             Assert.True(( fsd3.Length = 3 ))
             Assert.True(( fsd3.[0].ReservationKey = g_ResvKey1 ))
@@ -994,7 +994,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
                     if s <> 0 then
                         s
                     else
-                        ( int i1.RelativeTargetPortIdentifier ) - ( int i2.RelativeTargetPortIdentifier )
+                        ( int32 i1.RelativeTargetPortIdentifier ) - ( int32 i2.RelativeTargetPortIdentifier )
                 )
             Assert.True(( fsd2.Length = 2 ))
             Assert.True(( fsd2.[0].ReservationKey = g_ResvKey1 ))
@@ -1039,7 +1039,7 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
                     if s <> 0 then
                         s
                     else
-                        ( int i1.RelativeTargetPortIdentifier ) - ( int i2.RelativeTargetPortIdentifier )
+                        ( int32 i1.RelativeTargetPortIdentifier ) - ( int32 i2.RelativeTargetPortIdentifier )
                 )
             Assert.True(( fsd2.Length = 2 ))
             Assert.True(( fsd2.[0].ReservationKey = g_ResvKey1 ))

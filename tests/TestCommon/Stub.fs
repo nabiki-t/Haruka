@@ -391,7 +391,7 @@ type public CProtocolService_Stub() =
     let mutable f_NoticeSessionRecovery : ( string -> unit ) option = None
     let mutable f_GetSessionParameter : ( unit -> IscsiNegoParamSW ) option = None
     let mutable f_GetLUNs : ( unit -> LUN_T[] ) option = None
-    let mutable f_GetTaskQueueUsage : ( unit -> int ) option = None
+    let mutable f_GetTaskQueueUsage : ( unit -> int32 ) option = None
 
     member val dummy : obj = box () with get, set
     member _.p_Terminate with set v = f_Terminate <- Some( v )
@@ -450,7 +450,7 @@ type public CProtocolService_Stub() =
             f_GetSessionParameter.Value ()
         override _.GetLUNs() : LUN_T[] =
             f_GetLUNs.Value ()
-        override _.GetTaskQueueUsage() : int =
+        override _.GetTaskQueueUsage() : int32 =
             f_GetTaskQueueUsage.Value ()
 
 /// <summary>
@@ -473,7 +473,7 @@ type public CLU_Stub() =
     let mutable f_ACAStatus : ( unit -> struct( ITNexus * ScsiCmdStatCd * SenseKeyCd * ASCCd * bool ) voption ) option = None
     let mutable f_TaskDescStrings : ( unit -> struct ( string * string )[] ) option = None
     let mutable f_GetMedia : ( unit -> IMedia ) option = None
-    let mutable f_GetTaskQueueUsage : ( TSIH_T -> int ) option = None
+    let mutable f_GetTaskQueueUsage : ( TSIH_T -> int32 ) option = None
 
     member val dummy : obj = box () with get, set
     member _.p_Terminate with set v = f_Terminate <- Some( v )
@@ -524,7 +524,7 @@ type public CLU_Stub() =
             f_TaskDescStrings.Value ()
         override _.GetMedia() =
             f_GetMedia.Value()
-        override _.GetTaskQueueUsage ( tsih : TSIH_T ) : int =
+        override _.GetTaskQueueUsage ( tsih : TSIH_T ) : int32 =
             f_GetTaskQueueUsage.Value tsih
 
 /// <summary>
@@ -536,8 +536,8 @@ type public CMedia_Stub() =
     let mutable f_Closing : ( unit -> unit ) option = None
     let mutable f_TestUnitReady : ( ITT_T -> CommandSourceInfo -> ASCCd voption ) option = None
     let mutable f_ReadCapacity : ( ITT_T -> CommandSourceInfo -> uint64 ) option = None
-    let mutable f_Read : ( ITT_T -> CommandSourceInfo -> BLKCNT64_T -> ArraySegment<byte> -> Task<int> ) option = None
-    let mutable f_Write : ( ITT_T -> CommandSourceInfo -> BLKCNT64_T -> uint64 -> ArraySegment<byte> -> Task<int> ) option = None
+    let mutable f_Read : ( ITT_T -> CommandSourceInfo -> BLKCNT64_T -> ArraySegment<byte> -> Task<int32> ) option = None
+    let mutable f_Write : ( ITT_T -> CommandSourceInfo -> BLKCNT64_T -> uint64 -> ArraySegment<byte> -> Task<int32> ) option = None
     let mutable f_Format : ( ITT_T -> CommandSourceInfo -> Task<unit> ) option = None
     let mutable f_Terminate : ( unit -> unit ) option = None
     let mutable f_NotifyLUReset : ( ITT_T voption -> CommandSourceInfo voption -> unit ) option = None
@@ -592,7 +592,7 @@ type public CMedia_Stub() =
                 ( source : CommandSourceInfo )
                 ( argLBA : BLKCNT64_T )
                 ( buf : ArraySegment<byte> ) :
-                Task<int> =
+                Task<int32> =
             f_Read.Value initiatorTaskTag source argLBA buf
         override _.Write
                 ( initiatorTaskTag : ITT_T )
@@ -600,7 +600,7 @@ type public CMedia_Stub() =
                 ( argLBA : BLKCNT64_T )
                 ( offset : uint64 ) 
                 ( data : ArraySegment<byte> ) :
-                Task<int> =
+                Task<int32> =
             f_Write.Value initiatorTaskTag source argLBA offset data
         override _.Format( initiatorTaskTag : ITT_T ) ( source : CommandSourceInfo ) : Task<unit> =
             f_Format.Value initiatorTaskTag source
@@ -886,7 +886,7 @@ type public CBlockDeviceTask_Stub() =
     let mutable f_GetSource : ( unit -> CommandSourceInfo ) option = None
     let mutable f_GetInitiatorTaskTag : ( unit -> ITT_T ) option = None
     let mutable f_GetSCSICommand : ( unit -> SCSICommandPDU ) option = None
-    let mutable f_GetReceivedDataLength : ( unit -> uint ) option = None
+    let mutable f_GetReceivedDataLength : ( unit -> uint32 ) option = None
     let mutable f_GetCDB : ( unit -> ICDB voption ) option = None
     let mutable f_Execute : ( unit -> struct ( ( unit -> Task<unit> ) * ( TaskSet -> TaskSet ) ) ) option = None
     let mutable f_GetDescString : ( unit -> string ) option = None
@@ -912,7 +912,7 @@ type public CBlockDeviceTask_Stub() =
         override _.Source : CommandSourceInfo = f_GetSource.Value()
         override _.InitiatorTaskTag : ITT_T = f_GetInitiatorTaskTag.Value()
         override _.SCSICommand : SCSICommandPDU = f_GetSCSICommand.Value()
-        override _.ReceivedDataLength : uint = f_GetReceivedDataLength.Value()
+        override _.ReceivedDataLength : uint32 = f_GetReceivedDataLength.Value()
         override _.CDB : ICDB voption = f_GetCDB.Value()
         override _.Execute() : struct ( ( unit -> Task<unit> ) * ( TaskSet -> TaskSet ) ) = f_Execute.Value()
         override _.DescString : string =

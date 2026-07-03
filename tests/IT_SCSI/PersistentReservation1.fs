@@ -377,7 +377,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
 
     static member Write6 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
         task {
-            let senddata = PooledBuffer.Rent ( m_MediaBlockSize |> Blocksize.toUInt32 |> int )
+            let senddata = PooledBuffer.Rent ( m_MediaBlockSize |> Blocksize.toUInt32 |> int32 )
             let! itt_msense = r.Send_Write6 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize senddata NACA.T
             let! resp_cmd = r.WaitSCSIResponse itt_msense
             resp_cmd.ResData.Return()
@@ -386,7 +386,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
 
     static member Write10 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
         task {
-            let senddata = PooledBuffer.Rent ( m_MediaBlockSize |> Blocksize.toUInt32 |> int )
+            let senddata = PooledBuffer.Rent ( m_MediaBlockSize |> Blocksize.toUInt32 |> int32 )
             let! itt_msense = r.Send_Write10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize senddata NACA.T
             let! resp_cmd = r.WaitSCSIResponse itt_msense
             resp_cmd.ResData.Return()
@@ -395,7 +395,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
 
     static member Write12 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
         task {
-            let senddata = PooledBuffer.Rent ( m_MediaBlockSize |> Blocksize.toUInt32 |> int )
+            let senddata = PooledBuffer.Rent ( m_MediaBlockSize |> Blocksize.toUInt32 |> int32 )
             let! itt_msense = r.Send_Write12 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize senddata NACA.T
             let! resp_cmd = r.WaitSCSIResponse itt_msense
             resp_cmd.ResData.Return()
@@ -404,7 +404,7 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
 
     static member Write16 ( r : SCSI_Initiator ) ( lun : LUN_T ) ( ex : ScsiCmdStatCd ) : Task<unit> =
         task {
-            let senddata = PooledBuffer.Rent ( m_MediaBlockSize |> Blocksize.toUInt32 |> int )
+            let senddata = PooledBuffer.Rent ( m_MediaBlockSize |> Blocksize.toUInt32 |> int32 )
             let! itt_msense = r.Send_Write16 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero64 m_MediaBlockSize senddata NACA.T
             let! resp_cmd = r.WaitSCSIResponse itt_msense
             resp_cmd.ResData.Return()

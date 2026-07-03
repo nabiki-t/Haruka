@@ -540,10 +540,10 @@ type Session
                                 StatSN = statsn_me.zero;
                                 ExpCmdSN = cmdsn_me.zero;
                                 MaxCmdSN = cmdsn_me.zero;
-                                DataSN = datasn_me.fromPrim( uint cnt );
+                                DataSN = datasn_me.fromPrim( uint32 cnt );
                                 BufferOffset = dpos;
                                 ResidualCount = 0u;
-                                DataSegment = argSendDataBytes.GetArraySegment ( int dpos ) ( int dlen )
+                                DataSegment = argSendDataBytes.GetArraySegment ( int32 dpos ) ( int32 dlen )
                                 ResponseFence = ResponseFenceNeedsFlag.Immediately;
                             } :> ILogicalPDU
                         )
@@ -624,7 +624,7 @@ type Session
                     SenseLength = uint16 senseData.Count;
                     SenseData = 
                         if senseData.Count > 0 && mrdsl_I - 2u >= realSendDataLength && argRespCode = iScsiSvcRespCd.COMMAND_COMPLETE then
-                            argSendDataBytes.GetArraySegment 0 ( int realSendDataLength )
+                            argSendDataBytes.GetArraySegment 0 ( int32 realSendDataLength )
                         else
                             ArraySegment.Empty;
                     ResponseData = ArraySegment.Empty; // The response data always uses a SCSI Data-In PDU.
@@ -810,7 +810,7 @@ type Session
         let struct( succeed : bool, logid : LogID, msgfunc : ( GenLogMsg -> string ) ) = 
             m_CIDs.Update( fun oldVal ->
                 let wCurCidCnt = oldVal.Count
-                if wCurCidCnt >= (int)maxCons then
+                if wCurCidCnt >= (int32)maxCons then
                     let mf = fun ( g : GenLogMsg ) -> g.Gen2( loginfo, maxCons, wCurCidCnt )
                     struct( oldVal, struct( false, LogID.E_TOO_MANY_CONNECTIONS, mf ) )
                 elif oldVal.ContainsKey newCID then
@@ -947,7 +947,7 @@ type Session
                 wTaskList, wwtl2 
 
             let nonImmidiateTaskIdx =
-                let wvidx = List<int>( nextWaitTaskList2.Length )
+                let wvidx = List<int32>( nextWaitTaskList2.Length )
                 nextWaitTaskList2
                 |> Array.iteri ( fun idx itr ->
                     if not( ValueOption.defaultValue true itr.Value.Immidiate ) then
@@ -999,7 +999,7 @@ type Session
                     nonImmidiateTaskIdx
                 else
                     // The referenced array has been updated and needs to be recreated.
-                    let wvidx = List<int>( nextWaitTaskList3.Length )
+                    let wvidx = List<int32>( nextWaitTaskList3.Length )
                     nextWaitTaskList3
                     |> Array.iteri ( fun idx itr ->
                         if not( ValueOption.defaultValue true itr.Value.Immidiate ) then
@@ -1594,7 +1594,7 @@ type Session
         ( conns : OptimisticLock< ImmutableDictionary< CID_T, CIDInfo > > )
         ( sess : ISession )
         ( tick : ( unit -> int64 ) )
-        ( interval : int ) : Task<unit> =
+        ( interval : int32 ) : Task<unit> =
 
         // Continue sending ping requests on connections that have an unacknowledged status.
         let loop ( nextIdx : int64 ) : Task< struct( bool * int64 ) > =

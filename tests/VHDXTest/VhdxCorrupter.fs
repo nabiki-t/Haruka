@@ -80,7 +80,7 @@ type VhdxCorrupter() =
             let a = descNum * 32u + 64u
             ( ( a + 4095u ) / 4096u ) * 4096u
         let entryLength = descSecLen + ( descNum * 4096u )   // Bytes length of the log entry.
-        let logEntry = Array.zeroCreate<byte> ( int entryLength )
+        let logEntry = Array.zeroCreate<byte> ( int32 entryLength )
 
         printfn "=== CreateLogEntry ==="
         printfn "Number of descriptor : %d" descNum
@@ -113,9 +113,9 @@ type VhdxCorrupter() =
         data
         |> List.iteri ( fun idx struct ( _, itr ) ->
             let pos = descSecLen + uint32( idx * 4096 )
-            Array.blit ( Encoding.UTF8.GetBytes "data" ) 0 logEntry ( int pos ) 4
+            Array.blit ( Encoding.UTF8.GetBytes "data" ) 0 logEntry ( int32 pos ) 4
             GlbFunc.WriteUInt32LE logEntry ( pos + 4u ) ( uint32 ( secnum >>> 32 ) )
-            Array.blit itr 8 logEntry ( int pos + 8 ) 4084
+            Array.blit itr 8 logEntry ( int32 pos + 8 ) 4084
             GlbFunc.WriteUInt32LE logEntry ( pos + 4092u ) ( uint32 secnum )
         )
 
@@ -150,7 +150,7 @@ type VhdxCorrupter() =
         let totalLen =
             ( dummyLogEntry |> List.sumBy ( fun itr -> itr.Length ) ) + rightLogEntry.Length
         let v = Array.zeroCreate<byte> totalLen
-        let rec loop ( idx : int ) ( pos : int ) : int =
+        let rec loop ( idx : int32 ) ( pos : int32 ) : int32 =
             if idx < dummyLogEntry.Length then
                 Array.blit dummyLogEntry.[idx] 0 v pos dummyLogEntry.[idx].Length
                 loop ( idx + 1 ) ( pos + dummyLogEntry.[idx].Length )
@@ -219,7 +219,7 @@ type VhdxCorrupter() =
         let logSecCnt = metadata.Header.LogLength / 4096u
         let randbuf = Array.zeroCreate<byte> 4096
         fs.Seek( int64 metadata.Header.LogOffset, SeekOrigin.Begin ) |> ignore
-        for i = 1 to int logSecCnt do
+        for i = 1 to int32 logSecCnt do
             Random.Shared.NextBytes randbuf
             fs.Write( randbuf )
         printfn "Log area random number writing"
@@ -256,7 +256,7 @@ type VhdxCorrupter() =
         ]
 
         // Determine the log writing location.
-        let logOutputPos = Random.Shared.Next ( int logSecCnt ) * 4096 |> uint32
+        let logOutputPos = Random.Shared.Next ( int32 logSecCnt ) * 4096 |> uint32
 
         // Generate four dummy log entries.
         let dummyLogEntry =

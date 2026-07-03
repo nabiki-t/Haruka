@@ -769,7 +769,7 @@ type IscsiTaskScsiCommand
         override _.GetExecuteTask () : struct( ( unit -> unit ) * IIscsiTask ) =
 
             // Create async procedure list for send R2T PSUs
-            let createProcListForSendR2T ( conn : IConnection ) ( maxOutstandR2T : int ) =
+            let createProcListForSendR2T ( conn : IConnection ) ( maxOutstandR2T : int32 ) =
                 let rec loop cont idx cnt =
                     if idx < m_R2TPDU.Length && cnt < maxOutstandR2T then
                         if m_R2TPDU.[idx].isOutstanding then

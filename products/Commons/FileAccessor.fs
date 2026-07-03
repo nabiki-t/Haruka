@@ -53,7 +53,7 @@ type FileAccessor ( m_FileName : string, m_Multiplicity : uint32, m_ReadOnly : b
                 FileAccess.Read
             else
                 FileAccess.ReadWrite
-        Array.init ( int m_Multiplicity ) ( fun _ -> factory m_FileName FileMode.Open access FileShare.ReadWrite )
+        Array.init ( int32 m_Multiplicity ) ( fun _ -> factory m_FileName FileMode.Open access FileShare.ReadWrite )
 
     /// Store currently unused streams
     let streamQueue =

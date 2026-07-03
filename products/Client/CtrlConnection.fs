@@ -89,7 +89,7 @@ type CtrlConnection(
     /// <returns>
     ///  CtrlConnection instance.
     /// </returns>
-    static member Connect ( messageTable : StringTable ) ( h : string ) ( p : int ) ( f : bool )  : Task<CtrlConnection> =
+    static member Connect ( messageTable : StringTable ) ( h : string ) ( p : int32 ) ( f : bool )  : Task<CtrlConnection> =
         task {
             let! con = Functions.ConnectToServer h p 1000 100 50
             let c1 = con.GetStream()
@@ -1661,7 +1661,7 @@ type CtrlConnection(
     /// <returns>
     ///  Registared traps.
     /// </returns>
-    abstract DebugMedia_GetCounterValue : tdid:TDID_T -> lun:LUN_T -> mediaid:MEDIAIDX_T -> counterno:int -> Task< int >
+    abstract DebugMedia_GetCounterValue : tdid:TDID_T -> lun:LUN_T -> mediaid:MEDIAIDX_T -> counterno:int32 -> Task< int32 >
     default this.DebugMedia_GetCounterValue tdid lun mediaid counterno =
         task {
             let reqData = MediaCtrlReq.U_Debug(

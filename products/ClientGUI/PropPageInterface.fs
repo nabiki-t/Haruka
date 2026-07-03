@@ -125,10 +125,10 @@ type IMainWindowIFForPP =
     abstract Logout : unit -> unit
 
     /// register logout event handler
-    abstract SubscribeLogoutEvent : e : ( unit -> unit ) -> int
+    abstract SubscribeLogoutEvent : e : ( unit -> unit ) -> int32
 
     /// unregister logout event handler
-    abstract UnsubscribeLogoutEvent : idx : int -> unit
+    abstract UnsubscribeLogoutEvent : idx : int32 -> unit
 
     /// <summary>
     ///  Set progress bar to enable or disable.

@@ -27,13 +27,13 @@ type [<NoComparison>]T_Test = {
 }
 
 and [<NoComparison>]T_R027_1 = 
-    | U_D1 of int
+    | U_D1 of int32
     | U_R027_2 of T_R027_2
-    | U_D2 of int
+    | U_D2 of int32
 
 and [<NoComparison>]T_R027_2 = 
-    | U_D1_1 of int
-    | U_D1_2 of int
+    | U_D1_1 of int32
+    | U_D1_2 of int32
 
 //=============================================================================
 // Class implementation
@@ -258,7 +258,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_Test_toString ( indent : int ) ( indentStep : int ) ( elem : T_Test ) ( elemName : string ) : seq<string> = 
+    static member private T_Test_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_Test ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -285,7 +285,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_R027_1_toString ( indent : int ) ( indentStep : int ) ( elem : T_R027_1 ) ( elemName : string ) : seq<string> = 
+    static member private T_R027_1_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_R027_1 ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {
@@ -318,7 +318,7 @@ type ReaderWriter() =
     /// <returns>
     ///  Array of the generated string.
     /// </returns>
-    static member private T_R027_2_toString ( indent : int ) ( indentStep : int ) ( elem : T_R027_2 ) ( elemName : string ) : seq<string> = 
+    static member private T_R027_2_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_R027_2 ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {

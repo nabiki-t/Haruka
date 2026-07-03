@@ -37,7 +37,7 @@ type ParseSenseData() =
                 ValueNone
 
     static member private ParseDescriptor ( sd : byte[] ) ( isCurrent : bool ) : SenseData voption =
-        if sd.Length < 8 && ( int sd.[7] ) + 8 > sd.Length then
+        if sd.Length < 8 && ( int32 sd.[7] ) + 8 > sd.Length then
             ValueNone
         else
             let senseKey = Enum.ToObject( typeof<SenseKeyCd>, sd.[1] ) :?> SenseKeyCd
@@ -50,12 +50,12 @@ type ParseSenseData() =
                 f : fieldReplaceableUnitSenseDataDesc voption,
                 v : vendorSpecificSenseDataDesc voption,
                 b : blockCommandSenseDataDesc voption,
-                pos : int
+                pos : int32
             ) =
 
                 if pos = sd.Length then
                     ValueSome ( i, c, s, f, v, b )
-                elif pos + 2 > sd.Length || pos + ( int sd.[pos+1] ) + 2 > sd.Length then
+                elif pos + 2 > sd.Length || pos + ( int32 sd.[pos+1] ) + 2 > sd.Length then
                     ValueNone
                 else
                     match sd.[pos] with
@@ -64,37 +64,37 @@ type ParseSenseData() =
                         | ValueNone ->
                             ValueNone
                         | ValueSome( x ) ->
-                            loop( ValueSome x, c, s, f, v, b, pos + ( int sd.[pos+1] ) + 2 )
+                            loop( ValueSome x, c, s, f, v, b, pos + ( int32 sd.[pos+1] ) + 2 )
                     | 1uy ->
                         match ParseSenseData.Parse_commandSpecificSenseDataDesc sd pos with
                         | ValueNone ->
                             ValueNone
                         | ValueSome( x ) ->
-                            loop( i, ValueSome x, s, f, v, b, pos + ( int sd.[pos+1] ) + 2 )
+                            loop( i, ValueSome x, s, f, v, b, pos + ( int32 sd.[pos+1] ) + 2 )
                     | 2uy ->
                         match ParseSenseData.Parse_senseKeySpecificSenseDataDesc sd pos senseKey with
                         | ValueNone ->
                             ValueNone
                         | ValueSome( x ) ->
-                            loop( i, c, ValueSome x, f, v, b, pos + ( int sd.[pos+1] ) + 2 )
+                            loop( i, c, ValueSome x, f, v, b, pos + ( int32 sd.[pos+1] ) + 2 )
                     | 3uy ->
                         match ParseSenseData.Parse_fieldReplaceableUnitSenseDataDesc sd pos with
                         | ValueNone ->
                             ValueNone
                         | ValueSome( x ) ->
-                            loop( i, c, s, ValueSome x, v, b, pos + ( int sd.[pos+1] ) + 2 )
+                            loop( i, c, s, ValueSome x, v, b, pos + ( int32 sd.[pos+1] ) + 2 )
                     | 5uy ->
                         match ParseSenseData.Parse_blockCommandSenseDataDesc sd pos with
                         | ValueNone ->
                             ValueNone
                         | ValueSome( x ) ->
-                            loop( i, c, s, f, v, ValueSome x, pos + ( int sd.[pos+1] ) + 2 )
+                            loop( i, c, s, f, v, ValueSome x, pos + ( int32 sd.[pos+1] ) + 2 )
                     | r when r >= 0x80uy && r <= 0xFFuy ->
                         match ParseSenseData.Parse_vendorSpecificSenseDataDesc sd pos with
                         | ValueNone ->
                             ValueNone
                         | ValueSome( x ) ->
-                            loop( i, c, s, f, ValueSome x, b, pos + ( int sd.[pos+1] ) + 2 )
+                            loop( i, c, s, f, ValueSome x, b, pos + ( int32 sd.[pos+1] ) + 2 )
                     | _ ->
                         ValueNone
             let r = loop( ValueNone, ValueNone, ValueNone, ValueNone, ValueNone, ValueNone, 8 )
@@ -105,7 +105,7 @@ type ParseSenseData() =
                 SenseData( isCurrent, senseKey, additionalSenseCode, i, c, s, f, v, b ) |> ValueSome
 
 
-    static member private Parse_informationSenseDataDesc ( sd : byte[] ) ( pos : int ) : informationSenseDataDesc voption =
+    static member private Parse_informationSenseDataDesc ( sd : byte[] ) ( pos : int32 ) : informationSenseDataDesc voption =
         if pos + 12 > sd.Length || sd.[ pos + 0 ] <> 0x00uy || sd.[ pos + 1 ] <> 0x0Auy || sd.[ pos + 2 ] <> 0x80uy then
             ValueNone
         else
@@ -114,7 +114,7 @@ type ParseSenseData() =
             }
             |> ValueSome
 
-    static member private Parse_commandSpecificSenseDataDesc ( sd : byte[] ) ( pos : int ) : commandSpecificSenseDataDesc voption =
+    static member private Parse_commandSpecificSenseDataDesc ( sd : byte[] ) ( pos : int32 ) : commandSpecificSenseDataDesc voption =
         if pos + 12 > sd.Length || sd.[ pos + 0 ] <> 0x01uy || sd.[ pos + 1 ] <> 0x0Auy then
             ValueNone
         else
@@ -123,7 +123,7 @@ type ParseSenseData() =
             }
             |> ValueSome
 
-    static member private Parse_senseKeySpecificSenseDataDesc ( sd : byte[] ) ( pos : int ) ( senseKey : SenseKeyCd ) : senseKeySpecificSenseDataDesc voption =
+    static member private Parse_senseKeySpecificSenseDataDesc ( sd : byte[] ) ( pos : int32 ) ( senseKey : SenseKeyCd ) : senseKeySpecificSenseDataDesc voption =
         if pos + 8 > sd.Length || sd.[ pos + 0 ] <> 0x02uy || sd.[ pos + 1 ] <> 0x06uy || sd.[ pos + 4 ] &&& 0x80uy <> 0x80uy then
             ValueNone
         else
@@ -156,7 +156,7 @@ type ParseSenseData() =
             | _ ->
                 ValueNone
 
-    static member private Parse_fieldReplaceableUnitSenseDataDesc ( sd : byte[] ) ( pos : int ) : fieldReplaceableUnitSenseDataDesc voption =
+    static member private Parse_fieldReplaceableUnitSenseDataDesc ( sd : byte[] ) ( pos : int32 ) : fieldReplaceableUnitSenseDataDesc voption =
         if pos + 4 > sd.Length || sd.[ pos + 0 ] <> 0x03uy || sd.[ pos + 1 ] <> 0x02uy then
             ValueNone
         else
@@ -165,7 +165,7 @@ type ParseSenseData() =
             }
             |> ValueSome
 
-    static member private Parse_blockCommandSenseDataDesc ( sd : byte[] ) ( pos : int ) : blockCommandSenseDataDesc voption =
+    static member private Parse_blockCommandSenseDataDesc ( sd : byte[] ) ( pos : int32 ) : blockCommandSenseDataDesc voption =
         if pos + 4 > sd.Length || sd.[ pos + 0 ] <> 0x05uy || sd.[ pos + 1 ] <> 0x02uy then
             ValueNone
         else
@@ -174,18 +174,18 @@ type ParseSenseData() =
             }
             |> ValueSome
 
-    static member private Parse_vendorSpecificSenseDataDesc ( sd : byte[] ) ( pos : int ) : vendorSpecificSenseDataDesc voption =
-        if pos + 2 > sd.Length || sd.[ pos ] &&& 0x80uy <> 0x80uy || pos + ( int sd.[ pos + 1 ] ) + 2 > sd.Length then
+    static member private Parse_vendorSpecificSenseDataDesc ( sd : byte[] ) ( pos : int32 ) : vendorSpecificSenseDataDesc voption =
+        if pos + 2 > sd.Length || sd.[ pos ] &&& 0x80uy <> 0x80uy || pos + ( int32 sd.[ pos + 1 ] ) + 2 > sd.Length then
             ValueNone
         else
             {
                 DescriptorType = Enum.ToObject( typeof<VendorSpecificSenseDataDescType>, sd.[ pos ] ) :?> VendorSpecificSenseDataDescType;
-                VendorSpecific = sd.[ pos + 2 .. pos + ( int sd.[ pos + 1 ] ) + 1 ];
+                VendorSpecific = sd.[ pos + 2 .. pos + ( int32 sd.[ pos + 1 ] ) + 1 ];
             }
             |> ValueSome
 
     static member private ParseFixed ( sd : byte[] ) ( isCurrent : bool ) : SenseData voption =
-        if sd.Length < 18 || ( int sd.[7] ) + 8 > sd.Length then
+        if sd.Length < 18 || ( int32 sd.[7] ) + 8 > sd.Length then
             ValueNone
         else
             let senseKey = Enum.ToObject( typeof<SenseKeyCd>, sd.[2] &&& 0x0Fuy ) :?> SenseKeyCd

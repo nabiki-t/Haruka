@@ -155,7 +155,7 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
 
     let FillData ( r : SCSI_Initiator ) ( lun : LUN_T ) : Task< PooledBuffer > =
         task {
-            let buf = PooledBuffer.Rent( int m_MediaSize )
+            let buf = PooledBuffer.Rent( int32 m_MediaSize )
             Random.Shared.NextBytes buf.ArraySegment
             let! itt = r.Send_Write10 TaskATTRCd.SIMPLE_TASK lun blkcnt_me.zero32 m_MediaBlockSize buf NACA.T
             let! _ = r.WaitSCSIResponseGoodStatus itt
@@ -193,8 +193,8 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             Assert.True(( readData.uLength = exBytesLen ))
             
             let exStartBytesPos = Blocksize.toUInt32 m_MediaBlockSize * exStartBlkPos
-            for i = 0 to int exBytesLen - 1 do
-                Assert.True(( filledData.[ int exStartBytesPos + i ] = readData.Array.[ i ] ))
+            for i = 0 to int32 exBytesLen - 1 do
+                Assert.True(( filledData.[ int32 exStartBytesPos + i ] = readData.Array.[ i ] ))
             
             readData.Return()
             do! r1.Close()
@@ -248,8 +248,8 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             Assert.True(( readData.uLength = exBytesLen ))
             
             let exStartBytesPos = Blocksize.toUInt32 m_MediaBlockSize * exStartBlkPos
-            for i = 0 to int exBytesLen - 1 do
-                Assert.True(( filledData.[ int exStartBytesPos + i ] = readData.Array.[ i ] ))
+            for i = 0 to int32 exBytesLen - 1 do
+                Assert.True(( filledData.[ int32 exStartBytesPos + i ] = readData.Array.[ i ] ))
             
             readData.Return()
             do! r1.Close()
@@ -323,8 +323,8 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             Assert.True(( readData.uLength = exBytesLen ))
             
             let exStartBytesPos = Blocksize.toUInt32 m_MediaBlockSize * exStartBlkPos
-            for i = 0 to int exBytesLen - 1 do
-                Assert.True(( filledData.[ int exStartBytesPos + i ] = readData.Array.[ i ] ))
+            for i = 0 to int32 exBytesLen - 1 do
+                Assert.True(( filledData.[ int32 exStartBytesPos + i ] = readData.Array.[ i ] ))
             
             readData.Return()
             do! r1.Close()
@@ -399,8 +399,8 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             Assert.True(( readData.uLength = exBytesLen ))
             
             let exStartBytesPos = Blocksize.toUInt32 m_MediaBlockSize * exStartBlkPos
-            for i = 0 to int exBytesLen - 1 do
-                Assert.True(( filledData.[ int exStartBytesPos + i ] = readData.Array.[ i ] ))
+            for i = 0 to int32 exBytesLen - 1 do
+                Assert.True(( filledData.[ int32 exStartBytesPos + i ] = readData.Array.[ i ] ))
             
             readData.Return()
             do! r1.Close()
@@ -494,12 +494,12 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! filledData = FillData r1 g_LUN1
 
-            let blockSizeInt = int ( Blocksize.toUInt32 m_MediaBlockSize )
+            let blockSizeInt = int32 ( Blocksize.toUInt32 m_MediaBlockSize )
             let transByteCount =
                 if transLen = 0uy then
                     256 * blockSizeInt
                 else
-                    int transLen * blockSizeInt
+                    int32 transLen * blockSizeInt
             let buf =  PooledBuffer.Rent transByteCount
             Random.Shared.NextBytes buf.ArraySegment
 
@@ -509,7 +509,7 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! mediaData = ReadAllData r1 g_LUN1
             let expData = Array.zeroCreate filledData.Length
             Array.blit filledData.Array 0 expData 0 expData.Length
-            Array.blit buf.Array 0 expData ( int lba * blockSizeInt ) buf.Length
+            Array.blit buf.Array 0 expData ( int32 lba * blockSizeInt ) buf.Length
             
             for i = 0 to mediaData.Length - 1 do
                 Assert.True(( mediaData.Array.[ i ] = expData.[ i ] ))
@@ -535,12 +535,12 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
 
-            let blockSizeInt = int ( Blocksize.toUInt32 m_MediaBlockSize )
+            let blockSizeInt = int32 ( Blocksize.toUInt32 m_MediaBlockSize )
             let transByteCount =
                 if transLen = 0uy then
                     256 * blockSizeInt
                 else
-                    int transLen * blockSizeInt
+                    int32 transLen * blockSizeInt
             let buf =  PooledBuffer.Rent transByteCount
 
             let! itt = r1.Send_Write6 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 lba ) m_MediaBlockSize buf NACA.T
@@ -556,12 +556,12 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
     [<Theory>]
     [<InlineData( 2, 1uy )>]
     [<InlineData( 1, 2uy )>]
-    member _.Write6_003 ( dlen : int ) ( cdblen : byte ) =
+    member _.Write6_003 ( dlen : int32 ) ( cdblen : byte ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! filledData = FillData r1 g_LUN1
 
-            let blockSizeInt = int ( Blocksize.toUInt32 m_MediaBlockSize )
+            let blockSizeInt = int32 ( Blocksize.toUInt32 m_MediaBlockSize )
             let transByteCount = dlen * blockSizeInt
             let buf =  PooledBuffer.Rent transByteCount
 
@@ -597,8 +597,8 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! filledData = FillData r1 g_LUN1
 
-            let blockSizeInt = int ( Blocksize.toUInt32 m_MediaBlockSize )
-            let transByteCount = int transLen * blockSizeInt
+            let blockSizeInt = int32 ( Blocksize.toUInt32 m_MediaBlockSize )
+            let transByteCount = int32 transLen * blockSizeInt
             let buf =  PooledBuffer.Rent transByteCount
             Random.Shared.NextBytes buf.ArraySegment
 
@@ -608,7 +608,7 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! mediaData = ReadAllData r1 g_LUN1
             let expData = Array.zeroCreate filledData.Length
             Array.blit filledData.Array 0 expData 0 expData.Length
-            Array.blit buf.Array 0 expData ( int lba * blockSizeInt ) buf.Length
+            Array.blit buf.Array 0 expData ( int32 lba * blockSizeInt ) buf.Length
             
             for i = 0 to mediaData.Length - 1 do
                 Assert.True(( mediaData.Array.[ i ] = expData.[ i ] ))
@@ -648,12 +648,12 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
     [<Theory>]
     [<InlineData( 2, 1us )>]
     [<InlineData( 1, 2us )>]
-    member _.Write10_003 ( dlen : int ) ( cdblen : uint16 ) =
+    member _.Write10_003 ( dlen : int32 ) ( cdblen : uint16 ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! filledData = FillData r1 g_LUN1
 
-            let blockSizeInt = int ( Blocksize.toUInt32 m_MediaBlockSize )
+            let blockSizeInt = int32 ( Blocksize.toUInt32 m_MediaBlockSize )
             let transByteCount = dlen * blockSizeInt
             let buf =  PooledBuffer.Rent transByteCount
 
@@ -709,8 +709,8 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! filledData = FillData r1 g_LUN1
 
-            let blockSizeInt = int ( Blocksize.toUInt32 m_MediaBlockSize )
-            let transByteCount = int transLen * blockSizeInt
+            let blockSizeInt = int32 ( Blocksize.toUInt32 m_MediaBlockSize )
+            let transByteCount = int32 transLen * blockSizeInt
             let buf =  PooledBuffer.Rent transByteCount
             Random.Shared.NextBytes buf.ArraySegment
 
@@ -720,7 +720,7 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! mediaData = ReadAllData r1 g_LUN1
             let expData = Array.zeroCreate filledData.Length
             Array.blit filledData.Array 0 expData 0 expData.Length
-            Array.blit buf.Array 0 expData ( int lba * blockSizeInt ) buf.Length
+            Array.blit buf.Array 0 expData ( int32 lba * blockSizeInt ) buf.Length
             
             for i = 0 to mediaData.Length - 1 do
                 Assert.True(( mediaData.Array.[ i ] = expData.[ i ] ))
@@ -760,12 +760,12 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
     [<Theory>]
     [<InlineData( 2, 1u )>]
     [<InlineData( 1, 2u )>]
-    member _.Write12_003 ( dlen : int ) ( cdblen : uint32 ) =
+    member _.Write12_003 ( dlen : int32 ) ( cdblen : uint32 ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! filledData = FillData r1 g_LUN1
 
-            let blockSizeInt = int ( Blocksize.toUInt32 m_MediaBlockSize )
+            let blockSizeInt = int32 ( Blocksize.toUInt32 m_MediaBlockSize )
             let transByteCount = dlen * blockSizeInt
             let buf =  PooledBuffer.Rent transByteCount
 
@@ -821,8 +821,8 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! filledData = FillData r1 g_LUN1
 
-            let blockSizeInt = int ( Blocksize.toUInt32 m_MediaBlockSize )
-            let transByteCount = int transLen * blockSizeInt
+            let blockSizeInt = int32 ( Blocksize.toUInt32 m_MediaBlockSize )
+            let transByteCount = int32 transLen * blockSizeInt
             let buf =  PooledBuffer.Rent transByteCount
             Random.Shared.NextBytes buf.ArraySegment
 
@@ -832,7 +832,7 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! mediaData = ReadAllData r1 g_LUN1
             let expData = Array.zeroCreate filledData.Length
             Array.blit filledData.Array 0 expData 0 expData.Length
-            Array.blit buf.Array 0 expData ( int lba * blockSizeInt ) buf.Length
+            Array.blit buf.Array 0 expData ( int32 lba * blockSizeInt ) buf.Length
             
             for i = 0 to mediaData.Length - 1 do
                 Assert.True(( mediaData.Array.[ i ] = expData.[ i ] ))
@@ -872,12 +872,12 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
     [<Theory>]
     [<InlineData( 2, 1u )>]
     [<InlineData( 1, 2u )>]
-    member _.Write16_003 ( dlen : int ) ( cdblen : uint32 ) =
+    member _.Write16_003 ( dlen : int32 ) ( cdblen : uint32 ) =
         task {
             let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
             let! filledData = FillData r1 g_LUN1
 
-            let blockSizeInt = int ( Blocksize.toUInt32 m_MediaBlockSize )
+            let blockSizeInt = int32 ( Blocksize.toUInt32 m_MediaBlockSize )
             let transByteCount = dlen * blockSizeInt
             let buf =  PooledBuffer.Rent transByteCount
 

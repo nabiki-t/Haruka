@@ -117,7 +117,7 @@ type NetworkPortalPropPage(
         m_ConfigurationExpander.Expanded.AddHandler ( fun _ _ -> UserOpeStat.SetExpanded "NetworkPortalPropPage" m_ConfigurationExpander.Name true )
         m_ConfigurationExpander.Collapsed.AddHandler ( fun _ _ -> UserOpeStat.SetExpanded "NetworkPortalPropPage" m_ConfigurationExpander.Name false )
 
-        m_Timer.Interval <- new TimeSpan( 0, 0, int Constants.RECOUNTER_SPAN_SEC )
+        m_Timer.Interval <- new TimeSpan( 0, 0, int32 Constants.RECOUNTER_SPAN_SEC )
         m_Timer.Start()
 
         // Set default value
@@ -415,7 +415,7 @@ type NetworkPortalPropPage(
 
         conn
         |> Seq.sortWith ( fun c d -> concnt_me.Compare c.ConnectionID c.ConnectionCount d.ConnectionID d.ConnectionCount )
-        |> Seq.fold ( fun ( idx : int ) ( itr : TargetDeviceCtrlRes.T_Connection ) ->
+        |> Seq.fold ( fun ( idx : int32 ) ( itr : TargetDeviceCtrlRes.T_Connection ) ->
 
             // Normalize connection usage data
             let connReceiveUsage =
@@ -446,13 +446,13 @@ type NetworkPortalPropPage(
                     1
                 else
                     let ctvi = m_ConnectionList.Items.Item( idx ) :?> ListViewItem
-                    let _, tviCID, tviConCnt = ctvi.Tag :?> ( RoutedEventHandler * uint16 * int )
+                    let _, tviCID, tviConCnt = ctvi.Tag :?> ( RoutedEventHandler * uint16 * int32 )
                     concnt_me.Compare ( cid_me.fromPrim tviCID ) ( concnt_me.fromPrim tviConCnt ) itr.ConnectionID itr.ConnectionCount
 
             if c = 0 then
                 // update connection tree node
                 let ctvi = m_ConnectionList.Items.Item( idx ) :?> ListViewItem
-                let e, _, _ = ctvi.Tag :?> ( RoutedEventHandler * uint16 * int )
+                let e, _, _ = ctvi.Tag :?> ( RoutedEventHandler * uint16 * int32 )
                 ctvi.Selected.RemoveHandler e
                 ctvi.Tag <- ( conHandler, itr.ConnectionID, itr.ConnectionCount )
                 ctvi.Selected.AddHandler conHandler

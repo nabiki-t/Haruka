@@ -188,7 +188,7 @@ type PooledBuffer_Test() =
     [<InlineData( 256, 257, 256 )>]
     [<InlineData( 0, 0, 0)>]
     [<InlineData( 0, 1, 0)>]
-    member _.Truncate_001 ( blen : int, req : int, res : int ) =
+    member _.Truncate_001 ( blen : int32, req : int32, res : int32 ) =
         let p1 = PooledBuffer.Rent blen
         Assert.True(( p1.Length = blen ))
         p1.Truncate req

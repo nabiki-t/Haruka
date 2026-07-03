@@ -164,7 +164,7 @@ type Command04( fx : Command04_Fixture ) =
     }
 
 // Check session counts
-    let CheckSessionCount ( expcnt : int ) ( expPrompt : string ) =
+    let CheckSessionCount ( expcnt : int32 ) ( expPrompt : string ) =
         let mutable loopcnt = 0
         while loopcnt < 10 do
             Thread.Sleep 10

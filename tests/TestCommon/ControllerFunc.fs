@@ -33,7 +33,7 @@ type ControllerFunc() =
     /// <param name="controllPortNo">
     ///  The TCP port number used for client connections to the controller.
     /// </param>
-    static member InitializeConfigDir ( workPath : string ) ( controllPortNo : int ) : unit =
+    static member InitializeConfigDir ( workPath : string ) ( controllPortNo : int32 ) : unit =
         let curdir = Path.GetDirectoryName workPath
 
         // Initialize Haruka configuration directory
@@ -126,7 +126,7 @@ type ControllerFunc() =
         ctrlProc2
 
     /// Start Haruka controller and client process.
-    static member StartHarukaController( workPath : string ) ( controllPortNo : int ) : ( Process * ClientProc ) =
+    static member StartHarukaController( workPath : string ) ( controllPortNo : int32 ) : ( Process * ClientProc ) =
 
         // Initialize Haruka configuration directory
         ControllerFunc.InitializeConfigDir workPath controllPortNo

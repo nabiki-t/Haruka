@@ -145,7 +145,7 @@ type TargetPropPage(
         m_ReceiveBytesHeightTextBlock.Text <- ""
         m_SendBytesHeightTextBlock.Text <- ""
 
-        m_Timer.Interval <- new TimeSpan( 0, 0, int Constants.RECOUNTER_SPAN_SEC )
+        m_Timer.Interval <- new TimeSpan( 0, 0, int32 Constants.RECOUNTER_SPAN_SEC )
         m_Timer.Start()
 
         // Set default value

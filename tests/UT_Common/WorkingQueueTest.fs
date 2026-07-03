@@ -30,13 +30,13 @@ type WorkingQueue_Test() =
     member _.Enqueue_001() =
         let mutable cnt = 0
         use b = new Barrier( 2 )
-        let testfunc ( a : int ) =
+        let testfunc ( a : int32 ) =
             task {
                 Assert.True(( a = 99 ))
                 cnt <- cnt + 1
                 b.SignalAndWait()
             }
-        let wq = new WorkingTaskQueue< int >( testfunc )
+        let wq = new WorkingTaskQueue< int32 >( testfunc )
         wq.Enqueue( 99 )
         b.SignalAndWait()
         Assert.True(( cnt = 1 ))
@@ -46,7 +46,7 @@ type WorkingQueue_Test() =
     member _.Enqueue_002() =
         let mutable cnt = 0
         use b = new Barrier( 2 )
-        let testfunc ( a : int ) =
+        let testfunc ( a : int32 ) =
             task {
                 cnt <- cnt + 1
                 if cnt = 1 then
@@ -55,7 +55,7 @@ type WorkingQueue_Test() =
                     Assert.True(( a = 99 ))
                     b.SignalAndWait()
             }
-        let wq = new WorkingTaskQueue< int >( testfunc )
+        let wq = new WorkingTaskQueue< int32 >( testfunc )
         wq.Enqueue( 98 )
         wq.Enqueue( 99 )
         b.SignalAndWait()
@@ -66,12 +66,12 @@ type WorkingQueue_Test() =
     member _.Enqueue_003() =
         let mutable cnt = 0
         use b = new Barrier( 2 )
-        let testfunc ( a : int ) =
+        let testfunc ( a : int32 ) =
             task {
                 cnt <- cnt + 1
                 b.SignalAndWait()
             }
-        let wq = new WorkingTaskQueue< int >( testfunc )
+        let wq = new WorkingTaskQueue< int32 >( testfunc )
         wq.Enqueue( 99 )
         b.SignalAndWait()
         wq.Stop()
@@ -85,13 +85,13 @@ type WorkingQueue_Test() =
     member _.Enqueue_004() =
         let mutable cnt = 0
         use b = new Barrier( 2 )
-        let testfunc ( a : int ) =
+        let testfunc ( a : int32 ) =
             task {
                 cnt <- cnt + 1
                 b.SignalAndWait()
                 b.SignalAndWait()
             }
-        let wq = new WorkingTaskQueue< int >( testfunc )
+        let wq = new WorkingTaskQueue< int32 >( testfunc )
 
         wq.Enqueue( 99 )
         b.SignalAndWait()
@@ -122,15 +122,15 @@ type WorkingQueue_Test() =
 
     [<Fact>]
     member _.Enqueue_005() =
-        let cnt = Array.zeroCreate< int >( 4 )
+        let cnt = Array.zeroCreate< int32 >( 4 )
         let b = [| for i = 1 to 4 do new Barrier( 2 ) |]
 
-        let testfunc ( a : int ) =
+        let testfunc ( a : int32 ) =
             task {
                 cnt.[ a ] <- cnt.[ a ] + 1
                 b.[a].SignalAndWait()
             }
-        let wq = new WorkingTaskQueue< int >( testfunc )
+        let wq = new WorkingTaskQueue< int32 >( testfunc )
 
         for i = 0 to 3 do
             wq.Enqueue( i )
@@ -157,7 +157,7 @@ type WorkingQueue_Test() =
 
     [<Fact>]
     member _.TaskQueue_002() =
-        let cnt = Array.zeroCreate< int >( 4 )
+        let cnt = Array.zeroCreate< int32 >( 4 )
         let b = [| for i = 1 to 4 do new Barrier( 2 ) |]
         let wq = new TaskQueue( 4u )
 
@@ -176,7 +176,7 @@ type WorkingQueue_Test() =
 
     [<Fact>]
     member _.TaskQueueWithState_001() =
-        let q = new TaskQueueWithState<int>( 0 )
+        let q = new TaskQueueWithState<int32>( 0 )
         let b = new Barrier( 2 )
 
         q.Enqueue( fun s -> task {

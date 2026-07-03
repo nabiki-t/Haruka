@@ -101,7 +101,7 @@ type Stream_Stub() =
             f_FlushAsync.Value( c )
         override _.Read ( buffer : byte[], offset : int32, count : int32 ) : int32 =
             f_Read.Value( buffer, offset, count )
-        override _.ReadAsync ( buffer : byte[], offset : int32, count : int32, c : CancellationToken ) : Task<int> =
+        override _.ReadAsync ( buffer : byte[], offset : int32, count : int32, c : CancellationToken ) : Task<int32> =
             f_ReadAsync.Value( buffer, offset, count, c )
         override _.Seek( offset : int64, origin : SeekOrigin ) : int64 =
             f_Seek.Value( offset, origin )
@@ -200,7 +200,7 @@ type FileAccessorTest() =
             new Stream_Stub()
 
         let _ = FileAccessor( fname, Constants.LU_MAX_MULTIPLICITY, true, f )
-        Assert.True(( cnt = int Constants.LU_MAX_MULTIPLICITY ))
+        Assert.True(( cnt = int32 Constants.LU_MAX_MULTIPLICITY ))
         File.Delete fname
 
     [<Theory>]
@@ -210,7 +210,7 @@ type FileAccessorTest() =
     [<InlineData( 16UL, 0UL, 17 )>]
     [<InlineData( 16UL, 16UL, 1 )>]
     [<InlineData( 16UL, 17UL, 0 )>]
-    member _.Read_InvalidArg_001 ( fsize : uint64 ) ( pos : uint64 ) ( len : int ) =
+    member _.Read_InvalidArg_001 ( fsize : uint64 ) ( pos : uint64 ) ( len : int32 ) =
         task {
             let fname = Path.GetTempFileName()
             let f = File.OpenWrite fname
@@ -237,10 +237,10 @@ type FileAccessorTest() =
     [<InlineData( 4096UL, 0UL, 16 )>]
     [<InlineData( 4096UL, 4080UL, 16 )>]
     [<InlineData( 4096UL, 0UL, 4096 )>]
-    member _.Read_Success_001 ( fsize : uint64 ) ( pos : uint64 ) ( len : int ) =
+    member _.Read_Success_001 ( fsize : uint64 ) ( pos : uint64 ) ( len : int32 ) =
         task {
             let fname = Path.GetTempFileName()
-            let wbuf = Array.zeroCreate<byte>( int fsize )
+            let wbuf = Array.zeroCreate<byte>( int32 fsize )
             Random.Shared.NextBytes wbuf
             File.WriteAllBytes( fname, wbuf )
 
@@ -250,7 +250,7 @@ type FileAccessorTest() =
             do! fa.Read pos ( ArraySegment( wbuf2, 10, len ) )
 
             for i = 0 to len - 1 do
-                Assert.True(( wbuf.[ i + int pos ] = wbuf2.[ i + 10 ] ))
+                Assert.True(( wbuf.[ i + int32 pos ] = wbuf2.[ i + 10 ] ))
 
             fa.Close()
             File.Delete fname
@@ -279,7 +279,7 @@ type FileAccessorTest() =
             File.WriteAllBytes( fname, [| 0uy |] )
             let fa = FileAccessor( fname, Constants.LU_MAX_MULTIPLICITY, true, fc )
 
-            for _ = 1 to int Constants.LU_MAX_MULTIPLICITY do
+            for _ = 1 to int32 Constants.LU_MAX_MULTIPLICITY do
                 fun () ->
                     task {
                         let buf = Array.zeroCreate<byte> 1
@@ -288,7 +288,7 @@ type FileAccessorTest() =
                 |> Functions.StartTask
 
             do! Task.Delay 5
-            while cnt < int Constants.LU_MAX_MULTIPLICITY do
+            while cnt < int32 Constants.LU_MAX_MULTIPLICITY do
                 do! Task.Delay 5
 
             try
@@ -301,7 +301,7 @@ type FileAccessorTest() =
             | _ ->
                 Assert.Fail __LINE__
 
-            for _ = 1 to int Constants.LU_MAX_MULTIPLICITY do
+            for _ = 1 to int32 Constants.LU_MAX_MULTIPLICITY do
                 sm.Release() |> ignore
             fa.Close()
             File.Delete fname
@@ -458,7 +458,7 @@ type FileAccessorTest() =
     [<InlineData( 16UL, 0UL, 17 )>]
     [<InlineData( 16UL, 16UL, 1 )>]
     [<InlineData( 16UL, 17UL, 0 )>]
-    member _.Write_InvalidArg_001 ( fsize : uint64 ) ( pos : uint64 ) ( len : int ) =
+    member _.Write_InvalidArg_001 ( fsize : uint64 ) ( pos : uint64 ) ( len : int32 ) =
         task {
             let fname = Path.GetTempFileName()
             let f = File.OpenWrite fname
@@ -485,11 +485,11 @@ type FileAccessorTest() =
     [<InlineData( 4096UL, 0UL, 16 )>]
     [<InlineData( 4096UL, 4080UL, 16 )>]
     [<InlineData( 4096UL, 0UL, 4096 )>]
-    member _.Write_Success_001 ( fsize : uint64 ) ( pos : uint64 ) ( len : int ) =
+    member _.Write_Success_001 ( fsize : uint64 ) ( pos : uint64 ) ( len : int32 ) =
         task {
             let fname = Path.GetTempFileName()
 
-            let wbuf = Array.zeroCreate<byte>( int fsize )
+            let wbuf = Array.zeroCreate<byte>( int32 fsize )
             Random.Shared.NextBytes wbuf
             File.WriteAllBytes( fname, wbuf )
 
@@ -501,7 +501,7 @@ type FileAccessorTest() =
             fa.Close()
 
             for i = 0 to len - 1 do
-                wbuf.[ i + int pos ] <- wbuf2.[ i + 10 ]
+                wbuf.[ i + int32 pos ] <- wbuf2.[ i + 10 ]
             let wbuf3 = File.ReadAllBytes( fname )
             Assert.True(( wbuf = wbuf3 ))
 
@@ -551,7 +551,7 @@ type FileAccessorTest() =
             File.WriteAllBytes( fname, [| 0uy |] )
             let fa = FileAccessor( fname, Constants.LU_MAX_MULTIPLICITY, false, fc )
 
-            for _ = 1 to int Constants.LU_MAX_MULTIPLICITY do
+            for _ = 1 to int32 Constants.LU_MAX_MULTIPLICITY do
                 fun () ->
                     task {
                         let buf = Array.zeroCreate<byte> 1
@@ -560,7 +560,7 @@ type FileAccessorTest() =
                 |> Functions.StartTask
 
             do! Task.Delay 5
-            while cnt < int Constants.LU_MAX_MULTIPLICITY do
+            while cnt < int32 Constants.LU_MAX_MULTIPLICITY do
                 do! Task.Delay 5
 
             try
@@ -573,7 +573,7 @@ type FileAccessorTest() =
             | _ ->
                 Assert.Fail __LINE__
 
-            for _ = 1 to int Constants.LU_MAX_MULTIPLICITY do
+            for _ = 1 to int32 Constants.LU_MAX_MULTIPLICITY do
                 sm.Release() |> ignore
             fa.Close()
             File.Delete fname
@@ -798,7 +798,7 @@ type FileAccessorTest() =
             let fname = Path.GetTempFileName()
             let fa = FileAccessor( fname, Constants.LU_MAX_MULTIPLICITY, false, fc )
 
-            for _ = 1 to int Constants.LU_MAX_MULTIPLICITY do
+            for _ = 1 to int32 Constants.LU_MAX_MULTIPLICITY do
                 fun () ->
                     task {
                         do! fa.SetFileSize 1UL
@@ -806,7 +806,7 @@ type FileAccessorTest() =
                 |> Functions.StartTask
 
             do! Task.Delay 5
-            while cnt < int Constants.LU_MAX_MULTIPLICITY do
+            while cnt < int32 Constants.LU_MAX_MULTIPLICITY do
                 do! Task.Delay 5
 
             try
@@ -818,7 +818,7 @@ type FileAccessorTest() =
             | _ ->
                 Assert.Fail __LINE__
 
-            for _ = 1 to int Constants.LU_MAX_MULTIPLICITY do
+            for _ = 1 to int32 Constants.LU_MAX_MULTIPLICITY do
                 sm.Release() |> ignore
             fa.Close()
             File.Delete fname
@@ -929,7 +929,7 @@ type FileAccessorTest() =
     [<Fact>]
     member _.GetFileSize_TooManyDuplicate_001 () =
         task {
-            ThreadPool.SetMinThreads( int Constants.LU_MAX_MULTIPLICITY + 1, int Constants.LU_MAX_MULTIPLICITY + 1 ) |> ignore
+            ThreadPool.SetMinThreads( int32 Constants.LU_MAX_MULTIPLICITY + 1, int32 Constants.LU_MAX_MULTIPLICITY + 1 ) |> ignore
             let sm = new SemaphoreSlim( 1 )
             sm.Wait()
             let mutable cnt = 0
@@ -947,7 +947,7 @@ type FileAccessorTest() =
             let fname = Path.GetTempFileName()
             let fa = FileAccessor( fname, Constants.LU_MAX_MULTIPLICITY, false, fc )
 
-            for _ = 1 to int Constants.LU_MAX_MULTIPLICITY do
+            for _ = 1 to int32 Constants.LU_MAX_MULTIPLICITY do
                 fun () ->
                     task {
                         do! Task.Yield()
@@ -957,7 +957,7 @@ type FileAccessorTest() =
                 |> Functions.StartTask
 
             do! Task.Delay 5
-            while cnt < int Constants.LU_MAX_MULTIPLICITY do
+            while cnt < int32 Constants.LU_MAX_MULTIPLICITY do
                 do! Task.Delay 5
 
             try
@@ -969,7 +969,7 @@ type FileAccessorTest() =
             | _ ->
                 Assert.Fail __LINE__
 
-            for _ = 1 to int Constants.LU_MAX_MULTIPLICITY do
+            for _ = 1 to int32 Constants.LU_MAX_MULTIPLICITY do
                 sm.Release() |> ignore
             fa.Close()
             File.Delete fname

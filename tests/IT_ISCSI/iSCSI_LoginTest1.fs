@@ -29,7 +29,7 @@ open Haruka.Test
 type iSCSI_LoginTest1_Fixture() =
 
     // Add default configurations
-    let AddDefaultConf( client : ClientProc ) : int =
+    let AddDefaultConf( client : ClientProc ) : int32 =
         let iscsiPortNo = GlbFunc.nextTcpPortNo()
         client.RunCommand "create" "Created" "CR> "
         client.RunCommand "select 0" "" "TD> "

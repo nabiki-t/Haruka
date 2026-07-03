@@ -111,7 +111,7 @@ type IconLoader ( m_ExeDir : string ) =
                 let icoH = GuiConst.ICO_HEIGHT * ssf
                 let dpiX = 96.0 * icoW / GuiConst.SOURCE_ICO_WIDTH
                 let dpiY = 96.0 * icoH / GuiConst.SOURCE_ICO_HEIGHT
-                let rtb = new RenderTargetBitmap( int icoW, int icoH, dpiX, dpiY, PixelFormats.Default )
+                let rtb = new RenderTargetBitmap( int32 icoW, int32 icoH, dpiX, dpiY, PixelFormats.Default )
                 rtb.Render( drawingVisual )
                 ( tid, Some( rtb ) )
             with

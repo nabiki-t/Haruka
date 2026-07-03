@@ -55,7 +55,7 @@ type PRManager_Test3 () =
         let pc = new PrivateCaller( pm )
         ( pc.GetField( "m_Locker" ) :?> OptimisticLock< PRInfoRec > ).obj
 
-    member _.CreateDefaultPM ( fname : string ) ( expType : PR_TYPE ) ( expCnt : int ) =
+    member _.CreateDefaultPM ( fname : string ) ( expType : PR_TYPE ) ( expCnt : int32 ) =
         let k = new HKiller() :> IKiller
         let statStub = new CStatus_Stub(
             p_GetTargetFromLUN = ( fun lun ->
