@@ -68,6 +68,7 @@
     <Compile Include="InterProcessCounter.fs" />
     <Compile Include="FileAccessor.fs" />
     <Compile Include="RWLock.fs" />
+    <Compile Include="Crc32C.fs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -59,6 +59,7 @@
     <Compile Include="InterProcessCounterTest.fs" />
     <Compile Include="FileAccessorTest.fs" />
     <Compile Include="RWLockTest.fs" />
+    <Compile Include="Crc32C_Test.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
 

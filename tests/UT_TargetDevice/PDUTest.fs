@@ -280,7 +280,7 @@ type PDU_Test () =
                 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; 
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // Header digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -317,7 +317,7 @@ type PDU_Test () =
                 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; 
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // Header digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -352,7 +352,7 @@ type PDU_Test () =
                 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; 
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // Header digest
             |]
-        Functions.UInt32ToNetworkBytes buf 60 ( Functions.CRC32 buf.[0..59] )
+        Functions.UInt32ToNetworkBytes buf 60 ( Crc32C.Compute buf.[0..59] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -389,7 +389,7 @@ type PDU_Test () =
                 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; 
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // Header digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -429,7 +429,7 @@ type PDU_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // Data digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -467,7 +467,7 @@ type PDU_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // Header digest
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // Data Segment
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -506,7 +506,7 @@ type PDU_Test () =
                 0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // Data Segment
                 0xAAuy; 0x00uy; 0x00uy; 
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -546,7 +546,7 @@ type PDU_Test () =
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy;
                 0xAAuy; 0x00uy; 0x00uy;         // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -586,7 +586,7 @@ type PDU_Test () =
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy;
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -626,7 +626,7 @@ type PDU_Test () =
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy;
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -666,8 +666,8 @@ type PDU_Test () =
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy;
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
-        Functions.UInt32ToNetworkBytes buf 80 ( Functions.CRC32 buf.[72..79] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 80 ( Crc32C.Compute buf.[72..79] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -707,8 +707,8 @@ type PDU_Test () =
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy;
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
-        Functions.UInt32ToNetworkBytes buf 80 ( Functions.CRC32 buf.[72..79] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 80 ( Crc32C.Compute buf.[72..79] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -748,8 +748,8 @@ type PDU_Test () =
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy;
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
-        Functions.UInt32ToNetworkBytes buf 80 ( Functions.CRC32 buf.[72..79] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 80 ( Crc32C.Compute buf.[72..79] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -789,8 +789,8 @@ type PDU_Test () =
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy;
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
-        Functions.UInt32ToNetworkBytes buf 80 ( Functions.CRC32 buf.[72..79] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 80 ( Crc32C.Compute buf.[72..79] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -830,8 +830,8 @@ type PDU_Test () =
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy;
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
-        Functions.UInt32ToNetworkBytes buf 80 ( Functions.CRC32 buf.[72..79] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 80 ( Crc32C.Compute buf.[72..79] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -869,8 +869,8 @@ type PDU_Test () =
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy;
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 60 ( Functions.CRC32 buf.[0..59] )
-        Functions.UInt32ToNetworkBytes buf 72 ( Functions.CRC32 buf.[64..71] )
+        Functions.UInt32ToNetworkBytes buf 60 ( Crc32C.Compute buf.[0..59] )
+        Functions.UInt32ToNetworkBytes buf 72 ( Crc32C.Compute buf.[64..71] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -908,8 +908,8 @@ type PDU_Test () =
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy;
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 60 ( Functions.CRC32 buf.[0..59] )
-        Functions.UInt32ToNetworkBytes buf 72 ( Functions.CRC32 buf.[64..71] )
+        Functions.UInt32ToNetworkBytes buf 60 ( Crc32C.Compute buf.[0..59] )
+        Functions.UInt32ToNetworkBytes buf 72 ( Crc32C.Compute buf.[64..71] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -949,8 +949,8 @@ type PDU_Test () =
                 0xAAuy; 0xBBuy; 0xBBuy; 0xBBuy;
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
-        Functions.UInt32ToNetworkBytes buf 80 ( Functions.CRC32 buf.[72..79] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 80 ( Crc32C.Compute buf.[72..79] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -1123,8 +1123,8 @@ type PDU_Test () =
                 0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // Data Segment
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
-        Functions.UInt32ToNetworkBytes buf 76 ( Functions.CRC32 buf.[72..75] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 76 ( Crc32C.Compute buf.[72..75] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -1316,8 +1316,8 @@ type PDU_Test () =
                 0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // Data Segment( SenseLength is error )
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
-        Functions.UInt32ToNetworkBytes buf 76 ( Functions.CRC32 buf.[72..75] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 76 ( Crc32C.Compute buf.[72..75] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -1356,8 +1356,8 @@ type PDU_Test () =
                 0x00uy; 0x02uy; 0xAAuy; 0xAAuy; // Data Segment
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
-        Functions.UInt32ToNetworkBytes buf 76 ( Functions.CRC32 buf.[72..75] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 76 ( Crc32C.Compute buf.[72..75] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -1396,8 +1396,8 @@ type PDU_Test () =
                 0x00uy; 0x02uy; 0xAAuy; 0xAAuy; // Data Segment
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
-        Functions.UInt32ToNetworkBytes buf 76 ( Functions.CRC32 buf.[72..75] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 76 ( Crc32C.Compute buf.[72..75] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -1656,8 +1656,8 @@ type PDU_Test () =
                 0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // Data Segment
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
-        Functions.UInt32ToNetworkBytes buf 76 ( Functions.CRC32 buf.[72..75] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 76 ( Crc32C.Compute buf.[72..75] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -1691,8 +1691,8 @@ type PDU_Test () =
                 0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // Data Segment
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 48 ( Functions.CRC32 buf.[0..47] )
-        Functions.UInt32ToNetworkBytes buf 56 ( Functions.CRC32 buf.[52..55] )
+        Functions.UInt32ToNetworkBytes buf 48 ( Crc32C.Compute buf.[0..47] )
+        Functions.UInt32ToNetworkBytes buf 56 ( Crc32C.Compute buf.[52..55] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -1852,8 +1852,8 @@ type PDU_Test () =
                 0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // Data Segment
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
-        Functions.UInt32ToNetworkBytes buf 76 ( Functions.CRC32 buf.[72..75] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 76 ( Crc32C.Compute buf.[72..75] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -1887,8 +1887,8 @@ type PDU_Test () =
                 0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // Data Segment
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 48 ( Functions.CRC32 buf.[0..47] )
-        Functions.UInt32ToNetworkBytes buf 56 ( Functions.CRC32 buf.[52..55] )
+        Functions.UInt32ToNetworkBytes buf 48 ( Crc32C.Compute buf.[0..47] )
+        Functions.UInt32ToNetworkBytes buf 56 ( Crc32C.Compute buf.[52..55] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -1920,7 +1920,7 @@ type PDU_Test () =
                 0x0Cuy; 0x0Duy; 0x0Euy; 0x0Fuy; 
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // Header digest
             |]
-        Functions.UInt32ToNetworkBytes buf 48 ( Functions.CRC32 buf.[0..47] )
+        Functions.UInt32ToNetworkBytes buf 48 ( Crc32C.Compute buf.[0..47] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -2137,8 +2137,8 @@ type PDU_Test () =
                 0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // Data Segment
                 0x00uy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 48 ( Functions.CRC32 buf.[0..47] )
-        Functions.UInt32ToNetworkBytes buf 56 ( Functions.CRC32 buf.[52..55] )
+        Functions.UInt32ToNetworkBytes buf 48 ( Crc32C.Compute buf.[0..47] )
+        Functions.UInt32ToNetworkBytes buf 56 ( Crc32C.Compute buf.[52..55] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -2301,8 +2301,8 @@ type PDU_Test () =
                 0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // Data Segment
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
-        Functions.UInt32ToNetworkBytes buf 76 ( Functions.CRC32 buf.[72..75] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 76 ( Crc32C.Compute buf.[72..75] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -2336,8 +2336,8 @@ type PDU_Test () =
                 0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // Data Segment
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 48 ( Functions.CRC32 buf.[0..47] )
-        Functions.UInt32ToNetworkBytes buf 56 ( Functions.CRC32 buf.[52..55] )
+        Functions.UInt32ToNetworkBytes buf 48 ( Crc32C.Compute buf.[0..47] )
+        Functions.UInt32ToNetworkBytes buf 56 ( Crc32C.Compute buf.[52..55] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -2496,7 +2496,7 @@ type PDU_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // Header digest
             |]
-        Functions.UInt32ToNetworkBytes buf 48 ( Functions.CRC32 buf.[0..47] )
+        Functions.UInt32ToNetworkBytes buf 48 ( Crc32C.Compute buf.[0..47] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -2958,7 +2958,7 @@ type PDU_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // Header digest
             |]
-        Functions.UInt32ToNetworkBytes buf 48 ( Functions.CRC32 buf.[0..47] )
+        Functions.UInt32ToNetworkBytes buf 48 ( Crc32C.Compute buf.[0..47] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -2990,7 +2990,7 @@ type PDU_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // Header digest
             |]
-        Functions.UInt32ToNetworkBytes buf 48 ( Functions.CRC32 buf.[0..47] )
+        Functions.UInt32ToNetworkBytes buf 48 ( Crc32C.Compute buf.[0..47] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -3309,7 +3309,7 @@ type PDU_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // Header digest
             |]
-        Functions.UInt32ToNetworkBytes buf 48 ( Functions.CRC32 buf.[0..47] )
+        Functions.UInt32ToNetworkBytes buf 48 ( Crc32C.Compute buf.[0..47] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -3341,7 +3341,7 @@ type PDU_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // Header digest
             |]
-        Functions.UInt32ToNetworkBytes buf 48 ( Functions.CRC32 buf.[0..47] )
+        Functions.UInt32ToNetworkBytes buf 48 ( Crc32C.Compute buf.[0..47] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -3633,7 +3633,7 @@ type PDU_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // Header digest
             |]
-        Functions.UInt32ToNetworkBytes buf 48 ( Functions.CRC32 buf.[0..47] )
+        Functions.UInt32ToNetworkBytes buf 48 ( Crc32C.Compute buf.[0..47] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -3672,8 +3672,8 @@ type PDU_Test () =
                 0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // Data Segment
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
-        Functions.UInt32ToNetworkBytes buf 76 ( Functions.CRC32 buf.[72..75] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 76 ( Crc32C.Compute buf.[72..75] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -3707,8 +3707,8 @@ type PDU_Test () =
                 0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // Data Segment
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 48 ( Functions.CRC32 buf.[0..47] )
-        Functions.UInt32ToNetworkBytes buf 56 ( Functions.CRC32 buf.[52..55] )
+        Functions.UInt32ToNetworkBytes buf 48 ( Crc32C.Compute buf.[0..47] )
+        Functions.UInt32ToNetworkBytes buf 56 ( Crc32C.Compute buf.[52..55] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -3785,7 +3785,7 @@ type PDU_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // Header digest
             |]
-        Functions.UInt32ToNetworkBytes buf 48 ( Functions.CRC32 buf.[0..47] )
+        Functions.UInt32ToNetworkBytes buf 48 ( Crc32C.Compute buf.[0..47] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
         try
@@ -3823,8 +3823,8 @@ type PDU_Test () =
                 0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // Data Segment
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 68 ( Functions.CRC32 buf.[0..67] )
-        Functions.UInt32ToNetworkBytes buf 76 ( Functions.CRC32 buf.[72..75] )
+        Functions.UInt32ToNetworkBytes buf 68 ( Crc32C.Compute buf.[0..67] )
+        Functions.UInt32ToNetworkBytes buf 76 ( Crc32C.Compute buf.[72..75] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -3858,8 +3858,8 @@ type PDU_Test () =
                 0xAAuy; 0xAAuy; 0xAAuy; 0xAAuy; // Data Segment
                 0xAAuy; 0x00uy; 0x00uy; 0x00uy  // Data Digest
             |]
-        Functions.UInt32ToNetworkBytes buf 48 ( Functions.CRC32 buf.[0..47] )
-        Functions.UInt32ToNetworkBytes buf 56 ( Functions.CRC32 buf.[52..55] )
+        Functions.UInt32ToNetworkBytes buf 48 ( Crc32C.Compute buf.[0..47] )
+        Functions.UInt32ToNetworkBytes buf 56 ( Crc32C.Compute buf.[52..55] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -3937,7 +3937,7 @@ type PDU_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // Header digest
             |]
-        Functions.UInt32ToNetworkBytes buf 48 ( Functions.CRC32 buf.[0..47] )
+        Functions.UInt32ToNetworkBytes buf 48 ( Crc32C.Compute buf.[0..47] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -3969,7 +3969,7 @@ type PDU_Test () =
                 0x55uy; 0x55uy; 0x55uy; 0x55uy; // RunLength
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // Header digest
             |]
-        Functions.UInt32ToNetworkBytes buf 48 ( Functions.CRC32 buf.[0..47] )
+        Functions.UInt32ToNetworkBytes buf 48 ( Crc32C.Compute buf.[0..47] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 
@@ -4048,7 +4048,7 @@ type PDU_Test () =
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // Header digest
             |]
-        Functions.UInt32ToNetworkBytes buf 48 ( Functions.CRC32 buf.[0..47] )
+        Functions.UInt32ToNetworkBytes buf 48 ( Crc32C.Compute buf.[0..47] )
         ms.Write( buf, 0, buf.Length )
         ms.Seek( 0L, SeekOrigin .Begin ) |> ignore
 

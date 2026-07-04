@@ -139,7 +139,7 @@ type PDU() =
                     do! PDU.ReceiveBytes( sock, wbufHeaderDigest, headerDigestLen, argTSIH, argCID, argCounter, objid )
 
                     // Check header digest
-                    let crc = Functions.CRC32_AS [| wbufBHS.ArraySegment; wbufAllAHS.ArraySegment; |]
+                    let crc = Crc32C.Compute [| wbufBHS.ArraySegment; wbufAllAHS.ArraySegment; |]
                     if crc <> Functions.NetworkBytesToUInt32 wbufHeaderDigest 0 then
                         HLogger.Trace( LogID.E_HEADER_DIGEST_ERROR, fun g -> g.Gen0 loginfo )
                         raise <| ConnectionErrorException( "Header digest error.", tsih_me.fromValOpt 0us argTSIH, cid_me.fromValOpt 0us argCID )
@@ -173,7 +173,7 @@ type PDU() =
                     do! PDU.ReceiveBytes( sock, wbufDataDigest, dataDigestLen, argTSIH, argCID, argCounter, objid )
  
                     // Check data digest
-                    let crc = Functions.CRC32_AS [| wbufDataSegment.ArraySegment; ArraySegment wbufDataSegmentPadding |]
+                    let crc = Crc32C.Compute [| wbufDataSegment.ArraySegment; ArraySegment wbufDataSegmentPadding |]
                     if crc <> Functions.NetworkBytesToUInt32 wbufDataDigest 0 then
                         HLogger.Trace( LogID.W_DATA_DIGEST_ERROR, fun g -> g.Gen0 loginfo )
                         match standpoint with
@@ -1763,7 +1763,7 @@ type PDU() =
                 // Calc Data Digest
                 let vDigest = 
                     if argDataDigest = DigestType.DST_CRC32C then
-                        Functions.CRC32_AS( [| v; ArraySegment( paddBytes ); |] )
+                        Crc32C.Compute( [| v; ArraySegment( paddBytes ); |] )
                         |> Functions.UInt32ToNetworkBytes_NewVec
                         |> Some
                     else
@@ -2258,7 +2258,7 @@ type PDU() =
                 let headerDigestLen =
                     if argHeaderDigest = DigestType.DST_CRC32C then 4u else 0u
                 if headerDigestLen > 0u then
-                    let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Functions.CRC32_A( wbuf.ArraySegment )
+                    let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
                     let! _ = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
                     ()
 
@@ -2377,7 +2377,7 @@ type PDU() =
                 let headerDigestLen =
                     if argHeaderDigest = DigestType.DST_CRC32C then 4u else 0u
                 if headerDigestLen > 0u then
-                    let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Functions.CRC32_A( wbuf.ArraySegment )
+                    let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
                     let! _ = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
                     ()
         
@@ -2403,7 +2403,7 @@ type PDU() =
                     // Calc data digest
                     let vDigest =
                         if argDataDigest = DigestType.DST_CRC32C then
-                            Functions.CRC32_AS [|
+                            Crc32C.Compute [|
                                 ArraySegment( SenseDataLengthBytes );
                                 argPDU.SenseData;
                                 argPDU.ResponseData;
@@ -2497,7 +2497,7 @@ type PDU() =
 
             // send Header Digest
             if ( not headerOnly ) && argHeaderDigest = DigestType.DST_CRC32C then
-                let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Functions.CRC32_A( wbuf.ArraySegment )
+                let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
                 wbuf.Return()
                 return bhsLen + headerDigestLen
@@ -2581,7 +2581,7 @@ type PDU() =
 
             // send Header Digest
             if ( not headerOnly ) && argHeaderDigest = DigestType.DST_CRC32C then
-                let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Functions.CRC32_A( wbuf.ArraySegment )
+                let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
                 wbuf.Return()
                 return bhsLen + headerDigestLen
@@ -2679,7 +2679,7 @@ type PDU() =
                 // Create and send Header Digest
                 let vDigest =
                     if argHeaderDigest = DigestType.DST_CRC32C then
-                        Functions.UInt32ToNetworkBytes_NewVec <| Functions.CRC32_A( wbuf.ArraySegment )
+                        Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
                     else
                         Array.empty
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
@@ -2788,7 +2788,7 @@ type PDU() =
                 // Create and send Header Digest
                 let vDigest =
                     if argHeaderDigest = DigestType.DST_CRC32C then
-                        Functions.UInt32ToNetworkBytes_NewVec <| Functions.CRC32_A( wbuf.ArraySegment )
+                        Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
                     else
                         Array.empty
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
@@ -2879,7 +2879,7 @@ type PDU() =
 
             // Create and send Header Digest
             if ( not headerOnly ) && argHeaderDigest = DigestType.DST_CRC32C then
-                let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Functions.CRC32_A( wbuf.ArraySegment )
+                let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
 
                 wbuf.Return()
@@ -2985,7 +2985,7 @@ type PDU() =
                 // Create and send Header Digest
                 let vDigest =
                     if argHeaderDigest = DigestType.DST_CRC32C then
-                        Functions.UInt32ToNetworkBytes_NewVec <| Functions.CRC32_A( wbuf.ArraySegment )
+                        Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
                     else
                         Array.empty
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
@@ -3008,7 +3008,7 @@ type PDU() =
                     // Send Data Digest
                     let vDigest =
                         if argDataDigest = DigestType.DST_CRC32C then
-                            Functions.UInt32ToNetworkBytes_NewVec <| Functions.CRC32v( [| SenseDataLengthBytes; argPDU.SenseData; argPDU.ISCSIEventData; paddBytes; |] )
+                            Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( [| SenseDataLengthBytes; argPDU.SenseData; argPDU.ISCSIEventData; paddBytes; |] )
                         else
                             Array.empty
                     let! dataDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
@@ -3098,7 +3098,7 @@ type PDU() =
                 // Create and send Header Digest
                 let vDigest =
                     if argHeaderDigest = DigestType.DST_CRC32C then
-                        Functions.UInt32ToNetworkBytes_NewVec <| Functions.CRC32_A( wbuf.ArraySegment )
+                        Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
                     else
                         Array.empty
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
@@ -3195,7 +3195,7 @@ type PDU() =
                 // Create and send Header Digest
                 let vDigest =
                     if argHeaderDigest = DigestType.DST_CRC32C then
-                        Functions.UInt32ToNetworkBytes_NewVec <| Functions.CRC32_A( wbuf.ArraySegment )
+                        Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
                     else
                         Array.empty
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
@@ -3300,7 +3300,7 @@ type PDU() =
                 // Create and send Header Digest
                 let vDigest =
                     if argHeaderDigest = DigestType.DST_CRC32C then
-                        Functions.UInt32ToNetworkBytes_NewVec <| Functions.CRC32_A( wbuf.ArraySegment )
+                        Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
                     else
                         Array.empty
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
@@ -3406,7 +3406,7 @@ type PDU() =
                 // Create and send Header Digest
                 let vDigest =
                     if argHeaderDigest = DigestType.DST_CRC32C then
-                        Functions.UInt32ToNetworkBytes_NewVec <| Functions.CRC32_A( wbuf.ArraySegment )
+                        Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
                     else
                         Array.empty
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
@@ -3493,7 +3493,7 @@ type PDU() =
 
             // Create and send Header Digest
             if ( not headerOnly ) && argHeaderDigest = DigestType.DST_CRC32C then
-                let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Functions.CRC32_A( wbuf.ArraySegment )
+                let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
 
                 wbuf.Return()
@@ -3580,7 +3580,7 @@ type PDU() =
 
             // Create and send Header Digest
             if ( not headerOnly ) && argHeaderDigest = DigestType.DST_CRC32C then
-                let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Functions.CRC32_A( wbuf.ArraySegment )
+                let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
 
                 wbuf.Return()
@@ -3666,7 +3666,7 @@ type PDU() =
 
             // Create and send Header Digest
             if ( not headerOnly ) && argHeaderDigest = DigestType.DST_CRC32C then
-                let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Functions.CRC32_A( wbuf.ArraySegment )
+                let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
 
                 wbuf.Return()
@@ -3761,7 +3761,7 @@ type PDU() =
                 // Create and send Header Digest
                 let vDigest =
                     if argHeaderDigest = DigestType.DST_CRC32C then
-                        Functions.UInt32ToNetworkBytes_NewVec <| Functions.CRC32_A( wbuf.ArraySegment )
+                        Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
                     else
                         Array.empty
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
@@ -3859,7 +3859,7 @@ type PDU() =
                 // Create and send Header Digest
                 let vDigest =
                     if argHeaderDigest = DigestType.DST_CRC32C then
-                        Functions.UInt32ToNetworkBytes_NewVec <| Functions.CRC32_A( wbuf.ArraySegment )
+                        Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
                     else
                         Array.empty
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
@@ -3959,7 +3959,7 @@ type PDU() =
                 // Create and send Header Digest
                 let vDigest =
                     if argHeaderDigest = DigestType.DST_CRC32C then
-                        Functions.UInt32ToNetworkBytes_NewVec <| Functions.CRC32_A( wbuf.ArraySegment )
+                        Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
                     else
                         Array.empty
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
