@@ -3,6 +3,45 @@ namespace VhdxLibrary
 open System
 open System.IO
 
+open Haruka.Constants
+open Haruka.Commons
+
+/// Data type that represents 4K sector number.
+[<Measure>]
+type sec4k_me =
+
+    /// <summary>
+    ///  Convert to a primitive uint64 value.
+    /// </summary>
+    /// <param name="v">
+    ///  Block count value by sec4k_me.
+    /// </param>
+    /// <returns>
+    ///  Converted uint64 value.
+    /// </returns>
+    static member inline toUInt64( v : uint64<sec4k_me> ) : uint64 =
+        uint64 v
+
+    /// <summary>
+    ///  Convert a primitive uint64 value to a Block count value by sec4k_me.
+    /// </summary>
+    /// <param name="v">
+    ///  primitive uint64 value.
+    /// </param>
+    /// <returns>
+    ///  Converted sec4k_me value.
+    /// </returns>
+    static member inline ofUInt64( v : uint64 ) : uint64<sec4k_me> =
+        v * 1UL<sec4k_me>
+
+    /// zero value by uint64
+    static member zero64 = 0UL<sec4k_me>
+
+
+/// Data type that uses uint64 to represent the 4K sector number
+type SEC4K_T = uint64<sec4k_me>
+
+
 // ============================================================================
 // File header
 

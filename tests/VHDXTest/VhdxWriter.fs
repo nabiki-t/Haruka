@@ -2,8 +2,11 @@ namespace VhdxLibrary
 
 open System
 open System.IO
-open System.Text
 open System.Collections.Generic
+
+open Haruka.Constants
+open Haruka.Commons
+
 
 /// <summary>
 ///  Write RAW data to VHDX file.
@@ -401,7 +404,7 @@ type VhdxWriter() =
             | PayloadPartiallyPresent ->
                 7UL
         let d = e.FileOffset ||| a
-        GlbFunc.WriteUInt64LE buf offset d
+        VhdxCommon.WriteUInt64LE buf offset d
 
     /// <summary>
     ///  Write SectorBitmapBATEntry data to the buffer
@@ -423,7 +426,7 @@ type VhdxWriter() =
             | BatEntryStateSB.SectorBitmapPresent ->
                 6UL
         let d = e.FileOffset ||| a
-        GlbFunc.WriteUInt64LE buf offset d
+        VhdxCommon.WriteUInt64LE buf offset d
 
     /// <summary>
     ///  Create BAT table from 4K sector number.

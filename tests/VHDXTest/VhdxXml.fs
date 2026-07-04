@@ -5,6 +5,10 @@ open System.IO
 open System.Text
 open System.Xml
 
+open Haruka.Constants
+open Haruka.Commons
+
+
 /// Output VHDX metadata as XML data.
 type VhdxXmlSerializer() =
 
@@ -104,9 +108,9 @@ type VhdxXmlSerializer() =
         writer.WriteStartElement( "Entries" )
         List.iteri ( fun j ( e : RegionEntry ) ->
             let regionName =
-                if e.Guid = GlbFunc.REGENT_TYPE_BAT then
+                if e.Guid = VhdxCommon.REGENT_TYPE_BAT then
                     "BAT"
-                elif e.Guid = GlbFunc.REGENT_TYPE_METADATA then
+                elif e.Guid = VhdxCommon.REGENT_TYPE_METADATA then
                     "Metadata"
                 else
                     sprintf "Region_%d" j

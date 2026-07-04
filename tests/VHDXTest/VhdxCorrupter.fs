@@ -2,8 +2,11 @@ namespace VhdxLibrary
 
 open System
 open System.IO
-open System.Buffers.Binary
 open System.Text
+
+open Haruka.Constants
+open Haruka.Commons
+
 
 /// A class that updates an existing VHDX file,
 /// filling the data in the specified sectors
@@ -39,8 +42,8 @@ type VhdxCorrupter() =
         Array.blit ( Encoding.UTF8.GetBytes "desc" ) 0 v 0 4
         Array.blit TrailingBytes 0 v 4 4
         Array.blit LeadingBytes 0 v 8 8
-        GlbFunc.WriteUInt64LE v 16u ( uint64 offset * 4096UL )
-        GlbFunc.WriteUInt64LE v 24u sequenceNumber
+        VhdxCommon.WriteUInt64LE v 16u ( uint64 offset * 4096UL )
+        VhdxCommon.WriteUInt64LE v 24u sequenceNumber
         v
 
     /// <summary>
@@ -94,15 +97,15 @@ type VhdxCorrupter() =
 
         // Entry header
         Array.blit ( Encoding.UTF8.GetBytes "loge" ) 0 logEntry 0 4    // Signature
-        GlbFunc.WriteUInt32LE logEntry 4u 0u            // Checksum
-        GlbFunc.WriteUInt32LE logEntry 8u entryLength   // Entry length
-        GlbFunc.WriteUInt32LE logEntry 12u tail         // tail
-        GlbFunc.WriteUInt64LE logEntry 16u secnum       // Sequence number
-        GlbFunc.WriteUInt32LE logEntry 24u descNum      // Number of descriptors
-        GlbFunc.WriteUInt32LE logEntry 28u 0u           // Reserved
-        GlbFunc.WriteGuid logEntry 32u logGuid          // Log GUID
-        GlbFunc.WriteUInt64LE logEntry 48u argFFO       // Flashed file offset
-        GlbFunc.WriteUInt64LE logEntry 56u argLFO       // ast file offset
+        VhdxCommon.WriteUInt32LE logEntry 4u 0u            // Checksum
+        VhdxCommon.WriteUInt32LE logEntry 8u entryLength   // Entry length
+        VhdxCommon.WriteUInt32LE logEntry 12u tail         // tail
+        VhdxCommon.WriteUInt64LE logEntry 16u secnum       // Sequence number
+        VhdxCommon.WriteUInt32LE logEntry 24u descNum      // Number of descriptors
+        VhdxCommon.WriteUInt32LE logEntry 28u 0u           // Reserved
+        VhdxCommon.WriteGuid logEntry 32u logGuid          // Log GUID
+        VhdxCommon.WriteUInt64LE logEntry 48u argFFO       // Flashed file offset
+        VhdxCommon.WriteUInt64LE logEntry 56u argLFO       // ast file offset
 
         // descriptors
         data
@@ -114,14 +117,14 @@ type VhdxCorrupter() =
         |> List.iteri ( fun idx struct ( _, itr ) ->
             let pos = descSecLen + uint32( idx * 4096 )
             Array.blit ( Encoding.UTF8.GetBytes "data" ) 0 logEntry ( int32 pos ) 4
-            GlbFunc.WriteUInt32LE logEntry ( pos + 4u ) ( uint32 ( secnum >>> 32 ) )
+            VhdxCommon.WriteUInt32LE logEntry ( pos + 4u ) ( uint32 ( secnum >>> 32 ) )
             Array.blit itr 8 logEntry ( int32 pos + 8 ) 4084
-            GlbFunc.WriteUInt32LE logEntry ( pos + 4092u ) ( uint32 secnum )
+            VhdxCommon.WriteUInt32LE logEntry ( pos + 4092u ) ( uint32 secnum )
         )
 
         // Update checksum
         let checkSum = Crc32C.Compute logEntry
-        GlbFunc.WriteUInt32LE logEntry 4u checkSum
+        VhdxCommon.WriteUInt32LE logEntry 4u checkSum
         printfn "Checksum : 0x%08X" checkSum
 
         logEntry

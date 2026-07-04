@@ -5,10 +5,34 @@ open System.IO
 open System.Text
 open System.Buffers.Binary
 
+open Haruka.Constants
+open Haruka.Commons
+
 // ============================================================================
 /// class implementation of VHDX metadata reader.
 
 type VhdxReader() =
+
+    /// <summary>
+    ///  Read data from a specified region in the stream.
+    /// </summary>
+    /// <param name="fs">
+    ///  Stream.
+    /// </param>
+    /// <param name="offset">
+    ///  Position where data is read.
+    /// </param>
+    /// <param name="length">
+    ///  Data length to be read.
+    /// </param>
+    /// <returns>
+    ///  Loaded data.
+    /// </returns>
+    static let ReadBytes ( fs : FileStream ) ( offset : uint64 ) ( length : uint32 ) : byte[] =
+        let b = Array.zeroCreate<byte>( int32 length )
+        fs.Seek( int64 offset, SeekOrigin.Begin ) |> ignore
+        fs.ReadExactly( b, 0, int32 length )
+        b
 
     /// <summary>
     ///  Read file type identifier
@@ -22,15 +46,15 @@ type VhdxReader() =
     static let ReadFileTypeIdentifier ( fs : FileStream ) : string =
 
         // signature
-        let sigBuf = GlbFunc.ReadBytes fs 0UL 8u
-        let signature = GlbFunc.ReadUInt64BE sigBuf 0u
+        let sigBuf = ReadBytes fs 0UL 8u
+        let signature = VhdxCommon.ReadUInt64BE sigBuf 0u
         printfn "File type identifier signature : 0x%016X" signature
         if signature <> 0x7668647866696C65UL then
             raise <| Exception( "File type identifier signature mismatch" )
 
         // Creator
         let rs =
-            GlbFunc.ReadBytes fs 8UL 512u
+            ReadBytes fs 8UL 512u
             |> Encoding.Unicode.GetString
             |> _.Replace( "\000", "" )
             |> _.Trim()
@@ -49,24 +73,24 @@ type VhdxReader() =
     /// </returns>
     static let ReadHeaders ( fs : FileStream ) : VhdxHeader list =
         // Read header 0 (offset=0x10000)
-        let header0Buf = GlbFunc.ReadBytes fs 0x10000UL 4096u
+        let header0Buf = ReadBytes fs 0x10000UL 4096u
         let header0 = {
-            Signature = GlbFunc.ReadUInt32BE header0Buf 0u;
-            Checksum = GlbFunc.ReadUInt32LE header0Buf 4u;
-            SequenceNumber = GlbFunc.ReadUInt64LE header0Buf 8u;
-            FileWriteGuid = GlbFunc.ReadGuid header0Buf 16u;
-            DataWriteGuid = GlbFunc.ReadGuid header0Buf 32u;
-            LogGuid = GlbFunc.ReadGuid header0Buf 48u;
-            LogVersion = GlbFunc.ReadUInt16LE header0Buf 64u;
-            Version = GlbFunc.ReadUInt16LE header0Buf 66u;
-            LogLength = GlbFunc.ReadUInt32LE header0Buf 68u;
-            LogOffset = GlbFunc.ReadUInt64LE header0Buf 72u;
+            Signature = VhdxCommon.ReadUInt32BE header0Buf 0u;
+            Checksum = VhdxCommon.ReadUInt32LE header0Buf 4u;
+            SequenceNumber = VhdxCommon.ReadUInt64LE header0Buf 8u;
+            FileWriteGuid = VhdxCommon.ReadGuid header0Buf 16u;
+            DataWriteGuid = VhdxCommon.ReadGuid header0Buf 32u;
+            LogGuid = VhdxCommon.ReadGuid header0Buf 48u;
+            LogVersion = VhdxCommon.ReadUInt16LE header0Buf 64u;
+            Version = VhdxCommon.ReadUInt16LE header0Buf 66u;
+            LogLength = VhdxCommon.ReadUInt32LE header0Buf 68u;
+            LogOffset = VhdxCommon.ReadUInt64LE header0Buf 72u;
             Offset = 0x10000UL;
             Index = 0;
         }
 
         let header0Enable =
-            let c0 = GlbFunc.CheckHeaderChecksum header0Buf header0.Checksum && header0.Signature = 0x68656164u
+            let c0 = VhdxCommon.CheckHeaderChecksum header0Buf header0.Checksum && header0.Signature = 0x68656164u
             let c1 = header0.LogVersion = 0us
             let c2 = header0.Version = 1us
             let c3 = header0.LogLength &&& 0x000FFFFFu = 0u             // Multiples of 1MB
@@ -92,23 +116,23 @@ type VhdxReader() =
         printfn "  Validity : %s" ( if header0Enable then "valid" else "invalid" )
 
         // Read header 1 (offset=0x20000)
-        let header1Buf = GlbFunc.ReadBytes( fs )( 0x20000UL )( 4096u )
+        let header1Buf = ReadBytes( fs )( 0x20000UL )( 4096u )
         let header1 = {
-            Signature = GlbFunc.ReadUInt32BE header1Buf 0u;
-            Checksum = GlbFunc.ReadUInt32LE header1Buf 4u;
-            SequenceNumber = GlbFunc.ReadUInt64LE header1Buf 8u;
-            FileWriteGuid = GlbFunc.ReadGuid header1Buf 16u;
-            DataWriteGuid = GlbFunc.ReadGuid header1Buf 32u;
-            LogGuid = GlbFunc.ReadGuid header1Buf 48u;
-            LogVersion = GlbFunc.ReadUInt16LE header1Buf 64u;
-            Version = GlbFunc.ReadUInt16LE header1Buf 66u;
-            LogLength = GlbFunc.ReadUInt32LE header1Buf 68u;
-            LogOffset = GlbFunc.ReadUInt64LE header1Buf 72u;
+            Signature = VhdxCommon.ReadUInt32BE header1Buf 0u;
+            Checksum = VhdxCommon.ReadUInt32LE header1Buf 4u;
+            SequenceNumber = VhdxCommon.ReadUInt64LE header1Buf 8u;
+            FileWriteGuid = VhdxCommon.ReadGuid header1Buf 16u;
+            DataWriteGuid = VhdxCommon.ReadGuid header1Buf 32u;
+            LogGuid = VhdxCommon.ReadGuid header1Buf 48u;
+            LogVersion = VhdxCommon.ReadUInt16LE header1Buf 64u;
+            Version = VhdxCommon.ReadUInt16LE header1Buf 66u;
+            LogLength = VhdxCommon.ReadUInt32LE header1Buf 68u;
+            LogOffset = VhdxCommon.ReadUInt64LE header1Buf 72u;
             Offset = 0x20000UL;
             Index = 1;
         }
         let header1Enable =
-            let c0 = GlbFunc.CheckHeaderChecksum header1Buf header1.Checksum && header1.Signature = 0x68656164u
+            let c0 = VhdxCommon.CheckHeaderChecksum header1Buf header1.Checksum && header1.Signature = 0x68656164u
             let c1 = header1.LogVersion = 0us
             let c2 = header1.Version = 1us
             let c3 = header1.LogLength &&& 0x000FFFFFu = 0u             // Multiples of 1MB
@@ -162,9 +186,9 @@ type VhdxReader() =
     static let ReadLogDataSector ( data : byte[] ) ( offset : uint32 ) ( seqNum : uint64 ) : byte[] =
         printfn "  ReadLogDataSector( offset=%d )" offset
 
-        let signeture = GlbFunc.ReadUInt32BE data offset
-        let sequenceHigh = GlbFunc.ReadUInt32LE data ( offset + 4u )
-        let sequenceLow = GlbFunc.ReadUInt32LE data ( offset + 4092u )
+        let signeture = VhdxCommon.ReadUInt32BE data offset
+        let sequenceHigh = VhdxCommon.ReadUInt32LE data ( offset + 4u )
+        let sequenceLow = VhdxCommon.ReadUInt32LE data ( offset + 4092u )
 
         printfn "    Signeture : 0x%08X" signeture
         printfn "    Sequence High : %d" sequenceHigh
@@ -207,14 +231,14 @@ type VhdxReader() =
 
         printfn "  ReadLogDescriptor( offset=%d )" offset
 
-        let signeture = GlbFunc.ReadUInt32BE data offset
+        let signeture = VhdxCommon.ReadUInt32BE data offset
         printfn "    Signeture : 0x%08X" signeture
 
          // Zero descriptor
         if signeture = 0x7A65726Fu then
-            let zeroLength = GlbFunc.ReadUInt64LE data ( offset + 8u )
-            let fileOffset = GlbFunc.ReadUInt64LE data ( offset + 16u )
-            let sequenceNumber = GlbFunc.ReadUInt64LE data ( offset + 24u )
+            let zeroLength = VhdxCommon.ReadUInt64LE data ( offset + 8u )
+            let fileOffset = VhdxCommon.ReadUInt64LE data ( offset + 16u )
+            let sequenceNumber = VhdxCommon.ReadUInt64LE data ( offset + 24u )
 
             printfn "    Zero Length : %d" zeroLength
             printfn "    File Offset : %d" fileOffset
@@ -245,8 +269,8 @@ type VhdxReader() =
         elif signeture = 0x64657363u then
             let trailingBytes = data.[ int32 offset + 4 .. int32 offset + 7 ]
             let leadingBytes = data.[ int32 offset + 8 .. int32 offset + 15 ]
-            let fileOffset = GlbFunc.ReadUInt64LE data ( offset + 16u )
-            let sequenceNumber = GlbFunc.ReadUInt64LE data ( offset + 24u )
+            let fileOffset = VhdxCommon.ReadUInt64LE data ( offset + 16u )
+            let sequenceNumber = VhdxCommon.ReadUInt64LE data ( offset + 24u )
 
             printfn "    Trailing Bytes : %s" ( trailingBytes |> Array.map ( sprintf "%02X" ) |> String.concat "," )
             printfn "    Leading Bytes : %s" ( leadingBytes |> Array.map ( sprintf "%02X" ) |> String.concat "," )
@@ -303,18 +327,18 @@ type VhdxReader() =
         if ( pos &&& 0x00000FFFu ) <> 0u then
             raise <| Exception( "The log sequence start position is not in 4KB units." )
 
-        let wpos = GlbFunc.RapUInt32 pos ( uint32 logData.Length )
+        let wpos = pos % ( uint32 logData.Length )  // wraparound
 
         // Retrieve each item in the entry header.
-        let signature = GlbFunc.ReadUInt32BE logData wpos
-        let checksum = GlbFunc.ReadUInt32LE logData ( wpos + 4u )
-        let entryLength = GlbFunc.ReadUInt32LE logData ( wpos + 8u )
-        let tail = GlbFunc.ReadUInt32LE logData ( wpos + 12u )
-        let sequenceNumber = GlbFunc.ReadUInt64LE logData ( wpos + 16u )
-        let descriptorCount = GlbFunc.ReadUInt32LE logData ( wpos + 24u )
-        let logGuid = GlbFunc.ReadGuid logData ( wpos + 32u );
-        let flushedFileOffset = GlbFunc.ReadUInt64LE logData ( wpos + 48u )
-        let lastFileOffset = GlbFunc.ReadUInt64LE logData ( wpos + 56u )
+        let signature = VhdxCommon.ReadUInt32BE logData wpos
+        let checksum = VhdxCommon.ReadUInt32LE logData ( wpos + 4u )
+        let entryLength = VhdxCommon.ReadUInt32LE logData ( wpos + 8u )
+        let tail = VhdxCommon.ReadUInt32LE logData ( wpos + 12u )
+        let sequenceNumber = VhdxCommon.ReadUInt64LE logData ( wpos + 16u )
+        let descriptorCount = VhdxCommon.ReadUInt32LE logData ( wpos + 24u )
+        let logGuid = VhdxCommon.ReadGuid logData ( wpos + 32u );
+        let flushedFileOffset = VhdxCommon.ReadUInt64LE logData ( wpos + 48u )
+        let lastFileOffset = VhdxCommon.ReadUInt64LE logData ( wpos + 56u )
 
         printfn "  Signature : 0x%08X" signature
         printfn "  Checksum : 0x%08X" checksum
@@ -363,11 +387,11 @@ type VhdxReader() =
             // Retrieve all log entry data
             let logEntryData = Array.zeroCreate<byte>( int32 entryLength )
             for i = 0 to int32 ( entryLength / 4096u ) - 1 do
-                let srcidx = GlbFunc.RapInt32 ( int32 wpos + i * 4096 ) 0x000FFFFF
+                let srcidx = ( int32 wpos + i * 4096 ) % 0x000FFFFF
                 Array.blit logData srcidx logEntryData ( i * 4096 ) 4096
 
             /// Verify whether the checksum is correct.
-            let checksum_Check = GlbFunc.CheckHeaderChecksum logEntryData checksum
+            let checksum_Check = VhdxCommon.CheckHeaderChecksum logEntryData checksum
             if not checksum_Check then
                 printfn "  Invalid checksum"
                 None
@@ -485,7 +509,7 @@ type VhdxReader() =
             let nextActiveSeq, nextCurTail =
                 if curSeq.Length = 0 || r then
                     printfn "The retrieved sequence is invalid."
-                    activeSeq, ( GlbFunc.RapUInt32 ( curTail + 4096u ) ( uint32 logData.Length ) )
+                    activeSeq, ( ( curTail + 4096u ) % ( uint32 logData.Length ) )
                 else
                     // The current entry appears to be correct.
                     let asSecNum =
@@ -503,7 +527,7 @@ type VhdxReader() =
                         else
                             printfn "The retrieved sequence appears correct, but the sequence number is old."
                             activeSeq
-                    nas, ( GlbFunc.RapUInt32 ( curTail + SeqTotalLen ) ( uint32 logData.Length ) )
+                    nas, ( ( curTail + SeqTotalLen ) % ( uint32 logData.Length ) )
 
             if nextCurTail < curTail then
                 printfn "Search for active sequences complete."
@@ -542,7 +566,7 @@ type VhdxReader() =
             [||]
         else
             // Read from the file.
-            let buf = GlbFunc.ReadBytes fs offset length
+            let buf = ReadBytes fs offset length
             // Reflect updates from the log.
             for itrLE in log do
                 for itrDE in itrLE.Descriptors do
@@ -577,11 +601,11 @@ type VhdxReader() =
     static let ReadRegionTable ( data : byte[] ) ( fileLen : uint64 ) : RegionTable option =
 
         // Interpretation of the region table header
-        let signature = GlbFunc.ReadUInt32BE data 0u
-        let checksum = GlbFunc.ReadUInt32LE data 4u
-        let entryCount = GlbFunc.ReadUInt32LE data 8u
+        let signature = VhdxCommon.ReadUInt32BE data 0u
+        let checksum = VhdxCommon.ReadUInt32LE data 4u
+        let entryCount = VhdxCommon.ReadUInt32LE data 8u
         let signature_Check = signature = 0x72656769u
-        let checksum_Check = GlbFunc.CheckHeaderChecksum data checksum
+        let checksum_Check = VhdxCommon.CheckHeaderChecksum data checksum
         let entryCount_Check = 0u <= entryCount && entryCount <= 2047u
 
         printfn "Region table header"
@@ -597,10 +621,10 @@ type VhdxReader() =
                 [
                     for i in 0u .. entryCount - 1u do
                         let entryOffset = 16u + i * 32u
-                        let guid = GlbFunc.ReadGuid data entryOffset
-                        let fileOffsetBytes = GlbFunc.ReadUInt64LE data ( entryOffset + 16u )
-                        let lengthBytes = GlbFunc.ReadUInt32LE data ( entryOffset + 24u )
-                        let required = GlbFunc.ReadUInt32LE data ( entryOffset + 28u )
+                        let guid = VhdxCommon.ReadGuid data entryOffset
+                        let fileOffsetBytes = VhdxCommon.ReadUInt64LE data ( entryOffset + 16u )
+                        let lengthBytes = VhdxCommon.ReadUInt32LE data ( entryOffset + 24u )
+                        let required = VhdxCommon.ReadUInt32LE data ( entryOffset + 28u )
 
                         printfn "Region table entry(%d)" i
                         printfn "  Entry offset : 0x%08X" entryOffset
@@ -655,8 +679,8 @@ type VhdxReader() =
     /// </returns>
     static let ReadMetadata ( data : byte[] ) : VirtualDiskInfo =
 
-        let signature = GlbFunc.ReadUInt64BE data 0u        // signature
-        let mtEntryCount = GlbFunc.ReadUInt16LE data 10u    // Entry count
+        let signature = VhdxCommon.ReadUInt64BE data 0u        // signature
+        let mtEntryCount = VhdxCommon.ReadUInt16LE data 10u    // Entry count
 
         printfn "Metadata table header."
         printfn "  Signature : 0x%016X" signature
@@ -672,9 +696,9 @@ type VhdxReader() =
             [
                 for i in 0u .. uint32 mtEntryCount - 1u do
                     let eo = 32u + i * 32u
-                    let itemId = GlbFunc.ReadGuid data eo
-                    let offset = GlbFunc.ReadUInt32LE data ( eo + 16u );
-                    let length = GlbFunc.ReadUInt32LE data ( eo + 20u );
+                    let itemId = VhdxCommon.ReadGuid data eo
+                    let offset = VhdxCommon.ReadUInt32LE data ( eo + 16u );
+                    let length = VhdxCommon.ReadUInt32LE data ( eo + 20u );
                     let b = data.[ int32 eo + 24 ]
                     let isUser = ( b &&& 0x01uy ) <> 0uy
                     let isVirtualDisk = ( b &&& 0x02uy ) <> 0uy
@@ -726,12 +750,12 @@ type VhdxReader() =
         // Retrieve file parameters
         let fileParamItem =
             metadataItems
-            |> List.tryFind ( fun m -> m.ItemId = GlbFunc.METADATA_FILE_PARAM )
+            |> List.tryFind ( fun m -> m.ItemId = VhdxCommon.METADATA_FILE_PARAM )
         if fileParamItem.IsNone then
             raise <| Exception( "Metadata item(file parameter) missing" )
         if fileParamItem.Value.Length < 8u then
             raise <| Exception( "Invalid Length of metadata item(file parameter)." )
-        let payloadBlockSize = GlbFunc.ReadUInt32LE fileParamItem.Value.Data 0u
+        let payloadBlockSize = VhdxCommon.ReadUInt32LE fileParamItem.Value.Data 0u
         let leaveBlockAllocated = ( fileParamItem.Value.Data.[4] &&& 0x01uy ) = 0x01uy
         let hasParent = ( fileParamItem.Value.Data.[4] &&& 0x02uy ) = 0x02uy
 
@@ -747,12 +771,12 @@ type VhdxReader() =
         // Retrieve the virtual disk size.
         let diskSizeItem =
             metadataItems
-            |> List.tryFind ( fun m -> m.ItemId = GlbFunc.METADATA_VIRT_DISK_SIZE )
+            |> List.tryFind ( fun m -> m.ItemId = VhdxCommon.METADATA_VIRT_DISK_SIZE )
         if diskSizeItem.IsNone then
             raise <| Exception( "metadata item(virtual disk size) missing" )
         if diskSizeItem.Value.Length < 8u then
             raise <| Exception( "Length of metadata item(virtual disk size) is invalid." )
-        let virtualDiskSize = GlbFunc.ReadUInt64LE diskSizeItem.Value.Data 0u
+        let virtualDiskSize = VhdxCommon.ReadUInt64LE diskSizeItem.Value.Data 0u
 
         printfn "metadata item(virtual disk size): %d" virtualDiskSize
 
@@ -764,23 +788,23 @@ type VhdxReader() =
         // Retrieve the virtual disk ID
         let diskIDItem =
             metadataItems
-            |> List.tryFind ( fun m -> m.ItemId = GlbFunc.METADATA_VIRT_DISK_ID )
+            |> List.tryFind ( fun m -> m.ItemId = VhdxCommon.METADATA_VIRT_DISK_ID )
         if diskIDItem.IsNone then
             raise <| Exception( "Metadata item(virtual disk ID) missing." )
         if diskIDItem.Value.Length < 16u then
             raise <| Exception( "Length of metadata item(virtual disk ID) is invalid" )
-        let VirtualDiskId = GlbFunc.ReadGuid diskIDItem.Value.Data 0u
+        let VirtualDiskId = VhdxCommon.ReadGuid diskIDItem.Value.Data 0u
         printfn "Metadata item(virtual disk ID) : %s" ( VirtualDiskId.ToString( "D" ) )
 
         // Retrieve logical sector size.
         let logiSecSizeItem =
             metadataItems
-            |> List.tryFind ( fun m -> m.ItemId = GlbFunc.METADATA_LOGI_SECTOR_SIZE )
+            |> List.tryFind ( fun m -> m.ItemId = VhdxCommon.METADATA_LOGI_SECTOR_SIZE )
         if logiSecSizeItem.IsNone then
             raise <| Exception( "Metadata item(logical sector size) missing." )
         if logiSecSizeItem.Value.Length < 4u then
             raise <| Exception( "Length of metadata item(logical sector size) is invalid." )
-        let logicalSectorSize = GlbFunc.ReadUInt32LE logiSecSizeItem.Value.Data 0u
+        let logicalSectorSize = VhdxCommon.ReadUInt32LE logiSecSizeItem.Value.Data 0u
 
         printfn "Metadata item(logical sector size) : %d" logicalSectorSize
 
@@ -792,12 +816,12 @@ type VhdxReader() =
         // Retrieve the physical sector size.
         let physSecSizeItem =
             metadataItems
-            |> List.tryFind ( fun m -> m.ItemId = GlbFunc.METADATA_LOGI_SECTOR_SIZE )
+            |> List.tryFind ( fun m -> m.ItemId = VhdxCommon.METADATA_LOGI_SECTOR_SIZE )
         if physSecSizeItem.IsNone then
             raise <| Exception( "Metadata item(physical sector size) missing" )
         if physSecSizeItem.Value.Length < 4u then
             raise <| Exception( "Length of metadata item(physical sector size) is invalid" )
-        let physicalSectorSize = GlbFunc.ReadUInt32LE physSecSizeItem.Value.Data 0u
+        let physicalSectorSize = VhdxCommon.ReadUInt32LE physSecSizeItem.Value.Data 0u
 
         printfn "Metadata item(physical sector size) : %d" physicalSectorSize
 
@@ -809,16 +833,16 @@ type VhdxReader() =
             if hasParent then
                 let parLocItem =
                     metadataItems
-                    |> List.tryFind ( fun m -> m.ItemId = GlbFunc.METADATA_PARENT_LOC )
+                    |> List.tryFind ( fun m -> m.ItemId = VhdxCommon.METADATA_PARENT_LOC )
                 if parLocItem.IsNone then
                     raise <| Exception( "Metadata item(parent locator) missing" )
                 if parLocItem.Value.Length < 20u then
                     raise <| Exception( "Length of metadata item(parent locator) is invalid" )
-                let locatorType = GlbFunc.ReadGuid parLocItem.Value.Data 0u
+                let locatorType = VhdxCommon.ReadGuid parLocItem.Value.Data 0u
                 printfn "Metadata item(parent locator type) : %s" ( locatorType.ToString "D" )
-                if locatorType <> GlbFunc.METADATA_PARENT_LOC_VHDX then
+                if locatorType <> VhdxCommon.METADATA_PARENT_LOC_VHDX then
                     raise <| Exception( "The type of metadata item (parent locator) is unknown." )
-                let keyValueCount = GlbFunc.ReadUInt16LE parLocItem.Value.Data 18u
+                let keyValueCount = VhdxCommon.ReadUInt16LE parLocItem.Value.Data 18u
                 printfn "Metadata item(parent locator count) : %d" keyValueCount
                 if parLocItem.Value.Length < 20u + uint32 keyValueCount * 12u then
                     raise <| Exception( "The number of metadata item(parent locator) is invalid." )
@@ -827,10 +851,10 @@ type VhdxReader() =
                 let parLocEntry = [
                     for i in 0u .. uint32 keyValueCount - 1u do
                         let wpos = 20u + i * 12u
-                        let keyOffset = GlbFunc.ReadUInt32LE data wpos
-                        let valueOffset = GlbFunc.ReadUInt32LE data ( wpos + 4u )
-                        let keyLength = GlbFunc.ReadUInt16LE data ( wpos + 8u )
-                        let valueLength = GlbFunc.ReadUInt16LE data ( wpos + 10u )
+                        let keyOffset = VhdxCommon.ReadUInt32LE data wpos
+                        let valueOffset = VhdxCommon.ReadUInt32LE data ( wpos + 4u )
+                        let keyLength = VhdxCommon.ReadUInt16LE data ( wpos + 8u )
+                        let valueLength = VhdxCommon.ReadUInt16LE data ( wpos + 10u )
                         printfn "  Parent locator key offset : %d" keyOffset
                         printfn "  Parent locator value offset  : %d" valueOffset
                         printfn "  Parent locator key length : %d" keyLength
@@ -899,7 +923,7 @@ type VhdxReader() =
     /// </returns>
     static let GetPayloadBlockEntry ( batData : byte[] ) ( chunkRatio : uint64 ) ( pbIndex : uint64 ) : PayloadBATEntry =
         let idx = ( pbIndex / chunkRatio ) * ( chunkRatio + 1UL ) + ( pbIndex % chunkRatio )
-        let entry = GlbFunc.ReadUInt64LE batData ( uint32 idx * 8u )
+        let entry = VhdxCommon.ReadUInt64LE batData ( uint32 idx * 8u )
         let state =
             match entry &&& 0x0000000000000007UL with
             | 0UL -> BatEntryStatePB.PayloadNotPresent
@@ -938,7 +962,7 @@ type VhdxReader() =
     /// </returns>
     static let GetSectorBitmapBlockEntry ( batData : byte[] ) ( chunkRatio : uint64 ) ( sbbIndex : uint64 ) : struct( uint64 * BatEntryStateSB * uint64 ) =
         let idx = sbbIndex * ( chunkRatio + 1UL ) + chunkRatio
-        let entry = GlbFunc.ReadUInt64LE batData ( uint32 idx * 8u )
+        let entry = VhdxCommon.ReadUInt64LE batData ( uint32 idx * 8u )
         let state =
             match entry &&& 0x0000000000000007UL with
             | 0UL -> BatEntryStateSB.SectorBitmapNotPresent
@@ -1064,7 +1088,7 @@ type VhdxReader() =
         // Retrieve log information (active log entries only)
         let logInfo =
             if currentHeader.LogLength > 0u && currentHeader.LogGuid <> Guid.Empty then
-                let logData = GlbFunc.ReadBytes fs currentHeader.LogOffset currentHeader.LogLength
+                let logData = ReadBytes fs currentHeader.LogOffset currentHeader.LogLength
                 let e = ReadActiveLogSequense logData currentHeader.LogGuid
                 if e.Length = 0 then
                     raise <| Exception "No valid logs exist."
@@ -1146,13 +1170,13 @@ type VhdxReader() =
         // Get the locations of the metadata region and BAT region.
         let metadataRegion =
             currentRegionTable.Entries
-            |> List.tryFind ( fun e -> e.Guid = GlbFunc.REGENT_TYPE_METADATA )
+            |> List.tryFind ( fun e -> e.Guid = VhdxCommon.REGENT_TYPE_METADATA )
         if metadataRegion.IsNone then
             raise <| Exception("Metadata region not found.")
 
         let batRegion =
             currentRegionTable.Entries
-            |> List.tryFind ( fun e -> e.Guid = GlbFunc.REGENT_TYPE_BAT )
+            |> List.tryFind ( fun e -> e.Guid = VhdxCommon.REGENT_TYPE_BAT )
         if batRegion.IsNone then
             raise <| Exception("BAT region not found.")
 

@@ -3,7 +3,9 @@ namespace VhdxLibrary
 open System
 open System.IO
 open System.Text
-open System.Xml
+
+open Haruka.Constants
+open Haruka.Commons
 
 
 /// <summary>
@@ -26,18 +28,18 @@ type VhdxHandler() =
     static member UpdateHeader ( fs : FileStream ) ( header : VhdxHeader ) : uint64 =
 
         let hdrBuf1 : byte[] = Array.zeroCreate 4096
-        GlbFunc.WriteUInt32BE hdrBuf1 0u header.Signature
-        GlbFunc.WriteUInt32LE hdrBuf1 4u 0u
-        GlbFunc.WriteUInt64LE hdrBuf1 8u header.SequenceNumber
-        GlbFunc.WriteGuid hdrBuf1 16u header.FileWriteGuid
-        GlbFunc.WriteGuid hdrBuf1 32u header.DataWriteGuid
-        GlbFunc.WriteGuid hdrBuf1 48u header.LogGuid
-        GlbFunc.WriteUInt16LE hdrBuf1 64u header.LogVersion
-        GlbFunc.WriteUInt16LE hdrBuf1 66u header.Version
-        GlbFunc.WriteUInt32LE hdrBuf1 68u header.LogLength
-        GlbFunc.WriteUInt64LE hdrBuf1 72u header.LogOffset
+        VhdxCommon.WriteUInt32BE hdrBuf1 0u header.Signature
+        VhdxCommon.WriteUInt32LE hdrBuf1 4u 0u
+        VhdxCommon.WriteUInt64LE hdrBuf1 8u header.SequenceNumber
+        VhdxCommon.WriteGuid hdrBuf1 16u header.FileWriteGuid
+        VhdxCommon.WriteGuid hdrBuf1 32u header.DataWriteGuid
+        VhdxCommon.WriteGuid hdrBuf1 48u header.LogGuid
+        VhdxCommon.WriteUInt16LE hdrBuf1 64u header.LogVersion
+        VhdxCommon.WriteUInt16LE hdrBuf1 66u header.Version
+        VhdxCommon.WriteUInt32LE hdrBuf1 68u header.LogLength
+        VhdxCommon.WriteUInt64LE hdrBuf1 72u header.LogOffset
         let checkSum = Crc32C.Compute hdrBuf1
-        GlbFunc.WriteUInt32LE hdrBuf1 4u checkSum
+        VhdxCommon.WriteUInt32LE hdrBuf1 4u checkSum
 
         // Update old header
         let oldHeaderOffset = 0x30000UL - header.Offset
@@ -46,10 +48,10 @@ type VhdxHandler() =
         fs.Flush()
 
         // Update new header
-        GlbFunc.WriteUInt32LE hdrBuf1 4u 0u
-        GlbFunc.WriteUInt64LE hdrBuf1 8u ( header.SequenceNumber + 1UL )
+        VhdxCommon.WriteUInt32LE hdrBuf1 4u 0u
+        VhdxCommon.WriteUInt64LE hdrBuf1 8u ( header.SequenceNumber + 1UL )
         let checkSum2 = Crc32C.Compute hdrBuf1
-        GlbFunc.WriteUInt32LE hdrBuf1 4u checkSum2
+        VhdxCommon.WriteUInt32LE hdrBuf1 4u checkSum2
         fs.Seek( int64 header.Offset, SeekOrigin.Begin ) |> ignore
         fs.Write( hdrBuf1 )
         fs.Flush()

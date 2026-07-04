@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="GlbFunc.fs" />
+    <Compile Include="VhdxCommon.fs" />
     <Compile Include="VhdxTypes.fs" />
     <Compile Include="VhdxReader.fs" />
     <Compile Include="VhdxHandler.fs" />
@@ -17,6 +17,10 @@
     <Compile Include="VhdxChecker.fs" />
     <Compile Include="VhdxWriter.fs" />
     <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\products\Commons\Commons.fsproj" />
   </ItemGroup>
 
 </Project>

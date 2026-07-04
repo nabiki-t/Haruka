@@ -2,8 +2,10 @@ namespace VhdxLibrary
 
 open System
 open System.IO
-open System.Buffers.Binary
-open System.Text
+
+open Haruka.Constants
+open Haruka.Commons
+
 
 /// <summary>
 ///  Replay unprocessed logs.
