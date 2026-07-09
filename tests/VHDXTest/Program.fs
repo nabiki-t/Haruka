@@ -2,6 +2,8 @@ module main
 
 open System
 open System.Text.RegularExpressions
+open System.IO
+
 open VhdxLibrary
 
 open Haruka.Constants
@@ -27,7 +29,7 @@ type CmdArgs() =
         printfn "  VHDXTest read <vhdx-input> <xml-output>"
         printfn "  VHDXTest toraw <vhdx-input> <raw-output>"
         printfn "  VHDXTest tovhdx <raw-input> <vhdx-output> [/f] [/log <log-size>] [/p <payload-block-size>] [/s <sectore-size>]"
-        printfn "  VHDXTest corrupt <vhdx-input> <vhdx-output> /s <sector-indices>"
+        printfn "  VHDXTest corrupt <vhdx-output> /s <sector-indices>"
         printfn "  VHDXTest snapshot <parent-vhdx-input> <vhdx-output> [/log <log-size>] [/p <payload-block-size>]"
         printfn "  VHDXTest create <vhdx-output> [/v <virtual-disk-size>] [/f] [/log <log-size>] [/p <payload-block-size>] [/s <sectore-size>]"
         printfn "  VHDXTest check <vhdx-input>"
@@ -112,7 +114,7 @@ type CmdArgs() =
                 Varb = VHDXUtilCmdType.Corrupt;
                 NamedArgs = [| ( "/s", CRVM_String( 512 ) ); |]
                 ValuelessArgs = Array.empty;
-                NamelessArgs = [| CRVM_String( 256 ); CRVM_String( 256 ); |];
+                NamelessArgs = [| CRVM_String( 256 ); |];
                 HelpMsgName = "";
             };
             {
@@ -200,95 +202,128 @@ type CmdArgs() =
 [< EntryPoint >]
 let main ( argv : string[] ) : int32 =
     let cmd = CmdArgs.Recognize argv
-    match cmd.Varb with
-    | Read ->
-        let infile = cmd.DefaultNamelessString 0 ""
-        let outfile = cmd.DefaultNamelessString 1 ""
-        let metadata = VhdxReader.ReadVhdx infile
-        VhdxXmlSerializer.SerializeToFile metadata outfile
 
-    | ToRAW ->
-        let infile = cmd.DefaultNamelessString 0 ""
-        let outfile = cmd.DefaultNamelessString 1 ""
-        VhdxToRaw.Convert infile outfile
+    let t = task {
+        match cmd.Varb with
+        | Read ->
+            let infile = cmd.DefaultNamelessString 0 ""
+            let outfile = cmd.DefaultNamelessString 1 ""
+            let fa = FileAccessor( infile, 1u, true )
+            let! metadata = VhdxReader.ReadVhdx fa
+            VhdxXmlSerializer.SerializeToFile metadata outfile
+            fa.Close()
 
-    | ToVHDX ->
-        let rawfile = cmd.DefaultNamelessString 0 ""
-        let outfile = cmd.DefaultNamelessString 1 ""
-        let fixedflg = cmd.NamedArgs.ContainsKey "/f"
-        let logSize = cmd.DefaultNamedUInt32 "/log" 1u
-        let payloadBlockSize = cmd.DefaultNamedString "/p" "1" |> uint32
-        let sectorSize = cmd.DefaultNamedString "/s" "512" |> Blocksize.fromStringValue
-        VhdxCreator.RawToVHDX rawfile outfile ( logSize * 1048576u ) ( payloadBlockSize * 1048576u ) fixedflg sectorSize
+        | ToRAW ->
+            let infile = cmd.DefaultNamelessString 0 ""
+            let outfile = cmd.DefaultNamelessString 1 ""
+            let fa = FileAccessor( infile, 1u, true )
+            do! VhdxToRaw.Convert fa outfile
+            fa.Close()
 
-    | Corrupt ->
-        let infile = cmd.DefaultNamelessString 0 ""
-        let outfile = cmd.DefaultNamelessString 1 ""
-        let sectors =
-            cmd.DefaultNamedString "/s" ""
-            |> _.Split( ',' )
-            |> Array.map ( fun s -> uint64 s |> sec4k_me.ofUInt64 )
-            |> Array.toList
-        VhdxCorrupter.Inject infile outfile sectors
+        | ToVHDX ->
+            let rawfile = cmd.DefaultNamelessString 0 ""
+            let outfile = cmd.DefaultNamelessString 1 ""
+            let fixedflg = cmd.NamedArgs.ContainsKey "/f"
+            let logSize = cmd.DefaultNamedUInt32 "/log" 1u
+            let payloadBlockSize = cmd.DefaultNamedString "/p" "1" |> uint32
+            let sectorSize = cmd.DefaultNamedString "/s" "512" |> Blocksize.fromStringValue
+            File.Create outfile |> _.Close()
+            let fa = FileAccessor( outfile, 1u, false )
+            do! VhdxCreator.RawToVHDX rawfile fa ( logSize * 1048576u ) ( payloadBlockSize * 1048576u ) fixedflg sectorSize
+            fa.Close()
 
-    | Snapshot ->
-        let parent = cmd.DefaultNamelessString 0 ""
-        let outfile = cmd.DefaultNamelessString 1 ""
-        let logSize = cmd.DefaultNamedUInt32 "/log" 1u
-        let payloadBlockSize = cmd.DefaultNamedString "/p" "1" |> uint32
-        VhdxCreator.Create parent outfile ( logSize * 1048576u ) ( payloadBlockSize * 1048576u ) false 0UL Blocksize.BS_512
+        | Corrupt ->
+            let outfile = cmd.DefaultNamelessString 0 ""
+            let sectors =
+                cmd.DefaultNamedString "/s" ""
+                |> _.Split( ',' )
+                |> Array.map ( fun s -> uint64 s |> sec4k_me.ofUInt64 )
+                |> Array.toList
+            let fa = FileAccessor( outfile, 1u, false )
+            do! VhdxCorrupter.Inject fa sectors
+            fa.Close()
 
-    | Create ->
-        let outfile = cmd.DefaultNamelessString 0 ""
-        let fixedflg = cmd.NamedArgs.ContainsKey "/f"
-        let virtualDiskSize = cmd.DefaultNamedUInt64 "/v" 64UL
-        let logSize = cmd.DefaultNamedUInt32 "/log" 1u
-        let payloadBlockSize = cmd.DefaultNamedString "/p" "1" |> uint32
-        let sectorSize = cmd.DefaultNamedString "/s" "512" |> Blocksize.fromStringValue
-        VhdxCreator.Create "" outfile ( logSize * 1048576u ) ( payloadBlockSize * 1048576u ) fixedflg ( virtualDiskSize * 1048576UL ) sectorSize
+        | Snapshot ->
+            let parent = cmd.DefaultNamelessString 0 ""
+            let outfile = cmd.DefaultNamelessString 1 ""
+            let logSize = cmd.DefaultNamedUInt32 "/log" 1u
+            let payloadBlockSize = cmd.DefaultNamedString "/p" "1" |> uint32
+            let faparent =
+                if parent.Length > 0 then
+                    FileAccessor( parent, 1u, true ) |> Some
+                else
+                    None
+            File.Create outfile |> _.Close()
+            let faout = FileAccessor( outfile, 1u, false )
+            do! VhdxCreator.Create faparent faout ( logSize * 1048576u ) ( payloadBlockSize * 1048576u ) false 0UL Blocksize.BS_512
+            if faparent.IsSome then faparent.Value.Close()
+            faout.Close()
 
-    | Check ->
-        let infile = cmd.DefaultNamelessString 0 ""
-        VhdxChecker.Check infile
+        | Create ->
+            let outfile = cmd.DefaultNamelessString 0 ""
+            let fixedflg = cmd.NamedArgs.ContainsKey "/f"
+            let virtualDiskSize = cmd.DefaultNamedUInt64 "/v" 64UL
+            let logSize = cmd.DefaultNamedUInt32 "/log" 1u
+            let payloadBlockSize = cmd.DefaultNamedString "/p" "1" |> uint32
+            let sectorSize = cmd.DefaultNamedString "/s" "512" |> Blocksize.fromStringValue
+            File.Create outfile |> _.Close()
+            let fa = FileAccessor( outfile, 1u, false )
+            do! VhdxCreator.Create None fa ( logSize * 1048576u ) ( payloadBlockSize * 1048576u ) fixedflg ( virtualDiskSize * 1048576UL ) sectorSize
+            fa.Close()
 
-    | Write ->
-        let rawfile = cmd.DefaultNamelessString 0 ""
-        let vhdxfile = cmd.DefaultNamelessString 1 ""
-        let lba = cmd.DefaultNamedUInt64 "/l" 0UL |> blkcnt_me.ofUInt64
-        let ex = cmd.DefaultNamedInt32 "/int" 0
-        VhdxWriter.Write rawfile vhdxfile lba ex
+        | Check ->
+            let infile = cmd.DefaultNamelessString 0 ""
+            let fa = FileAccessor( infile, 1u, false )
+            do! VhdxChecker.Check fa
+            fa.Close()
 
-    | Random ->
-        let rawfile = cmd.DefaultNamelessString 0 ""
-        let fsizemb = cmd.DefaultNamedUInt64 "/v" 64UL
-        VhdxHandler.CreateRandomFile rawfile fsizemb
+        | Write ->
+            let rawfile = cmd.DefaultNamelessString 0 ""
+            let vhdxfile = cmd.DefaultNamelessString 1 ""
+            let lba = cmd.DefaultNamedUInt64 "/l" 0UL |> blkcnt_me.ofUInt64
+            let ex = cmd.DefaultNamedInt32 "/int" 0
+            let fa = FileAccessor( vhdxfile, 1u, false )
+            do! VhdxWriter.Write fa rawfile lba ex
+            fa.Close()
 
-    | Compare ->
-        let file1 = cmd.DefaultNamelessString 0 ""
-        let file2 = cmd.DefaultNamelessString 1 ""
-        let f1type =
-            match cmd.NamedString "/t1" with
-            | Some "vhdx" -> true
-            | Some "raw" -> false
-            | _ -> file1.ToUpperInvariant().EndsWith( ".VHDX" )
-        let f2type =
-            match cmd.NamedString "/t2" with
-            | Some "vhdx" -> true
-            | Some "raw" -> false
-            | _ -> file2.ToUpperInvariant().EndsWith( ".VHDX" )
-        let r =
-            match f1type, f2type with
-            | ( false, false ) ->
-                VhdxHandler.CompareRAW_RAW file1 file2
-            | ( true, false ) ->
-                VhdxHandler.CompareVHDX_RAW file1 file2
-            | ( false, true ) ->
-                VhdxHandler.CompareVHDX_RAW file2 file1
-            | ( true, true ) ->
-                VhdxHandler.CompareVHDX_VHDX file1 file2
-        if r then
-            printfn "The file contents match."
-        else
-            printfn "The file contents do not match."
+        | Random ->
+            let rawfile = cmd.DefaultNamelessString 0 ""
+            let fsizemb = cmd.DefaultNamedUInt64 "/v" 64UL
+            VhdxHandler.CreateRandomFile rawfile fsizemb
+
+        | Compare ->
+            let file1 = cmd.DefaultNamelessString 0 ""
+            let file2 = cmd.DefaultNamelessString 1 ""
+            let f1type =
+                match cmd.NamedString "/t1" with
+                | Some "vhdx" -> true
+                | Some "raw" -> false
+                | _ -> file1.ToUpperInvariant().EndsWith( ".VHDX" )
+            let f2type =
+                match cmd.NamedString "/t2" with
+                | Some "vhdx" -> true
+                | Some "raw" -> false
+                | _ -> file2.ToUpperInvariant().EndsWith( ".VHDX" )
+            let! r = task {
+                match f1type, f2type with
+                | ( false, false ) ->
+                    return VhdxHandler.CompareRAW_RAW file1 file2
+                | ( true, false ) ->
+                    let fa1 = FileAccessor( file1, 1u, true )
+                    return! VhdxHandler.CompareVHDX_RAW fa1 file2
+                | ( false, true ) ->
+                    let fa2 = FileAccessor( file2, 1u, true )
+                    return! VhdxHandler.CompareVHDX_RAW fa2 file1
+                | ( true, true ) ->
+                    let fa1 = FileAccessor( file1, 1u, true )
+                    let fa2 = FileAccessor( file2, 1u, true )
+                    return! VhdxHandler.CompareVHDX_VHDX fa1 fa2
+            }
+            if r then
+                printfn "The file contents match."
+            else
+                printfn "The file contents do not match."
+    }
+    t.Result |> ignore
 
     0

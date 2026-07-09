@@ -2,6 +2,7 @@ namespace VhdxLibrary
 
 open System
 open System.IO
+open System.Threading.Tasks
 
 open Haruka.Constants
 open Haruka.Commons
@@ -19,69 +20,61 @@ type VhdxToRaw() =
     /// <param name="outputPath">
     ///  Output RAW file path name.
     /// </param>
-    static member Convert ( inputPath : string ) ( outputPath : string ) : unit =
+    static member Convert ( fa : FileAccessor ) ( outputPath : string ) : Task =
+        task {
+            printfn "========================================================"
+            printfn "Convert to RAW format."
+            printfn "Input file : %s" fa.FileName
+            printfn "Output file : %s" outputPath
 
-        printfn "========================================================"
-        printfn "Convert to RAW format."
-        printfn "Input file : %s" inputPath
-        printfn "Output file : %s" outputPath
+            // Read metadata and open files.
+            let! allMetadatas = VhdxHandler.ReadAllMetadata fa
+            let vFiles, vMD = allMetadatas |> Array.unzip
+            if vFiles.Length <= 0 then
+                raise <| Exception "Missing input files."
 
-        // Read metadata and open files.
-        let vFiles, vMD =
-            let metadata = VhdxHandler.ReadAllMetadata inputPath
-            let v1 =
-                metadata
-                |> Array.map ( fun ( itr, _ ) ->
-                    new FileStream( itr, FileMode.Open, FileAccess.Read, FileShare.None )
-                )
-            let v2 = metadata |> Array.map snd
-            ( v1, v2 )
-        if vFiles.Length <= 0 then
-            raise <| Exception "Missing input files."
+            File.Delete outputPath
+            use outfile = new FileStream( outputPath, FileMode.Create, FileAccess.Write, FileShare.None )
 
-        File.Delete outputPath
-        use outfile = new FileStream( outputPath, FileMode.Create, FileAccess.Write, FileShare.None )
+            let zeroBuffer = Array.zeroCreate<byte>( int32 vMD.[0].VirtualDiskInfo.PayloadBlockSize )
+            let readPBBuf = Array.zeroCreate<byte>( int32 vMD.[0].VirtualDiskInfo.PayloadBlockSize )
+            let readSecBuf = Array.zeroCreate<byte>( vMD.[0].VirtualDiskInfo.LogicalSectorSize |> Blocksize.toUInt32 |> int32 )
 
-        let zeroBuffer = Array.zeroCreate<byte>( int32 vMD.[0].VirtualDiskInfo.PayloadBlockSize )
-        let readPBBuf = Array.zeroCreate<byte>( int32 vMD.[0].VirtualDiskInfo.PayloadBlockSize )
-        let readSecBuf = Array.zeroCreate<byte>( vMD.[0].VirtualDiskInfo.LogicalSectorSize |> Blocksize.toUInt32 |> int32 )
+            // Calculate number of sectors in a payload block.
+            let secCntInPB =
+                vMD.[0].VirtualDiskInfo.PayloadBlockSize / ( vMD.[0].VirtualDiskInfo.LogicalSectorSize |> Blocksize.toUInt32 ) |> int32
 
-        // Calculate number of sectors in a payload block.
-        let secCntInPB =
-            vMD.[0].VirtualDiskInfo.PayloadBlockSize / ( vMD.[0].VirtualDiskInfo.LogicalSectorSize |> Blocksize.toUInt32 ) |> int32
+            for pbIdx = 0 to vMD.[0].BatEntries.Payloads.Length - 1 do
+                let pbItr = vMD.[0].BatEntries.Payloads.[ pbIdx ]
+                match pbItr.State with
+                | PayloadUndefined
+                | PayloadZero
+                | PayloadUnapped ->
+                    // Assume that all values ​​are 0.
+                    printfn "Payload block %d : All zeros" pbIdx
+                    outfile.Write( zeroBuffer )
 
-        vMD.[0].BatEntries.Payloads
-        |> Array.iteri ( fun pbIdx pbItr ->
-            match pbItr.State with
-            | PayloadUndefined
-            | PayloadZero
-            | PayloadUnapped ->
-                // Assume that all values ​​are 0.
-                printfn "Payload block %d : All zeros" pbIdx
-                outfile.Write( zeroBuffer )
+                | PayloadFullyPresent ->
+                    // All data is recorded in the input file.
+                    printfn "Payload block %d : Recorded in the input file" pbIdx
+                    do! vFiles.[0].ReadWithPseudoLimit vMD.[0].LastFileSize pbItr.FileOffset ( ArraySegment readPBBuf )
+                    outfile.Write( readPBBuf )
 
-            | PayloadFullyPresent ->
-                // All data is recorded in the input file.
-                printfn "Payload block %d : Recorded in the input file" pbIdx
-                vFiles.[0].Seek( int64 pbItr.FileOffset, SeekOrigin.Begin ) |> ignore
-                vFiles.[0].Read( readPBBuf ) |> ignore
-                outfile.Write( readPBBuf )
+                | PayloadNotPresent
+                | PayloadPartiallyPresent ->
+                    // The sector bitmap needs to be inspected.
+                    printfn "Payload block %d : Copy sector by sector" pbIdx
+                    for secIdxInPB = 0 to secCntInPB - 1 do
+                        let lba = uint64 ( pbIdx * secCntInPB + secIdxInPB ) |> blkcnt_me.ofUInt64
+                        match VhdxHandler.ResolvLBA lba vMD with
+                        | ValueSome( struct( fsidx2, fpos ) ) ->
+                            do! vFiles.[fsidx2].ReadWithPseudoLimit vMD.[fsidx2].LastFileSize fpos ( ArraySegment readSecBuf )
+                        | _ ->
+                            Array.fill readSecBuf 0 readSecBuf.Length 0uy
+                        outfile.Write( readSecBuf )
 
-            | PayloadNotPresent
-            | PayloadPartiallyPresent ->
-                // The sector bitmap needs to be inspected.
-                printfn "Payload block %d : Copy sector by sector" pbIdx
-                for secIdxInPB = 0 to secCntInPB - 1 do
-                    let lba = uint64 ( pbIdx * secCntInPB + secIdxInPB ) |> blkcnt_me.ofUInt64
-                    match VhdxHandler.ResolvLBA lba vMD with
-                    | ValueSome( struct( fsidx2, fpos ) ) ->
-                        vFiles.[fsidx2].Seek( int64 fpos, SeekOrigin.Begin ) |> ignore
-                        vFiles.[fsidx2].Read( readSecBuf ) |> ignore
-                    | _ ->
-                        Array.fill readSecBuf 0 readSecBuf.Length 0uy
-                    outfile.Write( readSecBuf )
-        )
+            vFiles |> Array.iter ( fun itr -> itr.Close() )
+            outfile.Flush()
+            outfile.Close()
+        }
 
-        vFiles |> Array.iter ( fun itr -> itr.Close() )
-        outfile.Flush()
-        outfile.Close()

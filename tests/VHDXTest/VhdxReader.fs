@@ -3,7 +3,7 @@ namespace VhdxLibrary
 open System
 open System.IO
 open System.Text
-open System.Buffers.Binary
+open System.Threading.Tasks
 
 open Haruka.Constants
 open Haruka.Commons
@@ -12,7 +12,7 @@ open Haruka.Commons
 /// class implementation of VHDX metadata reader.
 
 type VhdxReader() =
-
+(*
     /// <summary>
     ///  Read data from a specified region in the stream.
     /// </summary>
@@ -33,139 +33,148 @@ type VhdxReader() =
         fs.Seek( int64 offset, SeekOrigin.Begin ) |> ignore
         fs.ReadExactly( b, 0, int32 length )
         b
-
+*)
     /// <summary>
     ///  Read file type identifier
     /// </summary>
-    /// <param name="fs">
-    ///  File stream for opened VHDX file.
+    /// <param name="fa">
+    ///  File accessor for opened VHDX file.
     /// </param>
     /// <returns>
     ///  creator string.
     /// </returns>
-    static let ReadFileTypeIdentifier ( fs : FileStream ) : string =
+    static let ReadFileTypeIdentifier ( fa : FileAccessor ) : Task<string> =
+        task {
+            // signature
+            let sigBuf = Array.zeroCreate<byte> 8 
+            do! fa.Read 0UL ( ArraySegment sigBuf )
+            let signature = VhdxCommon.ReadUInt64BE sigBuf 0u
+            printfn "File type identifier signature : 0x%016X" signature
+            if signature <> 0x7668647866696C65UL then
+                raise <| Exception( "File type identifier signature mismatch" )
 
-        // signature
-        let sigBuf = ReadBytes fs 0UL 8u
-        let signature = VhdxCommon.ReadUInt64BE sigBuf 0u
-        printfn "File type identifier signature : 0x%016X" signature
-        if signature <> 0x7668647866696C65UL then
-            raise <| Exception( "File type identifier signature mismatch" )
-
-        // Creator
-        let rs =
-            ReadBytes fs 8UL 512u
-            |> Encoding.Unicode.GetString
-            |> _.Replace( "\000", "" )
-            |> _.Trim()
-
-        printfn "Creator : %s" rs
-        rs
+            // Creator
+            let wv = Array.zeroCreate<byte> ( 512 - 8 )
+            do! fa.Read 8UL ( ArraySegment wv )
+            let rs =
+                wv
+                |> Encoding.Unicode.GetString
+                |> _.Replace( "\000", "" )
+                |> _.Trim()
+            printfn "Creator : %s" rs
+            return rs
+        }
 
     /// <summary>
     ///  Read headers.
     /// </summary>
-    /// <param name="fs">
-    ///  File stream for opened VHDX file.
+    /// <param name="fa">
+    ///  File accessor for opened VHDX file.
     /// </param>
     /// <returns>
     ///  Retrieved VHDX file headeres.
     /// </returns>
-    static let ReadHeaders ( fs : FileStream ) : VhdxHeader list =
-        // Read header 0 (offset=0x10000)
-        let header0Buf = ReadBytes fs 0x10000UL 4096u
-        let header0 = {
-            Signature = VhdxCommon.ReadUInt32BE header0Buf 0u;
-            Checksum = VhdxCommon.ReadUInt32LE header0Buf 4u;
-            SequenceNumber = VhdxCommon.ReadUInt64LE header0Buf 8u;
-            FileWriteGuid = VhdxCommon.ReadGuid header0Buf 16u;
-            DataWriteGuid = VhdxCommon.ReadGuid header0Buf 32u;
-            LogGuid = VhdxCommon.ReadGuid header0Buf 48u;
-            LogVersion = VhdxCommon.ReadUInt16LE header0Buf 64u;
-            Version = VhdxCommon.ReadUInt16LE header0Buf 66u;
-            LogLength = VhdxCommon.ReadUInt32LE header0Buf 68u;
-            LogOffset = VhdxCommon.ReadUInt64LE header0Buf 72u;
-            Offset = 0x10000UL;
-            Index = 0;
+    static let ReadHeaders ( fa : FileAccessor ) : Task<VhdxHeader list> =
+        task {
+            let fileSize = fa.GetFileSize()
+
+            // Read header 0 (offset=0x10000)
+            let header0Buf = Array.zeroCreate<byte> 4096
+            do! fa.Read 0x10000UL ( ArraySegment header0Buf )
+            let header0 = {
+                Signature = VhdxCommon.ReadUInt32BE header0Buf 0u;
+                Checksum = VhdxCommon.ReadUInt32LE header0Buf 4u;
+                SequenceNumber = VhdxCommon.ReadUInt64LE header0Buf 8u;
+                FileWriteGuid = VhdxCommon.ReadGuid header0Buf 16u;
+                DataWriteGuid = VhdxCommon.ReadGuid header0Buf 32u;
+                LogGuid = VhdxCommon.ReadGuid header0Buf 48u;
+                LogVersion = VhdxCommon.ReadUInt16LE header0Buf 64u;
+                Version = VhdxCommon.ReadUInt16LE header0Buf 66u;
+                LogLength = VhdxCommon.ReadUInt32LE header0Buf 68u;
+                LogOffset = VhdxCommon.ReadUInt64LE header0Buf 72u;
+                Offset = 0x10000UL;
+                Index = 0;
+            }
+
+            let header0Enable =
+                let c0 = VhdxCommon.CheckHeaderChecksum header0Buf header0.Checksum && header0.Signature = 0x68656164u
+                let c1 = header0.LogVersion = 0us
+                let c2 = header0.Version = 1us
+                let c3 = header0.LogLength &&& 0x000FFFFFu = 0u             // Multiples of 1MB
+                let c4 = header0.LogOffset &&& 0x00000000000FFFFFUL = 0UL   // Multiples of 1MB
+                let c5 = ( int32 header0.LogLength ) >= 0
+                let c6 = ( int64 header0.LogOffset ) >= 0L
+                let c7 = header0.LogOffset + ( uint64 header0.LogLength ) <= fileSize
+                let c8 = header0.LogOffset + ( uint64 header0.LogLength ) <= 0x0000400000000000UL   // 64TB or less
+                c0 && c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8
+
+            printfn "Header 0"
+            printfn "  Signature : 0x%08X" header0.Signature
+            printfn "  Checksum : 0x%08X" header0.Checksum
+            printfn "  Sequence Number : %d" header0.SequenceNumber
+            printfn "  File Write Guid : %s" ( header0.FileWriteGuid.ToString( "D" ) )
+            printfn "  Data Write Guid : %s" ( header0.DataWriteGuid.ToString( "D" ) )
+            printfn "  Log Guid : %s" ( header0.LogGuid.ToString( "D" ) )
+            printfn "  Log Version : %d" header0.LogVersion
+            printfn "  Version : %d" header0.Version
+            printfn "  Log Length : %d" header0.LogLength
+            printfn "  Log Offset : %d" header0.LogOffset
+            printfn "  Header 0 Offset : %d" header0.Offset
+            printfn "  Validity : %s" ( if header0Enable then "valid" else "invalid" )
+
+            // Read header 1 (offset=0x20000)
+            let header1Buf = Array.zeroCreate<byte> 4096
+            do! fa.Read 0x20000UL ( ArraySegment header1Buf )
+            let header1 = {
+                Signature = VhdxCommon.ReadUInt32BE header1Buf 0u;
+                Checksum = VhdxCommon.ReadUInt32LE header1Buf 4u;
+                SequenceNumber = VhdxCommon.ReadUInt64LE header1Buf 8u;
+                FileWriteGuid = VhdxCommon.ReadGuid header1Buf 16u;
+                DataWriteGuid = VhdxCommon.ReadGuid header1Buf 32u;
+                LogGuid = VhdxCommon.ReadGuid header1Buf 48u;
+                LogVersion = VhdxCommon.ReadUInt16LE header1Buf 64u;
+                Version = VhdxCommon.ReadUInt16LE header1Buf 66u;
+                LogLength = VhdxCommon.ReadUInt32LE header1Buf 68u;
+                LogOffset = VhdxCommon.ReadUInt64LE header1Buf 72u;
+                Offset = 0x20000UL;
+                Index = 1;
+            }
+            let header1Enable =
+                let c0 = VhdxCommon.CheckHeaderChecksum header1Buf header1.Checksum && header1.Signature = 0x68656164u
+                let c1 = header1.LogVersion = 0us
+                let c2 = header1.Version = 1us
+                let c3 = header1.LogLength &&& 0x000FFFFFu = 0u             // Multiples of 1MB
+                let c4 = header1.LogOffset &&& 0x00000000000FFFFFUL = 0UL   // Multiples of 1MB
+                let c5 = ( int32 header1.LogLength ) >= 0
+                let c6 = ( int64 header1.LogOffset ) >= 0L
+                let c7 = header1.LogOffset + ( uint64 header1.LogLength ) <= fileSize
+                let c8 = header1.LogOffset + ( uint64 header1.LogLength ) <= 0x0000400000000000UL   // 64TB or less
+                c0 && c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8
+
+            printfn "Header 1"
+            printfn "  Signature : 0x%08X" header1.Signature
+            printfn "  Checksum : 0x%08X" header1.Checksum
+            printfn "  Sequence Number : %d" header1.SequenceNumber
+            printfn "  File Write Guid : %s" ( header1.FileWriteGuid.ToString( "D" ) )
+            printfn "  Data Write Guid : %s" ( header1.DataWriteGuid.ToString( "D" ) )
+            printfn "  Log Guid : %s" ( header1.LogGuid.ToString( "D" ) )
+            printfn "  Log Version : %d" header1.LogVersion
+            printfn "  Version : %d" header1.Version
+            printfn "  Log Length : %d" header1.LogLength
+            printfn "  Log Offset : %d" header1.LogOffset
+            printfn "  Header 1 Offset : %d" header1.Offset
+            printfn "  Validity : %s" ( if header1Enable then "valid" else "invalid" )
+
+            // Determine which headers to use
+            if header0Enable && header1Enable then
+                return [ header0; header1 ]
+            elif header0Enable && not header1Enable then
+                return [ header0 ]
+            elif not header0Enable && header1Enable then
+                return [ header1 ]
+            else
+                return raise <| Exception( "No valid header exists." )
         }
-
-        let header0Enable =
-            let c0 = VhdxCommon.CheckHeaderChecksum header0Buf header0.Checksum && header0.Signature = 0x68656164u
-            let c1 = header0.LogVersion = 0us
-            let c2 = header0.Version = 1us
-            let c3 = header0.LogLength &&& 0x000FFFFFu = 0u             // Multiples of 1MB
-            let c4 = header0.LogOffset &&& 0x00000000000FFFFFUL = 0UL   // Multiples of 1MB
-            let c5 = ( int32 header0.LogLength ) >= 0
-            let c6 = ( int64 header0.LogOffset ) >= 0L
-            let c7 = ( int64 header0.LogOffset ) + ( int64 header0.LogLength ) <= fs.Length
-            let c8 = header0.LogOffset + ( uint64 header0.LogLength ) <= 0x0000400000000000UL   // 64TB or less
-            c0 && c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8
-
-        printfn "Header 0"
-        printfn "  Signature : 0x%08X" header0.Signature
-        printfn "  Checksum : 0x%08X" header0.Checksum
-        printfn "  Sequence Number : %d" header0.SequenceNumber
-        printfn "  File Write Guid : %s" ( header0.FileWriteGuid.ToString( "D" ) )
-        printfn "  Data Write Guid : %s" ( header0.DataWriteGuid.ToString( "D" ) )
-        printfn "  Log Guid : %s" ( header0.LogGuid.ToString( "D" ) )
-        printfn "  Log Version : %d" header0.LogVersion
-        printfn "  Version : %d" header0.Version
-        printfn "  Log Length : %d" header0.LogLength
-        printfn "  Log Offset : %d" header0.LogOffset
-        printfn "  Header 0 Offset : %d" header0.Offset
-        printfn "  Validity : %s" ( if header0Enable then "valid" else "invalid" )
-
-        // Read header 1 (offset=0x20000)
-        let header1Buf = ReadBytes( fs )( 0x20000UL )( 4096u )
-        let header1 = {
-            Signature = VhdxCommon.ReadUInt32BE header1Buf 0u;
-            Checksum = VhdxCommon.ReadUInt32LE header1Buf 4u;
-            SequenceNumber = VhdxCommon.ReadUInt64LE header1Buf 8u;
-            FileWriteGuid = VhdxCommon.ReadGuid header1Buf 16u;
-            DataWriteGuid = VhdxCommon.ReadGuid header1Buf 32u;
-            LogGuid = VhdxCommon.ReadGuid header1Buf 48u;
-            LogVersion = VhdxCommon.ReadUInt16LE header1Buf 64u;
-            Version = VhdxCommon.ReadUInt16LE header1Buf 66u;
-            LogLength = VhdxCommon.ReadUInt32LE header1Buf 68u;
-            LogOffset = VhdxCommon.ReadUInt64LE header1Buf 72u;
-            Offset = 0x20000UL;
-            Index = 1;
-        }
-        let header1Enable =
-            let c0 = VhdxCommon.CheckHeaderChecksum header1Buf header1.Checksum && header1.Signature = 0x68656164u
-            let c1 = header1.LogVersion = 0us
-            let c2 = header1.Version = 1us
-            let c3 = header1.LogLength &&& 0x000FFFFFu = 0u             // Multiples of 1MB
-            let c4 = header1.LogOffset &&& 0x00000000000FFFFFUL = 0UL   // Multiples of 1MB
-            let c5 = ( int32 header1.LogLength ) >= 0
-            let c6 = ( int64 header1.LogOffset ) >= 0L
-            let c7 = ( int64 header1.LogOffset ) + ( int64 header1.LogLength ) <= fs.Length
-            let c8 = header1.LogOffset + ( uint64 header1.LogLength ) <= 0x0000400000000000UL   // 64TB or less
-            c0 && c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8
-
-        printfn "Header 1"
-        printfn "  Signature : 0x%08X" header1.Signature
-        printfn "  Checksum : 0x%08X" header1.Checksum
-        printfn "  Sequence Number : %d" header1.SequenceNumber
-        printfn "  File Write Guid : %s" ( header1.FileWriteGuid.ToString( "D" ) )
-        printfn "  Data Write Guid : %s" ( header1.DataWriteGuid.ToString( "D" ) )
-        printfn "  Log Guid : %s" ( header1.LogGuid.ToString( "D" ) )
-        printfn "  Log Version : %d" header1.LogVersion
-        printfn "  Version : %d" header1.Version
-        printfn "  Log Length : %d" header1.LogLength
-        printfn "  Log Offset : %d" header1.LogOffset
-        printfn "  Header 1 Offset : %d" header1.Offset
-        printfn "  Validity : %s" ( if header1Enable then "valid" else "invalid" )
-
-        // Determine which headers to use
-        if header0Enable && header1Enable then
-            [ header0; header1 ]
-        elif header0Enable && not header1Enable then
-            [ header0 ]
-        elif not header0Enable && header1Enable then
-            [ header1 ]
-        else
-            raise <| Exception( "No valid header exists." )
 
     /// <summary>
     ///  Read log data sector.
@@ -543,8 +552,8 @@ type VhdxReader() =
     /// <param name="log">
     ///  log data.
     /// </param>
-    /// <param name="fs">
-    ///  File stream of the VHDX file.
+    /// <param name="fa">
+    ///  File accessor of the VHDX file.
     /// </param>
     /// <param name="offset">
     ///  The starting position of the range to attempt to acquire data.
@@ -556,35 +565,44 @@ type VhdxReader() =
     /// <returns>
     ///  Retrieved data.
     /// </returns>
-    static let ReadBytesWithLog ( log : LogEntry list ) ( fs : FileStream ) ( offset : uint64 ) ( length : uint32 ) : byte[] =
-        if offset &&& 0x0000000000000FFFUL <> 0UL then
-            raise <| Exception "offset is not in units of 4KB."
-        if length &&& 0x00000FFFu <> 0u then
-            raise <| Exception "length is not in units of 4KB."
+    static let ReadBytesWithLog
+            ( log : LogEntry list )
+            ( lastFileSize : uint64 )
+            ( fa : FileAccessor )
+            ( offset : uint64 )
+            ( length : uint32 ) : Task<byte[]> =
+        task {
+            if offset &&& 0x0000000000000FFFUL <> 0UL then
+                raise <| Exception "offset is not in units of 4KB."
+            if length &&& 0x00000FFFu <> 0u then
+                raise <| Exception "length is not in units of 4KB."
 
-        if length = 0u then
-            [||]
-        else
-            // Read from the file.
-            let buf = ReadBytes fs offset length
-            // Reflect updates from the log.
-            for itrLE in log do
-                for itrDE in itrLE.Descriptors do
-                    match itrDE with
-                    | LogDescriptor.Data x ->
-                        if offset <= x.FileOffset && x.FileOffset < offset + uint64 length then
-                            let dstPos = x.FileOffset - offset |> int32
-                            Array.blit x.LeadingBytes 0 buf dstPos 8
-                            Array.blit itrLE.DataSectors.[ int32 x.ddIndex ] 0 buf ( dstPos + 8 ) 4084
-                            Array.blit x.TrailingBytes 0 buf ( dstPos + 4092 ) 4
-                    | LogDescriptor.Zero x ->
-                        let startIdx = max offset x.FileOffset
-                        let endIdx = min ( offset + uint64 length ) ( x.FileOffset + uint64 x.ZeroLength )
-                        if endIdx > startIdx then
-                            let targetIndex = startIdx - offset |> int32
-                            let targetLength = endIdx - startIdx |> int32
-                            Array.fill buf targetIndex targetLength 0uy
-            buf
+            if length = 0u then
+                return [||]
+            else
+
+                // Read from the file.
+                let buf = Array.zeroCreate<byte>( int32 length )
+                do! fa.ReadWithPseudoLimit lastFileSize offset ( ArraySegment buf )
+                // Reflect updates from the log.
+                for itrLE in log do
+                    for itrDE in itrLE.Descriptors do
+                        match itrDE with
+                        | LogDescriptor.Data x ->
+                            if offset <= x.FileOffset && x.FileOffset < offset + uint64 length then
+                                let dstPos = x.FileOffset - offset |> int32
+                                Array.blit x.LeadingBytes 0 buf dstPos 8
+                                Array.blit itrLE.DataSectors.[ int32 x.ddIndex ] 0 buf ( dstPos + 8 ) 4084
+                                Array.blit x.TrailingBytes 0 buf ( dstPos + 4092 ) 4
+                        | LogDescriptor.Zero x ->
+                            let startIdx = max offset x.FileOffset
+                            let endIdx = min ( offset + uint64 length ) ( x.FileOffset + uint64 x.ZeroLength )
+                            if endIdx > startIdx then
+                                let targetIndex = startIdx - offset |> int32
+                                let targetLength = endIdx - startIdx |> int32
+                                Array.fill buf targetIndex targetLength 0uy
+                return buf
+        }
 
     /// <summary>
     ///  Read Region Table.
@@ -996,69 +1014,71 @@ type VhdxReader() =
     /// </returns>
     static let ReadBat
         ( logInfo : LogEntry list )
-        ( fs : FileStream )
+        ( lastFileSize : uint64 )
+        ( fa : FileAccessor )
         ( batRegion : RegionEntry )
         ( virtualDiskInfo : VirtualDiskInfo )
-        : BatEntries =
+        : Task<BatEntries> =
+        task {
+            let! fileData = ReadBytesWithLog logInfo lastFileSize fa batRegion.FileOffset batRegion.Length
+            let chunkSize = 0x800000UL * Blocksize.toUInt64 virtualDiskInfo.LogicalSectorSize
+            let chunkRatio = chunkSize / uint64 virtualDiskInfo.PayloadBlockSize
+            let payloadBlockCount = ( virtualDiskInfo.VirtualDiskSize - 1UL ) / uint64 virtualDiskInfo.PayloadBlockSize + 1UL
+            let sectorBitmapBlockCount = ( payloadBlockCount - 1UL ) / chunkRatio + 1UL
+            let batEntryCount =
+                if not virtualDiskInfo.HasParent then
+                    payloadBlockCount + ( ( payloadBlockCount - 1UL ) / chunkRatio )
+                else
+                    sectorBitmapBlockCount * ( chunkRatio + 1UL )
 
-        let fileData = ReadBytesWithLog logInfo fs batRegion.FileOffset batRegion.Length
-        let chunkSize = 0x800000UL * Blocksize.toUInt64 virtualDiskInfo.LogicalSectorSize
-        let chunkRatio = chunkSize / uint64 virtualDiskInfo.PayloadBlockSize
-        let payloadBlockCount = ( virtualDiskInfo.VirtualDiskSize - 1UL ) / uint64 virtualDiskInfo.PayloadBlockSize + 1UL
-        let sectorBitmapBlockCount = ( payloadBlockCount - 1UL ) / chunkRatio + 1UL
-        let batEntryCount =
-            if not virtualDiskInfo.HasParent then
-                payloadBlockCount + ( ( payloadBlockCount - 1UL ) / chunkRatio )
-            else
-                sectorBitmapBlockCount * ( chunkRatio + 1UL )
+            printfn "  Chunk Size : %d" chunkSize
+            printfn "  Chunk Ratio : %d" chunkRatio
+            printfn "  Payload Block Count : %d" payloadBlockCount
+            printfn "  Sector Bitmap Block Count : %d" sectorBitmapBlockCount
+            printfn "  Bat Entry Count : %d" batEntryCount
 
-        printfn "  Chunk Size : %d" chunkSize
-        printfn "  Chunk Ratio : %d" chunkRatio
-        printfn "  Payload Block Count : %d" payloadBlockCount
-        printfn "  Sector Bitmap Block Count : %d" sectorBitmapBlockCount
-        printfn "  Bat Entry Count : %d" batEntryCount
+            if uint64( fileData.Length / 8 ) < batEntryCount then
+                raise <| Exception "The BAT entry has insufficient data length."
 
-        if uint64( fileData.Length / 8 ) < batEntryCount then
-            raise <| Exception "The BAT entry has insufficient data length."
+            // Read payload BAT entries
+            let payloads = [|
+                for i in 0UL .. payloadBlockCount - 1UL ->
+                    GetPayloadBlockEntry fileData chunkRatio i
+            |]
 
-        // Read payload BAT entries
-        let payloads = [|
-            for i in 0UL .. payloadBlockCount - 1UL ->
-                GetPayloadBlockEntry fileData chunkRatio i
-        |]
-
-        // Read sector bitmap blocks
-        let sectorBitmapBlock = [|
-            for i in  0UL .. sectorBitmapBlockCount - 1UL do
+            // Read sector bitmap blocks
+            let sectorBitmapBlock = Array.zeroCreate<SectorBitmapBATEntry>( int sectorBitmapBlockCount )
+            for i in 0UL .. sectorBitmapBlockCount - 1UL do
                 if not virtualDiskInfo.HasParent then
                     // For dynamic or fixed VHDX files, the final sector bitmap block BAT entry is not recorded on the media.
                     // Since no sector bitmap is allocated in this case, the reading of the sector bitmap block BAT entry is skipped.
-                    {
+                    sectorBitmapBlock.[ int i ] <- {
                         BatEntryIndex = i * ( chunkRatio + 1UL ) + chunkRatio;
                         SBState = BatEntryStateSB.SectorBitmapNotPresent;
                         FileOffset = 0UL;
                         Bitmap = Array.empty;
                     }
                 else
-                    let struct( idx, stat, pos ) = GetSectorBitmapBlockEntry fileData chunkRatio ( uint64 i )
-                    {
+                    let struct( idx, stat, pos ) = GetSectorBitmapBlockEntry fileData chunkRatio i
+                    let! bitmapData = ReadBytesWithLog logInfo lastFileSize fa pos 0x100000u
+                    sectorBitmapBlock.[ int i ] <- {
                         BatEntryIndex = idx;
                         SBState = stat;
                         FileOffset = pos;
-                        Bitmap = ReadBytesWithLog logInfo fs pos 0x100000u;
+                        Bitmap = bitmapData;
                     }
-        |]
 
-        {
-            BATRegionOffset = batRegion.FileOffset;
-            BATRegionLength = batRegion.Length;
-            ChunkSize = chunkSize;
-            ChunkRatio = chunkRatio;
-            PayloadBlockCount = payloadBlockCount;
-            SectorBitmapBlockCount = sectorBitmapBlockCount;
-            BatEntryCount = batEntryCount;
-            Payloads = payloads;
-            SectorBitmap = sectorBitmapBlock;
+            return {
+                BATRegionOffset = batRegion.FileOffset;
+                BATRegionLength = batRegion.Length;
+                ChunkSize = chunkSize;
+                ChunkRatio = chunkRatio;
+                PayloadBlockCount = payloadBlockCount;
+                SectorBitmapBlockCount = sectorBitmapBlockCount;
+                BatEntryCount = batEntryCount;
+                Payloads = payloads;
+                SectorBitmap = sectorBitmapBlock;
+            }
         }
 
     /// <summary>
@@ -1070,158 +1090,161 @@ type VhdxReader() =
     /// <returns>
     ///  Retrieved metadata.
     /// </returns>
-    static member ReadVhdx( filePath : string ) : VhdxMetadata =
-        use fs = new FileStream( filePath, FileMode.Open, FileAccess.Read, FileShare.Read )
+    static member ReadVhdx ( fa : FileAccessor ) : Task<VhdxMetadata> =
+        task {
+            let fileSize = fa.GetFileSize()
+            if fileSize < 0x30000UL then
+                raise <| Exception( "The VHDX file is too small." )
 
-        if fs.Length < 0x30000L then
-            raise <| Exception( "The VHDX file is too small." )
+            // Validating the file type identifier and obtaining the creator
+            printfn "================================================================"
+            let! creator = ReadFileTypeIdentifier fa
 
-        // Validating the file type identifier and obtaining the creator
-        printfn "================================================================"
-        let creator = ReadFileTypeIdentifier fs
+            // Load the header
+            printfn "================================================================"
+            let! headers = ReadHeaders fa
+            let currentHeader = headers.[ 0 ]
 
-        // Load the header
-        printfn "================================================================"
-        let headers = ReadHeaders fs
-        let currentHeader = headers.[ 0 ]
+            // Retrieve log information (active log entries only)
+            let! logInfo = task {
+                if currentHeader.LogLength > 0u && currentHeader.LogGuid <> Guid.Empty then
+                    let logData = Array.zeroCreate<byte>( int currentHeader.LogLength )
+                    do! fa.Read currentHeader.LogOffset ( ArraySegment logData )
+                    let e = ReadActiveLogSequense logData currentHeader.LogGuid
+                    if e.Length = 0 then
+                        raise <| Exception "No valid logs exist."
 
-        // Retrieve log information (active log entries only)
-        let logInfo =
-            if currentHeader.LogLength > 0u && currentHeader.LogGuid <> Guid.Empty then
-                let logData = ReadBytes fs currentHeader.LogOffset currentHeader.LogLength
-                let e = ReadActiveLogSequense logData currentHeader.LogGuid
-                if e.Length = 0 then
-                    raise <| Exception "No valid logs exist."
+                    // Verify the value of FlushedFileOffset in the last entry.
+                    let headFFO = ( e |> List.last ).FlushedFileOffset
+                    if fileSize < headFFO then
+                        raise <| Exception "The file has been truncated."
+                    return e
+                else
+                    return []
+            }
 
-                // Verify the value of FlushedFileOffset in the last entry.
-                let headFFO = ( e |> List.last ).FlushedFileOffset
-                if fs.Length < int64 headFFO then
-                    raise <| Exception "The file has been truncated."
-                e
+            let lastFileSize =
+                if logInfo.Length > 0 then
+                    ( logInfo |> List.last ).LastFileOffset
+                else
+                    fileSize |> uint64
+
+            printfn "Number of log entries retrieved : %d" logInfo.Length
+            for itr in logInfo do
+                printfn "***"
+                printfn "  Signature : 0x%08X" itr.Signature
+                printfn "  Checksum : 0x%08X" itr.Checksum
+                printfn "  Entry Length : %d" itr.EntryLength
+                printfn "  Tail : 0x%08X" itr.Tail
+                printfn "  Descriptor Count: %d" itr.DescriptorCount
+                printfn "  Log Guid : %s" ( itr.LogGuid.ToString "D" )
+                printfn "  Flushed File Offset : %d" itr.FlushedFileOffset
+                printfn "  Last File Offset : %d" itr.LastFileOffset
+                printfn "  Log Descriptors---"
+                for di in itr.Descriptors do
+                    match di with
+                    | LogDescriptor.Data( x ) ->
+                        printfn "    Data Descriptor"
+                        printfn "    Data Signature : 0x%08X" x.DataSignature
+                        printfn "    Trailing Bytes : %s" ( x.TrailingBytes |> Array.map ( sprintf "%02X" ) |> String.concat "" )
+                        printfn "    Leading Bytes : %s" ( x.LeadingBytes |> Array.map ( sprintf "%02X" ) |> String.concat "" )
+                        printfn "    File Offset : %d" x.FileOffset
+                        printfn "    Sequence Number : %d" x.SequenceNumber
+                        printfn "    Index : %d" x.ddIndex
+                    | LogDescriptor.Zero( x ) ->
+                        printfn "    Zero Descriptor"
+                        printfn "    Zero Signature : 0x%08X" x.ZeroSignature
+                        printfn "    Zero Length : %d" x.ZeroLength
+                        printfn "    File Offset : %d" x.FileOffset
+                        printfn "    Sequence Number : %d" x.SequenceNumber
+
+            // Read Region table 1 0x30000
+            printfn "================================================================"
+            printfn "Region Table 1"
+            printfn "  4K Sector Number : %d .. %d"
+                        ( 0x30000UL / 4096UL )
+                        ( 0x30000UL / 4096UL + 65536UL / 4096UL - 1UL )
+            let! regionTable1Buf = ReadBytesWithLog logInfo lastFileSize fa 0x30000UL 65536u
+            let regionTable1 = ReadRegionTable regionTable1Buf lastFileSize
+
+            // Read Region table 2 0x40000
+            printfn "================================================================"
+            printfn "Region Table 2"
+            printfn "  4K Sector Number : %d .. %d"
+                        ( 0x40000UL / 4096UL )
+                        ( 0x40000UL / 4096UL + 65536UL / 4096UL - 1UL )
+            let! regionTable2Buf = ReadBytesWithLog logInfo lastFileSize fa 0x40000UL 65536u
+            let regionTable2 = ReadRegionTable regionTable2Buf lastFileSize
+
+            // Region Table List
+            let regionTables =
+                [
+                    if regionTable1.IsSome then
+                        yield regionTable1.Value;
+                    if regionTable2.IsSome then
+                        yield regionTable2.Value;
+                ]
+            let currentRegionTable =
+                if regionTables.Length = 0 then
+                    raise <| Exception( "No valid region table exists." )
+                regionTables.[0]
+
+            // Get the locations of the metadata region and BAT region.
+            let metadataRegion =
+                currentRegionTable.Entries
+                |> List.tryFind ( fun e -> e.Guid = VhdxCommon.REGENT_TYPE_METADATA )
+            if metadataRegion.IsNone then
+                raise <| Exception("Metadata region not found.")
+
+            let batRegion =
+                currentRegionTable.Entries
+                |> List.tryFind ( fun e -> e.Guid = VhdxCommon.REGENT_TYPE_BAT )
+            if batRegion.IsNone then
+                raise <| Exception("BAT region not found.")
+
+            // Read metadata region.
+            printfn "================================================================"
+            printfn "Metadata region"
+            printfn "  4K Sector Number : %d .. %d"
+                        ( metadataRegion.Value.FileOffset / 4096UL )
+                        ( metadataRegion.Value.FileOffset / 4096UL + uint64 metadataRegion.Value.Length / 4096UL - 1UL )
+            let! metadataBuf = ReadBytesWithLog logInfo lastFileSize fa metadataRegion.Value.FileOffset metadataRegion.Value.Length
+            let virtualDiskInfo = ReadMetadata metadataBuf
+
+            // Read BAT
+            printfn "================================================================"
+            printfn "BAT"
+            printfn "  4K Sector Number : %d .. %d"
+                        ( batRegion.Value.FileOffset / 4096UL )
+                        ( batRegion.Value.FileOffset / 4096UL + uint64 batRegion.Value.Length / 4096UL - 1UL )
+            let! batEntries = ReadBat logInfo lastFileSize fa batRegion.Value virtualDiskInfo
+
+            if virtualDiskInfo.HasParent then
+                // For differential VHDX files, if a PartiallyPresent payload BAT entry exists,
+                // a corresponding sector bitmap BAT entry must also exist.
+                batEntries.Payloads
+                |> Array.filter ( _.State.IsPayloadPartiallyPresent )
+                |> Array.iteri ( fun idx itr ->
+                    let j = idx / int32 batEntries.ChunkRatio  // Index of sector bitmap BAT entry
+                    if batEntries.SectorBitmap.[j].Bitmap.Length = 0 then
+                        raise <| Exception "There is no sector bitmap BAT entry corresponding to the payload BAT entry for PartiallyPresent."
+                )
             else
-                []
+                // If there is no parent, the PartiallyPresent payload BAT entry must not exist.
+                if batEntries.Payloads |> Array.exists ( _.State.IsPayloadPartiallyPresent ) then
+                    raise <| Exception "A fixed or dynamic VHDX file exists with a payload BAT entry for PartiallyPresent."
 
-        let lastFileSize =
-            if logInfo.Length > 0 then
-                ( logInfo |> List.last ).LastFileOffset
-            else
-                fs.Length |> uint64
+                // If a parent does not exist, a sector bitmap BAT entry must not exist.
+                if batEntries.SectorBitmap |> Array.exists ( fun itr -> itr.Bitmap.Length > 0 ) then
+                    raise <| Exception "The VHDX file has either fixed or dynamic sector bitmap BAT entries assigned to it."
 
-        printfn "Number of log entries retrieved : %d" logInfo.Length
-        for itr in logInfo do
-            printfn "***"
-            printfn "  Signature : 0x%08X" itr.Signature
-            printfn "  Checksum : 0x%08X" itr.Checksum
-            printfn "  Entry Length : %d" itr.EntryLength
-            printfn "  Tail : 0x%08X" itr.Tail
-            printfn "  Descriptor Count: %d" itr.DescriptorCount
-            printfn "  Log Guid : %s" ( itr.LogGuid.ToString "D" )
-            printfn "  Flushed File Offset : %d" itr.FlushedFileOffset
-            printfn "  Last File Offset : %d" itr.LastFileOffset
-            printfn "  Log Descriptors---"
-            for di in itr.Descriptors do
-                match di with
-                | LogDescriptor.Data( x ) ->
-                    printfn "    Data Descriptor"
-                    printfn "    Data Signature : 0x%08X" x.DataSignature
-                    printfn "    Trailing Bytes : %s" ( x.TrailingBytes |> Array.map ( sprintf "%02X" ) |> String.concat "" )
-                    printfn "    Leading Bytes : %s" ( x.LeadingBytes |> Array.map ( sprintf "%02X" ) |> String.concat "" )
-                    printfn "    File Offset : %d" x.FileOffset
-                    printfn "    Sequence Number : %d" x.SequenceNumber
-                    printfn "    Index : %d" x.ddIndex
-                | LogDescriptor.Zero( x ) ->
-                    printfn "    Zero Descriptor"
-                    printfn "    Zero Signature : 0x%08X" x.ZeroSignature
-                    printfn "    Zero Length : %d" x.ZeroLength
-                    printfn "    File Offset : %d" x.FileOffset
-                    printfn "    Sequence Number : %d" x.SequenceNumber
-
-        // Read Region table 1 0x30000
-        printfn "================================================================"
-        printfn "Region Table 1"
-        printfn "  4K Sector Number : %d .. %d"
-                    ( 0x30000UL / 4096UL )
-                    ( 0x30000UL / 4096UL + 65536UL / 4096UL - 1UL )
-        let regionTable1Buf = ReadBytesWithLog logInfo fs 0x30000UL 65536u
-        let regionTable1 = ReadRegionTable regionTable1Buf ( uint64 fs.Length )
-
-        // Read Region table 2 0x40000
-        printfn "================================================================"
-        printfn "Region Table 2"
-        printfn "  4K Sector Number : %d .. %d"
-                    ( 0x40000UL / 4096UL )
-                    ( 0x40000UL / 4096UL + 65536UL / 4096UL - 1UL )
-        let regionTable2Buf = ReadBytesWithLog logInfo fs 0x40000UL 65536u
-        let regionTable2 = ReadRegionTable regionTable2Buf ( uint64 fs.Length )
-
-        // Region Table List
-        let regionTables =
-            [
-                if regionTable1.IsSome then
-                    yield regionTable1.Value;
-                if regionTable2.IsSome then
-                    yield regionTable2.Value;
-            ]
-        let currentRegionTable =
-            if regionTables.Length = 0 then
-                raise <| Exception( "No valid region table exists." )
-            regionTables.[0]
-
-        // Get the locations of the metadata region and BAT region.
-        let metadataRegion =
-            currentRegionTable.Entries
-            |> List.tryFind ( fun e -> e.Guid = VhdxCommon.REGENT_TYPE_METADATA )
-        if metadataRegion.IsNone then
-            raise <| Exception("Metadata region not found.")
-
-        let batRegion =
-            currentRegionTable.Entries
-            |> List.tryFind ( fun e -> e.Guid = VhdxCommon.REGENT_TYPE_BAT )
-        if batRegion.IsNone then
-            raise <| Exception("BAT region not found.")
-
-        // Read metadata region.
-        printfn "================================================================"
-        printfn "Metadata region"
-        printfn "  4K Sector Number : %d .. %d"
-                    ( metadataRegion.Value.FileOffset / 4096UL )
-                    ( metadataRegion.Value.FileOffset / 4096UL + uint64 metadataRegion.Value.Length / 4096UL - 1UL )
-        let metadataBuf = ReadBytesWithLog logInfo fs metadataRegion.Value.FileOffset metadataRegion.Value.Length
-        let virtualDiskInfo = ReadMetadata metadataBuf
-
-        // Read BAT
-        printfn "================================================================"
-        printfn "BAT"
-        printfn "  4K Sector Number : %d .. %d"
-                    ( batRegion.Value.FileOffset / 4096UL )
-                    ( batRegion.Value.FileOffset / 4096UL + uint64 batRegion.Value.Length / 4096UL - 1UL )
-        let batEntries = ReadBat logInfo fs batRegion.Value virtualDiskInfo
-
-        if virtualDiskInfo.HasParent then
-            // For differential VHDX files, if a PartiallyPresent payload BAT entry exists,
-            // a corresponding sector bitmap BAT entry must also exist.
-            batEntries.Payloads
-            |> Array.filter ( _.State.IsPayloadPartiallyPresent )
-            |> Array.iteri ( fun idx itr ->
-                let j = idx / int32 batEntries.ChunkRatio  // Index of sector bitmap BAT entry
-                if batEntries.SectorBitmap.[j].Bitmap.Length = 0 then
-                    raise <| Exception "There is no sector bitmap BAT entry corresponding to the payload BAT entry for PartiallyPresent."
-            )
-        else
-            // If there is no parent, the PartiallyPresent payload BAT entry must not exist.
-            if batEntries.Payloads |> Array.exists ( _.State.IsPayloadPartiallyPresent ) then
-                raise <| Exception "A fixed or dynamic VHDX file exists with a payload BAT entry for PartiallyPresent."
-
-            // If a parent does not exist, a sector bitmap BAT entry must not exist.
-            if batEntries.SectorBitmap |> Array.exists ( fun itr -> itr.Bitmap.Length > 0 ) then
-                raise <| Exception "The VHDX file has either fixed or dynamic sector bitmap BAT entries assigned to it."
-
-        {
-            Creator = creator;
-            Header = currentHeader;
-            LogInfo = logInfo;
-            LastFileSize = lastFileSize;
-            RegionTables = currentRegionTable;
-            VirtualDiskInfo = virtualDiskInfo;
-            BatEntries = batEntries;
+            return {
+                Creator = creator;
+                Header = currentHeader;
+                LogInfo = logInfo;
+                LastFileSize = lastFileSize;
+                RegionTables = currentRegionTable;
+                VirtualDiskInfo = virtualDiskInfo;
+                BatEntries = batEntries;
+            }
         }

@@ -19,7 +19,6 @@ open System.Threading.Tasks
 
 open Haruka.Constants
 
-
 //=============================================================================
 // Class implementation
 
@@ -135,7 +134,61 @@ type FileAccessor ( m_FileName : string, m_Multiplicity : uint32, m_ReadOnly : b
         }
 
     /// <summary>
-    ///  Read data to the file.
+    ///  Read data with pseudo size limit.
+    /// </summary>
+    /// <param name="pseudoSize">
+    ///  pseudo size limit.
+    /// </param>
+    /// <param name="startPos">
+    ///  Position in bytes where data is read.
+    /// </param>
+    /// <param name="buffer">
+    ///  The buffer to store the read data.
+    /// </param>
+    /// <remarks>
+    ///  If data is read from an area beyond the actual file size, 0 is returned.
+    /// </remarks>
+    member _.ReadWithPseudoLimit ( pseudoSize : uint64 ) ( startPos : uint64 ) ( buffer : ArraySegment<byte> ) : Task<unit> =
+        task {
+            let bytesToRead = uint64 buffer.Count
+
+            if uint64 Int64.MaxValue < pseudoSize ||
+                uint64 Int64.MaxValue < startPos ||
+                pseudoSize < startPos ||
+                pseudoSize < bytesToRead ||
+                pseudoSize - bytesToRead < startPos
+            then
+                raise <| ArgumentOutOfRangeException( "Out of range for pseudo file access." )
+
+            let fs = getFreeStream()
+            try
+                let flength = uint64 fs.Length
+
+                if startPos >= flength then
+                    let mem = Memory<byte>( buffer.Array, buffer.Offset, buffer.Count )
+                    mem.Span.Clear()
+                else
+                    let readable = min ( flength - startPos ) ( uint64 buffer.Count ) |> int
+                    fs.Seek( int64 startPos, SeekOrigin.Begin ) |> ignore
+
+                    let exc : Exception -> bool =
+                        function | :? IOException -> false | _ -> true
+                    let! r = Functions.RetryAsync2 ( fun () -> task {
+                                    let b2 = Memory<byte>( buffer.Array, buffer.Offset, readable )
+                                    do! fs.ReadExactlyAsync( b2 )
+                                } ) exc
+
+                    if r.IsError then
+                        Functions.GetErrorValue "" r |> IOException |> raise
+
+                    let b3 = Memory<byte>( buffer.Array, readable, buffer.Count - readable )
+                    b3.Span.Clear()
+            finally
+                streamQueue.Enqueue fs
+        }
+
+    /// <summary>
+    ///  Write data to the file.
     /// </summary>
     /// <param name="startPos">
     ///  Position in bytes where data is written.
@@ -143,7 +196,7 @@ type FileAccessor ( m_FileName : string, m_Multiplicity : uint32, m_ReadOnly : b
     /// <param name="buffer">
     ///  The data to be written.
     /// </param>
-      member _.Write ( startPos : uint64 ) ( buffer : ArraySegment<byte> ) : Task<unit> =
+    member _.Write ( startPos : uint64 ) ( buffer : ArraySegment<byte> ) : Task<unit> =
         task {
             if m_ReadOnly then
                 raise <| InvalidOperationException( "File opened read-only; Write not allowed" )
@@ -211,3 +264,13 @@ type FileAccessor ( m_FileName : string, m_Multiplicity : uint32, m_ReadOnly : b
             uint64 fs.Length
         finally
             streamQueue.Enqueue fs
+
+    /// File name property
+    member _.FileName = m_FileName
+
+    /// Multiplicity property
+    member _.Multiplicity = m_Multiplicity
+
+    /// ReadOnly flag property
+    member _.ReadOnly = m_ReadOnly
+
