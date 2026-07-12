@@ -20,6 +20,7 @@ type VHDXUtilCmdType =
     | Write
     | Random
     | Compare
+    | Parent
 
 type CmdArgs() =
 
@@ -179,6 +180,14 @@ type CmdArgs() =
                 NamelessArgs = [| CRVM_String( 256 ); CRVM_String( 256 ); |];
                 HelpMsgName = "";
             };
+            {
+                Command = [| "PARENT"; |];
+                Varb = VHDXUtilCmdType.Parent;
+                NamedArgs = Array.empty;
+                ValuelessArgs = Array.empty;
+                NamelessArgs = [| CRVM_String( 256 ); |];
+                HelpMsgName = "";
+            };
         |]
 
     /// <summary>
@@ -323,6 +332,24 @@ let main ( argv : string[] ) : int32 =
                 printfn "The file contents match."
             else
                 printfn "The file contents do not match."
+
+        | Parent ->
+            let file1 = cmd.DefaultNamelessString 0 ""
+            let fa = FileAccessor( file1, 1u, true )
+            let! metadata = VhdxHandler.ReadAllMetadata fa
+            for ( fa, meta ) in metadata do
+                if meta.VirtualDiskInfo.HasParent then
+                    let struct( _, plt ) = VhdxHandler.GetParentFileName meta
+                    match plt with
+                    | ParentLocatorType.RelativePath ( x ) ->
+                        printfn "%s : RelativePath : %s" fa.FileName x
+                    | ParentLocatorType.VolumePath ( x ) ->
+                        printfn "%s : VolumePath : %s" fa.FileName x
+                    | ParentLocatorType.AbsoluteWin32Path ( x ) ->
+                        printfn "%s : AbsoluteWin32Path : %s" fa.FileName x
+                else
+                    printfn "%s : No parent" fa.FileName
+                fa.Close()
     }
     t.Result |> ignore
 

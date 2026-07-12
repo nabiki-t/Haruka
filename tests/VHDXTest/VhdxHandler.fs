@@ -8,6 +8,11 @@ open System.Collections.Generic
 open Haruka.Constants
 open Haruka.Commons
 
+type ParentLocatorType =
+    | RelativePath of string
+    | VolumePath of string
+    | AbsoluteWin32Path of string
+
 
 /// <summary>
 ///  Defines functions for handling VHDX files.
@@ -199,22 +204,15 @@ type VhdxHandler() =
                         acc.Add( fn, meta )
                         return struct( false, ( fn, None ) )
                     else
-                        // The expected value of the next parent's DataWriteGuid.
-                        let parentDataWriteGuid = meta.VirtualDiskInfo.ParentLocator.[ "parent_linkage" ] |> Guid
-
-                        // Identify the parent file name
+                        // The value of parent_linkage is the DataWriteGuid value expected in the parent VHDX file.
+                        let struct( parentDataWriteGuid, plt ) = VhdxHandler.GetParentFileName meta
                         let parentFileName =
-                            let r1, v1 = pl.TryGetValue "relative_path"
-                            let r2, v2 = pl.TryGetValue "volume_path"
-                            let r3, v3 = pl.TryGetValue "absolute_win32_path"
-                            if r1 then
-                                Path.Combine( [| Path.GetDirectoryName fn.FileName; v1 |] )
-                            elif r2 then
-                                v2
-                            elif r3 then
-                                v3
-                            else
-                                raise <| Exception "Unable to identify the parent VHDX file name."
+                            match plt with
+                            | RelativePath x ->
+                                Path.Combine( [| Path.GetDirectoryName fn.FileName; x; |] )
+                            | VolumePath x -> x
+                            | AbsoluteWin32Path x -> x
+
                         let parentFA = FileAccessor( parentFileName, fn.Multiplicity, fn.ReadOnly )
 
                         // Read next parent VHDX file.
@@ -429,3 +427,33 @@ type VhdxHandler() =
                 vfiles2
                 |> Array.iter _.Close()
         }
+
+    /// <summary>
+    ///  Get parent likage GUID and parent file name.
+    /// </summary>
+    /// <param name="metadata">
+    ///  VHDX metadata.
+    /// </param>
+    /// <returns>
+    ///  Pair of the parent linkaged GUID value and the parent file name.
+    /// </returns>
+    /// <remarks>
+    ///  The metadata argument must specify the metadata for the differencing VHDX file that has the parent VHDX.
+    /// </remarks>
+    static member GetParentFileName ( metadata : VhdxMetadata ) : struct( Guid * ParentLocatorType ) =
+        let pl = metadata.VirtualDiskInfo.ParentLocator
+        let parent_linkage = pl.[ "parent_linkage" ] |> Guid
+        let plt =
+            let r1, v1 = pl.TryGetValue "relative_path"
+            let r2, v2 = pl.TryGetValue "volume_path"
+            let r3, v3 = pl.TryGetValue "absolute_win32_path"
+            if r1 then
+                ParentLocatorType.RelativePath( v1 )
+            elif r2 then
+                ParentLocatorType.VolumePath( v1 )
+            elif r3 then
+                ParentLocatorType.AbsoluteWin32Path( v1 )
+            else
+                raise <| Exception "Unable to identify the parent VHDX file name."
+        struct( parent_linkage, plt )
+        
