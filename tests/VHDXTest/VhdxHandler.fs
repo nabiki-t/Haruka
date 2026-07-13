@@ -210,9 +210,12 @@ type VhdxHandler() =
                             match plt with
                             | RelativePath x ->
                                 Path.Combine( [| Path.GetDirectoryName fn.FileName; x; |] )
-                            | VolumePath x -> x
-                            | AbsoluteWin32Path x -> x
+                            | VolumePath x ->
+                                x
+                            | AbsoluteWin32Path x ->
+                                x
 
+                        printfn "Next file : %s" parentFileName
                         let parentFA = FileAccessor( parentFileName, fn.Multiplicity, fn.ReadOnly )
 
                         // Read next parent VHDX file.
@@ -450,9 +453,9 @@ type VhdxHandler() =
             if r1 then
                 ParentLocatorType.RelativePath( v1 )
             elif r2 then
-                ParentLocatorType.VolumePath( v1 )
+                ParentLocatorType.VolumePath( v2 )
             elif r3 then
-                ParentLocatorType.AbsoluteWin32Path( v1 )
+                ParentLocatorType.AbsoluteWin32Path( v3 )
             else
                 raise <| Exception "Unable to identify the parent VHDX file name."
         struct( parent_linkage, plt )

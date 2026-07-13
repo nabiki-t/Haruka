@@ -12,28 +12,7 @@ open Haruka.Commons
 /// class implementation of VHDX metadata reader.
 
 type VhdxReader() =
-(*
-    /// <summary>
-    ///  Read data from a specified region in the stream.
-    /// </summary>
-    /// <param name="fs">
-    ///  Stream.
-    /// </param>
-    /// <param name="offset">
-    ///  Position where data is read.
-    /// </param>
-    /// <param name="length">
-    ///  Data length to be read.
-    /// </param>
-    /// <returns>
-    ///  Loaded data.
-    /// </returns>
-    static let ReadBytes ( fs : FileStream ) ( offset : uint64 ) ( length : uint32 ) : byte[] =
-        let b = Array.zeroCreate<byte>( int32 length )
-        fs.Seek( int64 offset, SeekOrigin.Begin ) |> ignore
-        fs.ReadExactly( b, 0, int32 length )
-        b
-*)
+
     /// <summary>
     ///  Read file type identifier
     /// </summary>

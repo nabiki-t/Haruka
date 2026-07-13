@@ -2,9 +2,9 @@ namespace VhdxLibrary
 
 open System
 open System.IO
-open System.Buffers.Binary
 open System.Text
 open System.Threading.Tasks
+open System.Text.RegularExpressions
 
 open Haruka.Constants
 open Haruka.Commons
@@ -79,6 +79,28 @@ type VhdxCreator() =
             do! fa.Write 196608UL ( ArraySegment buf )
             do! fa.Write 262144UL ( ArraySegment buf )
         }
+
+    static member private VolumePathRegex = Regex( @"^\\\\\?\\Volume\{[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}\}\\.*$", RegexOptions.IgnoreCase )
+
+    /// <summary>
+    ///  Obtain the path name type and the path name to be recorded in the VHDX file from the path name.
+    /// </summary>
+    /// <param name="pathName">
+    ///  User specified path name.
+    /// </param>
+    /// <returns>
+    ///  The pair of parent locator entry name and value.
+    /// </returns>
+    static member private GetLocatorEntryValue ( pathName : string ) : struct( string * string ) =
+        if VhdxCreator.VolumePathRegex.IsMatch pathName then
+            struct( "volume_path", pathName )
+        elif Path.IsPathFullyQualified pathName then
+            if pathName.StartsWith @"\\?\" then
+                struct( "absolute_win32_path", pathName )
+            else
+                struct( "absolute_win32_path", @"\\?\" + pathName )
+        else
+            struct( "relative_path", pathName )
 
     /// <summary>
     ///  Write metadata
@@ -166,27 +188,15 @@ type VhdxCreator() =
             // Parent locator
             let plParamStartPos, plParamLen =
                 if hasParent then
-                    let parentLinkageKey =
-                        "parent_linkage"
-                        |> Encoding.Unicode.GetBytes
-                    let parentLinkageVal =
-                        parentDataWriteGuid.ToString "b"
-                        |> Encoding.Unicode.GetBytes
-                    let relativePathKey =
-                        "relative_path"
-                        |> Encoding.Unicode.GetBytes
-                    let relativePathVal =
-                        parentFile
-                        |> Option.map _.FileName
-                        |> Option.defaultValue ""
-                        |> Encoding.Unicode.GetBytes
+                    let parentLinkageKey = Encoding.Unicode.GetBytes "parent_linkage"
+                    let parentLinkageVal = parentDataWriteGuid.ToString "b" |> Encoding.Unicode.GetBytes
+                    let struct( pathEntryKey, pathEntryValue ) = VhdxCreator.GetLocatorEntryValue parentFile.Value.FileName
+                    let relativePathKey = Encoding.Unicode.GetBytes pathEntryKey
+                    let relativePathVal = Encoding.Unicode.GetBytes pathEntryValue
                     let parentLinkageKey_StartPos = 20 + 12 * 2
-                    let parentLinkageVal_StartPos =
-                            parentLinkageKey_StartPos + parentLinkageKey.Length
-                    let relativePathKey_StartPos =
-                            parentLinkageVal_StartPos + parentLinkageVal.Length
-                    let relativePathVal_StartPos =
-                            relativePathKey_StartPos + relativePathKey.Length
+                    let parentLinkageVal_StartPos = parentLinkageKey_StartPos + parentLinkageKey.Length
+                    let relativePathKey_StartPos = parentLinkageVal_StartPos + parentLinkageVal.Length
+                    let relativePathVal_StartPos = relativePathKey_StartPos + relativePathKey.Length
                     let buflen = relativePathVal_StartPos + relativePathVal.Length
                     let plParamBuf = Array.zeroCreate<byte> buflen
 
