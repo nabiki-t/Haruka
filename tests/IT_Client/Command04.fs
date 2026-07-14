@@ -31,6 +31,7 @@ type Command04_Fixture() =
 
     let m_ControllPortNo = GlbFunc.nextTcpPortNo()
     let m_iSCSIPortNo1 = GlbFunc.nextTcpPortNo()
+    let m_iSCSIPortNo2 = GlbFunc.nextTcpPortNo()
     let m_MediaSize = 65536u
     let m_MediaBlockSizse = 512      // 4096 or 512 bytes
 
@@ -48,10 +49,11 @@ type Command04_Fixture() =
         p.RunCommand "select 0" "" "TD> "
         p.RunCommand "set loglevel VERBOSE" "" "TD> "
         p.RunCommand ( sprintf "create networkportal /a ::1 /p %d" m_iSCSIPortNo1 ) "Created" "TD> "
+        p.RunCommand ( sprintf "create networkportal /a ::1 /p %d" m_iSCSIPortNo2 ) "Created" "TD> "
 
         // Create Target Group 1
         p.RunCommand "create targetgroup" "Created" "TD> "
-        p.RunCommand "select 1" "" "TG> "
+        p.RunCommand "select 2" "" "TG> "
         p.RunCommand "set ID TG_00000001" "" "TG> "
         p.RunCommand "create /n iqn.2020-05.example.com:target1" "Created" "TG> "
         p.RunCommand "select 0" "" "T > "
@@ -67,7 +69,7 @@ type Command04_Fixture() =
 
         // Create Target Group 2
         p.RunCommand "create targetgroup" "Created" "TD> "
-        p.RunCommand "select 2" "" "TG> "
+        p.RunCommand "select 3" "" "TG> "
 
         p.RunCommand "set ID TG_00000002" "" "TG> "
         p.RunCommand "create /n iqn.2020-05.example.com:target2" "Created" "TG> "
@@ -110,6 +112,7 @@ type Command04_Fixture() =
     member _.ControllPortNo = m_ControllPortNo
     member _.WorkPath = m_WorkPath
     member _.iSCSIPortNo1 = m_iSCSIPortNo1
+    member _.iSCSIPortNo2 = m_iSCSIPortNo2
     member _.MediaSize = m_MediaSize
     member _.MediaBlockSizse = m_MediaBlockSizse
 
@@ -123,6 +126,7 @@ type Command04( fx : Command04_Fixture ) =
     let m_ControllPortNo = fx.ControllPortNo
     let m_Client = fx.ClientProc
     let iSCSIPortNo1 = fx.iSCSIPortNo1
+    let iSCSIPortNo2 = fx.iSCSIPortNo2
     let g_CID0 = cid_me.zero
     let m_MediaSize = fx.MediaSize
     let m_MediaBlockSizse = fx.MediaBlockSizse
@@ -163,7 +167,7 @@ type Command04( fx : Command04_Fixture ) =
         MaxRecvDataSegmentLength_T = Constants.NEGOPARAM_DEF_MaxRecvDataSegmentLength;
     }
 
-// Check session counts
+    // Check session counts
     let CheckSessionCount ( expcnt : int32 ) ( expPrompt : string ) =
         let mutable loopcnt = 0
         while loopcnt < 10 do
@@ -178,6 +182,20 @@ type Command04( fx : Command04_Fixture ) =
                 loopcnt <- loopcnt + 1
         Assert.StrictEqual( 99, loopcnt )
 
+    // Check connection counts
+    let CheckConnectionCount ( expcnt : int32 ) ( expPrompt : string ) =
+        let mutable loopcnt = 0
+        while loopcnt < 10 do
+            Thread.Sleep 10
+            let sesscnt =
+                m_Client.RunCommandGetResp "connections" expPrompt
+                |> Array.filter _.Contains( "Connection(" )
+                |> Array.length
+            if sesscnt = expcnt then
+                loopcnt <- 99
+            else
+                loopcnt <- loopcnt + 1
+        Assert.StrictEqual( 99, loopcnt )
 
 
     ///////////////////////////////////////////////////////////////////////////
@@ -995,3 +1013,158 @@ type Command04( fx : Command04_Fixture ) =
             m_Client.RunCommand "reload /y" "" "CR> "
         }
 
+    [<Fact>]
+    member _.Connections_TargetDevice_001 () =
+        task {
+            // Start target device
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+
+            // connect to target 1
+            let! r1 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target1" } m_defaultConnParam
+            CheckConnectionCount 1 "TD> "
+
+            // connect to target 2
+            let! r2 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target2" } m_defaultConnParam
+            CheckConnectionCount 2 "TD> "
+
+            // connect to target 3
+            let! r3 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target3" } m_defaultConnParam
+            CheckConnectionCount 3 "TD> "
+
+            // Disconnect r2
+            do! r2.Close()
+            CheckConnectionCount 2 "TD> "
+
+            // Disconnect r3
+            do! r3.Close()
+            CheckConnectionCount 1 "TD> "
+
+            // Disconnect r1
+            do! r1.Close()
+            CheckConnectionCount 0 "TD> "
+
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    [<Fact>]
+    member _.Connections_NetworkPortal_001 () =
+        task {
+            // Start target device
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+            let npidx = m_Client.GetIndexNumber ( sprintf "%d" iSCSIPortNo1 ) "TD> "
+            m_Client.RunCommand ( sprintf "select %d" npidx ) "" "NP> "
+
+            // Connect via np1.
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam { m_defaultConnParam with PortNo = iSCSIPortNo1 }
+            CheckConnectionCount 1 "NP> "
+
+            // Connect via np2.
+            let! r2 = SCSI_Initiator.Create m_defaultSessParam { m_defaultConnParam with PortNo = iSCSIPortNo2 }
+            CheckConnectionCount 1 "NP> "
+
+            // Connect via np1.
+            let! r3 = SCSI_Initiator.Create m_defaultSessParam { m_defaultConnParam with PortNo = iSCSIPortNo1 }
+            CheckConnectionCount 2 "NP> "
+
+            // Disconnect r2
+            do! r2.Close()
+            CheckConnectionCount 2 "NP> "
+
+            // Disconnect r3
+            do! r3.Close()
+            CheckConnectionCount 1 "NP> "
+
+            // Disconnect r1
+            do! r1.Close()
+            CheckConnectionCount 0 "NP> "
+
+            m_Client.RunCommand "kill" "Killed" "NP> "
+            m_Client.RunCommand "unselect" "" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    [<Fact>]
+    member _.Connections_TargetGroup_001 () =
+        task {
+            // Start target device
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+            let tgidx = m_Client.GetIndexNumber "TG_00000002" "TD> "
+            m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+
+            // connect to target 1
+            let! r1 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target1" } m_defaultConnParam
+            CheckConnectionCount 0 "TG> "
+
+            // connect to target 2
+            let! r2 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target2" } m_defaultConnParam
+            CheckConnectionCount 1 "TG> "
+
+            // connect to target 3
+            let! r3 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target3" } m_defaultConnParam
+            CheckConnectionCount 2 "TG> "
+
+            // Disconnect r2
+            do! r2.Close()
+            CheckConnectionCount 1 "TG> "
+
+            // Disconnect r3
+            do! r3.Close()
+            CheckConnectionCount 0 "TG> "
+
+            // Disconnect r1
+            do! r1.Close()
+            CheckConnectionCount 0 "TG> "
+
+            m_Client.RunCommand "unselect" "" "TD> "
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    [<Fact>]
+    member _.Connections_Target_001 () =
+        task {
+            // Start target device
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+            let tgidx = m_Client.GetIndexNumber "TG_00000002" "TD> "
+            m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+            let tgidx = m_Client.GetIndexNumber "target2" "TG> "
+            m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "T > "
+
+            // connect to target 1
+            let! r1 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target1" } m_defaultConnParam
+            CheckConnectionCount 0 "T > "
+
+            // connect to target 2
+            let! r2 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target2" } m_defaultConnParam
+            CheckConnectionCount 1 "T > "
+
+            // connect to target 3
+            let! r3 = SCSI_Initiator.Create { m_defaultSessParam with TargetName = "iqn.2020-05.example.com:target3" } m_defaultConnParam
+            CheckConnectionCount 1 "T > "
+
+            // Disconnect r3
+            do! r3.Close()
+            CheckConnectionCount 1 "T > "
+
+            // Disconnect r1
+            do! r1.Close()
+            CheckConnectionCount 1 "T > "
+
+            // Disconnect r2
+            do! r2.Close()
+            CheckConnectionCount 0 "T > "
+
+            m_Client.RunCommand "unselect" "" "TG> "
+            m_Client.RunCommand "unselect" "" "TD> "
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
