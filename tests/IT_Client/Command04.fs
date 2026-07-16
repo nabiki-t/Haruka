@@ -995,6 +995,60 @@ type Command04( fx : Command04_Fixture ) =
         }
 
     [<Fact>]
+    member _.Sessions_TDUnloaded_001 () =
+        m_Client.RunCommand "select 0" "" "TD> "
+        m_Client.CheckStatus "TD_00000001" "UNLOADED" "TD> "
+
+        let r = m_Client.RunCommandGetResp "sessions" "TD> "
+        Assert.StartsWith( "Target device process is not running", r.[0] )
+
+        m_Client.RunCommand "unselect" "" "CR> "
+        m_Client.RunCommand "reload /y" "" "CR> "
+
+    [<Fact>]
+    member _.Sessions_TGUnloaded_001 () =
+        m_Client.RunCommand "select 0" "" "TD> "
+        m_Client.RunCommand "start" "Started" "TD> "
+        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
+
+        // unload target group 1
+        let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
+        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+        m_Client.RunCommand "inactivate" "Inactivated" "TG> "
+        m_Client.RunCommand "unload" "Unloaded" "TG> "
+
+        let r = m_Client.RunCommandGetResp "sessions" "TG> "
+        Assert.StartsWith( "Specified target group is unloaded", r.[0] )
+
+        m_Client.RunCommand "unselect" "" "TD> "
+        m_Client.RunCommand "kill" "Killed" "TD> "
+        m_Client.RunCommand "unselect" "" "CR> "
+        m_Client.RunCommand "reload /y" "" "CR> "
+
+    [<Fact>]
+    member _.Sessions_TGUnloadedAMod_001 () =
+        m_Client.RunCommand "select 0" "" "TD> "
+        m_Client.RunCommand "start" "Started" "TD> "
+        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
+
+        // unload target group 1
+        let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
+        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+        m_Client.RunCommand "inactivate" "Inactivated" "TG> "
+        m_Client.RunCommand "unload" "Unloaded" "TG> "
+        m_Client.RunCommand "set ID TG_00000002" "" "TG> "
+        m_Client.RunCommand "set NAME wwwwwwwww" "" "TG> "
+        m_Client.CheckStatus "wwwwwwwww" "UNLOAD(A-MOD)" "TG> "
+
+        let r = m_Client.RunCommandGetResp "sessions" "TG> "
+        Assert.StartsWith( "The target group has been modified", r.[0] )
+
+        m_Client.RunCommand "unselect" "" "TD> "
+        m_Client.RunCommand "kill" "Killed" "TD> "
+        m_Client.RunCommand "unselect" "" "CR> "
+        m_Client.RunCommand "reload /y" "" "CR> "
+
+    [<Fact>]
     member _.Sesskill_001 () =
         task {
             // Start target device
@@ -1012,6 +1066,31 @@ type Command04( fx : Command04_Fixture ) =
             m_Client.RunCommand "unselect" "" "CR> "
             m_Client.RunCommand "reload /y" "" "CR> "
         }
+
+    [<Fact>]
+    member _.Sesskill_002 () =
+        task {
+            // Start target device
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+
+            m_Client.RunCommand "sesskill 999" "Unexpected request error" "TD> "
+
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    [<Fact>]
+    member _.Sesskill_TDUnloaded_001 () =
+        m_Client.RunCommand "select 0" "" "TD> "
+        m_Client.CheckStatus "TD_00000001" "UNLOADED" "TD> "
+
+        let r = m_Client.RunCommandGetResp "sesskill 999" "TD> "
+        Assert.StartsWith( "Target device process is not running", r.[0] )
+
+        m_Client.RunCommand "unselect" "" "CR> "
+        m_Client.RunCommand "reload /y" "" "CR> "
 
     [<Fact>]
     member _.Connections_TargetDevice_001 () =
