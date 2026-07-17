@@ -1247,3 +1247,38 @@ type Command04( fx : Command04_Fixture ) =
             m_Client.RunCommand "unselect" "" "CR> "
             m_Client.RunCommand "reload /y" "" "CR> "
         }
+
+    [<Fact>]
+    member _.Connections_TDUnloaded_001 () =
+        m_Client.RunCommand "select 0" "" "TD> "
+        m_Client.CheckStatus "TD_00000001" "UNLOADED" "TD> "
+
+        let r = m_Client.RunCommandGetResp "Connections" "TD> "
+        Assert.StartsWith( "Target device process is not running", r.[0] )
+
+        m_Client.RunCommand "unselect" "" "CR> "
+        m_Client.RunCommand "reload /y" "" "CR> "
+
+    [<Fact>]
+    member _.LUStatus_Normal_001 () =
+        task {
+            // Start target device
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+            let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
+            m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+            let tgidx = m_Client.GetIndexNumber "target1" "TG> "
+            m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "T > "
+            m_Client.RunCommand "select 0" "" "LU> "
+
+            let r = m_Client.RunCommandGetResp "lustatus" "LU> "
+            Assert.True( r |> Array.exists ( fun i -> i.StartsWith "ACA : None" ) )
+            Assert.True( r |> Array.exists ( fun i -> i.StartsWith "Tasks : None" ) )
+
+            m_Client.RunCommand "unselect" "" "T > "
+            m_Client.RunCommand "unselect" "" "TG> "
+            m_Client.RunCommand "unselect" "" "TD> "
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
