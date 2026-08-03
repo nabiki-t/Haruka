@@ -61,7 +61,7 @@ type VhdxChecker() =
     static member Check ( vhdxFile : FileAccessor ) : Task =
         task {
             // Read VHDX metadata
-            let! metadata = VhdxReader.ReadVhdx vhdxFile
+            let! structures = VhdxReader.ReadVhdx vhdxFile
 
             printfn "========================================================"
             printfn "Replay unprocessed log."
@@ -69,18 +69,18 @@ type VhdxChecker() =
 
             // update file write GUID in header
             let hd1 = {
-                metadata.Header with
+                structures.Header with
                     FileWriteGuid = Guid.NewGuid();
-                    SequenceNumber = metadata.Header.SequenceNumber + 1UL;
+                    SequenceNumber = structures.Header.SequenceNumber + 1UL;
             }
             let! nextSecNum = VhdxHandler.UpdateHeader vhdxFile hd1
 
             // replay log
-            do! VhdxChecker.ReplayLog vhdxFile metadata.LogInfo
+            do! VhdxChecker.ReplayLog vhdxFile structures.Log
 
             // update log GUID in header
             let hd2 = {
-                metadata.Header with
+                structures.Header with
                     LogGuid = Guid();
                     SequenceNumber = nextSecNum;
             }

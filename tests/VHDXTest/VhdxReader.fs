@@ -9,7 +9,7 @@ open Haruka.Constants
 open Haruka.Commons
 
 // ============================================================================
-/// class implementation of VHDX metadata reader.
+/// class implementation of VHDX file structures reader.
 
 type VhdxReader() =
 
@@ -22,7 +22,7 @@ type VhdxReader() =
     /// <returns>
     ///  creator string.
     /// </returns>
-    static let ReadFileTypeIdentifier ( fa : FileAccessor ) : Task<string> =
+    static member private ReadFileTypeIdentifier ( fa : FileAccessor ) : Task<string> =
         task {
             // signature
             let sigBuf = Array.zeroCreate<byte> 8 
@@ -53,7 +53,7 @@ type VhdxReader() =
     /// <returns>
     ///  Retrieved VHDX file headeres.
     /// </returns>
-    static let ReadHeaders ( fa : FileAccessor ) : Task<VhdxHeader list> =
+    static member private ReadHeaders ( fa : FileAccessor ) : Task<VhdxHeader list> =
         task {
             let fileSize = fa.GetFileSize()
 
@@ -171,7 +171,7 @@ type VhdxReader() =
     ///  Values ​​of log data sectors, excluding signature and sequence numbers.
     ///  If there is an error in the data, an array of length 0 is returned.
     /// </returns>
-    static let ReadLogDataSector ( data : byte[] ) ( offset : uint32 ) ( seqNum : uint64 ) : byte[] =
+    static member private ReadLogDataSector ( data : byte[] ) ( offset : uint32 ) ( seqNum : uint64 ) : byte[] =
         printfn "  ReadLogDataSector( offset=%d )" offset
 
         let signeture = VhdxCommon.ReadUInt32BE data offset
@@ -215,7 +215,7 @@ type VhdxReader() =
     ///  Retrieved log descriptor.
     ///  If there is an error in the data, None is returned.
     /// </returns>
-    static let ReadLogDescriptor ( data : byte[] ) ( offset : uint32 ) ( dataDescCount : uint32 ) ( seqNum : uint64 ) : LogDescriptor option =
+    static member private ReadLogDescriptor ( data : byte[] ) ( offset : uint32 ) ( dataDescCount : uint32 ) ( seqNum : uint64 ) : LogDescriptor option =
 
         printfn "  ReadLogDescriptor( offset=%d )" offset
 
@@ -304,7 +304,7 @@ type VhdxReader() =
     /// <returns>
     ///  Retrieved log entry value, or None.
     /// </returns>
-    static let ReadLogEntry ( logData : byte[] ) ( pos : uint32 ) ( headerLogGuid : Guid ) : LogEntry option =
+    static member private ReadLogEntry ( logData : byte[] ) ( pos : uint32 ) ( headerLogGuid : Guid ) : LogEntry option =
         printfn "-----------------------"
         printfn "ReadLogEntry( pos=%d )" pos
 
@@ -387,7 +387,7 @@ type VhdxReader() =
                 // Retrieve the descriptor
                 let rec loop ( idx : uint32 ) ( ddcnt : uint32 ) ( r : LogDescriptor list ) : ( LogDescriptor list * uint32 ) =
                     if idx < descriptorCount then
-                        let desc = ReadLogDescriptor logEntryData ( 64u + idx * 32u ) ddcnt sequenceNumber
+                        let desc = VhdxReader.ReadLogDescriptor logEntryData ( 64u + idx * 32u ) ddcnt sequenceNumber
                         match desc with
                         | None ->
                             [], 0u  // failed to retrieve the descriptor
@@ -420,7 +420,7 @@ type VhdxReader() =
                         // Retrieve the data sector
                         let dataSectores = [
                             for i in 0u .. dataSectorCount - 1u do
-                                let d = ReadLogDataSector logEntryData ( dataSectorPos + i * 4096u ) sequenceNumber
+                                let d = VhdxReader.ReadLogDataSector logEntryData ( dataSectorPos + i * 4096u ) sequenceNumber
                                 if d.Length = 4084 then
                                     d
                         ]
@@ -456,13 +456,13 @@ type VhdxReader() =
     /// <returns>
     ///  Retrieved log entry value list.
     /// </returns>
-    static let ReadActiveLogSequense ( logData : byte[] ) ( headerLogGuid : Guid ) : LogEntry list =
+    static member private ReadActiveLogSequense ( logData : byte[] ) ( headerLogGuid : Guid ) : LogEntry list =
 
         printfn "================================================================"
         printfn "Read Active Log Sequense"
 
         let rec getCurrentSeq ( pos : uint32 ) ( acc : LogEntry list ) =
-            match ReadLogEntry logData pos headerLogGuid with
+            match VhdxReader.ReadLogEntry logData pos headerLogGuid with
             | Some x ->
                 match acc with
                 | h :: _ ->
@@ -544,7 +544,7 @@ type VhdxReader() =
     /// <returns>
     ///  Retrieved data.
     /// </returns>
-    static let ReadBytesWithLog
+    static member private ReadBytesWithLog
             ( log : LogEntry list )
             ( lastFileSize : uint64 )
             ( fa : FileAccessor )
@@ -595,7 +595,7 @@ type VhdxReader() =
     /// <returns>
     ///  Retrieved region table data, or None.
     /// </returns>
-    static let ReadRegionTable ( data : byte[] ) ( fileLen : uint64 ) : RegionTable option =
+    static member private ReadRegionTable ( data : byte[] ) ( fileLen : uint64 ) : RegionTable option =
 
         // Interpretation of the region table header
         let signature = VhdxCommon.ReadUInt32BE data 0u
@@ -674,7 +674,7 @@ type VhdxReader() =
     /// <returns>
     ///  Retrieved metadata information, or None.
     /// </returns>
-    static let ReadMetadata ( data : byte[] ) : VirtualDiskInfo =
+    static member private ReadMetadata ( data : byte[] ) : VirtualDiskInfo =
 
         let signature = VhdxCommon.ReadUInt64BE data 0u        // signature
         let mtEntryCount = VhdxCommon.ReadUInt16LE data 10u    // Entry count
@@ -918,7 +918,7 @@ type VhdxReader() =
     /// <returns>
     ///  Retrieved payload BAT Entry.
     /// </returns>
-    static let GetPayloadBlockEntry ( batData : byte[] ) ( chunkRatio : uint64 ) ( pbIndex : uint64 ) : PayloadBATEntry =
+    static member private GetPayloadBlockEntry ( batData : byte[] ) ( chunkRatio : uint64 ) ( pbIndex : uint64 ) : PayloadBATEntry =
         let idx = ( pbIndex / chunkRatio ) * ( chunkRatio + 1UL ) + ( pbIndex % chunkRatio )
         let entry = VhdxCommon.ReadUInt64LE batData ( uint32 idx * 8u )
         let state =
@@ -957,7 +957,7 @@ type VhdxReader() =
     /// <returns>
     /// pair of status of the sector bitmap and file offset of the sector bitmap data.
     /// </returns>
-    static let GetSectorBitmapBlockEntry ( batData : byte[] ) ( chunkRatio : uint64 ) ( sbbIndex : uint64 ) : struct( uint64 * BatEntryStateSB * uint64 ) =
+    static member GetSectorBitmapBlockEntry ( batData : byte[] ) ( chunkRatio : uint64 ) ( sbbIndex : uint64 ) : struct( uint64 * BatEntryStateSB * uint64 ) =
         let idx = sbbIndex * ( chunkRatio + 1UL ) + chunkRatio
         let entry = VhdxCommon.ReadUInt64LE batData ( uint32 idx * 8u )
         let state =
@@ -976,7 +976,7 @@ type VhdxReader() =
     /// <summary>
     ///  Read block allocation table.
     /// </summary>
-    /// <param name="logInfo">
+    /// <param name="log">
     ///  Log information.
     /// </param>
     /// <param name="fs">
@@ -991,15 +991,15 @@ type VhdxReader() =
     /// <returns>
     ///  Retrieved BAT entries.
     /// </returns>
-    static let ReadBat
-        ( logInfo : LogEntry list )
+    static member private ReadBat
+        ( log : LogEntry list )
         ( lastFileSize : uint64 )
         ( fa : FileAccessor )
         ( batRegion : RegionEntry )
         ( virtualDiskInfo : VirtualDiskInfo )
         : Task<BatEntries> =
         task {
-            let! fileData = ReadBytesWithLog logInfo lastFileSize fa batRegion.FileOffset batRegion.Length
+            let! fileData = VhdxReader.ReadBytesWithLog log lastFileSize fa batRegion.FileOffset batRegion.Length
             let chunkSize = 0x800000UL * Blocksize.toUInt64 virtualDiskInfo.LogicalSectorSize
             let chunkRatio = chunkSize / uint64 virtualDiskInfo.PayloadBlockSize
             let payloadBlockCount = ( virtualDiskInfo.VirtualDiskSize - 1UL ) / uint64 virtualDiskInfo.PayloadBlockSize + 1UL
@@ -1022,7 +1022,7 @@ type VhdxReader() =
             // Read payload BAT entries
             let payloads = [|
                 for i in 0UL .. payloadBlockCount - 1UL ->
-                    GetPayloadBlockEntry fileData chunkRatio i
+                    VhdxReader.GetPayloadBlockEntry fileData chunkRatio i
             |]
 
             // Read sector bitmap blocks
@@ -1038,8 +1038,8 @@ type VhdxReader() =
                         Bitmap = Array.empty;
                     }
                 else
-                    let struct( idx, stat, pos ) = GetSectorBitmapBlockEntry fileData chunkRatio i
-                    let! bitmapData = ReadBytesWithLog logInfo lastFileSize fa pos 0x100000u
+                    let struct( idx, stat, pos ) = VhdxReader.GetSectorBitmapBlockEntry fileData chunkRatio i
+                    let! bitmapData = VhdxReader.ReadBytesWithLog log lastFileSize fa pos 0x100000u
                     sectorBitmapBlock.[ int i ] <- {
                         BatEntryIndex = idx;
                         SBState = stat;
@@ -1061,15 +1061,15 @@ type VhdxReader() =
         }
 
     /// <summary>
-    ///  Read the VHDX file and retrieve the metadata.
+    ///  Read the VHDX file and retrieve the all of structures.
     /// </summary>
     /// <param name="filePath">
     ///  VHDX file name.
     /// </param>
     /// <returns>
-    ///  Retrieved metadata.
+    ///  Retrieved structures data.
     /// </returns>
-    static member ReadVhdx ( fa : FileAccessor ) : Task<VhdxMetadata> =
+    static member ReadVhdx ( fa : FileAccessor ) : Task<VhdxStructures> =
         task {
             let fileSize = fa.GetFileSize()
             if fileSize < 0x30000UL then
@@ -1077,19 +1077,19 @@ type VhdxReader() =
 
             // Validating the file type identifier and obtaining the creator
             printfn "================================================================"
-            let! creator = ReadFileTypeIdentifier fa
+            let! creator = VhdxReader.ReadFileTypeIdentifier fa
 
             // Load the header
             printfn "================================================================"
-            let! headers = ReadHeaders fa
+            let! headers = VhdxReader.ReadHeaders fa
             let currentHeader = headers.[ 0 ]
 
             // Retrieve log information (active log entries only)
-            let! logInfo = task {
+            let! log = task {
                 if currentHeader.LogLength > 0u && currentHeader.LogGuid <> Guid.Empty then
                     let logData = Array.zeroCreate<byte>( int currentHeader.LogLength )
                     do! fa.Read currentHeader.LogOffset ( ArraySegment logData )
-                    let e = ReadActiveLogSequense logData currentHeader.LogGuid
+                    let e = VhdxReader.ReadActiveLogSequense logData currentHeader.LogGuid
                     if e.Length = 0 then
                         raise <| Exception "No valid logs exist."
 
@@ -1103,13 +1103,13 @@ type VhdxReader() =
             }
 
             let lastFileSize =
-                if logInfo.Length > 0 then
-                    ( logInfo |> List.last ).LastFileOffset
+                if log.Length > 0 then
+                    ( log |> List.last ).LastFileOffset
                 else
                     fileSize |> uint64
 
-            printfn "Number of log entries retrieved : %d" logInfo.Length
-            for itr in logInfo do
+            printfn "Number of log entries retrieved : %d" log.Length
+            for itr in log do
                 printfn "***"
                 printfn "  Signature : 0x%08X" itr.Signature
                 printfn "  Checksum : 0x%08X" itr.Checksum
@@ -1143,8 +1143,8 @@ type VhdxReader() =
             printfn "  4K Sector Number : %d .. %d"
                         ( 0x30000UL / 4096UL )
                         ( 0x30000UL / 4096UL + 65536UL / 4096UL - 1UL )
-            let! regionTable1Buf = ReadBytesWithLog logInfo lastFileSize fa 0x30000UL 65536u
-            let regionTable1 = ReadRegionTable regionTable1Buf lastFileSize
+            let! regionTable1Buf = VhdxReader.ReadBytesWithLog log lastFileSize fa 0x30000UL 65536u
+            let regionTable1 = VhdxReader.ReadRegionTable regionTable1Buf lastFileSize
 
             // Read Region table 2 0x40000
             printfn "================================================================"
@@ -1152,8 +1152,8 @@ type VhdxReader() =
             printfn "  4K Sector Number : %d .. %d"
                         ( 0x40000UL / 4096UL )
                         ( 0x40000UL / 4096UL + 65536UL / 4096UL - 1UL )
-            let! regionTable2Buf = ReadBytesWithLog logInfo lastFileSize fa 0x40000UL 65536u
-            let regionTable2 = ReadRegionTable regionTable2Buf lastFileSize
+            let! regionTable2Buf = VhdxReader.ReadBytesWithLog log lastFileSize fa 0x40000UL 65536u
+            let regionTable2 = VhdxReader.ReadRegionTable regionTable2Buf lastFileSize
 
             // Region Table List
             let regionTables =
@@ -1187,8 +1187,8 @@ type VhdxReader() =
             printfn "  4K Sector Number : %d .. %d"
                         ( metadataRegion.Value.FileOffset / 4096UL )
                         ( metadataRegion.Value.FileOffset / 4096UL + uint64 metadataRegion.Value.Length / 4096UL - 1UL )
-            let! metadataBuf = ReadBytesWithLog logInfo lastFileSize fa metadataRegion.Value.FileOffset metadataRegion.Value.Length
-            let virtualDiskInfo = ReadMetadata metadataBuf
+            let! metadataBuf = VhdxReader.ReadBytesWithLog log lastFileSize fa metadataRegion.Value.FileOffset metadataRegion.Value.Length
+            let virtualDiskInfo = VhdxReader.ReadMetadata metadataBuf
 
             // Read BAT
             printfn "================================================================"
@@ -1196,7 +1196,7 @@ type VhdxReader() =
             printfn "  4K Sector Number : %d .. %d"
                         ( batRegion.Value.FileOffset / 4096UL )
                         ( batRegion.Value.FileOffset / 4096UL + uint64 batRegion.Value.Length / 4096UL - 1UL )
-            let! batEntries = ReadBat logInfo lastFileSize fa batRegion.Value virtualDiskInfo
+            let! batEntries = VhdxReader.ReadBat log lastFileSize fa batRegion.Value virtualDiskInfo
 
             if virtualDiskInfo.HasParent then
                 // For differential VHDX files, if a PartiallyPresent payload BAT entry exists,
@@ -1220,10 +1220,10 @@ type VhdxReader() =
             return {
                 Creator = creator;
                 Header = currentHeader;
-                LogInfo = logInfo;
+                Log = log;
                 LastFileSize = lastFileSize;
-                RegionTables = currentRegionTable;
-                VirtualDiskInfo = virtualDiskInfo;
-                BatEntries = batEntries;
+                Region = currentRegionTable;
+                VDI = virtualDiskInfo;
+                BAT = batEntries;
             }
         }

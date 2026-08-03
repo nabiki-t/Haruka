@@ -73,15 +73,15 @@ type VhdxHandler() =
     /// <returns>
     ///  Pair of file index(​​in the array meta) and byte offset in the VHDX file.
     /// </returns>
-    static member ResolvLBA( lba : BLKCNT64_T ) ( meta : VhdxMetadata[] ) : struct( int32 * uint64 ) voption =
+    static member ResolvLBA( lba : BLKCNT64_T ) ( meta : VhdxStructures[] ) : struct( int32 * uint64 ) voption =
         let rec loop ( idx : int32 ) =
-            if idx < meta.Length then
+            if idx >= 0 then
                 let pbSize =
-                    meta.[idx].VirtualDiskInfo.PayloadBlockSize |> uint64       // Payload Block Size
+                    meta.[idx].VDI.PayloadBlockSize |> uint64       // Payload Block Size
                 let logiSecSize =
-                    Blocksize.toUInt64 meta.[idx].VirtualDiskInfo.LogicalSectorSize // Logical Sector Size
+                    Blocksize.toUInt64 meta.[idx].VDI.LogicalSectorSize // Logical Sector Size
                 let chunkRatio =
-                    meta.[idx].BatEntries.ChunkRatio |> uint64                  // Chunk Ratio
+                    meta.[idx].BAT.ChunkRatio |> uint64                  // Chunk Ratio
                 let secCntInPB = pbSize / logiSecSize                           // Number of sectors in a payload block.
                 let pbIdx = ( blkcnt_me.toUInt64 lba ) / secCntInPB             // Payload block index
                 let secIdxInPB = ( blkcnt_me.toUInt64 lba ) % secCntInPB        // Sector index within payload block
@@ -90,12 +90,12 @@ type VhdxHandler() =
                 let byteIdxInSB =
                     ( pbIdxInSB * secCntInPB / 8UL) + ( secIdxInPB / 8UL )      // Byte position within a sector bitmap BAT entry
                 let bitIdx = secIdxInPB % 8UL                                   // Bit position within a byte
-                let pbEntry = meta.[idx].BatEntries.Payloads.[ int32 pbIdx ]      // Payload BAT Entry
+                let pbEntry = meta.[idx].BAT.Payloads.[ int32 pbIdx ]      // Payload BAT Entry
 
                 match pbEntry.State with
                 | PayloadNotPresent ->
                     // The data to be accessed resides in the parent file.
-                    loop ( idx + 1 )
+                    loop ( idx - 1 )
 
                 | PayloadUndefined
                 | PayloadZero
@@ -110,7 +110,7 @@ type VhdxHandler() =
 
                 | PayloadPartiallyPresent ->
                     // The sector bitmap BAT entries need to be examined.
-                    let sb = meta.[idx].BatEntries.SectorBitmap[ int32 sbIdx ].Bitmap
+                    let sb = meta.[idx].BAT.SectorBitmap[ int32 sbIdx ].Bitmap
                     let bitValue = ( sb.[ int32 byteIdxInSB ] >>> ( int32 bitIdx ) ) &&& 1uy
                     if bitValue = 1uy then
                         // The data to be accessed resides in this file.
@@ -118,11 +118,11 @@ type VhdxHandler() =
                         struct( idx, posInFile ) |> ValueSome
                     else
                         // The data to be accessed resides in the parent file.
-                        loop ( idx + 1 )
+                        loop ( idx - 1 )
             else
                 // No block allocation
                 ValueNone
-        loop 0
+        loop ( meta.Length - 1 )
 
     /// <summary>
     ///  From the LBA, calculate the payload block BAT entry index and the sector index within the payload block.
@@ -136,9 +136,9 @@ type VhdxHandler() =
     /// <returns>
     ///  Pair of payload block BAT entry index and sector index within the payload block.
     /// </returns>
-    static member LBAtoPayloadBlockIndex ( lba : BLKCNT64_T ) ( metadata : VhdxMetadata ) : struct( uint32 * BLKCNT32_T ) =
-        let pbsize = metadata.VirtualDiskInfo.PayloadBlockSize
-        let secsize = metadata.VirtualDiskInfo.LogicalSectorSize |> Blocksize.toUInt32
+    static member LBAtoPayloadBlockIndex ( lba : BLKCNT64_T ) ( metadata : VhdxStructures ) : struct( uint32 * BLKCNT32_T ) =
+        let pbsize = metadata.VDI.PayloadBlockSize
+        let secsize = metadata.VDI.LogicalSectorSize |> Blocksize.toUInt32
         let secCntInPb = pbsize / secsize |> uint64
         let pbIndex = ( blkcnt_me.toUInt64 lba ) / secCntInPb |> uint32
         let secIndex = ( blkcnt_me.toUInt64 lba ) % secCntInPb |> uint32
@@ -156,27 +156,27 @@ type VhdxHandler() =
     /// <returns>
     ///  Pair of the sector bitmap BAT entry index and bit position within the payload block.
     /// </returns>
-    static member LBAtoSectorBitmapIndex ( lba : BLKCNT64_T ) ( metadata : VhdxMetadata ) : struct( uint32 * uint32 ) =
+    static member LBAtoSectorBitmapIndex ( lba : BLKCNT64_T ) ( metadata : VhdxStructures ) : struct( uint32 * uint32 * uint32 ) =
         let sbindex = ( blkcnt_me.toUInt64 lba ) / 8388608UL |> uint32
         let bitpos = ( blkcnt_me.toUInt64 lba ) % 8388608UL |> uint32
-        struct( sbindex, bitpos )
+        struct( sbindex, bitpos >>> 3, bitpos &&& 7u )
 
     /// <summary>
-    /// Retrieve all metadata, including the parent VHDX file.
+    /// Retrieve all of VHDX file structures, including the parent VHDX file.
     /// </summary>
     /// <param name="fa">
     ///  FileAccessor object for VHDX file.
     /// </param>
     /// <returns>
-    ///  Retrieved VHDX metadata.
+    ///  Retrieved structures data.
     /// </returns>
-    static member ReadAllMetadata( fa : FileAccessor ) : Task<( FileAccessor * VhdxMetadata )[]> =
+    static member ReadAllStructures( fa : FileAccessor ) : Task<( FileAccessor * VhdxStructures )[]> =
         task {
             printfn "================================================================"
             printfn "Load all VHDX files, including the parent file."
             printfn "File name : %s" fa.FileName
 
-            let acc = List<FileAccessor * VhdxMetadata>()
+            let acc = List<FileAccessor * VhdxStructures>()
             let loop ( ( fn : FileAccessor ), ( expDWG : Guid option ) ) : Task<struct( bool * ( FileAccessor * Guid option ) )> =
                 task {
                     printfn "---------"
@@ -186,8 +186,8 @@ type VhdxHandler() =
 
                     // Read metadata
                     let! meta = VhdxReader.ReadVhdx fn
-                    let hasParent = meta.VirtualDiskInfo.HasParent
-                    let pl = meta.VirtualDiskInfo.ParentLocator
+                    let hasParent = meta.VDI.HasParent
+                    let pl = meta.VDI.ParentLocator
 
                     // Check Data Write Guid
                     if expDWG.IsSome && meta.Header.DataWriteGuid <> expDWG.Value then
@@ -229,8 +229,8 @@ type VhdxHandler() =
 
             // Verify that the metadata matches.
             for i = 1 to rv.Length - 1 do
-                let vdi0 = ( snd rv.[0] ).VirtualDiskInfo
-                let vdix = ( snd rv.[i] ).VirtualDiskInfo
+                let vdi0 = ( snd rv.[0] ).VDI
+                let vdix = ( snd rv.[i] ).VDI
                 if vdi0.VirtualDiskSize <> vdix.VirtualDiskSize then
                     raise <| Exception( sprintf "The virtual disk size of the parent (%d) does not match." i )
                 if vdi0.VirtualDiskId <> vdix.VirtualDiskId then
@@ -321,15 +321,15 @@ type VhdxHandler() =
     /// </returns>
     static member CompareVHDX_RAW ( fa : FileAccessor ) ( fname2 : string ) : Task<bool> =
         task {
-            let! allVHDXMetadata = VhdxHandler.ReadAllMetadata fa
+            let! allVHDXMetadata = VhdxHandler.ReadAllStructures fa
             let vfiles, metadatas =
                 allVHDXMetadata
                 |> Array.unzip
 
             use fs2 = File.OpenRead fname2
             try
-                let sectorSize = metadatas.[0].VirtualDiskInfo.LogicalSectorSize |> Blocksize.toUInt64
-                let virtualDiskSize = metadatas.[0].VirtualDiskInfo.VirtualDiskSize
+                let sectorSize = metadatas.[0].VDI.LogicalSectorSize |> Blocksize.toUInt64
+                let virtualDiskSize = metadatas.[0].VDI.VirtualDiskSize
                 let sectorCount = virtualDiskSize / sectorSize |> blkcnt_me.ofUInt64
                 if fs2.Length <> int64 virtualDiskSize then
                     return false
@@ -375,18 +375,18 @@ type VhdxHandler() =
     static member CompareVHDX_VHDX ( fa1 : FileAccessor ) ( fa2 : FileAccessor ) : Task<bool> =
         task {
             // read metadata for fname1
-            let! allVHDXMetadata1 = VhdxHandler.ReadAllMetadata fa1
+            let! allVHDXMetadata1 = VhdxHandler.ReadAllStructures fa1
             let vfiles1, metadatas1 = allVHDXMetadata1 |> Array.unzip
 
             // read metadata for fname2
-            let! allVHDXMetadata2 = VhdxHandler.ReadAllMetadata fa2
+            let! allVHDXMetadata2 = VhdxHandler.ReadAllStructures fa2
             let vfiles2, metadatas2 = allVHDXMetadata2 |> Array.unzip
 
             try
-                let sectorSize1 = metadatas1.[0].VirtualDiskInfo.LogicalSectorSize |> Blocksize.toUInt64
-                let virtualDiskSize1 = metadatas1.[0].VirtualDiskInfo.VirtualDiskSize
-                let sectorSize2 = metadatas2.[0].VirtualDiskInfo.LogicalSectorSize |> Blocksize.toUInt64
-                let virtualDiskSize2 = metadatas2.[0].VirtualDiskInfo.VirtualDiskSize
+                let sectorSize1 = metadatas1.[0].VDI.LogicalSectorSize |> Blocksize.toUInt64
+                let virtualDiskSize1 = metadatas1.[0].VDI.VirtualDiskSize
+                let sectorSize2 = metadatas2.[0].VDI.LogicalSectorSize |> Blocksize.toUInt64
+                let virtualDiskSize2 = metadatas2.[0].VDI.VirtualDiskSize
                 let sectorCount = virtualDiskSize1 / sectorSize1 |> blkcnt_me.ofUInt64
 
                 if sectorSize1 <> sectorSize2 || virtualDiskSize1 <> virtualDiskSize2 then
@@ -443,8 +443,8 @@ type VhdxHandler() =
     /// <remarks>
     ///  The metadata argument must specify the metadata for the differencing VHDX file that has the parent VHDX.
     /// </remarks>
-    static member GetParentFileName ( metadata : VhdxMetadata ) : struct( Guid * ParentLocatorType ) =
-        let pl = metadata.VirtualDiskInfo.ParentLocator
+    static member GetParentFileName ( metadata : VhdxStructures ) : struct( Guid * ParentLocatorType ) =
+        let pl = metadata.VDI.ParentLocator
         let parent_linkage = pl.[ "parent_linkage" ] |> Guid
         let plt =
             let r1, v1 = pl.TryGetValue "relative_path"
@@ -460,3 +460,25 @@ type VhdxHandler() =
                 raise <| Exception "Unable to identify the parent VHDX file name."
         struct( parent_linkage, plt )
         
+    static member UpdateFileWriteGuidAndDataWriteGuid ( fa : FileAccessor ) ( metadata : VhdxStructures ) : Task<VhdxStructures> =
+        task {
+            let hd = {
+                metadata.Header with
+                    FileWriteGuid = Guid.NewGuid();
+                    DataWriteGuid = Guid.NewGuid();
+                    LogGuid = Guid();
+                    SequenceNumber = metadata.Header.SequenceNumber + 1UL;
+            }
+            printfn "  FileWriteGuid : %s" ( hd.FileWriteGuid.ToString "D" )
+            printfn "  DataWriteGuid : %s" ( hd.DataWriteGuid.ToString "D" )
+            printfn "  SequenceNumber : %d" ( hd.SequenceNumber )
+            let! nextsn = VhdxHandler.UpdateHeader fa hd
+            printfn "  Next sequence number : %d" nextsn
+            return {
+                metadata with
+                    Header = {
+                        metadata.Header with
+                            SequenceNumber = nextsn;    // Set the next sequence number to use.
+                }
+            }
+        }

@@ -270,22 +270,22 @@ type BatEntries = {
 }
 
 // ============================================================================
-// All of VHDX metadata
+// All of VHDX structures
 
-/// VHDX file metadata
-type VhdxMetadata = {
+/// VHDX file structures
+type VhdxStructures = {
     /// creator string
     Creator : string;
     /// Effective header
     Header : VhdxHeader;
     /// Log
-    LogInfo : LogEntry list;
+    Log : LogEntry list;
     /// Expected file size
     LastFileSize : uint64;
-    /// Regio table
-    RegionTables : RegionTable;
+    /// Region table
+    Region : RegionTable;
     /// Virtual disk infomation.
-    VirtualDiskInfo : VirtualDiskInfo;
+    VDI : VirtualDiskInfo;
     /// BAT entries
-    BatEntries : BatEntries;
+    BAT : BatEntries;
 }

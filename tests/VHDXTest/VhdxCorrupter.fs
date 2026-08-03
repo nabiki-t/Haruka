@@ -137,8 +137,8 @@ type VhdxCorrupter() =
     /// <param name="fa">
     ///  File accessor for VHDX file.
     /// </param>
-    /// <param name="metadata">
-    ///  Metadata for the VHDX file.
+    /// <param name="structures">
+    ///  The VHDX file structures data.
     /// </param>
     /// <param name="offset">
     ///  Offset of log output position within the log area.
@@ -149,7 +149,7 @@ type VhdxCorrupter() =
     /// <param name="rightLogEntry">
     ///  Log entries that write correct data.
     /// </param>
-    static member WriteLogEntry ( fa : FileAccessor ) ( metadata : VhdxMetadata ) ( offset : uint32 ) ( dummyLogEntry : byte[] list ) ( rightLogEntry: byte[] ) : Task =
+    static member WriteLogEntry ( fa : FileAccessor ) ( structures : VhdxStructures ) ( offset : uint32 ) ( dummyLogEntry : byte[] list ) ( rightLogEntry: byte[] ) : Task =
         let rec loop ( idx : int32 ) ( pos : int32 ) ( v : byte[] ) : int32 =
             if idx < dummyLogEntry.Length then
                 Array.blit dummyLogEntry.[idx] 0 v pos dummyLogEntry.[idx].Length
@@ -164,17 +164,17 @@ type VhdxCorrupter() =
             let v = Array.zeroCreate<byte> totalLen
             Array.blit rightLogEntry 0 v ( loop 0 0 v ) rightLogEntry.Length
 
-            if offset + ( uint32 totalLen ) <= metadata.Header.LogLength then
-                do! fa.Write ( metadata.Header.LogOffset + uint64 offset ) ( ArraySegment v )
+            if offset + ( uint32 totalLen ) <= structures.Header.LogLength then
+                do! fa.Write ( structures.Header.LogOffset + uint64 offset ) ( ArraySegment v )
             else
-                let len1 = metadata.Header.LogLength - offset   // Length of the first half
+                let len1 = structures.Header.LogLength - offset   // Length of the first half
                 let len2 = ( uint32 v.Length ) - len1           // Length of the second half
 
                 // first half
-                do! fa.Write ( metadata.Header.LogOffset + uint64 offset ) ( ArraySegment( v, 0, int32 len1 ) )
+                do! fa.Write ( structures.Header.LogOffset + uint64 offset ) ( ArraySegment( v, 0, int32 len1 ) )
 
                 // second half
-                do! fa.Write ( metadata.Header.LogOffset ) ( ArraySegment( v, int32 len1, int32 len2 ) )
+                do! fa.Write ( structures.Header.LogOffset ) ( ArraySegment( v, int32 len1, int32 len2 ) )
         }
 
 
@@ -195,30 +195,30 @@ type VhdxCorrupter() =
             printfn "Output file : %s" outputFile.FileName
             printfn "Update 4K sectores : %s" ( sectorIndices |> List.map ( sprintf "%d" ) |> String.concat "," )
 
-            let! metadata = VhdxReader.ReadVhdx outputFile
+            let! structures = VhdxReader.ReadVhdx outputFile
             let fileSize = outputFile.GetFileSize()
             printfn "File size : %d" fileSize
 
             // Update header
             let newLogGuid = Guid.NewGuid()
             let newHeader = {
-                metadata.Header with
-                    SequenceNumber = metadata.Header.SequenceNumber + 1UL;
+                structures.Header with
+                    SequenceNumber = structures.Header.SequenceNumber + 1UL;
                     FileWriteGuid = Guid.NewGuid();
                     LogGuid = newLogGuid;
             }
             let! _ = VhdxHandler.UpdateHeader outputFile newHeader
 
             // Fill the log area with random numbers.
-            let logSecCnt = metadata.Header.LogLength / 4096u
+            let logSecCnt = structures.Header.LogLength / 4096u
             let randbuf = Array.zeroCreate<byte> 4096
             for i in 1UL .. uint64 logSecCnt - 1UL do
                 Random.Shared.NextBytes randbuf
-                do! outputFile.Write ( metadata.Header.LogOffset + i * 4096UL ) ( ArraySegment randbuf )
+                do! outputFile.Write ( structures.Header.LogOffset + i * 4096UL ) ( ArraySegment randbuf )
 
             printfn "Log area random number writing"
-            printfn "Log offset : %d" metadata.Header.LogOffset
-            printfn "Log length : %d" metadata.Header.LogLength
+            printfn "Log offset : %d" structures.Header.LogOffset
+            printfn "Log length : %d" structures.Header.LogLength
             printfn "Log sector count : %d" logSecCnt
 
             // Generate dummy update data
@@ -263,11 +263,11 @@ type VhdxCorrupter() =
                 VhdxCorrupter.CreateLogEntry sectorInfo logOutputPos 5UL newLogGuid fileSize fileSize
 
             printfn "Write log entry"
-            printfn "LogOffset = %d" metadata.Header.LogOffset
-            printfn "LogLength = %d" metadata.Header.LogLength
+            printfn "LogOffset = %d" structures.Header.LogOffset
+            printfn "LogLength = %d" structures.Header.LogLength
             printfn "Log write position = %d" logOutputPos
             printfn "Generated log entry count : %d" ( dummyLogEntry.Length + 1 )
 
-            do! VhdxCorrupter.WriteLogEntry outputFile metadata logOutputPos dummyLogEntry rightLogEntry
+            do! VhdxCorrupter.WriteLogEntry outputFile structures logOutputPos dummyLogEntry rightLogEntry
 
         }

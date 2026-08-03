@@ -9,7 +9,7 @@ open Haruka.Constants
 open Haruka.Commons
 
 
-/// Output VHDX metadata as XML data.
+/// Output VHDX file structures as XML data.
 type VhdxXmlSerializer() =
 
     /// <summary>
@@ -28,44 +28,44 @@ type VhdxXmlSerializer() =
             System.BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant()
     
     /// <summary>
-    ///  Convert VHDX metadata to XML string.
+    ///  Convert VHDX structures to XML string.
     /// </summary>
-    /// <param name="metadata">
-    ///  VHDX metadata.
+    /// <param name="structures">
+    ///  VHDX structures data.
     /// </param>
     /// <returns>
     ///  Converted XML string.
     /// </returns>
-    static member Serialize ( metadata : VhdxMetadata ) : string =
+    static member Serialize ( structures : VhdxStructures ) : string =
 
         let sb = StringBuilder()
         use writer = XmlWriter.Create( sb, XmlWriterSettings( Indent = true, Encoding = Encoding.UTF8 ) )
         writer.WriteStartDocument()
-        writer.WriteStartElement( "VhdxMetadata" )
+        writer.WriteStartElement( "VhdxStructures" )
 
         // File type identifier
         writer.WriteStartElement( "FileTypeIdentifier" )
-        writer.WriteString( metadata.Creator )
+        writer.WriteString( structures.Creator )
         writer.WriteEndElement()
             
         // Header
         writer.WriteStartElement( "Header" )
-        writer.WriteElementString( "Checksum", "0x" + metadata.Header.Checksum.ToString( "X8" ) )
-        writer.WriteElementString( "SequenceNumber", string metadata.Header.SequenceNumber )
-        writer.WriteElementString( "FileWriteGuid", metadata.Header.FileWriteGuid.ToString "D" )
-        writer.WriteElementString( "DataWriteGuid", metadata.Header.DataWriteGuid.ToString "D" )
-        writer.WriteElementString( "LogGuid", metadata.Header.LogGuid.ToString "D" )
-        writer.WriteElementString( "LogVersion", string metadata.Header.LogVersion )
-        writer.WriteElementString( "Version", string metadata.Header.Version )
-        writer.WriteElementString( "LogLength", string metadata.Header.LogLength )
-        writer.WriteElementString( "LogOffset", string metadata.Header.LogOffset )
-        writer.WriteElementString( "Offset", string metadata.Header.Offset )
-        writer.WriteElementString( "Index", string metadata.Header.Index )
+        writer.WriteElementString( "Checksum", "0x" + structures.Header.Checksum.ToString( "X8" ) )
+        writer.WriteElementString( "SequenceNumber", string structures.Header.SequenceNumber )
+        writer.WriteElementString( "FileWriteGuid", structures.Header.FileWriteGuid.ToString "D" )
+        writer.WriteElementString( "DataWriteGuid", structures.Header.DataWriteGuid.ToString "D" )
+        writer.WriteElementString( "LogGuid", structures.Header.LogGuid.ToString "D" )
+        writer.WriteElementString( "LogVersion", string structures.Header.LogVersion )
+        writer.WriteElementString( "Version", string structures.Header.Version )
+        writer.WriteElementString( "LogLength", string structures.Header.LogLength )
+        writer.WriteElementString( "LogOffset", string structures.Header.LogOffset )
+        writer.WriteElementString( "Offset", string structures.Header.Offset )
+        writer.WriteElementString( "Index", string structures.Header.Index )
         writer.WriteEndElement()
 
         // Log
         writer.WriteStartElement( "LogEntries" )
-        metadata.LogInfo
+        structures.Log
         |> List.iter ( fun ( e : LogEntry ) ->
             writer.WriteStartElement( "LogEntry" )
             writer.WriteElementString( "Checksum", "0x" + e.Checksum.ToString("X8") )
@@ -103,8 +103,8 @@ type VhdxXmlSerializer() =
 
         // Region table
         writer.WriteStartElement( "RegionTable" )
-        writer.WriteElementString( "Checksum", "0x" + metadata.RegionTables.Checksum.ToString("X8") )
-        writer.WriteElementString( "EntryCount", string metadata.RegionTables.EntryCount )
+        writer.WriteElementString( "Checksum", "0x" + structures.Region.Checksum.ToString("X8") )
+        writer.WriteElementString( "EntryCount", string structures.Region.EntryCount )
         writer.WriteStartElement( "Entries" )
         List.iteri ( fun j ( e : RegionEntry ) ->
             let regionName =
@@ -122,21 +122,21 @@ type VhdxXmlSerializer() =
             writer.WriteElementString( "FileOffset", string e.FileOffset )
             writer.WriteElementString( "Length", string e.Length )
             writer.WriteEndElement()
-        ) metadata.RegionTables.Entries
+        ) structures.Region.Entries
         writer.WriteEndElement()
         writer.WriteEndElement()
             
         // Virtual disk info
         writer.WriteStartElement( "VirtualDiskInfo" )
-        writer.WriteElementString( "PayloadBlockSize", string metadata.VirtualDiskInfo.PayloadBlockSize )
-        writer.WriteElementString( "LeaveBlockAllocated", string metadata.VirtualDiskInfo.LeaveBlockAllocated )
-        writer.WriteElementString( "HasParent", string metadata.VirtualDiskInfo.HasParent )
-        writer.WriteElementString( "VirtualDiskSize", string metadata.VirtualDiskInfo.VirtualDiskSize )
-        writer.WriteElementString( "VirtualDiskId", string metadata.VirtualDiskInfo.VirtualDiskId )
-        writer.WriteElementString( "LogicalSectorSize", string metadata.VirtualDiskInfo.LogicalSectorSize )
-        writer.WriteElementString( "PhysicalSectorSize", string metadata.VirtualDiskInfo.PhysicalSectorSize )
+        writer.WriteElementString( "PayloadBlockSize", string structures.VDI.PayloadBlockSize )
+        writer.WriteElementString( "LeaveBlockAllocated", string structures.VDI.LeaveBlockAllocated )
+        writer.WriteElementString( "HasParent", string structures.VDI.HasParent )
+        writer.WriteElementString( "VirtualDiskSize", string structures.VDI.VirtualDiskSize )
+        writer.WriteElementString( "VirtualDiskId", string structures.VDI.VirtualDiskId )
+        writer.WriteElementString( "LogicalSectorSize", string structures.VDI.LogicalSectorSize )
+        writer.WriteElementString( "PhysicalSectorSize", string structures.VDI.PhysicalSectorSize )
         writer.WriteStartElement( "ParentLocators" )
-        for itr in metadata.VirtualDiskInfo.ParentLocator do
+        for itr in structures.VDI.ParentLocator do
             writer.WriteStartElement( "ParentLocator" )
             writer.WriteElementString( "Key", itr.Key )
             writer.WriteElementString( "Value", itr.Value )
@@ -146,27 +146,45 @@ type VhdxXmlSerializer() =
 
         // BAT entry
         writer.WriteStartElement( "BatEntries" )
-        writer.WriteElementString( "BATRegionOffset", string metadata.BatEntries.BATRegionOffset )
-        writer.WriteElementString( "BATRegionLength", string metadata.BatEntries.BATRegionLength )
-        writer.WriteElementString( "ChunkSize", string metadata.BatEntries.ChunkSize )
-        writer.WriteElementString( "ChunkRatio", string metadata.BatEntries.ChunkRatio )
-        writer.WriteElementString( "PayloadBlockCount", string metadata.BatEntries.PayloadBlockCount )
-        writer.WriteElementString( "SectorBitmapBlockCount", string metadata.BatEntries.SectorBitmapBlockCount )
-        writer.WriteElementString( "BatEntryCount", string metadata.BatEntries.BatEntryCount )
+        writer.WriteElementString( "BATRegionOffset", string structures.BAT.BATRegionOffset )
+        writer.WriteElementString( "BATRegionLength", string structures.BAT.BATRegionLength )
+        writer.WriteElementString( "ChunkSize", string structures.BAT.ChunkSize )
+        writer.WriteElementString( "ChunkRatio", string structures.BAT.ChunkRatio )
+        writer.WriteElementString( "PayloadBlockCount", string structures.BAT.PayloadBlockCount )
+        writer.WriteElementString( "SectorBitmapBlockCount", string structures.BAT.SectorBitmapBlockCount )
+        writer.WriteElementString( "BatEntryCount", string structures.BAT.BatEntryCount )
         writer.WriteStartElement( "Payloads" )
-        for itr in metadata.BatEntries.Payloads do
+        for i = 0 to structures.BAT.Payloads.Length - 1 do
+            let itr = structures.BAT.Payloads[i]
             writer.WriteStartElement( "Payload" )
+            writer.WriteElementString( "Index", string i )
             writer.WriteElementString( "BatEntryIndex", string itr.BatEntryIndex )
             writer.WriteElementString( "State", string itr.State )
             writer.WriteElementString( "FileOffset", string itr.FileOffset )
             writer.WriteEndElement()
         writer.WriteEndElement()
         writer.WriteStartElement( "SectorBitmaps" )
-        for itr in metadata.BatEntries.SectorBitmap do
+        for i = 0 to structures.BAT.SectorBitmap.Length - 1 do
+            let itr = structures.BAT.SectorBitmap.[i]
             writer.WriteStartElement( "SectorBitmap" )
+            writer.WriteElementString( "Index", string i )
             writer.WriteElementString( "BatEntryIndex", string itr.BatEntryIndex )
             writer.WriteElementString( "SBState", string itr.SBState )
             writer.WriteElementString( "FileOffset", string itr.FileOffset )
+            writer.WriteElementString( "BitmapLength", string itr.Bitmap.Length )
+            if itr.SBState.IsSectorBitmapPresent then
+                writer.WriteStartElement( "Bitmap" )
+                let bmpChunkLength = itr.Bitmap.Length / int structures.BAT.ChunkRatio
+                for j = 0 to int structures.BAT.ChunkRatio - 1 do
+                    let spos = j * bmpChunkLength
+                    writer.WriteElementString( "CorrespondingPayloadIndex", string ( i * int structures.BAT.ChunkRatio + j ) )
+                    let targetSpan = ReadOnlySpan<byte>( itr.Bitmap, spos, bmpChunkLength )
+                    for k in 0 .. 32 .. ( bmpChunkLength - 1 ) do
+                        let sb = StringBuilder()
+                        for b in targetSpan.Slice( k, 32 ) do
+                            sb.AppendFormat( "{0:x2} ", b ) |> ignore
+                        writer.WriteElementString( sprintf "Bitmap%05d" k, sb.ToString() )
+                writer.WriteEndElement()
             writer.WriteEndElement()
         writer.WriteEndElement()
         writer.WriteEndElement()
@@ -178,14 +196,14 @@ type VhdxXmlSerializer() =
         sb.ToString()
     
     /// <summary>
-    ///  Write VHDX metadata to file as XML.
+    ///  Write VHDX structures to file as XML.
     /// </summary>
-    /// <param name="metadata">
-    ///  VHDX metadata.
+    /// <param name="structures">
+    ///  VHDX structures data.
     /// </param>
     /// <param name="filePath">
     ///  Output file name.
     /// </param>
-    static member SerializeToFile ( metadata : VhdxMetadata ) ( filePath : string ) : unit =
-        let xml = VhdxXmlSerializer.Serialize( metadata )
+    static member SerializeToFile ( structures : VhdxStructures ) ( filePath : string ) : unit =
+        let xml = VhdxXmlSerializer.Serialize( structures )
         File.WriteAllText( filePath, xml, Encoding.UTF8 )

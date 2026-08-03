@@ -103,180 +103,187 @@ type VhdxCreator() =
             struct( "relative_path", pathName )
 
     /// <summary>
-    ///  Write metadata
+    ///  Create bytes array for metadata.
     /// </summary>
-    /// <param name="fa">
-    ///  File accessor for the VHDX file.
+    /// <param name="vdi">
+    ///  Virtual disk information.
     /// </param>
-    /// <param name="metadataStartPos">
-    ///  File offset for the location where metadata is written.
-    /// </param>
-    /// <param name="payloadBlockSize">
-    ///  Payload block size value in file parameter.
-    /// </param>
-    /// <param name="isFixed">
-    ///  A-LeaveBlockAllocated flag value in the file parameter.
-    /// </param>
-    /// <param name="hasParent">
-    ///  B-HasParent flag value in file parameter.
-    /// </param>
-    /// <param name="virtualDiskSize">
-    ///  Virtual disk size value in the virtual disk size parameter.
-    /// </param>
-    /// <param name="virtualDiskID">
-    ///  Virtual disk ID value in the virtual disk ID parameter.
-    /// </param>
-    /// <param name="sectorSize">
-    ///  Sector size tat is used for the logical sector size and PhysicalSectorSize.
-    /// </param>
-    /// <param name="parentDataWriteGuid">
-    ///  Value of Data write GUID on the parent virtual disk.
-    /// </param>
-    /// <param name="parentFile">
-    ///  File accessor of parent VHDX file.
-    /// </param>
-    static member private WriteMetadata
-        ( fa : FileAccessor )
-        ( metadataStartPos : uint64 )
-        ( payloadBlockSize : uint32 )
-        ( isFixed : bool )
-        ( hasParent : bool )
-        ( virtualDiskSize : uint64 )
-        ( virtualDiskID : Guid )
-        ( sectorSize : Blocksize )
-        ( parentDataWriteGuid : Guid )
-        ( parentFile : FileAccessor option )
-        : Task =
+    /// <returns>
+    ///  Created bytes array pair of the metadata header and the metadata tables.
+    /// </returns>
+    static member CreateMetadataBytes ( vdi : VirtualDiskInfo ) : ( byte[] * byte[] ) =
 
-        task {
-            // MemoryStream for temporarily recording metadata items
-            let ms = new MemoryStream()
+        let ms = new MemoryStream() // MemoryStream for temporarily recording metadata items
 
-            // File parameter
-            let fileParamBuf = Array.zeroCreate<byte> 8
-            let fileParamStartPos = 0u
-            VhdxCommon.WriteUInt32LE fileParamBuf 0u payloadBlockSize
-            fileParamBuf.[4] <-
-                ( if isFixed then 1uy else 0uy ) |||
-                ( if hasParent then 2uy else 0uy )
-            ms.Write( fileParamBuf )
+        // File parameter
+        let fileParamBuf = Array.zeroCreate<byte> 8
+        let fileParamStartPos = 0u
+        VhdxCommon.WriteUInt32LE fileParamBuf 0u vdi.PayloadBlockSize
+        fileParamBuf.[4] <-
+            ( if vdi.LeaveBlockAllocated then 1uy else 0uy ) |||
+            ( if vdi.HasParent then 2uy else 0uy )
+        ms.Write( fileParamBuf )
 
-            // Virtual disk size
-            let vdsParamBuf = Array.zeroCreate<byte> 8
-            let vdsParamStartPos = ms.Length |> uint32
-            VhdxCommon.WriteUInt64LE vdsParamBuf 0u virtualDiskSize
-            ms.Write( vdsParamBuf )
+        // Virtual disk size
+        let vdsParamBuf = Array.zeroCreate<byte> 8
+        let vdsParamStartPos = ms.Length |> uint32
+        VhdxCommon.WriteUInt64LE vdsParamBuf 0u vdi.VirtualDiskSize
+        ms.Write( vdsParamBuf )
 
-            // Virtual disk ID
-            let vdidParamBuf = Array.zeroCreate<byte> 16
-            let vdidParamStartPos = ms.Length |> uint32
-            VhdxCommon.WriteGuid vdidParamBuf 0u virtualDiskID
-            ms.Write( vdidParamBuf )
+        // Virtual disk ID
+        let vdidParamBuf = Array.zeroCreate<byte> 16
+        let vdidParamStartPos = ms.Length |> uint32
+        VhdxCommon.WriteGuid vdidParamBuf 0u vdi.VirtualDiskId
+        ms.Write( vdidParamBuf )
 
-            // Logical sector size
-            let lssParamBuf = Array.zeroCreate<byte> 4
-            let lssParamStartPos = ms.Length |> uint32
-            VhdxCommon.WriteUInt32LE lssParamBuf 0u ( Blocksize.toUInt32 sectorSize )
-            ms.Write( lssParamBuf )
+        // Logical sector size
+        let lssParamBuf = Array.zeroCreate<byte> 4
+        let lssParamStartPos = ms.Length |> uint32
+        VhdxCommon.WriteUInt32LE lssParamBuf 0u ( Blocksize.toUInt32 vdi.LogicalSectorSize )
+        ms.Write( lssParamBuf )
 
-            // Physical sector size
-            let pssParamBuf = Array.zeroCreate<byte> 4
-            let pssParamStartPos = ms.Length |> uint32
-            VhdxCommon.WriteUInt32LE pssParamBuf 0u ( Blocksize.toUInt32 sectorSize )
-            ms.Write( pssParamBuf )
+        // Physical sector size
+        let pssParamBuf = Array.zeroCreate<byte> 4
+        let pssParamStartPos = ms.Length |> uint32
+        VhdxCommon.WriteUInt32LE pssParamBuf 0u ( Blocksize.toUInt32 vdi.PhysicalSectorSize )
+        ms.Write( pssParamBuf )
 
-            // Parent locator
-            let plParamStartPos, plParamLen =
-                if hasParent then
-                    let parentLinkageKey = Encoding.Unicode.GetBytes "parent_linkage"
-                    let parentLinkageVal = parentDataWriteGuid.ToString "b" |> Encoding.Unicode.GetBytes
-                    let struct( pathEntryKey, pathEntryValue ) = VhdxCreator.GetLocatorEntryValue parentFile.Value.FileName
-                    let relativePathKey = Encoding.Unicode.GetBytes pathEntryKey
-                    let relativePathVal = Encoding.Unicode.GetBytes pathEntryValue
-                    let parentLinkageKey_StartPos = 20 + 12 * 2
-                    let parentLinkageVal_StartPos = parentLinkageKey_StartPos + parentLinkageKey.Length
-                    let relativePathKey_StartPos = parentLinkageVal_StartPos + parentLinkageVal.Length
-                    let relativePathVal_StartPos = relativePathKey_StartPos + relativePathKey.Length
-                    let buflen = relativePathVal_StartPos + relativePathVal.Length
-                    let plParamBuf = Array.zeroCreate<byte> buflen
+        // Parent locator
+        let plParamStartPos, plParamLen =
+            if vdi.HasParent then
+                let parentLinkageKey = Encoding.Unicode.GetBytes "parent_linkage"
+                let parentLinkageVal = vdi.ParentLocator.["parent_linkage"] |> Encoding.Unicode.GetBytes
 
-                    // Parent locator header
-                    VhdxCommon.WriteGuid plParamBuf 0u VhdxCommon.METADATA_PARENT_LOC_VHDX
-                    VhdxCommon.WriteUInt16LE plParamBuf 18u 2us
+                let hasRelativePath = vdi.ParentLocator.ContainsKey "relative_path"
+                let hasVolumePath = vdi.ParentLocator.ContainsKey "volume_path"
+                let hasAbsoluteWin32Path = vdi.ParentLocator.ContainsKey "absolute_win32_path"
+                let keyValueCount =
+                    ( if hasRelativePath then 1 else 0 ) +
+                    ( if hasVolumePath then 1 else 0 ) +
+                    ( if hasAbsoluteWin32Path then 1 else 0 ) + 1
 
-                    // Parent locator entry (parent_linkage)
-                    VhdxCommon.WriteUInt32LE plParamBuf 20u ( uint32 parentLinkageKey_StartPos )
-                    VhdxCommon.WriteUInt32LE plParamBuf 24u ( uint32 parentLinkageVal_StartPos )
-                    VhdxCommon.WriteUInt16LE plParamBuf 28u ( uint16 parentLinkageKey.Length )
-                    VhdxCommon.WriteUInt16LE plParamBuf 30u ( uint16 parentLinkageVal.Length )
+                let relativePathKey, relativePathVal =
+                    if hasRelativePath then
+                        ( Encoding.Unicode.GetBytes "relative_path" ), ( Encoding.Unicode.GetBytes vdi.ParentLocator.[ "relative_path" ] )
+                    else
+                        Array.Empty(), Array.Empty()
 
-                    // Parent locator entry (relative_path)
-                    VhdxCommon.WriteUInt32LE plParamBuf 32u ( uint32 relativePathKey_StartPos )
-                    VhdxCommon.WriteUInt32LE plParamBuf 36u ( uint32 relativePathVal_StartPos )
-                    VhdxCommon.WriteUInt16LE plParamBuf 40u ( uint16 relativePathKey.Length )
-                    VhdxCommon.WriteUInt16LE plParamBuf 42u ( uint16 relativePathVal.Length )
+                let volumePathKey, volumePathVal =
+                    if hasVolumePath then
+                        ( Encoding.Unicode.GetBytes "volume_path" ), ( Encoding.Unicode.GetBytes vdi.ParentLocator.[ "volume_path" ] )
+                    else
+                        Array.Empty(), Array.Empty()
 
-                    // parent_linkage
-                    Array.blit parentLinkageKey 0 plParamBuf parentLinkageKey_StartPos parentLinkageKey.Length
-                    Array.blit parentLinkageVal 0 plParamBuf parentLinkageVal_StartPos parentLinkageVal.Length
+                let absoluteWin32PathKey, absoluteWin32PathVal =
+                    if hasAbsoluteWin32Path then
+                        ( Encoding.Unicode.GetBytes "absolute_win32_path" ), ( Encoding.Unicode.GetBytes vdi.ParentLocator.[ "absolute_win32_path" ] )
+                    else
+                        Array.Empty(), Array.Empty()
 
-                    // relative_path
+                let parentLinkageKey_StartPos = 20 + 12 * keyValueCount
+                let parentLinkageVal_StartPos = parentLinkageKey_StartPos + parentLinkageKey.Length
+                let relativePathKey_StartPos = parentLinkageVal_StartPos + parentLinkageVal.Length
+                let relativePathVal_StartPos = relativePathKey_StartPos + relativePathKey.Length
+                let volumePathKey_StartPos = relativePathVal_StartPos + relativePathVal.Length
+                let volumePathVal_StartPos = volumePathKey_StartPos + volumePathKey.Length
+                let absoluteWin32PathKey_StartPos = volumePathVal_StartPos + volumePathVal.Length
+                let absoluteWin32PathVal_StartPos = absoluteWin32PathKey_StartPos + absoluteWin32PathKey.Length
+                let buflen = absoluteWin32PathVal_StartPos + absoluteWin32PathVal.Length
+                let plParamBuf = Array.zeroCreate<byte> buflen
+
+                // Parent locator header
+                VhdxCommon.WriteGuid plParamBuf 0u VhdxCommon.METADATA_PARENT_LOC_VHDX
+                VhdxCommon.WriteUInt16LE plParamBuf 18u ( uint16 keyValueCount )
+
+                // Parent locator entry
+                let v = [|
+                    yield ( uint32 parentLinkageKey_StartPos, uint32 parentLinkageVal_StartPos, uint16 parentLinkageKey.Length, uint16 parentLinkageVal.Length );
+                    if hasRelativePath then
+                        yield ( uint32 relativePathKey_StartPos, uint32 relativePathVal_StartPos, uint16 relativePathKey.Length, uint16 relativePathVal.Length );
+                    if hasVolumePath then
+                        yield ( uint32 volumePathKey_StartPos, uint32 volumePathVal_StartPos, uint16 volumePathKey.Length, uint16 volumePathVal.Length );
+                    if hasAbsoluteWin32Path then
+                        yield ( uint32 absoluteWin32PathKey_StartPos, uint32 absoluteWin32PathVal_StartPos, uint16 absoluteWin32PathKey.Length, uint16 absoluteWin32PathVal.Length );
+                |]
+                for i = 0 to v.Length - 1 do
+                    let ( key_StartPos, val_StartPos, key_Length, val_Length ) = v.[i]
+                    let p = 20u + ( uint32 i ) * 12u
+                    VhdxCommon.WriteUInt32LE plParamBuf ( p       ) key_StartPos
+                    VhdxCommon.WriteUInt32LE plParamBuf ( p + 4u  ) val_StartPos
+                    VhdxCommon.WriteUInt16LE plParamBuf ( p + 8u  ) key_Length
+                    VhdxCommon.WriteUInt16LE plParamBuf ( p + 10u ) val_Length
+
+                // parent_linkage
+                Array.blit parentLinkageKey 0 plParamBuf parentLinkageKey_StartPos parentLinkageKey.Length
+                Array.blit parentLinkageVal 0 plParamBuf parentLinkageVal_StartPos parentLinkageVal.Length
+
+                // relative_path
+                if hasRelativePath then
                     Array.blit relativePathKey 0 plParamBuf relativePathKey_StartPos relativePathKey.Length
                     Array.blit relativePathVal 0 plParamBuf relativePathVal_StartPos relativePathVal.Length
 
-                    let plParamStartPos = ms.Length |> uint32
-                    ms.Write( plParamBuf )
-                    plParamStartPos, ( uint32 buflen )
-                else
-                    0u, 0u
+                // volume_path
+                if hasVolumePath then
+                    Array.blit volumePathKey 0 plParamBuf volumePathKey_StartPos volumePathKey.Length
+                    Array.blit volumePathVal 0 plParamBuf volumePathVal_StartPos volumePathVal.Length
 
-            // Metadata table header
-            let entryCount = if hasParent then 6 else 5
-            let tableLen = 32 + 32 * entryCount
-            let metadatabuf = Array.zeroCreate<byte> tableLen
-            VhdxCommon.WriteUInt64LE metadatabuf 0u 0x617461646174656DUL      // signature
-            VhdxCommon.WriteUInt16LE metadatabuf 10u ( uint16 entryCount )    // Entry count
+                // volume_path
+                if hasAbsoluteWin32Path then
+                    Array.blit absoluteWin32PathKey 0 plParamBuf absoluteWin32PathKey_StartPos absoluteWin32PathKey.Length
+                    Array.blit absoluteWin32PathVal 0 plParamBuf absoluteWin32PathVal_StartPos absoluteWin32PathVal.Length
 
-            // Metadata table entry ( file parameter )
-            VhdxCommon.WriteGuid metadatabuf 32u VhdxCommon.METADATA_FILE_PARAM           // Item ID
-            VhdxCommon.WriteUInt32LE metadatabuf 48u ( fileParamStartPos + 65536u )    // Offset
-            VhdxCommon.WriteUInt32LE metadatabuf 52u 8u                                // Length
-            metadatabuf.[56] <- 4uy
+                let plParamStartPos = ms.Length |> uint32
+                ms.Write( plParamBuf )
+                plParamStartPos, ( uint32 buflen )
+            else
+                0u, 0u
 
-            // Metadata table entry ( Virtual disk size )
-            VhdxCommon.WriteGuid metadatabuf 64u VhdxCommon.METADATA_VIRT_DISK_SIZE       // Item ID
-            VhdxCommon.WriteUInt32LE metadatabuf 80u ( vdsParamStartPos + 65536u )     // Offset
-            VhdxCommon.WriteUInt32LE metadatabuf 84u 8u                                // Length
-            metadatabuf.[88] <- 6uy
+        // Metadata table header
+        let entryCount = if vdi.HasParent then 6 else 5
+        let tableLen = 32 + 32 * entryCount
+        let metadatabuf = Array.zeroCreate<byte> tableLen
+        VhdxCommon.WriteUInt64LE metadatabuf 0u 0x617461646174656DUL                // signature
+        VhdxCommon.WriteUInt16LE metadatabuf 10u ( uint16 entryCount )              // Entry count
 
-            // Metadata table entry ( Virtual disk ID )
-            VhdxCommon.WriteGuid metadatabuf 96u VhdxCommon.METADATA_VIRT_DISK_ID         // Item ID
-            VhdxCommon.WriteUInt32LE metadatabuf 112u ( vdidParamStartPos + 65536u )   // Offset
-            VhdxCommon.WriteUInt32LE metadatabuf 116u 16u                              // Length
-            metadatabuf.[120] <- 6uy
+        // Metadata table entry ( file parameter )
+        VhdxCommon.WriteGuid metadatabuf 32u VhdxCommon.METADATA_FILE_PARAM         // Item ID
+        VhdxCommon.WriteUInt32LE metadatabuf 48u ( fileParamStartPos + 65536u )     // Offset
+        VhdxCommon.WriteUInt32LE metadatabuf 52u 8u                                 // Length
+        metadatabuf.[56] <- 4uy
 
-            // Metadata table entry ( Logical sector size )
-            VhdxCommon.WriteGuid metadatabuf 128u VhdxCommon.METADATA_LOGI_SECTOR_SIZE    // Item ID
-            VhdxCommon.WriteUInt32LE metadatabuf 144u ( lssParamStartPos + 65536u )    // Offset
-            VhdxCommon.WriteUInt32LE metadatabuf 148u 4u                               // Length
-            metadatabuf.[152] <- 6uy
+        // Metadata table entry ( Virtual disk size )
+        VhdxCommon.WriteGuid metadatabuf 64u VhdxCommon.METADATA_VIRT_DISK_SIZE     // Item ID
+        VhdxCommon.WriteUInt32LE metadatabuf 80u ( vdsParamStartPos + 65536u )      // Offset
+        VhdxCommon.WriteUInt32LE metadatabuf 84u 8u                                 // Length
+        metadatabuf.[88] <- 6uy
 
-            // Metadata table entry ( Physical sector size )
-            VhdxCommon.WriteGuid metadatabuf 160u VhdxCommon.METADATA_PHY_SECTOR_SIZE     // Item ID
-            VhdxCommon.WriteUInt32LE metadatabuf 176u ( pssParamStartPos + 65536u )    // Offset
-            VhdxCommon.WriteUInt32LE metadatabuf 180u 4u                               // Length
-            metadatabuf.[184] <- 6uy
+        // Metadata table entry ( Virtual disk ID )
+        VhdxCommon.WriteGuid metadatabuf 96u VhdxCommon.METADATA_VIRT_DISK_ID       // Item ID
+        VhdxCommon.WriteUInt32LE metadatabuf 112u ( vdidParamStartPos + 65536u )    // Offset
+        VhdxCommon.WriteUInt32LE metadatabuf 116u 16u                               // Length
+        metadatabuf.[120] <- 6uy
 
-            // Metadata table entry ( Parent locator )
-            if hasParent then
-                VhdxCommon.WriteGuid metadatabuf 192u VhdxCommon.METADATA_PARENT_LOC       // Item ID
-                VhdxCommon.WriteUInt32LE metadatabuf 208u ( plParamStartPos + 65536u )  // Offset
-                VhdxCommon.WriteUInt32LE metadatabuf 212u plParamLen                    // Length
-                metadatabuf.[216] <- 4uy
+        // Metadata table entry ( Logical sector size )
+        VhdxCommon.WriteGuid metadatabuf 128u VhdxCommon.METADATA_LOGI_SECTOR_SIZE  // Item ID
+        VhdxCommon.WriteUInt32LE metadatabuf 144u ( lssParamStartPos + 65536u )     // Offset
+        VhdxCommon.WriteUInt32LE metadatabuf 148u 4u                                // Length
+        metadatabuf.[152] <- 6uy
 
-            do! fa.Write metadataStartPos ( ArraySegment metadatabuf )
-            do! fa.Write ( metadataStartPos + 65536UL ) ( ArraySegment( ms.ToArray() ) )
-        }
+        // Metadata table entry ( Physical sector size )
+        VhdxCommon.WriteGuid metadatabuf 160u VhdxCommon.METADATA_PHY_SECTOR_SIZE   // Item ID
+        VhdxCommon.WriteUInt32LE metadatabuf 176u ( pssParamStartPos + 65536u )     // Offset
+        VhdxCommon.WriteUInt32LE metadatabuf 180u 4u                                // Length
+        metadatabuf.[184] <- 6uy
+
+        // Metadata table entry ( Parent locator )
+        if vdi.HasParent then
+            VhdxCommon.WriteGuid metadatabuf 192u VhdxCommon.METADATA_PARENT_LOC    // Item ID
+            VhdxCommon.WriteUInt32LE metadatabuf 208u ( plParamStartPos + 65536u )  // Offset
+            VhdxCommon.WriteUInt32LE metadatabuf 212u plParamLen                    // Length
+            metadatabuf.[216] <- 4uy
+
+        ( metadatabuf, ms.ToArray() )
+
 
     /// <summary>
     ///  Write BAT
@@ -421,8 +428,8 @@ type VhdxCreator() =
         ( virtualDiskSize : uint64 )
         ( sectorSize : Blocksize ) : Task =
         task {
-            // Read parent VHDX file metadata
-            let! parentMetadata = task {
+            // Read parent VHDX file structures
+            let! parentStructures = task {
                 match inputFile with
                 | Some x ->
                     let! r = VhdxReader.ReadVhdx x
@@ -433,7 +440,7 @@ type VhdxCreator() =
 
             // Get DataWriteGuid value of parent VHDX file.
             let parentDataWriteGuid =
-                match parentMetadata with
+                match parentStructures with
                 | Some x ->
                     x.Header.DataWriteGuid
                 | None ->
@@ -441,25 +448,25 @@ type VhdxCreator() =
 
             // Determin virtual disk size.
             let efVirtualDiskSize =
-                match parentMetadata with
+                match parentStructures with
                 | Some x ->
-                    x.VirtualDiskInfo.VirtualDiskSize
+                    x.VDI.VirtualDiskSize
                 | None ->
                     virtualDiskSize
 
             // Determin virtual disk ID.
             let efVirtualDiskID =
-                match parentMetadata with
+                match parentStructures with
                 | Some x ->
-                    x.VirtualDiskInfo.VirtualDiskId
+                    x.VDI.VirtualDiskId
                 | None ->
                     Guid.NewGuid()
 
             // Determin sector size.
             let efSectorSize =
-                match parentMetadata with
+                match parentStructures with
                 | Some x ->
-                    x.VirtualDiskInfo.LogicalSectorSize
+                    x.VDI.LogicalSectorSize
                 | None ->
                     sectorSize
 
@@ -537,14 +544,35 @@ type VhdxCreator() =
             do! VhdxCreator.WriteRegionTable outputFile metadataStartPos batRegionStartPos batRegionSize
 
             // Metadata region
-            let hasParent = inputFile.IsSome
-            do! VhdxCreator.WriteMetadata
-                    outputFile metadataStartPos payloadBlockSize isFixed hasParent efVirtualDiskSize
-                    efVirtualDiskID efSectorSize parentDataWriteGuid inputFile
+            let metadataTableBytes, metadataItemsBytes =
+                let hasParent = inputFile.IsSome
+                let parentLocator =
+                    if hasParent then
+                        let struct( pathEntryKey, pathEntryValue ) = VhdxCreator.GetLocatorEntryValue inputFile.Value.FileName
+                        [|
+                            ( "parent_linkage", ( parentDataWriteGuid.ToString "D" ) );
+                            ( pathEntryKey, pathEntryValue )
+                        |]
+                        |> Map
+                    else
+                        Map.empty
+                let vdi = {
+                    PayloadBlockSize = payloadBlockSize;
+                    LeaveBlockAllocated = isFixed;
+                    HasParent = hasParent;
+                    VirtualDiskSize = efVirtualDiskSize;
+                    VirtualDiskId = efVirtualDiskID;
+                    LogicalSectorSize = efSectorSize;
+                    PhysicalSectorSize = efSectorSize;
+                    ParentLocator = parentLocator;
+                }
+                VhdxCreator.CreateMetadataBytes vdi
+            do! outputFile.Write metadataStartPos ( ArraySegment metadataTableBytes )
+            do! outputFile.Write ( metadataStartPos + 65536UL ) ( ArraySegment metadataItemsBytes )
 
             // BAT
             do! VhdxCreator.WriteBAT
-                    outputFile isFixed hasParent batRegionStartPos
+                    outputFile isFixed inputFile.IsSome batRegionStartPos
                     batEntryCount payloadBlockCount sectorBitmapCount
                     batRegionSize payloadBlockSize chunkRate
         }
@@ -598,27 +626,27 @@ type VhdxCreator() =
 
             // If dynamic VHDX file, it must be updated the BAT entries.
             if not isFixed then
-                let! metadata = VhdxReader.ReadVhdx outputFile
+                let! structures = VhdxReader.ReadVhdx outputFile
                 let metadataStartPos = 1048576UL + uint64 logAreaSize
                 let batRegionStartPos = metadataStartPos + 1048576UL
                 let batRegionSize =
-                    ( metadata.BatEntries.BatEntryCount * 64UL + 0x00000000000FFFFFUL ) &&& 0xFFFFFFFFFFF00000UL
+                    ( structures.BAT.BatEntryCount * 64UL + 0x00000000000FFFFFUL ) &&& 0xFFFFFFFFFFF00000UL
 
                 do! VhdxCreator.WriteBAT
                         outputFile true false batRegionStartPos
-                        metadata.BatEntries.BatEntryCount
-                        metadata.BatEntries.PayloadBlockCount
-                        metadata.BatEntries.SectorBitmapBlockCount
+                        structures.BAT.BatEntryCount
+                        structures.BAT.PayloadBlockCount
+                        structures.BAT.SectorBitmapBlockCount
                         batRegionSize
                         payloadBlockSize
-                        metadata.BatEntries.ChunkRatio
+                        structures.BAT.ChunkRatio
 
-            let! metadata = VhdxReader.ReadVhdx outputFile
+            let! structures = VhdxReader.ReadVhdx outputFile
 
             // Output payloag blocks
             let buf = Array.zeroCreate<byte>( int32 payloadBlockSize )
-            for i = 0 to ( int32 metadata.BatEntries.PayloadBlockCount - 1 ) do
-                let ent = metadata.BatEntries.Payloads.[i]
+            for i = 0 to ( int32 structures.BAT.PayloadBlockCount - 1 ) do
+                let ent = structures.BAT.Payloads.[i]
                 let spos = ( uint64 i ) * ( uint64 payloadBlockSize )
                 let len = min ( int32 payloadBlockSize ) ( int32 ( virtualDiskSize - spos ) )
                 rawfs.Seek( int64 spos, SeekOrigin.Begin ) |> ignore

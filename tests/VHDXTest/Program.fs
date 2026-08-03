@@ -21,6 +21,7 @@ type VHDXUtilCmdType =
     | Random
     | Compare
     | Parent
+    | Merge
 
 type CmdArgs() =
 
@@ -28,7 +29,7 @@ type CmdArgs() =
     static let help() =
         printfn "Usage:"
         printfn "  VHDXTest read <vhdx-input> <xml-output>"
-        printfn "  VHDXTest toraw <vhdx-input> <raw-output>"
+        printfn "  VHDXTest toraw <vhdx-input> <raw-output> [/x width]"
         printfn "  VHDXTest tovhdx <raw-input> <vhdx-output> [/f] [/log <log-size>] [/p <payload-block-size>] [/s <sectore-size>]"
         printfn "  VHDXTest corrupt <vhdx-output> /s <sector-indices>"
         printfn "  VHDXTest snapshot <parent-vhdx-input> <vhdx-output> [/log <log-size>] [/p <payload-block-size>]"
@@ -37,6 +38,8 @@ type CmdArgs() =
         printfn "  VHDXTest write <raw-input> <vhdx-update> [/l <logical-block-address>] [/int <step>]"
         printfn "  VHDXTest random <raw-output> [/v <file-size>]"
         printfn "  VHDXTest compare <input1> <intput2> [/t1 <input1-type>] [/t2 <input2-type>]"
+        printfn "  VHDXTest parent <vhdx-input>"
+        printfn "  VHDXTest merge <vhdx-child> <vhdx-ancestor>"
         printfn ""
         printfn "Commands:"
         printfn "  read     Analyze the VHDX file and output the metadata as XML."
@@ -49,8 +52,12 @@ type CmdArgs() =
         printfn "  write    Write raw data to VHDX file."
         printfn "  random   Create a file filled with random bytes."
         printfn "  compare  Compare the contents of two files to see if they match."
+        printfn "  parent   Display the ancestor file name of the differencing VHDX file."
+        printfn "  merge    Delete a snapshot in a differencing VHDX file."
         printfn ""
         printfn "Options"
+        printfn "  toraw :"
+        printfn "   /x <width>                 Output as a hexadecimal dump."
         printfn "  tovhdx :"
         printfn "   /f                         Create it as a fixed VHDX file."
         printfn "   /log <log-size>            Log area length. In MB. Specify a number between 1 and 8. Default is 1MB."
@@ -93,7 +100,7 @@ type CmdArgs() =
             {
                 Command = [| "TORAW"; |];
                 Varb = VHDXUtilCmdType.ToRAW;
-                NamedArgs = Array.empty;
+                NamedArgs = [| ( "/x", CRV_uint64( 1UL, 256UL ) ) |];
                 ValuelessArgs = Array.empty;
                 NamelessArgs = [| CRVM_String( 256 ); CRVM_String( 256 ); |];
                 HelpMsgName = "";
@@ -188,6 +195,14 @@ type CmdArgs() =
                 NamelessArgs = [| CRVM_String( 256 ); |];
                 HelpMsgName = "";
             };
+            {
+                Command = [| "MERGE"; |];
+                Varb = VHDXUtilCmdType.Merge;
+                NamedArgs = Array.empty;
+                ValuelessArgs = Array.empty;
+                NamelessArgs = [| CRVM_String( 256 ); CRV_int32( 0, 65535 ); |];
+                HelpMsgName = "";
+            };
         |]
 
     /// <summary>
@@ -225,8 +240,9 @@ let main ( argv : string[] ) : int32 =
         | ToRAW ->
             let infile = cmd.DefaultNamelessString 0 ""
             let outfile = cmd.DefaultNamelessString 1 ""
+            let hexdump = cmd.NamedUInt64 "/x"
             let fa = FileAccessor( infile, 1u, true )
-            do! VhdxToRaw.Convert fa outfile
+            do! VhdxToRaw.Convert fa outfile hexdump
             fa.Close()
 
         | ToVHDX ->
@@ -336,20 +352,27 @@ let main ( argv : string[] ) : int32 =
         | Parent ->
             let file1 = cmd.DefaultNamelessString 0 ""
             let fa = FileAccessor( file1, 1u, true )
-            let! metadata = VhdxHandler.ReadAllMetadata fa
-            for ( fa, meta ) in metadata do
-                if meta.VirtualDiskInfo.HasParent then
+            let! metadata = VhdxHandler.ReadAllStructures fa
+            for i = 0 to metadata.Length - 1 do
+                let ( fa, meta )  = metadata.[i]
+                if meta.VDI.HasParent then
                     let struct( _, plt ) = VhdxHandler.GetParentFileName meta
                     match plt with
                     | ParentLocatorType.RelativePath ( x ) ->
-                        printfn "%s : RelativePath : %s" fa.FileName x
+                        printfn "%d : %s : RelativePath : %s" i fa.FileName x
                     | ParentLocatorType.VolumePath ( x ) ->
-                        printfn "%s : VolumePath : %s" fa.FileName x
+                        printfn "%d : %s : VolumePath : %s" i fa.FileName x
                     | ParentLocatorType.AbsoluteWin32Path ( x ) ->
-                        printfn "%s : AbsoluteWin32Path : %s" fa.FileName x
+                        printfn "%d : %s : AbsoluteWin32Path : %s" i fa.FileName x
                 else
-                    printfn "%s : No parent" fa.FileName
+                    printfn "%d : %s : No parent" i fa.FileName
                 fa.Close()
+
+        | Merge ->
+            let child = cmd.DefaultNamelessString 0 ""
+            let ancestor = cmd.DefaultNamelessInt32 1 0
+            let fa = FileAccessor( child, 1u, false )
+            do! VhdxMerge.Merge fa ancestor
     }
     t.Result |> ignore
 

@@ -16,6 +16,7 @@
     <Compile Include="VhdxCreater.fs" />
     <Compile Include="VhdxChecker.fs" />
     <Compile Include="VhdxWriter.fs" />
+    <Compile Include="VhdxMerge.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
