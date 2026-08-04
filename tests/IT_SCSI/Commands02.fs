@@ -283,8 +283,8 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
             let! itt1 = r1.Send_ReportSupportedTaskManagementFunctions TaskATTRCd.SIMPLE_TASK g_LUN1 allen NACA.T
             let! res = r1.WaitSCSIResponse itt1
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
 
             do! ClearACA r1 g_LUN1
             do! r1.Close()
@@ -350,8 +350,8 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
             else
                 let! res = r1.WaitSCSIResponse itt1
                 Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-                Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-                Assert.True(( res.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
+                Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+                Assert.True(( res.Sense |> _.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
                 do! ClearACA r1 g_LUN1
 
             do! r1.Close()
@@ -395,8 +395,8 @@ type SCSI_Commands02( fx : SCSI_Commands02_Fixture ) =
             else
                 let! res = r1.WaitSCSIResponse itt1
                 Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-                Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-                Assert.True(( res.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
+                Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+                Assert.True(( res.Sense |> _.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
                 do! ClearACA r1 g_LUN1
 
             do! r1.Close()

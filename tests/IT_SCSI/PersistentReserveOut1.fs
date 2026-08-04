@@ -587,7 +587,9 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             let! res_pr_out2 = r2.WaitSCSIResponse itt_pr_out2
             Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.CHECK_CONDITION ))
             let msg = 
-                res_pr_out2.Sense.Value.VendorSpecific.Value.VendorSpecific
+                res_pr_out2.Sense
+                |> _.Value.VendorSpecific
+                |> _.Value.VendorSpecific
                 |> System.Text.Encoding.UTF8.GetString
             Assert.True(( msg.EndsWith "already registered." ))
 
@@ -1473,8 +1475,8 @@ type SCSI_PersistentReserveOut1( fx : SCSI_PersistentReserveOut1_Fixture ) =
             if isua then
                 let! res_read1 = r2.WaitSCSIResponse itt_read1
                 Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-                Assert.True(( res_read1.Sense.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))
-                Assert.True(( res_read1.Sense.Value.ASC = ASCCd.RESERVATIONS_RELEASED ))
+                Assert.True(( res_read1.Sense |> _.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))
+                Assert.True(( res_read1.Sense |> _.Value.ASC = ASCCd.RESERVATIONS_RELEASED ))
             else
                 let! res_read1 = r2.WaitSCSIResponseGoodStatus itt_read1
                 res_read1.Return()

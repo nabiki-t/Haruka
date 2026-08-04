@@ -201,8 +201,8 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
             let! itt = r.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK lun NACA.T
             let! res = r.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))
-            Assert.True(( res.Sense.Value.ASC = expASC ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))
+            Assert.True(( res.Sense |> _.Value.ASC = expASC ))
         }
 
     let Check_UA_Cleared ( r : SCSI_Initiator ) ( lun : LUN_T ) : Task<unit> =
@@ -1277,8 +1277,8 @@ type SCSI_PersistentReserveOut4( fx : SCSI_PersistentReserveOut4_Fixture ) =
                     r1.Send_PROut_PREEMPT TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.WRITE_EXCLUSIVE g_ResvKey1 resvkey_me.zero
             let! res_pr_out2 = r1.WaitSCSIResponse itt_pr_out2
             Assert.True(( res_pr_out2.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res_pr_out2.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res_pr_out2.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
+            Assert.True(( res_pr_out2.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res_pr_out2.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
 
             // clear ACA
             let! itt_tmf = r1.SendTMFRequest_ClearACA BitI.T g_LUN1

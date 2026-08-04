@@ -219,8 +219,8 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! itt = r1.Send_Read6 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 lba ) m_MediaBlockSize ( blkcnt_me.ofUInt8 transLen ) NACA.T
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
 
             do! ClearACA r1 g_LUN1
             do! r1.Close()
@@ -274,8 +274,8 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! itt = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 lba ) m_MediaBlockSize ( blkcnt_me.ofUInt16 transLen ) NACA.T
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
 
             do! ClearACA r1 g_LUN1
             do! r1.Close()
@@ -294,8 +294,8 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
             
             do! ClearACA r1 g_LUN1
             do! r1.Close()
@@ -350,8 +350,8 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
 
             do! ClearACA r1 g_LUN1
             do! r1.Close()
@@ -370,8 +370,8 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
             
             do! ClearACA r1 g_LUN1
             do! r1.Close()
@@ -426,8 +426,8 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
 
             do! ClearACA r1 g_LUN1
             do! r1.Close()
@@ -446,8 +446,8 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
             
             do! ClearACA r1 g_LUN1
             do! r1.Close()
@@ -472,9 +472,9 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
-            let msg = res.Sense.Value.VendorSpecific.Value.VendorSpecific |> System.Text.Encoding.UTF8.GetString
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+            let msg = res.Sense |> _.Value.VendorSpecific |> _.Value.VendorSpecific |> System.Text.Encoding.UTF8.GetString
             Assert.StartsWith( "Linked command is not supported", msg )
             do! ClearACA r1 g_LUN1
             do! r1.Close()
@@ -546,8 +546,8 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! itt = r1.Send_Write6 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 lba ) m_MediaBlockSize buf NACA.T
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
 
             do! ClearACA r1 g_LUN1
             do! r1.Close()
@@ -638,8 +638,8 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
 
             do! ClearACA r1 g_LUN1
             do! r1.Close()
@@ -687,8 +687,8 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
             
             do! ClearACA r1 g_LUN1
             do! r1.Close()
@@ -750,8 +750,8 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
 
             do! ClearACA r1 g_LUN1
             do! r1.Close()
@@ -799,8 +799,8 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
             
             do! ClearACA r1 g_LUN1
             do! r1.Close()
@@ -862,8 +862,8 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
 
             do! ClearACA r1 g_LUN1
             do! r1.Close()
@@ -911,8 +911,8 @@ type SCSI_ReadWrite( fx : SCSI_ReadWrite_Fixture ) =
             let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb PooledBuffer.Empty 0u
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
             
             do! ClearACA r1 g_LUN1
             do! r1.Close()

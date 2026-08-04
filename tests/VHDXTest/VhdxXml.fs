@@ -96,7 +96,7 @@ type VhdxXmlSerializer() =
                     writer.WriteEndElement()
             )
             writer.WriteEndElement()
-            writer.WriteElementString( "DataSectors.Length", e.DataSectors.Length.ToString() )
+            writer.WriteElementString( "DataSectors.Length", e.DataSectors.Length |> _.ToString() )
             writer.WriteEndElement()
         )
         writer.WriteEndElement()

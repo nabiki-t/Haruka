@@ -938,7 +938,7 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
                 Assert.True(( res.Status = ScsiCmdStatCd.GOOD ))
             else
                 Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-                Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+                Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
                 do! ClearACA r1 g_LUN1
 
             do! r1.Close()
@@ -968,8 +968,8 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
             let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb paramBytes1 paramBytes1.uLength
             let! res = r1.WaitSCSIResponse itt_select
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
             do! ClearACA r1 g_LUN1
 
             do! r1.Close()
@@ -1219,9 +1219,9 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
             let! itt = r1.Send_ModeSelect6 TaskATTRCd.SIMPLE_TASK g_LUN1 PF.T SP.T mp2 NACA.T
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
-            let msg = res.Sense.Value.VendorSpecific.Value.VendorSpecific |> System.Text.Encoding.UTF8.GetString
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+            let msg = res.Sense |> _.Value.VendorSpecific |> _.Value.VendorSpecific |> System.Text.Encoding.UTF8.GetString
             Assert.StartsWith( "Saving Mode Parameters is not supported", msg )
             do! ClearACA r1 g_LUN1
 
@@ -1271,8 +1271,8 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
             let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb paramBytes1 paramBytes1.uLength
             let! res = r1.WaitSCSIResponse itt_select
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
             do! ClearACA r1 g_LUN1
 
             do! r1.Close()
@@ -1318,9 +1318,9 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
             let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb paramBytes1 paramBytes1.uLength
             let! res = r1.WaitSCSIResponse itt_select
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-            let msg = res.Sense.Value.VendorSpecific.Value.VendorSpecific |> System.Text.Encoding.UTF8.GetString
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
+            let msg = res.Sense |> _.Value.VendorSpecific |> _.Value.VendorSpecific |> System.Text.Encoding.UTF8.GetString
             Assert.StartsWith( "Unsupported page code value", msg )
 
             do! ClearACA r1 g_LUN1
@@ -1380,7 +1380,7 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
                 Assert.True(( res.Status = ScsiCmdStatCd.GOOD ))
             else
                 Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-                Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+                Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
                 do! ClearACA r1 g_LUN1
 
             do! r1.Close()
@@ -1410,8 +1410,8 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
             let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb paramBytes1 paramBytes1.uLength
             let! res = r1.WaitSCSIResponse itt_select
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
             do! ClearACA r1 g_LUN1
 
             do! r1.Close()
@@ -1661,9 +1661,9 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
             let! itt = r1.Send_ModeSelect10 TaskATTRCd.SIMPLE_TASK g_LUN1 PF.T SP.T mp2 NACA.T
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
-            let msg = res.Sense.Value.VendorSpecific.Value.VendorSpecific |> System.Text.Encoding.UTF8.GetString
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+            let msg = res.Sense |> _.Value.VendorSpecific |> _.Value.VendorSpecific |> System.Text.Encoding.UTF8.GetString
             Assert.StartsWith( "Saving Mode Parameters is not supported", msg )
             do! ClearACA r1 g_LUN1
 
@@ -1713,8 +1713,8 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
             let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb paramBytes1 paramBytes1.uLength
             let! res = r1.WaitSCSIResponse itt_select
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
             do! ClearACA r1 g_LUN1
 
             do! r1.Close()
@@ -1760,9 +1760,9 @@ type SCSI_ModeParameter( fx : SCSI_ModeParameter_Fixture ) =
             let! itt_select = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK g_LUN1 cdb paramBytes1 paramBytes1.uLength
             let! res = r1.WaitSCSIResponse itt_select
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
-            let msg = res.Sense.Value.VendorSpecific.Value.VendorSpecific |> System.Text.Encoding.UTF8.GetString
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
+            let msg = res.Sense |> _.Value.VendorSpecific |> _.Value.VendorSpecific |> System.Text.Encoding.UTF8.GetString
             Assert.StartsWith( "Unsupported page code value", msg )
 
             do! ClearACA r1 g_LUN1

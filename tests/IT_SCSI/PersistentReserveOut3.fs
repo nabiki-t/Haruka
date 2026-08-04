@@ -1114,8 +1114,8 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
                 let! itt_read1 = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
                 let! res_read1 = r1.WaitSCSIResponse itt_read1
                 Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-                Assert.True(( res_read1.Sense.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))
-                Assert.True(( res_read1.Sense.Value.ASC = ASCCd.RESERVATIONS_RELEASED ))
+                Assert.True(( res_read1.Sense |> _.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))
+                Assert.True(( res_read1.Sense |> _.Value.ASC = ASCCd.RESERVATIONS_RELEASED ))
 
                 let! itt_read2 = r2.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
                 let! res_read2 = r2.WaitSCSIResponseGoodStatus itt_read2
@@ -1125,8 +1125,8 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
                 let! itt_read3 = r3.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
                 let! res_read3 = r3.WaitSCSIResponse itt_read3
                 Assert.True(( res_read3.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-                Assert.True(( res_read3.Sense.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))
-                Assert.True(( res_read3.Sense.Value.ASC = ASCCd.RESERVATIONS_RELEASED ))
+                Assert.True(( res_read3.Sense |> _.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))
+                Assert.True(( res_read3.Sense |> _.Value.ASC = ASCCd.RESERVATIONS_RELEASED ))
 
                 let! itt_read4 = r4.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
                 let! res_read4 = r4.WaitSCSIResponseGoodStatus itt_read4
@@ -1263,8 +1263,8 @@ type SCSI_PersistentReserveOut3( fx : SCSI_PersistentReserveOut3_Fixture ) =
             let! itt_read3 = r4.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
             let! res_read3 = r4.WaitSCSIResponse itt_read3
             Assert.True(( res_read3.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res_read3.Sense.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))
-            Assert.True(( res_read3.Sense.Value.ASC = ASCCd.RESERVATIONS_RELEASED ))
+            Assert.True(( res_read3.Sense |> _.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))
+            Assert.True(( res_read3.Sense |> _.Value.ASC = ASCCd.RESERVATIONS_RELEASED ))
 
             let! itt_read4 = r3.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
             let! res_read4 = r3.WaitSCSIResponseGoodStatus itt_read4

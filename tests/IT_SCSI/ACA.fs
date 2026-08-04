@@ -341,22 +341,22 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             // raise ACA
             let! result = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r lun NACA.T
             Assert.True(( result.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( result.Sense.IsSome ))
+            Assert.True(( result.Sense |> _.IsSome ))
             if lun = g_LUN0 then
-                Assert.True(( result.Sense.Value.SenseKey = SenseKeyCd.NOT_READY ))
-                Assert.True(( result.Sense.Value.ASC = ASCCd.MEDIUM_NOT_PRESENT ))
+                Assert.True(( result.Sense |> _.Value.SenseKey = SenseKeyCd.NOT_READY ))
+                Assert.True(( result.Sense |> _.Value.ASC = ASCCd.MEDIUM_NOT_PRESENT ))
             else
-                Assert.True(( result.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-                Assert.True(( result.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
-            Assert.True(( result.Sense.Value.BlockCommand.IsSome ))         // There is no useful information
-            Assert.True(( result.Sense.Value.Information.IsNone ))
-            Assert.True(( result.Sense.Value.CommandSpecific.IsSome ))      // There is no useful information
-            Assert.True(( result.Sense.Value.FieldReplaceableUnit.IsSome )) // There is no useful information
-            Assert.True(( result.Sense.Value.FieldPointer.IsNone ))
-            Assert.True(( result.Sense.Value.ActualRetryCount.IsNone ))
-            Assert.True(( result.Sense.Value.ProgressIndication.IsNone ))
-            Assert.True(( result.Sense.Value.SegmentPointer.IsNone ))
-            Assert.True(( result.Sense.Value.VendorSpecific.IsSome ))   // message
+                Assert.True(( result.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+                Assert.True(( result.Sense |> _.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
+            Assert.True(( result.Sense |> _.Value.BlockCommand |> _.IsSome ))         // There is no useful information
+            Assert.True(( result.Sense |> _.Value.Information |> _.IsNone ))
+            Assert.True(( result.Sense |> _.Value.CommandSpecific |> _.IsSome ))      // There is no useful information
+            Assert.True(( result.Sense |> _.Value.FieldReplaceableUnit |> _.IsSome )) // There is no useful information
+            Assert.True(( result.Sense |> _.Value.FieldPointer |> _.IsNone ))
+            Assert.True(( result.Sense |> _.Value.ActualRetryCount |> _.IsNone ))
+            Assert.True(( result.Sense |> _.Value.ProgressIndication |> _.IsNone ))
+            Assert.True(( result.Sense |> _.Value.SegmentPointer |> _.IsNone ))
+            Assert.True(( result.Sense |> _.Value.VendorSpecific |> _.IsSome ))   // message
 
             // Clear ACA
             do! clearACA r lun
@@ -389,22 +389,22 @@ type SCSI_ACACases( fx : SCSI_ACACases_Fixture ) =
             // raise ACA
             let! result = raiseCA_ACA TaskATTRCd.SIMPLE_TASK r lun NACA.T
             Assert.True(( result.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( result.Sense.IsSome ))
+            Assert.True(( result.Sense |> _.IsSome ))
             if lun = g_LUN0 then
-                Assert.True(( result.Sense.Value.SenseKey = SenseKeyCd.NOT_READY ))
-                Assert.True(( result.Sense.Value.ASC = ASCCd.MEDIUM_NOT_PRESENT ))
+                Assert.True(( result.Sense |> _.Value.SenseKey = SenseKeyCd.NOT_READY ))
+                Assert.True(( result.Sense |> _.Value.ASC = ASCCd.MEDIUM_NOT_PRESENT ))
             else
-                Assert.True(( result.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-                Assert.True(( result.Sense.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
-            Assert.True(( result.Sense.Value.BlockCommand.IsNone ))
-            Assert.True(( result.Sense.Value.Information.IsNone ))
-            Assert.True(( result.Sense.Value.CommandSpecific.IsNone ))
-            Assert.True(( result.Sense.Value.FieldReplaceableUnit.IsNone ))
-            Assert.True(( result.Sense.Value.FieldPointer.IsNone ))
-            Assert.True(( result.Sense.Value.ActualRetryCount.IsNone ))
-            Assert.True(( result.Sense.Value.ProgressIndication.IsNone ))
-            Assert.True(( result.Sense.Value.SegmentPointer.IsNone ))
-            Assert.True(( result.Sense.Value.VendorSpecific.IsSome ))   // message
+                Assert.True(( result.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+                Assert.True(( result.Sense |> _.Value.ASC = ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE ))
+            Assert.True(( result.Sense |> _.Value.BlockCommand |> _.IsNone ))
+            Assert.True(( result.Sense |> _.Value.Information |> _.IsNone ))
+            Assert.True(( result.Sense |> _.Value.CommandSpecific |> _.IsNone ))
+            Assert.True(( result.Sense |> _.Value.FieldReplaceableUnit |> _.IsNone ))
+            Assert.True(( result.Sense |> _.Value.FieldPointer |> _.IsNone ))
+            Assert.True(( result.Sense |> _.Value.ActualRetryCount |> _.IsNone ))
+            Assert.True(( result.Sense |> _.Value.ProgressIndication |> _.IsNone ))
+            Assert.True(( result.Sense |> _.Value.SegmentPointer |> _.IsNone ))
+            Assert.True(( result.Sense |> _.Value.VendorSpecific |> _.IsSome ))   // message
 
             // Clear ACA
             let! itt2 = r.SendTMFRequest_ClearACA BitI.F lun

@@ -326,8 +326,8 @@ type SCSI_PersistentReserveOut5( fx : SCSI_PersistentReserveOut5_Fixture ) =
             let! itt = r.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK lun NACA.T
             let! res = r.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))
-            Assert.True(( res.Sense.Value.ASC = expASC ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))
+            Assert.True(( res.Sense |> _.Value.ASC = expASC ))
         }
 
     let Check_UA_Cleared ( r : SCSI_Initiator ) ( lun : LUN_T ) : Task<unit> =

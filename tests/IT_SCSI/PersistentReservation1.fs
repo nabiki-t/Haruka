@@ -1654,8 +1654,8 @@ type SCSI_PersistentReservation( fx : SCSI_PersistentReservation1_Fixture ) =
                 let! itt_read1 = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 blkcnt_me.zero32 m_MediaBlockSize ( blkcnt_me.ofUInt16 1us ) NACA.T
                 let! res_read1 = r1.WaitSCSIResponse itt_read1
                 Assert.True(( res_read1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-                Assert.True(( res_read1.Sense.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))
-                Assert.True(( res_read1.Sense.Value.ASC = ASCCd.RESERVATIONS_RELEASED ))
+                Assert.True(( res_read1.Sense |> _.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))
+                Assert.True(( res_read1.Sense |> _.Value.ASC = ASCCd.RESERVATIONS_RELEASED ))
 
             // release reservation
             let! itt_pr_out6 = r1.Send_PROut_RELEASE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T prtype resvkey1

@@ -201,8 +201,8 @@ type SCSI_Commands01( fx : SCSI_Commands01_Fixture ) =
             let! itt = r1.Send_Inquiry TaskATTRCd.SIMPLE_TASK lun EVPD.F 1uy 0us NACA.T
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
             do! ClearACA r1 lun
             do! r1.Close()
         }
@@ -672,8 +672,8 @@ type SCSI_Commands01( fx : SCSI_Commands01_Fixture ) =
             let! itt = r1.Send_Inquiry TaskATTRCd.SIMPLE_TASK lun EVPD.T page 256us NACA.T
             let! r = r1.WaitSCSIResponse itt
             Assert.True(( r.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( r.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( r.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
+            Assert.True(( r.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( r.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_CDB ))
             do! ClearACA r1 lun
             do! r1.Close()
         }
@@ -703,8 +703,8 @@ type SCSI_Commands01( fx : SCSI_Commands01_Fixture ) =
             let! itt_tur1 = r2.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK lun NACA.T
             let! res_tur1 = r2.WaitSCSIResponse itt_tur1
             Assert.True(( res_tur1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res_tur1.Sense.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))
-            Assert.True(( res_tur1.Sense.Value.ASC = ASCCd.RESERVATIONS_PREEMPTED ))
+            Assert.True(( res_tur1.Sense |> _.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))
+            Assert.True(( res_tur1.Sense |> _.Value.ASC = ASCCd.RESERVATIONS_PREEMPTED ))
 
             do! r1.Close()
             do! r2.Close()
@@ -1000,8 +1000,8 @@ type SCSI_Commands01( fx : SCSI_Commands01_Fixture ) =
             let! itt_tur1 = r2.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T
             let! res_tur1 = r2.WaitSCSIResponse itt_tur1
             Assert.True(( res_tur1.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res_tur1.Sense.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))
-            Assert.True(( res_tur1.Sense.Value.ASC = ASCCd.RESERVATIONS_PREEMPTED ))
+            Assert.True(( res_tur1.Sense |> _.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))
+            Assert.True(( res_tur1.Sense |> _.Value.ASC = ASCCd.RESERVATIONS_PREEMPTED ))
 
             do! r1.Close()
             do! r2.Close()

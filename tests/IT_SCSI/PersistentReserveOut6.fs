@@ -211,8 +211,8 @@ type SCSI_PersistentReserveOut6( fx : SCSI_PersistentReserveOut6_Fixture ) =
             let! itt = r.Send_TestUnitReady TaskATTRCd.SIMPLE_TASK lun NACA.T
             let! res = r.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))
-            Assert.True(( res.Sense.Value.ASC = expASC ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.UNIT_ATTENTION ))
+            Assert.True(( res.Sense |> _.Value.ASC = expASC ))
         }
 
     let Check_UA_Cleared ( r : SCSI_Initiator ) ( lun : LUN_T ) : Task<unit> =
@@ -506,8 +506,8 @@ type SCSI_PersistentReserveOut6( fx : SCSI_PersistentReserveOut6_Fixture ) =
             let! itt = r1.Send_PROut_REGISTER_AND_MOVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey3 UNREG.T APTPL.T 1us transid
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
             do! ClearACA r1 g_LUN1
 
             let! fstat2 = PR_ReadFullStatus r1 g_LUN1
@@ -534,8 +534,8 @@ type SCSI_PersistentReserveOut6( fx : SCSI_PersistentReserveOut6_Fixture ) =
             let! itt = r1.Send_PROut_REGISTER_AND_MOVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey3 UNREG.T APTPL.T 1us transid
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
             do! ClearACA r1 g_LUN1
 
             let! fstat2 = PR_ReadFullStatus r1 g_LUN1
@@ -722,8 +722,8 @@ type SCSI_PersistentReserveOut6( fx : SCSI_PersistentReserveOut6_Fixture ) =
             let! itt = r1.Send_PROut_REGISTER_AND_MOVE TaskATTRCd.SIMPLE_TASK g_LUN1 NACA.T PR_TYPE.EXCLUSIVE_ACCESS g_ResvKey1 g_ResvKey2 UNREG.F APTPL.T 1us transid
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.INVALID_FIELD_IN_PARAMETER_LIST ))
             do! ClearACA r1 g_LUN1
 
             let! fstat2 = PR_ReadFullStatus r1 g_LUN1

@@ -532,8 +532,8 @@ type SCSI_Configuration( fx : SCSI_Configuration_Fixture ) =
             let! itt = r1.SendSCSICommand TaskATTRCd.SIMPLE_TASK lun cdb PooledBuffer.Empty 0u
             let! res = r1.WaitSCSIResponse itt
             Assert.True(( res.Status = ScsiCmdStatCd.CHECK_CONDITION ))
-            Assert.True(( res.Sense.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
-            Assert.True(( res.Sense.Value.ASC = ASCCd.INVALID_COMMAND_OPERATION_CODE ))
+            Assert.True(( res.Sense |> _.Value.SenseKey = SenseKeyCd.ILLEGAL_REQUEST ))
+            Assert.True(( res.Sense |> _.Value.ASC = ASCCd.INVALID_COMMAND_OPERATION_CODE ))
 
             // Errors with unknown operation codes are always treated as CA, regardless of the value of the control byte.
             let! itt_i = r1.Send_Inquiry TaskATTRCd.SIMPLE_TASK lun EVPD.T 0uy 256us NACA.T
