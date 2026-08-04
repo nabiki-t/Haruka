@@ -33,7 +33,7 @@ type Command04_Fixture() =
     let m_iSCSIPortNo1 = GlbFunc.nextTcpPortNo()
     let m_iSCSIPortNo2 = GlbFunc.nextTcpPortNo()
     let m_MediaSize = 65536u
-    let m_MediaBlockSizse = 512      // 4096 or 512 bytes
+    let m_MediaBlockSize = 512      // 4096 or 512 bytes
 
     let m_WorkPath =
         let tempPath = Path.GetTempPath()
@@ -61,7 +61,7 @@ type Command04_Fixture() =
         p.RunCommand "select 0" "" "LU> "
         p.RunCommand ( sprintf "create membuffer %d" m_MediaSize ) "Created" "LU> "
         p.RunCommand "select 0" "" "MD> "
-        p.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSizse ) "" "MD> "
+        p.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSize ) "" "MD> "
         p.RunCommand "unselect" "" "LU> "
         p.RunCommand "unselect" "" "T > "
         p.RunCommand "unselect" "" "TG> "
@@ -78,7 +78,7 @@ type Command04_Fixture() =
         p.RunCommand "select 0" "" "LU> "
         p.RunCommand ( sprintf "create membuffer %d" m_MediaSize ) "Created" "LU> "
         p.RunCommand "select 0" "" "MD> "
-        p.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSizse ) "" "MD> "
+        p.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSize ) "" "MD> "
         p.RunCommand "unselect" "" "LU> "
         p.RunCommand "unselect" "" "T > "
         p.RunCommand "unselect" "" "TG> "
@@ -89,7 +89,7 @@ type Command04_Fixture() =
         p.RunCommand "select 0" "" "LU> "
         p.RunCommand ( sprintf "create membuffer %d" m_MediaSize ) "Created" "LU> "
         p.RunCommand "select 0" "" "MD> "
-        p.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSizse ) "" "MD> "
+        p.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSize ) "" "MD> "
         p.RunCommand "unselect" "" "LU> "
         p.RunCommand "unselect" "" "T > "
         p.RunCommand "unselect" "" "TG> "
@@ -114,7 +114,7 @@ type Command04_Fixture() =
     member _.iSCSIPortNo1 = m_iSCSIPortNo1
     member _.iSCSIPortNo2 = m_iSCSIPortNo2
     member _.MediaSize = m_MediaSize
-    member _.MediaBlockSizse = m_MediaBlockSizse
+    member _.MediaBlockSize = m_MediaBlockSize
 
 [<Collection( "Command04" )>]
 type Command04( fx : Command04_Fixture ) =
@@ -128,8 +128,13 @@ type Command04( fx : Command04_Fixture ) =
     let iSCSIPortNo1 = fx.iSCSIPortNo1
     let iSCSIPortNo2 = fx.iSCSIPortNo2
     let g_CID0 = cid_me.zero
+    let g_LUN0 = lun_me.zero
+    let g_LUN1 = lun_me.fromPrim 1UL
+    let g_LUN2 = lun_me.fromPrim 2UL
+    let g_LUN3 = lun_me.fromPrim 3UL
     let m_MediaSize = fx.MediaSize
-    let m_MediaBlockSizse = fx.MediaBlockSizse
+    let m_MediaBlockSize = fx.MediaBlockSize
+    let m_MediaBlockSizeBS = if m_MediaBlockSize = 512 then Blocksize.BS_512 else Blocksize.BS_4096
 
     // default session parameters
     let m_defaultSessParam = {
@@ -268,7 +273,7 @@ type Command04( fx : Command04_Fixture ) =
         m_Client.RunCommand "select 0" "" "LU> "
         m_Client.RunCommand ( sprintf "create membuffer %d" m_MediaSize ) "Created" "LU> "
         m_Client.RunCommand "select 0" "" "MD> "
-        m_Client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSizse ) "" "MD> "
+        m_Client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSize ) "" "MD> "
         m_Client.RunCommand "unselect" "" "LU> "
         m_Client.RunCommand "unselect" "" "T > "
         m_Client.RunCommand "unselect" "" "TG> "
@@ -1274,6 +1279,40 @@ type Command04( fx : Command04_Fixture ) =
             let r = m_Client.RunCommandGetResp "lustatus" "LU> "
             Assert.True( r |> Array.exists ( fun i -> i.StartsWith "ACA : None" ) )
             Assert.True( r |> Array.exists ( fun i -> i.StartsWith "Tasks : None" ) )
+
+            m_Client.RunCommand "unselect" "" "T > "
+            m_Client.RunCommand "unselect" "" "TG> "
+            m_Client.RunCommand "unselect" "" "TD> "
+            m_Client.RunCommand "kill" "Killed" "TD> "
+            m_Client.RunCommand "unselect" "" "CR> "
+            m_Client.RunCommand "reload /y" "" "CR> "
+        }
+
+    [<Fact>]
+    member _.LUStatus_ACA_001 () =
+        task {
+            // Start target device
+            m_Client.RunCommand "select 0" "" "TD> "
+            m_Client.RunCommand "start" "Started" "TD> "
+            let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
+            m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+            let tgidx = m_Client.GetIndexNumber "target1" "TG> "
+            m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "T > "
+            m_Client.RunCommand "select 0" "" "LU> "
+
+            // connect to target 1
+            let! r1 = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
+
+            // establish ACA
+            let! itt_read = r1.Send_Read10 TaskATTRCd.SIMPLE_TASK g_LUN1 ( blkcnt_me.ofUInt32 UInt32.MaxValue ) m_MediaBlockSizeBS ( blkcnt_me.ofUInt16 10us ) NACA.T
+            let! res_read = r1.WaitSCSIResponse itt_read
+            Assert.StrictEqual( ScsiCmdStatCd.CHECK_CONDITION, res_read.Status )
+
+            let r = m_Client.RunCommandGetResp "lustatus" "LU> "
+            Assert.True( r |> Array.exists ( fun i -> i.StartsWith "ACA : {" ) )
+            Assert.True( r |> Array.exists ( fun i -> i.StartsWith "Tasks : None" ) )
+
+            do! r1.Close()
 
             m_Client.RunCommand "unselect" "" "T > "
             m_Client.RunCommand "unselect" "" "TG> "
