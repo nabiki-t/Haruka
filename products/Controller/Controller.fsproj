@@ -6,6 +6,11 @@
     <BaseOutputPath>../../work</BaseOutputPath>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <AnalysisLevel>6.0-all</AnalysisLevel>
+    <Authors>nabiki_t</Authors>
+    <Company>nabiki_t</Company>
+    <Product>Haruka software storage.</Product>
+    <Description>Haruka software storage. Control multiple Target Device processes.</Description>
+    <Title>Haruka software storage</Title>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

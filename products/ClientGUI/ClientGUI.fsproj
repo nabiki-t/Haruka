@@ -7,6 +7,10 @@
     <UseWindowsForms>True</UseWindowsForms>
     <BaseOutputPath>../../work</BaseOutputPath>
     <ApplicationIcon>icon\Application.ico</ApplicationIcon>
+    <Authors>nabiki_t</Authors>
+    <Company>nabiki_t</Company>
+    <Product>Haruka software storage.</Product>
+    <Description>Haruka software storage. Implementation of  GUI client function.</Description>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

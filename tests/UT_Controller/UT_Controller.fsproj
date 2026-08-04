@@ -7,6 +7,10 @@
     <GenerateProgramFile>false</GenerateProgramFile>
     <AnalysisLevel>6.0-all</AnalysisLevel>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
+    <Title>Haruka software storage</Title>
+    <Product>Haruka software storage.</Product>
+    <Company>nabiki_t</Company>
+    <Authors>nabiki_t</Authors>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

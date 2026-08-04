@@ -2,37 +2,26 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <EnableNETAnalyzers>True</EnableNETAnalyzers>
-    <AnalysisLevel>6.0-all</AnalysisLevel>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <BaseOutputPath>../../work</BaseOutputPath>
     <Authors>nabiki_t</Authors>
     <Company>nabiki_t</Company>
     <Product>Haruka software storage.</Product>
-    <Description>Haruka software storage. Implement basic media functionality.</Description>
+    <Description>Haruka software storage. This is a software-implemented iSCSI target. </Description>
     <Title>Haruka software storage</Title>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <Tailcalls>True</Tailcalls>
     <WarningLevel>5</WarningLevel>
-    <OtherFlags>--warnon:3390</OtherFlags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <WarningLevel>5</WarningLevel>
-    <OtherFlags>--warnon:3390</OtherFlags>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="PlainFileMedia.fs" />
-    <Compile Include="MemBufferMedia.fs" />
-    <Compile Include="DummyMedia.fs" />
-    <Compile Include="DebugMedia.fs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="../Commons/Commons.fsproj" />
-    <ProjectReference Include="../Constants/Constants.fsproj" />
+    <ProjectReference Include="..\products\Commons\Commons.fsproj" />
+    <ProjectReference Include="..\products\Constants\Constants.fsproj" />
   </ItemGroup>
 
 </Project>

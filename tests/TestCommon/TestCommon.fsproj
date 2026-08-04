@@ -6,6 +6,10 @@
     <OutputType>Exe</OutputType>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <AnalysisLevel>6.0-all</AnalysisLevel>
+    <Title>Haruka software storage</Title>
+    <Product>Haruka software storage.</Product>
+    <Authors>nabiki_t</Authors>
+    <Company>nabiki_t</Company>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
