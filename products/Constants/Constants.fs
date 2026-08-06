@@ -2025,6 +2025,9 @@ module Constants =
     let LU_DEF_OPTIMAL_TRANSFER_LENGTH : uint32 =
         16u
 
+    let VHDX_MEDIA_MAX_SNAPSHOT_COUNT : int32 =
+        32
+
     //=============================================================================
     // Constants convertion functions
 

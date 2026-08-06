@@ -80,6 +80,7 @@ and [<NoComparison>]T_MEDIA =
     | U_MemBuffer of T_MemBuffer
     | U_DummyMedia of T_DummyMedia
     | U_DebugMedia of T_DebugMedia
+    | U_VHDXFile of T_VHDXFile
 
 and [<NoComparison>]T_PlainFile = {
     IdentNumber : MEDIAIDX_T;
@@ -105,6 +106,13 @@ and [<NoComparison>]T_DebugMedia = {
     IdentNumber : MEDIAIDX_T;
     MediaName : string;
     Peripheral : T_MEDIA;
+}
+
+and [<NoComparison>]T_VHDXFile = {
+    IdentNumber : MEDIAIDX_T;
+    MediaName : string;
+    FileName : string;
+    WriteProtect : bool;
 }
 
 //=============================================================================
@@ -387,6 +395,32 @@ type ReaderWriter() =
             </xsd:simpleType>
           </xsd:element>
           <xsd:element name='Peripheral' type='MEDIA' ></xsd:element>
+        </xsd:sequence></xsd:complexType>
+      </xsd:element>
+      <xsd:element name='VHDXFile' >
+        <xsd:complexType><xsd:sequence>
+          <xsd:element name='IdentNumber' >
+            <xsd:simpleType><xsd:restriction base='xsd:unsignedInt' /></xsd:simpleType>
+          </xsd:element>
+          <xsd:element name='MediaName' >
+            <xsd:simpleType>
+              <xsd:restriction base='xsd:string'>
+                <xsd:minLength value='0' />
+                <xsd:maxLength value='256' />
+              </xsd:restriction>
+            </xsd:simpleType>
+          </xsd:element>
+          <xsd:element name='FileName' >
+            <xsd:simpleType>
+              <xsd:restriction base='xsd:string'>
+                <xsd:minLength value='0' />
+                <xsd:maxLength value='256' />
+              </xsd:restriction>
+            </xsd:simpleType>
+          </xsd:element>
+          <xsd:element name='WriteProtect' >
+            <xsd:simpleType><xsd:restriction base='xsd:boolean' /></xsd:simpleType>
+          </xsd:element>
         </xsd:sequence></xsd:complexType>
       </xsd:element>
     </xsd:choice>
@@ -685,6 +719,8 @@ type ReaderWriter() =
             U_DummyMedia( ReaderWriter.Read_T_DummyMedia firstChild )
         | "DebugMedia" ->
             U_DebugMedia( ReaderWriter.Read_T_DebugMedia firstChild )
+        | "VHDXFile" ->
+            U_VHDXFile( ReaderWriter.Read_T_VHDXFile firstChild )
         | _ -> raise <| ConfRWException( "Unexpected tag name." )
 
     /// <summary>
@@ -765,6 +801,27 @@ type ReaderWriter() =
                 elem.Element( XName.Get "MediaName" ).Value;
             Peripheral =
                 ReaderWriter.Read_T_MEDIA( elem.Element( XName.Get "Peripheral" ) );
+        }
+
+    /// <summary>
+    ///  Read T_VHDXFile data from XML document.
+    /// </summary>
+    /// <param name="elem">
+    ///  Loaded XML document.
+    /// </param>
+    /// <returns>
+    ///  parsed T_VHDXFile data structure.
+    /// </returns>
+    static member private Read_T_VHDXFile ( elem : XElement ) : T_VHDXFile = 
+        {
+            IdentNumber =
+                mediaidx_me.fromPrim( UInt32.Parse( elem.Element( XName.Get "IdentNumber" ).Value ) );
+            MediaName =
+                elem.Element( XName.Get "MediaName" ).Value;
+            FileName =
+                elem.Element( XName.Get "FileName" ).Value;
+            WriteProtect =
+                Boolean.Parse( elem.Element( XName.Get "WriteProtect" ).Value );
         }
 
     /// <summary>
@@ -1160,6 +1217,8 @@ type ReaderWriter() =
                 yield! ReaderWriter.T_DummyMedia_toString ( indent + 1 ) indentStep ( x ) "DummyMedia"
             | U_DebugMedia( x ) ->
                 yield! ReaderWriter.T_DebugMedia_toString ( indent + 1 ) indentStep ( x ) "DebugMedia"
+            | U_VHDXFile( x ) ->
+                yield! ReaderWriter.T_VHDXFile_toString ( indent + 1 ) indentStep ( x ) "VHDXFile"
             yield sprintf "%s</%s>" indentStr elemName
         }
 
@@ -1298,6 +1357,44 @@ type ReaderWriter() =
                 raise <| ConfRWException( "Max value(string) restriction error. MediaName" )
             yield sprintf "%s%s<MediaName>%s</MediaName>" singleIndent indentStr ( ReaderWriter.xmlEncode(elem.MediaName) )
             yield! ReaderWriter.T_MEDIA_toString ( indent + 1 ) indentStep ( elem.Peripheral ) "Peripheral"
+            yield sprintf "%s</%s>" indentStr elemName
+        }
+
+    /// <summary>
+    ///  Write T_VHDXFile data structure to configuration file.
+    /// </summary>
+    /// <param name="indent">
+    ///  Indent space count.
+    /// </param>
+    /// <param name="indentStep">
+    ///  Indent step count.
+    /// </param>
+    /// <param name="elem">
+    ///  Data structure for output.
+    /// </param>
+    /// <param name="elemName">
+    ///  XML tag name for the data.
+    /// </param>
+    /// <returns>
+    ///  Array of the generated string.
+    /// </returns>
+    static member private T_VHDXFile_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_VHDXFile ) ( elemName : string ) : seq<string> = 
+        let indentStr = String.replicate ( indent * indentStep ) " "
+        let singleIndent = String.replicate ( indentStep ) " "
+        seq {
+            yield sprintf "%s<%s>" indentStr elemName
+            yield sprintf "%s%s<IdentNumber>%d</IdentNumber>" singleIndent indentStr ( mediaidx_me.toPrim (elem.IdentNumber) )
+            if (elem.MediaName).Length < 0 then
+                raise <| ConfRWException( "Min value(string) restriction error. MediaName" )
+            if (elem.MediaName).Length > 256 then
+                raise <| ConfRWException( "Max value(string) restriction error. MediaName" )
+            yield sprintf "%s%s<MediaName>%s</MediaName>" singleIndent indentStr ( ReaderWriter.xmlEncode(elem.MediaName) )
+            if (elem.FileName).Length < 0 then
+                raise <| ConfRWException( "Min value(string) restriction error. FileName" )
+            if (elem.FileName).Length > 256 then
+                raise <| ConfRWException( "Max value(string) restriction error. FileName" )
+            yield sprintf "%s%s<FileName>%s</FileName>" singleIndent indentStr ( ReaderWriter.xmlEncode(elem.FileName) )
+            yield sprintf "%s%s<WriteProtect>%b</WriteProtect>" singleIndent indentStr (elem.WriteProtect)
             yield sprintf "%s</%s>" indentStr elemName
         }
 
