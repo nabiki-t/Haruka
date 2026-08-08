@@ -357,7 +357,7 @@ type SupportedOperationCodeConst() =
     /// that is used when REPORTING OPTIONS value is 000b.
     static member SupportedAllOperationCommands : byte[] =
         [|
-            yield! Functions.Int32ToNetworkBytes_NewVec 312;    // 37 * 8
+            yield! ByteFunc.S32ToNVBE 312;    // 37 * 8
             yield! SupportedOperationCommands_INQUIRY
             yield! SupportedOperationCommands_MODE_SELECT_6
             yield! SupportedOperationCommands_MODE_SELECT_10
@@ -401,7 +401,7 @@ type SupportedOperationCodeConst() =
     /// that is used when REPORTING OPTIONS value is 000b.
     static member SupportedOperationCommandsDummyDevice : byte[] =
         [|
-            yield! Functions.Int32ToNetworkBytes_NewVec 208;    // 26 * 8
+            yield! ByteFunc.S32ToNVBE 208;    // 26 * 8
             yield! SupportedOperationCommands_INQUIRY
             yield! SupportedOperationCommands_MODE_SELECT_6
             yield! SupportedOperationCommands_MODE_SELECT_10

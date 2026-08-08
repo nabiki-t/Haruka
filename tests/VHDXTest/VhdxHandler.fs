@@ -34,28 +34,28 @@ type VhdxHandler() =
     static member UpdateHeader ( fa : FileAccessor ) ( header : VhdxHeader ) : Task<uint64> =
         task {
             let hdrBuf1 : byte[] = Array.zeroCreate 4096
-            VhdxCommon.WriteUInt32BE hdrBuf1 0u header.Signature
-            VhdxCommon.WriteUInt32LE hdrBuf1 4u 0u
-            VhdxCommon.WriteUInt64LE hdrBuf1 8u header.SequenceNumber
-            VhdxCommon.WriteGuid hdrBuf1 16u header.FileWriteGuid
-            VhdxCommon.WriteGuid hdrBuf1 32u header.DataWriteGuid
-            VhdxCommon.WriteGuid hdrBuf1 48u header.LogGuid
-            VhdxCommon.WriteUInt16LE hdrBuf1 64u header.LogVersion
-            VhdxCommon.WriteUInt16LE hdrBuf1 66u header.Version
-            VhdxCommon.WriteUInt32LE hdrBuf1 68u header.LogLength
-            VhdxCommon.WriteUInt64LE hdrBuf1 72u header.LogOffset
+            ByteFunc.WriteU32BE hdrBuf1 0u header.Signature
+            ByteFunc.WriteU32LE hdrBuf1 4u 0u
+            ByteFunc.WriteU64LE hdrBuf1 8u header.SequenceNumber
+            ByteFunc.WriteGuid hdrBuf1 16u header.FileWriteGuid
+            ByteFunc.WriteGuid hdrBuf1 32u header.DataWriteGuid
+            ByteFunc.WriteGuid hdrBuf1 48u header.LogGuid
+            ByteFunc.WriteU16LE hdrBuf1 64u header.LogVersion
+            ByteFunc.WriteU16LE hdrBuf1 66u header.Version
+            ByteFunc.WriteU32LE hdrBuf1 68u header.LogLength
+            ByteFunc.WriteU64LE hdrBuf1 72u header.LogOffset
             let checkSum = Crc32C.Compute hdrBuf1
-            VhdxCommon.WriteUInt32LE hdrBuf1 4u checkSum
+            ByteFunc.WriteU32LE hdrBuf1 4u checkSum
 
             // Update old header
             let oldHeaderOffset = 0x30000UL - header.Offset
             do! fa.Write oldHeaderOffset ( ArraySegment hdrBuf1 )
 
             // Update new header
-            VhdxCommon.WriteUInt32LE hdrBuf1 4u 0u
-            VhdxCommon.WriteUInt64LE hdrBuf1 8u ( header.SequenceNumber + 1UL )
+            ByteFunc.WriteU32LE hdrBuf1 4u 0u
+            ByteFunc.WriteU64LE hdrBuf1 8u ( header.SequenceNumber + 1UL )
             let checkSum2 = Crc32C.Compute hdrBuf1
-            VhdxCommon.WriteUInt32LE hdrBuf1 4u checkSum2
+            ByteFunc.WriteU32LE hdrBuf1 4u checkSum2
             do! fa.Write header.Offset ( ArraySegment hdrBuf1 )
 
             return ( header.SequenceNumber + 2UL )

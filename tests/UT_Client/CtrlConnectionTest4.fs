@@ -79,6 +79,8 @@ type CtrlConnection_Test4() =
                         ()
                     | _ ->
                         Assert.Fail __LINE__
+                | _ ->
+                    Assert.Fail __LINE__
 
                 // send response for MediaCtrlReq
                 do! MediaCtrlRes.U_Debug(
@@ -470,6 +472,8 @@ type CtrlConnection_Test4() =
                         Assert.True(( y.Action.IsU_Count ))
                     | _ ->
                         Assert.Fail __LINE__
+                | _ ->
+                    Assert.Fail __LINE__
 
                 // send response for MediaCtrlReq
                 do! MediaCtrlRes.U_Debug(
@@ -651,6 +655,8 @@ type CtrlConnection_Test4() =
                 match reqData with
                 | MediaCtrlReq.U_Debug( x ) ->
                     Assert.True(( x.IsU_ClearTraps ))
+                | _ ->
+                    Assert.Fail __LINE__
 
                 // send response for MediaCtrlReq
                 do! MediaCtrlRes.U_Debug(
@@ -826,6 +832,8 @@ type CtrlConnection_Test4() =
                         Assert.True(( y = 99 ))
                     | _ ->
                         Assert.Fail __LINE__
+                | _ ->
+                    Assert.Fail __LINE__
 
                 // send response for MediaCtrlReq
                 do! MediaCtrlRes.U_Debug(
@@ -971,6 +979,8 @@ type CtrlConnection_Test4() =
                         ()
                     | _ ->
                         Assert.Fail __LINE__
+                | _ ->
+                    Assert.Fail __LINE__
 
                 // send response for MediaCtrlReq
                 do! MediaCtrlRes.U_Debug(
@@ -1018,6 +1028,8 @@ type CtrlConnection_Test4() =
                         ()
                     | _ ->
                         Assert.Fail __LINE__
+                | _ ->
+                    Assert.Fail __LINE__
 
                 // send response for MediaCtrlReq
                 do! MediaCtrlRes.U_Debug(
@@ -1063,6 +1075,8 @@ type CtrlConnection_Test4() =
                         ()
                     | _ ->
                         Assert.Fail __LINE__
+                | _ ->
+                    Assert.Fail __LINE__
 
                 // send response for MediaCtrlReq
                 do! MediaCtrlRes.U_Unexpected( "aawqqeerrr" )
@@ -1103,6 +1117,8 @@ type CtrlConnection_Test4() =
                         ()
                     | _ ->
                         Assert.Fail __LINE__
+                | _ ->
+                    Assert.Fail __LINE__
 
                 // send response
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "gggthththththt" )
@@ -1144,6 +1160,8 @@ type CtrlConnection_Test4() =
                         Assert.True(( t.ITT = itt_me.fromPrim 98u ))
                     | _ ->
                         Assert.Fail __LINE__
+                | _ ->
+                    Assert.Fail __LINE__
 
                 // send response for MediaCtrlReq
                 do! MediaCtrlRes.U_Debug(
@@ -1185,6 +1203,8 @@ type CtrlConnection_Test4() =
                         Assert.True(( t.ITT = itt_me.fromPrim 98u ))
                     | _ ->
                         Assert.Fail __LINE__
+                | _ ->
+                    Assert.Fail __LINE__
 
                 // send response for MediaCtrlReq
                 do! MediaCtrlRes.U_Debug(
@@ -1232,6 +1252,8 @@ type CtrlConnection_Test4() =
                         Assert.True(( t.ITT = itt_me.fromPrim 98u ))
                     | _ ->
                         Assert.Fail __LINE__
+                | _ ->
+                    Assert.Fail __LINE__
 
                 // send response for MediaCtrlReq
                 do! MediaCtrlRes.U_Debug(
@@ -1279,6 +1301,8 @@ type CtrlConnection_Test4() =
                         Assert.True(( t.ITT = itt_me.fromPrim 98u ))
                     | _ ->
                         Assert.Fail __LINE__
+                | _ ->
+                    Assert.Fail __LINE__
 
                 // send response for MediaCtrlReq
                 do! MediaCtrlRes.U_Unexpected( "aawqqeerrr" )
@@ -1321,6 +1345,8 @@ type CtrlConnection_Test4() =
                         Assert.True(( t.ITT = itt_me.fromPrim 98u ))
                     | _ ->
                         Assert.Fail __LINE__
+                | _ ->
+                    Assert.Fail __LINE__
 
                 // send response
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "gggthththththt" )

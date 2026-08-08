@@ -550,7 +550,7 @@ type ScsiTask
                             yield 0x04uy;   // IDENTIFIER LENGTH
                             yield 0x00uy;   // Reserved
                             yield 0x00uy;   // Reserved
-                            yield! Functions.UInt16ToNetworkBytes_NewVec ( tnodeidx_me.toPrim sessParam.TargetConf.IdentNumber );   // IDENTIFIER
+                            yield! ByteFunc.U16ToNVBE ( tnodeidx_me.toPrim sessParam.TargetConf.IdentNumber );   // IDENTIFIER
                         |]
 
                         // DISCRIPTOR 4 ( SCSI target device )
@@ -568,7 +568,7 @@ type ScsiTask
 
                         // PAGE LENGTH
                         yield! int16( dec1.Length + dec2.Length + dec3.Length + dec4.Length )
-                                |> Functions.Int16ToNetworkBytes_NewVec
+                                |> ByteFunc.S16ToNVBE
 
                         yield! dec1;    // DISCRIPTOR 1
                         yield! dec2;    // DISCRIPTOR 2
@@ -602,7 +602,7 @@ type ScsiTask
                         yield 0x00uy;
                         yield 0x00uy;
                         yield 0x00uy;
-                        yield! Functions.UInt32ToNetworkBytes_NewVec ( blkcnt_me.toUInt32 m_LU.OptimalTransferLength )  // OPTIMAL TRANSFER LENGTH
+                        yield! ByteFunc.U32ToNVBE ( blkcnt_me.toUInt32 m_LU.OptimalTransferLength )  // OPTIMAL TRANSFER LENGTH
                     |]
                 | 0xB1uy ->
                     //  Block Device Characteristics VPD page
@@ -1061,7 +1061,7 @@ type ScsiTask
 
         let bufLen = 4 + 4 + ( 8 * luns.Length )
         let paramdata = PooledBuffer.Rent bufLen
-        Functions.Int32ToNetworkBytes paramdata.Array 0 ( luns.Length * 8 )
+        ByteFunc.WriteS32BE paramdata.Array 0u ( luns.Length * 8 )
         paramdata.Array.[4] <- 0x00uy;
         paramdata.Array.[5] <- 0x00uy;
         paramdata.Array.[6] <- 0x00uy;
@@ -1542,17 +1542,17 @@ type ScsiTask
                 //  READ CAPACITY(10)
                 let r = PooledBuffer.Rent 8
                 if blockCount < 0xFFFFFFFFUL then
-                    Functions.UInt32ToNetworkBytes r.Array 0 ( uint32 blockCount )
+                    ByteFunc.WriteU32BE r.Array 0u ( uint32 blockCount )
                 else
-                    Functions.UInt32ToNetworkBytes r.Array 0 0xFFFFFFFFu
-                Functions.UInt32ToNetworkBytes r.Array 4 blockSize
+                    ByteFunc.WriteU32BE r.Array 0u 0xFFFFFFFFu
+                ByteFunc.WriteU32BE r.Array 4u blockSize
                 r
 
             else
                 //  READ CAPACITY(16)
                 let r = PooledBuffer.Rent 32
-                Functions.UInt64ToNetworkBytes r.Array 0 blockCount
-                Functions.UInt32ToNetworkBytes r.Array 8 blockSize
+                ByteFunc.WriteU64BE r.Array 0u blockCount
+                ByteFunc.WriteU32BE r.Array 8u blockSize
                 r.Array.[12] <- 0x00uy; // RTO_EN, PROT_EN
                 for i = 13 to 31 do
                     r.Array.[i] <- 0x00uy;

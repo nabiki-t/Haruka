@@ -57,6 +57,7 @@
     <Compile Include="TaskWaiter.fs" />
     <Compile Include="ResCounter.fs" />
     <Compile Include="ResponseFence.fs" />
+    <Compile Include="ByteFunc.fs" />
     <Compile Include="Functions.fs" />
     <Compile Include="PDUInterface.fs" />
     <Compile Include="Interfaces.fs" />

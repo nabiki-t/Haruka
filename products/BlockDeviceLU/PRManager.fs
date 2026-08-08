@@ -456,12 +456,12 @@ type PRManager(
             |> Seq.toArray
         [|
             // PRGENERATION
-            yield! Functions.UInt32ToNetworkBytes_NewVec pr.m_PRGeneration;
+            yield! ByteFunc.U32ToNVBE pr.m_PRGeneration;
             // ADDITIONAL LENGTH
-            yield! Functions.Int32ToNetworkBytes_NewVec ( pr.m_Registrations.Count * 8 );
+            yield! ByteFunc.S32ToNVBE ( pr.m_Registrations.Count * 8 );
             // RESERVATION KEYs
             for itr in v do
-                yield! Functions.UInt64ToNetworkBytes_NewVec ( resvkey_me.toPrim itr.Value );
+                yield! ByteFunc.U64ToNVBE ( resvkey_me.toPrim itr.Value );
         |]
 
     /// <summary>
@@ -481,22 +481,22 @@ type PRManager(
         if pr.m_Type = PR_TYPE.NO_RESERVATION then
             [|
                 // PRGENERATION
-                yield! Functions.UInt32ToNetworkBytes_NewVec pr.m_PRGeneration;
+                yield! ByteFunc.U32ToNVBE pr.m_PRGeneration;
                 // ADDITIONAL LENGTH
-                yield! Functions.Int32ToNetworkBytes_NewVec 0;
+                yield! ByteFunc.S32ToNVBE 0;
             |]
         else
             [|
                 // PRGENERATION
-                yield! Functions.UInt32ToNetworkBytes_NewVec pr.m_PRGeneration;
+                yield! ByteFunc.U32ToNVBE pr.m_PRGeneration;
                 // ADDITIONAL LENGTH
-                yield! Functions.Int32ToNetworkBytes_NewVec 0x10;
+                yield! ByteFunc.S32ToNVBE 0x10;
                 // RESERVATION KEY
                 if PR_TYPE.isAllRegistrants pr.m_Type then
-                    yield! Functions.UInt64ToNetworkBytes_NewVec ( 0UL );
+                    yield! ByteFunc.U64ToNVBE ( 0UL );
                 else
                     let _, holderKey = pr.m_Registrations.TryGetValue( pr.m_Holder.Value )
-                    yield! Functions.UInt64ToNetworkBytes_NewVec ( resvkey_me.toPrim holderKey );
+                    yield! ByteFunc.U64ToNVBE ( resvkey_me.toPrim holderKey );
                 // Obsoluted
                 yield 0uy;
                 yield 0uy;
@@ -575,7 +575,7 @@ type PRManager(
                     |> Option.defaultValue ( tnodeidx_me.fromPrim 0us )
 
                 // RESERVATION KEY
-                yield! Functions.UInt64ToNetworkBytes_NewVec ( resvkey_me.toPrim iKey );
+                yield! ByteFunc.U64ToNVBE ( resvkey_me.toPrim iKey );
                 // Reserved
                 yield 0x00uy;
                 yield 0x00uy;
@@ -598,7 +598,7 @@ type PRManager(
                 yield 0x00uy;
                 yield 0x00uy;
                 // RELATIVE TARGET PORT IDENTIFIER
-                yield! Functions.UInt16ToNetworkBytes_NewVec ( tnodeidx_me.toPrim rtpi )
+                yield! ByteFunc.U16ToNVBE ( tnodeidx_me.toPrim rtpi )
 
                 // prepare initiator name bytes array for TransportID
                 let initiatorPortNameStr = Encoding.UTF8.GetBytes iITN.InitiatorPortName
@@ -607,22 +607,22 @@ type PRManager(
                 Array.blit initiatorPortNameStr 0 buf 0 initiatorPortNameStr.Length
 
                 // ADDITIONAL DESCRIPTOR LENGTH
-                yield! Functions.UInt32ToNetworkBytes_NewVec ( initiatorPortNameBytesLen + 4u )
+                yield! ByteFunc.U32ToNVBE ( initiatorPortNameBytesLen + 4u )
 
                 // FORMAT CODE(01b),  PROTOCOL IDENTIFIER(5)
                 yield 0x45uy;
                 // Reserved
                 yield 0x00uy;
                 // ADDITIONAL LENGTH
-                yield! Functions.UInt16ToNetworkBytes_NewVec ( uint16 initiatorPortNameBytesLen )
+                yield! ByteFunc.U16ToNVBE ( uint16 initiatorPortNameBytesLen )
                 // ISCSI NAME
                 yield! buf
             |]
         [|
             // PRGENERATION
-            yield! Functions.UInt32ToNetworkBytes_NewVec pr.m_PRGeneration;
+            yield! ByteFunc.U32ToNVBE pr.m_PRGeneration;
             // ADDITIONAL LENGTH
-            yield! Functions.Int32ToNetworkBytes_NewVec desc.Length;
+            yield! ByteFunc.S32ToNVBE desc.Length;
             // Full status descriptors
             yield! desc
         |]
@@ -1937,8 +1937,8 @@ type PRManager(
                 msg
             )
 
-        let reservationKey = resvkey_me.fromPrim( Functions.NetworkBytesToUInt64_InPooledBuffer param 0 )
-        let serviceActionReservationKey = resvkey_me.fromPrim( Functions.NetworkBytesToUInt64_InPooledBuffer param 8 )
+        let reservationKey = resvkey_me.fromPrim( ByteFunc.ReadU64BEPB param 0u )
+        let serviceActionReservationKey = resvkey_me.fromPrim( ByteFunc.ReadU64BEPB param 8u )
         let allTG_PT = Functions.CheckBitflag param.[20] 0x04uy
         let aptpl = Functions.CheckBitflag param.[20] 0x01uy
 
@@ -1953,7 +1953,7 @@ type PRManager(
                         msg
                     )
 
-                let transportParameterDataLength = Functions.NetworkBytesToUInt32_InPooledBuffer param 24
+                let transportParameterDataLength = ByteFunc.ReadU32BEPB param 24u
                 if transportParameterDataLength + 28u > paramLen then
                     let msg = "Invalid TRANSPORTID PARAMETER DATA LENGTH in PERSISTENT RESERVE OUT."
                     HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.PARAMETER_LIST_LENGTH_ERROR, msg )
@@ -2021,12 +2021,12 @@ type PRManager(
                 msg
             )
 
-        let reservationKey = resvkey_me.fromPrim( Functions.NetworkBytesToUInt64_InPooledBuffer param 0 )
-        let serviceActionReservationKey = resvkey_me.fromPrim( Functions.NetworkBytesToUInt64_InPooledBuffer param 8 )
+        let reservationKey = resvkey_me.fromPrim( ByteFunc.ReadU64BEPB param 0u )
+        let serviceActionReservationKey = resvkey_me.fromPrim( ByteFunc.ReadU64BEPB param 8u )
         let unreg = Functions.CheckBitflag param.[17] 0x02uy
         let aptpl = Functions.CheckBitflag param.[17] 0x01uy
-        let relativeTargetPortIdentifier = Functions.NetworkBytesToUInt16_InPooledBuffer param 18
-        let transportIDLength = Functions.NetworkBytesToUInt32_InPooledBuffer param 20
+        let relativeTargetPortIdentifier = ByteFunc.ReadU16BEPB param 18u
+        let transportIDLength = ByteFunc.ReadU32BEPB param 20u
 
         if transportIDLength + 24u <> paramLen then
             let msg = "Invalid TRANSPORTID PARAMETER DATA LENGTH in PERSISTENT RESERVE OUT."
@@ -2135,7 +2135,7 @@ type PRManager(
                         msg
                     )
 
-                let additionalLength = int32( Functions.NetworkBytesToUInt16_InPooledBuffer param ( pos + 2 ) )
+                let additionalLength = int32( ByteFunc.ReadU16BEPB param ( uint32 pos + 2u ) )
                 if pos + 4 + additionalLength > ( int32 paramLen ) || additionalLength < 20 || additionalLength % 4 <> 0 then
                     let msg = sprintf "Invalid  ADDITIONAL LENGTH value(%d) in PERSISTENT RESERVE OUT command parameter list." additionalLength
                     HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.PARAMETER_LIST_LENGTH_ERROR, msg )

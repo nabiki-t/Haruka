@@ -444,7 +444,7 @@ type VhdxWriter() =
             | PayloadPartiallyPresent ->
                 7UL
         let d = e.FileOffset ||| a
-        VhdxCommon.WriteUInt64LE buf offset d
+        ByteFunc.WriteU64LE buf offset d
 
     /// <summary>
     ///  Write SectorBitmapBATEntry data to the buffer
@@ -466,7 +466,7 @@ type VhdxWriter() =
             | BatEntryStateSB.SectorBitmapPresent ->
                 6UL
         let d = e.FileOffset ||| a
-        VhdxCommon.WriteUInt64LE buf offset d
+        ByteFunc.WriteU64LE buf offset d
 
     /// <summary>
     ///  Create BAT table from 4K sector number.
