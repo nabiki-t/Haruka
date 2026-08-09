@@ -55,7 +55,6 @@ type ByteFunc() =
         if not <| v.TryWriteBytes( Span( bytes, int32 offset, 16 ) ) then
             failwith "Unexpected error. Failed to write GUID to byte array. In WriteGuid function."
 
-
     /// <summary>
     ///  Read a int16 value from byte array in little-endian format.
     /// </summary>
@@ -84,6 +83,8 @@ type ByteFunc() =
     ///  Retrieved int16 value.
     /// </returns>
     static member inline ReadS16LEPB( bytes : PooledBuffer ) ( offset : uint32 ) : int16 =
+        if offset + 2u > bytes.uLength || offset + 2u < offset then
+            failwith "Argument exception. Out of range. In ReadS16LEPB function."
         BinaryPrimitives.ReadInt16LittleEndian( ReadOnlySpan( bytes.Array, int32 offset, 2 ) )
 
     /// <summary>
@@ -114,6 +115,8 @@ type ByteFunc() =
     ///  Retrieved int16 value.
     /// </returns>
     static member inline ReadS16BEPB ( bytes : PooledBuffer ) ( offset : uint32 ) : int16 =
+        if offset + 2u > bytes.uLength || offset + 2u < offset then
+            failwith "Argument exception. Out of range. In ReadS16BEPB function."
         BinaryPrimitives.ReadInt16BigEndian( ReadOnlySpan( bytes.Array, int32 offset, 2 ) )
 
     /// <summary>
@@ -144,6 +147,8 @@ type ByteFunc() =
     ///  Retrieved uint16 value.
     /// </returns>
     static member inline ReadU16LEPB( bytes : PooledBuffer ) ( offset : uint32 ) : uint16 =
+        if offset + 2u > bytes.uLength || offset + 2u < offset then
+            failwith "Argument exception. Out of range. In ReadU16LEPB function."
         BinaryPrimitives.ReadUInt16LittleEndian( ReadOnlySpan( bytes.Array, int32 offset, 2 ) )
 
     /// <summary>
@@ -174,6 +179,8 @@ type ByteFunc() =
     ///  Retrieved uint16 value.
     /// </returns>
     static member inline ReadU16BEPB ( bytes : PooledBuffer ) ( offset : uint32 ) : uint16 =
+        if offset + 2u > bytes.uLength || offset + 2u < offset then
+            failwith "Argument exception. Out of range. In ReadU16BEPB function."
         BinaryPrimitives.ReadUInt16BigEndian( ReadOnlySpan( bytes.Array, int32 offset, 2 ) )
 
     /// <summary>
@@ -204,6 +211,8 @@ type ByteFunc() =
     ///  Retrieved int32 value.
     /// </returns>
     static member inline ReadS32LEPB( bytes : PooledBuffer ) ( offset : uint32 ) : int32 =
+        if offset + 4u > bytes.uLength || offset + 4u < offset then
+            failwith "Argument exception. Out of range. In ReadS32LEPB function."
         BinaryPrimitives.ReadInt32LittleEndian( ReadOnlySpan( bytes.Array, int32 offset, 4 ) )
 
     /// <summary>
@@ -234,6 +243,8 @@ type ByteFunc() =
     ///  Retrieved int32 value.
     /// </returns>
     static member inline ReadS32BEPB ( bytes : PooledBuffer ) ( offset : uint32 ) : int32 =
+        if offset + 4u > bytes.uLength || offset + 4u < offset then
+            failwith "Argument exception. Out of range. In ReadS32BEPB function."
         BinaryPrimitives.ReadInt32BigEndian( ReadOnlySpan( bytes.Array, int32 offset, 4 ) )
 
     /// <summary>
@@ -264,6 +275,8 @@ type ByteFunc() =
     ///  Retrieved uint32 value.
     /// </returns>
     static member inline ReadU32LEPB( bytes : PooledBuffer ) ( offset : uint32 ) : uint32 =
+        if offset + 4u > bytes.uLength || offset + 4u < offset then
+            failwith "Argument exception. Out of range. In ReadU32LEPB function."
         BinaryPrimitives.ReadUInt32LittleEndian( ReadOnlySpan( bytes.Array, int32 offset, 4 ) )
 
     /// <summary>
@@ -294,6 +307,8 @@ type ByteFunc() =
     ///  Retrieved uint32 value.
     /// </returns>
     static member inline ReadU32BEPB ( bytes : PooledBuffer ) ( offset : uint32 ) : uint32 =
+        if offset + 4u > bytes.uLength || offset + 4u < offset then
+            failwith "Argument exception. Out of range. In ReadU32BEPB function."
         BinaryPrimitives.ReadUInt32BigEndian( ReadOnlySpan( bytes.Array, int32 offset, 4 ) )
 
     /// <summary>
@@ -324,6 +339,8 @@ type ByteFunc() =
     ///  Retrieved int64 value.
     /// </returns>
     static member inline ReadS64LEPB ( bytes : PooledBuffer ) ( offset : uint32 ) : int64 =
+        if offset + 8u > bytes.uLength || offset + 8u < offset then
+            failwith "Argument exception. Out of range. In ReadS64LEPB function."
         BinaryPrimitives.ReadInt64LittleEndian( ReadOnlySpan( bytes.Array, int32 offset, 8 ) )
 
     /// <summary>
@@ -354,6 +371,8 @@ type ByteFunc() =
     ///  Retrieved int64 value.
     /// </returns>
     static member inline ReadS64BEPB ( bytes : PooledBuffer ) ( offset : uint32 ) : int64 =
+        if offset + 8u > bytes.uLength || offset + 8u < offset then
+            failwith "Argument exception. Out of range. In ReadS64BEPB function."
         BinaryPrimitives.ReadInt64BigEndian( ReadOnlySpan( bytes.Array, int32 offset, 8 ) )
 
     /// <summary>
@@ -384,6 +403,8 @@ type ByteFunc() =
     ///  Retrieved uint64 value.
     /// </returns>
     static member inline ReadU64LEPB ( bytes : PooledBuffer ) ( offset : uint32 ) : uint64 =
+        if offset + 8u > bytes.uLength || offset + 8u < offset then
+            failwith "Argument exception. Out of range. In ReadU64LEPB function."
         BinaryPrimitives.ReadUInt64LittleEndian( ReadOnlySpan( bytes.Array, int32 offset, 8 ) )
 
     /// <summary>
@@ -414,6 +435,8 @@ type ByteFunc() =
     ///  Retrieved uint64 value.
     /// </returns>
     static member inline ReadU64BEPB ( bytes : PooledBuffer ) ( offset : uint32 ) : uint64 =
+        if offset + 8u > bytes.uLength || offset + 8u < offset then
+            failwith "Argument exception. Out of range. In ReadU64BEPB function."
         BinaryPrimitives.ReadUInt64BigEndian( ReadOnlySpan( bytes.Array, int32 offset, 8 ) )
 
     /// <summary>
@@ -444,6 +467,8 @@ type ByteFunc() =
     ///  The int16 value to be written.
     /// </param>
     static member inline WriteS16LEPB ( buffer : PooledBuffer ) ( offset : uint32 ) ( v : int16 ) : unit =
+        if offset + 2u > buffer.uLength || offset + 2u < offset then
+            failwith "Argument exception. Out of range. In WriteS16LEPB function."
         BinaryPrimitives.WriteInt16LittleEndian( Span( buffer.Array, int32 offset, 2 ), v )
 
     /// <summary>
@@ -474,6 +499,8 @@ type ByteFunc() =
     ///  The int16 value to be written.
     /// </param>
     static member inline WriteS16BEPB ( buffer : PooledBuffer ) ( offset : uint32 ) ( v : int16 ) : unit =
+        if offset + 2u > buffer.uLength || offset + 2u < offset then
+            failwith "Argument exception. Out of range. In WriteS16BEPB function."
         BinaryPrimitives.WriteInt16BigEndian( Span( buffer.Array, int32 offset, 2 ), v )
 
     /// <summary>
@@ -504,6 +531,8 @@ type ByteFunc() =
     ///  The uint16 value to be written.
     /// </param>
     static member inline WriteU16LEPB ( buffer : PooledBuffer ) ( offset : uint32 ) ( v : uint16 ) : unit =
+        if offset + 2u > buffer.uLength || offset + 2u < offset then
+            failwith "Argument exception. Out of range. In WriteU16LEPB function."
         BinaryPrimitives.WriteUInt16LittleEndian( Span( buffer.Array, int32 offset, 2 ), v )
 
     /// <summary>
@@ -534,6 +563,8 @@ type ByteFunc() =
     ///  The uint16 value to be written.
     /// </param>
     static member inline WriteU16BEPB ( buffer : PooledBuffer ) ( offset : uint32 ) ( v : uint16 ) : unit =
+        if offset + 2u > buffer.uLength || offset + 2u < offset then
+            failwith "Argument exception. Out of range. In WriteU16BEPB function."
         BinaryPrimitives.WriteUInt16BigEndian( Span( buffer.Array, int32 offset, 2 ), v )
 
     /// <summary>
@@ -564,6 +595,8 @@ type ByteFunc() =
     ///  The int32 value to be written.
     /// </param>
     static member inline WriteS32LEPB ( buffer : PooledBuffer ) ( offset : uint32 ) ( v : int32 ) : unit =
+        if offset + 4u > buffer.uLength || offset + 4u < offset then
+            failwith "Argument exception. Out of range. In WriteS32LEPB function."
         BinaryPrimitives.WriteInt32LittleEndian( Span( buffer.Array, int32 offset, 4 ), v )
 
     /// <summary>
@@ -594,6 +627,8 @@ type ByteFunc() =
     ///  The int32 value to be written.
     /// </param>
     static member inline WriteS32BEPB ( buffer : PooledBuffer ) ( offset : uint32 ) ( v : int32 ) : unit =
+        if offset + 4u > buffer.uLength || offset + 4u < offset then
+            failwith "Argument exception. Out of range. In WriteS32BEPB function."
         BinaryPrimitives.WriteInt32BigEndian( Span( buffer.Array, int32 offset, 4 ), v )
 
     /// <summary>
@@ -624,6 +659,8 @@ type ByteFunc() =
     ///  The uint32 value to be written.
     /// </param>
     static member inline WriteU32LEPB ( buffer : PooledBuffer ) ( offset : uint32 ) ( v : uint32 ) : unit =
+        if offset + 4u > buffer.uLength || offset + 4u < offset then
+            failwith "Argument exception. Out of range. In WriteU32LEPB function."
         BinaryPrimitives.WriteUInt32LittleEndian( Span( buffer.Array, int32 offset, 4 ), v )
 
     /// <summary>
@@ -654,6 +691,8 @@ type ByteFunc() =
     ///  The uint32 value to be written.
     /// </param>
     static member inline WriteU32BEPB ( buffer : PooledBuffer ) ( offset : uint32 ) ( v : uint32 ) : unit =
+        if offset + 4u > buffer.uLength || offset + 4u < offset then
+            failwith "Argument exception. Out of range. In WriteU32BEPB function."
         BinaryPrimitives.WriteUInt32BigEndian( Span( buffer.Array, int32 offset, 4 ), v )
 
     /// <summary>
@@ -684,6 +723,8 @@ type ByteFunc() =
     ///  The int64 value to be written.
     /// </param>
     static member inline WriteS64LEPB ( buffer : PooledBuffer ) ( offset : uint32 ) ( v : int64 ) : unit =
+        if offset + 8u > buffer.uLength || offset + 8u < offset then
+            failwith "Argument exception. Out of range. In WriteS64LEPB function."
         BinaryPrimitives.WriteInt64LittleEndian( Span( buffer.Array, int32 offset, 8 ), v )
 
     /// <summary>
@@ -714,6 +755,8 @@ type ByteFunc() =
     ///  The int64 value to be written.
     /// </param>
     static member inline WriteS64BEPB ( buffer : PooledBuffer ) ( offset : uint32 ) ( v : int64 ) : unit =
+        if offset + 8u > buffer.uLength || offset + 8u < offset then
+            failwith "Argument exception. Out of range. In WriteS64BEPB function."
         BinaryPrimitives.WriteInt64BigEndian( Span( buffer.Array, int32 offset, 8 ), v )
 
     /// <summary>
@@ -744,6 +787,8 @@ type ByteFunc() =
     ///  The uint64 value to be written.
     /// </param>
     static member inline WriteU64LEPB ( buffer : PooledBuffer ) ( offset : uint32 ) ( v : uint64 ) : unit =
+        if offset + 8u > buffer.uLength || offset + 8u < offset then
+            failwith "Argument exception. Out of range. In WriteU64LEPB function."
         BinaryPrimitives.WriteUInt64LittleEndian( Span( buffer.Array, int32 offset, 8 ), v )
 
     /// <summary>
@@ -774,6 +819,8 @@ type ByteFunc() =
     ///  The uint64 value to be written.
     /// </param>
     static member inline WriteU64BEPB ( buffer : PooledBuffer ) ( offset : uint32 ) ( v : uint64 ) : unit =
+        if offset + 8u > buffer.uLength || offset + 8u < offset then
+            failwith "Argument exception. Out of range. In WriteU64BEPB function."
         BinaryPrimitives.WriteUInt64BigEndian( Span( buffer.Array, int32 offset, 8 ), v )
 
     /// <summary>
