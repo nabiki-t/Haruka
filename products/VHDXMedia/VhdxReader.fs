@@ -1,9 +1,21 @@
-namespace VhdxLibrary
+//=============================================================================
+// Haruka Software Storage.
+// VhdxReader.fs : Define a function to read the structural data of a VHDX file.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Media.VhdxUtil
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
 open System.Text
 open System.Threading.Tasks
+open System.Collections.Generic
 
 open Haruka.Constants
 open Haruka.Commons
@@ -76,7 +88,7 @@ type VhdxReader() =
             }
 
             let header0Enable =
-                let c0 = VhdxCommon.CheckHeaderChecksum header0Buf header0.Checksum && header0.Signature = 0x68656164u
+                let c0 = VhdxCommons.CheckHeaderChecksum header0Buf header0.Checksum && header0.Signature = 0x68656164u
                 let c1 = header0.LogVersion = 0us
                 let c2 = header0.Version = 1us
                 let c3 = header0.LogLength &&& 0x000FFFFFu = 0u             // Multiples of 1MB
@@ -119,7 +131,7 @@ type VhdxReader() =
                 Index = 1;
             }
             let header1Enable =
-                let c0 = VhdxCommon.CheckHeaderChecksum header1Buf header1.Checksum && header1.Signature = 0x68656164u
+                let c0 = VhdxCommons.CheckHeaderChecksum header1Buf header1.Checksum && header1.Signature = 0x68656164u
                 let c1 = header1.LogVersion = 0us
                 let c2 = header1.Version = 1us
                 let c3 = header1.LogLength &&& 0x000FFFFFu = 0u             // Multiples of 1MB
@@ -379,7 +391,7 @@ type VhdxReader() =
                 Array.blit logData srcidx logEntryData ( i * 4096 ) 4096
 
             /// Verify whether the checksum is correct.
-            let checksum_Check = VhdxCommon.CheckHeaderChecksum logEntryData checksum
+            let checksum_Check = VhdxCommons.CheckHeaderChecksum logEntryData checksum
             if not checksum_Check then
                 printfn "  Invalid checksum"
                 None
@@ -602,7 +614,7 @@ type VhdxReader() =
         let checksum = ByteFunc.ReadU32LE data 4u
         let entryCount = ByteFunc.ReadU32LE data 8u
         let signature_Check = signature = 0x72656769u
-        let checksum_Check = VhdxCommon.CheckHeaderChecksum data checksum
+        let checksum_Check = VhdxCommons.CheckHeaderChecksum data checksum
         let entryCount_Check = 0u <= entryCount && entryCount <= 2047u
 
         printfn "Region table header"
@@ -747,7 +759,7 @@ type VhdxReader() =
         // Retrieve file parameters
         let fileParamItem =
             metadataItems
-            |> List.tryFind ( fun m -> m.ItemId = VhdxCommon.METADATA_FILE_PARAM )
+            |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_FILE_PARAM )
         if fileParamItem.IsNone then
             raise <| Exception( "Metadata item(file parameter) missing" )
         if fileParamItem.Value.Length < 8u then
@@ -768,7 +780,7 @@ type VhdxReader() =
         // Retrieve the virtual disk size.
         let diskSizeItem =
             metadataItems
-            |> List.tryFind ( fun m -> m.ItemId = VhdxCommon.METADATA_VIRT_DISK_SIZE )
+            |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_VIRT_DISK_SIZE )
         if diskSizeItem.IsNone then
             raise <| Exception( "metadata item(virtual disk size) missing" )
         if diskSizeItem.Value.Length < 8u then
@@ -785,7 +797,7 @@ type VhdxReader() =
         // Retrieve the virtual disk ID
         let diskIDItem =
             metadataItems
-            |> List.tryFind ( fun m -> m.ItemId = VhdxCommon.METADATA_VIRT_DISK_ID )
+            |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_VIRT_DISK_ID )
         if diskIDItem.IsNone then
             raise <| Exception( "Metadata item(virtual disk ID) missing." )
         if diskIDItem.Value.Length < 16u then
@@ -796,7 +808,7 @@ type VhdxReader() =
         // Retrieve logical sector size.
         let logiSecSizeItem =
             metadataItems
-            |> List.tryFind ( fun m -> m.ItemId = VhdxCommon.METADATA_LOGI_SECTOR_SIZE )
+            |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_LOGI_SECTOR_SIZE )
         if logiSecSizeItem.IsNone then
             raise <| Exception( "Metadata item(logical sector size) missing." )
         if logiSecSizeItem.Value.Length < 4u then
@@ -813,7 +825,7 @@ type VhdxReader() =
         // Retrieve the physical sector size.
         let physSecSizeItem =
             metadataItems
-            |> List.tryFind ( fun m -> m.ItemId = VhdxCommon.METADATA_LOGI_SECTOR_SIZE )
+            |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_LOGI_SECTOR_SIZE )
         if physSecSizeItem.IsNone then
             raise <| Exception( "Metadata item(physical sector size) missing" )
         if physSecSizeItem.Value.Length < 4u then
@@ -830,14 +842,14 @@ type VhdxReader() =
             if hasParent then
                 let parLocItem =
                     metadataItems
-                    |> List.tryFind ( fun m -> m.ItemId = VhdxCommon.METADATA_PARENT_LOC )
+                    |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_PARENT_LOC )
                 if parLocItem.IsNone then
                     raise <| Exception( "Metadata item(parent locator) missing" )
                 if parLocItem.Value.Length < 20u then
                     raise <| Exception( "Length of metadata item(parent locator) is invalid" )
                 let locatorType = ByteFunc.ReadGuid parLocItem.Value.Data 0u
                 printfn "Metadata item(parent locator type) : %s" ( locatorType.ToString "D" )
-                if locatorType <> VhdxCommon.METADATA_PARENT_LOC_VHDX then
+                if locatorType <> VhdxCommons.METADATA_PARENT_LOC_VHDX then
                     raise <| Exception( "The type of metadata item (parent locator) is unknown." )
                 let keyValueCount = ByteFunc.ReadU16LE parLocItem.Value.Data 18u
                 printfn "Metadata item(parent locator count) : %d" keyValueCount
@@ -1171,13 +1183,13 @@ type VhdxReader() =
             // Get the locations of the metadata region and BAT region.
             let metadataRegion =
                 currentRegionTable.Entries
-                |> List.tryFind ( fun e -> e.Guid = VhdxCommon.REGENT_TYPE_METADATA )
+                |> List.tryFind ( fun e -> e.Guid = VhdxCommons.REGENT_TYPE_METADATA )
             if metadataRegion.IsNone then
                 raise <| Exception("Metadata region not found.")
 
             let batRegion =
                 currentRegionTable.Entries
-                |> List.tryFind ( fun e -> e.Guid = VhdxCommon.REGENT_TYPE_BAT )
+                |> List.tryFind ( fun e -> e.Guid = VhdxCommons.REGENT_TYPE_BAT )
             if batRegion.IsNone then
                 raise <| Exception("BAT region not found.")
 
@@ -1226,4 +1238,90 @@ type VhdxReader() =
                 VDI = virtualDiskInfo;
                 BAT = batEntries;
             }
+        }
+
+    /// <summary>
+    /// Retrieve all of VHDX file structures, including the parent VHDX file.
+    /// </summary>
+    /// <param name="fa">
+    ///  FileAccessor object for VHDX file.
+    /// </param>
+    /// <returns>
+    ///  Retrieved structures data.
+    /// </returns>
+    static member ReadAllStructures( fa : FileAccessor ) : Task<( FileAccessor * VhdxStructures )[]> =
+        task {
+            printfn "================================================================"
+            printfn "Load all VHDX files, including the parent file."
+            printfn "File name : %s" fa.FileName
+
+            let acc = List<FileAccessor * VhdxStructures>()
+            let loop ( ( fn : FileAccessor ), ( expDWG : Guid option ) ) : Task<struct( bool * ( FileAccessor * Guid option ) )> =
+                task {
+                    printfn "---------"
+                    printfn "Parent VHDX loading : %s" fn.FileName
+                    if expDWG.IsSome then
+                        printfn "Expected DataWriteGuid : %s" ( expDWG.Value.ToString "D" )
+
+                    // Read metadata
+                    let! meta = VhdxReader.ReadVhdx fn
+                    let hasParent = meta.VDI.HasParent
+                    let pl = meta.VDI.ParentLocator
+
+                    // Check Data Write Guid
+                    if expDWG.IsSome && meta.Header.DataWriteGuid <> expDWG.Value then
+                        raise <| Exception "Data Write Guid does not match"
+
+                    // Check if a File Write GUID with the same one already exists.
+                    for ( _, itr ) in acc do
+                        if itr.Header.FileWriteGuid = meta.Header.FileWriteGuid then
+                            raise <| Exception "The same file is specified as the parent VHDX file."
+
+                    if not hasParent then
+                        // If there is no parent file, add the current file to the list and finish.
+                        printfn "Processing terminated as there are no more parents."
+                        acc.Add( fn, meta )
+                        return struct( false, ( fn, None ) )
+                    else
+                        // The value of parent_linkage is the DataWriteGuid value expected in the parent VHDX file.
+                        let struct( parentDataWriteGuid, plt ) = VhdxCommons.GetParentFileName meta
+                        let parentFileName =
+                            match plt with
+                            | RelativePath x ->
+                                Path.Combine( [| Path.GetDirectoryName fn.FileName; x; |] )
+                            | VolumePath x ->
+                                x
+                            | AbsoluteWin32Path x ->
+                                x
+
+                        printfn "Next file : %s" parentFileName
+                        let parentFA = FileAccessor( parentFileName, fn.Multiplicity, fn.ReadOnly )
+
+                        // Read next parent VHDX file.
+                        acc.Add( fn, meta )
+                        return struct( true, ( parentFA, ( Some parentDataWriteGuid ) ) )
+                }
+
+            let! _ = Functions.loopAsyncWithState loop ( fa, None )
+            acc.Reverse()
+            let rv = acc.ToArray()
+
+            // Verify that the metadata matches.
+            for i = 1 to rv.Length - 1 do
+                let vdi0 = ( snd rv.[0] ).VDI
+                let vdix = ( snd rv.[i] ).VDI
+                if vdi0.VirtualDiskSize <> vdix.VirtualDiskSize then
+                    raise <| Exception( sprintf "The virtual disk size of the parent (%d) does not match." i )
+                if vdi0.VirtualDiskId <> vdix.VirtualDiskId then
+                    raise <| Exception( sprintf "The virtual disk ID of the parent (%d) does not match." i )
+                if vdi0.LogicalSectorSize <> vdix.LogicalSectorSize then
+                    raise <| Exception( sprintf "The logical sector size of the parent (%d) does not match." i )
+                if vdi0.PhysicalSectorSize <> vdix.PhysicalSectorSize then
+                    raise <| Exception( sprintf "The physical sector size of the parent (%d) does not match." i )
+            
+            printfn " ReadAllMetadata success"
+            printfn " Read file count : %d" rv.Length
+            printfn "================================================================"
+
+            return rv
         }

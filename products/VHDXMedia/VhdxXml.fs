@@ -1,13 +1,24 @@
-namespace VhdxLibrary
+//=============================================================================
+// Haruka Software Storage.
+// VhdxXml.fs : Output the VHDX structures data of the VHDX file in XML format.
+// 
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Media.VhdxUtil
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
 open System.Text
 open System.Xml
 
-open Haruka.Constants
-open Haruka.Commons
 
+//=============================================================================
+// Class implementation
 
 /// Output VHDX file structures as XML data.
 type VhdxXmlSerializer() =
@@ -108,9 +119,9 @@ type VhdxXmlSerializer() =
         writer.WriteStartElement( "Entries" )
         List.iteri ( fun j ( e : RegionEntry ) ->
             let regionName =
-                if e.Guid = VhdxCommon.REGENT_TYPE_BAT then
+                if e.Guid = VhdxCommons.REGENT_TYPE_BAT then
                     "BAT"
-                elif e.Guid = VhdxCommon.REGENT_TYPE_METADATA then
+                elif e.Guid = VhdxCommons.REGENT_TYPE_METADATA then
                     "Metadata"
                 else
                     sprintf "Region_%d" j

@@ -1,4 +1,15 @@
-namespace VhdxLibrary
+//=============================================================================
+// Haruka Software Storage.
+// VhdxCreater.fs : Implement functionality to create a new, empty VHDX file.
+// 
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Media.VhdxUtil
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -9,6 +20,8 @@ open System.Text.RegularExpressions
 open Haruka.Constants
 open Haruka.Commons
 
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///  Create an empty VHDX file.
@@ -61,13 +74,13 @@ type VhdxCreator() =
             ByteFunc.WriteU32LE buf 8u 2u             // Entry count
 
             // Metadata
-            ByteFunc.WriteGuid buf 16u VhdxCommon.REGENT_TYPE_METADATA
+            ByteFunc.WriteGuid buf 16u VhdxCommons.REGENT_TYPE_METADATA
             ByteFunc.WriteU64LE buf 32u metadataStartPos          // Metadata region start position.
             ByteFunc.WriteU32LE buf 40u 1048576u                  // Metadata region length
             ByteFunc.WriteU32LE buf 44u 1u                        // Required
 
             // BAT
-            ByteFunc.WriteGuid buf 48u VhdxCommon.REGENT_TYPE_BAT
+            ByteFunc.WriteGuid buf 48u VhdxCommons.REGENT_TYPE_BAT
             ByteFunc.WriteU64LE buf 64u batRegionStartPos         // BAT region start position.
             ByteFunc.WriteU32LE buf 72u ( uint32 batRegionSize )  // BAT region length
             ByteFunc.WriteU32LE buf 76u 1u                        // Required
@@ -192,7 +205,7 @@ type VhdxCreator() =
                 let plParamBuf = Array.zeroCreate<byte> buflen
 
                 // Parent locator header
-                ByteFunc.WriteGuid plParamBuf 0u VhdxCommon.METADATA_PARENT_LOC_VHDX
+                ByteFunc.WriteGuid plParamBuf 0u VhdxCommons.METADATA_PARENT_LOC_VHDX
                 ByteFunc.WriteU16LE plParamBuf 18u ( uint16 keyValueCount )
 
                 // Parent locator entry
@@ -246,38 +259,38 @@ type VhdxCreator() =
         ByteFunc.WriteU16LE metadatabuf 10u ( uint16 entryCount )              // Entry count
 
         // Metadata table entry ( file parameter )
-        ByteFunc.WriteGuid metadatabuf 32u VhdxCommon.METADATA_FILE_PARAM         // Item ID
+        ByteFunc.WriteGuid metadatabuf 32u VhdxCommons.METADATA_FILE_PARAM         // Item ID
         ByteFunc.WriteU32LE metadatabuf 48u ( fileParamStartPos + 65536u )     // Offset
         ByteFunc.WriteU32LE metadatabuf 52u 8u                                 // Length
         metadatabuf.[56] <- 4uy
 
         // Metadata table entry ( Virtual disk size )
-        ByteFunc.WriteGuid metadatabuf 64u VhdxCommon.METADATA_VIRT_DISK_SIZE     // Item ID
+        ByteFunc.WriteGuid metadatabuf 64u VhdxCommons.METADATA_VIRT_DISK_SIZE     // Item ID
         ByteFunc.WriteU32LE metadatabuf 80u ( vdsParamStartPos + 65536u )      // Offset
         ByteFunc.WriteU32LE metadatabuf 84u 8u                                 // Length
         metadatabuf.[88] <- 6uy
 
         // Metadata table entry ( Virtual disk ID )
-        ByteFunc.WriteGuid metadatabuf 96u VhdxCommon.METADATA_VIRT_DISK_ID       // Item ID
+        ByteFunc.WriteGuid metadatabuf 96u VhdxCommons.METADATA_VIRT_DISK_ID       // Item ID
         ByteFunc.WriteU32LE metadatabuf 112u ( vdidParamStartPos + 65536u )    // Offset
         ByteFunc.WriteU32LE metadatabuf 116u 16u                               // Length
         metadatabuf.[120] <- 6uy
 
         // Metadata table entry ( Logical sector size )
-        ByteFunc.WriteGuid metadatabuf 128u VhdxCommon.METADATA_LOGI_SECTOR_SIZE  // Item ID
+        ByteFunc.WriteGuid metadatabuf 128u VhdxCommons.METADATA_LOGI_SECTOR_SIZE  // Item ID
         ByteFunc.WriteU32LE metadatabuf 144u ( lssParamStartPos + 65536u )     // Offset
         ByteFunc.WriteU32LE metadatabuf 148u 4u                                // Length
         metadatabuf.[152] <- 6uy
 
         // Metadata table entry ( Physical sector size )
-        ByteFunc.WriteGuid metadatabuf 160u VhdxCommon.METADATA_PHY_SECTOR_SIZE   // Item ID
+        ByteFunc.WriteGuid metadatabuf 160u VhdxCommons.METADATA_PHY_SECTOR_SIZE   // Item ID
         ByteFunc.WriteU32LE metadatabuf 176u ( pssParamStartPos + 65536u )     // Offset
         ByteFunc.WriteU32LE metadatabuf 180u 4u                                // Length
         metadatabuf.[184] <- 6uy
 
         // Metadata table entry ( Parent locator )
         if vdi.HasParent then
-            ByteFunc.WriteGuid metadatabuf 192u VhdxCommon.METADATA_PARENT_LOC    // Item ID
+            ByteFunc.WriteGuid metadatabuf 192u VhdxCommons.METADATA_PARENT_LOC    // Item ID
             ByteFunc.WriteU32LE metadatabuf 208u ( plParamStartPos + 65536u )  // Offset
             ByteFunc.WriteU32LE metadatabuf 212u plParamLen                    // Length
             metadatabuf.[216] <- 4uy
@@ -538,7 +551,7 @@ type VhdxCreator() =
                 Offset = 0x10000UL;
                 Index = 0;                  // unused
             }
-            let! _ = VhdxHandler.UpdateHeader outputFile header
+            let! _ = VhdxCommons.UpdateHeader outputFile header
 
             // Region table
             do! VhdxCreator.WriteRegionTable outputFile metadataStartPos batRegionStartPos batRegionSize

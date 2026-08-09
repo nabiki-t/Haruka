@@ -1,11 +1,23 @@
-namespace VhdxLibrary
+//=============================================================================
+// Haruka Software Storage.
+// VhdxChecker.fs : Implement a function to replay uncommitted logs of a VHDX file.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Media.VhdxUtil
+
+//=============================================================================
+// Import declaration
 
 open System
-open System.IO
 open System.Threading.Tasks
 
-open Haruka.Constants
 open Haruka.Commons
+
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///  Replay unprocessed logs.
@@ -73,7 +85,7 @@ type VhdxChecker() =
                     FileWriteGuid = Guid.NewGuid();
                     SequenceNumber = structures.Header.SequenceNumber + 1UL;
             }
-            let! nextSecNum = VhdxHandler.UpdateHeader vhdxFile hd1
+            let! nextSecNum = VhdxCommons.UpdateHeader vhdxFile hd1
 
             // replay log
             do! VhdxChecker.ReplayLog vhdxFile structures.Log
@@ -84,7 +96,7 @@ type VhdxChecker() =
                     LogGuid = Guid();
                     SequenceNumber = nextSecNum;
             }
-            let! _ = VhdxHandler.UpdateHeader vhdxFile hd2
+            let! _ = VhdxCommons.UpdateHeader vhdxFile hd2
             ()
         }
 

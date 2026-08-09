@@ -1,10 +1,11 @@
+
 module main
 
 open System
 open System.Text.RegularExpressions
 open System.IO
 
-open VhdxLibrary
+open Haruka.Media.VhdxUtil
 
 open Haruka.Constants
 open Haruka.Commons
@@ -314,7 +315,7 @@ let main ( argv : string[] ) : int32 =
         | Random ->
             let rawfile = cmd.DefaultNamelessString 0 ""
             let fsizemb = cmd.DefaultNamedUInt64 "/v" 64UL
-            VhdxHandler.CreateRandomFile rawfile fsizemb
+            VhdxCommons.CreateRandomFile rawfile fsizemb
 
         | Compare ->
             let file1 = cmd.DefaultNamelessString 0 ""
@@ -332,17 +333,17 @@ let main ( argv : string[] ) : int32 =
             let! r = task {
                 match f1type, f2type with
                 | ( false, false ) ->
-                    return VhdxHandler.CompareRAW_RAW file1 file2
+                    return VhdxToRaw.CompareRAW_RAW file1 file2
                 | ( true, false ) ->
                     let fa1 = FileAccessor( file1, 1u, true )
-                    return! VhdxHandler.CompareVHDX_RAW fa1 file2
+                    return! VhdxToRaw.CompareVHDX_RAW fa1 file2
                 | ( false, true ) ->
                     let fa2 = FileAccessor( file2, 1u, true )
-                    return! VhdxHandler.CompareVHDX_RAW fa2 file1
+                    return! VhdxToRaw.CompareVHDX_RAW fa2 file1
                 | ( true, true ) ->
                     let fa1 = FileAccessor( file1, 1u, true )
                     let fa2 = FileAccessor( file2, 1u, true )
-                    return! VhdxHandler.CompareVHDX_VHDX fa1 fa2
+                    return! VhdxToRaw.CompareVHDX_VHDX fa1 fa2
             }
             if r then
                 printfn "The file contents match."
@@ -352,11 +353,11 @@ let main ( argv : string[] ) : int32 =
         | Parent ->
             let file1 = cmd.DefaultNamelessString 0 ""
             let fa = FileAccessor( file1, 1u, true )
-            let! metadata = VhdxHandler.ReadAllStructures fa
+            let! metadata = VhdxReader.ReadAllStructures fa
             for i = 0 to metadata.Length - 1 do
                 let ( fa, meta )  = metadata.[i]
                 if meta.VDI.HasParent then
-                    let struct( _, plt ) = VhdxHandler.GetParentFileName meta
+                    let struct( _, plt ) = VhdxCommons.GetParentFileName meta
                     match plt with
                     | ParentLocatorType.RelativePath ( x ) ->
                         printfn "%d : %s : RelativePath : %s" i fa.FileName x

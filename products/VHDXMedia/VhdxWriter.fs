@@ -1,4 +1,15 @@
-namespace VhdxLibrary
+//=============================================================================
+// Haruka Software Storage.
+// VhdxChecker.fs : Implement a function to write RAW-format data to a specified location within a VHDX file.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Media.VhdxUtil
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -7,6 +18,9 @@ open System.Collections.Generic
 
 open Haruka.Constants
 open Haruka.Commons
+
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///  Write RAW data to VHDX file.
@@ -234,7 +248,7 @@ type VhdxWriter() =
 
         let pbSize = uint64 structures.VDI.PayloadBlockSize
         let allocPBStat = if structures.VDI.HasParent then PayloadPartiallyPresent else PayloadFullyPresent;
-        let struct( pbidx, _ ) = VhdxHandler.LBAtoPayloadBlockIndex lba structures
+        let struct( pbidx, _ ) = VhdxCommons.LBAtoPayloadBlockIndex lba structures
         let pb = structures.BAT.Payloads.[ int32 pbidx ]
 
         match pb.State with
@@ -335,7 +349,7 @@ type VhdxWriter() =
     /// </returns>
     static member UpdateSBForAllocate ( structures : VhdxStructures ) ( lba : BLKCNT64_T ) ( updatedPB4K : HashSet<SEC4K_T> ) ( updatedSB4K : Dictionary< SEC4K_T, ArraySegment<byte> > ) : bool =
         let bat = structures.BAT
-        let struct( sbIdx, bytePos, bitPos ) = VhdxHandler.LBAtoSectorBitmapIndex lba structures
+        let struct( sbIdx, bytePos, bitPos ) = VhdxCommons.LBAtoSectorBitmapIndex lba structures
         let sbEntry = bat.SectorBitmap.[ int32 sbIdx ]
         let sb = sbEntry.Bitmap
         let sbFileOffset = sbEntry.FileOffset
@@ -367,7 +381,7 @@ type VhdxWriter() =
                 if span.IndexOfAnyExcept( 0xFFuy ) <> -1 then
                     () // There are still unused logical sectors.
                 else
-                    let struct( pbidx, _ ) = VhdxHandler.LBAtoPayloadBlockIndex lba structures
+                    let struct( pbidx, _ ) = VhdxCommons.LBAtoPayloadBlockIndex lba structures
                     bat.Payloads.[ int32 pbidx ] <-
                         {
                             bat.Payloads.[ int32 pbidx ] with
@@ -582,7 +596,7 @@ type VhdxWriter() =
                                 LogGuid = newLogGuid;
                                 SequenceNumber = headerSeq;
                         }
-                        let! nextsn1 = VhdxHandler.UpdateHeader fa hd1
+                        let! nextsn1 = VhdxCommons.UpdateHeader fa hd1
 
                         if ex = 4 then
                             raise <| Exception( "Stop processing based on user specification. WriteUpdatedBAT, Update header( Update LogGuid )." )
@@ -608,7 +622,7 @@ type VhdxWriter() =
                                 LogGuid = Guid();
                                 SequenceNumber = nextsn1;
                         }
-                        let! nextsn2 = VhdxHandler.UpdateHeader fa hd2
+                        let! nextsn2 = VhdxCommons.UpdateHeader fa hd2
 
                         if ex = 7 then
                             raise <| Exception( "Stop processing based on user specification. WriteUpdatedBAT, Update header ( Set LogGuid to zero )." )
@@ -678,7 +692,7 @@ type VhdxWriter() =
                                 LogGuid = newLogGuid;
                                 SequenceNumber = headerSeq;
                         }
-                        let! nextsn1 = VhdxHandler.UpdateHeader fa hd1
+                        let! nextsn1 = VhdxCommons.UpdateHeader fa hd1
 
                         // Write updated structures data to file
                         for struct ( sec4k, sbData ) in listSec4K_SBData do
@@ -690,7 +704,7 @@ type VhdxWriter() =
                                 LogGuid = Guid();
                                 SequenceNumber = nextsn1;
                         }
-                        let! nextSeq = VhdxHandler.UpdateHeader fa hd2
+                        let! nextSeq = VhdxCommons.UpdateHeader fa hd2
                         return Continue( struct( cycle + 1, nextSeq ) )
                     else
                         return Terminate( headerSeq )
@@ -722,7 +736,7 @@ type VhdxWriter() =
 
             for i in 0UL .. rawDataSec - 1UL do
                 let curlba = blkcnt_me.ofUInt64 i + lba
-                let struct( badIndex, offsetInBat ) = VhdxHandler.LBAtoPayloadBlockIndex curlba structures
+                let struct( badIndex, offsetInBat ) = VhdxCommons.LBAtoPayloadBlockIndex curlba structures
                 let pbStartPos = structures.BAT.Payloads.[ int32 badIndex ].FileOffset
                 let offsetInPB = ( uint64 offsetInBat ) * sectorSize
                 rawfs.ReadExactly( buffer, 0, int32 sectorSize )
@@ -789,7 +803,7 @@ type VhdxWriter() =
 
             // Update FileWriteGuid and DataWriteGuid
             printfn "=== Update FileWriteGuid and DataWriteGuid. ==="
-            let! structures2 = VhdxHandler.UpdateFileWriteGuidAndDataWriteGuid vhdxFile structures1
+            let! structures2 = VhdxCommons.UpdateFileWriteGuidAndDataWriteGuid vhdxFile structures1
 
             if ex = 2 then
                 raise <| Exception( "Stop processing based on user specification. Update FileWriteGuid and DataWriteGuid." )

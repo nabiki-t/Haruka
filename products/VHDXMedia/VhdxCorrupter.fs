@@ -1,14 +1,26 @@
-namespace VhdxLibrary
+//=============================================================================
+// Haruka Software Storage.
+// VhdxCorrupter.fs : Write unprocessed log data to the VHDX file.
+// This is a test function that simulates a power loss during the update process.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Media.VhdxUtil
+
+//=============================================================================
+// Import declaration
 
 open System
-open System.IO
 open System.Text
 open System.Threading.Tasks
 open System.Collections.Generic
 
-open Haruka.Constants
 open Haruka.Commons
 
+//=============================================================================
+// Class implementation
 
 /// A class that updates an existing VHDX file,
 /// filling the data in the specified sectors
@@ -207,7 +219,7 @@ type VhdxCorrupter() =
                     FileWriteGuid = Guid.NewGuid();
                     LogGuid = newLogGuid;
             }
-            let! _ = VhdxHandler.UpdateHeader outputFile newHeader
+            let! _ = VhdxCommons.UpdateHeader outputFile newHeader
 
             // Fill the log area with random numbers.
             let logSecCnt = structures.Header.LogLength / 4096u

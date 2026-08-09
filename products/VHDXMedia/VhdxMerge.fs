@@ -1,4 +1,15 @@
-namespace VhdxLibrary
+//=============================================================================
+// Haruka Software Storage.
+// VhdxMerge.fs : Implement a function to delete snapshots of differencing VHDX files.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Media.VhdxUtil
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
@@ -7,6 +18,9 @@ open System.Collections.Generic
 
 open Haruka.Constants
 open Haruka.Commons
+
+//=============================================================================
+// Class implementation
 
 /// <summary>
 ///  Delete a snapshot.
@@ -54,13 +68,13 @@ type VhdxMerge() =
             printfn "  copyLength : %d" copyLength
 
             let srcStartBytePos =
-                let struct( idx, off ) = VhdxHandler.LBAtoPayloadBlockIndex lba srcStr
+                let struct( idx, off ) = VhdxCommons.LBAtoPayloadBlockIndex lba srcStr
                 let pboffset = srcStr.BAT.Payloads.[ int idx ].FileOffset
                 let inpboff = uint64 off * uint64 blocksize
                 ( pboffset + inpboff )
 
             let dstStartBytePos =
-                let struct( idx, off ) = VhdxHandler.LBAtoPayloadBlockIndex lba dstStr
+                let struct( idx, off ) = VhdxCommons.LBAtoPayloadBlockIndex lba dstStr
                 let pboffset = dstStr.BAT.Payloads.[ int idx ].FileOffset
                 let inpboff = uint64 off * uint64 blocksize
                 ( pboffset + inpboff )
@@ -94,7 +108,7 @@ type VhdxMerge() =
             let metadataFileOffset, metadataLength = 
                 let e =
                     structures.Region.Entries
-                    |> List.find ( fun itr -> itr.Guid = VhdxCommon.REGENT_TYPE_METADATA )
+                    |> List.find ( fun itr -> itr.Guid = VhdxCommons.REGENT_TYPE_METADATA )
                 e.FileOffset, e.Length
             let sec4kCount = metadataLength / 4096u
 
@@ -183,7 +197,7 @@ type VhdxMerge() =
 
                 printfn "  loop1( lba1=%d, ubufcnt1=%d, gfs1=%d )" lba1 ubufcnt1 gfs1
 
-                let struct( pdidx, pblbaoff ) = VhdxHandler.LBAtoPayloadBlockIndex lba1 dstr
+                let struct( pdidx, pblbaoff ) = VhdxCommons.LBAtoPayloadBlockIndex lba1 dstr
                 let lbastart = ( uint64 pdidx ) * d_PayloadBlockLBACount + ( pblbaoff |> blkcnt_me.toUInt32 |> uint64 |> blkcnt_me.ofUInt64 )
                 let lbaend = ( uint64 pdidx + 1UL ) * d_PayloadBlockLBACount
 
@@ -213,7 +227,7 @@ type VhdxMerge() =
                             lba2, ( ubufcnt2 + 1 ), restFreeList2, gfs2
                         else
                             let ( nextRFL, nextGFS2 ) = VhdxWriter.UpdatePBForAllocate mstr lba2 restFreeList2 gfs2 updatedPB4K
-                            let struct( sbIdx, bytePos, bitPos ) = VhdxHandler.LBAtoSectorBitmapIndex lba2 mstr
+                            let struct( sbIdx, bytePos, bitPos ) = VhdxCommons.LBAtoSectorBitmapIndex lba2 mstr
                             let sbEntry = mstr.BAT.SectorBitmap.[ int32 sbIdx ].Bitmap
                             let bitValue = ( sbEntry.[ int32 bytePos ] >>> ( int32 bitPos ) ) &&& 1uy
 
@@ -297,7 +311,7 @@ type VhdxMerge() =
                     // Zero out unused portions at the LBA unit.
                     for wlba in [ uint64 lbastart .. uint64 lbaend - 1UL ] do
                         let bitValue =
-                            let struct( sbIdx, bytePos, bitPos ) = VhdxHandler.LBAtoSectorBitmapIndex ( blkcnt_me.ofUInt64 wlba ) structures
+                            let struct( sbIdx, bytePos, bitPos ) = VhdxCommons.LBAtoSectorBitmapIndex ( blkcnt_me.ofUInt64 wlba ) structures
                             let sbEntry = structures.BAT.SectorBitmap.[ int32 sbIdx ]
                             ( sbEntry.Bitmap.[ int32 bytePos ] >>> ( int32 bitPos ) ) &&& 1uy
                         if bitValue = 0uy then
@@ -352,7 +366,7 @@ type VhdxMerge() =
 
             // Update FileWriteGuid and DataWriteGuid
             printfn "=== Update FileWriteGuid and DataWriteGuid. ==="
-            let! structures2 = VhdxHandler.UpdateFileWriteGuidAndDataWriteGuid mfa structures1
+            let! structures2 = VhdxCommons.UpdateFileWriteGuidAndDataWriteGuid mfa structures1
 
             // Allocate area and copy data
             printfn "=== Allocate and copy ==="
@@ -451,7 +465,7 @@ type VhdxMerge() =
 
                 printfn "  loop1( lba1=%d, ubufcnt1=%d, gfs1=%d )" lba1 ubufcnt1 gfs1
 
-                let struct( pdidx, pblbaoff ) = VhdxHandler.LBAtoPayloadBlockIndex lba1 dstr
+                let struct( pdidx, pblbaoff ) = VhdxCommons.LBAtoPayloadBlockIndex lba1 dstr
                 let lbastart = ( uint64 pdidx ) * d_PayloadBlockLBACount + ( pblbaoff |> blkcnt_me.toUInt32 |> uint64 |> blkcnt_me.ofUInt64 )
                 let lbaend = ( uint64 pdidx + 1UL ) * d_PayloadBlockLBACount
 
@@ -507,7 +521,7 @@ type VhdxMerge() =
                             // If a range spans across payload blocks, it is not treated as a contiguous region.
                             lba2, ( ubufcnt2 + 1 ), restFreeList2, gfs2
                         else
-                            let struct( dsbidx, bytePos, bitPos ) = VhdxHandler.LBAtoSectorBitmapIndex lba2 dstr
+                            let struct( dsbidx, bytePos, bitPos ) = VhdxCommons.LBAtoSectorBitmapIndex lba2 dstr
                             let dsbState = ( dstr.BAT.SectorBitmap.[ int32 dsbidx ].Bitmap.[ int32 bytePos ] >>> ( int32 bitPos ) ) &&& 1uy
                             if dsbState = 1uy then
                                 // The logical sector in question is in use.
@@ -566,7 +580,7 @@ type VhdxMerge() =
 
             // Update FileWriteGuid and DataWriteGuid
             printfn "=== Update FileWriteGuid and DataWriteGuid. ==="
-            let! structures2 = VhdxHandler.UpdateFileWriteGuidAndDataWriteGuid mfa structures1
+            let! structures2 = VhdxCommons.UpdateFileWriteGuidAndDataWriteGuid mfa structures1
 
             // Allocate area and copy data
             printfn "=== Allocate and copy ==="
@@ -620,7 +634,7 @@ type VhdxMerge() =
     /// </param>
     static member Merge ( childvhdx : FileAccessor ) ( ancestor : int32 ) : Task =
         task {
-            let! structures = VhdxHandler.ReadAllStructures childvhdx
+            let! structures = VhdxReader.ReadAllStructures childvhdx
 
             printfn "================================================================"
             printfn "Merge VHDX file."
