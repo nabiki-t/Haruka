@@ -53,11 +53,6 @@ type VhdxToRaw() =
     /// </param>
     static member Convert ( fa : FileAccessor ) ( outputPath : string ) ( hexdump : uint64 option ) : Task =
         task {
-            printfn "========================================================"
-            printfn "Convert to RAW format."
-            printfn "Input file : %s" fa.FileName
-            printfn "Output file : %s" outputPath
-            printfn "Output digits : %d" ( if hexdump.IsSome then hexdump.Value else 0UL )
 
             // Read VHDX file structures and open files.
             let! allStructures = VhdxReader.ReadAllStructures fa
@@ -87,7 +82,6 @@ type VhdxToRaw() =
                 | PayloadZero
                 | PayloadUnapped ->
                     // Assume that all values ​​are 0.
-                    printfn "Payload block %d : All zeros" pbIdx
                     match hexdump with
                     | Some x ->
                         VhdxToRaw.OutputByHexdump outfile zeroBuffer x ( uint64 pbIdx * uint64 pbBlockSize )
@@ -96,7 +90,6 @@ type VhdxToRaw() =
 
                 | PayloadFullyPresent ->
                     // All data is recorded in the input file.
-                    printfn "Payload block %d : Recorded in the input file" pbIdx
                     do! vFiles.[cidx].ReadWithPseudoLimit curstr.LastFileSize pbItr.FileOffset ( ArraySegment readPBBuf )
                     match hexdump with
                     | Some x ->
@@ -107,7 +100,6 @@ type VhdxToRaw() =
                 | PayloadNotPresent
                 | PayloadPartiallyPresent ->
                     // The sector bitmap needs to be inspected.
-                    printfn "Payload block %d : Copy sector by sector" pbIdx
                     for secIdxInPB = 0 to secCntInPB - 1 do
                         let lba = uint64 ( pbIdx * secCntInPB + secIdxInPB ) |> blkcnt_me.ofUInt64
                         match VhdxCommons.ResolvLBA lba vMD with

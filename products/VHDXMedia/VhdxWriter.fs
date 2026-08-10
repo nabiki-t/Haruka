@@ -112,20 +112,7 @@ type VhdxWriter() =
         let freeRanges =
             payloads
             |> VhdxWriter.getUsedRegions
-            |> ( fun d ->
-                printfn "--- Allocated payloads ---"
-                for i = 0 to d.Length - 1 do
-                    printfn "  %d : %d" i d.[i]
-                d
-            )
             |> VhdxWriter.mergeIntervals structures
-            |> ( fun d ->
-                printfn "--- Used regions ---"
-                for i = 0 to d.Length - 1 do
-                    let struct( x, y ) = d.[i]
-                    printfn "  %d : %d .. %d " i x y
-                d
-            )
             |> List.fold ( fun struct ( prevEnd, acc ) struct ( s, e ) -> 
                 let acc =
                     if prevEnd < s then
@@ -189,18 +176,8 @@ type VhdxWriter() =
                 PayloadFullyPresent;
         let updated4KSecs = HashSet<SEC4K_T>()
 
-        printfn "--------------"
-        printfn "  AllocatePayloadBlock"
-        printfn "  hasParent : %b" hasParent
-        printfn "  Payload Block Size : %d" pbSize
-        printfn "  Allocated initially payload block status : %s" ( allocPBStat.ToString() )
-
         // build free list
         let freeList = VhdxWriter.BuildFreeList structures
-
-        printfn "  Free area list"
-        for i in freeList do
-            printfn "    %d .. %d" i ( i + pbSize - 1UL )
 
         // allocate space and update BAT entry
         let rec loop ( wcnt : BLKCNT64_T ) ( restFreeList : uint64 list ) ( gfs : uint64 ) : uint64 =
@@ -211,9 +188,6 @@ type VhdxWriter() =
             else
                 gfs
         let requiredFileSize = loop blkcnt_me.zero64 freeList structures.LastFileSize
-
-        printfn "  All payload block allocated."
-        printfn "  Required File Sizse : %d" requiredFileSize
 
         struct ( updated4KSecs, requiredFileSize )
 
@@ -278,12 +252,6 @@ type VhdxWriter() =
             let secidx = fpos / 4096UL |> sec4k_me.ofUInt64
             updated4KSecs.Add secidx |> ignore
 
-            printfn "  Allocate payload block"
-            printfn "    File offset : %d" fileoffset
-            printfn "    LBA : %d" lba
-            printfn "    Payload block index : %d" pbidx
-            printfn "    Updated 4K sector number : %d" secidx
-
             // To next LBA block
             nextFL, nextgfs
 
@@ -317,11 +285,6 @@ type VhdxWriter() =
         ( lba : BLKCNT64_T )
         ( cnt : BLKCNT64_T )
         : Dictionary< SEC4K_T, ArraySegment<byte> > =
-
-        printfn "--------------"
-        printfn "  UpdateSectorBitmap"
-        printfn "  LBA : %d" lba
-        printfn "  sector count : %d" cnt
 
         let updatedSB4K = Dictionary< SEC4K_T, ArraySegment<byte> >()
         for i in [ 0UL .. blkcnt_me.toUInt64 cnt - 1UL ] do
@@ -507,12 +470,6 @@ type VhdxWriter() =
         // Number of BAT entries to be output
         let count2 = ( min ( sBATIdx + count ) bat.BatEntryCount ) - sBATIdx
 
-        printfn "--- CreateBATEntryTableFrom4KSectorNumber "
-        printfn "   secnum : %d" secnum
-        printfn "   count : %d" count
-        printfn "   sBATIdx : %d" sBATIdx
-        printfn "   count2 : %d" count2
-
         for i in 0UL .. count2 - 1UL do
             let idx = sBATIdx + i
             if ( idx + 1UL ) % ( chunkRatio + 1UL ) = 0UL then
@@ -525,7 +482,6 @@ type VhdxWriter() =
                     let w3 = idx % ( chunkRatio + 1UL )
                     w2 + w3
                     |> int32
-                printfn "bat.Payloads.Length=%d, idx=%d, pbidx=%d, chunkRatio=%d " bat.Payloads.Length idx pbidx chunkRatio
                 if pbidx < bat.Payloads.Length then
                     VhdxWriter.PayloadBlockEntryToBytes buffer ( uint32 i * 8u ) bat.Payloads.[ pbidx ]
         buffer
@@ -554,14 +510,6 @@ type VhdxWriter() =
             let logOutputPos = structures.Header.LogOffset
             let cycleCount = ( sec4Ks.Length + ( logEntryUnit - 1 ) ) / logEntryUnit
 
-            printfn "====================="
-            printfn " WriteUpdatedBAT"
-            printfn " sec4Ks.Length : %d" sec4Ks.Length
-            printfn " reqFileSize : %d" reqFileSize
-            printfn " logEntryUnit : %d" logEntryUnit
-            printfn " logOutputPos : %d" logOutputPos
-            printfn " cycleCount : %d" cycleCount
-
             let loop struct ( cycle : int32, headerSeq : uint64 ) : Task< LoopState< struct( int32 * uint64 ), uint64 > > =
                 task {
                     if cycle < cycleCount then
@@ -569,12 +517,6 @@ type VhdxWriter() =
                         let wcnt = min logEntryUnit ( sec4Ks.Length - widx )
                         let newLogGuid = Guid.NewGuid()
                         let currentFileSize = fa.GetFileSize()
-
-                        printfn "--- loop ---"
-                        printfn " cycle : %d" cycle
-                        printfn " headerSeq : %d" headerSeq
-                        printfn " output 4K sectores : %d .. %d" sec4Ks.[ widx ] sec4Ks.[ ( widx +  wcnt - 1 ) ]
-                        printfn " currentFileSize : %d" currentFileSize
 
                         // Write log entry
                         let listSec4K_BatData =
@@ -602,7 +544,6 @@ type VhdxWriter() =
                             raise <| Exception( "Stop processing based on user specification. WriteUpdatedBAT, Update header( Update LogGuid )." )
 
                         // Set file size
-                        printfn " SetFileSize : %d -> %d " currentFileSize reqFileSize
                         if currentFileSize < reqFileSize then
                             do! fa.SetFileSize( reqFileSize )
 
@@ -657,13 +598,6 @@ type VhdxWriter() =
             let logOutputPos = structures.Header.LogOffset
             let cycleCount = ( sec4Ks.Length + ( logEntryUnit - 1 ) ) / logEntryUnit
 
-            printfn "====================="
-            printfn " WriteUpdatedSB"
-            printfn " sec4Ks.Length : %d" sec4Ks.Length
-            printfn " logEntryUnit : %d" logEntryUnit
-            printfn " logOutputPos : %d" logOutputPos
-            printfn " cycleCount : %d" cycleCount
-
             let loop struct ( cycle : int32, headerSeq : uint64 ) : Task< LoopState< struct( int32 * uint64 ), uint64 > > =
                 task {
                     if cycle < cycleCount then
@@ -671,12 +605,6 @@ type VhdxWriter() =
                         let wcnt = min logEntryUnit ( sec4Ks.Length - widx )
                         let newLogGuid = Guid.NewGuid()
                         let currentFileSize = structures.LastFileSize
-
-                        printfn "--- loop ---"
-                        printfn " cycle : %d" cycle
-                        printfn " headerSeq : %d" headerSeq
-                        printfn " output 4K sectores : %d .. %d" ( sec4Ks.[ widx ] |> ( fun struct( a, _ ) -> a ) ) ( sec4Ks.[ ( widx +  wcnt - 1 ) ] |> ( fun struct( a, _ ) -> a ) )
-                        printfn " currentFileSize : %d" currentFileSize
 
                         // Write log entry
                         let listSec4K_SBData =
@@ -765,19 +693,6 @@ type VhdxWriter() =
             let rawDataLength = rawfs.Length |> uint64
             let rawDataSec = rawDataLength / uint64 sectorSize |> blkcnt_me.ofUInt64
 
-            printfn ""
-            printfn "========================================================"
-            printfn "Write raw data to VHDX file"
-            printfn "VHDX file name : %s" vhdxFile.FileName
-            printfn "RAW file name : %s" rawFileName
-            printfn "LBA : %d" lba
-            printfn "RAW data length(byte) : %d" rawDataLength
-            printfn "RAW data length(sector) : %d" rawDataSec
-            printfn "VHDX sector sizse : %d" sectorSize
-            printfn "Virtual Disk Size(byte) : %d" vdsb
-            printfn "Virtual Disk Size(sector) : %d" vdss
-            printfn "========================================================"
-
             if ( blkcnt_me.toUInt64 rawDataSec * uint64 sectorSize ) <> rawDataLength then
                 raise <| Exception( "RAW data length must be multiple of sector size." )
             if lba > vdss then
@@ -789,9 +704,8 @@ type VhdxWriter() =
 
             // Flash log entries
             if structures.Log.Length > 0 then
-                printfn "=== Need to replay log. ==="
                 do! VhdxChecker.Check vhdxFile
-                printfn "=== Replay log complete. ==="
+
             let structures1 =
                 if structures.Log.Length > 0 then
                     { structures with Header.SequenceNumber = structures.Header.SequenceNumber + 2UL }
@@ -802,21 +716,18 @@ type VhdxWriter() =
                 raise <| Exception( "Stop processing based on user specification. : Flash log entries." )
 
             // Update FileWriteGuid and DataWriteGuid
-            printfn "=== Update FileWriteGuid and DataWriteGuid. ==="
             let! structures2 = VhdxCommons.UpdateFileWriteGuidAndDataWriteGuid vhdxFile structures1
 
             if ex = 2 then
                 raise <| Exception( "Stop processing based on user specification. Update FileWriteGuid and DataWriteGuid." )
 
             // Allocate Payload block. structures2 will be updated.
-            printfn "=== Allocate Payload block ==="
             let struct( updatedPB4K, requiredFileSize ) =
                 VhdxWriter.AllocatePayloadBlock structures2 lba rawDataSec
 
             // Update sector bitmap.
             let updated4KSecsForSB =
                 if structures2.VDI.HasParent then
-                    printfn "=== Update sector bitmap ==="
                     VhdxWriter.UpdateSectorBitmap structures2 updatedPB4K lba rawDataSec
                     |> Seq.map ( fun itr -> struct( itr.Key, itr.Value ) )
                     |> Seq.toArray
@@ -825,7 +736,6 @@ type VhdxWriter() =
             let updated4KSecsForBAT = Seq.toArray updatedPB4K
 
             // Output the updated BATEntry
-            printfn "=== Output the updated BATEntry ==="
             let! structures3 = task {
                 let! nextsn = VhdxWriter.WriteUpdatedBAT vhdxFile structures2 updated4KSecsForBAT requiredFileSize ex
                 return { structures2 with Header.SequenceNumber = nextsn; }
@@ -837,7 +747,6 @@ type VhdxWriter() =
             // Output sector bitmap.
             let! structures4 = task {
                 if updated4KSecsForSB.Length > 0 then
-                    printfn "=== Output the updated sector bitmap ==="
                     let! nextsn = VhdxWriter.WriteUpdatedSB vhdxFile structures3 updated4KSecsForSB
                     return { structures3 with Header.SequenceNumber = nextsn; }
                 else

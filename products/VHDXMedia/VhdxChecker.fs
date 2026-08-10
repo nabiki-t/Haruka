@@ -75,10 +75,6 @@ type VhdxChecker() =
             // Read VHDX metadata
             let! structures = VhdxReader.ReadVhdx vhdxFile
 
-            printfn "========================================================"
-            printfn "Replay unprocessed log."
-            printfn "Input file name : %s" vhdxFile.FileName
-
             // update file write GUID in header
             let hd1 = {
                 structures.Header with

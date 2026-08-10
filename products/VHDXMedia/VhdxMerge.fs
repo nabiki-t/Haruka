@@ -59,14 +59,6 @@ type VhdxMerge() =
             let chunkCount = ( uint32 cnt + lbPerChunk - 1u ) / lbPerChunk
             let copyLength = uint64 cnt * uint64 blocksize
 
-            printfn "  CopyData( lba=%d, cnt=%d )" lba cnt
-            printfn "  source file sizse : %d" ( srcFa.GetFileSize() )
-            printfn "  destination file sizse : %d" ( dstFa.GetFileSize() )
-            printfn "  blocksize : %d" blocksize
-            printfn "  lbPerChunk : %d" lbPerChunk
-            printfn "  chunkCount : %d" chunkCount
-            printfn "  copyLength : %d" copyLength
-
             let srcStartBytePos =
                 let struct( idx, off ) = VhdxCommons.LBAtoPayloadBlockIndex lba srcStr
                 let pboffset = srcStr.BAT.Payloads.[ int idx ].FileOffset
@@ -79,11 +71,8 @@ type VhdxMerge() =
                 let inpboff = uint64 off * uint64 blocksize
                 ( pboffset + inpboff )
 
-            printfn "  srcStartBytePos : %d" srcStartBytePos
-            printfn "  dstStartBytePos : %d" dstStartBytePos
-
             let s = seq {
-                for i in [ 0UL .. uint64 chunkCount - 1UL ] do
+                for i in 0UL .. uint64 chunkCount - 1UL do
                     let currentA = i * 1048576UL
                     let currentB = min 1048576UL ( copyLength - currentA )
                     yield ( currentA, currentB )
@@ -179,11 +168,6 @@ type VhdxMerge() =
         let d_VirtualDiskLBACount =
             dstr.VDI.VirtualDiskSize / ( Blocksize.toUInt64 dstr.VDI.LogicalSectorSize ) |> blkcnt_me.ofUInt64
 
-        printfn "  UpdateBATForDeleteRoot"
-        printfn "  delete target logical sector count per payload block : %d" d_PayloadBlockLBACount
-        printfn "  delete target logical sector count : %d" d_VirtualDiskLBACount
-        printfn "  update target logical sector count per payload block : %d" m_PayloadBlockLBACount
-
         // initialize return buffer
         for i = 0 to updateLbaBuf.Length - 1 do
             updateLbaBuf.[i] <- struct( blkcnt_me.ofUInt64 UInt64.MaxValue, blkcnt_me.ofUInt32 UInt32.MaxValue )
@@ -195,14 +179,9 @@ type VhdxMerge() =
         let rec loop1 ( lba1 : BLKCNT64_T, ubufcnt1 : int, restFreeList1 : uint64 list, gfs1 : uint64 )  : uint64 * BLKCNT64_T =
             if lba1 < d_VirtualDiskLBACount && ubufcnt1 < updateLbaBuf.Length then
 
-                printfn "  loop1( lba1=%d, ubufcnt1=%d, gfs1=%d )" lba1 ubufcnt1 gfs1
-
                 let struct( pdidx, pblbaoff ) = VhdxCommons.LBAtoPayloadBlockIndex lba1 dstr
                 let lbastart = ( uint64 pdidx ) * d_PayloadBlockLBACount + ( pblbaoff |> blkcnt_me.toUInt32 |> uint64 |> blkcnt_me.ofUInt64 )
                 let lbaend = ( uint64 pdidx + 1UL ) * d_PayloadBlockLBACount
-
-                printfn "  pdidx=%d, lbastart=%d, lbaend=%d" pdidx lbastart lbaend
-                printfn "  Payload State=%s" ( dstr.BAT.Payloads.[ int pdidx ].State.ToString() )
 
                 match dstr.BAT.Payloads.[ int pdidx ].State with
                 | PayloadNotPresent
@@ -280,15 +259,10 @@ type VhdxMerge() =
             let zerobuf = Array.zeroCreate<byte> ( int blocksize )
             let updatedPB4K = HashSet<SEC4K_T>()
 
-            printfn "  FillPartiallyPayload"
-            printfn "  update target logical sector count per payload block : %d" payloadBlockLBACount
 
             for pdidx = 0 to structures.BAT.Payloads.Length - 1 do
                 let lbastart = ( uint64 pdidx ) * payloadBlockLBACount
                 let lbaend = ( uint64 pdidx + 1UL ) * payloadBlockLBACount
-
-                printfn "  pdidx=%d, lbastart=%d, lbaend=%d" pdidx lbastart lbaend
-                printfn "  Payload State=%s" ( structures.BAT.Payloads.[ pdidx ].State.ToString() )
 
                 match structures.BAT.Payloads.[ pdidx ].State with
                 | PayloadNotPresent
@@ -345,19 +319,14 @@ type VhdxMerge() =
             let ( dfa, dstr ) = structures.[0]
             let ( mfa, mstr ) = structures.[1]
 
-            printfn "=== DeleteRoot ==="
-            printfn "delete target file name : %s" dfa.FileName
-            printfn "update target file name : %s" mfa.FileName
-
             let updateLbaBuf = Array.zeroCreate< struct( BLKCNT64_T * BLKCNT32_T ) > 4096
             let d_VirtualDiskLBACount =
                 dstr.VDI.VirtualDiskSize / ( Blocksize.toUInt64 dstr.VDI.LogicalSectorSize ) |> blkcnt_me.ofUInt64
 
             // Flash log entries
             if mstr.Log.Length > 0 then
-                printfn "=== Need to replay log. ==="
                 do! VhdxChecker.Check mfa
-                printfn "=== Replay log complete. ==="
+
             let structures1 =
                 if mstr.Log.Length > 0 then
                     { mstr with Header.SequenceNumber = mstr.Header.SequenceNumber + 2UL }
@@ -365,20 +334,15 @@ type VhdxMerge() =
                     mstr
 
             // Update FileWriteGuid and DataWriteGuid
-            printfn "=== Update FileWriteGuid and DataWriteGuid. ==="
             let! structures2 = VhdxCommons.UpdateFileWriteGuidAndDataWriteGuid mfa structures1
 
             // Allocate area and copy data
-            printfn "=== Allocate and copy ==="
             let! _, structures3 =
                 Functions.loopAsyncWithState ( fun ( lba, structures4 ) -> task {
-                    printfn "  DeleteRoot loop(lba=%d)" lba
 
                     let requiredFileSize, updatedPB4K, nextLba =
                         VhdxMerge.UpdateBATForDeleteRoot dstr structures4 lba updateLbaBuf
                     let updated4KSecsForBAT = Seq.toArray updatedPB4K
-
-                    printfn "  requiredFileSize=%d" requiredFileSize
 
                     // Output BAT entries.
                     let! nextsn5 = VhdxWriter.WriteUpdatedBAT mfa structures4 updated4KSecsForBAT requiredFileSize 0
@@ -446,11 +410,6 @@ type VhdxMerge() =
         let d_VirtualDiskLBACount =
             dstr.VDI.VirtualDiskSize / ( Blocksize.toUInt64 dstr.VDI.LogicalSectorSize ) |> blkcnt_me.ofUInt64
 
-        printfn "  UpdateBATForMergeIntermediate"
-        printfn "  delete target logical sector count per payload block : %d" d_PayloadBlockLBACount
-        printfn "  delete target logical sector count : %d" d_VirtualDiskLBACount
-        printfn "  update target logical sector count per payload block : %d" m_PayloadBlockLBACount
-
         // initialize return buffer
         for i = 0 to updateLbaBuf.Length - 1 do
             updateLbaBuf.[i] <- struct( blkcnt_me.ofUInt64 UInt64.MaxValue, blkcnt_me.ofUInt32 UInt32.MaxValue )
@@ -463,14 +422,9 @@ type VhdxMerge() =
         let rec loop1 ( lba1 : BLKCNT64_T, ubufcnt1 : int, restFreeList1 : uint64 list, gfs1 : uint64 )  : uint64 * BLKCNT64_T =
             if lba1 < d_VirtualDiskLBACount && ubufcnt1 < updateLbaBuf.Length then
 
-                printfn "  loop1( lba1=%d, ubufcnt1=%d, gfs1=%d )" lba1 ubufcnt1 gfs1
-
                 let struct( pdidx, pblbaoff ) = VhdxCommons.LBAtoPayloadBlockIndex lba1 dstr
                 let lbastart = ( uint64 pdidx ) * d_PayloadBlockLBACount + ( pblbaoff |> blkcnt_me.toUInt32 |> uint64 |> blkcnt_me.ofUInt64 )
                 let lbaend = ( uint64 pdidx + 1UL ) * d_PayloadBlockLBACount
-
-                printfn "  pdidx=%d, lbastart=%d, lbaend=%d" pdidx lbastart lbaend
-                printfn "  Payload State=%s" ( dstr.BAT.Payloads.[ int pdidx ].State.ToString() )
 
                 match dstr.BAT.Payloads.[ int pdidx ].State with
                 | PayloadNotPresent
@@ -559,19 +513,14 @@ type VhdxMerge() =
             let ( dfa, dstr ) = structures.[ delidx ]
             let ( mfa, mstr ) = structures.[ delidx + 1 ]
 
-            printfn "=== MergeIntermediate ==="
-            printfn "delete target file name : %s" dfa.FileName
-            printfn "update target file name : %s" mfa.FileName
-
             let updateLbaBuf = Array.zeroCreate< struct( BLKCNT64_T * BLKCNT32_T ) > 4096
             let d_VirtualDiskLBACount =
                 dstr.VDI.VirtualDiskSize / ( Blocksize.toUInt64 dstr.VDI.LogicalSectorSize ) |> blkcnt_me.ofUInt64
 
             // Flash log entries
             if mstr.Log.Length > 0 then
-                printfn "=== Need to replay log. ==="
                 do! VhdxChecker.Check mfa
-                printfn "=== Replay log complete. ==="
+
             let structures1 =
                 if mstr.Log.Length > 0 then
                     { mstr with Header.SequenceNumber = mstr.Header.SequenceNumber + 2UL }
@@ -579,14 +528,11 @@ type VhdxMerge() =
                     mstr
 
             // Update FileWriteGuid and DataWriteGuid
-            printfn "=== Update FileWriteGuid and DataWriteGuid. ==="
             let! structures2 = VhdxCommons.UpdateFileWriteGuidAndDataWriteGuid mfa structures1
 
             // Allocate area and copy data
-            printfn "=== Allocate and copy ==="
             let! _, structures3 =
                 Functions.loopAsyncWithState ( fun ( lba, structures4 ) -> task {
-                    printfn "  MergeIntermediate loop(lba=%d)" lba
 
                     let requiredFileSize, updatedPB4K, updatedSB4K, nextLba =
                         VhdxMerge.UpdateBATForMergeIntermediate dstr structures4 lba updateLbaBuf
@@ -635,11 +581,6 @@ type VhdxMerge() =
     static member Merge ( childvhdx : FileAccessor ) ( ancestor : int32 ) : Task =
         task {
             let! structures = VhdxReader.ReadAllStructures childvhdx
-
-            printfn "================================================================"
-            printfn "Merge VHDX file."
-            printfn "leaf node file name : %s" childvhdx.FileName
-            printfn "delete target index : %d" ancestor
 
             // Leaf-node descendants cannot be deleted (simply deleting the files is sufficient).
             if ancestor = structures.Length - 1 then

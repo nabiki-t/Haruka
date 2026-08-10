@@ -84,31 +84,32 @@ type VhdxCommons() =
     /// </returns>
     static member UpdateHeader ( fa : FileAccessor ) ( header : VhdxHeader ) : Task<uint64> =
         task {
-            let hdrBuf1 : byte[] = Array.zeroCreate 4096
-            ByteFunc.WriteU32BE hdrBuf1 0u header.Signature
-            ByteFunc.WriteU32LE hdrBuf1 4u 0u
-            ByteFunc.WriteU64LE hdrBuf1 8u header.SequenceNumber
-            ByteFunc.WriteGuid hdrBuf1 16u header.FileWriteGuid
-            ByteFunc.WriteGuid hdrBuf1 32u header.DataWriteGuid
-            ByteFunc.WriteGuid hdrBuf1 48u header.LogGuid
-            ByteFunc.WriteU16LE hdrBuf1 64u header.LogVersion
-            ByteFunc.WriteU16LE hdrBuf1 66u header.Version
-            ByteFunc.WriteU32LE hdrBuf1 68u header.LogLength
-            ByteFunc.WriteU64LE hdrBuf1 72u header.LogOffset
-            let checkSum = Crc32C.Compute hdrBuf1
-            ByteFunc.WriteU32LE hdrBuf1 4u checkSum
+            let hdrBuf1 = PooledBuffer.RentAndInit 4096
+            ByteFunc.WriteU32BEPB hdrBuf1 0u header.Signature
+            ByteFunc.WriteU32LEPB hdrBuf1 4u 0u
+            ByteFunc.WriteU64LEPB hdrBuf1 8u header.SequenceNumber
+            ByteFunc.WriteGuidPB hdrBuf1 16u header.FileWriteGuid
+            ByteFunc.WriteGuidPB hdrBuf1 32u header.DataWriteGuid
+            ByteFunc.WriteGuidPB hdrBuf1 48u header.LogGuid
+            ByteFunc.WriteU16LEPB hdrBuf1 64u header.LogVersion
+            ByteFunc.WriteU16LEPB hdrBuf1 66u header.Version
+            ByteFunc.WriteU32LEPB hdrBuf1 68u header.LogLength
+            ByteFunc.WriteU64LEPB hdrBuf1 72u header.LogOffset
+            let checkSum = Crc32C.Compute hdrBuf1.ArraySegment
+            ByteFunc.WriteU32LEPB hdrBuf1 4u checkSum
 
             // Update old header
             let oldHeaderOffset = 0x30000UL - header.Offset
-            do! fa.Write oldHeaderOffset ( ArraySegment hdrBuf1 )
+            do! fa.Write oldHeaderOffset ( hdrBuf1.ArraySegment )
 
             // Update new header
-            ByteFunc.WriteU32LE hdrBuf1 4u 0u
-            ByteFunc.WriteU64LE hdrBuf1 8u ( header.SequenceNumber + 1UL )
-            let checkSum2 = Crc32C.Compute hdrBuf1
-            ByteFunc.WriteU32LE hdrBuf1 4u checkSum2
-            do! fa.Write header.Offset ( ArraySegment hdrBuf1 )
+            ByteFunc.WriteU32LEPB hdrBuf1 4u 0u
+            ByteFunc.WriteU64LEPB hdrBuf1 8u ( header.SequenceNumber + 1UL )
+            let checkSum2 = Crc32C.Compute hdrBuf1.ArraySegment
+            ByteFunc.WriteU32LEPB hdrBuf1 4u checkSum2
+            do! fa.Write header.Offset ( hdrBuf1.ArraySegment )
 
+            PooledBuffer.Return hdrBuf1
             return ( header.SequenceNumber + 2UL )
         }
 
@@ -181,15 +182,15 @@ type VhdxCommons() =
     /// <param name="lba">
     ///  LBA used for location identification.
     /// </param>
-    /// <param name="metadata">
-    ///  VHDX file metadata.
+    /// <param name="structures">
+    ///  VHDX file controll structures.
     /// </param>
     /// <returns>
     ///  Pair of payload block BAT entry index and sector index within the payload block.
     /// </returns>
-    static member LBAtoPayloadBlockIndex ( lba : BLKCNT64_T ) ( metadata : VhdxStructures ) : struct( uint32 * BLKCNT32_T ) =
-        let pbsize = metadata.VDI.PayloadBlockSize
-        let secsize = metadata.VDI.LogicalSectorSize |> Blocksize.toUInt32
+    static member LBAtoPayloadBlockIndex ( lba : BLKCNT64_T ) ( structures : VhdxStructures ) : struct( uint32 * BLKCNT32_T ) =
+        let pbsize = structures.VDI.PayloadBlockSize
+        let secsize = structures.VDI.LogicalSectorSize |> Blocksize.toUInt32
         let secCntInPb = pbsize / secsize |> uint64
         let pbIndex = ( blkcnt_me.toUInt64 lba ) / secCntInPb |> uint32
         let secIndex = ( blkcnt_me.toUInt64 lba ) % secCntInPb |> uint32
@@ -201,13 +202,13 @@ type VhdxCommons() =
     /// <param name="lba">
     ///  LBA used for location identification.
     /// </param>
-    /// <param name="metadata">
-    ///  VHDX file metadata.
+    /// <param name="structures">
+    ///  VHDX file controll structures.
     /// </param>
     /// <returns>
     ///  Pair of the sector bitmap BAT entry index and bit position within the payload block.
     /// </returns>
-    static member LBAtoSectorBitmapIndex ( lba : BLKCNT64_T ) ( metadata : VhdxStructures ) : struct( uint32 * uint32 * uint32 ) =
+    static member LBAtoSectorBitmapIndex ( lba : BLKCNT64_T ) ( structures : VhdxStructures ) : struct( uint32 * uint32 * uint32 ) =
         let sbindex = ( blkcnt_me.toUInt64 lba ) / 8388608UL |> uint32
         let bitpos = ( blkcnt_me.toUInt64 lba ) % 8388608UL |> uint32
         struct( sbindex, bitpos >>> 3, bitpos &&& 7u )
@@ -226,14 +227,9 @@ type VhdxCommons() =
         use fs = File.OpenWrite fname
         let buf = Array.zeroCreate<byte> 1048576
 
-        let rec loop ( cnt : uint64 ) =
-            if cnt < fsizemb then
-                Random.Shared.NextBytes buf
-                fs.Write buf
-                loop ( cnt + 1UL )
-            else
-                ()
-        loop 0UL
+        for _ in 1UL .. fsizemb do
+            Random.Shared.NextBytes buf
+            fs.Write buf
 
         fs.Flush()
         fs.Close()
@@ -242,8 +238,8 @@ type VhdxCommons() =
     /// <summary>
     ///  Get parent likage GUID and parent file name.
     /// </summary>
-    /// <param name="metadata">
-    ///  VHDX metadata.
+    /// <param name="structures">
+    ///  VHDX file controll structures.
     /// </param>
     /// <returns>
     ///  Pair of the parent linkaged GUID value and the parent file name.
@@ -251,8 +247,8 @@ type VhdxCommons() =
     /// <remarks>
     ///  The metadata argument must specify the metadata for the differencing VHDX file that has the parent VHDX.
     /// </remarks>
-    static member GetParentFileName ( metadata : VhdxStructures ) : struct( Guid * ParentLocatorType ) =
-        let pl = metadata.VDI.ParentLocator
+    static member GetParentFileName ( structures : VhdxStructures ) : struct( Guid * ParentLocatorType ) =
+        let pl = structures.VDI.ParentLocator
         let parent_linkage = pl.[ "parent_linkage" ] |> Guid
         let plt =
             let r1, v1 = pl.TryGetValue "relative_path"
@@ -268,25 +264,30 @@ type VhdxCommons() =
                 raise <| Exception "Unable to identify the parent VHDX file name."
         struct( parent_linkage, plt )
         
-    static member UpdateFileWriteGuidAndDataWriteGuid ( fa : FileAccessor ) ( metadata : VhdxStructures ) : Task<VhdxStructures> =
+    /// <summary>
+    ///  Update the FileWriteGuid and DataWriteGuid values ​​in the header.
+    /// </summary>
+    /// <param name="fa">
+    ///  The fileAccessor object for the VHDX file.
+    /// </param>
+    /// <param name="structures">
+    ///  VHDX file controll structures.
+    /// </param>
+    /// <returns>
+    ///  Updated structures data.
+    /// </returns>
+    static member UpdateFileWriteGuidAndDataWriteGuid ( fa : FileAccessor ) ( structures : VhdxStructures ) : Task<VhdxStructures> =
         task {
             let hd = {
-                metadata.Header with
+                structures.Header with
                     FileWriteGuid = Guid.NewGuid();
                     DataWriteGuid = Guid.NewGuid();
                     LogGuid = Guid();
-                    SequenceNumber = metadata.Header.SequenceNumber + 1UL;
+                    SequenceNumber = structures.Header.SequenceNumber + 1UL;
             }
-            printfn "  FileWriteGuid : %s" ( hd.FileWriteGuid.ToString "D" )
-            printfn "  DataWriteGuid : %s" ( hd.DataWriteGuid.ToString "D" )
-            printfn "  SequenceNumber : %d" ( hd.SequenceNumber )
             let! nextsn = VhdxCommons.UpdateHeader fa hd
-            printfn "  Next sequence number : %d" nextsn
             return {
-                metadata with
-                    Header = {
-                        metadata.Header with
-                            SequenceNumber = nextsn;    // Set the next sequence number to use.
-                }
+                structures with
+                    Header.SequenceNumber = nextsn;    // Set the next sequence number to use.
             }
         }

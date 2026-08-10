@@ -53,7 +53,7 @@ type sec4k_me =
 /// Data type that uses uint64 to represent the 4K sector number
 type SEC4K_T = uint64<sec4k_me>
 
-
+/// Constant identifying the Parent Locator type.
 type ParentLocatorType =
     | RelativePath of string
     | VolumePath of string

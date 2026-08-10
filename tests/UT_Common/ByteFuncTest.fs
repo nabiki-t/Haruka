@@ -56,6 +56,31 @@ type ByteFunc_Test () =
     [<InlineData( 16, 0xFFFFFFEFu )>]
     [<InlineData( 16, 0xFFFFFFF0u )>]
     [<InlineData( 16, 0xFFFFFFF1u )>]
+    member _.ReadGuidPB_001 ( vlen : int32 ) ( pos : uint32 ) =
+        let v = Array.zeroCreate<byte> vlen |> PooledBuffer.Rent
+        Assert.ThrowsAny<Exception> ( fun () ->
+            ByteFunc.ReadGuidPB v pos
+            |> ignore
+        )
+        |> ignore
+        PooledBuffer.Return v
+
+    [<Theory>]
+    [<InlineData( 16, 0u, "03020100-0504-0706-0809-0a0b0c0d0e0f" )>]
+    [<InlineData( 17, 1u, "04030201-0605-0807-090a-0b0c0d0e0f10" )>]
+    member _.ReadGuidPB_002 ( vlen : int32 ) ( pos : uint32 ) ( exstr : string ) =
+        let v = [| 0uy .. byte vlen - 1uy |] |> PooledBuffer.Rent
+        let g = ByteFunc.ReadGuidPB v pos
+        Assert.StrictEqual( Guid( exstr ), g )
+        PooledBuffer.Return v
+
+    [<Theory>]
+    [<InlineData( 0, 0u )>]
+    [<InlineData( 15, 0u )>]
+    [<InlineData( 16, 1u )>]
+    [<InlineData( 16, 0xFFFFFFEFu )>]
+    [<InlineData( 16, 0xFFFFFFF0u )>]
+    [<InlineData( 16, 0xFFFFFFF1u )>]
     member _.WriteGuid_001 ( vlen : int32 ) ( pos : uint32 ) =
         let v = Array.zeroCreate<byte> vlen
         Assert.ThrowsAny<Exception> ( fun () ->
@@ -73,6 +98,33 @@ type ByteFunc_Test () =
 
         for i = int32 pos to int32 pos + 15 do
             Assert.StrictEqual( byte i, v.[i] )
+
+    [<Theory>]
+    [<InlineData( 0, 0u )>]
+    [<InlineData( 15, 0u )>]
+    [<InlineData( 16, 1u )>]
+    [<InlineData( 16, 0xFFFFFFEFu )>]
+    [<InlineData( 16, 0xFFFFFFF0u )>]
+    [<InlineData( 16, 0xFFFFFFF1u )>]
+    member _.WriteGuidPB_001 ( vlen : int32 ) ( pos : uint32 ) =
+        let v = Array.zeroCreate<byte> vlen |> PooledBuffer.Rent
+        Assert.ThrowsAny<Exception> ( fun () ->
+            ByteFunc.WriteGuidPB v pos ( Guid() )
+            |> ignore
+        )
+        |> ignore
+        PooledBuffer.Return v
+
+    [<Theory>]
+    [<InlineData( 16, 0u, "03020100-0504-0706-0809-0a0b0c0d0e0f" )>]
+    [<InlineData( 17, 1u, "04030201-0605-0807-090a-0b0c0d0e0f10" )>]
+    member _.WriteGuidPB_002 ( vlen : int32 ) ( pos : uint32 ) ( gstr : string ) =
+        let v = Array.zeroCreate<byte> vlen |> PooledBuffer.Rent
+        ByteFunc.WriteGuidPB v pos ( Guid( gstr ) )
+
+        for i = int32 pos to int32 pos + 15 do
+            Assert.StrictEqual( byte i, v.[i] )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 2, 0, 0x0001s )>]
@@ -100,6 +152,7 @@ type ByteFunc_Test () =
     member _.ReadS16BEPB_001 ( vlen : int ) ( pos : uint32 ) ( exval : int16 ) =
         let v = PooledBuffer.Rent( [| 0uy .. byte vlen - 1uy |] )
         Assert.StrictEqual( exval, ByteFunc.ReadS16BEPB v pos )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -113,6 +166,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.ReadS16BEPB v pos |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 2, 0, 0x0001us )>]
@@ -140,6 +194,7 @@ type ByteFunc_Test () =
     member _.ReadU16BEPB_001 ( vlen : int ) ( pos : uint32 ) ( exval : uint16 ) =
         let v = [| 0uy .. byte vlen - 1uy |] |> PooledBuffer.Rent
         Assert.StrictEqual( exval, ByteFunc.ReadU16BEPB v pos )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -153,6 +208,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.ReadU16BEPB v pos |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 2, 0, 0x0100s )>]
@@ -180,6 +236,7 @@ type ByteFunc_Test () =
     member _.ReadS16LEPB_001 ( vlen : int ) ( pos : uint32 ) ( exval : int16 ) =
         let v = PooledBuffer.Rent( [| 0uy .. byte vlen - 1uy |] )
         Assert.StrictEqual( exval, ByteFunc.ReadS16LEPB v pos )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -193,6 +250,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.ReadS16LEPB v pos |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 2, 0, 0x0100us )>]
@@ -220,6 +278,7 @@ type ByteFunc_Test () =
     member _.ReadU16LEPB_001 ( vlen : int ) ( pos : uint32 ) ( exval : uint16 ) =
         let v = [| 0uy .. byte vlen - 1uy |] |> PooledBuffer.Rent
         Assert.StrictEqual( exval, ByteFunc.ReadU16LEPB v pos )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -233,6 +292,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.ReadU16LEPB v pos |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 4, 0, 0x00010203 )>]
@@ -260,6 +320,7 @@ type ByteFunc_Test () =
     member _.ReadS32BEPB_001 ( vlen : int ) ( pos : uint32 ) ( exval : int32 ) =
         let v = [| 0uy .. byte vlen - 1uy |] |> PooledBuffer.Rent
         Assert.StrictEqual( exval, ByteFunc.ReadS32BEPB v pos )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -273,6 +334,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.ReadS32BEPB v pos |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 4, 0, 0x00010203u )>]
@@ -300,6 +362,7 @@ type ByteFunc_Test () =
     member _.ReadU32BEPB_001 ( vlen : int ) ( pos : uint32 ) ( exval : uint32 ) =
         let v = [| 0uy .. byte vlen - 1uy |] |> PooledBuffer.Rent
         Assert.StrictEqual( exval, ByteFunc.ReadU32BEPB v pos )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -313,6 +376,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.ReadU32BEPB v pos |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 4, 0, 0x03020100 )>]
@@ -340,6 +404,7 @@ type ByteFunc_Test () =
     member _.ReadS32LEPB_001 ( vlen : int ) ( pos : uint32 ) ( exval : int32 ) =
         let v = [| 0uy .. byte vlen - 1uy |] |> PooledBuffer.Rent
         Assert.StrictEqual( exval, ByteFunc.ReadS32LEPB v pos )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -353,6 +418,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.ReadS32LEPB v pos |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 4, 0, 0x03020100u )>]
@@ -380,6 +446,7 @@ type ByteFunc_Test () =
     member _.ReadU32LEPB_001 ( vlen : int ) ( pos : uint32 ) ( exval : uint32 ) =
         let v = [| 0uy .. byte vlen - 1uy |] |> PooledBuffer.Rent
         Assert.StrictEqual( exval, ByteFunc.ReadU32LEPB v pos )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -393,6 +460,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.ReadU32LEPB v pos |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 8, 0, 0x0001020304050607L )>]
@@ -420,6 +488,7 @@ type ByteFunc_Test () =
     member _.ReadS64BEPB_001 ( vlen : int ) ( pos : uint32 ) ( exval : int64 ) =
         let v = [| 0uy .. byte vlen - 1uy |] |> PooledBuffer.Rent
         Assert.StrictEqual( exval, ByteFunc.ReadS64BEPB v pos )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -433,6 +502,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.ReadS64BEPB v pos |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 8, 0, 0x0001020304050607UL )>]
@@ -460,6 +530,7 @@ type ByteFunc_Test () =
     member _.ReadU64BEPB_001 ( vlen : int ) ( pos : uint32 ) ( exval : uint64 ) =
         let v = [| 0uy .. byte vlen - 1uy |] |> PooledBuffer.Rent
         Assert.StrictEqual( exval, ByteFunc.ReadU64BEPB v pos )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -473,6 +544,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.ReadU64BEPB v pos |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 8, 0, 0x0706050403020100L )>]
@@ -500,6 +572,7 @@ type ByteFunc_Test () =
     member _.ReadS64LEPB_001 ( vlen : int ) ( pos : uint32 ) ( exval : int64 ) =
         let v = [| 0uy .. byte vlen - 1uy |] |> PooledBuffer.Rent
         Assert.StrictEqual( exval, ByteFunc.ReadS64LEPB v pos )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -513,6 +586,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.ReadS64LEPB v pos |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 8, 0, 0x0706050403020100UL )>]
@@ -540,6 +614,7 @@ type ByteFunc_Test () =
     member _.ReadU64LEPB_001 ( vlen : int ) ( pos : uint32 ) ( exval : uint64 ) =
         let v = [| 0uy .. byte vlen - 1uy |] |> PooledBuffer.Rent
         Assert.StrictEqual( exval, ByteFunc.ReadU64LEPB v pos )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -553,6 +628,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.ReadU64LEPB v pos |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     static member m_WriteS16BE_001_data : obj[][] = [|
         [| 2; 0; 0xFEDCs; [| 0xFEuy; 0xDCuy; |] |]
@@ -585,6 +661,7 @@ type ByteFunc_Test () =
         let v = Array.zeroCreate<byte> vlen |> PooledBuffer.Rent
         ByteFunc.WriteS16BEPB v pos testval
         Assert.True( PooledBuffer.ValueEqualsWithArray v exr )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -598,6 +675,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.WriteS16BEPB v pos 0s |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     static member m_WriteU16BE_001_data : obj[][] = [|
         [| 2; 0; 0xFEDCus; [| 0xFEuy; 0xDCuy; |] |]
@@ -630,6 +708,7 @@ type ByteFunc_Test () =
         let v = Array.zeroCreate<byte> vlen |> PooledBuffer.Rent
         ByteFunc.WriteU16BEPB v pos testval
         Assert.True( PooledBuffer.ValueEqualsWithArray v exr )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -643,6 +722,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.WriteU16BEPB v pos 0us |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     static member m_WriteS16LE_001_data : obj[][] = [|
         [| 2; 0; 0xFEDCs; [| 0xDCuy; 0xFEuy; |] |]
@@ -675,6 +755,7 @@ type ByteFunc_Test () =
         let v = Array.zeroCreate<byte> vlen |> PooledBuffer.Rent
         ByteFunc.WriteS16LEPB v pos testval
         Assert.True( PooledBuffer.ValueEqualsWithArray v exr )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -688,6 +769,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.WriteS16LEPB v pos 0s |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     static member m_WriteU16LE_001_data : obj[][] = [|
         [| 2; 0; 0xFEDCus; [| 0xDCuy; 0xFEuy; |] |]
@@ -720,6 +802,7 @@ type ByteFunc_Test () =
         let v = Array.zeroCreate<byte> vlen |> PooledBuffer.Rent
         ByteFunc.WriteU16LEPB v pos testval
         Assert.True( PooledBuffer.ValueEqualsWithArray v exr )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -733,6 +816,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.WriteU16LEPB v pos 0us |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     static member m_WriteS32BE_001_data : obj[][] = [|
         [| 4; 0; 0xFEDCBA98; [| 0xFEuy; 0xDCuy; 0xBAuy; 0x98uy |] |]
@@ -765,6 +849,7 @@ type ByteFunc_Test () =
         let v = Array.zeroCreate<byte> vlen |> PooledBuffer.Rent
         ByteFunc.WriteS32BEPB v pos testval
         Assert.True( PooledBuffer.ValueEqualsWithArray v exr )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -778,6 +863,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.WriteS32BEPB v pos 0 |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     static member m_WriteU32BE_001_data : obj[][] = [|
         [| 4; 0; 0xFEDCBA98u; [| 0xFEuy; 0xDCuy; 0xBAuy; 0x98uy |] |]
@@ -810,6 +896,7 @@ type ByteFunc_Test () =
         let v = Array.zeroCreate<byte> vlen |> PooledBuffer.Rent
         ByteFunc.WriteU32BEPB v pos testval
         Assert.True( PooledBuffer.ValueEqualsWithArray v exr )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -823,6 +910,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.WriteU32BEPB v pos 0u |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     static member m_WriteS32LE_001_data : obj[][] = [|
         [| 4; 0; 0xFEDCBA98; [| 0x98uy; 0xBAuy; 0xDCuy; 0xFEuy; |] |]
@@ -855,6 +943,7 @@ type ByteFunc_Test () =
         let v = Array.zeroCreate<byte> vlen |> PooledBuffer.Rent
         ByteFunc.WriteS32LEPB v pos testval
         Assert.True( PooledBuffer.ValueEqualsWithArray v exr )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -868,6 +957,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.WriteS32LEPB v pos 0 |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     static member m_WriteU32LE_001_data : obj[][] = [|
         [| 4; 0; 0xFEDCBA98u; [| 0x98uy; 0xBAuy; 0xDCuy; 0xFEuy; |] |]
@@ -900,6 +990,7 @@ type ByteFunc_Test () =
         let v = Array.zeroCreate<byte> vlen |> PooledBuffer.Rent
         ByteFunc.WriteU32LEPB v pos testval
         Assert.True( PooledBuffer.ValueEqualsWithArray v exr )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -913,6 +1004,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.WriteU32LEPB v pos 0u |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     static member m_WriteS64BE_001_data : obj[][] = [|
         [| 8;  0; 0xFEDCBA9876543210L; [| 0xFEuy; 0xDCuy; 0xBAuy; 0x98uy; 0x76uy; 0x54uy; 0x32uy; 0x10uy |] |]
@@ -945,6 +1037,7 @@ type ByteFunc_Test () =
         let v = Array.zeroCreate<byte> vlen |> PooledBuffer.Rent
         ByteFunc.WriteS64BEPB v pos testval
         Assert.True( PooledBuffer.ValueEqualsWithArray v exr )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -958,6 +1051,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.WriteS64BEPB v pos 0L |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     static member m_WriteU64BE_001_data : obj[][] = [|
         [| 8;  0; 0xFEDCBA9876543210UL; [| 0xFEuy; 0xDCuy; 0xBAuy; 0x98uy; 0x76uy; 0x54uy; 0x32uy; 0x10uy |] |]
@@ -990,6 +1084,7 @@ type ByteFunc_Test () =
         let v = Array.zeroCreate<byte> vlen |> PooledBuffer.Rent
         ByteFunc.WriteU64BEPB v pos testval
         Assert.True( PooledBuffer.ValueEqualsWithArray v exr )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -1003,6 +1098,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.WriteU64BEPB v pos 0UL |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     static member m_WriteS64LE_001_data : obj[][] = [|
         [| 8;  0; 0xFEDCBA9876543210L; [| 0x10uy; 0x32uy; 0x54uy; 0x76uy; 0x98uy; 0xBAuy; 0xDCuy; 0xFEuy; |] |]
@@ -1035,6 +1131,7 @@ type ByteFunc_Test () =
         let v = Array.zeroCreate<byte> vlen |> PooledBuffer.Rent
         ByteFunc.WriteS64LEPB v pos testval
         Assert.True( PooledBuffer.ValueEqualsWithArray v exr )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -1048,6 +1145,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.WriteS64LEPB v pos 0L |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     static member m_WriteU64LE_001_data : obj[][] = [|
         [| 8;  0; 0xFEDCBA9876543210UL; [| 0x10uy; 0x32uy; 0x54uy; 0x76uy; 0x98uy; 0xBAuy; 0xDCuy; 0xFEuy; |] |]
@@ -1080,6 +1178,7 @@ type ByteFunc_Test () =
         let v = Array.zeroCreate<byte> vlen |> PooledBuffer.Rent
         ByteFunc.WriteU64LEPB v pos testval
         Assert.True( PooledBuffer.ValueEqualsWithArray v exr )
+        PooledBuffer.Return v
 
     [<Theory>]
     [<InlineData( 0, 0 )>]
@@ -1093,6 +1192,7 @@ type ByteFunc_Test () =
         Assert.ThrowsAny<Exception> ( fun () ->
             ByteFunc.WriteU64LEPB v pos 0UL |> ignore
         ) |> ignore
+        PooledBuffer.Return v
 
     [<Fact>]
     member _.S16ToNVBE_001() =

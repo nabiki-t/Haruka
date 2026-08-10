@@ -255,44 +255,44 @@ type VhdxCreator() =
         let entryCount = if vdi.HasParent then 6 else 5
         let tableLen = 32 + 32 * entryCount
         let metadatabuf = Array.zeroCreate<byte> tableLen
-        ByteFunc.WriteU64LE metadatabuf 0u 0x617461646174656DUL                // signature
-        ByteFunc.WriteU16LE metadatabuf 10u ( uint16 entryCount )              // Entry count
+        ByteFunc.WriteU64LE metadatabuf 0u 0x617461646174656DUL                     // signature
+        ByteFunc.WriteU16LE metadatabuf 10u ( uint16 entryCount )                   // Entry count
 
         // Metadata table entry ( file parameter )
-        ByteFunc.WriteGuid metadatabuf 32u VhdxCommons.METADATA_FILE_PARAM         // Item ID
-        ByteFunc.WriteU32LE metadatabuf 48u ( fileParamStartPos + 65536u )     // Offset
-        ByteFunc.WriteU32LE metadatabuf 52u 8u                                 // Length
+        ByteFunc.WriteGuid metadatabuf 32u VhdxCommons.METADATA_FILE_PARAM          // Item ID
+        ByteFunc.WriteU32LE metadatabuf 48u ( fileParamStartPos + 65536u )          // Offset
+        ByteFunc.WriteU32LE metadatabuf 52u 8u                                      // Length
         metadatabuf.[56] <- 4uy
 
         // Metadata table entry ( Virtual disk size )
-        ByteFunc.WriteGuid metadatabuf 64u VhdxCommons.METADATA_VIRT_DISK_SIZE     // Item ID
-        ByteFunc.WriteU32LE metadatabuf 80u ( vdsParamStartPos + 65536u )      // Offset
-        ByteFunc.WriteU32LE metadatabuf 84u 8u                                 // Length
+        ByteFunc.WriteGuid metadatabuf 64u VhdxCommons.METADATA_VIRT_DISK_SIZE      // Item ID
+        ByteFunc.WriteU32LE metadatabuf 80u ( vdsParamStartPos + 65536u )           // Offset
+        ByteFunc.WriteU32LE metadatabuf 84u 8u                                      // Length
         metadatabuf.[88] <- 6uy
 
         // Metadata table entry ( Virtual disk ID )
-        ByteFunc.WriteGuid metadatabuf 96u VhdxCommons.METADATA_VIRT_DISK_ID       // Item ID
-        ByteFunc.WriteU32LE metadatabuf 112u ( vdidParamStartPos + 65536u )    // Offset
-        ByteFunc.WriteU32LE metadatabuf 116u 16u                               // Length
+        ByteFunc.WriteGuid metadatabuf 96u VhdxCommons.METADATA_VIRT_DISK_ID        // Item ID
+        ByteFunc.WriteU32LE metadatabuf 112u ( vdidParamStartPos + 65536u )         // Offset
+        ByteFunc.WriteU32LE metadatabuf 116u 16u                                    // Length
         metadatabuf.[120] <- 6uy
 
         // Metadata table entry ( Logical sector size )
-        ByteFunc.WriteGuid metadatabuf 128u VhdxCommons.METADATA_LOGI_SECTOR_SIZE  // Item ID
-        ByteFunc.WriteU32LE metadatabuf 144u ( lssParamStartPos + 65536u )     // Offset
-        ByteFunc.WriteU32LE metadatabuf 148u 4u                                // Length
+        ByteFunc.WriteGuid metadatabuf 128u VhdxCommons.METADATA_LOGI_SECTOR_SIZE   // Item ID
+        ByteFunc.WriteU32LE metadatabuf 144u ( lssParamStartPos + 65536u )          // Offset
+        ByteFunc.WriteU32LE metadatabuf 148u 4u                                     // Length
         metadatabuf.[152] <- 6uy
 
         // Metadata table entry ( Physical sector size )
-        ByteFunc.WriteGuid metadatabuf 160u VhdxCommons.METADATA_PHY_SECTOR_SIZE   // Item ID
-        ByteFunc.WriteU32LE metadatabuf 176u ( pssParamStartPos + 65536u )     // Offset
-        ByteFunc.WriteU32LE metadatabuf 180u 4u                                // Length
+        ByteFunc.WriteGuid metadatabuf 160u VhdxCommons.METADATA_PHY_SECTOR_SIZE    // Item ID
+        ByteFunc.WriteU32LE metadatabuf 176u ( pssParamStartPos + 65536u )          // Offset
+        ByteFunc.WriteU32LE metadatabuf 180u 4u                                     // Length
         metadatabuf.[184] <- 6uy
 
         // Metadata table entry ( Parent locator )
         if vdi.HasParent then
-            ByteFunc.WriteGuid metadatabuf 192u VhdxCommons.METADATA_PARENT_LOC    // Item ID
-            ByteFunc.WriteU32LE metadatabuf 208u ( plParamStartPos + 65536u )  // Offset
-            ByteFunc.WriteU32LE metadatabuf 212u plParamLen                    // Length
+            ByteFunc.WriteGuid metadatabuf 192u VhdxCommons.METADATA_PARENT_LOC     // Item ID
+            ByteFunc.WriteU32LE metadatabuf 208u ( plParamStartPos + 65536u )       // Offset
+            ByteFunc.WriteU32LE metadatabuf 212u plParamLen                         // Length
             metadatabuf.[216] <- 4uy
 
         ( metadatabuf, ms.ToArray() )
@@ -350,19 +350,16 @@ type VhdxCreator() =
             let! reqFileSize = task {
                 if isFixed then
                     // Fixed VHDX file.
-                    printfn "Write BAT entries for fixed VHDX file."
                     // Sector bitmaps ares not allocated. All of payload blocks are allocated.
                     for i in 0UL .. batEntryCount - 1UL do
                         if ( i + 1UL ) % ( chunkRate + 1UL ) = 0UL then
                             // sector bitmat BAT entry
-                            printfn "Entry(%d) : Sector bitmap Offset=0" i
                             ByteFunc.WriteU64LE entrybuf ( uint32 i * 8u ) 0UL
                         else
                             // Payload BAT Entry
                             let payloadPos =
                                 batRegionStartPos + batRegionSize +
                                 ( uint64 i - 1UL ) * ( uint64 payloadBlockSize )
-                            printfn "Entry(%d) : Payload Offset=%d" i payloadPos
                             ByteFunc.WriteU64LE entrybuf ( uint32 i * 8u ) payloadPos
                             entrybuf.[ int32 i * 8 ] <- 6uy
                     do! fa.Write batRegionStartPos ( ArraySegment entrybuf )
@@ -370,7 +367,7 @@ type VhdxCreator() =
 
                 elif hasParent then
                     // Differential VHDX file
-                    printfn "Write BAT entries for differential VHDX file."
+
                     // Initially, no payload blocks are allocated.
                     // All of sector bitmap blocks are allocated.
                     for i in 0UL .. batEntryCount - 1UL do
@@ -379,19 +376,17 @@ type VhdxCreator() =
                             let sbPos =
                                 batRegionStartPos + batRegionSize +
                                 ( uint64 i / chunkRate - 1UL ) * 1048576UL
-                            printfn "Entry(%d) : Sector bitmap Offset=%d" i sbPos
                             ByteFunc.WriteU64LE entrybuf ( uint32 i * 8u ) sbPos
                             entrybuf.[int32 i * 8] <- 6uy
                         else
                             // Payload BAT entry
-                            printfn "Entry(%d) : Payload Offset=0" i
                             ByteFunc.WriteU64LE entrybuf ( uint32 i * 8u ) 0UL
                     do! fa.Write batRegionStartPos ( ArraySegment entrybuf )
                     return batRegionStartPos + batRegionSize + sectorBitmapCount * 1048576UL
 
                 else
                     // Dynamic VHDX file.
-                    printfn "Write BAT entries for dynamic VHDX file."
+
                     // No sector bitmap blocks are alocated.
                     // Initially, No payload blocks are also allocated.
                     Array.fill entrybuf 0 ( int batEntryCount ) 0uy
@@ -400,7 +395,6 @@ type VhdxCreator() =
             }
 
             // Set file size.
-            printfn "File size : %d" reqFileSize
             do! fa.SetFileSize( reqFileSize )
         }
 
@@ -483,18 +477,6 @@ type VhdxCreator() =
                 | None ->
                     sectorSize
 
-            printfn "========================================================"
-            printfn "Create empty virtual disk"
-            printfn "Input file name : %s" ( if inputFile.IsSome then inputFile.Value.FileName else "" )
-            printfn "Output file name : %s" outputFile.FileName
-            printfn "Log area size : %d" logAreaSize
-            printfn "Payload block size : %d" payloadBlockSize
-            printfn "Is fixed : %b" isFixed
-            printfn "DataWriteGuid of parent disk : %s" ( parentDataWriteGuid.ToString "b" )
-            printfn "Virtual disk size : %d" efVirtualDiskSize
-            printfn "Virtual disk ID : %s" ( efVirtualDiskID.ToString "D" )
-            printfn "Sector size : %s" ( Blocksize.toStringName efSectorSize )
-
             if logAreaSize &&& 0x000FFFFFu <> 0u then
                 raise <| Exception "Log are size must be multiples of 1MB."
             if payloadBlockSize < 0x100000u ||                                  // 1MB or more
@@ -522,15 +504,6 @@ type VhdxCreator() =
                 ( batEntryCount * 64UL + 0x00000000000FFFFFUL ) &&& 0xFFFFFFFFFFF00000UL
             let metadataStartPos = 1048576UL + uint64 logAreaSize
             let batRegionStartPos = metadataStartPos + 1048576UL
-
-            printfn "Metadeta start position : %d" metadataStartPos
-            printfn "Chunk size : %d" chunkSize
-            printfn "Chunk ratio : %d" chunkRate
-            printfn "Payload block count : %d" payloadBlockCount
-            printfn "Sector bitmap block count : %d" sectorBitmapCount
-            printfn "BAT entry count : %d" batEntryCount
-            printfn "BAT region size : %d" batRegionSize
-            printfn "BAT region start pos : %d" batRegionStartPos
 
             // File type identifier
             do! outputFile.SetFileSize ( batRegionStartPos + batRegionSize )
@@ -623,16 +596,6 @@ type VhdxCreator() =
             // Get length of input raw file.
             use rawfs = new FileStream( inputPath, FileMode.Open, FileAccess.Read, FileShare.None )
             let virtualDiskSize = uint64 rawfs.Length
-
-            printfn "========================================================"
-            printfn "Convert raw image file to VHDX file."
-            printfn "Input file name : %s" inputPath
-            printfn "Output file name : %s" outputFile.FileName
-            printfn "Log area length : %d" logAreaSize
-            printfn "Payload block length : %d" payloadBlockSize
-            printfn "Fix format : %b" isFixed
-            printfn "Virtual disk size : %d" virtualDiskSize
-            printfn "Sector length : %s" ( Blocksize.toStringName sectorSize )
 
             // Create empty VHDX file.
             do! VhdxCreator.Create None outputFile logAreaSize payloadBlockSize isFixed virtualDiskSize sectorSize

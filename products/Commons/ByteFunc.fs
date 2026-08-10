@@ -40,6 +40,23 @@ type ByteFunc() =
         Guid( ReadOnlySpan( bytes, int32 offset, 16 ) )
 
     /// <summary>
+    ///  Read a GUID value from PooledBuffer.
+    /// </summary>
+    /// <param name="bytes">
+    ///  PooledBuffer containing a GUID value.
+    /// </param>
+    /// <param name="offset">
+    ///  The index in which the GUID value in the byte array is recorded.
+    /// </param>
+    /// <returns>
+    ///  Retrieved GUID value.
+    /// </returns>
+    static member inline ReadGuidPB ( bytes : PooledBuffer ) ( offset : uint32 ) : Guid =
+        if offset + 16u > bytes.uLength || offset + 16u < offset then
+            failwith "Argument exception. Out of range. In ReadGuidPB function."
+        Guid( ReadOnlySpan( bytes.Array, int32 offset, 16 ) )
+
+    /// <summary>
     ///  Write a GUID value to byte array.
     /// </summary>
     /// <param name="bytes">
@@ -54,6 +71,23 @@ type ByteFunc() =
     static member inline WriteGuid ( bytes : byte[] ) ( offset : uint32 ) ( v : Guid ) : unit =
         if not <| v.TryWriteBytes( Span( bytes, int32 offset, 16 ) ) then
             failwith "Unexpected error. Failed to write GUID to byte array. In WriteGuid function."
+
+    /// <summary>
+    ///  Write a GUID value to the PooledBuffer.
+    /// </summary>
+    /// <param name="bytes">
+    ///  The PooledBuffer to which the GUID value will be written.
+    /// </param>
+    /// <param name="offset">
+    ///  The offset in the PooledBuffer where the GUID value will be written.
+    /// </param>
+    /// <param name="v">
+    ///  The GUID value to be written.
+    /// </param>
+    static member inline WriteGuidPB ( bytes : PooledBuffer ) ( offset : uint32 ) ( v : Guid ) : unit =
+        if offset + 16u > bytes.uLength || offset + 16u < offset then
+            failwith "Argument exception. Out of range. In ReadGuidPB function."
+        v.TryWriteBytes( Span( bytes.Array, int32 offset, 16 ) ) |> ignore
 
     /// <summary>
     ///  Read a int16 value from byte array in little-endian format.

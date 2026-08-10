@@ -47,12 +47,6 @@ type VhdxCorrupter() =
         let TrailingBytes = data.[ data.Length - 4 .. ]
         let LeadingBytes = data.[ 0 .. 7 ]
 
-        printfn "    Data sector"
-        printfn "    Trailing Bytes : %s" ( TrailingBytes |> Array.map ( sprintf "%02X" ) |> String.concat "" )
-        printfn "    Leading Bytes : %s" ( LeadingBytes |> Array.map ( sprintf "%02X" ) |> String.concat "" )
-        printfn "    File offset : %d" offset
-        printfn "    Sequence number : %d" sequenceNumber
-
         Array.blit ( Encoding.UTF8.GetBytes "desc" ) 0 v 0 4
         Array.blit TrailingBytes 0 v 4 4
         Array.blit LeadingBytes 0 v 8 8
@@ -99,16 +93,6 @@ type VhdxCorrupter() =
         let entryLength = descSecLen + ( descNum * 4096u )   // Bytes length of the log entry.
         let logEntry = Array.zeroCreate<byte> ( int32 entryLength )
 
-        printfn "=== CreateLogEntry ==="
-        printfn "Number of descriptor : %d" descNum
-        printfn "Bytes length of the descriptor sector : %d" descSecLen
-        printfn "Bytes length of the log entry : %d" entryLength
-        printfn "tail : %d" tail
-        printfn "Sequence number : %d" secnum
-        printfn "Log GUID : %s" ( logGuid.ToString "D" )
-        printfn "Flashed file offset : %d" argFFO
-        printfn "Last file offset : %d" argLFO
-
         // Entry header
         Array.blit ( Encoding.UTF8.GetBytes "loge" ) 0 logEntry 0 4    // Signature
         ByteFunc.WriteU32LE logEntry 4u 0u            // Checksum
@@ -139,7 +123,6 @@ type VhdxCorrupter() =
         // Update checksum
         let checkSum = Crc32C.Compute logEntry
         ByteFunc.WriteU32LE logEntry 4u checkSum
-        printfn "Checksum : 0x%08X" checkSum
 
         logEntry
 
@@ -195,21 +178,15 @@ type VhdxCorrupter() =
     ///  while recording the original data as an unprocessed log.
     /// </summary>
     /// <param name="outputFile">
-    ///  File accessfor for the VHDX file.
+    ///  File accessor for the VHDX file.
     /// </param>
     /// <param name="sectorIndices">
     ///  The index number of the 4K sector where random data should be written.
     /// </param>
     static member Inject ( outputFile : FileAccessor ) ( sectorIndices : SEC4K_T list ) : Task =
         task {
-            printfn "========================================================"
-            printfn "VHDX file inconsistent injection"
-            printfn "Output file : %s" outputFile.FileName
-            printfn "Update 4K sectores : %s" ( sectorIndices |> List.map ( sprintf "%d" ) |> String.concat "," )
-
             let! structures = VhdxReader.ReadVhdx outputFile
             let fileSize = outputFile.GetFileSize()
-            printfn "File size : %d" fileSize
 
             // Update header
             let newLogGuid = Guid.NewGuid()
@@ -227,11 +204,6 @@ type VhdxCorrupter() =
             for i in 1UL .. uint64 logSecCnt - 1UL do
                 Random.Shared.NextBytes randbuf
                 do! outputFile.Write ( structures.Header.LogOffset + i * 4096UL ) ( ArraySegment randbuf )
-
-            printfn "Log area random number writing"
-            printfn "Log offset : %d" structures.Header.LogOffset
-            printfn "Log length : %d" structures.Header.LogLength
-            printfn "Log sector count : %d" logSecCnt
 
             // Generate dummy update data
             let dummyUpdateData = [
@@ -252,7 +224,6 @@ type VhdxCorrupter() =
             Random.Shared.NextBytes rnddata
             for itr in sectorIndices do
                 let offset = uint64 itr * 4096UL
-                printfn "Replace 4K sectore(%d, %d)" itr offset
                 let readdata = Array.zeroCreate<byte> 4096
                 do! outputFile.Read offset ( ArraySegment readdata )
                 do! outputFile.Write offset ( ArraySegment rnddata )
@@ -271,14 +242,7 @@ type VhdxCorrupter() =
                 |> Seq.toList
 
             // Generate a correct log entry (1 item)
-            let rightLogEntry =
-                VhdxCorrupter.CreateLogEntry sectorInfo logOutputPos 5UL newLogGuid fileSize fileSize
-
-            printfn "Write log entry"
-            printfn "LogOffset = %d" structures.Header.LogOffset
-            printfn "LogLength = %d" structures.Header.LogLength
-            printfn "Log write position = %d" logOutputPos
-            printfn "Generated log entry count : %d" ( dummyLogEntry.Length + 1 )
+            let rightLogEntry = VhdxCorrupter.CreateLogEntry sectorInfo logOutputPos 5UL newLogGuid fileSize fileSize
 
             do! VhdxCorrupter.WriteLogEntry outputFile structures logOutputPos dummyLogEntry rightLogEntry
 
