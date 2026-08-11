@@ -49,6 +49,7 @@
     <Compile Include="ConstantsTest.fs" />
     <Compile Include="TypeDefsTest.fs" />
     <Compile Include="IPConditionTest.fs" />
+    <Compile Include="PseudoSeqTest.fs" />
     <Compile Include="PooledBufferTest.fs" />
     <Compile Include="WorkingQueueTest.fs" />
     <Compile Include="TaskWaiterTest.fs" />

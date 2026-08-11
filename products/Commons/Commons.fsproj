@@ -51,6 +51,7 @@
     <Content Include="IODataTypes/StringTableFormat.xml" />
     <Content Include="IODataTypes/InitMediaMessage.xml" />
     <Content Include="IODataTypes/TempExport.xml" />
+    <Compile Include="PseudoSeq.fs" />
     <Compile Include="PooledBuffer.fs" />
     <Compile Include="OptimisticLock.fs" />
     <Compile Include="WorkingQueue.fs" />
