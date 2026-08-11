@@ -59,6 +59,7 @@ type ParentLocatorType =
     | VolumePath of string
     | AbsoluteWin32Path of string
 
+
 // ============================================================================
 // File header
 
@@ -306,3 +307,27 @@ type VhdxStructures = {
     /// BAT entries
     BAT : BatEntries;
 }
+
+// ============================================================================
+// Exceptions
+
+type VhdxMediaException
+    (
+        m_FileName : string option,
+        m_Structures : VhdxStructures option,
+        argMsg : string
+    ) =
+    inherit Exception( argMsg )
+
+    new( argMsg : string ) =
+        VhdxMediaException( None, None, argMsg )
+
+    new( argFileName : string, argMsg : string ) =
+        VhdxMediaException( Some argFileName, None, argMsg )
+
+    new( argStructures : VhdxStructures, argMsg : string ) =
+        VhdxMediaException( None, Some argStructures, argMsg )
+
+    member _.FileName = m_FileName
+    member _.Structures = m_Structures
+

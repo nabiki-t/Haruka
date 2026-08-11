@@ -58,7 +58,7 @@ type VhdxToRaw() =
             let! allStructures = VhdxReader.ReadAllStructures fa
             let vFiles, vMD = allStructures |> Array.unzip
             if vFiles.Length <= 0 then
-                raise <| Exception "Missing input files."
+                raise <| VhdxMediaException( "Missing input files." )
 
             File.Delete outputPath
             use outfile = new FileStream( outputPath, FileMode.Create, FileAccess.Write, FileShare.None )

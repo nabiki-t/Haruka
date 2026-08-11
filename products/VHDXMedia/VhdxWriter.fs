@@ -530,7 +530,7 @@ type VhdxWriter() =
                         do! VhdxCorrupter.WriteLogEntry fa structures 0u [] logEntries
 
                         if ex = 3 then
-                            raise <| Exception( "Stop processing based on user specification. WriteUpdatedBAT, Write log entry." )
+                            raise <| VhdxMediaException( "Stop processing based on user specification. WriteUpdatedBAT, Write log entry." )
 
                         // Update header( Update LogGuid )
                         let hd1 = {
@@ -541,21 +541,21 @@ type VhdxWriter() =
                         let! nextsn1 = VhdxCommons.UpdateHeader fa hd1
 
                         if ex = 4 then
-                            raise <| Exception( "Stop processing based on user specification. WriteUpdatedBAT, Update header( Update LogGuid )." )
+                            raise <| VhdxMediaException( "Stop processing based on user specification. WriteUpdatedBAT, Update header( Update LogGuid )." )
 
                         // Set file size
                         if currentFileSize < reqFileSize then
                             do! fa.SetFileSize( reqFileSize )
 
                         if ex = 5 then
-                            raise <| Exception( "Stop processing based on user specification. WriteUpdatedBAT, Set file size." )
+                            raise <| VhdxMediaException( "Stop processing based on user specification. WriteUpdatedBAT, Set file size." )
 
                         // Write BAT data to file
                         for struct ( sec4k, batData ) in listSec4K_BatData do
                             do! fa.Write ( uint64 sec4k * 4096UL ) ( ArraySegment batData )
 
                         if ex = 6 then
-                            raise <| Exception( "Stop processing based on user specification. WriteUpdatedBAT, Write BAT to file." )
+                            raise <| VhdxMediaException( "Stop processing based on user specification. WriteUpdatedBAT, Write BAT to file." )
 
                         // Update header ( Set LogGuid to zero )
                         let hd2 = {
@@ -566,7 +566,7 @@ type VhdxWriter() =
                         let! nextsn2 = VhdxCommons.UpdateHeader fa hd2
 
                         if ex = 7 then
-                            raise <| Exception( "Stop processing based on user specification. WriteUpdatedBAT, Update header ( Set LogGuid to zero )." )
+                            raise <| VhdxMediaException( "Stop processing based on user specification. WriteUpdatedBAT, Update header ( Set LogGuid to zero )." )
 
                         return Continue( struct( cycle + 1, nextsn2 ) )
                     else
@@ -694,13 +694,16 @@ type VhdxWriter() =
             let rawDataSec = rawDataLength / uint64 sectorSize |> blkcnt_me.ofUInt64
 
             if ( blkcnt_me.toUInt64 rawDataSec * uint64 sectorSize ) <> rawDataLength then
-                raise <| Exception( "RAW data length must be multiple of sector size." )
+                raise <| VhdxMediaException( rawFileName, "RAW data length must be multiple of sector size." )
             if lba > vdss then
-                raise <| Exception( "LBA must be less than or equals virtual disk size." )
+                let msg = sprintf "LBA(%d) must be less than or equals virtual disk total sector count(%d)." lba vdss
+                raise <| VhdxMediaException( vhdxFile.FileName, msg )
             if rawDataSec > vdss then
-                raise <| Exception( "RAW data length must be less than or equals virtual disk size." )
-            if rawDataSec + lba > vdss then
-                raise <| Exception( "RAW data length + LBA must be less than or equals virtual disk size." )
+                let msg = sprintf "RAW data sector count(%d) must be less than or equals virtual disk total sector count(%d)." rawDataSec vdss
+                raise <| VhdxMediaException( vhdxFile.FileName, msg )
+            if rawDataSec + lba > vdss || rawDataSec + lba < rawDataSec then
+                let msg = sprintf "RAW data sector count(%d) + LBA(%d) must be less than or equals virtual disk total sector count(%d)." rawDataSec lba vdss
+                raise <| VhdxMediaException( vhdxFile.FileName, msg )
 
             // Flash log entries
             if structures.Log.Length > 0 then
@@ -713,13 +716,13 @@ type VhdxWriter() =
                     structures
 
             if ex = 1 then
-                raise <| Exception( "Stop processing based on user specification. : Flash log entries." )
+                raise <| VhdxMediaException( "Stop processing based on user specification. : Flash log entries." )
 
             // Update FileWriteGuid and DataWriteGuid
             let! structures2 = VhdxCommons.UpdateFileWriteGuidAndDataWriteGuid vhdxFile structures1
 
             if ex = 2 then
-                raise <| Exception( "Stop processing based on user specification. Update FileWriteGuid and DataWriteGuid." )
+                raise <| VhdxMediaException( "Stop processing based on user specification. Update FileWriteGuid and DataWriteGuid." )
 
             // Allocate Payload block. structures2 will be updated.
             let struct( updatedPB4K, requiredFileSize ) =
@@ -742,7 +745,7 @@ type VhdxWriter() =
             }
 
             if ex = 8 then
-                raise <| Exception( "Stop processing based on user specification. Output the updated BATEntry." )
+                raise <| VhdxMediaException( "Stop processing based on user specification. Output the updated BATEntry." )
 
             // Output sector bitmap.
             let! structures4 = task {
@@ -754,7 +757,7 @@ type VhdxWriter() =
             }
 
             if ex = 9 then
-                raise <| Exception( "Stop processing based on user specification. Output sector bitmap." )
+                raise <| VhdxMediaException( "Stop processing based on user specification. Output sector bitmap." )
 
             // Output RAW data
             do! VhdxWriter.OutputRawData rawfs vhdxFile lba structures4

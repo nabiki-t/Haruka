@@ -261,7 +261,7 @@ type VhdxCommons() =
             elif r3 then
                 ParentLocatorType.AbsoluteWin32Path( v3 )
             else
-                raise <| Exception "Unable to identify the parent VHDX file name."
+                raise <| VhdxMediaException( structures, "Unable to identify the parent VHDX file name." )
         struct( parent_linkage, plt )
         
     /// <summary>

@@ -478,17 +478,17 @@ type VhdxCreator() =
                     sectorSize
 
             if logAreaSize &&& 0x000FFFFFu <> 0u then
-                raise <| Exception "Log are size must be multiples of 1MB."
+                raise <| VhdxMediaException( sprintf "Log are size must be multiples of 1MB. Specified sizse=%d" logAreaSize )
             if payloadBlockSize < 0x100000u ||                                  // 1MB or more
                 0x10000000u < payloadBlockSize ||                               // 256MB or less
                 ( payloadBlockSize &&& ( payloadBlockSize - 1u ) ) <> 0u then   // Powers of 2
-                raise <| Exception( "The payload block length must be a power of 2, ranging from 1MB to 256MB." )
+                raise <| VhdxMediaException( sprintf "The payload block length must be a power of 2, ranging from 1MB to 256MB. Specified sizse=%d" payloadBlockSize )
             if 0x400000000000UL < efVirtualDiskSize then
-                raise <| Exception( "The virtual disk size must be 64TB or less." )
+                raise <| VhdxMediaException( sprintf "The virtual disk size must be 64TB or less. Specified sizse=%d" efVirtualDiskSize )
             if efVirtualDiskSize = 0UL then
-                raise <| Exception( "The virtual disk size must be at least 1 byte." )
+                raise <| VhdxMediaException( "The virtual disk size must be at least 1 byte." )
             if efVirtualDiskSize % Blocksize.toUInt64 efSectorSize <> 0UL then
-                raise <| Exception( "The virtual disk size must be a multiple of the sector length." )
+                raise <| VhdxMediaException( sprintf "The virtual disk size must be a multiple of the sector length. Specified sizse=%d" efVirtualDiskSize )
 
             let chunkSize = Blocksize.toUInt64 efSectorSize * 8388608UL
             let chunkRate = chunkSize / uint64 payloadBlockSize

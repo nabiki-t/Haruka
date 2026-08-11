@@ -41,7 +41,7 @@ type VhdxReader() =
             do! fa.Read 0UL ( ArraySegment sigBuf )
             let signature = ByteFunc.ReadU64BE sigBuf 0u
             if signature <> 0x7668647866696C65UL then
-                raise <| Exception( "File type identifier signature mismatch" )
+                raise <| VhdxMediaException( fa.FileName, sprintf "File type identifier signature mismatch. Signature=0x%016X" signature )
 
             // Creator
             let wv = Array.zeroCreate<byte> ( 512 - 8 )
@@ -134,7 +134,7 @@ type VhdxReader() =
             elif not header0Enable && header1Enable then
                 return [ header1 ]
             else
-                return raise <| Exception( "No valid header exists." )
+                return raise <| VhdxMediaException( fa.FileName, "No valid header exists." )
         }
 
     /// <summary>
@@ -254,9 +254,9 @@ type VhdxReader() =
         // The log data length should be in units of 1MB,
         // and the starting position should be in units of 4KB.
         if ( logData.Length &&& 0x000FFFFF ) <> 0 then
-            raise <| Exception( "The log data length is not in units of 1MB." )
+            raise <| VhdxMediaException( sprintf "The log data length must be in units of 1MB. Length=%d" logData.Length )
         if ( pos &&& 0x00000FFFu ) <> 0u then
-            raise <| Exception( "The log sequence start position is not in 4KB units." )
+            raise <| VhdxMediaException( sprintf "The log sequence start position msut be in 4KB units. Position=%d" pos )
 
         let wpos = pos % ( uint32 logData.Length )  // wraparound
 
@@ -451,9 +451,9 @@ type VhdxReader() =
             ( length : uint32 ) : Task<byte[]> =
         task {
             if offset &&& 0x0000000000000FFFUL <> 0UL then
-                raise <| Exception "offset is not in units of 4KB."
+                raise <| VhdxMediaException( sprintf "The offset(%d) must be a multiple of 4 KB." offset )
             if length &&& 0x00000FFFu <> 0u then
-                raise <| Exception "length is not in units of 4KB."
+                raise <| VhdxMediaException( sprintf "The length(%d) must be a multiple of 4 KB." length )
 
             if length = 0u then
                 return [||]
@@ -567,9 +567,11 @@ type VhdxReader() =
         let mtEntryCount = ByteFunc.ReadU16LE data 10u    // Entry count
 
         if signature <> 0x6D65746164617461UL then
-            raise <| Exception( "The signatures in the metadata table do not match." )
+            let msg = sprintf "The signatures in the metadata table do not match. Signature=0x%016X" signature
+            raise <| VhdxMediaException( msg )
         if mtEntryCount > 2047us then
-            raise <| Exception( "The number of metadata entries is invalid." )
+            let msg = sprintf "The number of metadata entries is invalid. Count=%d" mtEntryCount
+            raise <| VhdxMediaException( msg )
 
         // Metadata entries
         let metadataItems =
@@ -611,22 +613,24 @@ type VhdxReader() =
                         }
             ]
         if metadataItems.Length <> int32 mtEntryCount then
-            raise <| Exception( "Invalid metadata entry" )
+            let msg = sprintf "There are invalid metadata entry. Expected=%d, Retrieved=%d" mtEntryCount metadataItems.Length
+            raise <| VhdxMediaException( msg )
 
         let userEntCount =
             metadataItems
             |> List.sumBy ( fun itr -> if itr.IsUser then 1 else 0 )
         if 1024 < userEntCount then
-            raise <| Exception( "The number of user entries is incorrect." )
+            let msg = sprintf "The number of user entries is incorrect. Count=%d" userEntCount
+            raise <| VhdxMediaException( msg )
 
         // Retrieve file parameters
         let fileParamItem =
             metadataItems
             |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_FILE_PARAM )
         if fileParamItem.IsNone then
-            raise <| Exception( "Metadata item(file parameter) missing" )
+            raise <| VhdxMediaException( "Metadata item(file parameter) missing" )
         if fileParamItem.Value.Length < 8u then
-            raise <| Exception( "Invalid Length of metadata item(file parameter)." )
+            raise <| VhdxMediaException( "Invalid Length of metadata item(file parameter)." )
         let payloadBlockSize = ByteFunc.ReadU32LE fileParamItem.Value.Data 0u
         let leaveBlockAllocated = ( fileParamItem.Value.Data.[4] &&& 0x01uy ) = 0x01uy
         let hasParent = ( fileParamItem.Value.Data.[4] &&& 0x02uy ) = 0x02uy
@@ -634,31 +638,36 @@ type VhdxReader() =
         if payloadBlockSize < 0x100000u ||      // 1MB or more
             0x10000000u < payloadBlockSize ||   // 256MB or less
             ( payloadBlockSize &&& ( payloadBlockSize - 1u ) ) <> 0u then   // Powers of 2
-            raise <| Exception( "Incorrect payload block size" )
+            let msg = sprintf "Incorrect payload block size. Size=%d" payloadBlockSize
+            raise <| VhdxMediaException( msg )
 
         // Retrieve the virtual disk size.
         let diskSizeItem =
             metadataItems
             |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_VIRT_DISK_SIZE )
         if diskSizeItem.IsNone then
-            raise <| Exception( "metadata item(virtual disk size) missing" )
+            raise <| VhdxMediaException( "Metadata item(virtual disk size) missing" )
         if diskSizeItem.Value.Length < 8u then
-            raise <| Exception( "Length of metadata item(virtual disk size) is invalid." )
+            let msg = sprintf "Length of metadata item(virtual disk size) is invalid. Length=%d" diskSizeItem.Value.Length
+            raise <| VhdxMediaException( msg )
         let virtualDiskSize = ByteFunc.ReadU64LE diskSizeItem.Value.Data 0u
 
         if 0x400000000000UL < virtualDiskSize then
-            raise <| Exception( "The virtual disk size is too large." )
+            let msg = sprintf "The virtual disk size(%d) is too large." virtualDiskSize
+            raise <| VhdxMediaException( msg )
         if virtualDiskSize = 0UL then
-            raise <| Exception( "The virtual disk size is too small." )
+            let msg = sprintf "The virtual disk size(%d) is too small." virtualDiskSize
+            raise <| VhdxMediaException( msg )
 
         // Retrieve the virtual disk ID
         let diskIDItem =
             metadataItems
             |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_VIRT_DISK_ID )
         if diskIDItem.IsNone then
-            raise <| Exception( "Metadata item(virtual disk ID) missing." )
+            raise <| VhdxMediaException( "Metadata item(virtual disk ID) missing." )
         if diskIDItem.Value.Length < 16u then
-            raise <| Exception( "Length of metadata item(virtual disk ID) is invalid" )
+            let msg = sprintf "Length of metadata item(virtual disk ID) is invalid. Length=%d" diskIDItem.Value.Length
+            raise <| VhdxMediaException( msg )
         let VirtualDiskId = ByteFunc.ReadGuid diskIDItem.Value.Data 0u
 
         // Retrieve logical sector size.
@@ -666,28 +675,33 @@ type VhdxReader() =
             metadataItems
             |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_LOGI_SECTOR_SIZE )
         if logiSecSizeItem.IsNone then
-            raise <| Exception( "Metadata item(logical sector size) missing." )
+            raise <| VhdxMediaException( "Metadata item(logical sector size) missing." )
         if logiSecSizeItem.Value.Length < 4u then
-            raise <| Exception( "Length of metadata item(logical sector size) is invalid." )
+            let msg = sprintf "Length of metadata item(logical sector size) is invalid. Length=%d" logiSecSizeItem.Value.Length
+            raise <| VhdxMediaException( msg )
         let logicalSectorSize = ByteFunc.ReadU32LE logiSecSizeItem.Value.Data 0u
 
         if logicalSectorSize <> 512u && logicalSectorSize <> 4096u then
-            raise <| Exception( "Incorrect logical sector size" )
+            let msg = sprintf "Incorrect logical sector size. Size=%d" logicalSectorSize
+            raise <| VhdxMediaException( msg )
         if virtualDiskSize % uint64 logicalSectorSize <> 0UL then
-            raise <| Exception( "The virtual disk size is not a multiple of the logical sector size." )
+            let msg = sprintf "The virtual disk size(%d) is not a multiple of the logical sector size." virtualDiskSize
+            raise <| VhdxMediaException( msg )
 
         // Retrieve the physical sector size.
         let physSecSizeItem =
             metadataItems
             |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_LOGI_SECTOR_SIZE )
         if physSecSizeItem.IsNone then
-            raise <| Exception( "Metadata item(physical sector size) missing" )
+            raise <| VhdxMediaException( "Metadata item(physical sector size) missing" )
         if physSecSizeItem.Value.Length < 4u then
-            raise <| Exception( "Length of metadata item(physical sector size) is invalid" )
+            let msg = sprintf "Length of metadata item(physical sector size) is invalid. Length=%d" physSecSizeItem.Value.Length
+            raise <| VhdxMediaException( msg )
         let physicalSectorSize = ByteFunc.ReadU32LE physSecSizeItem.Value.Data 0u
 
         if physicalSectorSize <> 512u && physicalSectorSize <> 4096u then
-            raise <| Exception( "Incorrect physical sector size" )
+            let msg = sprintf "Incorrect physical sector size. Size=%d" physicalSectorSize
+            raise <| VhdxMediaException( msg )
 
         // Retrieve the parent locator
         let parentLocator =
@@ -696,16 +710,19 @@ type VhdxReader() =
                     metadataItems
                     |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_PARENT_LOC )
                 if parLocItem.IsNone then
-                    raise <| Exception( "Metadata item(parent locator) missing" )
+                    raise <| VhdxMediaException( "Metadata item(parent locator) missing" )
                 if parLocItem.Value.Length < 20u then
-                    raise <| Exception( "Length of metadata item(parent locator) is invalid" )
+                    let msg = sprintf "Length of metadata item(parent locator) is invalid. Length=%d" parLocItem.Value.Length
+                    raise <| VhdxMediaException( msg )
                 let locatorType = ByteFunc.ReadGuid parLocItem.Value.Data 0u
 
                 if locatorType <> VhdxCommons.METADATA_PARENT_LOC_VHDX then
-                    raise <| Exception( "The type of metadata item (parent locator) is unknown." )
+                    let msg = sprintf "The type of metadata item (parent locator) is unknown. Locator Type=%s" ( locatorType.ToString() )
+                    raise <| VhdxMediaException( msg )
                 let keyValueCount = ByteFunc.ReadU16LE parLocItem.Value.Data 18u
                 if parLocItem.Value.Length < 20u + uint32 keyValueCount * 12u then
-                    raise <| Exception( "The number of metadata item(parent locator) is invalid." )
+                    let msg = sprintf "The number of metadata item(parent locator) is invalid. Count=%d" keyValueCount
+                    raise <| VhdxMediaException( msg )
                 let data = parLocItem.Value.Data
                 let dlen = data.Length |> uint32
                 let parLocEntry = [
@@ -733,18 +750,20 @@ type VhdxReader() =
                             yield ( lpkey, lpval )
                 ]
                 if parLocEntry.Length <> int32 keyValueCount then
-                    raise <| Exception( "Invalid metadata item(Parent locator)" )
+                    let msg = sprintf "There are invalid metadata item(Parent locator). Expected=%d, Retrieved=%d" keyValueCount parLocEntry.Length
+                    raise <| VhdxMediaException( msg )
                 let m = parLocEntry |> Map
                 if m.ContainsKey "parent_linkage" |> not then
-                    raise <| Exception( "Missing parent_linkage in metadata item(Parent locator)" )
+                    raise <| VhdxMediaException( "Missing parent_linkage in metadata item(Parent locator)." )
                 let r, _ = Guid.TryParse m.[ "parent_linkage" ]
                 if not r then
-                    raise <| Exception( "Invalid format of parent_linkage in metadata item(Parent locator)" )
+                    raise <| VhdxMediaException( "Invalid format of parent_linkage in metadata item(Parent locator)." )
                 let pathCheck =
                     [| "relative_path"; "volume_path"; "absolute_win32_path"; |]
                     |> Array.exists m.ContainsKey
                 if not pathCheck then
-                    raise <| Exception( "Metadata item(parent locator) does not contain relative_path, volume_path, or absolute_win32_path." )
+                    let msg = "Metadata item(parent locator) does not contain relative_path, volume_path, or absolute_win32_path."
+                    raise <| VhdxMediaException( msg )
                 m
             else
                 Map.empty
@@ -860,7 +879,8 @@ type VhdxReader() =
                     sectorBitmapBlockCount * ( chunkRatio + 1UL )
 
             if uint64( fileData.Length / 8 ) < batEntryCount then
-                raise <| Exception "The BAT entry has insufficient data length."
+                let msg = sprintf "The BAT entry has insufficient data length. Length=%d, EntryCount=%d" fileData.Length batEntryCount
+                raise <| VhdxMediaException( fa.FileName, msg )
 
             // Read payload BAT entries
             let payloads = [|
@@ -916,7 +936,8 @@ type VhdxReader() =
         task {
             let fileSize = fa.GetFileSize()
             if fileSize < 0x30000UL then
-                raise <| Exception( "The VHDX file is too small." )
+                let msg = sprintf "The VHDX file is too small. FileSize=%d" fileSize
+                raise <| VhdxMediaException( fa.FileName, msg )
 
             // Validating the file type identifier and obtaining the creator
             let! creator = VhdxReader.ReadFileTypeIdentifier fa
@@ -932,12 +953,13 @@ type VhdxReader() =
                     do! fa.Read currentHeader.LogOffset ( ArraySegment logData )
                     let e = VhdxReader.ReadActiveLogSequense logData currentHeader.LogGuid
                     if e.Length = 0 then
-                        raise <| Exception "No valid logs exist."
+                        raise <| VhdxMediaException( fa.FileName, "No valid logs exist." )
 
                     // Verify the value of FlushedFileOffset in the last entry.
                     let headFFO = ( e |> List.last ).FlushedFileOffset
                     if fileSize < headFFO then
-                        raise <| Exception "The file has been truncated."
+                        let msg = sprintf "The file has been truncated. FlushedFileOffset=%d" headFFO
+                        raise <| VhdxMediaException( fa.FileName, msg )
                     return e
                 else
                     return []
@@ -967,7 +989,7 @@ type VhdxReader() =
                 ]
             let currentRegionTable =
                 if regionTables.Length = 0 then
-                    raise <| Exception( "No valid region table exists." )
+                    raise <| VhdxMediaException( fa.FileName, "No valid region table exists." )
                 regionTables.[0]
 
             // Get the locations of the metadata region and BAT region.
@@ -975,13 +997,13 @@ type VhdxReader() =
                 currentRegionTable.Entries
                 |> List.tryFind ( fun e -> e.Guid = VhdxCommons.REGENT_TYPE_METADATA )
             if metadataRegion.IsNone then
-                raise <| Exception("Metadata region not found.")
+                raise <| VhdxMediaException( fa.FileName, "Metadata region not found.")
 
             let batRegion =
                 currentRegionTable.Entries
                 |> List.tryFind ( fun e -> e.Guid = VhdxCommons.REGENT_TYPE_BAT )
             if batRegion.IsNone then
-                raise <| Exception("BAT region not found.")
+                raise <| VhdxMediaException( fa.FileName, "BAT region not found.")
 
             // Read metadata region.
             let! metadataBuf = VhdxReader.ReadBytesWithLog log lastFileSize fa metadataRegion.Value.FileOffset metadataRegion.Value.Length
@@ -998,16 +1020,19 @@ type VhdxReader() =
                 |> Array.iteri ( fun idx itr ->
                     let j = idx / int32 batEntries.ChunkRatio  // Index of sector bitmap BAT entry
                     if batEntries.SectorBitmap.[j].Bitmap.Length = 0 then
-                        raise <| Exception "There is no sector bitmap BAT entry corresponding to the payload BAT entry for PartiallyPresent."
+                        let msg = "There is no sector bitmap BAT entry corresponding to the payload BAT entry for PartiallyPresent."
+                        raise <| VhdxMediaException( fa.FileName, msg )
                 )
             else
                 // If there is no parent, the PartiallyPresent payload BAT entry must not exist.
                 if batEntries.Payloads |> Array.exists ( _.State.IsPayloadPartiallyPresent ) then
-                    raise <| Exception "A fixed or dynamic VHDX file exists with a payload BAT entry for PartiallyPresent."
+                    let msg = "A fixed or dynamic VHDX file exists with a payload BAT entry for PartiallyPresent."
+                    raise <| VhdxMediaException( fa.FileName, msg ) 
 
                 // If a parent does not exist, a sector bitmap BAT entry must not exist.
                 if batEntries.SectorBitmap |> Array.exists ( fun itr -> itr.Bitmap.Length > 0 ) then
-                    raise <| Exception "The VHDX file has either fixed or dynamic sector bitmap BAT entries assigned to it."
+                    let msg = "The VHDX file has either fixed or dynamic sector bitmap BAT entries assigned to it."
+                    raise <| VhdxMediaException( fa.FileName, msg ) 
 
             return {
                 Creator = creator;
@@ -1037,16 +1062,15 @@ type VhdxReader() =
                     // Read metadata
                     let! meta = VhdxReader.ReadVhdx fn
                     let hasParent = meta.VDI.HasParent
-                    let pl = meta.VDI.ParentLocator
 
                     // Check Data Write Guid
                     if expDWG.IsSome && meta.Header.DataWriteGuid <> expDWG.Value then
-                        raise <| Exception "Data Write Guid does not match"
+                        raise <| VhdxMediaException( fa.FileName, "Data Write Guid does not match" )
 
                     // Check if a File Write GUID with the same one already exists.
                     for ( _, itr ) in acc do
                         if itr.Header.FileWriteGuid = meta.Header.FileWriteGuid then
-                            raise <| Exception "The same file is specified as the parent VHDX file."
+                            raise <| VhdxMediaException( fa.FileName, "The same file is specified as the parent VHDX file." )
 
                     if not hasParent then
                         // If there is no parent file, add the current file to the list and finish.
@@ -1079,13 +1103,17 @@ type VhdxReader() =
                 let vdi0 = ( snd rv.[0] ).VDI
                 let vdix = ( snd rv.[i] ).VDI
                 if vdi0.VirtualDiskSize <> vdix.VirtualDiskSize then
-                    raise <| Exception( sprintf "The virtual disk size of the parent (%d) does not match." i )
+                    let msg = sprintf "The virtual disk size of the parent (%d) does not match." i
+                    raise <| VhdxMediaException( fa.FileName, msg )
                 if vdi0.VirtualDiskId <> vdix.VirtualDiskId then
-                    raise <| Exception( sprintf "The virtual disk ID of the parent (%d) does not match." i )
+                    let msg = sprintf "The virtual disk ID of the parent (%d) does not match." i
+                    raise <| VhdxMediaException( fa.FileName, msg )
                 if vdi0.LogicalSectorSize <> vdix.LogicalSectorSize then
-                    raise <| Exception( sprintf "The logical sector size of the parent (%d) does not match." i )
+                    let msg = sprintf "The logical sector size of the parent (%d) does not match." i
+                    raise <| VhdxMediaException( fa.FileName, msg )
                 if vdi0.PhysicalSectorSize <> vdix.PhysicalSectorSize then
-                    raise <| Exception( sprintf "The physical sector size of the parent (%d) does not match." i )
+                    let msg = sprintf "The physical sector size of the parent (%d) does not match." i
+                    raise <| VhdxMediaException( fa.FileName, msg )
             
             return rv
         }

@@ -584,7 +584,7 @@ type VhdxMerge() =
 
             // Leaf-node descendants cannot be deleted (simply deleting the files is sufficient).
             if ancestor = structures.Length - 1 then
-                raise <| Exception "Leaf nodes cannot be deleted."
+                raise <| VhdxMediaException( "Leaf nodes cannot be deleted." )
 
             if ancestor = 0 then
                 do! VhdxMerge.DeleteRoot structures
