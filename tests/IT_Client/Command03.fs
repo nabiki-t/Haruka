@@ -98,8 +98,6 @@ type Command03_Fixture() =
     member _.ControllPortNo = m_ControllPortNo
     member _.WorkPath = m_WorkPath
     member _.iSCSIPortNo1 = m_iSCSIPortNo1
-    member _.MediaSize = m_MediaSize
-    member _.MediaBlockSizse = m_MediaBlockSizse
 
 [<Collection( "Command03" )>]
 type Command03( fx : Command03_Fixture ) =
@@ -112,8 +110,6 @@ type Command03( fx : Command03_Fixture ) =
     let m_Client = fx.ClientProc
     let iSCSIPortNo1 = fx.iSCSIPortNo1
     let g_CID0 = cid_me.zero
-    let m_MediaSize = fx.MediaSize
-    let m_MediaBlockSizse = fx.MediaBlockSizse
 
     // default session parameters
     let m_defaultSessParam = {
@@ -154,668 +150,390 @@ type Command03( fx : Command03_Fixture ) =
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
 
+    // Unloaded target devices can be deleted.
     [<Fact>]
-    member _.Start_Unloaded_001 () =
-        task {
-            m_Client.RunCommand "select 0" "" "TD> "
-            m_Client.CheckStatus "TD_00000001" "UNLOADED" "TD> "
-            m_Client.RunCommand "start" "Started" "TD> "
-
-            m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
-
-            let! r = SCSI_Initiator.Create m_defaultSessParam m_defaultConnParam
-            do! r.Close()
-
-            m_Client.RunCommand "kill" "Killed" "TD> "
-            m_Client.RunCommand "unselect" "" "CR> "
-            m_Client.RunCommand "reload /y" "" "CR> "
-        }
-
-    [<Fact>]
-    member _.Start_UnloadedMod_001 () =
-        m_Client.RunCommand "select 0" "" "TD> "
-        m_Client.RunCommand "set NAME bbb" "" "TD> "
-        m_Client.CheckStatus "TD_00000001" "UNLOADED(MOD)" "TD> "
-
-        // try to start target device, it failed
-        let v = m_Client.RunCommandGetResp "start" "TD> "
-        Assert.False ( v.[0].StartsWith "Started" )         
-
-        m_Client.CheckStatus "TD_00000001" "UNLOADED(MOD)" "TD> "
-
-        m_Client.RunCommand "unselect" "" "CR> "
-        m_Client.RunCommand "reload /y" "" "CR> "
-
-    [<Fact>]
-    member _.Start_UnloadedRMod_001 () =
-        // start target device 1
+    member _.Delete_TargetDevice_Unloaded_001 () =
+        // Start existing target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "start" "Started" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
 
-        // create target device 2
-        m_Client.RunCommand "create /n GGG" "Created" "CR> "
-        let tgidx = m_Client.GetIndexNumber "GGG" "CR> "
-        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TD> "
+        // create new target device
+        m_Client.RunCommand "create" "Created" "CR> "
+        let v1 = m_Client.RunCommandGetResp "list" "CR> "
+        m_Client.RunCommand "select 1" "" "TD> "
+        m_Client.CheckStatus "TD_00000002" "UNLOADED(MOD)" "TD> "
+
+        // Delete target device
+        m_Client.RunCommand "delete" "Deleted" "CR> "
+        let v2 = m_Client.RunCommandGetResp "list" "CR> "
+        Assert.StrictEqual( v2.Length + 1, v1.Length )
+
+        // Stop running target device
+        m_Client.RunCommand "select 0" "" "TD> "
+        m_Client.RunCommand "kill" "Killed" "TD> "
+        m_Client.RunCommand "unselect" "" "CR> "
+        m_Client.RunCommand "reload /y" "" "CR> "
+
+    // Unloaded target devices can be deleted.
+    [<Fact>]
+    member _.Delete_TargetDevice_Unloaded_002 () =
+        // Start existing target device
+        m_Client.RunCommand "select 0" "" "TD> "
+        m_Client.RunCommand "start" "Started" "TD> "
+        m_Client.RunCommand "unselect" "" "CR> "
+
+        // create new target device
+        m_Client.RunCommand "create" "Created" "CR> "
+        let v1 = m_Client.RunCommandGetResp "list" "CR> "
+
+        // Delete target device
+        m_Client.RunCommand "delete /i 1" "Deleted" "CR> "
+        let v2 = m_Client.RunCommandGetResp "list" "CR> "
+        Assert.StrictEqual( v2.Length + 1, v1.Length )
+
+        // Stop running target device
+        m_Client.RunCommand "select 0" "" "TD> "
+        m_Client.RunCommand "kill" "Killed" "TD> "
+        m_Client.RunCommand "unselect" "" "CR> "
+        m_Client.RunCommand "reload /y" "" "CR> "
+
+    // Unloaded target devices can be deleted.
+    [<Fact>]
+    member _.Delete_TargetDevice_UnloadedMod_001 () =
+        // Start existing target device
+        m_Client.RunCommand "select 0" "" "TD> "
+        m_Client.RunCommand "start" "Started" "TD> "
+        m_Client.RunCommand "unselect" "" "CR> "
+
+        // create new target device
+        m_Client.RunCommand "create" "Created" "CR> "
+        let v1 = m_Client.RunCommandGetResp "list" "CR> "
+        m_Client.RunCommand "select 1" "" "TD> "
+        m_Client.RunCommand "set NAME aaaaa" "" "TD> "
+        m_Client.CheckStatus "aaaaa" "UNLOADED(MOD)" "TD> "
+
+        // Delete the target device
+        m_Client.RunCommand "delete" "Deleted" "CR> "
+        let v2 = m_Client.RunCommandGetResp "list" "CR> "
+        Assert.StrictEqual( v2.Length + 1, v1.Length )
+
+        // Stop running target device
+        m_Client.RunCommand "select 0" "" "TD> "
+        m_Client.RunCommand "kill" "Killed" "TD> "
+        m_Client.RunCommand "unselect" "" "CR> "
+        m_Client.RunCommand "reload /y" "" "CR> "
+
+    // Unloaded target devices can be deleted.
+    [<Fact>]
+    member _.Delete_TargetDevice_UnloadedRMod_001 () =
+
+        // Start existing target device
+        m_Client.RunCommand "select 0" "" "TD> "
+        m_Client.RunCommand "start" "Started" "TD> "
+        m_Client.RunCommand "unselect" "" "CR> "
+
+        // create new target device
+        m_Client.RunCommand "create" "Created" "CR> "
+        let v1 = m_Client.RunCommandGetResp "list" "CR> "
+        m_Client.RunCommand "select 1" "" "TD> "
+        m_Client.RunCommand "set NAME aaaaa" "" "TD> "
         m_Client.RunCommand "set ID TD_00000001" "" "TD> "
-        m_Client.CheckStatus "GGG" "UNLOAD(R-MOD)" "TD> "
+        m_Client.CheckStatus "aaaaa" "UNLOAD(R-MOD)" "TD> "
 
-        // try to start target device 2, it failed
-        let v = m_Client.RunCommandGetResp "start" "TD> "
-        Assert.False ( v.[0].StartsWith "Started" )
+        // Delete the target device
+        m_Client.RunCommand "delete" "Deleted" "CR> "
+        let v2 = m_Client.RunCommandGetResp "list" "CR> "
+        Assert.StrictEqual( v2.Length + 1, v1.Length )
 
-        m_Client.CheckStatus "GGG" "UNLOAD(R-MOD)" "TD> "
-
-        m_Client.RunCommand "delete"  "Deleted" "CR> "
-
-        // stop target device 1
+        // Stop running target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "kill" "Killed" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
 
-    // Start the stopped Target Device.
-    // Note that this includes a test case that stops a Target Device while it is running.
+    // Running target devices can not be deleted.
     [<Fact>]
-    member _.Start_Running_001 () =
-        // start target device
+    member _.Delete_TargetDevice_Running_001 () =
+        let v1 = m_Client.RunCommandGetResp "list" "CR> "
+
+        // Start existing target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "start" "Started" "TD> "
-        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
 
-        // try to start target device, it failed
-        let v = m_Client.RunCommandGetResp "start" "TD> "
-        Assert.False ( v.[0].StartsWith "Started" )
+        // try to delete running target device, it failed.
+        m_Client.RunCommand "delete" "Unexpected error" "TD> "
+        m_Client.RunCommand "unselect" "" "CR> "
+        let v2 = m_Client.RunCommandGetResp "list" "CR> "
+        Assert.StrictEqual( v2.Length, v1.Length )
 
-        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
-
+        // stop running target device
+        m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "kill" "Killed" "TD> "
-        m_Client.CheckStatus "TD_00000001" "UNLOADED" "TD> "
-
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
 
+    // If the target device is unloaded, the target group can be deleted.
     [<Fact>]
-    member _.Kill_Unloaded_001 () =
+    member _.Delete_TargetGroup_TDUnloaded_001 () =
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.CheckStatus "TD_00000001" "UNLOADED" "TD> "
+        let v1 = m_Client.RunCommandGetResp "list" "TD> "
 
-        // try to stop target device, it failed
-        let v = m_Client.RunCommandGetResp "kill" "TD> "
-        Assert.False ( v.[0].StartsWith "Killed" )
+        let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
+        m_Client.RunCommand ( sprintf "select %d"  tgidx ) "" "TG> "
+        m_Client.RunCommand "delete" "Deleted" "TD> "
 
         m_Client.CheckStatus "TD_00000001" "UNLOADED" "TD> "
+        let v2 = m_Client.RunCommandGetResp "list" "TD> "
+        Assert.StrictEqual( v2.Length + 1, v1.Length )
 
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
 
+    // If the target device is unloaded, the target group can be deleted.
     [<Fact>]
-    member _.Kill_UnloadedMod_001 () =
+    member _.Delete_TargetGroup_TDUnloaded_002 () =
         m_Client.RunCommand "select 0" "" "TD> "
-        m_Client.RunCommand "set NAME bbb" "" "TD> "
-        m_Client.CheckStatus "TD_00000001" "UNLOADED(MOD)" "TD> "
+        m_Client.CheckStatus "TD_00000001" "UNLOADED" "TD> "
+        let v1 = m_Client.RunCommandGetResp "list" "TD> "
 
-        // try to stop target device, it failed
-        let v = m_Client.RunCommandGetResp "kill" "TD> "
-        Assert.False ( v.[0].StartsWith "Killed" )
+        let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
+        m_Client.RunCommand ( sprintf "delete /i %d"  tgidx ) "Deleted" "TD> "
 
-        m_Client.CheckStatus "TD_00000001" "UNLOADED(MOD)" "TD> "
+        m_Client.CheckStatus "TD_00000001" "UNLOADED" "TD> "
+        let v2 = m_Client.RunCommandGetResp "list" "TD> "
+        Assert.StrictEqual( v2.Length + 1, v1.Length )
 
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
 
+    // If the target device is unloaded, the target group can be deleted.
     [<Fact>]
-    member _.Kill_UnloadedRMod_001 () =
-        // start target device 1
+    member _.Delete_TargetGroup_TDUnloaded_RMod_001 () =
+        // Start target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "start" "Started" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
 
-        // create target device 2
-        m_Client.RunCommand "create /n GGG" "Created" "CR> "
-        let tgidx = m_Client.GetIndexNumber "GGG" "CR> "
-        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TD> "
+        // create new target device
+        m_Client.RunCommand "create" "Created" "CR> "
+        m_Client.RunCommand "select 1" "" "TD> "
+        m_Client.RunCommand "set NAME aaaaa" "" "TD> "
         m_Client.RunCommand "set ID TD_00000001" "" "TD> "
-        m_Client.CheckStatus "GGG" "UNLOAD(R-MOD)" "TD> "
+        m_Client.CheckStatus "aaaaa" "UNLOAD(R-MOD)" "TD> "
 
-        // try to stop target device, it failed
-        let v = m_Client.RunCommandGetResp "kill" "TD> "
-        Assert.False ( v.[0].StartsWith "Killed" )
+        // create a target group
+        m_Client.RunCommand "create targetgroup /n bbbbb" "Created" "TD> "
+        m_Client.RunCommand "select 0" "" "TG> "
+        m_Client.CheckStatus "bbbbb" "UNLOADED(MOD)" "TG> "
 
-        m_Client.CheckStatus "GGG" "UNLOAD(R-MOD)" "TD> "
-
-        // stop target device 1
-        m_Client.RunCommand "unselect" "" "CR> "
-        m_Client.RunCommand "select 0" "" "TD> "
-        m_Client.RunCommand "kill" "Killed" "TD> "
-        m_Client.RunCommand "unselect" "" "CR> "
-        m_Client.RunCommand "reload /y" "" "CR> "
-
-    [<Fact>]
-    member _.Create_NetworkPortal_Unloaded_001 () =
-        m_Client.RunCommand "select 0" "" "TD> "
-        m_Client.CheckStatus "TD_00000001" "UNLOADED" "TD> "
-
-        let v = m_Client.RunCommandGetResp "list" "TD> "
-
-        // Add a Network Portal
-        m_Client.RunCommand "create networkportal" "Created" "TD> "
-
-        let v2 = m_Client.RunCommandGetResp "list" "TD> "
-        Assert.StrictEqual( v.Length + 1, v2.Length )
-
-        // Target Device will be in a modified state.
-        m_Client.CheckStatus "TD_00000001" "UNLOADED(MOD)" "TD> "
-
-        m_Client.RunCommand "unselect" "" "CR> "
-        m_Client.RunCommand "reload /y" "" "CR> "
-
-    [<Fact>]
-    member _.Create_NetworkPortal_Running_001 () =
-        // start target device 1
-        m_Client.RunCommand "select 0" "" "TD> "
-        m_Client.RunCommand "start" "Started" "TD> "
-        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
-
-        let v = m_Client.RunCommandGetResp "list" "TD> "
-
-        // try to add Network Portal, it failed.
-        m_Client.RunCommand "create networkportal" "Unexpected" "TD> "
-
-        let v2 = m_Client.RunCommandGetResp "list" "TD> "
-        Assert.StrictEqual( v.Length , v2.Length )
-
-        // Stop target device
-        m_Client.RunCommand "kill" "Killed" "TD> "
-        m_Client.RunCommand "unselect" "" "CR> "
-        m_Client.RunCommand "reload /y" "" "CR> "
-
-    [<Fact>]
-    member _.Create_TargetGroup_Unloaded_001 () =
-        m_Client.RunCommand "select 0" "" "TD> "
-        m_Client.CheckStatus "TD_00000001" "UNLOADED" "TD> "
-
-        let v = m_Client.RunCommandGetResp "list" "TD> "
-
-        // create target group
-        m_Client.RunCommand "create targetgroup /n sss" "Created" "TD> "
-
-        let v2 = m_Client.RunCommandGetResp "list" "TD> "
-        Assert.StrictEqual( v.Length + 1, v2.Length )
-
-        // A Target Group in a modified state will be added.
-        let tgidx = m_Client.GetIndexNumber "sss" "TD> "
-        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
-        m_Client.CheckStatus "sss" "UNLOADED(MOD)" "TG> "
-        m_Client.RunCommand "unselect" "" "TD> "
-
-        // The state of the Target Device will not change.
-        m_Client.CheckStatus "TD_00000001" "UNLOADED" "TD> "
-
-        m_Client.RunCommand "unselect" "" "CR> "
-        m_Client.RunCommand "reload /y" "" "CR> "
-
-    [<Fact>]
-    member _.Create_TargetGroup_Running_001 () =
-        // start target device 1
-        m_Client.RunCommand "select 0" "" "TD> "
-        m_Client.RunCommand "start" "Started" "TD> "
-        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
-
-        let v = m_Client.RunCommandGetResp "list" "TD> "
-
-        m_Client.RunCommand "create targetgroup /n sss" "Created" "TD> "
-
-        let v2 = m_Client.RunCommandGetResp "list" "TD> "
-        Assert.StrictEqual( v.Length + 1, v2.Length )
-
-        // A Target Group in a modified state will be added.
-        let tgidx = m_Client.GetIndexNumber "sss" "TD> "
-        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
-        m_Client.CheckStatus "sss" "UNLOADED(MOD)" "TG> "
-        m_Client.RunCommand "unselect" "" "TD> "
-
-        // The state of the Target Device will not change.
-        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
-
-        m_Client.RunCommand "kill" "Killed" "TD> "
-        m_Client.RunCommand "unselect" "" "CR> "
-        m_Client.RunCommand "reload /y" "" "CR> "
-
-    [<Fact>]
-    member _.Create_TargetGroup_UnloadedMod_001 () =
-        m_Client.RunCommand "select 0" "" "TD> "
-        m_Client.RunCommand "SET NAME qqqq" "" "TD> "
-        m_Client.CheckStatus "TD_00000001" "UNLOADED(MOD)" "TD> "
-
-        let v = m_Client.RunCommandGetResp "list" "TD> "
-
-        // create target group
-        m_Client.RunCommand "create targetgroup /n sss" "Created" "TD> "
-
-        let v2 = m_Client.RunCommandGetResp "list" "TD> "
-        Assert.StrictEqual( v.Length + 1, v2.Length )
-
-        // A Target Group in a modified state will be added.
-        let tgidx = m_Client.GetIndexNumber "sss" "TD> "
-        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
-        m_Client.CheckStatus "sss" "UNLOADED(MOD)" "TG> "
-        m_Client.RunCommand "unselect" "" "TD> "
-
-        // The state of the Target Device will not change.
-        m_Client.CheckStatus "TD_00000001" "UNLOADED(MOD)" "TD> "
-
-        m_Client.RunCommand "unselect" "" "CR> "
-        m_Client.RunCommand "reload /y" "" "CR> "
-
-    [<Fact>]
-    member _.Create_TargetGroup_UnloadedRMod_001 () =
-        // start target device 1
-        m_Client.RunCommand "select 0" "" "TD> "
-        m_Client.RunCommand "start" "Started" "TD> "
-        m_Client.RunCommand "unselect" "" "CR> "
-
-        // create target device 2
-        m_Client.RunCommand "create /n GGG" "Created" "CR> "
-        let tgidx = m_Client.GetIndexNumber "GGG" "CR> "
-        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TD> "
-        m_Client.RunCommand "set ID TD_00000001" "" "TD> "
-        m_Client.CheckStatus "GGG" "UNLOAD(R-MOD)" "TD> "
-
-        // create target group
-        m_Client.RunCommand "create targetgroup /n sss" "Created" "TD> "
+        // delete target group
+        m_Client.RunCommand "delete" "Deleted" "TD> "
 
         let v2 = m_Client.RunCommandGetResp "list" "TD> "
         Assert.StrictEqual( 1, v2.Length )
+        Assert.StartsWith( "There are no child nodes", v2.[0] )
 
-        // A Target Group in a modified state will be added.
-        let tgidx = m_Client.GetIndexNumber "sss" "TD> "
-        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
-        m_Client.CheckStatus "sss" "UNLOADED(MOD)" "TG> "
-        m_Client.RunCommand "unselect" "" "TD> "
-
-        // The state of the Target Device will not change.
-        m_Client.CheckStatus "GGG" "UNLOAD(R-MOD)" "TD> "
-
-        // stop target device 1
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "kill" "Killed" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
 
+    // If the target device is unloaded, the target group can be deleted.
     [<Fact>]
-    member _.AddIP_CR_001 () =
-        let v = m_Client.RunCommandGetResp "values" "CR> "
-        let s = v |> Array.findIndex ( fun itr -> itr.Contains "WhiteList" )
-        let e = v |> Array.findIndex ( fun itr -> itr.Contains "LogMaintenance" )
-        Assert.StrictEqual( s + 1, e )
-
-        m_Client.RunCommand "add ipwhitelist /t loopback" "IP white list updated" "CR> "
-
-        let v = m_Client.RunCommandGetResp "values" "CR> "
-        let s = v |> Array.findIndex ( fun itr -> itr.Contains "WhiteList" )
-        let e = v |> Array.findIndex ( fun itr -> itr.Contains "LogMaintenance" )
-        Assert.StrictEqual( s + 2, e )
-
-        m_Client.RunCommand "clear ipwhitelist" "IP white list cleared" "CR> "
-
-        let v = m_Client.RunCommandGetResp "values" "CR> "
-        let s = v |> Array.findIndex ( fun itr -> itr.Contains "WhiteList" )
-        let e = v |> Array.findIndex ( fun itr -> itr.Contains "LogMaintenance" )
-        Assert.StrictEqual( s + 1, e )
-
-        m_Client.RunCommand "reload /y" "" "CR> "
-
-    [<Fact>]
-    member _.AddIP_NP_Unloaded_001 () =
-
-        m_Client.RunCommand "select 0" "" "TD> "
-        m_Client.CheckStatus "TD_00000001" "UNLOADED" "TD> "
-        let tgidx = m_Client.GetIndexNumber "Network Portal" "TD> "
-        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "NP> "
-
-        let v = m_Client.RunCommandGetResp "values" "NP> "
-        let s = v |> Array.findIndex ( fun itr -> itr.Contains "WhiteList" )
-        Assert.StrictEqual( s + 1, v.Length )
-
-        m_Client.RunCommand "add ipwhitelist /t loopback" "IP white list updated" "NP> "
-
-        let v = m_Client.RunCommandGetResp "values" "NP> "
-        let s = v |> Array.findIndex ( fun itr -> itr.Contains "WhiteList" )
-        Assert.StrictEqual( s + 2, v.Length )
-
-        m_Client.CheckStatus "TD_00000001" "UNLOADED(MOD)" "NP> "
-
-        m_Client.RunCommand "clear ipwhitelist" "IP white list cleared" "NP> "
-
-        let v = m_Client.RunCommandGetResp "values" "NP> "
-        let s = v |> Array.findIndex ( fun itr -> itr.Contains "WhiteList" )
-        Assert.StrictEqual( s + 1, v.Length )
-
-        m_Client.CheckStatus "TD_00000001" "UNLOADED(MOD)" "NP> "
-
-        m_Client.RunCommand "unselect" "" "TD> "
-        m_Client.RunCommand "unselect" "" "CR> "
-        m_Client.RunCommand "reload /y" "" "CR> "
-
-    [<Fact>]
-    member _.AddIP_NP_Running_001 () =
-
-        m_Client.RunCommand "select 0" "" "TD> "
-        m_Client.RunCommand "start" "Started" "TD> "
-        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
-        let tgidx = m_Client.GetIndexNumber "Network Portal" "TD> "
-        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "NP> "
-
-        let v = m_Client.RunCommandGetResp "values" "NP> "
-        let s = v |> Array.findIndex ( fun itr -> itr.Contains "WhiteList" )
-        Assert.StrictEqual( s + 1, v.Length )
-
-        // try to add ip white list, it failed.
-        m_Client.RunCommand "add ipwhitelist /t loopback" "Unexpected" "NP> "
-
-        let v = m_Client.RunCommandGetResp "values" "NP> "
-        let s = v |> Array.findIndex ( fun itr -> itr.Contains "WhiteList" )
-        Assert.StrictEqual( s + 1, v.Length )
-
-        m_Client.CheckStatus "TD_00000001" "RUNNING" "NP> "
-
-        // try to clear ip white list, it failed.
-        m_Client.RunCommand "clear ipwhitelist" "Unexpected" "NP> "
-
-        let v = m_Client.RunCommandGetResp "values" "NP> "
-        let s = v |> Array.findIndex ( fun itr -> itr.Contains "WhiteList" )
-        Assert.StrictEqual( s + 1, v.Length )
-
-        m_Client.CheckStatus "TD_00000001" "RUNNING" "NP> "
-
-        m_Client.RunCommand "unselect" "" "TD> "
-        m_Client.RunCommand "kill" "Killed" "TD> "
-        m_Client.RunCommand "unselect" "" "CR> "
-        m_Client.RunCommand "reload /y" "" "CR> "
-
-    [<Theory>]
-    [<InlineData( "load" )>]
-    [<InlineData( "unload" )>]
-    [<InlineData( "activate" )>]
-    [<InlineData( "inactivate" )>]
-    member _.Load_TDUnloaded_001 ( cmd : string ) =
-
-        m_Client.RunCommand "select 0" "" "TD> "
-        m_Client.CheckStatus "TD_00000001" "UNLOADED" "TD> "
-
-        let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
-        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
-        m_Client.CheckStatus "TG_00000001" "UNLOADED" "TG> "
-
-        // try to load/unload/activate/inactivate target group, it failed.
-        m_Client.RunCommand cmd "Target device process is not running" "TG> "
-        m_Client.CheckStatus "TG_00000001" "UNLOADED" "TG> "
-        m_Client.CheckStatus "TD_00000001" "UNLOADED" "TG> "
-
-        m_Client.RunCommand "unselect" "" "TD> "
-        m_Client.RunCommand "unselect" "" "CR> "
-        m_Client.RunCommand "reload /y" "" "CR> "
-
-    [<Theory>]
-    [<InlineData( "load" )>]
-    [<InlineData( "unload" )>]
-    [<InlineData( "activate" )>]
-    [<InlineData( "inactivate" )>]
-    member _.Load_TDUnloadedMod_001 ( cmd : string ) =
-
+    member _.Delete_TargetGroup_TDUnloaded_Mod_002 () =
+        // Modify target device config
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "set NAME ggg" "" "TD> "
-        m_Client.CheckStatus "TD_00000001" "UNLOADED(MOD)" "TD> "
+        m_Client.CheckStatus "ggg" "UNLOADED(MOD)" "TD> "
 
+        let v = m_Client.RunCommandGetResp "list" "TD> "
+
+        // delete target group
         let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
-        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
-        m_Client.CheckStatus "TG_00000001" "UNLOADED" "TG> "
+        m_Client.RunCommand ( sprintf "delete /i %d"  tgidx ) "Deleted" "TD> "
 
-        // try to load/unload/activate/inactivate target group, it failed.
-        m_Client.RunCommand cmd "Target device process is not running" "TG> "
-        m_Client.CheckStatus "TG_00000001" "UNLOADED" "TG> "
-        m_Client.CheckStatus "TD_00000001" "UNLOADED(MOD)" "TG> "
+        let v2 = m_Client.RunCommandGetResp "list" "TD> "
+        Assert.StrictEqual( v.Length, v2.Length + 1 )
 
-        m_Client.RunCommand "unselect" "" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
 
-    [<Theory>]
-    [<InlineData( "load" )>]
-    [<InlineData( "unload" )>]
-    [<InlineData( "activate" )>]
-    [<InlineData( "inactivate" )>]
-    member _.Load_TDUnloadedRMod_001 ( cmd : string ) =
-
-        // create target device 2
-        m_Client.RunCommand "create /n GGG" "Created" "CR> "
-        let tgidx = m_Client.GetIndexNumber "GGG" "CR> "
-        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TD> "
-        m_Client.RunCommand "set ID TD_00000002" "" "TD> "
-        m_Client.RunCommand ( sprintf "create networkportal /a ::1 /p %d" iSCSIPortNo1 ) "Created" "TD> "
-        m_Client.RunCommand "create targetgroup" "Created" "TD> "
-        m_Client.RunCommand "select 1" "" "TG> "
-        m_Client.RunCommand "set ID TG_00000001" "" "TG> "
-        m_Client.RunCommand "create /n iqn.2020-05.example.com:target1" "Created" "TG> "
-        m_Client.RunCommand "select 0" "" "T > "
-        m_Client.RunCommand "create /l 1" "Created" "T > "
-        m_Client.RunCommand "select 0" "" "LU> "
-        m_Client.RunCommand ( sprintf "create membuffer %d" m_MediaSize ) "Created" "LU> "
-        m_Client.RunCommand "select 0" "" "MD> "
-        m_Client.RunCommand ( sprintf "set BlockSize %d" m_MediaBlockSizse ) "" "MD> "
-        m_Client.RunCommand "unselect" "" "LU> "
-        m_Client.RunCommand "unselect" "" "T > "
-        m_Client.RunCommand "unselect" "" "TG> "
-        m_Client.RunCommand "unselect" "" "TD> "
-
-        // publish and start target device 2
-        m_Client.RunCommand "publish" "All configurations are uploaded" "TD> "
-        m_Client.RunCommand "start" "Started" "TD> "
-
-        // modify target device 1
-        m_Client.RunCommand "unselect" "" "CR> "
-        let tgidx = m_Client.GetIndexNumber "TD_00000001" "CR> "
-        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TD> "
-        m_Client.RunCommand "set ID TD_00000002" "" "TD> "
-        m_Client.CheckStatus "TD_00000002" "UNLOAD(R-MOD)" "TD> "
-
-        let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
-        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
-        m_Client.CheckStatus "TG_00000001" "UNLOADED" "TG> "
-
-        // try to load/unload/activate/inactivate target group, it failed.
-        m_Client.RunCommand cmd "Target device process is not running" "TG> "
-        m_Client.CheckStatus "TG_00000001" "UNLOADED" "TG> "
-
-        m_Client.RunCommand "unselect" "" "TD> "
-        m_Client.CheckStatus "TD_00000002" "UNLOAD(R-MOD)" "TD> "
-        m_Client.RunCommand "set ID TD_00000001" "" "TD> "
-
-        // stop and delete target device 2
-        m_Client.RunCommand "unselect" "" "CR> "
-        let tgidx = m_Client.GetIndexNumber "TD_00000002" "CR> "
-        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TD> "
-        m_Client.RunCommand "kill" "Killed" "TD> "
-        m_Client.RunCommand "delete" "Deleted" "CR> "
-        m_Client.RunCommand "publish" "All configurations are uploaded" "CR> "
-
-        m_Client.RunCommand "reload /y" "" "CR> "
-
-    [<Theory>]
-    [<InlineData( "load", "Loaded", "LOADED" )>]
-    [<InlineData( "unload", "Specified target group is", "UNLOADED" )>]
-    [<InlineData( "activate", "Specified target group is", "UNLOADED" )>]
-    [<InlineData( "inactivate", "Specified target group is", "UNLOADED" )>]
-    member _.Load_Unloaded_001 ( cmd : string ) ( expResp : string ) ( nextStat : string ) =
-        // Start the target device
+    // If the target group is unloaded, the target group can be deleted.
+    [<Fact>]
+    member _.Delete_TargetGroup_Unloaded_Mod_001 () =
+        // start target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "start" "Started" "TD> "
+
+        // create new target group
+        m_Client.RunCommand "create targetgroup /n TG003" "Created" "TD> "
+        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
+        let tgidx = m_Client.GetIndexNumber "TG003" "TD> "
+
+        let v = m_Client.RunCommandGetResp "list" "TD> "
+        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+        m_Client.CheckStatus "TG003" "UNLOADED(MOD)" "TG> "
+
+        // delete target group
+        m_Client.RunCommand "delete"  "Deleted" "TD> "
+
+        let v2 = m_Client.RunCommandGetResp "list" "TD> "
+        Assert.StrictEqual( v.Length, v2.Length + 1 )
+
         m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
 
-        // Select and unload the target group
+        m_Client.RunCommand "kill" "Killed" "TD> "
+        m_Client.RunCommand "unselect" "" "CR> "
+        m_Client.RunCommand "reload /y" "" "CR> "
+
+    // If the target group is unloaded, the target group can be deleted.
+    [<Fact>]
+    member _.Delete_TargetGroup_Unloaded_001 () =
+
+        // start target device
+        m_Client.RunCommand "select 0" "" "TD> "
+        m_Client.RunCommand "start" "Started" "TD> "
+
+        let v = m_Client.RunCommandGetResp "list" "TD> "
+
+        // unload target group
         let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
         m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
-        m_Client.RunCommand "inactivate" "Inactivated" "TG> "
-        m_Client.RunCommand "unload" "Unloaded" "TG> "
+        m_Client.RunCommand "inactivate"  "Inactivated" "TG> "
+        m_Client.RunCommand "unload"  "Unloaded" "TG> "
         m_Client.CheckStatus "TG_00000001" "UNLOADED" "TG> "
-
-        // load/unload/activate/inactivate the target group
-        m_Client.RunCommand cmd expResp "TG> "
-        m_Client.CheckStatus "TG_00000001" nextStat "TG> "
         m_Client.CheckStatus "TD_00000001" "RUNNING" "TG> "
 
-        m_Client.RunCommand "unselect" "" "TD> "
+        // Delete unloaded target group
+        m_Client.RunCommand "delete"  "Deleted" "TD> "
+
+        let v2 = m_Client.RunCommandGetResp "list" "TD> "
+        Assert.StrictEqual( v.Length, v2.Length + 1 )
+        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
+
         m_Client.RunCommand "kill" "Killed" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
 
-    [<Theory>]
-    [<InlineData( "load" )>]
-    [<InlineData( "unload" )>]
-    [<InlineData( "activate" )>]
-    [<InlineData( "inactivate" )>]
-    member _.Load_UnloadedMod_001 ( cmd : string ) =
-        // Start the target device
+    // If the target group is unloaded, the target group can be deleted.
+    [<Fact>]
+    member _.Delete_TargetGroup_Unloaded_LMod_001 () =
+
+        // start target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "start" "Started" "TD> "
-        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
 
-        // select and modify the target group
+        let v = m_Client.RunCommandGetResp "list" "TD> "
+
+        // Inactivate Targetgroup 1
         let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
         m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
-        m_Client.RunCommand "inactivate" "Inactivated" "TG> "
-        m_Client.RunCommand "unload" "Unloaded" "TG> "
-        m_Client.RunCommand "set NAME aaaaaaa" "" "TG> "
-        m_Client.CheckStatus "TG_00000001" "UNLOADED(MOD)" "TG> "
+        m_Client.RunCommand "inactivate"  "Inactivated" "TG> "
+        m_Client.RunCommand "unselect" "" "TD> "
 
-        // try to load target group, it failed.
-        m_Client.RunCommand cmd "Configuration is modified" "TG> "
-        m_Client.CheckStatus "TG_00000001" "UNLOADED(MOD)" "TG> "
+        // Unload Targetgroup 2 and edit ID
+        let tgidx = m_Client.GetIndexNumber "TG_00000002" "TD> "
+        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+        m_Client.RunCommand "inactivate"  "Inactivated" "TG> "
+        m_Client.RunCommand "unload"  "Unloaded" "TG> "
+        m_Client.RunCommand "set ID TG_00000001"  "" "TG> "
+        m_Client.RunCommand "set NAME aaaaa"  "" "TG> "
+        m_Client.CheckStatus "aaaaa" "UNLOAD(L-MOD)" "TG> "
+
         m_Client.CheckStatus "TD_00000001" "RUNNING" "TG> "
 
-        m_Client.RunCommand "unselect" "" "TD> "
+        // delete target group 2
+        m_Client.RunCommand "delete"  "Deleted" "TD> "
+
+        let v2 = m_Client.RunCommandGetResp "list" "TD> "
+        Assert.StrictEqual( v.Length, v2.Length + 1 )
+        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
+
         m_Client.RunCommand "kill" "Killed" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
 
-    [<Theory>]
-    [<InlineData( "load", "Unexpected", "LOADED" )>]
-    [<InlineData( "unload", "Unloaded", "UNLOADED" )>]
-    [<InlineData( "activate", "Activated", "ACTIVE" )>]
-    [<InlineData( "inactivate", "Specified target group is", "LOADED" )>]
-    member _.Load_Loaded_001 ( cmd : string ) ( expResp : string ) ( nextStat : string ) =
-        // Start the target device
+    // If the target group is unloaded, the target group can be deleted.
+    [<Fact>]
+    member _.Delete_TargetGroup_Unloaded_AMod_001 () =
+        // start target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "start" "Started" "TD> "
+
+        let v = m_Client.RunCommandGetResp "list" "TD> "
+
+        // Unload Targetgroup 2 and edit ID
+        let tgidx = m_Client.GetIndexNumber "TG_00000002" "TD> "
+        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
+        m_Client.RunCommand "inactivate"  "Inactivated" "TG> "
+        m_Client.RunCommand "unload"  "Unloaded" "TG> "
+        m_Client.RunCommand "set ID TG_00000001"  "" "TG> "
+        m_Client.RunCommand "set NAME aaaaa"  "" "TG> "
+        m_Client.CheckStatus "aaaaa" "UNLOAD(A-MOD)" "TG> "
+
+        // delete target group 2
+        m_Client.RunCommand "delete"  "Deleted" "TD> "
+
+        let v2 = m_Client.RunCommandGetResp "list" "TD> "
+        Assert.StrictEqual( v.Length, v2.Length + 1 )
         m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
 
-        // select and inactivate the target group
+        m_Client.RunCommand "kill" "Killed" "TD> "
+        m_Client.RunCommand "unselect" "" "CR> "
+        m_Client.RunCommand "reload /y" "" "CR> "
+
+    // If the target group is not unloaded, the target group can not be deleted.
+    [<Fact>]
+    member _.Delete_TargetGroup_Loaded_001 () =
+        // start target device
+        m_Client.RunCommand "select 0" "" "TD> "
+        m_Client.RunCommand "start" "Started" "TD> "
+
+        let v = m_Client.RunCommandGetResp "list" "TD> "
+
         let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
         m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
-        m_Client.RunCommand "inactivate" "Inactivated" "TG> "
+        m_Client.RunCommand "inactivate"  "Inactivated" "TG> "
         m_Client.CheckStatus "TG_00000001" "LOADED" "TG> "
 
-        // load/unload/activate/inactivate the target group
-        m_Client.RunCommand cmd expResp "TG> "
-        m_Client.CheckStatus "TG_00000001" nextStat "TG> "
-        m_Client.CheckStatus "TD_00000001" "RUNNING" "TG> "
+        // try to delete target group, it failed
+        m_Client.RunCommand "delete"  "Unexpected error" "TG> "
 
         m_Client.RunCommand "unselect" "" "TD> "
+
+        let v2 = m_Client.RunCommandGetResp "list" "TD> "
+        Assert.StrictEqual( v.Length, v2.Length )
+        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
+
         m_Client.RunCommand "kill" "Killed" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
 
-    [<Theory>]
-    [<InlineData( "load", "Unexpected", "ACTIVE" )>]
-    [<InlineData( "unload", "Specified target group is", "ACTIVE" )>]
-    [<InlineData( "activate", "Specified target group is", "ACTIVE" )>]
-    [<InlineData( "inactivate", "Inactivated", "LOADED" )>]
-    member _.Load_Active_001 ( cmd : string ) ( expResp : string ) ( nextStat : string ) =
-        // Start the target device
+    // If the target group is not unloaded, the target group can not be deleted.
+    [<Fact>]
+    member _.Delete_TargetGroup_Active_001 () =
+        // start target device
         m_Client.RunCommand "select 0" "" "TD> "
         m_Client.RunCommand "start" "Started" "TD> "
-        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
 
-        // select the target group
+        let v = m_Client.RunCommandGetResp "list" "TD> "
+
         let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
         m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
         m_Client.CheckStatus "TG_00000001" "ACTIVE" "TG> "
 
-        // try to load target group, it failed.
-        m_Client.RunCommand cmd expResp "TG> "
-        m_Client.CheckStatus "TG_00000001" nextStat "TG> "
-        m_Client.CheckStatus "TD_00000001" "RUNNING" "TG> "
+        // try to delete target group, it failed
+        m_Client.RunCommand "delete"  "Unexpected error" "TG> "
 
         m_Client.RunCommand "unselect" "" "TD> "
-        m_Client.RunCommand "kill" "Killed" "TD> "
-        m_Client.RunCommand "unselect" "" "CR> "
-        m_Client.RunCommand "reload /y" "" "CR> "
 
-    [<Theory>]
-    [<InlineData( "load" )>]
-    [<InlineData( "unload" )>]
-    [<InlineData( "activate" )>]
-    [<InlineData( "inactivate" )>]
-    member _.Load_UnloadedAMod_001 ( cmd : string ) =
-        // Start the target device
-        m_Client.RunCommand "select 0" "" "TD> "
-        m_Client.RunCommand "start" "Started" "TD> "
+        let v2 = m_Client.RunCommandGetResp "list" "TD> "
+        Assert.StrictEqual( v.Length, v2.Length )
         m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
 
-        // select and modify the target group 1
-        let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
-        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
-        m_Client.RunCommand "inactivate" "Inactivated" "TG> "
-        m_Client.RunCommand "unload" "Unloaded" "TG> "
-        m_Client.RunCommand "set ID TG_00000002" "" "TG> "
-        m_Client.RunCommand "set NAME wwwwwwwww" "" "TG> "
-        m_Client.CheckStatus "wwwwwwwww" "UNLOAD(A-MOD)" "TG> "
-
-        // try to load target group, it failed.
-        m_Client.RunCommand cmd "Configuration is modified" "TG> "
-        m_Client.CheckStatus "wwwwwwwww" "UNLOAD(A-MOD)" "TG> "
-        m_Client.CheckStatus "TD_00000001" "RUNNING" "TG> "
-
-        m_Client.RunCommand "unselect" "" "TD> "
         m_Client.RunCommand "kill" "Killed" "TD> "
         m_Client.RunCommand "unselect" "" "CR> "
         m_Client.RunCommand "reload /y" "" "CR> "
-
-    [<Theory>]
-    [<InlineData( "load" )>]
-    [<InlineData( "unload" )>]
-    [<InlineData( "activate" )>]
-    [<InlineData( "inactivate" )>]
-    member _.Load_UnloadedLMod_001 ( cmd : string ) =
-        // Start the target device
-        m_Client.RunCommand "select 0" "" "TD> "
-        m_Client.RunCommand "start" "Started" "TD> "
-        m_Client.CheckStatus "TD_00000001" "RUNNING" "TD> "
-
-        // Inactivate the target group 2
-        let tgidx = m_Client.GetIndexNumber "TG_00000002" "TD> "
-        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
-        m_Client.RunCommand "inactivate" "Inactivated" "TG> "
-        m_Client.RunCommand "unselect" "" "TD> "
-
-        // select and modify the target group 1
-        let tgidx = m_Client.GetIndexNumber "TG_00000001" "TD> "
-        m_Client.RunCommand ( sprintf "select %d" tgidx ) "" "TG> "
-        m_Client.RunCommand "inactivate" "Inactivated" "TG> "
-        m_Client.RunCommand "unload" "Unloaded" "TG> "
-        m_Client.RunCommand "set ID TG_00000002" "" "TG> "
-        m_Client.RunCommand "set NAME wwwwwwwww" "" "TG> "
-        m_Client.CheckStatus "wwwwwwwww" "UNLOAD(L-MOD)" "TG> "
-
-        // try to load target group, it failed.
-        m_Client.RunCommand cmd "Configuration is modified" "TG> "
-        m_Client.CheckStatus "wwwwwwwww" "UNLOAD(L-MOD)" "TG> "
-        m_Client.CheckStatus "TD_00000001" "RUNNING" "TG> "
-
-        m_Client.RunCommand "unselect" "" "TD> "
-        m_Client.RunCommand "kill" "Killed" "TD> "
-        m_Client.RunCommand "unselect" "" "CR> "
-        m_Client.RunCommand "reload /y" "" "CR> "
-

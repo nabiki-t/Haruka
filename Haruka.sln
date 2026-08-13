@@ -62,7 +62,7 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "IT_Client", "tests\IT_Clien
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "VHDXTest", "tests\VHDXTest\VHDXTest.fsproj", "{51F25D5C-D6F5-41AC-9176-EF0B9149E595}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "VHDXMedia", "VHDXMedia\VHDXMedia.fsproj", "{160AE95B-5938-44C2-A310-960B6C443C44}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "VHDXMedia", "products\VHDXMedia\VHDXMedia.fsproj", "{160AE95B-5938-44C2-A310-960B6C443C44}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

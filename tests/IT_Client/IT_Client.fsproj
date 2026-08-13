@@ -25,6 +25,11 @@
     <Compile Include="Command02.fs" />
     <Compile Include="Command03.fs" />
     <Compile Include="Command04.fs" />
+    <Compile Include="Command05.fs" />
+    <Compile Include="Command06.fs" />
+    <Compile Include="Command07.fs" />
+    <Compile Include="Command08.fs" />
+    <Compile Include="Command09.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>
 
