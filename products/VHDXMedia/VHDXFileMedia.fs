@@ -21,6 +21,7 @@ open System.Diagnostics
 open Haruka.Constants
 open Haruka.Commons
 open Haruka.IODataTypes
+open Haruka.Media.VhdxUtil
 
 //=============================================================================
 // Class implementation
@@ -55,6 +56,22 @@ type VHDXFileMedia
     /// Hash value identify this instance
     let m_ObjID = objidx_me.NewID()
 
+    /// Reader-Writer lock object
+    let m_Lock = RWLock()
+
+    let mutable m_FileAccessors, m_Structures = 
+        let fa = FileAccessor( m_Config.FileName, m_Multiplicity, m_Config.WriteProtect )
+        VhdxReader.ReadAllStructures fa
+        |> Functions.RunTaskSynchronously   // Due to implementation constraints, the threads here must be synchronized.
+        |> Array.unzip
+
+    /// The block size and the virtual disk size
+    /// Since the constructor executes synchronously, there is no need to acquire a lock here.
+    /// Therefore, information that does not change during operation is retrieved in advance.
+    let m_BlockSize, m_VirtualDiskSize =
+        let vdi = m_Structures.[0].VDI
+        ( vdi.LogicalSectorSize, vdi.VirtualDiskSize )
+
     /// Resource counter for read data
     let m_ReadBytesCounter = new ResCounter( Constants.RECOUNTER_SPAN_SEC, Constants.RESCOUNTER_LENGTH_SEC )
 
@@ -79,10 +96,14 @@ type VHDXFileMedia
 
         // --------------------------------------------------------------------
         // Implementation of IComponent.Terminate
-        override _.Terminate() : unit =
+        override this.Terminate() : unit =
             let loginfo = struct( m_ObjID, ValueNone, ValueNone, ValueSome( m_LUN ) )
             if HLogger.IsVerbose then
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "VHDXFileMedia.Terminate." ) )
+
+            this.CloseAllFiles()
+            |> Functions.RunTaskSynchronously   // Due to implementation constraints, the threads here must be synchronized.
+
             HLogger.Trace( LogID.I_FILE_CLOSED, fun g -> g.Gen1( loginfo, "" ) )
 
     
@@ -102,6 +123,10 @@ type VHDXFileMedia
             let loginfo = struct( m_ObjID, ValueNone, ValueNone, ValueSome( m_LUN ) )
             if HLogger.IsVerbose then
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "VHDXFileMedia.Closing." ) )
+
+            this.CloseAllFiles()
+            |> Functions.RunTaskSynchronously   // Due to implementation constraints, the threads here must be synchronized.
+
             HLogger.Trace( LogID.I_FILE_CLOSED, fun g -> g.Gen1( loginfo, "" ) )
 
         // ------------------------------------------------------------------------
@@ -109,7 +134,7 @@ type VHDXFileMedia
         override _.TestUnitReady( initiatorTaskTag : ITT_T ) ( source : CommandSourceInfo ) : ASCCd voption =
             if HLogger.IsVerbose then
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g ->
-                    let loginfo = struct( m_ObjID, ValueNone, ValueNone, ValueSome( m_LUN ) )
+                    let loginfo = struct( m_ObjID, ValueSome source, ValueSome initiatorTaskTag, ValueSome( m_LUN ) )
                     g.Gen1( loginfo, "VHDXFileMedia.TestUnitReady." )
                 )
             ValueNone    // Always returns true
@@ -119,10 +144,10 @@ type VHDXFileMedia
         override _.ReadCapacity( initiatorTaskTag : ITT_T ) ( source : CommandSourceInfo ) : uint64 =
             if HLogger.IsVerbose then
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g ->
-                    let loginfo = struct( m_ObjID, ValueNone, ValueNone, ValueSome( m_LUN ) )
+                    let loginfo = struct( m_ObjID, ValueSome source, ValueSome initiatorTaskTag, ValueSome m_LUN )
                     g.Gen1( loginfo, "VHDXFileMedia.ReadCapacity." )
                 )
-            uint64 0UL
+            m_VirtualDiskSize / ( Blocksize.toUInt64 m_BlockSize )
 
         // ------------------------------------------------------------------------
         // Implementation of Read method
@@ -133,7 +158,118 @@ type VHDXFileMedia
             ( buffer : ArraySegment<byte> )
             : Task<int32> =
 
+            let loginfo = struct( m_ObjID, ValueSome( source ), ValueSome( initiatorTaskTag ), ValueSome( m_LUN ) )
+            if HLogger.IsVerbose then
+                HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "VHDXFileMedia.Read." ) )
+
             task {
+                do! m_Lock.RLock()
+                try
+                    let sw = new Stopwatch()
+                    sw.Start()
+
+                    let allStructures = m_Structures
+                    let allFileAccessors = m_FileAccessors
+                    let lastIdx = allStructures.Length - 1
+                    let curFA = allFileAccessors.[ lastIdx ]
+                    let curStr = allStructures.[ lastIdx ]
+
+                    let readBytesLength_u64 = uint64 buffer.Count
+                    let blockSize_u64 = Blocksize.toUInt64 m_BlockSize
+                    let readpos_u64 = ( blkcnt_me.toUInt64 argLBA ) * blockSize_u64
+                    let mediaBlockCount = m_VirtualDiskSize / blockSize_u64
+
+                    // Check specified range is in media.
+                    if Functions.CheckAccessRange argLBA readBytesLength_u64 mediaBlockCount blockSize_u64 |> not then
+                        let errmsg =
+                            sprintf
+                                "Out of media capacity. BlockSize=%d, TotalBlockCount=%d, RequestedLBA=%d, RequestedBytesCount=%d"
+                                blockSize_u64 mediaBlockCount argLBA buffer.Count
+                        HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE, errmsg )
+                        raise <| SCSIACAException ( source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE, errmsg )
+
+                    // Check limit of this module
+                    if readpos_u64 >= 0x8000000000000000UL || readBytesLength_u64 >= 0x0000000080000000UL then
+                        let errmsg =
+                            sprintf
+                                "Out of module limits. BlockSize=%d, TotalBlockCount=0x%016X, RequestedLBA=0x%016X, RequestedBytesCount=%d"
+                                blockSize_u64 mediaBlockCount argLBA buffer.Count
+                        HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.CONFIGURATION_OF_INCAPABLE_LOGICAL_UNITS_FAILED, errmsg )
+                        raise <| SCSIACAException ( source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.CONFIGURATION_OF_INCAPABLE_LOGICAL_UNITS_FAILED, errmsg )
+
+                    // Sector count (number of logical blocks to read)
+                    let totalSectors = ( readBytesLength_u64 + ( blockSize_u64 - 1UL ) ) / blockSize_u64
+
+
+                    // payload block size and logical sector size for the last (child) file
+                    let childPBSize = uint64 curStr.VDI.PayloadBlockSize
+                    let blockSize_u64 = Blocksize.toUInt64 curStr.VDI.LogicalSectorSize
+                    let secCntInPB = childPBSize / blockSize_u64
+
+                    let loop ( sectorsRead : uint64 ) : Task<struct( bool * uint64 )> = task {
+
+                        if sectorsRead < totalSectors then
+                            let curLBA = blkcnt_me.ofUInt64 ( blkcnt_me.toUInt64 argLBA + uint64 sectorsRead )
+
+                            // Identify payload block index within child file and sector index inside it
+                            let struct( pbIdx, secIdxInPB ) = VhdxCommons.LBAtoPayloadBlockIndex curLBA curStr
+                            let secIdx = blkcnt_me.toUInt32 secIdxInPB |> uint64
+
+                            // Determine how many sectors remain in this payload block
+                            let remainInPB = secCntInPB - secIdx
+                            let remainTotal = totalSectors - sectorsRead
+                            let takeSectors = min remainInPB remainTotal
+
+                            match curStr.BAT.Payloads.[ int pbIdx ].State with
+                            | PayloadUndefined
+                            | PayloadZero
+                            | PayloadUnapped ->
+                                // Entire payload block range can be zero-filled
+                                let bytesToZero = takeSectors * blockSize_u64
+                                Array.Clear( buffer.Array, buffer.Offset + int ( sectorsRead * blockSize_u64 ), int bytesToZero )
+                                return struct( true, sectorsRead + takeSectors )
+
+                            | PayloadFullyPresent ->
+                                // All data for this payload exists in child file; read as a single request
+                                let pbEntry = curStr.BAT.Payloads.[ int pbIdx ]
+                                let posInFile = pbEntry.FileOffset + secIdx * blockSize_u64
+                                let bytesToRead = takeSectors * blockSize_u64
+                                let dstOffset = buffer.Offset + int ( sectorsRead * blockSize_u64 )
+                                do! curFA.ReadWithPseudoLimit curStr.LastFileSize posInFile ( ArraySegment( buffer.Array, dstOffset, int bytesToRead ) )
+                                return struct( true, sectorsRead + takeSectors )
+
+                            | PayloadNotPresent
+                            | PayloadPartiallyPresent ->
+                                // Must resolve per logical block (may involve parent files)
+                                for i in 0UL .. takeSectors - 1UL do
+                                    let lba = blkcnt_me.ofUInt64 ( blkcnt_me.toUInt64 argLBA + sectorsRead + i )
+                                    match VhdxCommons.ResolvLBA lba allStructures with
+                                    | ValueSome( struct( fsidx, fpos ) ) ->
+                                        let dstOffset = buffer.Offset + int ( ( sectorsRead + i ) * blockSize_u64 )
+                                        let bytesAvail = buffer.Count - dstOffset
+                                        let readCount = min ( int blockSize_u64 ) bytesAvail
+                                        do! allFileAccessors.[fsidx].ReadWithPseudoLimit curStr.LastFileSize fpos ( ArraySegment( buffer.Array, dstOffset, readCount ) )
+                                    | _ ->
+                                        let dstOffset = buffer.Offset + int ( ( sectorsRead + i ) * blockSize_u64 )
+                                        let bytesAvail = buffer.Count - dstOffset
+                                        let zeroCount = min ( int blockSize_u64 ) bytesAvail
+                                        Array.Clear( buffer.Array, dstOffset, zeroCount )
+                                return struct( true, sectorsRead + takeSectors )
+                        else
+                            return struct( false, 0UL )
+                    }
+                    let! _ = Functions.loopAsyncWithState loop 0UL
+
+                    sw.Stop()
+                    let d = DateTime.UtcNow
+                    m_ReadBytesCounter.AddCount d ( int64 buffer.Count )
+                    m_ReadTickCounter.AddCount d sw.ElapsedTicks
+
+                    do! m_Lock.Release()
+                with
+                | _ ->
+                    do! m_Lock.Release()
+
                 return 0
             }
 
@@ -146,6 +282,12 @@ type VHDXFileMedia
             ( offset : uint64 )
             ( data : ArraySegment<byte> )
             : Task<int32> =
+
+            if HLogger.IsVerbose then
+                HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g ->
+                    let loginfo = struct( m_ObjID, ValueSome source, ValueSome initiatorTaskTag, ValueSome m_LUN )
+                    g.Gen1( loginfo, "VHDXFileMedia.Read." )
+                )
 
             task {
                 return 0
@@ -183,11 +325,11 @@ type VHDXFileMedia
 
         // ------------------------------------------------------------------------
         // Get block count
-        override _.BlockCount = 0UL
+        override _.BlockCount = m_VirtualDiskSize / ( Blocksize.toUInt64 m_BlockSize )
 
         // ------------------------------------------------------------------------
         // Get block size
-        override _.BlockSize = Blocksize.BS_512
+        override _.BlockSize = m_BlockSize
 
         // ------------------------------------------------------------------------
         // Get write protect
@@ -195,12 +337,12 @@ type VHDXFileMedia
 
         // ------------------------------------------------------------------------
         // Media index ID
-        override _.MediaIndex = mediaidx_me.fromPrim 0u
+        override _.MediaIndex = m_Config.IdentNumber
 
         // ------------------------------------------------------------------------
         // String that descripts this media.
         override _.DescriptString =
-            sprintf "VHDX File Media(File Name=%s)" ""
+            sprintf "VHDX File Media(File Name=%s)" m_Config.FileName
 
         // ------------------------------------------------------------------------
         // Obtain the total number of read bytes.
@@ -234,5 +376,24 @@ type VHDXFileMedia
 
         // ------------------------------------------------------------------------
         // Get sub media object.
-        override _.GetSubMedia() : IMedia list = []
+        override _.GetSubMedia() : IMedia list =
+            // A VHDX file is a peripheral medium; no further child entities can exist beyond it.
+            []
 
+
+    /// <summary>
+    ///  Close all of VHDX files.
+    /// </summary>
+    member private _.CloseAllFiles() : Task =
+        task {
+            do! m_Lock.WLock()
+            try
+                for fs in m_FileAccessors do
+                    fs.Close()
+                m_FileAccessors <- [||]
+                m_Structures <- [||]
+                do! m_Lock.Release()
+            with
+            | _ ->
+                do! m_Lock.Release()
+        }
