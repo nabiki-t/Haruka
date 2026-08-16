@@ -78,15 +78,14 @@ type Controller_Test2 () =
         lock.ReleaseMutex() |> ignore
 
     static member DeleteDir ( dname : string ) =
-        Functions.loopAsync ( fun () -> task {
+        let rec loop() =
             try
                 GlbFunc.DeleteDir dname
-                return false
             with
             |_ ->
-                return true
-        } )
-        |> Functions.RunTaskSynchronously
+                Thread.Sleep 10
+                loop()
+        loop()
 
     ///////////////////////////////////////////////////////////////////////////
     // Test cases

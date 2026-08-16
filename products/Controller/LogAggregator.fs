@@ -207,27 +207,24 @@ type LogAggregator (
                 updateLogCounter()  // retry
 
         // log collect loop
-        let loop() =
-            task {
+        fun () -> task {
+            let cont = PseudoSeqCond<bool>( true, id )
+            for _ in cont do
                 try
                     let! line = s.ReadLineAsync()
                     if line <> null && updateLogCounter() then
                         let! _ = ( m_MsgQueue :> ITargetBlock<string> ).SendAsync line
                         ()
-                    return ( line <> null )
+                    cont.Next ( line <> null )
                 with
                 | _ as x ->
                     // ignore all of error, but terminate collection for this process.
-                    return false
-            }
+                    cont.Break()
 
-        let t() =
-           task {
-               do! Functions.loopAsync loop
-               s.Close()
-               s.Dispose()
-           }
-        Functions.StartTask t
+            s.Close()
+            s.Dispose()
+        }
+        |> Functions.StartTask
 
     /// Delete old logfiles.
     member _.MaintainLogFiles() : unit =

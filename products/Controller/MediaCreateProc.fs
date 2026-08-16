@@ -106,12 +106,11 @@ type MediaCreateProc(
     /// <remarks>
     ///  This procedure writes messages to log and updates internal status.
     /// </remarks>
-    let procMediaCreateStdout ( s : StreamReader ) : Task<bool> =
+    let procMediaCreateStdout ( s : StreamReader ) : Task =
         task {
-            let! line = s.ReadLineAsync()
-            if line = null then
-                return false
-            else
+            let! firstline = s.ReadLineAsync()
+            let cont = PseudoSeqCond<string>( firstline, fun s -> s <> null )
+            for line in cont do
                 try
                     let opt = InitMediaMessage.ReaderWriter.LoadString line
                     match opt.LineType with
@@ -129,11 +128,11 @@ type MediaCreateProc(
                         HLogger.Trace( LogID.W_INITMEDIA_PROC_ERROR_MSG, fun g -> g.Gen1( m_ObjID, x ) )
                         if m_ErrorMessages.Count < Constants.INITMEDIA_MAX_ERRMSG_COUNT then
                             m_ErrorMessages.Add x
-                    return true
                 with
                 | _ ->
                     HLogger.Trace( LogID.W_INITMEDIA_UNEXPECTED_MSG, fun g -> g.Gen1( m_ObjID, line ) )
-                    return true
+                let! nextline = s.ReadLineAsync()
+                cont.Next nextline
         }
 
     /// <summary>
@@ -148,14 +147,14 @@ type MediaCreateProc(
     /// <remarks>
     ///  This procedure writes messages to log.
     /// </remarks>
-    let procMediaCreateStderr ( s : StreamReader ) : Task<bool> =
+    let procMediaCreateStderr ( s : StreamReader ) : Task =
         task {
-            let! line = s.ReadLineAsync()
-            if line = null then
-                return false
-            else
+            let! firstline = s.ReadLineAsync()
+            let cont = PseudoSeqCond<string>( firstline, fun s -> s <> null )
+            for line in cont do
                 HLogger.Trace( LogID.W_INITMEDIA_PROC_STDERR, fun g -> g.Gen1( m_ObjID, line ) )
-                return true
+                let! nextline = s.ReadLineAsync()
+                cont.Next nextline
         }
 
     /// <summary>
@@ -220,12 +219,12 @@ type MediaCreateProc(
 
                 // start procedure for stdout messages
                 Functions.StartTask ( fun () ->
-                    Functions.loopAsync ( fun () -> procMediaCreateStdout p.StandardOutput )
+                    procMediaCreateStdout p.StandardOutput
                 )
                 
                 // start procedure for stderr messages
                 Functions.StartTask ( fun () ->
-                    Functions.loopAsync ( fun () -> procMediaCreateStderr p.StandardError )
+                    procMediaCreateStderr p.StandardError
                 )
 
                 Some p

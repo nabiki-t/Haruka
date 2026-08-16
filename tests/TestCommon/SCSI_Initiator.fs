@@ -2307,42 +2307,45 @@ type SCSI_Initiator( m_ISCIInitiator : iSCSI_Initiator ) as this =
     /// <summary>
     ///  Perform PDU reception processing.
     /// </summary>
-    member private this.Receiver() : Task =
-        let loop() =
-            task {
-                try
-                    let! pdu = m_ISCIInitiator.Receive m_CID
-                    match pdu with
-                    | :? SCSIResponsePDU as x ->
-                        return! this.Receive_SCSIResponsePDU x
+    member private this.Receiver() : Task = task {
+        try
+            let cont = PseudoSeqCond<bool>( true, id )
+            for _ in cont do
+                let! pdu = m_ISCIInitiator.Receive m_CID
+                match pdu with
+                | :? SCSIResponsePDU as x ->
+                    let! r = this.Receive_SCSIResponsePDU x
+                    cont.Next r
 
-                    | :? TaskManagementFunctionResponsePDU as x ->
-                        return! this.Receive_TaskManagementFunctionResponsePDU x
+                | :? TaskManagementFunctionResponsePDU as x ->
+                    let! r = this.Receive_TaskManagementFunctionResponsePDU x
+                    cont.Next r
 
-                    | :? SCSIDataInPDU as x ->
-                        return! this.Receive_SCSIDataInPDU x
+                | :? SCSIDataInPDU as x ->
+                    let! r = this.Receive_SCSIDataInPDU x
+                    cont.Next r
 
-                    | :? R2TPDU as x ->
-                        return! this.Receive_R2TPDU x
+                | :? R2TPDU as x ->
+                    let! r = this.Receive_R2TPDU x
+                    cont.Next r
 
-                    | :? NOPInPDU as x ->
-                        if Volatile.Read &m_ExitFlg && ( PooledBuffer.ValueEqualsWithArray x.PingData [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy;|] ) then
-                            m_ReceiveWaiter.Notify( x.InitiatorTaskTag, TaskResult.NOP )
-                            return false
-                        else
-                            return! this.Receive_NopInPDU x
+                | :? NOPInPDU as x ->
+                    if Volatile.Read &m_ExitFlg && ( PooledBuffer.ValueEqualsWithArray x.PingData [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy;|] ) then
+                        m_ReceiveWaiter.Notify( x.InitiatorTaskTag, TaskResult.NOP )
+                        cont.Break()
+                    else
+                        let! r = this.Receive_NopInPDU x
+                        cont.Next r
 
-                    | _ ->
-                        m_ReceiveWaiter.SetExceptionForAll ( SessionRecoveryException( "Unexpected PDU was received.", m_TSIH ) )
-                        return false
-                with
-                | _ as ex ->
-                    if not ( Volatile.Read &m_ExitFlg ) then
-                        // Unexpected error
-                        m_ReceiveWaiter.SetExceptionForAll ( SessionRecoveryException( ex.Message, m_TSIH ) )
-                    return false
-            }
-        Functions.loopAsync loop
+                | _ ->
+                    m_ReceiveWaiter.SetExceptionForAll ( SessionRecoveryException( "Unexpected PDU was received.", m_TSIH ) )
+                    cont.Break()
+        with
+        | _ as ex ->
+            if not ( Volatile.Read &m_ExitFlg ) then
+                // Unexpected error
+                m_ReceiveWaiter.SetExceptionForAll ( SessionRecoveryException( ex.Message, m_TSIH ) )
+    }
 
     /// <summary>
     ///  A SCSIResponse PDU was received.

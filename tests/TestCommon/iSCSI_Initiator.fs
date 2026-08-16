@@ -1107,28 +1107,25 @@ type iSCSI_Initiator(
             let readCDB = GenScsiCDB.Read10 0uy DPO.F FUA.F FUA_NV.F lba 0uy blockCount NACA.F LINK.F
             let! itt, _ = this.SendSCSICommandPDU cid BitI.F BitF.T BitR.T BitW.F TaskATTRCd.SIMPLE_TASK lun accessLength readCDB PooledBuffer.Empty 0u
 
-            do! Functions.loopAsync ( fun () ->
-                task {
-                    let! pdu = this.Receive cid
-                    match pdu with
-                    | :? SCSIDataInPDU as x ->
-                        if x.InitiatorTaskTag <> itt then
-                            raise <| SessionRecoveryException( "Unexpedted ITT", m_SessParams.TSIH )
-                        x.DataSegment.CopyTo( rBuffer, int32 x.BufferOffset )
-                        return true
-                    | :? SCSIResponsePDU as x ->
-                        if x.InitiatorTaskTag <> itt then
-                            raise <| SessionRecoveryException( "Unexpedted ITT", m_SessParams.TSIH )
-                        if x.Response <> iScsiSvcRespCd.COMMAND_COMPLETE then
-                            raise <| SessionRecoveryException( "Unexpedted Response", m_SessParams.TSIH )
-                        if x.Status <> ScsiCmdStatCd.GOOD then
-                            raise <| SessionRecoveryException( "Unexpedted Status", m_SessParams.TSIH )
-                        return false
-                    | _ ->
-                        raise <| SessionRecoveryException( "Unexpedted PDU", m_SessParams.TSIH )
-                        return false
-                }
-            )
+            let cont = PseudoSeq<unit>( () )
+            for _ in cont do
+                let! pdu = this.Receive cid
+                match pdu with
+                | :? SCSIDataInPDU as x ->
+                    if x.InitiatorTaskTag <> itt then
+                        raise <| SessionRecoveryException( "Unexpedted ITT", m_SessParams.TSIH )
+                    x.DataSegment.CopyTo( rBuffer, int32 x.BufferOffset )
+
+                | :? SCSIResponsePDU as x ->
+                    if x.InitiatorTaskTag <> itt then
+                        raise <| SessionRecoveryException( "Unexpedted ITT", m_SessParams.TSIH )
+                    if x.Response <> iScsiSvcRespCd.COMMAND_COMPLETE then
+                        raise <| SessionRecoveryException( "Unexpedted Response", m_SessParams.TSIH )
+                    if x.Status <> ScsiCmdStatCd.GOOD then
+                        raise <| SessionRecoveryException( "Unexpedted Status", m_SessParams.TSIH )
+                    cont.Break()
+                | _ ->
+                    raise <| SessionRecoveryException( "Unexpedted PDU", m_SessParams.TSIH )
             return rBuffer
         }
 
@@ -1158,40 +1155,35 @@ type iSCSI_Initiator(
             let writeCDB = GenScsiCDB.Write10 0uy DPO.F FUA.F FUA_NV.F lba 0uy blockCount NACA.F LINK.F
             let! itt, _ = this.SendSCSICommandPDU cid BitI.F BitF.T BitR.F BitW.T TaskATTRCd.SIMPLE_TASK lun ( uint32 bytesData.Length ) writeCDB PooledBuffer.Empty 0u
 
-            let loop () : Task<bool> =
-                task {
-                    let! pdu = this.Receive cid
-                    match pdu with
-                    | :? R2TPDU as x ->
-                        if x.InitiatorTaskTag <> itt then
-                            raise <| SessionRecoveryException( "Unexpedted ITT", m_SessParams.TSIH )
+            let cont = PseudoSeq<unit>( () )
+            for _ in cont do
+                let! pdu = this.Receive cid
+                match pdu with
+                | :? R2TPDU as x ->
+                    if x.InitiatorTaskTag <> itt then
+                        raise <| SessionRecoveryException( "Unexpedted ITT", m_SessParams.TSIH )
 
-                        let segs =
-                            Functions.DivideRespDataSegment x.BufferOffset x.DesiredDataTransferLength mbl mrdsl
-                            |> List.indexed
-                            |> List.map ( fun ( idx, struct( s, l , f ) ) -> struct( idx, s, l, f ) )
+                    let segs =
+                        Functions.DivideRespDataSegment x.BufferOffset x.DesiredDataTransferLength mbl mrdsl
+                        |> List.indexed
+                        |> List.map ( fun ( idx, struct( s, l , f ) ) -> struct( idx, s, l, f ) )
 
-                        for struct( idx, s, l, f ) in segs do
-                            let sendData = PooledBuffer.Rent( bytesData, int32 s, int32 l )
-                            let datasn = datasn_me.fromPrim ( uint32 idx )
-                            do! this.SendSCSIDataOutPDU cid ( BitF.ofBool f ) itt lun x.TargetTransferTag datasn s sendData
-                            sendData.Return()
+                    for struct( idx, s, l, f ) in segs do
+                        let sendData = PooledBuffer.Rent( bytesData, int32 s, int32 l )
+                        let datasn = datasn_me.fromPrim ( uint32 idx )
+                        do! this.SendSCSIDataOutPDU cid ( BitF.ofBool f ) itt lun x.TargetTransferTag datasn s sendData
+                        sendData.Return()
 
-                        return true
-                    | :? SCSIResponsePDU as x ->
-                        if x.InitiatorTaskTag <> itt then
-                            raise <| SessionRecoveryException( "Unexpedted ITT", m_SessParams.TSIH )
-                        if x.Response <> iScsiSvcRespCd.COMMAND_COMPLETE then
-                            raise <| SessionRecoveryException( "Unexpedted Response", m_SessParams.TSIH )
-                        if x.Status <> ScsiCmdStatCd.GOOD then
-                            raise <| SessionRecoveryException( "Unexpedted Status", m_SessParams.TSIH )
-                        return false
-                    | _ ->
-                        raise <| SessionRecoveryException( "Unexpedted PDU", m_SessParams.TSIH )
-                        return false
-                }
-
-            do! Functions.loopAsync loop
+                | :? SCSIResponsePDU as x ->
+                    if x.InitiatorTaskTag <> itt then
+                        raise <| SessionRecoveryException( "Unexpedted ITT", m_SessParams.TSIH )
+                    if x.Response <> iScsiSvcRespCd.COMMAND_COMPLETE then
+                        raise <| SessionRecoveryException( "Unexpedted Response", m_SessParams.TSIH )
+                    if x.Status <> ScsiCmdStatCd.GOOD then
+                        raise <| SessionRecoveryException( "Unexpedted Status", m_SessParams.TSIH )
+                    cont.Break()
+                | _ ->
+                    raise <| SessionRecoveryException( "Unexpedted PDU", m_SessParams.TSIH )
         }
 
     /// <summary>

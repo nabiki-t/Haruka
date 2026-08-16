@@ -126,8 +126,8 @@ type LogAggregator_Test1 () =
         sw.Close()
         sw.Dispose()
 
-        Functions.loopAsync ( fun () -> Task.FromResult cp.IsConnected )
-        |> Functions.RunTaskSynchronously
+        while cp.IsConnected do
+            Thread.Sleep 10
         Assert.False cp.IsConnected
 
         k.NoticeTerminate()
