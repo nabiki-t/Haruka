@@ -192,3 +192,80 @@ type PseudoSeq_Test() =
             else
                 ps.Break()
         )
+
+    [<Fact>]
+    member _.PseudoSeqCond_Constractor_001() =
+        let ps = PseudoSeqCond<int>( ValueSome 1, ( fun a -> a = 1 ) )
+        Assert.StrictEqual( ValueSome 1, ps.NextValue )
+
+    [<Fact>]
+    member _.PseudoSeqCond_Constractor_002() =
+        let ps = PseudoSeqCond<int>( ValueSome 0, ( fun a -> a = 1 ) )
+        Assert.StrictEqual( ValueNone, ps.NextValue )
+
+    [<Fact>]
+    member _.PseudoSeqCond_Constractor_003() =
+        let ps = PseudoSeqCond<int>( ValueNone, ( fun a -> a = 1 ) )
+        Assert.StrictEqual( ValueNone, ps.NextValue )
+
+    [<Fact>]
+    member _.PseudoSeqCond_Constractor_004() =
+        let ps = PseudoSeqCond<int>( fun a -> a = 1 )
+        Assert.StrictEqual( ValueNone, ps.NextValue )
+
+    [<Fact>]
+    member _.PseudoSeqCond_Constractor_005() =
+        let ps = PseudoSeqCond<int>( 1, ( fun a -> a = 1 ) )
+        Assert.StrictEqual( ValueSome 1, ps.NextValue )
+
+    [<Fact>]
+    member _.PseudoSeqCond_Constractor_006() =
+        let ps = PseudoSeqCond<int>( 0, ( fun a -> a = 1 ) )
+        Assert.StrictEqual( ValueNone, ps.NextValue )
+
+    [<Fact>]
+    member _.PseudoSeqCond_Next_001() =
+        let ps = PseudoSeqCond<int>( 2, ( fun a -> a > 1 ) )
+        ps.Next 3
+        Assert.StrictEqual( ValueSome 3, ps.NextValue )
+
+    [<Fact>]
+    member _.PseudoSeqCond_Next_002() =
+        let ps = PseudoSeqCond<int>( 2, ( fun a -> a > 1 ) )
+        ps.Next 1
+        Assert.StrictEqual( ValueNone, ps.NextValue )
+
+    [<Fact>]
+    member _.PseudoSeqCond_Continue_001() =
+        let ps = PseudoSeqCond<int>( 2, ( fun a -> a > 1 ) )
+        ps.Continue 3
+        Assert.StrictEqual( ValueSome 3, ps.NextValue )
+
+    [<Fact>]
+    member _.PseudoSeqCond_Continue_002() =
+        let ps = PseudoSeqCond<int>( 2, ( fun a -> a > 1 ) )
+        ps.Continue 1
+        Assert.StrictEqual( ValueSome 1, ps.NextValue )
+
+    [<Fact>]
+    member _.PseudoSeqCond_Break_001() =
+        let ps = PseudoSeqCond<int>( 2, ( fun a -> a > 1 ) )
+        Assert.StrictEqual( ValueSome 2, ps.NextValue )
+        ps.Break()
+        Assert.StrictEqual( ValueNone, ps.NextValue )
+
+    [<Fact>]
+    member _.PseudoSeqCond_Loop_001() =
+        let ps = PseudoSeqCond<int>( 0, ( fun a -> a < 10 ) )
+        let mutable cnt = 0
+        for itr in ps do
+            Assert.StrictEqual( itr, cnt )
+            cnt <- cnt + 1
+            ps.Next( itr + 1 )
+        Assert.StrictEqual( 10, cnt )
+
+    [<Fact>]
+    member _.PseudoSeqCond_Loop_002() =
+        let ps = PseudoSeqCond<int>( 10, ( fun a -> a < 10 ) )
+        for _ in ps do
+            Assert.Fail __LINE__

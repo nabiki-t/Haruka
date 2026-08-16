@@ -96,3 +96,48 @@ and PseudoEnumerator<'T>( m_Seq : PseudoSeq<'T> ) =
         /// Nothing to do.
         override _.Dispose() = ()
 
+/// <summary>
+///  A pseudo-sequence object that specifies repetition conditions in advance.
+/// </summary>
+/// <param name="initVal">
+///  Specify the initial value. 
+///  If the specified initial value does not satisfy the iteration condition, 
+///  the iteration is not executed unless a value that satisfies the condition is explicitly specified.
+/// </param>
+/// <param name="m_Condition">
+///  Specify the repetition condition.
+///  The loop executes as long as this function returns true.
+/// </param>
+type PseudoSeqCond<'T>( initVal : 'T voption, m_Condition : 'T -> bool ) =
+    inherit PseudoSeq<'T>( ValueOption.filter m_Condition initVal )
+
+    /// Construct a PseudoSeq without specifying the following values.
+    /// Repetition is not performed unless a value is explicitly specified.
+    new( m_Condition : 'T -> bool ) =
+        PseudoSeqCond<'T>( ValueNone, m_Condition )
+
+    /// Construct a PseudoSeq by specifying initial values.
+    new( v :'T, m_Condition : 'T -> bool ) =
+        PseudoSeqCond<'T>( ValueSome v, m_Condition )
+
+    /// <summary>
+    ///  Specify the following values.
+    /// </summary>
+    /// <param name="v">
+    ///  Next value.
+    /// </param>
+    /// <remarks>
+    ///  If the specified next value satisfies the iteration condition, 
+    ///  the loop continues (equivalent to calling the Continue method). 
+    ///  If it does not satisfy the iteration condition,
+    ///  the loop terminates (equivalent to calling the Break method).
+    ///  Note that if the parent class's `Continue` method is called directly,
+    ///  the loop continues without evaluating the repetition condition.
+    ///  Similarly, if the parent class's Break method is called,
+    ///  the loop is interrupted regardless of the repetition condition.
+    /// </remarks>
+    member _.Next ( v : 'T ) : unit =
+        if m_Condition v then
+            base.Continue v
+        else
+            base.Break()
