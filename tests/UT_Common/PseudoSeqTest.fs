@@ -28,28 +28,32 @@ type PseudoSeq_Test() =
     // Test cases
 
     [<Fact>]
-    member _.Constractor_001() =
-        let ps = PseudoSeq<int>( ValueSome 1 )
+    member _.PseudoSeqStat_Constractor_001() =
+        let ps = PseudoSeqStat<int32, uint32>( ValueSome 1 )
         Assert.StrictEqual( ValueSome 1, ps.NextValue )
+        Assert.StrictEqual( ValueNone, ps.LastValue )
 
     [<Fact>]
-    member _.Constractor_002() =
-        let ps = PseudoSeq<int>( ValueNone )
+    member _.PseudoSeqStat_Constractor_002() =
+        let ps = PseudoSeqStat<int32, uint32>( ValueNone )
         Assert.StrictEqual( ValueNone, ps.NextValue )
+        Assert.StrictEqual( ValueNone, ps.LastValue )
 
     [<Fact>]
-    member _.Constractor_003() =
-        let ps = PseudoSeq<int>()
+    member _.PseudoSeqStat_Constractor_003() =
+        let ps = PseudoSeqStat<int32, uint32>()
         Assert.StrictEqual( ValueNone, ps.NextValue )
+        Assert.StrictEqual( ValueNone, ps.LastValue )
 
     [<Fact>]
-    member _.Constractor_004() =
-        let ps = PseudoSeq<int>( 99 )
+    member _.PseudoSeqStat_Constractor_004() =
+        let ps = PseudoSeqStat<int32, uint32>( 99 )
         Assert.StrictEqual( ValueSome 99, ps.NextValue )
+        Assert.StrictEqual( ValueNone, ps.LastValue )
 
     [<Fact>]
-    member _.GetEnumerator_001() =
-        let ps = PseudoSeq<int>( 99 )
+    member _.PseudoSeqStat_GetEnumerator_001() =
+        let ps = PseudoSeqStat<int32, uint32>( 99 )
         let en : IEnumerator<int> = ( ps :> IEnumerable<int> ).GetEnumerator()
         
         Assert.ThrowsAny<Exception> ( fun () ->
@@ -57,15 +61,15 @@ type PseudoSeq_Test() =
         ) |> ignore
 
     [<Fact>]
-    member _.GetEnumerator_002() =
-        let ps = PseudoSeq<int>( 99 )
+    member _.PseudoSeqStat_GetEnumerator_002() =
+        let ps = PseudoSeqStat<int32, uint32>( 99 )
         let en : IEnumerator<int> = ( ps :> IEnumerable<int> ).GetEnumerator()
         Assert.True( en.MoveNext() )
         Assert.StrictEqual( 99, en.Current )
 
     [<Fact>]
-    member _.GetEnumerator_003() =
-        let ps = PseudoSeq<int>()
+    member _.PseudoSeqStat_GetEnumerator_003() =
+        let ps = PseudoSeqStat<int32, uint32>()
         let en : IEnumerator<int> = ( ps :> IEnumerable<int> ).GetEnumerator()
         Assert.False( en.MoveNext() )
         Assert.ThrowsAny<Exception> ( fun () ->
@@ -73,28 +77,29 @@ type PseudoSeq_Test() =
         ) |> ignore
 
     [<Fact>]
-    member _.GetEnumerator_004() =
-        let ps = PseudoSeq<int>( 99 )
+    member _.PseudoSeqStat_GetEnumerator_004() =
+        let ps = PseudoSeqStat<int32, uint32>( 99 )
         let en : System.Collections.IEnumerator = ( ps :> System.Collections.IEnumerable ).GetEnumerator()
         Assert.True( en.MoveNext() )
         Assert.StrictEqual( 99, en.Current :?> int )
 
     [<Fact>]
-    member _.Break_001() =
-        let ps = PseudoSeq<int>( 99 )
+    member _.PseudoSeqStat_Break_001() =
+        let ps = PseudoSeqStat<int32, uint32>( 99 )
         let en : IEnumerator<int> = ( ps :> IEnumerable<int> ).GetEnumerator()
 
         Assert.StrictEqual( ValueSome 99, ps.NextValue )
         ps.Break()
         Assert.StrictEqual( ValueNone, ps.NextValue )
+        Assert.StrictEqual( ValueNone, ps.LastValue )
         Assert.False( en.MoveNext() )
         Assert.ThrowsAny<Exception> ( fun () ->
             en.Current |> ignore
         ) |> ignore
 
     [<Fact>]
-    member _.Break_002() =
-        let ps = PseudoSeq<int>( 99 )
+    member _.PseudoSeqStat_Break_002() =
+        let ps = PseudoSeqStat<int32, uint32>( 99 )
         let en : IEnumerator<int> = ( ps :> IEnumerable<int> ).GetEnumerator()
 
         Assert.StrictEqual( ValueSome 99, ps.NextValue )
@@ -104,6 +109,7 @@ type PseudoSeq_Test() =
         ps.Break()
 
         Assert.StrictEqual( ValueNone, ps.NextValue )
+        Assert.StrictEqual( ValueNone, ps.LastValue )
         Assert.StrictEqual( 99, en.Current )
         Assert.False( en.MoveNext() )
         Assert.ThrowsAny<Exception> ( fun () ->
@@ -111,22 +117,37 @@ type PseudoSeq_Test() =
         ) |> ignore
 
     [<Fact>]
-    member _.Break_003() =
-        let ps = PseudoSeq<int>()
+    member _.PseudoSeqStat_Break_003() =
+        let ps = PseudoSeqStat<int32, uint32>()
         let en : IEnumerator<int> = ( ps :> IEnumerable<int> ).GetEnumerator()
         Assert.StrictEqual( ValueNone, ps.NextValue )
 
         ps.Break()
 
         Assert.StrictEqual( ValueNone, ps.NextValue )
+        Assert.StrictEqual( ValueNone, ps.LastValue )
         Assert.False( en.MoveNext() )
         Assert.ThrowsAny<Exception> ( fun () ->
             en.Current |> ignore
         ) |> ignore
 
     [<Fact>]
-    member _.Continue_001() =
-        let ps = PseudoSeq<int>( 99 )
+    member _.PseudoSeqStat_Break_004() =
+        let ps = PseudoSeqStat<int32, uint32>()
+        let en : IEnumerator<int> = ( ps :> IEnumerable<int> ).GetEnumerator()
+        Assert.StrictEqual( ValueNone, ps.NextValue )
+
+        ps.Continue 99
+        Assert.StrictEqual( ValueSome 99, ps.NextValue )
+
+        ps.Break 98u
+
+        Assert.StrictEqual( ValueNone, ps.NextValue )
+        Assert.StrictEqual( ValueSome 98u, ps.LastValue )
+
+    [<Fact>]
+    member _.PseudoSeqStat_Continue_001() =
+        let ps = PseudoSeqStat<int32, uint32>( 99 )
         let en : IEnumerator<int> = ( ps :> IEnumerable<int> ).GetEnumerator()
 
         Assert.StrictEqual( ValueSome 99, ps.NextValue )
@@ -136,8 +157,8 @@ type PseudoSeq_Test() =
         Assert.StrictEqual( 80, en.Current )
 
     [<Fact>]
-    member _.Continue_002() =
-        let ps = PseudoSeq<int>( 99 )
+    member _.PseudoSeqStat_Continue_002() =
+        let ps = PseudoSeqStat<int32, uint32>( 99 )
         let en : IEnumerator<int> = ( ps :> IEnumerable<int> ).GetEnumerator()
 
         Assert.StrictEqual( ValueSome 99, ps.NextValue )
@@ -152,8 +173,8 @@ type PseudoSeq_Test() =
         Assert.StrictEqual( 80, en.Current )
 
     [<Fact>]
-    member _.Continue_003() =
-        let ps = PseudoSeq<int>()
+    member _.PseudoSeqStat_Continue_003() =
+        let ps = PseudoSeqStat<int32, uint32>()
         let en : IEnumerator<int> = ( ps :> IEnumerable<int> ).GetEnumerator()
         Assert.StrictEqual( ValueNone, ps.NextValue )
 
@@ -164,8 +185,8 @@ type PseudoSeq_Test() =
         Assert.StrictEqual( 80, en.Current )
 
     [<Fact>]
-    member _.Loop_001() =
-        let ps = PseudoSeq<int>( 0 )
+    member _.PseudoSeqStat_Loop_001() =
+        let ps = PseudoSeqStat<int32, uint32>( 0 )
         let mutable cnt = 0
         for itr in ps do
             Assert.StrictEqual( itr, cnt )
@@ -176,14 +197,14 @@ type PseudoSeq_Test() =
                 ps.Break()
 
     [<Fact>]
-    member _.Loop_002() =
-        let ps = PseudoSeq<int>()
+    member _.PseudoSeqStat_Loop_002() =
+        let ps = PseudoSeqStat<int32, uint32>()
         for _ in ps do
             Assert.Fail __LINE__
 
     [<Fact>]
-    member _.Loop_003() =
-        let ps = PseudoSeq<int>( 0 )
+    member _.PseudoSeqStat_Loop_003() =
+        let ps = PseudoSeqStat<int32, uint32>( 0 )
         ps
         |> Seq.iteri ( fun idx itr ->
             Assert.StrictEqual( itr, idx )
@@ -192,6 +213,53 @@ type PseudoSeq_Test() =
             else
                 ps.Break()
         )
+
+    [<Fact>]
+    member _.PseudoSeqStat_Loop_004() =
+        let ps = PseudoSeqStat<int32, uint32>( 0 )
+        for itr in ps do
+            if itr < 10 then
+                ps.Continue( itr + 1 )
+            else
+                ps.Break( uint32 itr + 1u )
+        Assert.StrictEqual( ValueSome 11u, ps.LastValue )
+
+    [<Fact>]
+    member _.PseudoSeq_Constractor_001() =
+        let ps = PseudoSeq<int32 >( ValueSome 1 )
+        Assert.StrictEqual( ValueSome 1, ps.NextValue )
+        Assert.StrictEqual( ValueNone, ps.LastValue )
+
+    [<Fact>]
+    member _.PseudoSeq_Constractor_002() =
+        let ps = PseudoSeq<int32>( ValueNone )
+        Assert.StrictEqual( ValueNone, ps.NextValue )
+        Assert.StrictEqual( ValueNone, ps.LastValue )
+
+    [<Fact>]
+    member _.PseudoSeq_Constractor_003() =
+        let ps = PseudoSeq<int32>()
+        Assert.StrictEqual( ValueNone, ps.NextValue )
+        Assert.StrictEqual( ValueNone, ps.LastValue )
+
+    [<Fact>]
+    member _.PseudoSeq_Constractor_004() =
+        let ps = PseudoSeq<int32>( 99 )
+        Assert.StrictEqual( ValueSome 99, ps.NextValue )
+        Assert.StrictEqual( ValueNone, ps.LastValue )
+
+    [<Fact>]
+    member _.PseudoSeq_Loop_001() =
+        let ps = PseudoSeq<int32>( 0 )
+        let mutable cnt = 0
+        for itr in ps do
+            Assert.StrictEqual( itr, cnt )
+            cnt <- cnt + 1
+            if itr < 10 then
+                ps.Continue( itr + 1 )
+            else
+                ps.Break( itr + 1 )
+        Assert.StrictEqual( ValueSome 11, ps.LastValue )
 
     [<Fact>]
     member _.PseudoSeqCond_Constractor_001() =
@@ -263,9 +331,20 @@ type PseudoSeq_Test() =
             cnt <- cnt + 1
             ps.Next( itr + 1 )
         Assert.StrictEqual( 10, cnt )
+        Assert.StrictEqual( ValueSome 10, ps.LastValue )
 
     [<Fact>]
     member _.PseudoSeqCond_Loop_002() =
         let ps = PseudoSeqCond<int>( 10, ( fun a -> a < 10 ) )
         for _ in ps do
             Assert.Fail __LINE__
+
+    [<Fact>]
+    member _.PseudoSeqCond_Loop_003() =
+        let ps = PseudoSeqCond<int>( 0, ( fun a -> a < 10 ) )
+        for itr in ps do
+            if itr < 10 then
+                ps.Continue( itr + 1 )
+            else
+                ps.Break( itr + 90 )
+        Assert.StrictEqual( ValueSome 100, ps.LastValue )

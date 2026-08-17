@@ -22,34 +22,50 @@ open System.Collections.Generic
 /// <param name="initVal">
 ///  Specify the initial value.
 /// </param>
-type PseudoSeq<'T>( initVal : 'T voption ) =
+type PseudoSeqStat<'T1, 'T2>( initVal : 'T1 voption ) =
 
     /// next value
-    let mutable m_NextValue : 'T voption = initVal
+    let mutable m_NextValue : 'T1 voption = initVal
 
-    /// Construct a PseudoSeq without specifying the following values.
+    /// If a value is specified in the Break method, that specified value is retained.
+    let mutable m_LastValue : 'T2 voption = ValueNone
+
+    /// Construct a PseudoSeqStat without specifying the following values.
     /// Repetition is not performed unless a value is explicitly specified.
-    new() = PseudoSeq<'T>( ValueNone )
+    new() = PseudoSeqStat<'T1, 'T2>( ValueNone )
 
-    /// Construct a PseudoSeq by specifying initial values.
-    new( v :'T ) = PseudoSeq<'T>( ValueSome v )
+    /// Construct a PseudoSeqStat by specifying initial values.
+    new( v :'T1 ) = PseudoSeqStat<'T1, 'T2>( ValueSome v )
 
     /// Get next value property
-    member _.NextValue with set ( v : 'T voption ) : unit = m_NextValue <- v
-                       and  get () : 'T voption = m_NextValue
+    member _.NextValue = m_NextValue
 
-    interface IEnumerable<'T> with
+    /// Get last value property
+    member _.LastValue = m_LastValue
+
+    interface IEnumerable<'T1> with
         /// Get pseudo enumerator object
-        override this.GetEnumerator() : IEnumerator<'T> =
-            new PseudoEnumerator<'T>( this )
+        override this.GetEnumerator() : IEnumerator<'T1> =
+            new PseudoEnumerator<'T1, 'T2>( this )
 
         /// Get pseudo enumerator object
         override this.GetEnumerator() : System.Collections.IEnumerator =
-            new PseudoEnumerator<'T>( this )
+            new PseudoEnumerator<'T1, 'T2>( this )
 
     /// Instruct to interrupt the repetition.
     member _.Break() : unit =
         m_NextValue <- ValueNone
+        m_LastValue <- ValueNone
+
+    /// <summary>
+    ///  Instruct to interrupt the repetition.
+    /// </summary>
+    /// <param name="v">
+    ///  Specify the final value to be retained after the loop terminates.
+    /// </param>
+    member _.Break( v : 'T2 ) : unit =
+        m_NextValue <- ValueNone
+        m_LastValue <- ValueSome v
 
     /// <summary>
     ///  Specify the following value to indicate that the repetition should continue.
@@ -57,8 +73,9 @@ type PseudoSeq<'T>( initVal : 'T voption ) =
     /// <param name="v">
     ///  Next value.
     /// </param>
-    member _.Continue ( v : 'T ) : unit =
+    member _.Continue ( v : 'T1 ) : unit =
         m_NextValue <- ValueSome v
+        m_LastValue <- ValueNone
 
 /// <summary>
 ///  Implement the functionality of the pseudo-Enumerator used in PseudoSeq.
@@ -66,15 +83,15 @@ type PseudoSeq<'T>( initVal : 'T voption ) =
 /// <param name="m_Seq">
 ///  Specify a PseudoSeq instance.
 /// </param>
-and PseudoEnumerator<'T>( m_Seq : PseudoSeq<'T> ) =
+and PseudoEnumerator<'T1, 'T2>( m_Seq : PseudoSeqStat<'T1, 'T2> ) =
 
     /// current value
-    let mutable m_CurrentValue : 'T voption = ValueNone
+    let mutable m_CurrentValue : 'T1 voption = ValueNone
 
-    interface IEnumerator<'T> with
+    interface IEnumerator<'T1> with
 
         /// Get the current value.
-        override _.Current : 'T =
+        override _.Current : 'T1 =
             m_CurrentValue
             |> ValueOption.get
 
@@ -95,6 +112,24 @@ and PseudoEnumerator<'T>( m_Seq : PseudoSeq<'T> ) =
 
         /// Nothing to do.
         override _.Dispose() = ()
+
+
+/// <summary>
+///  Specify the same type name in PseudoSeqStat.
+/// </summary>
+/// <param name="initVal">
+///  Specify the initial value.
+/// </param>
+type PseudoSeq<'T>( initVal : 'T voption ) =
+    inherit PseudoSeqStat<'T, 'T>( initVal )
+
+    /// Construct a PseudoSeq without specifying the following values.
+    /// Repetition is not performed unless a value is explicitly specified.
+    new() = PseudoSeq<'T>( ValueNone )
+
+    /// Construct a PseudoSeq by specifying initial values.
+    new( v :'T ) = PseudoSeq<'T>( ValueSome v )
+
 
 /// <summary>
 ///  A pseudo-sequence object that specifies repetition conditions in advance.
@@ -140,4 +175,4 @@ type PseudoSeqCond<'T>( initVal : 'T voption, m_Condition : 'T -> bool ) =
         if m_Condition v then
             base.Continue v
         else
-            base.Break()
+            base.Break( v )

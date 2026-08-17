@@ -659,27 +659,27 @@ type Connection
     /// <returns>
     ///  Received PDU, or ValueNone if termination noticed.
     /// </returns>
-    member private _.ReceivePDUWithoutReject() =
-        let headerDigest = m_COParams.HeaderDigest.[0]
-        let dataDigest = m_COParams.DataDigest.[0]
-        let mrdsl_t = m_COParams.MaxRecvDataSegmentLength_T
-        Functions.loopAsyncWithArgs ( fun () ->
-            task {
+    member private _.ReceivePDUWithoutReject() : Task<ILogicalPDU voption> =
+        task {
+            let headerDigest = m_COParams.HeaderDigest.[0]
+            let dataDigest = m_COParams.DataDigest.[0]
+            let mrdsl_t = m_COParams.MaxRecvDataSegmentLength_T
+            let cont = PseudoSeqStat< unit, ILogicalPDU >( () )
+            for _ in cont do
                 try
                     let! lpdu = PDU.Receive(
                         mrdsl_t, headerDigest, dataDigest, ValueSome m_TSIH, ValueSome m_CID, ValueSome m_Counter, m_StreamForRead, Standpoint.Target
                     )
-                    return LoopState.Terminate( ValueSome lpdu )
+                    cont.Break lpdu
                 with
                 | :? RejectPDUException as x ->
                     if not m_Killer.IsNoticed then
                         // Send Reject PDU
                         m_session.RejectPDUByHeader m_CID m_Counter x.Header x.Reason
-                        return LoopState.Continue()
                     else
-                        return LoopState.Terminate( ValueNone )
-            }
-        ) ()
+                        cont.Break()
+            return cont.LastValue
+        }
 
     // ------------------------------------------------------------------------
     /// <summary>

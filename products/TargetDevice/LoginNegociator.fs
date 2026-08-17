@@ -409,143 +409,137 @@ type LoginNegociator
             // receive first PDU in discovery session
             let! next2_CPDU = PDU.Receive( mrdsl_T, hDigest, dDigest, ValueNone, ValueNone, ValueNone, m_NetStream, Standpoint.Target )
 
-            let negoloop struct ( beforePDU : ILogicalPDU, curStatSN : STATSN_T ) : Task< LoopState< struct( ILogicalPDU * STATSN_T ), unit > > =
-                task {
-                    if beforePDU.Opcode = OpcodeCd.LOGOUT_REQ then
-                        let logoutReq = beforePDU :?> LogoutRequestPDU
-                        if logoutReq.ReasonCode <> LogoutReqReasonCd.CLOSE_SESS then
-                            let msg = "Invalid logout reason in discovery session."
+            let wstatsn = next2_CPDU.ExpStatSN  // Since this is a PDU received by the target, ExpStatSN must exist.
+            let cont = PseudoSeq< struct ( ILogicalPDU * STATSN_T ) >( struct( next2_CPDU, wstatsn.Value ) )
+            for struct ( beforePDU, curStatSN ) in cont do
+                if beforePDU.Opcode = OpcodeCd.LOGOUT_REQ then
+                    let logoutReq = beforePDU :?> LogoutRequestPDU
+                    if logoutReq.ReasonCode <> LogoutReqReasonCd.CLOSE_SESS then
+                        let msg = "Invalid logout reason in discovery session."
+                        HLogger.Trace( LogID.E_UNKNOWN_NEGOTIATION_ERROR, fun g -> g.Gen1( m_ObjID, msg ) )
+                        raise <| SessionRecoveryException ( msg, tsih_me.zero )
+                    else
+                        // Send Logout Response PDU and close the connection
+                        let resp =
+                            {
+                                Response = LogoutResCd.SUCCESS;
+                                InitiatorTaskTag = logoutReq.InitiatorTaskTag;
+                                StatSN =  logoutReq.ExpStatSN;
+                                ExpCmdSN = if logoutReq.I then logoutReq.CmdSN else cmdsn_me.next logoutReq.CmdSN;
+                                MaxCmdSN = if logoutReq.I then logoutReq.CmdSN else cmdsn_me.next logoutReq.CmdSN;
+                                Time2Wait = 0us;
+                                Time2Retain = 0us;
+                                CloseAllegiantConnection = true;    // Close the connection
+                            } :> ILogicalPDU
+                        let! _ = PDU.SendPDU( mrdsl_I, hDigest, dDigest, ValueNone, ValueNone, ValueNone, m_ObjID, m_NetStream, resp )
+                        do! m_NetStream.FlushAsync()
+                        m_NetStream.Socket.Disconnect false
+                        m_NetStream.Close()
+                        m_NetStream.Dispose()
+                        HLogger.Trace( LogID.I_END_DISCOVERY_SESSION, fun g -> g.Gen1( m_ObjID, initiatorName ) )
+                        cont.Break()
+
+                elif beforePDU.Opcode = OpcodeCd.TEXT_REQ then
+
+                    let! textKey, recvPDU, nextStatSN =
+                        this.ReceiveTextRequestSequense ( beforePDU :?> TextRequestPDU ) next1_iSCSIParamCO curStatSN
+
+                    // if keys not allowed in discovery session is used, drop this connection
+                    if textKey.AuthMethod <> TextValueType.ISV_Missing ||
+                        textKey.CHAP_A <> TextValueType.ISV_Missing ||
+                        textKey.CHAP_I <> TextValueType.ISV_Missing ||
+                        textKey.CHAP_C <> TextValueType.ISV_Missing ||
+                        textKey.CHAP_N <> TextValueType.ISV_Missing ||
+                        textKey.CHAP_R <> TextValueType.ISV_Missing ||
+                        textKey.HeaderDigest <> TextValueType.ISV_Missing ||
+                        textKey.DataDigest <> TextValueType.ISV_Missing ||
+                        textKey.MaxConnections <> TextValueType.ISV_Missing ||
+                        textKey.TargetName <> TextValueType.ISV_Missing ||
+                        textKey.InitiatorName <> TextValueType.ISV_Missing ||
+                        textKey.TargetAlias <> TextValueType.ISV_Missing ||
+                        textKey.TargetAddress <> TextValueType.ISV_Missing ||
+                        textKey.TargetPortalGroupTag <> TextValueType.ISV_Missing ||
+                        textKey.InitialR2T <> TextValueType.ISV_Missing ||
+                        textKey.ImmediateData <> TextValueType.ISV_Missing ||
+                        textKey.MaxRecvDataSegmentLength_I <> TextValueType.ISV_Missing ||
+                        textKey.MaxRecvDataSegmentLength_T <> TextValueType.ISV_Missing ||
+                        textKey.MaxBurstLength <> TextValueType.ISV_Missing ||
+                        textKey.FirstBurstLength <> TextValueType.ISV_Missing ||
+                        textKey.DefaultTime2Wait <> TextValueType.ISV_Missing ||
+                        textKey.DefaultTime2Retain <> TextValueType.ISV_Missing ||
+                        textKey.MaxOutstandingR2T <> TextValueType.ISV_Missing ||
+                        textKey.DataPDUInOrder <> TextValueType.ISV_Missing ||
+                        textKey.DataSequenceInOrder <> TextValueType.ISV_Missing ||
+                        textKey.ErrorRecoveryLevel <> TextValueType.ISV_Missing ||
+                        textKey.TaskReporting <> TextValueType.ISV_Missing ||
+                        textKey.SessionType <> TextValueType.ISV_Missing ||
+                        textKey.UnknownKeys.Length > 0 then
+                            let msg = "Invalid text key was received in discovery session."
                             HLogger.Trace( LogID.E_UNKNOWN_NEGOTIATION_ERROR, fun g -> g.Gen1( m_ObjID, msg ) )
                             raise <| SessionRecoveryException ( msg, tsih_me.zero )
-                            return LoopState.Terminate()
-                        else
-                            // Send Logout Response PDU and close the connection
-                            let resp =
-                                {
-                                    Response = LogoutResCd.SUCCESS;
-                                    InitiatorTaskTag = logoutReq.InitiatorTaskTag;
-                                    StatSN =  logoutReq.ExpStatSN;
-                                    ExpCmdSN = if logoutReq.I then logoutReq.CmdSN else cmdsn_me.next logoutReq.CmdSN;
-                                    MaxCmdSN = if logoutReq.I then logoutReq.CmdSN else cmdsn_me.next logoutReq.CmdSN;
-                                    Time2Wait = 0us;
-                                    Time2Retain = 0us;
-                                    CloseAllegiantConnection = true;    // Close the connection
-                                } :> ILogicalPDU
-                            let! _ = PDU.SendPDU( mrdsl_I, hDigest, dDigest, ValueNone, ValueNone, ValueNone, m_ObjID, m_NetStream, resp )
-                            do! m_NetStream.FlushAsync()
-                            m_NetStream.Socket.Disconnect false
-                            m_NetStream.Close()
-                            m_NetStream.Dispose()
-                            HLogger.Trace( LogID.I_END_DISCOVERY_SESSION, fun g -> g.Gen1( m_ObjID, initiatorName ) )
-                            return LoopState.Terminate()
 
-                    elif beforePDU.Opcode = OpcodeCd.TEXT_REQ then
+                    let responseData =
+                        match textKey.SendTargets with
+                        | TextValueType.Value( "All" ) ->
+                            [|
+                                let enc = Encoding.GetEncoding( "utf-8" )
+                                let targetConfs = m_StatusMaster.GetActiveTarget()
+                                let netPortalConfs = m_StatusMaster.GetNetworkPortal()
+                                for tn in targetConfs do
+                                    let targetNameStr = "TargetName=" + tn.TargetName
+                                    yield! enc.GetBytes targetNameStr
+                                    yield '\u0000'B
 
-                        let! textKey, recvPDU, nextStatSN =
-                            this.ReceiveTextRequestSequense ( beforePDU :?> TextRequestPDU ) next1_iSCSIParamCO curStatSN
+                                    for pn in netPortalConfs do
+                                        if pn.TargetPortalGroupTag = tn.TargetPortalGroupTag then
+                                            let wadr = Functions.ConfiguredNetPortAddressToTargetAddressStr pn.TargetAddress ( ValueSome localAddress )
+                                            let targetAddressStr = sprintf "TargetAddress=%s:%d,%d" wadr pn.PortNumber pn.TargetPortalGroupTag
+                                            yield! enc.GetBytes targetAddressStr
+                                            yield '\u0000'B
+                            |]
 
-                        // if keys not allowed in discovery session is used, drop this connection
-                        if textKey.AuthMethod <> TextValueType.ISV_Missing ||
-                            textKey.CHAP_A <> TextValueType.ISV_Missing ||
-                            textKey.CHAP_I <> TextValueType.ISV_Missing ||
-                            textKey.CHAP_C <> TextValueType.ISV_Missing ||
-                            textKey.CHAP_N <> TextValueType.ISV_Missing ||
-                            textKey.CHAP_R <> TextValueType.ISV_Missing ||
-                            textKey.HeaderDigest <> TextValueType.ISV_Missing ||
-                            textKey.DataDigest <> TextValueType.ISV_Missing ||
-                            textKey.MaxConnections <> TextValueType.ISV_Missing ||
-                            textKey.TargetName <> TextValueType.ISV_Missing ||
-                            textKey.InitiatorName <> TextValueType.ISV_Missing ||
-                            textKey.TargetAlias <> TextValueType.ISV_Missing ||
-                            textKey.TargetAddress <> TextValueType.ISV_Missing ||
-                            textKey.TargetPortalGroupTag <> TextValueType.ISV_Missing ||
-                            textKey.InitialR2T <> TextValueType.ISV_Missing ||
-                            textKey.ImmediateData <> TextValueType.ISV_Missing ||
-                            textKey.MaxRecvDataSegmentLength_I <> TextValueType.ISV_Missing ||
-                            textKey.MaxRecvDataSegmentLength_T <> TextValueType.ISV_Missing ||
-                            textKey.MaxBurstLength <> TextValueType.ISV_Missing ||
-                            textKey.FirstBurstLength <> TextValueType.ISV_Missing ||
-                            textKey.DefaultTime2Wait <> TextValueType.ISV_Missing ||
-                            textKey.DefaultTime2Retain <> TextValueType.ISV_Missing ||
-                            textKey.MaxOutstandingR2T <> TextValueType.ISV_Missing ||
-                            textKey.DataPDUInOrder <> TextValueType.ISV_Missing ||
-                            textKey.DataSequenceInOrder <> TextValueType.ISV_Missing ||
-                            textKey.ErrorRecoveryLevel <> TextValueType.ISV_Missing ||
-                            textKey.TaskReporting <> TextValueType.ISV_Missing ||
-                            textKey.SessionType <> TextValueType.ISV_Missing ||
-                            textKey.UnknownKeys.Length > 0 then
-                                let msg = "Invalid text key was received in discovery session."
-                                HLogger.Trace( LogID.E_UNKNOWN_NEGOTIATION_ERROR, fun g -> g.Gen1( m_ObjID, msg ) )
-                                raise <| SessionRecoveryException ( msg, tsih_me.zero )
+                        | TextValueType.Value( "" ) ->
+                            let msg = "Invalid SendTargets value was received in discovery session."
+                            HLogger.Trace( LogID.E_UNKNOWN_NEGOTIATION_ERROR, fun g -> g.Gen1( m_ObjID, msg ) )
+                            raise <| SessionRecoveryException ( msg, tsih_me.zero )
 
-                        let responseData =
-                            match textKey.SendTargets with
-                            | TextValueType.Value( "All" ) ->
-                                [|
-                                    let enc = Encoding.GetEncoding( "utf-8" )
-                                    let targetConfs = m_StatusMaster.GetActiveTarget()
-                                    let netPortalConfs = m_StatusMaster.GetNetworkPortal()
-                                    for tn in targetConfs do
+                        | TextValueType.Value( targetName ) ->
+                            [|
+                                let enc = Encoding.GetEncoding( "utf-8" )
+                                let targetConfs = m_StatusMaster.GetActiveTarget()
+                                let netPortalConfs = m_StatusMaster.GetNetworkPortal()
+                                for tn in targetConfs do
+                                    if String.Equals( tn.TargetName, targetName, StringComparison.Ordinal ) then
                                         let targetNameStr = "TargetName=" + tn.TargetName
                                         yield! enc.GetBytes targetNameStr
                                         yield '\u0000'B
-
                                         for pn in netPortalConfs do
                                             if pn.TargetPortalGroupTag = tn.TargetPortalGroupTag then
                                                 let wadr = Functions.ConfiguredNetPortAddressToTargetAddressStr pn.TargetAddress ( ValueSome localAddress )
                                                 let targetAddressStr = sprintf "TargetAddress=%s:%d,%d" wadr pn.PortNumber pn.TargetPortalGroupTag
                                                 yield! enc.GetBytes targetAddressStr
                                                 yield '\u0000'B
-                                |]
+                            |]
 
-                            | TextValueType.Value( "" ) ->
-                                let msg = "Invalid SendTargets value was received in discovery session."
-                                HLogger.Trace( LogID.E_UNKNOWN_NEGOTIATION_ERROR, fun g -> g.Gen1( m_ObjID, msg ) )
-                                raise <| SessionRecoveryException ( msg, tsih_me.zero )
-                                Array.empty
-                            | TextValueType.Value( targetName ) ->
-                                [|
-                                    let enc = Encoding.GetEncoding( "utf-8" )
-                                    let targetConfs = m_StatusMaster.GetActiveTarget()
-                                    let netPortalConfs = m_StatusMaster.GetNetworkPortal()
-                                    for tn in targetConfs do
-                                        if String.Equals( tn.TargetName, targetName, StringComparison.Ordinal ) then
-                                            let targetNameStr = "TargetName=" + tn.TargetName
-                                            yield! enc.GetBytes targetNameStr
-                                            yield '\u0000'B
-                                            for pn in netPortalConfs do
-                                                if pn.TargetPortalGroupTag = tn.TargetPortalGroupTag then
-                                                    let wadr = Functions.ConfiguredNetPortAddressToTargetAddressStr pn.TargetAddress ( ValueSome localAddress )
-                                                    let targetAddressStr = sprintf "TargetAddress=%s:%d,%d" wadr pn.PortNumber pn.TargetPortalGroupTag
-                                                    yield! enc.GetBytes targetAddressStr
-                                                    yield '\u0000'B
-                                |]
-                            | TextValueType.ISV_Missing ->
-                                Array.empty
-                            | _ ->
-                                let msg = "Invalid SendTargets value was received in discovery session."
-                                HLogger.Trace( LogID.E_UNKNOWN_NEGOTIATION_ERROR, fun g -> g.Gen1( m_ObjID, msg ) )
-                                raise <| SessionRecoveryException ( msg, tsih_me.zero )
-                                Array.empty
+                        | TextValueType.ISV_Missing ->
+                            Array.empty
 
-                        // Send text response PDU
-                        let! nextStatSN2 =
-                            this.SendTextResponse_InBytes responseData next1_iSCSIParamCO recvPDU nextStatSN recvPDU.F
+                        | _ ->
+                            let msg = "Invalid SendTargets value was received in discovery session."
+                            HLogger.Trace( LogID.E_UNKNOWN_NEGOTIATION_ERROR, fun g -> g.Gen1( m_ObjID, msg ) )
+                            raise <| SessionRecoveryException ( msg, tsih_me.zero )
 
-                        // Receive next PDU
-                        let! wnextLogiPDU =
-                            PDU.Receive( mrdsl_T, hDigest, dDigest, ValueNone, ValueNone, ValueNone, m_NetStream, Standpoint.Target )
+                    // Send text response PDU
+                    let! nextStatSN2 = this.SendTextResponse_InBytes responseData next1_iSCSIParamCO recvPDU nextStatSN recvPDU.F
 
-                        return LoopState.Continue struct( wnextLogiPDU, nextStatSN2 + nextStatSN )
+                    // Receive next PDU
+                    let! wnextLogiPDU = PDU.Receive( mrdsl_T, hDigest, dDigest, ValueNone, ValueNone, ValueNone, m_NetStream, Standpoint.Target )
+                    cont.Continue( struct( wnextLogiPDU, nextStatSN2 + nextStatSN ) )
 
-                    else
-                        let msg = "Invalid PDU type in discovery session."
-                        HLogger.Trace( LogID.E_PROTOCOL_ERROR, fun g -> g.Gen1( m_ObjID, msg ) )
-                        raise <| SessionRecoveryException ( msg, tsih_me.zero )
-                        return LoopState.Terminate()
-                }
-            let wstatsn = next2_CPDU.ExpStatSN  // Since this is a PDU received by the target, ExpStatSN must exist.
-            do! Functions.loopAsyncWithArgs negoloop struct( next2_CPDU, wstatsn.Value )
+                else
+                    let msg = "Invalid PDU type in discovery session."
+                    HLogger.Trace( LogID.E_PROTOCOL_ERROR, fun g -> g.Gen1( m_ObjID, msg ) )
+                    raise <| SessionRecoveryException ( msg, tsih_me.zero )
         }
 
     // ------------------------------------------------------------------------
@@ -570,60 +564,56 @@ type LoginNegociator
         let hDigest = conParam.HeaderDigest.[0]            // Header Digest
         let dDigest = conParam.DataDigest.[0]              // Data Digest
 
-        // receive text request pdu sequence with c bit.
-        let cbitLoop struct( beforePDU2 : TextRequestPDU, curStatSN2 : STATSN_T, rv : List< TextRequestPDU > )
-                : Task< LoopState< struct( TextRequestPDU * STATSN_T * List< TextRequestPDU > ), unit > > =
-            task {
-                let nextCmdSN =
-                    if beforePDU2.I then
-                        beforePDU2.CmdSN
-                    else
-                        cmdsn_me.next beforePDU2.CmdSN
-
-                // send to empty text response PDU
-                let! _ =
-                    PDU.SendPDU(
-                        mrdsl_I, hDigest, dDigest, ValueNone, ValueNone, ValueNone, m_ObjID, m_NetStream,
-                        {
-                            F = false;
-                            C = false;
-                            LUN = lun_me.zero;
-                            InitiatorTaskTag = beforePDU2.InitiatorTaskTag;
-                            TargetTransferTag = ttt_me.fromPrim 0u;
-                            StatSN = curStatSN2;
-                            ExpCmdSN = nextCmdSN;
-                            MaxCmdSN = nextCmdSN;
-                            TextResponse = Array.empty;
-                        }
-                    )
- 
-                // receive next one
-                let! wnextTextPDU = PDU.Receive( mrdsl_T, hDigest, dDigest, ValueNone, ValueNone, ValueNone, m_NetStream, Standpoint.Target )
-                if wnextTextPDU.Opcode <> OpcodeCd.TEXT_REQ then
-                    HLogger.Trace( LogID.E_PROTOCOL_ERROR, fun g -> g.Gen1( m_ObjID, Constants.getOpcodeNameFromValue wnextTextPDU.Opcode ) )
-                    raise <| SessionRecoveryException ( "Unexpected PDU was received in discovery session.", tsih_me.zero )
-
-                let recvPDU = wnextTextPDU :?> TextRequestPDU
-                if recvPDU.ExpStatSN <> ( statsn_me.next curStatSN2 ) then
-                    HLogger.Trace( LogID.E_PROTOCOL_ERROR, fun g -> g.Gen1( m_ObjID, Constants.getOpcodeNameFromValue wnextTextPDU.Opcode ) )
-                    raise <| SessionRecoveryException ( "Unexpected ExpStatSN was received in discovery session.", tsih_me.zero )
-
-                if recvPDU.CmdSN <> nextCmdSN then
-                    HLogger.Trace( LogID.E_PROTOCOL_ERROR, fun g -> g.Gen1( m_ObjID, Constants.getOpcodeNameFromValue wnextTextPDU.Opcode ) )
-                    raise <| SessionRecoveryException ( "Unexpected CmdSN was received in discovery session.", tsih_me.zero )
-
-                rv.Add recvPDU
-                if recvPDU.C then
-                    return LoopState.Continue( struct( recvPDU, ( statsn_me.next curStatSN2 ), rv ) )
-                else
-                    return LoopState.Terminate()
-            }
-
         task {
             let rv = new List< TextRequestPDU >()
             rv.Add beforePDU
             if beforePDU.C then
-                do! Functions.loopAsyncWithArgs cbitLoop struct( beforePDU, curStatSN, rv )
+                let cont = PseudoSeq< struct( TextRequestPDU * STATSN_T * List< TextRequestPDU > ) >( struct( beforePDU, curStatSN, rv ) )
+                for struct( beforePDU2, curStatSN2, rv ) in cont do
+                    let nextCmdSN =
+                        if beforePDU2.I then
+                            beforePDU2.CmdSN
+                        else
+                            cmdsn_me.next beforePDU2.CmdSN
+
+                    // send to empty text response PDU
+                    let! _ =
+                        PDU.SendPDU(
+                            mrdsl_I, hDigest, dDigest, ValueNone, ValueNone, ValueNone, m_ObjID, m_NetStream,
+                            {
+                                F = false;
+                                C = false;
+                                LUN = lun_me.zero;
+                                InitiatorTaskTag = beforePDU2.InitiatorTaskTag;
+                                TargetTransferTag = ttt_me.fromPrim 0u;
+                                StatSN = curStatSN2;
+                                ExpCmdSN = nextCmdSN;
+                                MaxCmdSN = nextCmdSN;
+                                TextResponse = Array.empty;
+                            }
+                        )
+ 
+                    // receive next one
+                    let! wnextTextPDU = PDU.Receive( mrdsl_T, hDigest, dDigest, ValueNone, ValueNone, ValueNone, m_NetStream, Standpoint.Target )
+                    if wnextTextPDU.Opcode <> OpcodeCd.TEXT_REQ then
+                        HLogger.Trace( LogID.E_PROTOCOL_ERROR, fun g -> g.Gen1( m_ObjID, Constants.getOpcodeNameFromValue wnextTextPDU.Opcode ) )
+                        raise <| SessionRecoveryException ( "Unexpected PDU was received in discovery session.", tsih_me.zero )
+
+                    let recvPDU = wnextTextPDU :?> TextRequestPDU
+                    if recvPDU.ExpStatSN <> ( statsn_me.next curStatSN2 ) then
+                        HLogger.Trace( LogID.E_PROTOCOL_ERROR, fun g -> g.Gen1( m_ObjID, Constants.getOpcodeNameFromValue wnextTextPDU.Opcode ) )
+                        raise <| SessionRecoveryException ( "Unexpected ExpStatSN was received in discovery session.", tsih_me.zero )
+
+                    if recvPDU.CmdSN <> nextCmdSN then
+                        HLogger.Trace( LogID.E_PROTOCOL_ERROR, fun g -> g.Gen1( m_ObjID, Constants.getOpcodeNameFromValue wnextTextPDU.Opcode ) )
+                        raise <| SessionRecoveryException ( "Unexpected CmdSN was received in discovery session.", tsih_me.zero )
+
+                    rv.Add recvPDU
+                    if recvPDU.C then
+                        cont.Continue ( struct( recvPDU, ( statsn_me.next curStatSN2 ), rv ) )
+                    else
+                        cont.Break()
+
             let pduList = [| for itr in rv -> itr |]
 
             // Recognize received login request PDUs
