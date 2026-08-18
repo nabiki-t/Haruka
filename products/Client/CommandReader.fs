@@ -690,7 +690,7 @@ type CommandReader () =
         ( prp : string ) : Task<CommandParser<CommandVarb>> =
 
         task {
-            let cont = PseudoSeqCond<string>( "", String.IsNullOrEmpty )
+            let cont = PseudoSeqCond<string>( "", (=) "" )
             for _ in cont do
                 fprintf outfile "%s> " prp
                 let! line = infile.ReadLineAsync()

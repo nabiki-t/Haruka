@@ -102,8 +102,10 @@ type LogAggregator (
         HLogger.Trace( LogID.V_TRACE, fun g -> g.Gen1( m_ObjID, "Log aggregation procedure started." ) )
 
         // log output procedure
-        let proc ( s : StreamWriter option, cd : DateTime ) =
-            task {
+        let proc () = task {
+            let cont = PseudoSeq< struct ( StreamWriter option * DateTime ) >()
+            cont.Continue( struct ( None, DateTime() ) )
+            for struct ( s, cd ) in cont do
                 try
                     // Wait and receive next message
                     let! v = buf.ReceiveAsync()
@@ -112,7 +114,7 @@ type LogAggregator (
                         if s.IsSome then
                             s.Value.Close()
                             do! s.Value.DisposeAsync()
-                        return struct ( false, ( None, cd ) )
+                        cont.Break()
                     else
                         match m_Config.OutputDest with
                         | HarukaCtrlConf.U_ToFile( y ) ->
@@ -152,10 +154,11 @@ type LogAggregator (
                                 if y.ForceSync then
                                     do! x.FlushAsync()
                             | None -> ()
-                            return struct ( true, ( nextFile, currentDate ) )
+                            cont.Continue( struct( nextFile, currentDate ) )
+
                         | HarukaCtrlConf.U_ToStdout( _ ) ->
                             stdout.WriteLine v
-                            return struct ( true, ( s, cd ) )
+                            cont.Continue( struct( s, cd ) )
 
                 with
                 | _ ->
@@ -163,13 +166,10 @@ type LogAggregator (
                         s.Value.Close()
                         do! s.Value.DisposeAsync()
                     // All errors are ignored.
-                    return struct ( true, ( None, cd ) )
-            }
+                    cont.Continue( struct( None, cd ) )
+        }
 
-        Functions.StartTask( fun () ->
-            Functions.loopAsyncWithState proc ( None, DateTime() )
-            |> Functions.TaskIgnore
-        )
+        Functions.StartTask proc
 
     /// <summary>
     ///  Add child process to log aggregation target.
