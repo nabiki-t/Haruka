@@ -689,17 +689,12 @@ type CommandReader () =
         ( accCommands : AcceptableCommand<CommandVarb> array )
         ( prp : string ) : Task<CommandParser<CommandVarb>> =
 
-        let loop ( _ : string ) =
-            task {
-                fprintf outfile "%s> "prp
-                let! line = infile.ReadLineAsync()
-                if line.Length = 0 then
-                    return struct( true, "" )
-                else
-                    return struct( false, line )
-            }
         task {
-            let! line = Functions.loopAsyncWithState loop ""
-            return CommandParser.FromString accCommands line
+            let cont = PseudoSeqCond<string>( "", String.IsNullOrEmpty )
+            for _ in cont do
+                fprintf outfile "%s> " prp
+                let! line = infile.ReadLineAsync()
+                cont.Next line
+            return CommandParser.FromString accCommands ( ValueOption.get cont.LastValue )
         }
 

@@ -671,66 +671,63 @@ type LoginNegociator
                 let v = Array.chunkBySize ( int32 mrdsl_I ) sendBytes
                 if v.Length > 0 then v else [| Array.empty |]
 
-            let cbitloop struct( idx : int32, recvPDU2 : TextRequestPDU ) :
-                    Task< LoopState< struct( int32 * TextRequestPDU ), unit > > =
-                task {
-                    // Decide C bit value
-                    let cBitValue = ( idx < sendTextResponses.Length - 1 )
+            let cont = PseudoSeq< struct( int32 * TextRequestPDU ) >( struct( 0, recvPDU ) )
+            for struct( idx, recvPDU2 ) in cont do
+                // Decide C bit value
+                let cBitValue = ( idx < sendTextResponses.Length - 1 )
 
-                    // Decide next CmdSN value.
-                    let nextCmdSN =
-                        if recvPDU2.I then
-                            recvPDU2.CmdSN
-                        else
-                            cmdsn_me.next recvPDU2.CmdSN;
-
-                    // Send Text Response PDU
-                    let! _ = PDU.SendPDU( mrdsl_I, hDigest, dDigest, ValueNone, ValueNone, ValueNone, m_ObjID, m_NetStream, 
-                        {
-                            F = finalFlg;
-                            C = cBitValue;
-                            LUN = lun_me.zero;
-                            InitiatorTaskTag = recvPDU.InitiatorTaskTag;
-                            TargetTransferTag = ttt_me.fromPrim 0u;
-                            StatSN = statsn_me.incr ( uint32 idx ) curStatSN;
-                            ExpCmdSN = nextCmdSN;
-                            MaxCmdSN = nextCmdSN;
-                            TextResponse = sendTextResponses.[idx];
-                        }
-                    )
-        
-                    // if C bit equals 1, receive empty text request PDU
-                    if cBitValue then
-                        let! wnextTextPDU =
-                            PDU.Receive( mrdsl_T, hDigest, dDigest, ValueNone, ValueNone, ValueNone, m_NetStream, Standpoint.Target )
-
-                        if wnextTextPDU.Opcode <> OpcodeCd.TEXT_REQ then
-                            HLogger.Trace( LogID.E_PROTOCOL_ERROR, fun g -> g.Gen1( m_ObjID, Constants.getOpcodeNameFromValue wnextTextPDU.Opcode ) )
-                            raise <| SessionRecoveryException ( "Unexpected PDU was received.", tsih_me.zero )
-
-                        let emptyTextRequestPDU = wnextTextPDU :?> TextRequestPDU
-            
-                        // Check received PDU
-                        if emptyTextRequestPDU.TextRequest.Length > 0 || emptyTextRequestPDU.C then
-                            // protocol error
-                            let msg = "Response of Text response PDU with C bit set to 1 ( that is Login request PDU from Initiator ), TextRequest is not empty."
-                            HLogger.Trace( LogID.E_ISCSI_FORMAT_ERROR, fun g -> g.Gen1( m_ObjID, msg ) )
-                            raise <| SessionRecoveryException ( msg, tsih_me.zero )
-
-                        if emptyTextRequestPDU.CmdSN <> nextCmdSN then
-                            HLogger.Trace( LogID.E_PROTOCOL_ERROR, fun g -> g.Gen1( m_ObjID, Constants.getOpcodeNameFromValue wnextTextPDU.Opcode ) )
-                            raise <| SessionRecoveryException ( "Unexpected CmdSN was received in discovery session.", tsih_me.zero )
-
-                        if emptyTextRequestPDU.ExpStatSN <> statsn_me.incr ( uint32 idx + 1u ) curStatSN then
-                            HLogger.Trace( LogID.E_PROTOCOL_ERROR, fun g -> g.Gen1( m_ObjID, Constants.getOpcodeNameFromValue wnextTextPDU.Opcode ) )
-                            raise <| SessionRecoveryException ( "Unexpected ExpStatSN was received in discovery session.", tsih_me.zero )
-
-                        return LoopState.Continue( struct ( idx + 1, emptyTextRequestPDU ) )
+                // Decide next CmdSN value.
+                let nextCmdSN =
+                    if recvPDU2.I then
+                        recvPDU2.CmdSN
                     else
-                        return LoopState.Terminate()
+                        cmdsn_me.next recvPDU2.CmdSN;
 
-                }
-            do! Functions.loopAsyncWithArgs cbitloop struct( 0, recvPDU )
+                // Send Text Response PDU
+                let! _ = PDU.SendPDU( mrdsl_I, hDigest, dDigest, ValueNone, ValueNone, ValueNone, m_ObjID, m_NetStream, 
+                    {
+                        F = finalFlg;
+                        C = cBitValue;
+                        LUN = lun_me.zero;
+                        InitiatorTaskTag = recvPDU.InitiatorTaskTag;
+                        TargetTransferTag = ttt_me.fromPrim 0u;
+                        StatSN = statsn_me.incr ( uint32 idx ) curStatSN;
+                        ExpCmdSN = nextCmdSN;
+                        MaxCmdSN = nextCmdSN;
+                        TextResponse = sendTextResponses.[idx];
+                    }
+                )
+        
+                // if C bit equals 1, receive empty text request PDU
+                if cBitValue then
+                    let! wnextTextPDU =
+                        PDU.Receive( mrdsl_T, hDigest, dDigest, ValueNone, ValueNone, ValueNone, m_NetStream, Standpoint.Target )
+
+                    if wnextTextPDU.Opcode <> OpcodeCd.TEXT_REQ then
+                        HLogger.Trace( LogID.E_PROTOCOL_ERROR, fun g -> g.Gen1( m_ObjID, Constants.getOpcodeNameFromValue wnextTextPDU.Opcode ) )
+                        raise <| SessionRecoveryException ( "Unexpected PDU was received.", tsih_me.zero )
+
+                    let emptyTextRequestPDU = wnextTextPDU :?> TextRequestPDU
+            
+                    // Check received PDU
+                    if emptyTextRequestPDU.TextRequest.Length > 0 || emptyTextRequestPDU.C then
+                        // protocol error
+                        let msg = "Response of Text response PDU with C bit set to 1 ( that is Login request PDU from Initiator ), TextRequest is not empty."
+                        HLogger.Trace( LogID.E_ISCSI_FORMAT_ERROR, fun g -> g.Gen1( m_ObjID, msg ) )
+                        raise <| SessionRecoveryException ( msg, tsih_me.zero )
+
+                    if emptyTextRequestPDU.CmdSN <> nextCmdSN then
+                        HLogger.Trace( LogID.E_PROTOCOL_ERROR, fun g -> g.Gen1( m_ObjID, Constants.getOpcodeNameFromValue wnextTextPDU.Opcode ) )
+                        raise <| SessionRecoveryException ( "Unexpected CmdSN was received in discovery session.", tsih_me.zero )
+
+                    if emptyTextRequestPDU.ExpStatSN <> statsn_me.incr ( uint32 idx + 1u ) curStatSN then
+                        HLogger.Trace( LogID.E_PROTOCOL_ERROR, fun g -> g.Gen1( m_ObjID, Constants.getOpcodeNameFromValue wnextTextPDU.Opcode ) )
+                        raise <| SessionRecoveryException ( "Unexpected ExpStatSN was received in discovery session.", tsih_me.zero )
+
+                    cont.Continue struct ( idx + 1, emptyTextRequestPDU )
+                else
+                    cont.Break()
+
             return statsn_me.fromPrim ( uint32 sendTextResponses.Length );
         }
     
@@ -1004,54 +1001,48 @@ type LoginNegociator
                 do! this.SequrityNegotiation_WithCHAP targetConfig
         
             // wait for login request with T bit is 1.
-            let waitTrance struct( negoValue, negoStat ) :
-                    Task< LoopState<
-                        struct( TextKeyValues * TextKeyValuesStatus ),
-                        struct( LoginResponsePDU * LoginReqStateCd )
-                    > > =
-                task {
-                    // receive login request pdu
-                    let! wnextLogiPDU =
-                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, m_NetStream, Standpoint.Target )
-                    if wnextLogiPDU.Opcode <> OpcodeCd.LOGIN_REQ then
-                        HLogger.Trace( LogID.E_UNEXPECTED_PDU_IN_LOGIN_NEGOSEC, fun g -> g.Gen1( m_ObjID, Constants.getOpcodeNameFromValue wnextLogiPDU.Opcode ) )
-                        raise <| SessionRecoveryException ( "Unexpected PDU was received.", tsih_me.zero )
+            let cont = PseudoSeqStat< struct( TextKeyValues * TextKeyValuesStatus ), struct( LoginResponsePDU * LoginReqStateCd ) >()
+            cont.Continue struct( TextKeyValues.defaultTextKeyValues, TextKeyValuesStatus.defaultTextKeyValuesStatus )
+            for struct( negoValue, negoStat ) in cont do
+                // receive login request pdu
+                let! wnextLogiPDU =
+                    PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, m_NetStream, Standpoint.Target )
+                if wnextLogiPDU.Opcode <> OpcodeCd.LOGIN_REQ then
+                    HLogger.Trace( LogID.E_UNEXPECTED_PDU_IN_LOGIN_NEGOSEC, fun g -> g.Gen1( m_ObjID, Constants.getOpcodeNameFromValue wnextLogiPDU.Opcode ) )
+                    raise <| SessionRecoveryException ( "Unexpected PDU was received.", tsih_me.zero )
  
-                    let! requestTextKey, requestPDU =
-                        this.ReceiveLoginRequest ( wnextLogiPDU :?> LoginRequestPDU )
+                let! requestTextKey, requestPDU =
+                    this.ReceiveLoginRequest ( wnextLogiPDU :?> LoginRequestPDU )
 
-                    // update request value
-                    // marge target candidate and initiator request
-                    let next_negoResult, next_negoStat1 = IscsiTextEncode.margeTextKeyValue Standpoint.Target requestTextKey negoValue negoStat
+                // update request value
+                // marge target candidate and initiator request
+                let next_negoResult, next_negoStat1 = IscsiTextEncode.margeTextKeyValue Standpoint.Target requestTextKey negoValue negoStat
 
-                    // Error Check
-                    // AuthMethod, TargetName and InitiatorName must not be re-negotiated
-                    if next_negoResult.AuthMethod <> ISV_Missing || next_negoResult.TargetName <> ISV_Missing || next_negoResult.InitiatorName <> ISV_Missing then
-                        HLogger.Trace( LogID.E_UNKNOWN_NEGOTIATION_ERROR, fun g -> g.Gen1( m_ObjID, "AuthMethod" ) )
-                        raise <| SessionRecoveryException ( "Unknown negotiation error.", tsih_me.zero )
+                // Error Check
+                // AuthMethod, TargetName and InitiatorName must not be re-negotiated
+                if next_negoResult.AuthMethod <> ISV_Missing || next_negoResult.TargetName <> ISV_Missing || next_negoResult.InitiatorName <> ISV_Missing then
+                    HLogger.Trace( LogID.E_UNKNOWN_NEGOTIATION_ERROR, fun g -> g.Gen1( m_ObjID, "AuthMethod" ) )
+                    raise <| SessionRecoveryException ( "Unknown negotiation error.", tsih_me.zero )
 
-                    // decide transit flg
-                    // ( If all of target value is sended and initiator says 'T', transit to next stage )
-                    let targetTvalue =
-                        IscsiTextEncode.CheckAllKeyStatus next_negoStat1 ( fun v -> v &&& NegoStatusValue.NSG_WaitSend <> NegoStatusValue.NSG_WaitSend )
-                    if targetTvalue && requestPDU.T then
+                // decide transit flg
+                // ( If all of target value is sended and initiator says 'T', transit to next stage )
+                let targetTvalue =
+                    IscsiTextEncode.CheckAllKeyStatus next_negoStat1 ( fun v -> v &&& NegoStatusValue.NSG_WaitSend <> NegoStatusValue.NSG_WaitSend )
+                if targetTvalue && requestPDU.T then
 
-                        // If both Tbits are 1, this is the last PDU in the login sequence.
-                        let lastPDU = {
-                            PDU.CreateLoginResponsePDUfromLoginRequestPDU( requestPDU ) with
-                                T = true;
-                                NSG = requestPDU.NSG;
-                                TSIH = newTSIH;
-                        }
-                        return LoopState.Terminate( struct( lastPDU, requestPDU.NSG ) )
-                    else
-                        let! next_negoStat2 = this.SendNegotiationResponse next_negoResult next_negoStat1 true ValueNone requestPDU
-                        return LoopState.Continue( struct( next_negoResult, next_negoStat2 ) )
-                }
+                    // If both Tbits are 1, this is the last PDU in the login sequence.
+                    let lastPDU = {
+                        PDU.CreateLoginResponsePDUfromLoginRequestPDU( requestPDU ) with
+                            T = true;
+                            NSG = requestPDU.NSG;
+                            TSIH = newTSIH;
+                    }
+                    cont.Break( struct( lastPDU, requestPDU.NSG ) )
+                else
+                    let! next_negoStat2 = this.SendNegotiationResponse next_negoResult next_negoStat1 true ValueNone requestPDU
+                    cont.Continue( struct( next_negoResult, next_negoStat2 ) )
+            let struct( secPhaseLastPDU, nsg ) = ValueOption.get cont.LastValue
         
-            let! struct( secPhaseLastPDU, nsg ) =
-                Functions.loopAsyncWithArgs waitTrance struct( TextKeyValues.defaultTextKeyValues, TextKeyValuesStatus.defaultTextKeyValuesStatus )
-
             let retCOParams = {
                 coParam with
                     AuthMethod = negoAM_Result.AuthMethod.GetValue;
@@ -1162,10 +1153,12 @@ type LoginNegociator
             Task<struct ( TextKeyValues * LoginRequestPDU )> =
 
         task {
-            // receive login request pdu sequence with c bit.
-            let cbitLoop struct ( beforePDU : LoginRequestPDU, rv : List<LoginRequestPDU> ) :
-                    Task<LoopState< struct( LoginRequestPDU * List<LoginRequestPDU> ), unit >> =
-                task {
+            let rv = new List<LoginRequestPDU>()
+            rv.Add beforePDU
+            if beforePDU.C then
+                let cont = PseudoSeqCond< struct( LoginRequestPDU * List<LoginRequestPDU> ) >( fun struct ( pdu, _ ) -> pdu.C )
+                cont.Continue struct( beforePDU, rv )
+                for struct ( beforePDU, rv ) in cont do
                     // send to empty login response PDU
                     let! _ =
                         PDU.SendPDU(
@@ -1181,16 +1174,8 @@ type LoginNegociator
                         raise <| SessionRecoveryException ( "Unexpected PDU was received.", tsih_me.zero )
                     let recvPDU = wnextLogiPDU :?> LoginRequestPDU
                     rv.Add recvPDU
-                    if recvPDU.C then
-                        return LoopState.Continue( struct( recvPDU, rv ) )
-                    else
-                        return LoopState.Terminate()
-                }
+                    cont.Next struct( recvPDU, rv )
 
-            let rv = new List<LoginRequestPDU>()
-            rv.Add beforePDU
-            if beforePDU.C then
-                do! Functions.loopAsyncWithArgs cbitLoop struct( beforePDU, rv )
             let pduList = [| for itr in rv -> itr |]
 
             let reqs_opt, pdu =
@@ -1725,93 +1710,87 @@ type LoginNegociator
                 }
 
             // Perform operation negotiation
-            let negoloop struct( negoValue, negoStat, beforePDU ) : 
-                    Task< LoopState<
-                        struct( TextKeyValues * TextKeyValuesStatus * LoginRequestPDU ),
-                        struct( LoginResponsePDU * TextKeyValues * TextKeyValuesStatus )
-                    > > =
-                task {
-                    // Receive sequence of login request PDUs
-                    let! textKey, ( recvPDU : LoginRequestPDU ) =
-                        this.ReceiveLoginRequest beforePDU
+            let cont = PseudoSeqStat< struct( TextKeyValues * TextKeyValuesStatus * LoginRequestPDU ), struct( LoginResponsePDU * TextKeyValues * TextKeyValuesStatus )>()
+            cont.Continue struct( firstNegoValue, firstNegoStat, firstPDU )
+            for struct( negoValue, negoStat, beforePDU ) in cont do
+                // Receive sequence of login request PDUs
+                let! textKey, ( recvPDU : LoginRequestPDU ) = this.ReceiveLoginRequest beforePDU
 
-                    // if keys not allowed in operation negotiation stage is used, drop this connection
-                    if textKey.AuthMethod <> TextValueType.ISV_Missing ||
-                        textKey.CHAP_A <> TextValueType.ISV_Missing ||
-                        textKey.CHAP_I <> TextValueType.ISV_Missing ||
-                        textKey.CHAP_C <> TextValueType.ISV_Missing ||
-                        textKey.CHAP_N <> TextValueType.ISV_Missing ||
-                        textKey.CHAP_R <> TextValueType.ISV_Missing ||
-                        textKey.SendTargets <> TextValueType.ISV_Missing ||
-                        textKey.TargetAddress <> TextValueType.ISV_Missing then
+                // if keys not allowed in operation negotiation stage is used, drop this connection
+                if textKey.AuthMethod <> TextValueType.ISV_Missing ||
+                    textKey.CHAP_A <> TextValueType.ISV_Missing ||
+                    textKey.CHAP_I <> TextValueType.ISV_Missing ||
+                    textKey.CHAP_C <> TextValueType.ISV_Missing ||
+                    textKey.CHAP_N <> TextValueType.ISV_Missing ||
+                    textKey.CHAP_R <> TextValueType.ISV_Missing ||
+                    textKey.SendTargets <> TextValueType.ISV_Missing ||
+                    textKey.TargetAddress <> TextValueType.ISV_Missing then
+                    let msg = "Invalid text key was received."
+                    HLogger.Trace( LogID.E_UNKNOWN_NEGOTIATION_ERROR, fun g -> g.Gen1( m_ObjID, msg ) )
+                    raise <| SessionRecoveryException ( msg, tsih_me.zero )
+
+                // Check reject value
+                if not isLeadingCon then
+                    // if use existing session, LO parameters must not be handled.
+                    if textKey.MaxConnections <> TextValueType.ISV_Missing ||
+                        textKey.InitialR2T <> TextValueType.ISV_Missing ||
+                        textKey.ImmediateData <> TextValueType.ISV_Missing ||
+                        textKey.MaxBurstLength <> TextValueType.ISV_Missing ||
+                        textKey.FirstBurstLength <> TextValueType.ISV_Missing ||
+                        textKey.DefaultTime2Wait <> TextValueType.ISV_Missing ||
+                        textKey.DefaultTime2Retain <> TextValueType.ISV_Missing ||
+                        textKey.MaxOutstandingR2T <> TextValueType.ISV_Missing ||
+                        textKey.DataPDUInOrder <> TextValueType.ISV_Missing ||
+                        textKey.DataSequenceInOrder <> TextValueType.ISV_Missing ||
+                        textKey.ErrorRecoveryLevel <> TextValueType.ISV_Missing ||
+                        textKey.TaskReporting <> TextValueType.ISV_Missing then
                         let msg = "Invalid text key was received."
                         HLogger.Trace( LogID.E_UNKNOWN_NEGOTIATION_ERROR, fun g -> g.Gen1( m_ObjID, msg ) )
                         raise <| SessionRecoveryException ( msg, tsih_me.zero )
 
-                    // Check reject value
-                    if not isLeadingCon then
-                        // if use existing session, LO parameters must not be handled.
-                        if textKey.MaxConnections <> TextValueType.ISV_Missing ||
-                            textKey.InitialR2T <> TextValueType.ISV_Missing ||
-                            textKey.ImmediateData <> TextValueType.ISV_Missing ||
-                            textKey.MaxBurstLength <> TextValueType.ISV_Missing ||
-                            textKey.FirstBurstLength <> TextValueType.ISV_Missing ||
-                            textKey.DefaultTime2Wait <> TextValueType.ISV_Missing ||
-                            textKey.DefaultTime2Retain <> TextValueType.ISV_Missing ||
-                            textKey.MaxOutstandingR2T <> TextValueType.ISV_Missing ||
-                            textKey.DataPDUInOrder <> TextValueType.ISV_Missing ||
-                            textKey.DataSequenceInOrder <> TextValueType.ISV_Missing ||
-                            textKey.ErrorRecoveryLevel <> TextValueType.ISV_Missing ||
-                            textKey.TaskReporting <> TextValueType.ISV_Missing then
-                            let msg = "Invalid text key was received."
-                            HLogger.Trace( LogID.E_UNKNOWN_NEGOTIATION_ERROR, fun g -> g.Gen1( m_ObjID, msg ) )
-                            raise <| SessionRecoveryException ( msg, tsih_me.zero )
+                // If sequrity negotiation is performed, some text keys are not allowed to use in operational stage.
+                if isAuthentified then
+                    if textKey.SessionType <> TextValueType.ISV_Missing ||
+                        textKey.InitiatorName <> TextValueType.ISV_Missing ||
+                        textKey.TargetName <> TextValueType.ISV_Missing ||
+                        textKey.TargetPortalGroupTag <> TextValueType.ISV_Missing then
+                        let msg = "Invalid text key was received."
+                        HLogger.Trace( LogID.E_UNKNOWN_NEGOTIATION_ERROR, fun g -> g.Gen1( m_ObjID, msg ) )
+                        raise <| SessionRecoveryException ( msg, tsih_me.zero )
 
-                    // If sequrity negotiation is performed, some text keys are not allowed to use in operational stage.
-                    if isAuthentified then
-                        if textKey.SessionType <> TextValueType.ISV_Missing ||
-                            textKey.InitiatorName <> TextValueType.ISV_Missing ||
-                            textKey.TargetName <> TextValueType.ISV_Missing ||
-                            textKey.TargetPortalGroupTag <> TextValueType.ISV_Missing then
-                            let msg = "Invalid text key was received."
-                            HLogger.Trace( LogID.E_UNKNOWN_NEGOTIATION_ERROR, fun g -> g.Gen1( m_ObjID, msg ) )
-                            raise <| SessionRecoveryException ( msg, tsih_me.zero )
-
-                    // marge parameters       
-                    let next_negoValue, next_negoStat =
-                        IscsiTextEncode.margeTextKeyValue Standpoint.Target textKey negoValue negoStat 
+                // marge parameters       
+                let next_negoValue, next_negoStat =
+                    IscsiTextEncode.margeTextKeyValue Standpoint.Target textKey negoValue negoStat 
             
-                    // decide transit flg
-                    // ( If all of target value is sended and initiator says 'T', transit to next stage )
-                    let targetTvalue =
-                        IscsiTextEncode.CheckAllKeyStatus next_negoStat ( fun v -> v &&& NegoStatusValue.NSG_WaitSend <> NegoStatusValue.NSG_WaitSend )
-                    if targetTvalue && recvPDU.T then
+                // decide transit flg
+                // ( If all of target value is sended and initiator says 'T', transit to next stage )
+                let targetTvalue =
+                    IscsiTextEncode.CheckAllKeyStatus next_negoStat ( fun v -> v &&& NegoStatusValue.NSG_WaitSend <> NegoStatusValue.NSG_WaitSend )
+                if targetTvalue && recvPDU.T then
 
-                        // If both Tbits are 1, this is the last PDU in the login sequence.
-                        let lastPDU = {
-                            PDU.CreateLoginResponsePDUfromLoginRequestPDU( recvPDU ) with
-                                T = true;
-                                NSG = recvPDU.NSG;
-                                TSIH = newTSIH;
-                        }
-                        return LoopState.Terminate( struct( lastPDU, next_negoValue, next_negoStat ) )
+                    // If both Tbits are 1, this is the last PDU in the login sequence.
+                    let lastPDU = {
+                        PDU.CreateLoginResponsePDUfromLoginRequestPDU( recvPDU ) with
+                            T = true;
+                            NSG = recvPDU.NSG;
+                            TSIH = newTSIH;
+                    }
+                    cont.Break struct( lastPDU, next_negoValue, next_negoStat )
 
-                    else
-                        // The login phase is still ongoing
-                        let! next2_negoStat = this.SendNegotiationResponse next_negoValue next_negoStat targetTvalue ValueNone recvPDU
+                else
+                    // The login phase is still ongoing
+                    let! next2_negoStat = this.SendNegotiationResponse next_negoValue next_negoStat targetTvalue ValueNone recvPDU
 
-                        // Receive next PDU
-                        let! wnextLogiPDU =
-                            PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, m_NetStream, Standpoint.Target )
-                        if wnextLogiPDU.Opcode <> OpcodeCd.LOGIN_REQ then
-                            HLogger.Trace( LogID.E_UNEXPECTED_PDU_IN_LOGIN_NEGOSEC, fun g -> g.Gen1( m_ObjID, Constants.getOpcodeNameFromValue wnextLogiPDU.Opcode ) )
-                            raise <| SessionRecoveryException ( "Unexpected PDU was received.", tsih_me.zero )
+                    // Receive next PDU
+                    let! wnextLogiPDU =
+                        PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, m_NetStream, Standpoint.Target )
+                    if wnextLogiPDU.Opcode <> OpcodeCd.LOGIN_REQ then
+                        HLogger.Trace( LogID.E_UNEXPECTED_PDU_IN_LOGIN_NEGOSEC, fun g -> g.Gen1( m_ObjID, Constants.getOpcodeNameFromValue wnextLogiPDU.Opcode ) )
+                        raise <| SessionRecoveryException ( "Unexpected PDU was received.", tsih_me.zero )
 
-                        return LoopState.Continue( struct( next_negoValue, next2_negoStat, ( wnextLogiPDU :?> LoginRequestPDU ) ) )
-                }
+                    cont.Continue struct( next_negoValue, next2_negoStat, ( wnextLogiPDU :?> LoginRequestPDU ) )
 
-            let! loginPhaseLastPDU, negoResultValue, negoResultStat =
-                Functions.loopAsyncWithArgs negoloop struct( firstNegoValue, firstNegoStat, firstPDU )
+            let struct( loginPhaseLastPDU, negoResultValue, negoResultStat ) = ValueOption.get cont.LastValue
 
             // Create result parameter
             let resultCoParam =

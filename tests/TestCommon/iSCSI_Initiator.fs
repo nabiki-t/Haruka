@@ -1847,118 +1847,33 @@ type iSCSI_Initiator(
                     TextRequest = [||];
                     ByteCount = 0u; // not used
                 }
-
-            // Continue sending empty LoginRequestPDUs until you receive a PDU with T=1 from the target.
-            let waitTrance ( expStatSN : STATSN_T ): Task<LoopState< STATSN_T, LoginResponsePDU >> =
-                task {
-                    // send empty login request pdu
-                    let loginRequest =
-                        {
-                            defaultLoginRequest with
-                                T = true;
-                                CSG = LoginReqStateCd.SEQURITY;
-                                CmdSN = getCmdSN();
-                                ExpStatSN = expStatSN;
-                        }
-                    let! _ = PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objID, conn, loginRequest )
-
-                    // receive login response pdu
-                    let! _, loginResponse = iSCSI_Initiator.ReceiveLoginResponse objID exp_ConnParams.CID conn getCmdSN ( Some expStatSN )
-
-                    // If T bit is not set, try to next one PDU
-                    if not loginResponse.T then
-                        return LoopState.Continue( statsn_me.next loginResponse.StatSN )
-                    else
-                        return LoopState.Terminate( loginResponse )
-                }
         
-            // Perform operation negotiation
-            let negoloop ( negoValue, negoStat, initiatorTvalue, expStatSN ) : 
-                    Task< LoopState< ( TextKeyValues * TextKeyValuesStatus * bool * STATSN_T ), ( TextKeyValues * TextKeyValuesStatus * TSIH_T * STATSN_T ) > > =
-                task {
-                    // Send login request PDU
-                    let textReq = IscsiTextEncode.CreateTextKeyValueString negoValue negoStat
-                    let loginRequest =
-                        {
-                            defaultLoginRequest with
-                                T = initiatorTvalue;
-                                NSG = if initiatorTvalue then LoginReqStateCd.FULL else LoginReqStateCd.OPERATIONAL;
-                                CmdSN = getCmdSN();
-                                ExpStatSN = expStatSN;
-                                TextRequest = textReq;
-                        }
+            let contWait = PseudoSeqStat< STATSN_T, LoginResponsePDU >()
+            if not lastPDU.T then
+                contWait.Continue ( statsn_me.next lastPDU.StatSN )
+            else
+                contWait.Break lastPDU
+            for expStatSN in contWait do
+                // send empty login request pdu
+                let loginRequest =
+                    {
+                        defaultLoginRequest with
+                            T = true;
+                            CSG = LoginReqStateCd.SEQURITY;
+                            CmdSN = getCmdSN();
+                            ExpStatSN = expStatSN;
+                    }
+                let! _ = PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objID, conn, loginRequest )
 
-                    let! lastSentExpStatSN = iSCSI_Initiator.SendNegotiationRequest_InBytes objID conn loginRequest initiatorTvalue getCmdSN expStatSN textReq
-                    let negoStat2 = IscsiTextEncode.ClearSendWaitStatus negoStat
+                // receive login response pdu
+                let! _, loginResponse = iSCSI_Initiator.ReceiveLoginResponse objID exp_ConnParams.CID conn getCmdSN ( Some expStatSN )
 
-                    // Receive Login response PDU
-                    let! textKey, recvPDU = iSCSI_Initiator.ReceiveLoginResponse objID exp_ConnParams.CID conn getCmdSN ( Some expStatSN )
-
-                    // check StatSN value
-                    if lastSentExpStatSN <> recvPDU.StatSN then
-                        let msg = "Unexpected StatSN value."
-                        raise <| SessionRecoveryException ( msg, tsih_me.zero )
-
-                    // if keys not allowed in operation negotiation stage is used, drop this connection
-                    if textKey.AuthMethod <> TextValueType.ISV_Missing ||
-                        textKey.CHAP_A <> TextValueType.ISV_Missing ||
-                        textKey.CHAP_I <> TextValueType.ISV_Missing ||
-                        textKey.CHAP_C <> TextValueType.ISV_Missing ||
-                        textKey.CHAP_N <> TextValueType.ISV_Missing ||
-                        textKey.CHAP_R <> TextValueType.ISV_Missing ||
-                        textKey.SendTargets <> TextValueType.ISV_Missing ||
-                        textKey.TargetAddress <> TextValueType.ISV_Missing then
-                        let msg = "Invalid text key was received."
-                        raise <| SessionRecoveryException ( msg, tsih_me.zero )
-
-                    // Check reject value
-                    // if use existing session, LO parameters must not be handled.
-                    if ( not isLeadingCon ) && (
-                        textKey.MaxConnections <> TextValueType.ISV_Missing ||
-                        textKey.InitialR2T <> TextValueType.ISV_Missing ||
-                        textKey.ImmediateData <> TextValueType.ISV_Missing ||
-                        textKey.MaxBurstLength <> TextValueType.ISV_Missing ||
-                        textKey.FirstBurstLength <> TextValueType.ISV_Missing ||
-                        textKey.DefaultTime2Wait <> TextValueType.ISV_Missing ||
-                        textKey.DefaultTime2Retain <> TextValueType.ISV_Missing ||
-                        textKey.MaxOutstandingR2T <> TextValueType.ISV_Missing ||
-                        textKey.DataPDUInOrder <> TextValueType.ISV_Missing ||
-                        textKey.DataSequenceInOrder <> TextValueType.ISV_Missing ||
-                        textKey.ErrorRecoveryLevel <> TextValueType.ISV_Missing ||
-                        textKey.TaskReporting <> TextValueType.ISV_Missing ) then
-                            let msg = "Invalid text key was received."
-                            raise <| SessionRecoveryException ( msg, tsih_me.zero )
-
-                    // If sequrity negotiation is performed, some text keys are not allowed to use in operational stage.
-                    if isAuthentified then
-                        if textKey.SessionType <> TextValueType.ISV_Missing ||
-                            textKey.InitiatorName <> TextValueType.ISV_Missing ||
-                            textKey.TargetName <> TextValueType.ISV_Missing ||
-                            textKey.TargetPortalGroupTag <> TextValueType.ISV_Missing then
-                            let msg = "Invalid text key was received."
-                            raise <| SessionRecoveryException ( msg, tsih_me.zero )
-
-                    // marge parameters
-                    let next_negoValue, next_negoStat =
-                        IscsiTextEncode.margeTextKeyValue Standpoint.Initiator negoValue textKey negoStat2 
-            
-                    // decide transit flg
-                    // ( If all of initiator value is sended and target says 'T', transit to next stage )
-                    let nextInitiatorTvalue =
-                        IscsiTextEncode.CheckAllKeyStatus next_negoStat ( fun v -> v &&& NegoStatusValue.NSG_WaitSend <> NegoStatusValue.NSG_WaitSend )
-
-                    // try to next
-                    if not ( nextInitiatorTvalue && recvPDU.T ) then
-                        return LoopState.Continue( next_negoValue, next_negoStat, nextInitiatorTvalue, statsn_me.next recvPDU.StatSN )
-                    else
-                        return LoopState.Terminate( next_negoValue, next_negoStat, recvPDU.TSIH, recvPDU.StatSN )
-                }
-
-            let! lastPDU2 =
-                if not lastPDU.T then
-                    Functions.loopAsyncWithArgs waitTrance ( statsn_me.next lastPDU.StatSN )
+                // If T bit is not set, try to next one PDU
+                if not loginResponse.T then
+                    contWait.Continue( statsn_me.next loginResponse.StatSN )
                 else
-                    Task.FromResult lastPDU
+                    contWait.Break( loginResponse )
+            let lastPDU2 = ValueOption.get contWait.LastValue
 
             let negoValue1 =
                 {
@@ -2010,8 +1925,90 @@ type iSCSI_Initiator(
             let negoValue2, negoStat2 =
                 IscsiTextEncode.margeTextKeyValue Standpoint.Initiator currentNegoValues negoValue1 negoStat1 
 
+            // Perform operation negotiation
+            let contNego = PseudoSeqStat<
+                            struct ( TextKeyValues * TextKeyValuesStatus * bool * STATSN_T ),
+                            ( TextKeyValues * TextKeyValuesStatus * TSIH_T * STATSN_T ) >()
+            contNego.Continue( struct ( negoValue2, negoStat2, false, statsn_me.next lastPDU2.StatSN ) )
+            for struct( negoValue, negoStat, initiatorTvalue, expStatSN ) in contNego do
+                // Send login request PDU
+                let textReq = IscsiTextEncode.CreateTextKeyValueString negoValue negoStat
+                let loginRequest =
+                    {
+                        defaultLoginRequest with
+                            T = initiatorTvalue;
+                            NSG = if initiatorTvalue then LoginReqStateCd.FULL else LoginReqStateCd.OPERATIONAL;
+                            CmdSN = getCmdSN();
+                            ExpStatSN = expStatSN;
+                            TextRequest = textReq;
+                    }
 
-            return! Functions.loopAsyncWithArgs negoloop ( negoValue2, negoStat2, false, statsn_me.next lastPDU2.StatSN )
+                let! lastSentExpStatSN = iSCSI_Initiator.SendNegotiationRequest_InBytes objID conn loginRequest initiatorTvalue getCmdSN expStatSN textReq
+                let negoStat2 = IscsiTextEncode.ClearSendWaitStatus negoStat
+
+                // Receive Login response PDU
+                let! textKey, recvPDU = iSCSI_Initiator.ReceiveLoginResponse objID exp_ConnParams.CID conn getCmdSN ( Some expStatSN )
+
+                // check StatSN value
+                if lastSentExpStatSN <> recvPDU.StatSN then
+                    let msg = "Unexpected StatSN value."
+                    raise <| SessionRecoveryException ( msg, tsih_me.zero )
+
+                // if keys not allowed in operation negotiation stage is used, drop this connection
+                if textKey.AuthMethod <> TextValueType.ISV_Missing ||
+                    textKey.CHAP_A <> TextValueType.ISV_Missing ||
+                    textKey.CHAP_I <> TextValueType.ISV_Missing ||
+                    textKey.CHAP_C <> TextValueType.ISV_Missing ||
+                    textKey.CHAP_N <> TextValueType.ISV_Missing ||
+                    textKey.CHAP_R <> TextValueType.ISV_Missing ||
+                    textKey.SendTargets <> TextValueType.ISV_Missing ||
+                    textKey.TargetAddress <> TextValueType.ISV_Missing then
+                    let msg = "Invalid text key was received."
+                    raise <| SessionRecoveryException ( msg, tsih_me.zero )
+
+                // Check reject value
+                // if use existing session, LO parameters must not be handled.
+                if ( not isLeadingCon ) && (
+                    textKey.MaxConnections <> TextValueType.ISV_Missing ||
+                    textKey.InitialR2T <> TextValueType.ISV_Missing ||
+                    textKey.ImmediateData <> TextValueType.ISV_Missing ||
+                    textKey.MaxBurstLength <> TextValueType.ISV_Missing ||
+                    textKey.FirstBurstLength <> TextValueType.ISV_Missing ||
+                    textKey.DefaultTime2Wait <> TextValueType.ISV_Missing ||
+                    textKey.DefaultTime2Retain <> TextValueType.ISV_Missing ||
+                    textKey.MaxOutstandingR2T <> TextValueType.ISV_Missing ||
+                    textKey.DataPDUInOrder <> TextValueType.ISV_Missing ||
+                    textKey.DataSequenceInOrder <> TextValueType.ISV_Missing ||
+                    textKey.ErrorRecoveryLevel <> TextValueType.ISV_Missing ||
+                    textKey.TaskReporting <> TextValueType.ISV_Missing ) then
+                        let msg = "Invalid text key was received."
+                        raise <| SessionRecoveryException ( msg, tsih_me.zero )
+
+                // If sequrity negotiation is performed, some text keys are not allowed to use in operational stage.
+                if isAuthentified then
+                    if textKey.SessionType <> TextValueType.ISV_Missing ||
+                        textKey.InitiatorName <> TextValueType.ISV_Missing ||
+                        textKey.TargetName <> TextValueType.ISV_Missing ||
+                        textKey.TargetPortalGroupTag <> TextValueType.ISV_Missing then
+                        let msg = "Invalid text key was received."
+                        raise <| SessionRecoveryException ( msg, tsih_me.zero )
+
+                // marge parameters
+                let next_negoValue, next_negoStat =
+                    IscsiTextEncode.margeTextKeyValue Standpoint.Initiator negoValue textKey negoStat2 
+            
+                // decide transit flg
+                // ( If all of initiator value is sended and target says 'T', transit to next stage )
+                let nextInitiatorTvalue =
+                    IscsiTextEncode.CheckAllKeyStatus next_negoStat ( fun v -> v &&& NegoStatusValue.NSG_WaitSend <> NegoStatusValue.NSG_WaitSend )
+
+                // try to next
+                if not ( nextInitiatorTvalue && recvPDU.T ) then
+                    contNego.Continue( struct( next_negoValue, next_negoStat, nextInitiatorTvalue, statsn_me.next recvPDU.StatSN ) )
+                else
+                    contNego.Break( ( next_negoValue, next_negoStat, recvPDU.TSIH, recvPDU.StatSN ) )
+
+            return ( contNego.LastValue |> ValueOption.get )
         }
 
     /// <summary>
@@ -2045,49 +2042,46 @@ type iSCSI_Initiator(
                                         // (The initial value is determined by the target.)
         : Task< struct ( TextKeyValues * LoginResponsePDU ) > =
         task {
+            let pduList = new List<LoginResponsePDU>()
+
             // receive login response pdu sequence with c bit.
-            let cbitLoop ( expStatSN : STATSN_T option, rv : List< LoginResponsePDU > ) :
-                    Task< LoopState< STATSN_T option * List< LoginResponsePDU >, unit > > =
-                task {
-                    // receive next login response PDU
-                    let! wnextLogiPDU = PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, conn, Standpoint.Initiator )
-                    if wnextLogiPDU.Opcode <> OpcodeCd.LOGIN_RES then
-                        raise <| SessionRecoveryException ( "Unexpected PDU was received.", tsih_me.zero )
-                    let recvPDU = wnextLogiPDU :?> LoginResponsePDU
+            let cont = PseudoSeq< struct( STATSN_T option * List< LoginResponsePDU > ) >()
+            cont.Continue struct( expStatSN, pduList )
 
-                    match expStatSN with
-                    | Some( x ) ->
-                        if recvPDU.StatSN <> x then
-                            raise <| SessionRecoveryException ( "Unexpected StatSN was received.", tsih_me.zero )
-                    | _ -> ()
+            for struct ( expStatSN, rv ) in cont do
+                // receive next login response PDU
+                let! wnextLogiPDU = PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, conn, Standpoint.Initiator )
+                if wnextLogiPDU.Opcode <> OpcodeCd.LOGIN_RES then
+                    raise <| SessionRecoveryException ( "Unexpected PDU was received.", tsih_me.zero )
+                let recvPDU = wnextLogiPDU :?> LoginResponsePDU
 
-                    if recvPDU.Status <> LoginResStatCd.SUCCESS then
-                        let stat = recvPDU.Status
-                        let msg = sprintf "Unexpected login response status(%s) was received." ( stat.ToString() )
-                        raise <| SessionRecoveryException ( msg, tsih_me.zero )
+                match expStatSN with
+                | Some( x ) ->
+                    if recvPDU.StatSN <> x then
+                        raise <| SessionRecoveryException ( "Unexpected StatSN was received.", tsih_me.zero )
+                | _ -> ()
 
-                    rv.Add recvPDU
+                if recvPDU.Status <> LoginResStatCd.SUCCESS then
+                    let stat = recvPDU.Status
+                    let msg = sprintf "Unexpected login response status(%s) was received." ( stat.ToString() )
+                    raise <| SessionRecoveryException ( msg, tsih_me.zero )
 
-                    if recvPDU.C then
-                        // send to empty login request PDU
-                        let emptyPDU = iSCSI_Initiator.CreateLoginRequestPDUfromLoginResponsePDU argCID recvPDU getCmdSN
-                        let! _ = PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objID, conn, emptyPDU )
-                        return LoopState.Continue( Some emptyPDU.ExpStatSN, rv )
-                    else
-                        return LoopState.Terminate()
-                }
+                rv.Add recvPDU
 
-            let rv = new List<LoginResponsePDU>()
-
-            do! Functions.loopAsyncWithArgs cbitLoop ( expStatSN, rv )
-            let pduList = [| for itr in rv -> itr |]
+                if recvPDU.C then
+                    // send to empty login request PDU
+                    let emptyPDU = iSCSI_Initiator.CreateLoginRequestPDUfromLoginResponsePDU argCID recvPDU getCmdSN
+                    let! _ = PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueNone, ValueNone, ValueNone, objID, conn, emptyPDU )
+                    cont.Continue struct( Some emptyPDU.ExpStatSN, rv )
+                else
+                    cont.Break()
 
             let reqs_opt, pdu =
                 (
-                    pduList
+                    pduList.ToArray()
                     |> Array.map ( fun x -> x.TextResponse )
                     |> IscsiTextEncode.RecognizeTextKeyData true,
-                    Array.last pduList
+                    pduList.[ pduList.Count - 1 ]
                 )
 
             if reqs_opt.IsNone then
