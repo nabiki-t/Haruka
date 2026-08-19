@@ -1596,17 +1596,17 @@ type Session
         ( tick : ( unit -> int64 ) )
         ( interval : int32 ) : Task<unit> =
 
-        // Continue sending ping requests on connections that have an unacknowledged status.
-        let loop ( nextIdx : int64 ) : Task< struct( bool * int64 ) > =
-            task {
+        task {
+            let cont = PseudoSeq< int64 >( 0L )
+            for nextIdx in cont do
                 do! Task.Delay interval
                 if sess.IsAlive |> not then
-                    return struct( false, nextIdx )
+                    cont.Break()
                 else
                     let struct( starttick, _, qcount ) = rFense.LockStatus
 
                     if qcount = 0 then
-                        return struct( true, 0L )
+                        cont.Continue 0L
                     elif tick() >= starttick + ( Session.StatSNAckSchedule nextIdx ) then
                         conns.obj
                         |> Seq.choose ( fun itr ->
@@ -1617,12 +1617,10 @@ type Session
                                 None
                         )
                         |> Session.SendNopIn_PingRequest sess
-                        return struct( true, nextIdx + 1L )
+                        cont.Continue( nextIdx + 1L )
                     else
-                        return struct( true, nextIdx )
-            }
-        Functions.loopAsyncWithState loop 0L
-        |> Functions.TaskIgnore
+                        cont.Continue( nextIdx )
+        }
 
     /// <summary>
     ///  Determine the time interval between ping requests

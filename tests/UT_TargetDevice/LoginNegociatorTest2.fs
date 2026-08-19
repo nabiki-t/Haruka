@@ -95,7 +95,7 @@ type LoginNegociator_Test2 () =
 
     let createDefaultTargetTask ( mrdsl : uint32 ) ( vTargetNames : string[] ) ( vTargetAddresses : string[] ) ( vPortNumbers : uint16[] ) ( sp : NetworkStream ) =
         task {
-            Assert.True(( vTargetAddresses.Length = vPortNumbers.Length ))
+            Assert.StrictEqual( vTargetAddresses.Length, vPortNumbers.Length )
 
             let k1 = new HKiller() :> IKiller
             let stat1 =  new CStatus_Stub()
@@ -176,12 +176,12 @@ type LoginNegociator_Test2 () =
                 |> Functions.TaskIgnore
 
             let! recvPDU2 = PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome tsih_me.zero, ValueSome cid_me.zero, ValueSome concnt_me.zero, cp, Standpoint.Initiator )
-            Assert.True( ( recvPDU2.Opcode = OpcodeCd.LOGIN_RES ) );
+            Assert.StrictEqual( OpcodeCd.LOGIN_RES, recvPDU2.Opcode )
             let recvPDU2L = recvPDU2 :?> LoginResponsePDU
-            Assert.True( recvPDU2L.T = false )
-            Assert.True( recvPDU2L.ExpCmdSN = cmdsn_me.zero )
-            Assert.True( recvPDU2L.MaxCmdSN = cmdsn_me.zero )
-            Assert.True( recvPDU2L.StatSN = statsn_me.zero )
+            Assert.StrictEqual( false, recvPDU2L.T )
+            Assert.StrictEqual( cmdsn_me.zero, recvPDU2L.ExpCmdSN )
+            Assert.StrictEqual( cmdsn_me.zero, recvPDU2L.MaxCmdSN )
+            Assert.StrictEqual( statsn_me.zero, recvPDU2L.StatSN )
 
             do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
                     {
@@ -196,14 +196,14 @@ type LoginNegociator_Test2 () =
                 |> Functions.TaskIgnore
 
             let! recvPDU3 = PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome tsih_me.zero, ValueSome cid_me.zero, ValueSome concnt_me.zero, cp, Standpoint.Initiator )
-            Assert.True( ( recvPDU3.Opcode = OpcodeCd.LOGIN_RES ) );
+            Assert.StrictEqual( OpcodeCd.LOGIN_RES, recvPDU3.Opcode );
             let recvPDU3L = recvPDU3 :?> LoginResponsePDU
-            Assert.True( recvPDU3L.T = true )
-            Assert.True( recvPDU3L.CSG = LoginReqStateCd.OPERATIONAL )
-            Assert.True( recvPDU3L.NSG = LoginReqStateCd.FULL )
-            Assert.True( recvPDU3L.ExpCmdSN = cmdsn_me.zero )
-            Assert.True( recvPDU3L.MaxCmdSN = cmdsn_me.zero )
-            Assert.True( recvPDU3L.StatSN = statsn_me.fromPrim 1u )
+            Assert.StrictEqual( true, recvPDU3L.T )
+            Assert.StrictEqual( LoginReqStateCd.OPERATIONAL, recvPDU3L.CSG )
+            Assert.StrictEqual( LoginReqStateCd.FULL, recvPDU3L.NSG )
+            Assert.StrictEqual( cmdsn_me.zero, recvPDU3L.ExpCmdSN )
+            Assert.StrictEqual( cmdsn_me.zero, recvPDU3L.MaxCmdSN )
+            Assert.StrictEqual( statsn_me.fromPrim 1u, recvPDU3L.StatSN )
         }
 
     let initiatorLogoutSequense ( mrdsl : uint32 ) ( cp : NetworkStream ) ( pduCnt : int32 ) =
@@ -224,47 +224,51 @@ type LoginNegociator_Test2 () =
 
             // receive logout responce
             let! recvPDU5 = PDU.Receive( mrdsl, DigestType.DST_None, DigestType.DST_None, ValueSome tsih_me.zero, ValueSome cid_me.zero, ValueSome concnt_me.zero, cp, Standpoint.Initiator )
-            Assert.True( ( recvPDU5.Opcode = OpcodeCd.LOGOUT_RES ) );
+            Assert.StrictEqual( OpcodeCd.LOGOUT_RES, recvPDU5.Opcode );
             let recvPDU5L = recvPDU5 :?> LogoutResponsePDU
-            Assert.True(( recvPDU5L.Response = LogoutResCd.SUCCESS ))
-            Assert.True( recvPDU5L.ExpCmdSN = cmdsn_me.fromPrim ( uint32 pduCnt + 2u ) )
-            Assert.True( recvPDU5L.MaxCmdSN = cmdsn_me.fromPrim ( uint32 pduCnt + 2u ) )
-            Assert.True( recvPDU5L.StatSN = statsn_me.fromPrim ( uint32 pduCnt + 3u ) )
+            Assert.StrictEqual( LogoutResCd.SUCCESS, recvPDU5L.Response )
+            Assert.StrictEqual( cmdsn_me.fromPrim ( uint32 pduCnt + 2u ), recvPDU5L.ExpCmdSN )
+            Assert.StrictEqual( cmdsn_me.fromPrim ( uint32 pduCnt + 2u ), recvPDU5L.MaxCmdSN )
+            Assert.StrictEqual( statsn_me.fromPrim ( uint32 pduCnt + 3u ), recvPDU5L.StatSN )
         }
 
-    let receiveResultLoop struct ( cnt : int32, vResult : byte[][], mrdsl : uint32, cp : NetworkStream ) :
-            Task<LoopState< struct( int32 * byte[][] * uint32 * NetworkStream ), int32 > > =
+    let receiveResultLoop struct ( argCnt : int32, argResult : byte[][], argMrdsl : uint32, argCP : NetworkStream ) : Task<int32> =
         task {
-            // receive result PDU
-            let! recvPDU4 = PDU.Receive( mrdsl, DigestType.DST_None, DigestType.DST_None, ValueSome tsih_me.zero, ValueSome cid_me.zero, ValueSome concnt_me.zero, cp, Standpoint.Initiator )
-            Assert.True( ( recvPDU4.Opcode = OpcodeCd.TEXT_RES ) );
-            let recvPDU4L = recvPDU4 :?> TextResponsePDU
-            Assert.True(( recvPDU4L.TextResponse = vResult.[cnt] ))
-            Assert.True( recvPDU4L.ExpCmdSN = cmdsn_me.fromPrim ( uint32 cnt + 1u ) )
-            Assert.True( recvPDU4L.MaxCmdSN = cmdsn_me.fromPrim ( uint32 cnt + 1u ) )
-            Assert.True( recvPDU4L.StatSN = statsn_me.fromPrim ( uint32 cnt + 2u ) )
+            let cont = PseudoSeqStat< struct( int32 * byte[][] * uint32 * NetworkStream ), int32 >()
+            cont.Continue( struct ( argCnt, argResult, argMrdsl, argCP ) )
 
-            if recvPDU4L.C then
-                // Send empty text request PDU and continue to receive result PDU
-                do! PDU.SendPDU( mrdsl, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
-                        {
-                            I = false;
-                            F = false;
-                            C = false;
-                            LUN = lun_me.zero;
-                            InitiatorTaskTag = itt_me.fromPrim 0ul;
-                            TargetTransferTag = ttt_me.fromPrim 0u;
-                            CmdSN = cmdsn_me.fromPrim( uint32 cnt + 1u );
-                            ExpStatSN = statsn_me.fromPrim ( uint32 cnt + 3u );
-                            TextRequest = Array.empty;
-                            ByteCount = 0u;
-                        }
-                    )
-                    |> Functions.TaskIgnore
+            for struct ( cnt, vResult, mrdsl, cp ) in cont do
+                // receive result PDU
+                let! recvPDU4 = PDU.Receive( mrdsl, DigestType.DST_None, DigestType.DST_None, ValueSome tsih_me.zero, ValueSome cid_me.zero, ValueSome concnt_me.zero, cp, Standpoint.Initiator )
+                Assert.StrictEqual( OpcodeCd.TEXT_RES, recvPDU4.Opcode );
+                let recvPDU4L = recvPDU4 :?> TextResponsePDU
+                Assert.True( vResult.[cnt] = recvPDU4L.TextResponse )
+                Assert.StrictEqual( cmdsn_me.fromPrim ( uint32 cnt + 1u ), recvPDU4L.ExpCmdSN )
+                Assert.StrictEqual( cmdsn_me.fromPrim ( uint32 cnt + 1u ), recvPDU4L.MaxCmdSN )
+                Assert.StrictEqual( statsn_me.fromPrim ( uint32 cnt + 2u ), recvPDU4L.StatSN )
 
-                return Continue( struct( cnt + 1, vResult, mrdsl, cp ) )
-            else
-                return Terminate( cnt )
+                if recvPDU4L.C then
+                    // Send empty text request PDU and continue to receive result PDU
+                    do! PDU.SendPDU( mrdsl, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
+                            {
+                                I = false;
+                                F = false;
+                                C = false;
+                                LUN = lun_me.zero;
+                                InitiatorTaskTag = itt_me.fromPrim 0ul;
+                                TargetTransferTag = ttt_me.fromPrim 0u;
+                                CmdSN = cmdsn_me.fromPrim( uint32 cnt + 1u );
+                                ExpStatSN = statsn_me.fromPrim ( uint32 cnt + 3u );
+                                TextRequest = Array.empty;
+                                ByteCount = 0u;
+                            }
+                        )
+                        |> Functions.TaskIgnore
+
+                    cont.Continue( struct( cnt + 1, vResult, mrdsl, cp ) )
+                else
+                    cont.Break cnt
+            return ( ValueOption.get cont.LastValue )
         }
 
     let createSimpleInitiatorTask ( sendTargetsValue : string ) ( vResult : byte[][] ) ( mrdsl : uint32 ) ( cp : NetworkStream ) =
@@ -296,7 +300,7 @@ type LoginNegociator_Test2 () =
                 )
                 |> Functions.TaskIgnore
 
-            let! loopCnt = Functions.loopAsyncWithArgs receiveResultLoop struct( 0, vResult, mrdsl, cp )
+            let! loopCnt = receiveResultLoop struct( 0, vResult, mrdsl, cp )
 
             do! initiatorLogoutSequense mrdsl cp loopCnt
 
@@ -522,7 +526,7 @@ type LoginNegociator_Test2 () =
 
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp, defTextReqPDU )
                     |> Functions.TaskIgnore
-                let! loopCnt1 = Functions.loopAsyncWithArgs receiveResultLoop struct( 0, [| exResult |], 8192u, cp )
+                let! loopCnt1 = receiveResultLoop struct( 0, [| exResult |], 8192u, cp )
 
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp, 
                         {
@@ -533,7 +537,7 @@ type LoginNegociator_Test2 () =
                     )
                     |> Functions.TaskIgnore
 
-                let! loopCnt2 = Functions.loopAsyncWithArgs receiveResultLoop struct( loopCnt1 + 1, [| Array.empty; exResult |], 8192u, cp )
+                let! loopCnt2 = receiveResultLoop struct( loopCnt1 + 1, [| Array.empty; exResult |], 8192u, cp )
 
                 do! initiatorLogoutSequense 8192u cp ( loopCnt1 + loopCnt2 + 2 )
 
@@ -567,9 +571,9 @@ type LoginNegociator_Test2 () =
                     )
                     |> Functions.TaskIgnore
                 let! recvPDU2 = PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome tsih_me.zero, ValueSome cid_me.zero, ValueSome concnt_me.zero, cp, Standpoint.Initiator )
-                Assert.True( ( recvPDU2.Opcode = OpcodeCd.LOGIN_RES ) );
+                Assert.StrictEqual( OpcodeCd.LOGIN_RES, recvPDU2.Opcode )
                 let recvPDU2L = recvPDU2 :?> LoginResponsePDU
-                Assert.True( recvPDU2L.Status = LoginResStatCd.UNSUPPORTED_VERSION )
+                Assert.StrictEqual( LoginResStatCd.UNSUPPORTED_VERSION, recvPDU2L.Status )
         }
 
         Functions.RunTaskInPallalel [|
@@ -580,7 +584,7 @@ type LoginNegociator_Test2 () =
                     Assert.Fail __LINE__
                 with
                 | :? SessionRecoveryException as x ->
-                    Assert.True(( x.Message = "Unsupported version is requested." ))
+                    Assert.StrictEqual( "Unsupported version is requested.", x.Message )
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -624,12 +628,12 @@ type LoginNegociator_Test2 () =
                     )
                     |> Functions.TaskIgnore
                 let! recvPDU2 = PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome tsih_me.zero, ValueSome cid_me.zero, ValueSome concnt_me.zero, cp, Standpoint.Initiator )
-                Assert.True( ( recvPDU2.Opcode = OpcodeCd.LOGIN_RES ) );
+                Assert.StrictEqual( OpcodeCd.LOGIN_RES, recvPDU2.Opcode );
                 let recvPDU2L = recvPDU2 :?> LoginResponsePDU
-                Assert.True( recvPDU2L.T = false )
-                Assert.True( recvPDU2L.ExpCmdSN = cmdsn_me.zero )
-                Assert.True( recvPDU2L.MaxCmdSN = cmdsn_me.zero )
-                Assert.True( recvPDU2L.StatSN = statsn_me.zero )
+                Assert.StrictEqual( false, recvPDU2L.T )
+                Assert.StrictEqual( cmdsn_me.zero, recvPDU2L.ExpCmdSN )
+                Assert.StrictEqual( cmdsn_me.zero, recvPDU2L.MaxCmdSN )
+                Assert.StrictEqual( statsn_me.zero, recvPDU2L.StatSN )
 
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
                         {
@@ -643,14 +647,14 @@ type LoginNegociator_Test2 () =
                     |> Functions.TaskIgnore
 
                 let! recvPDU3 = PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome tsih_me.zero, ValueSome cid_me.zero, ValueSome concnt_me.zero, cp, Standpoint.Initiator )
-                Assert.True( ( recvPDU3.Opcode = OpcodeCd.LOGIN_RES ) );
+                Assert.StrictEqual( OpcodeCd.LOGIN_RES, recvPDU3.Opcode )
                 let recvPDU3L = recvPDU3 :?> LoginResponsePDU
-                Assert.True( recvPDU3L.T = true )
-                Assert.True( recvPDU3L.CSG = LoginReqStateCd.SEQURITY )
-                Assert.True( recvPDU3L.NSG = LoginReqStateCd.OPERATIONAL )
-                Assert.True( recvPDU3L.ExpCmdSN = cmdsn_me.zero )
-                Assert.True( recvPDU3L.MaxCmdSN = cmdsn_me.zero )
-                Assert.True( recvPDU3L.StatSN = statsn_me.zero )
+                Assert.StrictEqual( true, recvPDU3L.T )
+                Assert.StrictEqual( LoginReqStateCd.SEQURITY, recvPDU3L.CSG )
+                Assert.StrictEqual( LoginReqStateCd.OPERATIONAL, recvPDU3L.NSG )
+                Assert.StrictEqual( cmdsn_me.zero, recvPDU3L.ExpCmdSN )
+                Assert.StrictEqual( cmdsn_me.zero, recvPDU3L.MaxCmdSN )
+                Assert.StrictEqual( statsn_me.zero, recvPDU3L.StatSN )
 
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
                         {
@@ -663,12 +667,12 @@ type LoginNegociator_Test2 () =
                     )
                     |> Functions.TaskIgnore
                 let! recvPDU4 = PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome tsih_me.zero, ValueSome cid_me.zero, ValueSome concnt_me.zero, cp, Standpoint.Initiator )
-                Assert.True( ( recvPDU4.Opcode = OpcodeCd.LOGIN_RES ) );
+                Assert.StrictEqual( OpcodeCd.LOGIN_RES, recvPDU4.Opcode )
                 let recvPDU4L = recvPDU4 :?> LoginResponsePDU
-                Assert.True( recvPDU4L.T = false )
-                Assert.True( recvPDU4L.ExpCmdSN = cmdsn_me.zero )
-                Assert.True( recvPDU4L.MaxCmdSN = cmdsn_me.zero )
-                Assert.True( recvPDU4L.StatSN = statsn_me.zero )
+                Assert.StrictEqual( false, recvPDU4L.T )
+                Assert.StrictEqual( cmdsn_me.zero, recvPDU4L.ExpCmdSN )
+                Assert.StrictEqual( cmdsn_me.zero, recvPDU4L.MaxCmdSN )
+                Assert.StrictEqual( statsn_me.zero, recvPDU4L.StatSN )
 
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
                         {
@@ -682,14 +686,14 @@ type LoginNegociator_Test2 () =
                     |> Functions.TaskIgnore
 
                 let! recvPDU5 = PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome tsih_me.zero, ValueSome cid_me.zero, ValueSome concnt_me.zero, cp, Standpoint.Initiator )
-                Assert.True( ( recvPDU5.Opcode = OpcodeCd.LOGIN_RES ) );
+                Assert.StrictEqual( OpcodeCd.LOGIN_RES, recvPDU5.Opcode )
                 let recvPDU5L = recvPDU5 :?> LoginResponsePDU
-                Assert.True( recvPDU5L.T = true )
-                Assert.True( recvPDU5L.CSG = LoginReqStateCd.OPERATIONAL )
-                Assert.True( recvPDU5L.NSG = LoginReqStateCd.FULL )
-                Assert.True( recvPDU5L.ExpCmdSN = cmdsn_me.zero )
-                Assert.True( recvPDU5L.MaxCmdSN = cmdsn_me.zero )
-                Assert.True( recvPDU5L.StatSN = statsn_me.zero )
+                Assert.StrictEqual( true, recvPDU5L.T )
+                Assert.StrictEqual( LoginReqStateCd.OPERATIONAL, recvPDU5L.CSG )
+                Assert.StrictEqual( LoginReqStateCd.FULL, recvPDU5L.NSG )
+                Assert.StrictEqual( cmdsn_me.zero, recvPDU5L.ExpCmdSN )
+                Assert.StrictEqual( cmdsn_me.zero, recvPDU5L.MaxCmdSN )
+                Assert.StrictEqual( statsn_me.zero, recvPDU5L.StatSN )
 
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
                         {
@@ -716,7 +720,7 @@ type LoginNegociator_Test2 () =
                     )
                     |> Functions.TaskIgnore
 
-                let! loopCnt = Functions.loopAsyncWithArgs receiveResultLoop struct( 0, [| exResult |], 8192u, cp )
+                let! loopCnt = receiveResultLoop struct( 0, [| exResult |], 8192u, cp )
 
                 do! initiatorLogoutSequense 8192u cp loopCnt
 
@@ -748,12 +752,12 @@ type LoginNegociator_Test2 () =
                     )
                     |> Functions.TaskIgnore
                 let! recvPDU2 = PDU.Receive( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome tsih_me.zero, ValueSome cid_me.zero, ValueSome concnt_me.zero, cp, Standpoint.Initiator )
-                Assert.True( ( recvPDU2.Opcode = OpcodeCd.LOGIN_RES ) );
+                Assert.StrictEqual( OpcodeCd.LOGIN_RES, recvPDU2.Opcode );
                 let recvPDU2L = recvPDU2 :?> LoginResponsePDU
-                Assert.True( recvPDU2L.T = false )
-                Assert.True( recvPDU2L.ExpCmdSN = cmdsn_me.zero )
-                Assert.True( recvPDU2L.MaxCmdSN = cmdsn_me.zero )
-                Assert.True( recvPDU2L.StatSN = statsn_me.zero )
+                Assert.StrictEqual( false, recvPDU2L.T )
+                Assert.StrictEqual( cmdsn_me.zero, recvPDU2L.ExpCmdSN )
+                Assert.StrictEqual( cmdsn_me.zero, recvPDU2L.MaxCmdSN )
+                Assert.StrictEqual( statsn_me.zero, recvPDU2L.StatSN )
 
                 // Unexpected PDU
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
@@ -779,7 +783,7 @@ type LoginNegociator_Test2 () =
                     Assert.Fail __LINE__
                 with
                 | :? SessionRecoveryException as x ->
-                    Assert.True( x.Message.StartsWith "Unexpected PDU" )
+                    Assert.StartsWith( "Unexpected PDU", x.Message )
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -818,7 +822,7 @@ type LoginNegociator_Test2 () =
                     Assert.Fail __LINE__
                 with
                 | :? SessionRecoveryException as x ->
-                    Assert.True( x.Message.StartsWith "Invalid PDU type in discovery session." )
+                    Assert.StartsWith( "Invalid PDU type in discovery session.", x.Message )
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -876,7 +880,7 @@ type LoginNegociator_Test2 () =
                     Assert.Fail __LINE__
                 with
                 | :? SessionRecoveryException as x ->
-                    Assert.True( x.Message.StartsWith "Invalid logout reason" )
+                    Assert.StartsWith( "Invalid logout reason", x.Message )
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -926,7 +930,7 @@ type LoginNegociator_Test2 () =
                     Assert.Fail __LINE__
                 with
                 | :? SessionRecoveryException as x ->
-                    Assert.True( x.Message.StartsWith "Invalid text key was received" )
+                    Assert.StartsWith( "Invalid text key was received", x.Message )
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -979,7 +983,7 @@ type LoginNegociator_Test2 () =
                         Assert.Fail __LINE__
                     with
                     | :? SessionRecoveryException as x ->
-                        Assert.True( x.Message.StartsWith "Invalid SendTargets value was received in discovery session" )
+                        Assert.StartsWith( "Invalid SendTargets value was received in discovery session", x.Message )
                 }
             |]
             |> Functions.RunTaskSynchronously
@@ -1016,8 +1020,8 @@ type LoginNegociator_Test2 () =
                         }
                     )
                     |> Functions.TaskIgnore
-                let! loopCnt1 = Functions.loopAsyncWithArgs receiveResultLoop struct( 0, [| Array.empty |], 8192u, cp )
-                Assert.True(( loopCnt1 = 0 ))
+                let! loopCnt1 = receiveResultLoop struct( 0, [| Array.empty |], 8192u, cp )
+                Assert.StrictEqual( 0, loopCnt1 )
 
                 // text request part 2
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
@@ -1036,8 +1040,8 @@ type LoginNegociator_Test2 () =
                     )
                     |> Functions.TaskIgnore
 
-                let! loopCnt2 = Functions.loopAsyncWithArgs receiveResultLoop struct( 1, [| Array.empty; exResult |], 8192u, cp )
-                Assert.True(( loopCnt2 = 1 ))
+                let! loopCnt2 = receiveResultLoop struct( 1, [| Array.empty; exResult |], 8192u, cp )
+                Assert.StrictEqual( 1, loopCnt2 )
 
                 do! initiatorLogoutSequense 8192u cp 1
                 
@@ -1074,8 +1078,8 @@ type LoginNegociator_Test2 () =
                         }
                     )
                     |> Functions.TaskIgnore
-                let! loopCnt1 = Functions.loopAsyncWithArgs receiveResultLoop struct( 0, [| Array.empty |], 8192u, cp )
-                Assert.True(( loopCnt1 = 0 ))
+                let! loopCnt1 = receiveResultLoop struct( 0, [| Array.empty |], 8192u, cp )
+                Assert.StrictEqual( 0, loopCnt1 )
 
                 // Unexpected PDU
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
@@ -1101,7 +1105,7 @@ type LoginNegociator_Test2 () =
                     Assert.Fail __LINE__
                 with
                 | :? SessionRecoveryException as x ->
-                    Assert.True( x.Message.StartsWith "Unexpected PDU was received in discovery session." )
+                    Assert.StartsWith( "Unexpected PDU was received in discovery session.", x.Message )
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -1131,8 +1135,8 @@ type LoginNegociator_Test2 () =
                             }
                         )
                         |> Functions.TaskIgnore
-                let! loopCnt1 = Functions.loopAsyncWithArgs receiveResultLoop struct( 0, [| Array.empty |], 8192u, cp )
-                Assert.True(( loopCnt1 = 0 ))
+                let! loopCnt1 = receiveResultLoop struct( 0, [| Array.empty |], 8192u, cp )
+                Assert.StrictEqual( 0, loopCnt1 )
 
                 // text request part 2
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
@@ -1160,7 +1164,7 @@ type LoginNegociator_Test2 () =
                     Assert.Fail __LINE__
                 with
                 | :? SessionRecoveryException as x ->
-                    Assert.True( x.Message.StartsWith "Unexpected ExpStatSN was received in discovery session." )
+                    Assert.StartsWith( "Unexpected ExpStatSN was received in discovery session.", x.Message )
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -1190,8 +1194,8 @@ type LoginNegociator_Test2 () =
                         }
                     )
                     |> Functions.TaskIgnore
-                let! loopCnt1 = Functions.loopAsyncWithArgs receiveResultLoop struct( 0, [| Array.empty |], 8192u, cp )
-                Assert.True(( loopCnt1 = 0 ))
+                let! loopCnt1 = receiveResultLoop struct( 0, [| Array.empty |], 8192u, cp )
+                Assert.StrictEqual( 0, loopCnt1 )
 
                 // text request part 2
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
@@ -1219,7 +1223,7 @@ type LoginNegociator_Test2 () =
                     Assert.Fail __LINE__
                 with
                 | :? SessionRecoveryException as x ->
-                    Assert.True( x.Message.StartsWith "Unexpected CmdSN was received in discovery session." )
+                    Assert.StartsWith( "Unexpected CmdSN was received in discovery session.", x.Message )
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -1259,7 +1263,7 @@ type LoginNegociator_Test2 () =
                     Assert.Fail __LINE__
                 with
                 | :? SessionRecoveryException as x ->
-                    Assert.True( x.Message.StartsWith "In iSCSI text request PDU, Text request data is invalid in discovery session." )
+                    Assert.StartsWith( "In iSCSI text request PDU, Text request data is invalid in discovery session.", x.Message )
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -1292,11 +1296,11 @@ type LoginNegociator_Test2 () =
 
                 // receive result PDU
                 let! recvPDU4 = PDU.Receive( 512u, DigestType.DST_None, DigestType.DST_None, ValueSome tsih_me.zero, ValueSome cid_me.zero, ValueSome concnt_me.zero, cp, Standpoint.Initiator )
-                Assert.True( ( recvPDU4.Opcode = OpcodeCd.TEXT_RES ) );
+                Assert.StrictEqual( OpcodeCd.TEXT_RES, recvPDU4.Opcode );
                 let recvPDU4L = recvPDU4 :?> TextResponsePDU
-                Assert.True( recvPDU4L.ExpCmdSN = cmdsn_me.fromPrim 1u )
-                Assert.True( recvPDU4L.MaxCmdSN = cmdsn_me.fromPrim 1u )
-                Assert.True( recvPDU4L.StatSN = statsn_me.fromPrim 2u )
+                Assert.StrictEqual( cmdsn_me.fromPrim 1u, recvPDU4L.ExpCmdSN )
+                Assert.StrictEqual( cmdsn_me.fromPrim 1u, recvPDU4L.MaxCmdSN )
+                Assert.StrictEqual( statsn_me.fromPrim 2u, recvPDU4L.StatSN )
 
                 // Unexpected PDU
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
@@ -1323,7 +1327,7 @@ type LoginNegociator_Test2 () =
                     Assert.Fail __LINE__
                 with
                 | :? SessionRecoveryException as x ->
-                    Assert.True( x.Message.StartsWith "Unexpected PDU was received." )
+                    Assert.StartsWith( "Unexpected PDU was received.", x.Message )
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -1356,11 +1360,11 @@ type LoginNegociator_Test2 () =
 
                 // receive result PDU
                 let! recvPDU4 = PDU.Receive( 512u, DigestType.DST_None, DigestType.DST_None, ValueSome tsih_me.zero, ValueSome cid_me.zero, ValueSome concnt_me.zero, cp, Standpoint.Initiator )
-                Assert.True( ( recvPDU4.Opcode = OpcodeCd.TEXT_RES ) );
+                Assert.StrictEqual( OpcodeCd.TEXT_RES, recvPDU4.Opcode )
                 let recvPDU4L = recvPDU4 :?> TextResponsePDU
-                Assert.True( recvPDU4L.ExpCmdSN = cmdsn_me.fromPrim 1u )
-                Assert.True( recvPDU4L.MaxCmdSN = cmdsn_me.fromPrim 1u )
-                Assert.True( recvPDU4L.StatSN = statsn_me.fromPrim 2u )
+                Assert.StrictEqual( cmdsn_me.fromPrim 1u, recvPDU4L.ExpCmdSN )
+                Assert.StrictEqual( cmdsn_me.fromPrim 1u, recvPDU4L.MaxCmdSN )
+                Assert.StrictEqual( statsn_me.fromPrim 2u, recvPDU4L.StatSN )
 
                 // Unexpected PDU
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
@@ -1388,7 +1392,7 @@ type LoginNegociator_Test2 () =
                     Assert.Fail __LINE__
                 with
                 | :? SessionRecoveryException as x ->
-                    Assert.True( x.Message.StartsWith "Response of Text response PDU with" )
+                    Assert.StartsWith( "Response of Text response PDU with", x.Message )
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -1421,11 +1425,11 @@ type LoginNegociator_Test2 () =
 
                 // receive result PDU
                 let! recvPDU4 = PDU.Receive( 512u, DigestType.DST_None, DigestType.DST_None, ValueSome tsih_me.zero, ValueSome cid_me.zero, ValueSome concnt_me.zero, cp, Standpoint.Initiator )
-                Assert.True( ( recvPDU4.Opcode = OpcodeCd.TEXT_RES ) );
+                Assert.StrictEqual( OpcodeCd.TEXT_RES, recvPDU4.Opcode );
                 let recvPDU4L = recvPDU4 :?> TextResponsePDU
-                Assert.True( recvPDU4L.ExpCmdSN = cmdsn_me.fromPrim 1u )
-                Assert.True( recvPDU4L.MaxCmdSN = cmdsn_me.fromPrim 1u )
-                Assert.True( recvPDU4L.StatSN = statsn_me.fromPrim 2u )
+                Assert.StrictEqual( cmdsn_me.fromPrim 1u, recvPDU4L.ExpCmdSN )
+                Assert.StrictEqual( cmdsn_me.fromPrim 1u, recvPDU4L.MaxCmdSN )
+                Assert.StrictEqual( statsn_me.fromPrim 2u, recvPDU4L.StatSN )
 
                 // Unexpected PDU
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
@@ -1453,7 +1457,7 @@ type LoginNegociator_Test2 () =
                     Assert.Fail __LINE__
                 with
                 | :? SessionRecoveryException as x ->
-                    Assert.True( x.Message.StartsWith "Response of Text response PDU with" )
+                    Assert.StartsWith( "Response of Text response PDU with", x.Message )
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -1486,11 +1490,11 @@ type LoginNegociator_Test2 () =
 
                 // receive result PDU
                 let! recvPDU4 = PDU.Receive( 512u, DigestType.DST_None, DigestType.DST_None, ValueSome tsih_me.zero, ValueSome cid_me.zero, ValueSome concnt_me.zero, cp, Standpoint.Initiator )
-                Assert.True( ( recvPDU4.Opcode = OpcodeCd.TEXT_RES ) );
+                Assert.StrictEqual( OpcodeCd.TEXT_RES, recvPDU4.Opcode );
                 let recvPDU4L = recvPDU4 :?> TextResponsePDU
-                Assert.True( recvPDU4L.ExpCmdSN = cmdsn_me.fromPrim 1u )
-                Assert.True( recvPDU4L.MaxCmdSN = cmdsn_me.fromPrim 1u )
-                Assert.True( recvPDU4L.StatSN = statsn_me.fromPrim 2u )
+                Assert.StrictEqual( cmdsn_me.fromPrim 1u, recvPDU4L.ExpCmdSN )
+                Assert.StrictEqual( cmdsn_me.fromPrim 1u, recvPDU4L.MaxCmdSN )
+                Assert.StrictEqual( statsn_me.fromPrim 2u, recvPDU4L.StatSN )
 
                 // Unexpected PDU
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
@@ -1518,7 +1522,7 @@ type LoginNegociator_Test2 () =
                     Assert.Fail __LINE__
                 with
                 | :? SessionRecoveryException as x ->
-                    Assert.True( x.Message.StartsWith "Unexpected CmdSN was received" )
+                    Assert.StartsWith( "Unexpected CmdSN was received", x.Message )
             }
         |]
         |> Functions.RunTaskSynchronously
@@ -1551,11 +1555,11 @@ type LoginNegociator_Test2 () =
 
                 // receive result PDU
                 let! recvPDU4 = PDU.Receive( 512u, DigestType.DST_None, DigestType.DST_None, ValueSome tsih_me.zero, ValueSome cid_me.zero, ValueSome concnt_me.zero, cp, Standpoint.Initiator )
-                Assert.True( ( recvPDU4.Opcode = OpcodeCd.TEXT_RES ) );
+                Assert.StrictEqual( OpcodeCd.TEXT_RES, recvPDU4.Opcode )
                 let recvPDU4L = recvPDU4 :?> TextResponsePDU
-                Assert.True( recvPDU4L.ExpCmdSN = cmdsn_me.fromPrim 1u )
-                Assert.True( recvPDU4L.MaxCmdSN = cmdsn_me.fromPrim 1u )
-                Assert.True( recvPDU4L.StatSN = statsn_me.fromPrim 2u )
+                Assert.StrictEqual( cmdsn_me.fromPrim 1u, recvPDU4L.ExpCmdSN )
+                Assert.StrictEqual( cmdsn_me.fromPrim 1u, recvPDU4L.MaxCmdSN )
+                Assert.StrictEqual( statsn_me.fromPrim 2u, recvPDU4L.StatSN )
 
                 // Unexpected PDU
                 do! PDU.SendPDU( 8192u, DigestType.DST_None, DigestType.DST_None, ValueSome( tsih1 ), ValueSome( cid1 ), ValueSome( ccnt1 ), objidx_me.NewID(), cp,
@@ -1583,7 +1587,7 @@ type LoginNegociator_Test2 () =
                     Assert.Fail __LINE__
                 with
                 | :? SessionRecoveryException as x ->
-                    Assert.True( x.Message.StartsWith "Unexpected ExpStatSN was received" )
+                    Assert.StartsWith( "Unexpected ExpStatSN was received", x.Message )
             }
         |]
         |> Functions.RunTaskSynchronously
