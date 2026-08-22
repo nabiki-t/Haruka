@@ -166,29 +166,33 @@ type iSCSI_TMF( fx : iSCSI_TMF_Fixture ) =
         MaxRecvDataSegmentLength_T = 4096u;
     }
 
-    let receiveTMFResponse ( r1 : iSCSI_Initiator ) =
-        // Continue sending NOP-Out until a TMF response is received
-        let rec loop ( tmf : TaskManagementFunctionResponsePDU voption, scnt : int32, rcnt : int32 ) =
-            task {
+    let receiveTMFResponse ( r1 : iSCSI_Initiator ) : Task< struct ( TaskManagementFunctionResponsePDU voption * int32 * int32 ) > =
+        task {
+            let cont = PseudoSeq< struct ( TaskManagementFunctionResponsePDU voption * int32 * int32 ) >( struct( ValueNone, 1, 0 ) )
+            // Continue sending NOP-Out until a TMF response is received
+            for ( tmf : TaskManagementFunctionResponsePDU voption, scnt : int32, rcnt : int32 ) in cont do
                 let! pdu = r1.Receive g_CID0
                 match pdu with
                 | :? TaskManagementFunctionResponsePDU as tmdRespPDU ->
                     // After receiving a TMF response, send Nop-Output at least once.
                     let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
-                    return struct( true, ( ValueSome tmdRespPDU, scnt + 1, rcnt ) )
+                    cont.Continue( struct( ValueSome tmdRespPDU, scnt + 1, rcnt ) )
 
                 | :? NOPInPDU ->
                     if tmf.IsSome then
                         // After receiving a TMF response, repeat until the same number of Nop-Ins as the number of Nop-Outs sent are received.
-                        return struct( ( scnt > rcnt + 1 ), ( tmf, scnt, rcnt + 1 ) )
+                        if scnt > rcnt + 1 then
+                            cont.Continue( struct( tmf, scnt, rcnt + 1 ) )
+                        else
+                            cont.Break( struct( tmf, scnt, rcnt + 1 ) )
                     else
                         // Continue sending NOP-Out until a TMF response is received
                         let! _ = r1.SendNOPOut_PingRequest g_CID0 BitI.F g_LUN1 g_DefTTT PooledBuffer.Empty
-                        return struct( true, ( tmf, scnt + 1, rcnt + 1 ) )
+                        cont.Continue( tmf, scnt + 1, rcnt + 1 )
                 | _ ->
-                    return struct( false, ( ValueNone, 0, 0 ) )
-            }
-        Functions.loopAsyncWithState loop ( ValueNone, 1, 0 )
+                    cont.Break( struct( ValueNone, 0, 0 ) )
+            return ( ValueOption.get cont.LastValue )
+        }
 
     // Get a list of tasks that are stalled by the debug media wait action.
     let GetStuckTasks ( lu : int32 ) : ( string * TSIH_T * ITT_T ) array =
