@@ -30,6 +30,7 @@
     <Compile Include="VhdxMerge.fs" />
     <Compile Include="VhdxToRaw.fs" />
     <Compile Include="VhdxXml.fs" />
+    <Compile Include="VHDXLogManager.fs" />
     <Compile Include="VHDXFileMedia.fs" />
   </ItemGroup>
 
