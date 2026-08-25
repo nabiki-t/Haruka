@@ -91,7 +91,13 @@ type VhdxMerge() =
     /// <param name="structures">
     ///  Updated the VHDX file structures data.
     /// </param>
-    static member UpdateMetadata ( fa : FileAccessor ) ( structures : VhdxStructures ) : Task =
+    /// <param name="verhd">
+    ///  Latest header values.
+    /// </param>
+    /// <returns>
+    ///  Updated header values.
+    /// </returns>
+    static member UpdateMetadata ( fa : FileAccessor ) ( structures : VhdxStructures ) ( verhd : VhdxMutableHeader ) : Task<VhdxMutableHeader> =
         task {
             // Get recorded position of the metadata region.
             let metadataFileOffset, metadataLength = 
@@ -125,8 +131,7 @@ type VhdxMerge() =
                 |]
 
             // Update metadata while going through the log.
-            let! _ = VhdxWriter.WriteUpdatedSB fa structures update4KSecs
-            ()
+            return! VhdxWriter.WriteUpdatedSB fa structures verhd update4KSecs
         }
 
     /// <summary>
@@ -250,7 +255,13 @@ type VhdxMerge() =
     /// <param name="structures">
     ///  The VHDX structures data for the VHDX file.
     /// </param>
-    static member FillPartiallyPayload ( fa : FileAccessor ) ( structures : VhdxStructures ) : Task =
+    /// <param name="verhd">
+    ///  Latest header values.
+    /// </param>
+    /// <returns>
+    ///  Updated header values.
+    /// </returns>
+    static member FillPartiallyPayload ( fa : FileAccessor ) ( structures : VhdxStructures ) ( verhd : VhdxMutableHeader ) : Task<VhdxMutableHeader> =
         task {
             let blocksize = Blocksize.toUInt64 structures.VDI.LogicalSectorSize
             let payloadBlockLBACount =
@@ -307,8 +318,7 @@ type VhdxMerge() =
             let updated4KSecsForBAT = Seq.toArray updatedPB4K
 
             // Output updated BAT entry
-            let! _ = VhdxWriter.WriteUpdatedBAT fa structures updated4KSecsForBAT structures.LastFileSize 0
-            ()
+            return! VhdxWriter.WriteUpdatedBAT fa structures verhd updated4KSecsForBAT structures.LastFileSize 0
         }
 
     /// <summary>
@@ -324,50 +334,50 @@ type VhdxMerge() =
                 dstr.VDI.VirtualDiskSize / ( Blocksize.toUInt64 dstr.VDI.LogicalSectorSize ) |> blkcnt_me.ofUInt64
 
             // Flash log entries
-            if mstr.Log.Length > 0 then
-                do! VhdxChecker.Check mfa
-
-            let structures1 =
+            let! verhd1 =
                 if mstr.Log.Length > 0 then
-                    { mstr with Header.SequenceNumber = mstr.Header.SequenceNumber + 2UL }
+                    VhdxChecker.FlushLog mfa mstr
                 else
-                    mstr
+                    Task.FromResult mstr.LoadedVarHeader
 
             // Update FileWriteGuid and DataWriteGuid
-            let! structures2 = VhdxCommons.UpdateFileWriteGuidAndDataWriteGuid mfa structures1
+            let! verhd2 = VhdxCommons.UpdateFileWriteGuidAndDataWriteGuid mfa mstr verhd1
 
             // Allocate area and copy data
-            let! _, structures3 =
-                Functions.loopAsyncWithState ( fun ( lba, structures4 ) -> task {
+            let! _, verhd3 =
+                Functions.loopAsyncWithState ( fun ( lba, verhd4 ) -> task {
 
                     let requiredFileSize, updatedPB4K, nextLba =
-                        VhdxMerge.UpdateBATForDeleteRoot dstr structures4 lba updateLbaBuf
+                        VhdxMerge.UpdateBATForDeleteRoot dstr mstr lba updateLbaBuf
                     let updated4KSecsForBAT = Seq.toArray updatedPB4K
 
                     // Output BAT entries.
-                    let! nextsn5 = VhdxWriter.WriteUpdatedBAT mfa structures4 updated4KSecsForBAT requiredFileSize 0
-                    let structures5 = { structures4 with Header.SequenceNumber = nextsn5; }
+                    let! verhd5 = VhdxWriter.WriteUpdatedBAT mfa mstr verhd4 updated4KSecsForBAT requiredFileSize 0
 
                     // Copy payload data.
                     for struct( start, cnt ) in updateLbaBuf do
                         if start <> blkcnt_me.ofUInt64 UInt64.MaxValue then
-                            do! VhdxMerge.CopyData dfa dstr mfa structures5 start cnt
+                            do! VhdxMerge.CopyData dfa dstr mfa mstr start cnt
 
-                    return struct( ( nextLba < d_VirtualDiskLBACount ), ( nextLba, structures5 ) )
+                    return struct( ( nextLba < d_VirtualDiskLBACount ), ( nextLba, verhd5 ) )
 
-                } ) ( blkcnt_me.zero64, structures2 )
+                } ) ( blkcnt_me.zero64, verhd2 )
 
             // Update parent locator.
-            let structures7 = {
-                structures3 with
-                    Header.SequenceNumber = structures3.Header.SequenceNumber + 2UL;
+            let structures2 = {
+                mstr with
                     VDI.ParentLocator = Map.empty;
                     VDI.HasParent = false;
             }
-            do! VhdxMerge.UpdateMetadata mfa structures7
+            let verhd6 = {
+                verhd3 with
+                    SequenceNumber = verhd3.SequenceNumber + 2UL;
+            }
+            let! verhd7 = VhdxMerge.UpdateMetadata mfa structures2 verhd6
 
             // Convert PayloadPartiallyPresent payload block to PayloadFullyPresent.
-            do! VhdxMerge.FillPartiallyPayload mfa structures7
+            let! _ = VhdxMerge.FillPartiallyPayload mfa structures2 verhd7
+            ()
         }
 
     /// <summary>
@@ -518,24 +528,21 @@ type VhdxMerge() =
                 dstr.VDI.VirtualDiskSize / ( Blocksize.toUInt64 dstr.VDI.LogicalSectorSize ) |> blkcnt_me.ofUInt64
 
             // Flash log entries
-            if mstr.Log.Length > 0 then
-                do! VhdxChecker.Check mfa
-
-            let structures1 =
+            let! verhd1 =
                 if mstr.Log.Length > 0 then
-                    { mstr with Header.SequenceNumber = mstr.Header.SequenceNumber + 2UL }
+                    VhdxChecker.FlushLog mfa mstr
                 else
-                    mstr
+                    Task.FromResult mstr.LoadedVarHeader
 
             // Update FileWriteGuid and DataWriteGuid
-            let! structures2 = VhdxCommons.UpdateFileWriteGuidAndDataWriteGuid mfa structures1
+            let! verhd2 = VhdxCommons.UpdateFileWriteGuidAndDataWriteGuid mfa mstr verhd1
 
             // Allocate area and copy data
-            let! _, structures3 =
-                Functions.loopAsyncWithState ( fun ( lba, structures4 ) -> task {
+            let! _, verhd3 =
+                Functions.loopAsyncWithState ( fun ( lba, verhd4 ) -> task {
 
                     let requiredFileSize, updatedPB4K, updatedSB4K, nextLba =
-                        VhdxMerge.UpdateBATForMergeIntermediate dstr structures4 lba updateLbaBuf
+                        VhdxMerge.UpdateBATForMergeIntermediate dstr mstr lba updateLbaBuf
                     let updated4KSecsForSB =
                         updatedSB4K
                         |> Seq.map ( fun itr -> struct( itr.Key, itr.Value ) )
@@ -543,30 +550,31 @@ type VhdxMerge() =
                     let updated4KSecsForBAT = Seq.toArray updatedPB4K
 
                     // Output BAT entries.
-                    let! nextsn5 = VhdxWriter.WriteUpdatedBAT mfa structures4 updated4KSecsForBAT requiredFileSize 0
-                    let structures5 = { structures4 with Header.SequenceNumber = nextsn5; }
+                    let! verhd5 = VhdxWriter.WriteUpdatedBAT mfa mstr verhd4 updated4KSecsForBAT requiredFileSize 0
 
                     // Output sector bitmap.
-                    let! nextsn6 = VhdxWriter.WriteUpdatedSB mfa structures5 updated4KSecsForSB
-                    let structures6 = { structures5 with Header.SequenceNumber = nextsn6; }
+                    let! verhd6 = VhdxWriter.WriteUpdatedSB mfa mstr verhd5 updated4KSecsForSB
 
                     // Copy payload data.
                     for struct( start, cnt ) in updateLbaBuf do
                         if start <> blkcnt_me.ofUInt64 UInt64.MaxValue then
-                            do! VhdxMerge.CopyData dfa dstr mfa structures6 start cnt
+                            do! VhdxMerge.CopyData dfa dstr mfa mstr start cnt
 
-                    return struct( ( nextLba < d_VirtualDiskLBACount ), ( nextLba, structures6 ) )
+                    return struct( ( nextLba < d_VirtualDiskLBACount ), ( nextLba, verhd6 ) )
 
-                } ) ( blkcnt_me.zero64, structures2 )
+                } ) ( blkcnt_me.zero64, verhd2 )
 
             // Update parent locator.
-            let structures7 = {
-                structures3 with
-                    Header.SequenceNumber = structures3.Header.SequenceNumber + 2UL;
+            let structures2 = {
+                mstr with
                     VDI.ParentLocator = dstr.VDI.ParentLocator;
             }
-            do! VhdxMerge.UpdateMetadata mfa structures7
-
+            let verhd4 = {
+                verhd3 with
+                    SequenceNumber = verhd3.SequenceNumber + 2UL;
+            }
+            let! _ = VhdxMerge.UpdateMetadata mfa structures2 verhd4
+            ()
         }
 
     /// <summary>

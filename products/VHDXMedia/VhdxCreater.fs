@@ -449,7 +449,7 @@ type VhdxCreator() =
             let parentDataWriteGuid =
                 match parentStructures with
                 | Some x ->
-                    x.Header.DataWriteGuid
+                    x.LoadedVarHeader.DataWriteGuid
                 | None ->
                     Guid()
 
@@ -512,19 +512,21 @@ type VhdxCreator() =
             // Header
             let header = {
                 Signature = 0x68656164u;
-                Checksum = 0u;              // unused
-                SequenceNumber = 1UL;
-                FileWriteGuid = Guid.NewGuid();
-                DataWriteGuid = Guid.NewGuid();
-                LogGuid = Guid()            // log is cleared
-                LogVersion = 0us;           // Always 0
-                Version = 1us;              // Always 1
+                Checksum = 0u;                      // unused
+                LogVersion = 0us;                   // Always 0
+                Version = 1us;                      // Always 1
                 LogLength = logAreaSize;
                 LogOffset = 1048576UL;
                 Offset = 0x10000UL;
-                Index = 0;                  // unused
+                Index = 0;                          // unused
             }
-            let! _ = VhdxCommons.UpdateHeader outputFile header
+            let verhd = {
+                SequenceNumber = 1UL;
+                FileWriteGuid = Guid.NewGuid();
+                DataWriteGuid = Guid.NewGuid();
+                LogGuid = Guid()                    // log is cleared
+            }
+            let! _ = VhdxCommons.UpdateHeader outputFile header verhd
 
             // Region table
             do! VhdxCreator.WriteRegionTable outputFile metadataStartPos batRegionStartPos batRegionSize

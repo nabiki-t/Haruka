@@ -70,13 +70,13 @@ type VhdxHeader = {
     /// CRC-32C Checksum
     Checksum : uint32
     /// Sequence number
-    SequenceNumber : uint64
+//    SequenceNumber : uint64
     /// File write GUID
-    FileWriteGuid : Guid
+//    FileWriteGuid : Guid
     /// Data write GUID
-    DataWriteGuid : Guid
+//    DataWriteGuid : Guid
     /// Log GUID
-    LogGuid : Guid
+//    LogGuid : Guid
     /// Log version. Allways zero.
     LogVersion : uint16
     /// VHDX format version. Always 1.
@@ -89,6 +89,19 @@ type VhdxHeader = {
     Offset : uint64
     /// Index of this header ( 0 or 1 )
     Index : int;
+}
+
+/// A record within the header that holds viable values.
+[<Struct>]
+type VhdxMutableHeader = {
+    /// Sequence number
+    SequenceNumber : uint64
+    /// File write GUID
+    FileWriteGuid : Guid
+    /// Data write GUID
+    DataWriteGuid : Guid
+    /// Log GUID
+    LogGuid : Guid
 }
 
 // ============================================================================
@@ -294,8 +307,10 @@ type BatEntries = {
 type VhdxStructures = {
     /// creator string
     Creator : string;
-    /// Effective header
-    Header : VhdxHeader;
+    /// Immutable header values
+    ImmHeader : VhdxHeader;
+    /// Mutable header values
+    LoadedVarHeader : VhdxMutableHeader;
     /// Log
     Log : LogEntry list;
     /// Expected file size

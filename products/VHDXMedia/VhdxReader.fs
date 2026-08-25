@@ -63,20 +63,16 @@ type VhdxReader() =
     /// <returns>
     ///  Retrieved VHDX file headeres.
     /// </returns>
-    static member private ReadHeaders ( fa : FileAccessor ) : Task<VhdxHeader list> =
+    static member private ReadHeaders ( fa : FileAccessor ) : Task< ( VhdxHeader * VhdxMutableHeader ) > =
         task {
             let fileSize = fa.GetFileSize()
 
             // Read header 0 (offset=0x10000)
             let header0Buf = Array.zeroCreate<byte> 4096
             do! fa.Read 0x10000UL ( ArraySegment header0Buf )
-            let header0 = {
+            let immheader0 = {
                 Signature = ByteFunc.ReadU32BE header0Buf 0u;
                 Checksum = ByteFunc.ReadU32LE header0Buf 4u;
-                SequenceNumber = ByteFunc.ReadU64LE header0Buf 8u;
-                FileWriteGuid = ByteFunc.ReadGuid header0Buf 16u;
-                DataWriteGuid = ByteFunc.ReadGuid header0Buf 32u;
-                LogGuid = ByteFunc.ReadGuid header0Buf 48u;
                 LogVersion = ByteFunc.ReadU16LE header0Buf 64u;
                 Version = ByteFunc.ReadU16LE header0Buf 66u;
                 LogLength = ByteFunc.ReadU32LE header0Buf 68u;
@@ -84,29 +80,31 @@ type VhdxReader() =
                 Offset = 0x10000UL;
                 Index = 0;
             }
+            let verheader0 = {
+                SequenceNumber = ByteFunc.ReadU64LE header0Buf 8u;
+                FileWriteGuid = ByteFunc.ReadGuid header0Buf 16u;
+                DataWriteGuid = ByteFunc.ReadGuid header0Buf 32u;
+                LogGuid = ByteFunc.ReadGuid header0Buf 48u;
+            }
 
             let header0Enable =
-                let c0 = VhdxCommons.CheckHeaderChecksum header0Buf header0.Checksum && header0.Signature = 0x68656164u
-                let c1 = header0.LogVersion = 0us
-                let c2 = header0.Version = 1us
-                let c3 = header0.LogLength &&& 0x000FFFFFu = 0u             // Multiples of 1MB
-                let c4 = header0.LogOffset &&& 0x00000000000FFFFFUL = 0UL   // Multiples of 1MB
-                let c5 = ( int32 header0.LogLength ) >= 0
-                let c6 = ( int64 header0.LogOffset ) >= 0L
-                let c7 = header0.LogOffset + ( uint64 header0.LogLength ) <= fileSize
-                let c8 = header0.LogOffset + ( uint64 header0.LogLength ) <= 0x0000400000000000UL   // 64TB or less
+                let c0 = VhdxCommons.CheckHeaderChecksum header0Buf immheader0.Checksum && immheader0.Signature = 0x68656164u
+                let c1 = immheader0.LogVersion = 0us
+                let c2 = immheader0.Version = 1us
+                let c3 = immheader0.LogLength &&& 0x000FFFFFu = 0u             // Multiples of 1MB
+                let c4 = immheader0.LogOffset &&& 0x00000000000FFFFFUL = 0UL   // Multiples of 1MB
+                let c5 = ( int32 immheader0.LogLength ) >= 0
+                let c6 = ( int64 immheader0.LogOffset ) >= 0L
+                let c7 = immheader0.LogOffset + ( uint64 immheader0.LogLength ) <= fileSize
+                let c8 = immheader0.LogOffset + ( uint64 immheader0.LogLength ) <= 0x0000400000000000UL   // 64TB or less
                 c0 && c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8
 
             // Read header 1 (offset=0x20000)
             let header1Buf = Array.zeroCreate<byte> 4096
             do! fa.Read 0x20000UL ( ArraySegment header1Buf )
-            let header1 = {
+            let immheader1 = {
                 Signature = ByteFunc.ReadU32BE header1Buf 0u;
                 Checksum = ByteFunc.ReadU32LE header1Buf 4u;
-                SequenceNumber = ByteFunc.ReadU64LE header1Buf 8u;
-                FileWriteGuid = ByteFunc.ReadGuid header1Buf 16u;
-                DataWriteGuid = ByteFunc.ReadGuid header1Buf 32u;
-                LogGuid = ByteFunc.ReadGuid header1Buf 48u;
                 LogVersion = ByteFunc.ReadU16LE header1Buf 64u;
                 Version = ByteFunc.ReadU16LE header1Buf 66u;
                 LogLength = ByteFunc.ReadU32LE header1Buf 68u;
@@ -114,25 +112,32 @@ type VhdxReader() =
                 Offset = 0x20000UL;
                 Index = 1;
             }
+            let verheader1 = {
+                SequenceNumber = ByteFunc.ReadU64LE header1Buf 8u;
+                FileWriteGuid = ByteFunc.ReadGuid header1Buf 16u;
+                DataWriteGuid = ByteFunc.ReadGuid header1Buf 32u;
+                LogGuid = ByteFunc.ReadGuid header1Buf 48u;
+            }
+
             let header1Enable =
-                let c0 = VhdxCommons.CheckHeaderChecksum header1Buf header1.Checksum && header1.Signature = 0x68656164u
-                let c1 = header1.LogVersion = 0us
-                let c2 = header1.Version = 1us
-                let c3 = header1.LogLength &&& 0x000FFFFFu = 0u             // Multiples of 1MB
-                let c4 = header1.LogOffset &&& 0x00000000000FFFFFUL = 0UL   // Multiples of 1MB
-                let c5 = ( int32 header1.LogLength ) >= 0
-                let c6 = ( int64 header1.LogOffset ) >= 0L
-                let c7 = header1.LogOffset + ( uint64 header1.LogLength ) <= fileSize
-                let c8 = header1.LogOffset + ( uint64 header1.LogLength ) <= 0x0000400000000000UL   // 64TB or less
+                let c0 = VhdxCommons.CheckHeaderChecksum header1Buf immheader1.Checksum && immheader1.Signature = 0x68656164u
+                let c1 = immheader1.LogVersion = 0us
+                let c2 = immheader1.Version = 1us
+                let c3 = immheader1.LogLength &&& 0x000FFFFFu = 0u             // Multiples of 1MB
+                let c4 = immheader1.LogOffset &&& 0x00000000000FFFFFUL = 0UL   // Multiples of 1MB
+                let c5 = ( int32 immheader1.LogLength ) >= 0
+                let c6 = ( int64 immheader1.LogOffset ) >= 0L
+                let c7 = immheader1.LogOffset + ( uint64 immheader1.LogLength ) <= fileSize
+                let c8 = immheader1.LogOffset + ( uint64 immheader1.LogLength ) <= 0x0000400000000000UL   // 64TB or less
                 c0 && c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8
 
             // Determine which headers to use
             if header0Enable && header1Enable then
-                return [ header0; header1 ]
+                return ( immheader0, verheader0 )
             elif header0Enable && not header1Enable then
-                return [ header0 ]
+                return ( immheader0, verheader0 )
             elif not header0Enable && header1Enable then
-                return [ header1 ]
+                return ( immheader1, verheader1 )
             else
                 return raise <| VhdxMediaException( fa.FileName, "No valid header exists." )
         }
@@ -943,15 +948,14 @@ type VhdxReader() =
             let! creator = VhdxReader.ReadFileTypeIdentifier fa
 
             // Load the header
-            let! headers = VhdxReader.ReadHeaders fa
-            let currentHeader = headers.[ 0 ]
+            let! immheader, varheader = VhdxReader.ReadHeaders fa
 
             // Retrieve log information (active log entries only)
             let! log = task {
-                if currentHeader.LogLength > 0u && currentHeader.LogGuid <> Guid.Empty then
-                    let logData = Array.zeroCreate<byte>( int currentHeader.LogLength )
-                    do! fa.Read currentHeader.LogOffset ( ArraySegment logData )
-                    let e = VhdxReader.ReadActiveLogSequense logData currentHeader.LogGuid
+                if immheader.LogLength > 0u && varheader.LogGuid <> Guid.Empty then
+                    let logData = Array.zeroCreate<byte>( int immheader.LogLength )
+                    do! fa.Read immheader.LogOffset ( ArraySegment logData )
+                    let e = VhdxReader.ReadActiveLogSequense logData varheader.LogGuid
                     if e.Length = 0 then
                         raise <| VhdxMediaException( fa.FileName, "No valid logs exist." )
 
@@ -1036,7 +1040,8 @@ type VhdxReader() =
 
             return {
                 Creator = creator;
-                Header = currentHeader;
+                ImmHeader = immheader;
+                LoadedVarHeader = varheader;
                 Log = log;
                 LastFileSize = lastFileSize;
                 Region = currentRegionTable;
@@ -1064,12 +1069,12 @@ type VhdxReader() =
                     let hasParent = meta.VDI.HasParent
 
                     // Check Data Write Guid
-                    if expDWG.IsSome && meta.Header.DataWriteGuid <> expDWG.Value then
+                    if expDWG.IsSome && meta.LoadedVarHeader.DataWriteGuid <> expDWG.Value then
                         raise <| VhdxMediaException( fa.FileName, "Data Write Guid does not match" )
 
                     // Check if a File Write GUID with the same one already exists.
                     for ( _, itr ) in acc do
-                        if itr.Header.FileWriteGuid = meta.Header.FileWriteGuid then
+                        if itr.LoadedVarHeader.FileWriteGuid = meta.LoadedVarHeader.FileWriteGuid then
                             raise <| VhdxMediaException( fa.FileName, "The same file is specified as the parent VHDX file." )
 
                     if not hasParent then

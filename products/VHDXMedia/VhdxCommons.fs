@@ -77,20 +77,23 @@ type VhdxCommons() =
     ///  File accessor for VHDX file.
     /// </param>
     /// <param name="header">
-    ///  Header data to be wrote.
+    ///  Header values loaded when the VHDX file was opened.
+    /// </param>
+    /// <param name="verHeader">
+    ///  Latest header values.
     /// </param>
     /// <returns>
     ///  Sequence number to be used when the header is updated next time.
     /// </returns>
-    static member UpdateHeader ( fa : FileAccessor ) ( header : VhdxHeader ) : Task<uint64> =
+    static member UpdateHeader ( fa : FileAccessor ) ( header : VhdxHeader ) ( verHeader : VhdxMutableHeader ) : Task<VhdxMutableHeader> =
         task {
             let hdrBuf1 = PooledBuffer.RentAndInit 4096
             ByteFunc.WriteU32BEPB hdrBuf1 0u header.Signature
             ByteFunc.WriteU32LEPB hdrBuf1 4u 0u
-            ByteFunc.WriteU64LEPB hdrBuf1 8u header.SequenceNumber
-            ByteFunc.WriteGuidPB hdrBuf1 16u header.FileWriteGuid
-            ByteFunc.WriteGuidPB hdrBuf1 32u header.DataWriteGuid
-            ByteFunc.WriteGuidPB hdrBuf1 48u header.LogGuid
+            ByteFunc.WriteU64LEPB hdrBuf1 8u verHeader.SequenceNumber
+            ByteFunc.WriteGuidPB hdrBuf1 16u verHeader.FileWriteGuid
+            ByteFunc.WriteGuidPB hdrBuf1 32u verHeader.DataWriteGuid
+            ByteFunc.WriteGuidPB hdrBuf1 48u verHeader.LogGuid
             ByteFunc.WriteU16LEPB hdrBuf1 64u header.LogVersion
             ByteFunc.WriteU16LEPB hdrBuf1 66u header.Version
             ByteFunc.WriteU32LEPB hdrBuf1 68u header.LogLength
@@ -104,13 +107,16 @@ type VhdxCommons() =
 
             // Update new header
             ByteFunc.WriteU32LEPB hdrBuf1 4u 0u
-            ByteFunc.WriteU64LEPB hdrBuf1 8u ( header.SequenceNumber + 1UL )
+            ByteFunc.WriteU64LEPB hdrBuf1 8u ( verHeader.SequenceNumber + 1UL )
             let checkSum2 = Crc32C.Compute hdrBuf1.ArraySegment
             ByteFunc.WriteU32LEPB hdrBuf1 4u checkSum2
             do! fa.Write header.Offset ( hdrBuf1.ArraySegment )
 
             PooledBuffer.Return hdrBuf1
-            return ( header.SequenceNumber + 2UL )
+            return {
+                verHeader with
+                    SequenceNumber = verHeader.SequenceNumber + 2UL
+            }
         }
 
     /// <summary>
@@ -274,20 +280,13 @@ type VhdxCommons() =
     ///  VHDX file controll structures.
     /// </param>
     /// <returns>
-    ///  Updated structures data.
+    ///  Latest header values.
     /// </returns>
-    static member UpdateFileWriteGuidAndDataWriteGuid ( fa : FileAccessor ) ( structures : VhdxStructures ) : Task<VhdxStructures> =
-        task {
-            let hd = {
-                structures.Header with
-                    FileWriteGuid = Guid.NewGuid();
-                    DataWriteGuid = Guid.NewGuid();
-                    LogGuid = Guid();
-                    SequenceNumber = structures.Header.SequenceNumber + 1UL;
-            }
-            let! nextsn = VhdxCommons.UpdateHeader fa hd
-            return {
-                structures with
-                    Header.SequenceNumber = nextsn;    // Set the next sequence number to use.
-            }
+    static member UpdateFileWriteGuidAndDataWriteGuid ( fa : FileAccessor ) ( structures : VhdxStructures ) ( verhd : VhdxMutableHeader ) : Task<VhdxMutableHeader> =
+        let verhd2 = {
+            FileWriteGuid = Guid.NewGuid();
+            DataWriteGuid = Guid.NewGuid();
+            LogGuid = Guid();
+            SequenceNumber = verhd.SequenceNumber + 1UL;
         }
+        VhdxCommons.UpdateHeader fa structures.ImmHeader verhd2

@@ -1,3 +1,8 @@
+//=============================================================================
+// Haruka Software Storage.
+// VHDXLogManager.fs : Defines VhdxLogManager class.
+// VHDXLogManager class implement VHDX file block device functionality.
+// 
 
 namespace Haruka.Media.VhdxUtil
 
@@ -14,14 +19,13 @@ type private PendingLogEntry = {
     RequiredFileSize : uint64;
 }
 
+type VhdxLogManager ( m_FA : FileAccessor, m_ImmHeader : VhdxHeader, loadedVarHeader : VhdxMutableHeader ) =
 
-type VhdxLogManager ( m_FA : FileAccessor, m_InitialHeader : VhdxHeader ) =
-
-    // Log GUID.
-    let mutable activeLogGuid = Guid.Empty
-
-    // Header sequence numer to be used next.
-    let mutable nextHeaderSequenceNumber = m_InitialHeader.SequenceNumber
+    // Latest header values
+    let mutable m_VarHeader = {
+        loadedVarHeader with
+            LogGuid = Guid.Empty;
+    }
 
     // Log sequence numer to be used next.
     let mutable nextLogSequenceNumber = Random.Shared.NextInt64( 100000000L, 0x3FFFFFFFFFFFFFFFL ) |> uint64
@@ -33,7 +37,10 @@ type VhdxLogManager ( m_FA : FileAccessor, m_InitialHeader : VhdxHeader ) =
     let pendingEntries = ResizeArray<PendingLogEntry>()
 
     // Byte length of the log buffer.
-    let m_LogLength = m_InitialHeader.LogLength
+    let m_LogLength = m_ImmHeader.LogLength
+
+    /// property of m_VarHeader
+    member _.VarHeader = m_VarHeader
 
     // Update BAT entries.
     member this.UpdateBATEntries ( structures : VhdxStructures ) ( sec4Ks : SEC4K_T[] ) ( requiredFileSizeAfterCommit : uint64 ) : Task =
@@ -122,16 +129,10 @@ type VhdxLogManager ( m_FA : FileAccessor, m_InitialHeader : VhdxHeader ) =
                     do! m_FA.Write fileOffset ( ArraySegment data )
 
             // Set log GUID to zero to represent that log is cleared.
-            let newHeader = {
-                m_InitialHeader with
-                    SequenceNumber = nextHeaderSequenceNumber;
-                    LogGuid = Guid.Empty;
-            }
-            let! nextSequenceNumber = VhdxCommons.UpdateHeader m_FA newHeader
-            nextHeaderSequenceNumber <- nextSequenceNumber
+            let! wverhd = VhdxCommons.UpdateHeader m_FA m_ImmHeader { m_VarHeader with LogGuid = Guid.Empty }
+            m_VarHeader <- wverhd
 
             // Clear log cache data.
-            activeLogGuid <- Guid.Empty
             nextLogSequenceNumber <- nextLogSequenceNumber + 1UL
             nextLogWriteOffset <- 0u
             pendingEntries.Clear()
@@ -144,8 +145,8 @@ type VhdxLogManager ( m_FA : FileAccessor, m_InitialHeader : VhdxHeader ) =
     member private _.WriteLogEntries ( structures : VhdxStructures ) ( updates : struct( SEC4K_T * byte[] )[] ) ( fileSizeAfterCommit : uint64 ) : Task =
         task {
             // A new transaction is required.
-            if activeLogGuid = Guid.Empty then
-                activeLogGuid <- Guid.NewGuid()
+            if m_VarHeader.LogGuid = Guid.Empty then
+                m_VarHeader <- { m_VarHeader with LogGuid = Guid.NewGuid() }
                 nextLogSequenceNumber <- nextLogSequenceNumber + 1UL
                 nextLogWriteOffset <- 0u
                 pendingEntries.Clear()
@@ -153,7 +154,7 @@ type VhdxLogManager ( m_FA : FileAccessor, m_InitialHeader : VhdxHeader ) =
             let fileSizeBeforeCommit = m_FA.FileSize
             // Notice that tail value is always zero.
             let logEntry =
-                VhdxCorrupter.CreateLogEntry updates 0u nextLogSequenceNumber activeLogGuid fileSizeBeforeCommit fileSizeAfterCommit
+                VhdxCorrupter.CreateLogEntry updates 0u nextLogSequenceNumber m_VarHeader.LogGuid fileSizeBeforeCommit fileSizeAfterCommit
 
             do! VhdxCorrupter.WriteLogEntry m_FA structures nextLogWriteOffset [] logEntry
 
@@ -168,12 +169,7 @@ type VhdxLogManager ( m_FA : FileAccessor, m_InitialHeader : VhdxHeader ) =
 
             // Only the first entry of a transaction activates LogGuid.
             if pendingEntries.Count = 1 then
-                let newHeader = {
-                    m_InitialHeader with
-                        SequenceNumber = nextHeaderSequenceNumber;
-                        LogGuid = activeLogGuid;
-                }
-                let! nextSequenceNumber = VhdxCommons.UpdateHeader m_FA newHeader
-                nextHeaderSequenceNumber <- nextSequenceNumber
+                let! wverhd = VhdxCommons.UpdateHeader m_FA m_ImmHeader m_VarHeader
+                m_VarHeader <- wverhd
         }
 

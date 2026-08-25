@@ -300,7 +300,7 @@ let main ( argv : string[] ) : int32 =
         | Check ->
             let infile = cmd.DefaultNamelessString 0 ""
             let fa = FileAccessor( infile, 1u, false )
-            do! VhdxChecker.Check fa
+            let! _ = VhdxChecker.Check fa
             fa.Close()
 
         | Write ->

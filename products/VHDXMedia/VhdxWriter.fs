@@ -67,7 +67,7 @@ type VhdxWriter() =
                 // header
                 struct( 0UL, 1048575UL );
                 // log
-                struct( structures.Header.LogOffset, structures.Header.LogOffset + uint64 structures.Header.LogLength - 1UL )
+                struct( structures.ImmHeader.LogOffset, structures.ImmHeader.LogOffset + uint64 structures.ImmHeader.LogLength - 1UL )
                 // Regions( metadata, BAT, etc. )
                 for i in structures.Region.Entries do
                     struct( i.FileOffset, i.FileOffset + uint64 i.Length - 1UL )
@@ -495,6 +495,9 @@ type VhdxWriter() =
     /// <param name="structures">
     ///  VHDX file structures data.
     /// </param>
+    /// <param name="verhd">
+    ///  Latest header values.
+    /// </param>
     /// <param name="sec4Ks">
     ///  4K sector number representing the updated range within the BAT entry.
     /// </param>
@@ -504,13 +507,13 @@ type VhdxWriter() =
     /// <returns>
     ///  Next header sequence number.
     /// </returns>
-    static member WriteUpdatedBAT ( fa : FileAccessor ) ( structures : VhdxStructures ) ( sec4Ks : SEC4K_T[] ) ( reqFileSize : uint64 ) ( ex : int32 ) : Task<uint64> =
+    static member WriteUpdatedBAT ( fa : FileAccessor ) ( structures : VhdxStructures ) ( verhd : VhdxMutableHeader ) ( sec4Ks : SEC4K_T[] ) ( reqFileSize : uint64 ) ( ex : int32 ) : Task<VhdxMutableHeader> =
         task {
-            let logEntryUnit = VhdxWriter.Max4KSectorCountFromLogCapacity structures.Header.LogLength |> int
-            let logOutputPos = structures.Header.LogOffset
+            let logEntryUnit = VhdxWriter.Max4KSectorCountFromLogCapacity structures.ImmHeader.LogLength |> int
+            let logOutputPos = structures.ImmHeader.LogOffset
             let cycleCount = ( sec4Ks.Length + ( logEntryUnit - 1 ) ) / logEntryUnit
 
-            let loop struct ( cycle : int32, headerSeq : uint64 ) : Task< LoopState< struct( int32 * uint64 ), uint64 > > =
+            let loop struct ( cycle : int32, wverhd : VhdxMutableHeader ) : Task< LoopState< struct( int32 * VhdxMutableHeader ), VhdxMutableHeader > > =
                 task {
                     if cycle < cycleCount then
                         let widx = cycle * logEntryUnit
@@ -533,12 +536,7 @@ type VhdxWriter() =
                             raise <| VhdxMediaException( "Stop processing based on user specification. WriteUpdatedBAT, Write log entry." )
 
                         // Update header( Update LogGuid )
-                        let hd1 = {
-                            structures.Header with
-                                LogGuid = newLogGuid;
-                                SequenceNumber = headerSeq;
-                        }
-                        let! nextsn1 = VhdxCommons.UpdateHeader fa hd1
+                        let! wverhd1 = VhdxCommons.UpdateHeader fa structures.ImmHeader { wverhd with LogGuid = Guid.NewGuid() }
 
                         if ex = 4 then
                             raise <| VhdxMediaException( "Stop processing based on user specification. WriteUpdatedBAT, Update header( Update LogGuid )." )
@@ -558,21 +556,16 @@ type VhdxWriter() =
                             raise <| VhdxMediaException( "Stop processing based on user specification. WriteUpdatedBAT, Write BAT to file." )
 
                         // Update header ( Set LogGuid to zero )
-                        let hd2 = {
-                            structures.Header with
-                                LogGuid = Guid();
-                                SequenceNumber = nextsn1;
-                        }
-                        let! nextsn2 = VhdxCommons.UpdateHeader fa hd2
+                        let! wverhd2 = VhdxCommons.UpdateHeader fa structures.ImmHeader { wverhd1 with LogGuid = Guid() }
 
                         if ex = 7 then
                             raise <| VhdxMediaException( "Stop processing based on user specification. WriteUpdatedBAT, Update header ( Set LogGuid to zero )." )
 
-                        return Continue( struct( cycle + 1, nextsn2 ) )
+                        return Continue( struct( cycle + 1, wverhd2 ) )
                     else
-                        return Terminate( headerSeq )
+                        return Terminate( wverhd )
                 }
-            return! Functions.loopAsyncWithArgs loop ( struct( 0, structures.Header.SequenceNumber ) )
+            return! Functions.loopAsyncWithArgs loop ( struct( 0, verhd ) )
         }
 
     /// <summary>
@@ -584,21 +577,24 @@ type VhdxWriter() =
     /// <param name="structures">
     ///  The VHDX file structures data.
     /// </param>
+    /// <param name="verhd">
+    ///  Latest header values.
+    /// </param>
     /// <param name="sec4Ks">
     ///  The updated sector bitmap and the 4K sector number to which the output will be located.
     /// </param>
     /// <returns>
     ///  Next header sequence number.
     /// </returns>
-    static member WriteUpdatedSB ( fa : FileAccessor ) ( structures : VhdxStructures ) ( sec4Ks : struct( SEC4K_T * ArraySegment<byte> ) [] ) : Task<uint64> =
+    static member WriteUpdatedSB ( fa : FileAccessor ) ( structures : VhdxStructures ) ( verhd : VhdxMutableHeader ) ( sec4Ks : struct( SEC4K_T * ArraySegment<byte> ) [] ) : Task<VhdxMutableHeader> =
         task {
             let logEntryUnit =
-                VhdxWriter.Max4KSectorCountFromLogCapacity structures.Header.LogLength
+                VhdxWriter.Max4KSectorCountFromLogCapacity structures.ImmHeader.LogLength
                 |> int
-            let logOutputPos = structures.Header.LogOffset
+            let logOutputPos = structures.ImmHeader.LogOffset
             let cycleCount = ( sec4Ks.Length + ( logEntryUnit - 1 ) ) / logEntryUnit
 
-            let loop struct ( cycle : int32, headerSeq : uint64 ) : Task< LoopState< struct( int32 * uint64 ), uint64 > > =
+            let loop struct ( cycle : int32, wverhd : VhdxMutableHeader ) : Task< LoopState< struct( int32 * VhdxMutableHeader ), VhdxMutableHeader > > =
                 task {
                     if cycle < cycleCount then
                         let widx = cycle * logEntryUnit
@@ -615,29 +611,19 @@ type VhdxWriter() =
                         do! VhdxCorrupter.WriteLogEntry fa structures 0u [] logEntries
 
                         // Update header( Update LogGuid )
-                        let hd1 = {
-                            structures.Header with
-                                LogGuid = newLogGuid;
-                                SequenceNumber = headerSeq;
-                        }
-                        let! nextsn1 = VhdxCommons.UpdateHeader fa hd1
+                        let! wverhd1 = VhdxCommons.UpdateHeader fa structures.ImmHeader { wverhd with LogGuid = Guid.NewGuid() }
 
                         // Write updated structures data to file
                         for struct ( sec4k, sbData ) in listSec4K_SBData do
                             do! fa.Write ( uint64 sec4k * 4096UL ) ( ArraySegment sbData )
 
                         // Update header ( Set LogGuid to zero )
-                        let hd2 = {
-                            structures.Header with
-                                LogGuid = Guid();
-                                SequenceNumber = nextsn1;
-                        }
-                        let! nextSeq = VhdxCommons.UpdateHeader fa hd2
-                        return Continue( struct( cycle + 1, nextSeq ) )
+                        let! wverhd2 = VhdxCommons.UpdateHeader fa structures.ImmHeader { wverhd1 with LogGuid = Guid.NewGuid() }
+                        return Continue( struct( cycle + 1, wverhd2 ) )
                     else
-                        return Terminate( headerSeq )
+                        return Terminate( wverhd )
                 }
-            return! Functions.loopAsyncWithArgs loop ( struct( 0, structures.Header.SequenceNumber ) )
+            return! Functions.loopAsyncWithArgs loop ( struct( 0, verhd ) )
         }
    
     /// <summary>
@@ -706,32 +692,29 @@ type VhdxWriter() =
                 raise <| VhdxMediaException( vhdxFile.FileName, msg )
 
             // Flash log entries
-            if structures.Log.Length > 0 then
-                do! VhdxChecker.Check vhdxFile
-
-            let structures1 =
+            let! verhd1 =
                 if structures.Log.Length > 0 then
-                    { structures with Header.SequenceNumber = structures.Header.SequenceNumber + 2UL }
+                    VhdxChecker.FlushLog vhdxFile structures
                 else
-                    structures
+                    Task.FromResult structures.LoadedVarHeader
 
             if ex = 1 then
                 raise <| VhdxMediaException( "Stop processing based on user specification. : Flash log entries." )
 
             // Update FileWriteGuid and DataWriteGuid
-            let! structures2 = VhdxCommons.UpdateFileWriteGuidAndDataWriteGuid vhdxFile structures1
+            let! verhd2 = VhdxCommons.UpdateFileWriteGuidAndDataWriteGuid vhdxFile structures verhd1
 
             if ex = 2 then
                 raise <| VhdxMediaException( "Stop processing based on user specification. Update FileWriteGuid and DataWriteGuid." )
 
             // Allocate Payload block. structures2 will be updated.
             let struct( updatedPB4K, requiredFileSize ) =
-                VhdxWriter.AllocatePayloadBlock structures2 lba rawDataSec
+                VhdxWriter.AllocatePayloadBlock structures lba rawDataSec
 
             // Update sector bitmap.
             let updated4KSecsForSB =
-                if structures2.VDI.HasParent then
-                    VhdxWriter.UpdateSectorBitmap structures2 updatedPB4K lba rawDataSec
+                if structures.VDI.HasParent then
+                    VhdxWriter.UpdateSectorBitmap structures updatedPB4K lba rawDataSec
                     |> Seq.map ( fun itr -> struct( itr.Key, itr.Value ) )
                     |> Seq.toArray
                 else
@@ -739,27 +722,22 @@ type VhdxWriter() =
             let updated4KSecsForBAT = Seq.toArray updatedPB4K
 
             // Output the updated BATEntry
-            let! structures3 = task {
-                let! nextsn = VhdxWriter.WriteUpdatedBAT vhdxFile structures2 updated4KSecsForBAT requiredFileSize ex
-                return { structures2 with Header.SequenceNumber = nextsn; }
-            }
-
+            let! verhd3 = VhdxWriter.WriteUpdatedBAT vhdxFile structures verhd2 updated4KSecsForBAT requiredFileSize ex
+ 
             if ex = 8 then
                 raise <| VhdxMediaException( "Stop processing based on user specification. Output the updated BATEntry." )
 
             // Output sector bitmap.
-            let! structures4 = task {
+            let! verhd4 =
                 if updated4KSecsForSB.Length > 0 then
-                    let! nextsn = VhdxWriter.WriteUpdatedSB vhdxFile structures3 updated4KSecsForSB
-                    return { structures3 with Header.SequenceNumber = nextsn; }
+                    VhdxWriter.WriteUpdatedSB vhdxFile structures verhd3 updated4KSecsForSB
                 else
-                    return structures3
-            }
+                    Task.FromResult verhd3
 
             if ex = 9 then
                 raise <| VhdxMediaException( "Stop processing based on user specification. Output sector bitmap." )
 
             // Output RAW data
-            do! VhdxWriter.OutputRawData rawfs vhdxFile lba structures4
+            do! VhdxWriter.OutputRawData rawfs vhdxFile lba structures
         }
 

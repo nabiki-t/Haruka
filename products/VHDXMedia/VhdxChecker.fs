@@ -27,23 +27,13 @@ type VhdxChecker() =
     /// <summary>
     ///  Read data from a specified area of ​​the file, while reflecting updates from the log.
     /// </summary>
-    /// <param name="log">
-    ///  log data.
-    /// </param>
     /// <param name="fa">
     ///  File accessor of the VHDX file.
     /// </param>
-    /// <param name="offset">
-    ///  The starting position of the range to attempt to acquire data.
-    ///  Must be multiple of 4KB.
+    /// <param name="log">
+    ///  log data.
     /// </param>
-    /// <param name="length">
-    ///  Data length to retrieve. Must be multiple of 4KB.
-    /// </param>
-    /// <returns>
-    ///  Retrieved data.
-    /// </returns>
-    static member ReplayLog ( fa : FileAccessor ) ( log : LogEntry list ) : Task =
+    static member private Replay ( fa : FileAccessor ) ( log : LogEntry list ) : Task =
         task {
             let zeroData = lazy Array.zeroCreate<byte> 4096
 
@@ -70,29 +60,45 @@ type VhdxChecker() =
     /// <param name="vhdxFile">
     ///  Check target VHDX file.
     /// </param>
-    static member Check ( vhdxFile : FileAccessor ) : Task =
+    /// <param name="vhdxFile">
+    ///  VHDX file structures data.
+    /// </param>
+    /// <returns>
+    ///  Updated mutable header values.
+    /// </returns>
+    static member FlushLog ( vhdxFile : FileAccessor ) ( structures : VhdxStructures ) : Task<VhdxMutableHeader> =
+        task {
+            // update file write GUID in header
+            let verhd1 = {
+                structures.LoadedVarHeader with
+                    SequenceNumber = structures.LoadedVarHeader.SequenceNumber + 1UL;
+                    FileWriteGuid = Guid.NewGuid();
+            }
+            let! nextvh = VhdxCommons.UpdateHeader vhdxFile structures.ImmHeader verhd1
+
+            // replay log
+            do! VhdxChecker.Replay vhdxFile structures.Log
+
+            // update log GUID in header
+            let verhd2 = {
+                nextvh with
+                    LogGuid = Guid();
+            }
+            return! VhdxCommons.UpdateHeader vhdxFile structures.ImmHeader verhd2
+        }
+
+    /// <summary>
+    ///  Replay unprocessed logs.
+    /// </summary>
+    /// <param name="vhdxFile">
+    ///  Check target VHDX file.
+    /// </param>
+    /// <returns>
+    ///  Updated mutable header values.
+    /// </returns>
+    static member Check ( vhdxFile : FileAccessor ) : Task<VhdxMutableHeader> =
         task {
             // Read VHDX metadata
             let! structures = VhdxReader.ReadVhdx vhdxFile
-
-            // update file write GUID in header
-            let hd1 = {
-                structures.Header with
-                    FileWriteGuid = Guid.NewGuid();
-                    SequenceNumber = structures.Header.SequenceNumber + 1UL;
-            }
-            let! nextSecNum = VhdxCommons.UpdateHeader vhdxFile hd1
-
-            // replay log
-            do! VhdxChecker.ReplayLog vhdxFile structures.Log
-
-            // update log GUID in header
-            let hd2 = {
-                structures.Header with
-                    LogGuid = Guid();
-                    SequenceNumber = nextSecNum;
-            }
-            let! _ = VhdxCommons.UpdateHeader vhdxFile hd2
-            ()
+            return! VhdxChecker.FlushLog vhdxFile structures
         }
-

@@ -159,17 +159,17 @@ type VhdxCorrupter() =
             let v = Array.zeroCreate<byte> totalLen
             Array.blit rightLogEntry 0 v ( loop 0 0 v ) rightLogEntry.Length
 
-            if offset + ( uint32 totalLen ) <= structures.Header.LogLength then
-                do! fa.Write ( structures.Header.LogOffset + uint64 offset ) ( ArraySegment v )
+            if offset + ( uint32 totalLen ) <= structures.ImmHeader.LogLength then
+                do! fa.Write ( structures.ImmHeader.LogOffset + uint64 offset ) ( ArraySegment v )
             else
-                let len1 = structures.Header.LogLength - offset   // Length of the first half
+                let len1 = structures.ImmHeader.LogLength - offset   // Length of the first half
                 let len2 = ( uint32 v.Length ) - len1           // Length of the second half
 
                 // first half
-                do! fa.Write ( structures.Header.LogOffset + uint64 offset ) ( ArraySegment( v, 0, int32 len1 ) )
+                do! fa.Write ( structures.ImmHeader.LogOffset + uint64 offset ) ( ArraySegment( v, 0, int32 len1 ) )
 
                 // second half
-                do! fa.Write ( structures.Header.LogOffset ) ( ArraySegment( v, int32 len1, int32 len2 ) )
+                do! fa.Write ( structures.ImmHeader.LogOffset ) ( ArraySegment( v, int32 len1, int32 len2 ) )
         }
 
 
@@ -191,19 +191,19 @@ type VhdxCorrupter() =
             // Update header
             let newLogGuid = Guid.NewGuid()
             let newHeader = {
-                structures.Header with
-                    SequenceNumber = structures.Header.SequenceNumber + 1UL;
-                    FileWriteGuid = Guid.NewGuid();
-                    LogGuid = newLogGuid;
+                SequenceNumber = structures.LoadedVarHeader.SequenceNumber + 1UL;
+                FileWriteGuid = Guid.NewGuid();
+                DataWriteGuid = structures.LoadedVarHeader.DataWriteGuid;
+                LogGuid = newLogGuid;
             }
-            let! _ = VhdxCommons.UpdateHeader outputFile newHeader
+            let! _ = VhdxCommons.UpdateHeader outputFile structures.ImmHeader newHeader
 
             // Fill the log area with random numbers.
-            let logSecCnt = structures.Header.LogLength / 4096u
+            let logSecCnt = structures.ImmHeader.LogLength / 4096u
             let randbuf = Array.zeroCreate<byte> 4096
             for i in 1UL .. uint64 logSecCnt - 1UL do
                 Random.Shared.NextBytes randbuf
-                do! outputFile.Write ( structures.Header.LogOffset + i * 4096UL ) ( ArraySegment randbuf )
+                do! outputFile.Write ( structures.ImmHeader.LogOffset + i * 4096UL ) ( ArraySegment randbuf )
 
             // Generate dummy update data
             let dummyUpdateData = [
