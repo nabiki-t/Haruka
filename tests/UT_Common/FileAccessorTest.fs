@@ -973,7 +973,6 @@ type FileAccessorTest() =
     [<Fact>]
     member _.GetFileSize_TooManyDuplicate_001 () =
         task {
-            ThreadPool.SetMinThreads( int32 Constants.LU_MAX_MULTIPLICITY + 1, int32 Constants.LU_MAX_MULTIPLICITY + 1 ) |> ignore
             let sm = new SemaphoreSlim( 1 )
             sm.Wait()
             let mutable cnt = 0
@@ -989,9 +988,9 @@ type FileAccessorTest() =
                 )
 
             let fname = Path.GetTempFileName()
-            let fa = FileAccessor( fname, Constants.LU_MAX_MULTIPLICITY, false, fc )
+            let fa = FileAccessor( fname, 4u, false, fc )
 
-            for _ = 1 to int32 Constants.LU_MAX_MULTIPLICITY do
+            for _ = 1 to 4 do
                 fun () ->
                     task {
                         do! Task.Yield()
@@ -1001,7 +1000,7 @@ type FileAccessorTest() =
                 |> Functions.StartTask
 
             do! Task.Delay 5
-            while cnt < int32 Constants.LU_MAX_MULTIPLICITY do
+            while cnt < 4 do
                 do! Task.Delay 5
 
             let e =
@@ -1011,7 +1010,7 @@ type FileAccessorTest() =
                 )
             Assert.StartsWith( "No available stream", e.Message )
 
-            for _ = 1 to int32 Constants.LU_MAX_MULTIPLICITY do
+            for _ = 1 to 4 do
                 sm.Release() |> ignore
             fa.Close()
             File.Delete fname
