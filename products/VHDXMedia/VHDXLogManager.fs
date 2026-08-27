@@ -42,6 +42,17 @@ type VhdxLogManager ( m_FA : FileAccessor, m_ImmHeader : VhdxHeader, loadedVarHe
     /// property of m_VarHeader
     member _.VarHeader = m_VarHeader
 
+    // Update DataWriteGuid value
+    member _.UpdateDataWriteGuid() : Task =
+        task {
+            let newhd = {
+                m_VarHeader with
+                    DataWriteGuid = Guid.NewGuid()
+            }
+            let! wverhd = VhdxCommons.UpdateHeader m_FA m_ImmHeader newhd
+            m_VarHeader <- wverhd
+        }
+
     // Update BAT entries.
     member this.UpdateBATEntries ( structures : VhdxStructures ) ( sec4Ks : SEC4K_T[] ) ( requiredFileSizeAfterCommit : uint64 ) : Task =
         task {

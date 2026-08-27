@@ -59,11 +59,38 @@ type VHDXFileMedia
     /// Reader-Writer lock object
     let m_Lock = RWLock()
 
-    let mutable m_FileAccessors, m_Structures = 
+    let mutable m_FileAccessors : FileAccessor [] = [||]
+    let mutable m_Structures : VhdxStructures [] = [||]
+
+    /// VHDX log manager object
+    let m_LogManager =
         let fa = FileAccessor( m_Config.FileName, m_Multiplicity, m_Config.WriteProtect )
-        VhdxReader.ReadAllStructures fa
+        task {
+            // load al of VHDX files and flush logs.
+            let! all = VhdxReader.ReadAllStructures fa
+            let lastidx = all.Length - 1
+            let ffa, fvs = all.[ lastidx ]
+            let! verhd1 =
+                if fvs.Log.Length > 0 && not m_Config.WriteProtect then
+                    VhdxChecker.FlushLog ffa fvs
+                else
+                    Task.FromResult fvs.LoadedVarHeader
+
+            let lm = VhdxLogManager( ffa, fvs.ImmHeader, verhd1 )
+
+            // Although this is earlier than the intended timing,
+            // io opend in read/write mode, data write GUID is updated at this point.
+            if m_Config.WriteProtect |> not then
+                do! lm.UpdateDataWriteGuid()
+
+            let allfa, allvs = all |> Array.unzip
+            m_FileAccessors <- allfa
+            m_Structures <- allvs
+            return lm
+        }
         |> Functions.RunTaskSynchronously   // Due to implementation constraints, the threads here must be synchronized.
-        |> Array.unzip
+
+
 
     /// The block size and the virtual disk size
     /// Since the constructor executes synchronously, there is no need to acquire a lock here.
@@ -176,7 +203,6 @@ type VHDXFileMedia
 
                     let readBytesLength_u64 = uint64 buffer.Count
                     let blockSize_u64 = Blocksize.toUInt64 m_BlockSize
-                    let readpos_u64 = ( blkcnt_me.toUInt64 argLBA ) * blockSize_u64
                     let mediaBlockCount = m_VirtualDiskSize / blockSize_u64
 
                     // Check specified range is in media.
@@ -188,18 +214,8 @@ type VHDXFileMedia
                         HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE, errmsg )
                         raise <| SCSIACAException ( source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE, errmsg )
 
-                    // Check limit of this module
-                    if readpos_u64 >= 0x8000000000000000UL || readBytesLength_u64 >= 0x0000000080000000UL then
-                        let errmsg =
-                            sprintf
-                                "Out of module limits. BlockSize=%d, TotalBlockCount=0x%016X, RequestedLBA=0x%016X, RequestedBytesCount=%d"
-                                blockSize_u64 mediaBlockCount argLBA buffer.Count
-                        HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.CONFIGURATION_OF_INCAPABLE_LOGICAL_UNITS_FAILED, errmsg )
-                        raise <| SCSIACAException ( source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.CONFIGURATION_OF_INCAPABLE_LOGICAL_UNITS_FAILED, errmsg )
-
                     // Sector count (number of logical blocks to read)
                     let totalSectors = ( readBytesLength_u64 + ( blockSize_u64 - 1UL ) ) / blockSize_u64
-
 
                     // payload block size and logical sector size for the last (child) file
                     let childPBSize = uint64 curStr.VDI.PayloadBlockSize
@@ -283,16 +299,62 @@ type VHDXFileMedia
             ( data : ArraySegment<byte> )
             : Task<int32> =
 
+            let loginfo = struct( m_ObjID, ValueSome( source ), ValueSome( initiatorTaskTag ), ValueSome( m_LUN ) )
             if HLogger.IsVerbose then
-                HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g ->
-                    let loginfo = struct( m_ObjID, ValueSome source, ValueSome initiatorTaskTag, ValueSome m_LUN )
-                    g.Gen1( loginfo, "VHDXFileMedia.Read." )
-                )
+                HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "VHDXFileMedia.Write." ) )
+
+            // Check read only or not
+            if m_Config.WriteProtect then
+                let errmsg = "Write protected."
+                HLogger.ACAException( loginfo, SenseKeyCd.DATA_PROTECT, ASCCd.WRITE_PROTECTED, errmsg )
+                raise <| SCSIACAException ( source, true, SenseKeyCd.DATA_PROTECT, ASCCd.WRITE_PROTECTED, errmsg )
 
             task {
+                do! m_Lock.RLock()
+                try
+                    let sw = new Stopwatch()
+                    sw.Start()
+
+                    let allStructures = m_Structures
+                    let allFileAccessors = m_FileAccessors
+                    let lastIdx = allStructures.Length - 1
+                    let curFA = allFileAccessors.[ lastIdx ]
+                    let curStr = allStructures.[ lastIdx ]
+
+                    let blockSize_u64 = Blocksize.toUInt64 m_BlockSize
+                    let writeStartLBA = argLBA + blkcnt_me.ofUInt64 ( offset / blockSize_u64 )
+                    let writeBytesLength_u64 = uint64 data.Count
+                    let writeBlockLength = ( writeBytesLength_u64 + blockSize_u64 - 1UL ) / blockSize_u64
+                    let mediaBlockCount = m_VirtualDiskSize / blockSize_u64
+
+                    // Check specified range is in media file.
+                    if Functions.CheckAccessRange argLBA ( writeBytesLength_u64 + offset ) mediaBlockCount blockSize_u64 |> not then
+                        let errmsg = 
+                            sprintf
+                                "Out of media capacity. BlockSize=%d, TotalBlockCount=%d, RequestedLBA=%d, RequestedOffset=%d, RequestedBytesCount=%d"
+                                blockSize_u64 mediaBlockCount argLBA offset writeBytesLength_u64
+                        HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE, errmsg )
+                        raise <| SCSIACAException ( source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE, errmsg )
+
+
+                    if this.CheckAlreadyAllocated curStr writeStartLBA ( blkcnt_me.ofUInt64 writeBlockLength ) then
+                        // write data
+                        ()
+                    else
+                        // Release reader lock and aquire writer lock for updating the VHDX structures data.
+                        do! m_Lock.Release()
+                        do! m_Lock.WLock()
+
+                        // Allocate
+                        // write data
+
+                    do! m_Lock.Release()
+                with
+                | _ ->
+                    do! m_Lock.Release()
+
                 return 0
             }
-
 
         // ------------------------------------------------------------------------
         // Implementation of Format method
@@ -397,3 +459,40 @@ type VHDXFileMedia
             | _ ->
                 do! m_Lock.Release()
         }
+
+    member private _.CheckAlreadyAllocated ( structures : VhdxStructures ) ( lba : BLKCNT64_T ) ( blkCnt : BLKCNT64_T ) : bool =
+        
+        let blockSize = Blocksize.toUInt32 structures.VDI.LogicalSectorSize
+        let pbBlkCnt = structures.VDI.PayloadBlockSize / blockSize |> uint64 |> blkcnt_me.ofUInt64
+
+        let rec loop ( wpos : BLKCNT64_T ) : bool =
+            if wpos < lba + blkCnt then
+                
+                let struct( pbidx, secidb ) = VhdxCommons.LBAtoPayloadBlockIndex wpos structures
+                let pb = structures.BAT.Payloads.[ int32 pbidx ]
+                match pb.State with
+                | PayloadNotPresent
+                | PayloadUndefined
+                | PayloadZero
+                | PayloadUnapped ->
+                    // Need to allocate
+                    false
+                | PayloadFullyPresent ->
+                    // allocated
+                    loop ( wpos + pbBlkCnt - ( secidb |> uint64 |> blkcnt_me.ofUInt64 ) )
+                | PayloadPartiallyPresent ->
+                    // must be check sector bitmap
+                    let struct( sbIdx, bytePos, bitPos ) = VhdxCommons.LBAtoSectorBitmapIndex lba structures
+                    let sbEntry = structures.BAT.SectorBitmap.[ int32 sbIdx ]
+                    let sb = sbEntry.Bitmap
+                    let bitValue = ( sb.[ int32 bytePos ] >>> ( int32 bitPos ) ) &&& 1uy
+                    if bitValue <> 0uy then
+                        // it is already marked as in use
+                        loop ( wpos + blkcnt_me.ofUInt64 1UL )
+                    else
+                        // must be update sector bitmap
+                        false
+            else
+                // all range had been allocated
+                true
+        loop lba
