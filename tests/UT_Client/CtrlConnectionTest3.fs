@@ -14,6 +14,7 @@ namespace Haruka.Test.UT.Client
 open System
 open System.IO
 open System.Net.Sockets
+open System.Threading
 
 open Xunit
 
@@ -52,6 +53,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.SendTargetDeviceRequest_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "SendTargetDeviceRequest_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -75,17 +77,19 @@ type CtrlConnection_Test3() =
                         })
                     }
                 do! Functions.FramingSender c rb2
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! r = cc1.GetActiveTargetGroups tdid
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "qqqqqqqqqqq" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetActiveTargetGroups tdid
+                        ()
+                    })
+                Assert.StartsWith( "qqqqqqqqqqq" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -98,6 +102,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.SendTargetDeviceRequest_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "SendTargetDeviceRequest_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -115,17 +120,19 @@ type CtrlConnection_Test3() =
                         })
                     }
                 do! Functions.FramingSender c rb2
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! r = cc1.GetActiveTargetGroups tdid
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetActiveTargetGroups tdid
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -138,6 +145,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.SendTargetDeviceRequest_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "SendTargetDeviceRequest_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -151,17 +159,19 @@ type CtrlConnection_Test3() =
                         Response = HarukaCtrlerCtrlRes.T_Response.U_UnexpectedError( "qqwweerrffgg" )
                     }
                 do! Functions.FramingSender c rb2
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! r = cc1.GetActiveTargetGroups tdid
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "qqwweerrffgg" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetActiveTargetGroups tdid
+                        ()
+                    })
+                Assert.StartsWith( "qqwweerrffgg" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -174,6 +184,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.SendTargetDeviceRequest_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "SendTargetDeviceRequest_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -191,17 +202,19 @@ type CtrlConnection_Test3() =
                         })
                     }
                 do! Functions.FramingSender c rb2
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! r = cc1.GetActiveTargetGroups tdid
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetActiveTargetGroups tdid
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -214,6 +227,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.SendTargetDeviceRequest_005() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "SendTargetDeviceRequest_005"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -231,17 +245,18 @@ type CtrlConnection_Test3() =
                         })
                     }
                 do! Functions.FramingSender c rb2
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! r = cc1.GetActiveTargetGroups tdid
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    ()
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetActiveTargetGroups tdid
+                        ()
+                    })
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -254,25 +269,26 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.SendTargetDeviceRequest_006() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "SendTargetDeviceRequest_006"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let wlp : TargetDeviceConf.T_LogParameters = {
                     SoftLimit = Constants.LOGPARAM_MAX_SOFTLIMIT + 100u;
                     HardLimit = Constants.LOGPARAM_MAX_HARDLIMIT + 100u;
                     LogLevel = LogLevel.LOGLEVEL_INFO;
                 }
-                try
-                    do! cc1.SetLogParameters tdid wlp
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    ()
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.SetLogParameters tdid wlp
+                    })
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -285,6 +301,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetActiveTargetGroups_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetActiveTargetGroups_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -301,17 +318,19 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "hhhhhhhhhhhhh" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! r = cc1.GetActiveTargetGroups tdid
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "hhhhhhhhhhhhh" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! r = cc1.GetActiveTargetGroups tdid
+                        ()
+                    })
+                Assert.StartsWith( "hhhhhhhhhhhhh" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -324,6 +343,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetActiveTargetGroups_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetActiveTargetGroups_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -340,17 +360,19 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_DeviceName( "hhhhhhhhhhhhh" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! r = cc1.GetActiveTargetGroups tdid
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! r = cc1.GetActiveTargetGroups tdid
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -363,6 +385,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetActiveTargetGroups_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetActiveTargetGroups_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -381,13 +404,15 @@ type CtrlConnection_Test3() =
                             ActiveTGInfo = [];
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! r = cc1.GetActiveTargetGroups tdid
                 Assert.True(( r.Length = 0 ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -410,6 +435,7 @@ type CtrlConnection_Test3() =
                 Name = "aaa02";
             };
         ]
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -426,13 +452,15 @@ type CtrlConnection_Test3() =
                             ActiveTGInfo = wList;
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! r = cc1.GetActiveTargetGroups tdid
                 Assert.True(( r = wList ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -445,6 +473,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetLoadedTargetGroups_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetLoadedTargetGroups_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -459,18 +488,19 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "aaaaaa" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! r = cc1.GetLoadedTargetGroups tdid
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "aaaaaa" ))
-
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! r = cc1.GetLoadedTargetGroups tdid
+                        ()
+                    })
+                Assert.StartsWith( "aaaaaa" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -483,6 +513,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetLoadedTargetGroups_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetLoadedTargetGroups_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -499,18 +530,19 @@ type CtrlConnection_Test3() =
                         ActiveTGInfo = [];
                     })
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! r = cc1.GetLoadedTargetGroups tdid
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
-
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! r = cc1.GetLoadedTargetGroups tdid
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -523,6 +555,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetLoadedTargetGroups_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetLoadedTargetGroups_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -539,13 +572,15 @@ type CtrlConnection_Test3() =
                         LoadedTGInfo = [];
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! r = cc1.GetLoadedTargetGroups tdid
                 Assert.True(( r.Length = 0 ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -565,6 +600,7 @@ type CtrlConnection_Test3() =
                     Name = sprintf "aaa%d" i;
                 }
         ]
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -581,13 +617,15 @@ type CtrlConnection_Test3() =
                         LoadedTGInfo = tgids;
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! r = cc1.GetLoadedTargetGroups tdid
                 Assert.True(( r = tgids ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -601,6 +639,7 @@ type CtrlConnection_Test3() =
     member _.InactivateTargetGroup_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "InactivateTargetGroup_001"
         let tgid = GlbFunc.newTargetGroupID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -621,16 +660,18 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "aaa";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.InactivateTargetGroup tdid tgid
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "Failed to inactivate target group" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.InactivateTargetGroup tdid tgid
+                    })
+                Assert.StartsWith( "Failed to inactivate target group" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -644,6 +685,7 @@ type CtrlConnection_Test3() =
     member _.InactivateTargetGroup_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "InactivateTargetGroup_002"
         let tgid = GlbFunc.newTargetGroupID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -664,16 +706,18 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.InactivateTargetGroup tdid tgid
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.InactivateTargetGroup tdid tgid
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -687,6 +731,7 @@ type CtrlConnection_Test3() =
     member _.InactivateTargetGroup_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "InactivateTargetGroup_003"
         let tgid = GlbFunc.newTargetGroupID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -703,16 +748,18 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "ggggggggggggg" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.InactivateTargetGroup tdid tgid
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ggggggggggggg" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.InactivateTargetGroup tdid tgid
+                    })
+                Assert.StartsWith( "ggggggggggggg" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -726,6 +773,7 @@ type CtrlConnection_Test3() =
     member _.InactivateTargetGroup_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "InactivateTargetGroup_004"
         let tgid = GlbFunc.newTargetGroupID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -744,16 +792,18 @@ type CtrlConnection_Test3() =
                         ActiveTGInfo = [];
                     })
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.InactivateTargetGroup tdid tgid
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.InactivateTargetGroup tdid tgid
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -767,6 +817,7 @@ type CtrlConnection_Test3() =
     member _.InactivateTargetGroup_005() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "InactivateTargetGroup_005"
         let tgid = GlbFunc.newTargetGroupID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -787,12 +838,14 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 do! cc1.InactivateTargetGroup tdid tgid
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -806,6 +859,7 @@ type CtrlConnection_Test3() =
     member _.ActivateTargetGroup_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "ActivateTargetGroup_001"
         let tgid = GlbFunc.newTargetGroupID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -826,16 +880,18 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.ActivateTargetGroup tdid tgid
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.ActivateTargetGroup tdid tgid
+                    })
+                Assert.StartsWith( "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -849,6 +905,7 @@ type CtrlConnection_Test3() =
     member _.ActivateTargetGroup_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "ActivateTargetGroup_002"
         let tgid = GlbFunc.newTargetGroupID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -869,16 +926,18 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.ActivateTargetGroup tdid tgid
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.ActivateTargetGroup tdid tgid
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -892,6 +951,7 @@ type CtrlConnection_Test3() =
     member _.ActivateTargetGroup_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "ActivateTargetGroup_003"
         let tgid = GlbFunc.newTargetGroupID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -908,16 +968,18 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "aaAAssSFF" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.ActivateTargetGroup tdid tgid
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "aaAAssSFF" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.ActivateTargetGroup tdid tgid
+                    })
+                Assert.StartsWith( "aaAAssSFF" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -931,6 +993,7 @@ type CtrlConnection_Test3() =
     member _.ActivateTargetGroup_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "ActivateTargetGroup_004"
         let tgid = GlbFunc.newTargetGroupID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -951,16 +1014,18 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.ActivateTargetGroup tdid tgid
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.ActivateTargetGroup tdid tgid
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -974,6 +1039,7 @@ type CtrlConnection_Test3() =
     member _.ActivateTargetGroup_005() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "ActivateTargetGroup_005"
         let tgid = GlbFunc.newTargetGroupID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -994,12 +1060,14 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 do! cc1.ActivateTargetGroup tdid tgid
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1013,6 +1081,7 @@ type CtrlConnection_Test3() =
     member _.UnloadTargetGroup_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "UnloadTargetGroup_001"
         let tgid = GlbFunc.newTargetGroupID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1033,16 +1102,18 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "11111111111111111";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.UnloadTargetGroup tdid tgid
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "11111111111111111" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.UnloadTargetGroup tdid tgid
+                    })
+                Assert.StartsWith( "11111111111111111" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1056,6 +1127,7 @@ type CtrlConnection_Test3() =
     member _.UnloadTargetGroup_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "UnloadTargetGroup_002"
         let tgid = GlbFunc.newTargetGroupID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1076,16 +1148,18 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.UnloadTargetGroup tdid tgid
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.UnloadTargetGroup tdid tgid
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1099,6 +1173,7 @@ type CtrlConnection_Test3() =
     member _.UnloadTargetGroup_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "UnloadTargetGroup_003"
         let tgid = GlbFunc.newTargetGroupID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1115,16 +1190,18 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "222222222222222" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.UnloadTargetGroup tdid tgid
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "222222222222222" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.UnloadTargetGroup tdid tgid
+                    })
+                Assert.StartsWith( "222222222222222" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1138,6 +1215,7 @@ type CtrlConnection_Test3() =
     member _.UnloadTargetGroup_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "UnloadTargetGroup_004"
         let tgid = GlbFunc.newTargetGroupID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1158,16 +1236,18 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.UnloadTargetGroup tdid tgid
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.UnloadTargetGroup tdid tgid
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1181,6 +1261,7 @@ type CtrlConnection_Test3() =
     member _.UnloadTargetGroup_005() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "UnloadTargetGroup_005"
         let tgid = GlbFunc.newTargetGroupID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1201,12 +1282,14 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 do! cc1.UnloadTargetGroup tdid tgid
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1220,6 +1303,7 @@ type CtrlConnection_Test3() =
     member _.LoadTargetGroup_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "LoadTargetGroup_001"
         let tgid = GlbFunc.newTargetGroupID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1240,16 +1324,18 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "2222233322222222222222";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.LoadTargetGroup tdid tgid
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "2222233322222222222222" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.LoadTargetGroup tdid tgid
+                    })
+                Assert.StartsWith( "2222233322222222222222" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1263,6 +1349,7 @@ type CtrlConnection_Test3() =
     member _.LoadTargetGroup_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "LoadTargetGroup_002"
         let tgid = GlbFunc.newTargetGroupID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1283,16 +1370,18 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.LoadTargetGroup tdid tgid
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.LoadTargetGroup tdid tgid
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1306,6 +1395,7 @@ type CtrlConnection_Test3() =
     member _.LoadTargetGroup_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "LoadTargetGroup_003"
         let tgid = GlbFunc.newTargetGroupID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1322,16 +1412,18 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "444444444444" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.LoadTargetGroup tdid tgid
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "444444444444" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.LoadTargetGroup tdid tgid
+                    })
+                Assert.StartsWith( "444444444444" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1345,6 +1437,7 @@ type CtrlConnection_Test3() =
     member _.LoadTargetGroup_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "LoadTargetGroup_004"
         let tgid = GlbFunc.newTargetGroupID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1365,16 +1458,18 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.LoadTargetGroup tdid tgid
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.LoadTargetGroup tdid tgid
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1388,6 +1483,7 @@ type CtrlConnection_Test3() =
     member _.LoadTargetGroup_005() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "LoadTargetGroup_005"
         let tgid = GlbFunc.newTargetGroupID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1408,12 +1504,14 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 do! cc1.LoadTargetGroup tdid tgid
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1431,6 +1529,7 @@ type CtrlConnection_Test3() =
             HardLimit = Constants.LOGPARAM_DEF_HARDLIMIT;
             LogLevel = LogLevel.LOGLEVEL_INFO;
         }
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1449,16 +1548,18 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_SetLogParametersResult( false )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.SetLogParameters tdid logParam
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_FAILED_SET_LOGPARAM" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.SetLogParameters tdid logParam
+                    })
+                Assert.StartsWith( "ERRMSG_FAILED_SET_LOGPARAM" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1476,6 +1577,7 @@ type CtrlConnection_Test3() =
             HardLimit = Constants.LOGPARAM_DEF_HARDLIMIT;
             LogLevel = LogLevel.LOGLEVEL_INFO;
         }
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1494,16 +1596,18 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "466644444444" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.SetLogParameters tdid logParam
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "466644444444" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.SetLogParameters tdid logParam
+                    })
+                Assert.StartsWith( "466644444444" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1521,6 +1625,7 @@ type CtrlConnection_Test3() =
             HardLimit = Constants.LOGPARAM_DEF_HARDLIMIT;
             LogLevel = LogLevel.LOGLEVEL_INFO;
         }
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1543,16 +1648,18 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.SetLogParameters tdid logParam
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.SetLogParameters tdid logParam
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1570,19 +1677,21 @@ type CtrlConnection_Test3() =
             HardLimit = Constants.LOGPARAM_MAX_HARDLIMIT + 8888u;
             LogLevel = LogLevel.LOGLEVEL_INFO;
         }
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.SetLogParameters tdid logParam
-                with
-                | :? RequestError as x ->
-                    ()
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.SetLogParameters tdid logParam
+                    })
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1600,6 +1709,7 @@ type CtrlConnection_Test3() =
             HardLimit = Constants.LOGPARAM_DEF_HARDLIMIT;
             LogLevel = LogLevel.LOGLEVEL_INFO;
         }
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1618,12 +1728,14 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_SetLogParametersResult( true )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 do! cc1.SetLogParameters tdid logParam
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1636,6 +1748,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetLogParameters_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetLogParameters_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1654,15 +1767,17 @@ type CtrlConnection_Test3() =
                         LogLevel = LogLevel.LOGLEVEL_INFO;
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! r = cc1.GetLogParameters tdid
                 Assert.True(( r.SoftLimit = Constants.LOGPARAM_DEF_SOFTLIMIT ))
                 Assert.True(( r.HardLimit = Constants.LOGPARAM_DEF_HARDLIMIT ))
                 Assert.True(( r.LogLevel = LogLevel.LOGLEVEL_INFO ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1675,6 +1790,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetLogParameters_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetLogParameters_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1689,17 +1805,19 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "44444444444444444" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! r = cc1.GetLogParameters tdid
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "44444444444444444" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetLogParameters tdid
+                        ()
+                    })
+                Assert.StartsWith( "44444444444444444" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1712,6 +1830,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetLogParameters_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetLogParameters_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1730,17 +1849,19 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! r = cc1.GetLogParameters tdid
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetLogParameters tdid
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1753,6 +1874,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetDeviceName_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetDeviceName_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1767,13 +1889,15 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_DeviceName( "aaawwwwwww" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! r = cc1.GetDeviceName tdid
                 Assert.True(( r = "aaawwwwwww" ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1786,6 +1910,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetDeviceName_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetDeviceName_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1800,17 +1925,19 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "66666666666666666" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! r = cc1.GetDeviceName tdid
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "66666666666666666" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetDeviceName tdid
+                        ()
+                    })
+                Assert.StartsWith( "66666666666666666" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1823,6 +1950,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetDeviceName_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetDeviceName_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1841,17 +1969,19 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! r = cc1.GetDeviceName tdid
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetDeviceName tdid
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1864,6 +1994,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetSession_InTargetDevice_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetSession_InTargetDevice_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1911,15 +2042,17 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_SessionList( { Session = sessList } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! sesList = cc1.GetSession_InTargetDevice tdid
                 Assert.True(( sesList.Length = 1 ))
                 Assert.True(( sesList.[0].TargetGroupID = tgid_me.fromPrim( 99u ) ))
                 Assert.True(( sesList.[0].TargetNodeID = tnodeidx_me.fromPrim 1us ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1932,6 +2065,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetSession_InTargetDevice_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetSession_InTargetDevice_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1951,13 +2085,15 @@ type CtrlConnection_Test3() =
                 do! TargetDeviceCtrlRes.T_Response.U_SessionList( { Session = [] } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
                 c.Socket.Disconnect false
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! sesList = cc1.GetSession_InTargetDevice tdid
                 Assert.True(( sesList.Length = 0 ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1970,6 +2106,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetSession_InTargetDevice_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetSession_InTargetDevice_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1988,17 +2125,19 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "aassdd" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetSession_InTargetDevice tdid
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "aassdd" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetSession_InTargetDevice tdid
+                        ()
+                    })
+                Assert.StartsWith( "aassdd" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2011,6 +2150,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetSession_InTargetDevice_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetSession_InTargetDevice_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2033,17 +2173,19 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetSession_InTargetDevice tdid
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetSession_InTargetDevice tdid
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2056,6 +2198,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetSession_InTargetGroup_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetSession_InTargetGroup_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2103,15 +2246,17 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_SessionList( { Session = sessList } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! sesList = cc1.GetSession_InTargetGroup tdid ( tgid_me.fromPrim( 3u ) )
                 Assert.True(( sesList.Length = 1 ))
                 Assert.True(( sesList.[0].TargetGroupID = tgid_me.fromPrim( 4u ) ))    // not checked
                 Assert.True(( sesList.[0].TargetNodeID = tnodeidx_me.fromPrim 1us ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2124,6 +2269,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetSession_InTargetGroup_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetSession_InTargetGroup_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2142,13 +2288,15 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_SessionList( { Session = [] } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! sesList = cc1.GetSession_InTargetGroup tdid ( tgid_me.fromPrim( 3u ) )
                 Assert.True(( sesList.Length = 0 ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2161,6 +2309,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetSession_InTargetGroup_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetSession_InTargetGroup_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2179,17 +2328,19 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "aassdd001" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetSession_InTargetGroup tdid ( tgid_me.fromPrim( 3u ) )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "aassdd001" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetSession_InTargetGroup tdid ( tgid_me.fromPrim( 3u ) )
+                        ()
+                    })
+                Assert.StartsWith( "aassdd001" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2202,6 +2353,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetSession_InTargetGroup_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetSession_InTargetGroup_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2224,17 +2376,19 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetSession_InTargetGroup tdid ( tgid_me.fromPrim( 3u ) )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetSession_InTargetGroup tdid ( tgid_me.fromPrim( 3u ) )
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2247,6 +2401,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetSession_InTarget_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetSession_InTarget_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2294,15 +2449,17 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_SessionList( { Session = sessList } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! sesList = cc1.GetSession_InTarget tdid ( tnodeidx_me.fromPrim 4us )
                 Assert.True(( sesList.Length = 1 ))
                 Assert.True(( sesList.[0].TargetGroupID = tgid_me.fromPrim( 4u ) ))
                 Assert.True(( sesList.[0].TargetNodeID = tnodeidx_me.fromPrim 5us ))    // not checked
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2315,6 +2472,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetSession_InTarget_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetSession_InTarget_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2333,13 +2491,15 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_SessionList( { Session = [] } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! sesList = cc1.GetSession_InTarget tdid ( tnodeidx_me.fromPrim 4us )
                 Assert.True(( sesList.Length = 0 ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2352,6 +2512,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetSession_InTarget_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetSession_InTarget_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2370,17 +2531,19 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "aassdd002" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetSession_InTarget tdid ( tnodeidx_me.fromPrim 4us )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "aassdd002" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetSession_InTarget tdid ( tnodeidx_me.fromPrim 4us )
+                        ()
+                    })
+                Assert.StartsWith( "aassdd002" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2393,6 +2556,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetSession_InTarget_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetSession_InTarget_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2415,17 +2579,19 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetSession_InTarget tdid ( tnodeidx_me.fromPrim 4us )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetSession_InTarget tdid ( tnodeidx_me.fromPrim 4us )
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2438,6 +2604,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.DestructSession_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DestructSession_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2457,12 +2624,14 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     })
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 do! cc1.DestructSession tdid ( tsih_me.fromPrim 4us )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2475,6 +2644,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.DestructSession_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DestructSession_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2494,17 +2664,18 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "aaa";
                     })
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.DestructSession tdid ( tsih_me.fromPrim 4us )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "aaa" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.DestructSession tdid ( tsih_me.fromPrim 4us )
+                    })
+                Assert.StartsWith( "aaa" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2517,6 +2688,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.DestructSession_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DestructSession_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2536,17 +2708,18 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     })
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.DestructSession tdid ( tsih_me.fromPrim 4us )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.DestructSession tdid ( tsih_me.fromPrim 4us )
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2559,6 +2732,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.DestructSession_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DestructSession_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2574,17 +2748,18 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "qwsde001" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.DestructSession tdid ( tsih_me.fromPrim 4us )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "qwsde001" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.DestructSession tdid ( tsih_me.fromPrim 4us )
+                    })
+                Assert.StartsWith( "qwsde001" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2597,6 +2772,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.DestructSession_005() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DestructSession_005"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2616,17 +2792,18 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.DestructSession tdid ( tsih_me.fromPrim 4us )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.DestructSession tdid ( tsih_me.fromPrim 4us )
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2639,6 +2816,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetConnection_InTargetDevice_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetConnection_InTargetDevice_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2675,16 +2853,18 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_ConnectionList( { Connection = conist } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! conList = cc1.GetConnection_InTargetDevice tdid 
                 Assert.True(( conList.Length = 1 ))
                 Assert.True(( conList.[0].TSIH = tsih_me.fromPrim 1us ))
                 Assert.True(( conList.[0].ConnectionID = cid_me.fromPrim 2us ))
                 Assert.True(( conList.[0].ConnectionCount = concnt_me.fromPrim 3 ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2697,6 +2877,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetConnection_InTargetDevice_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetConnection_InTargetDevice_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2715,13 +2896,15 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_ConnectionList( { Connection = [] } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! conList = cc1.GetConnection_InTargetDevice tdid 
                 Assert.True(( conList.Length = 0 ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2734,6 +2917,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetConnection_InTargetDevice_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetConnection_InTargetDevice_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2752,17 +2936,19 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "wweerrtt111" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetConnection_InTargetDevice tdid 
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "wweerrtt111" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetConnection_InTargetDevice tdid 
+                        ()
+                    })
+                Assert.StartsWith( "wweerrtt111" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2775,6 +2961,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetConnection_InTargetDevice_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetConnection_InTargetDevice_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2797,17 +2984,19 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetConnection_InTargetDevice tdid 
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetConnection_InTargetDevice tdid 
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2820,6 +3009,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetConnection_InNetworkPortal_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetConnection_InNetworkPortal_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2856,16 +3046,18 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_ConnectionList( { Connection = conist } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! conList = cc1.GetConnection_InNetworkPortal tdid ( netportidx_me.fromPrim 5u )
                 Assert.True(( conList.Length = 1 ))
                 Assert.True(( conList.[0].TSIH = tsih_me.fromPrim 4us ))
                 Assert.True(( conList.[0].ConnectionID = cid_me.fromPrim 5us ))
                 Assert.True(( conList.[0].ConnectionCount = concnt_me.fromPrim 6 ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2878,6 +3070,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetConnection_InNetworkPortal_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetConnection_InNetworkPortal_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2896,13 +3089,15 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_ConnectionList( { Connection = [] } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! conList = cc1.GetConnection_InNetworkPortal tdid ( netportidx_me.fromPrim 5u )
                 Assert.True(( conList.Length = 0 ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2915,6 +3110,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetConnection_InNetworkPortal_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetConnection_InNetworkPortal_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2933,17 +3129,19 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "wweerrtt222" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetConnection_InNetworkPortal tdid ( netportidx_me.fromPrim 5u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "wweerrtt222" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetConnection_InNetworkPortal tdid ( netportidx_me.fromPrim 5u )
+                        ()
+                    })
+                Assert.StartsWith( "wweerrtt222" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -2956,6 +3154,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetConnection_InNetworkPortal_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetConnection_InNetworkPortal_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2978,17 +3177,19 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetConnection_InNetworkPortal tdid ( netportidx_me.fromPrim 5u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetConnection_InNetworkPortal tdid ( netportidx_me.fromPrim 5u )
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3001,6 +3202,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetConnection_InTargetGroup_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetConnection_InTargetGroup_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3037,16 +3239,18 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_ConnectionList( { Connection = conist } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! conList = cc1.GetConnection_InTargetGroup tdid ( tgid_me.fromPrim( 6u ) )
                 Assert.True(( conList.Length = 1 ))
                 Assert.True(( conList.[0].TSIH = tsih_me.fromPrim 7us ))
                 Assert.True(( conList.[0].ConnectionID = cid_me.fromPrim 8us ))
                 Assert.True(( conList.[0].ConnectionCount = concnt_me.fromPrim 9 ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3059,6 +3263,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetConnection_InTargetGroup_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetConnection_InTargetGroup_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3077,13 +3282,15 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_ConnectionList( { Connection = [] } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! conList = cc1.GetConnection_InTargetGroup tdid ( tgid_me.fromPrim( 7u ) )
                 Assert.True(( conList.Length = 0 ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3096,6 +3303,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetConnection_InTargetGroup_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetConnection_InTargetGroup_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3114,17 +3322,19 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "wweerrtt333" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetConnection_InTargetGroup tdid ( tgid_me.fromPrim( 7u ) )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "wweerrtt333" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetConnection_InTargetGroup tdid ( tgid_me.fromPrim( 7u ) )
+                        ()
+                    })
+                Assert.StartsWith( "wweerrtt333" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3137,6 +3347,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetConnection_InTargetGroup_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetConnection_InTargetGroup_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3159,17 +3370,19 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetConnection_InTargetGroup tdid ( tgid_me.fromPrim( 7u ) )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetConnection_InTargetGroup tdid ( tgid_me.fromPrim( 7u ) )
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3182,6 +3395,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetConnection_InTarget_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetConnection_InTarget_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3218,16 +3432,18 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_ConnectionList( { Connection = conist } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! conList = cc1.GetConnection_InTarget tdid ( tnodeidx_me.fromPrim 7us )
                 Assert.True(( conList.Length = 1 ))
                 Assert.True(( conList.[0].TSIH = tsih_me.fromPrim 10us ))
                 Assert.True(( conList.[0].ConnectionID = cid_me.fromPrim 11us ))
                 Assert.True(( conList.[0].ConnectionCount = concnt_me.fromPrim 12 ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3240,6 +3456,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetConnection_InTarget_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetConnection_InTarget_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3258,13 +3475,15 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_ConnectionList( { Connection = [] } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! conList = cc1.GetConnection_InTarget tdid ( tnodeidx_me.fromPrim 7us )
                 Assert.True(( conList.Length = 0 ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3277,6 +3496,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetConnection_InTarget_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetConnection_InTarget_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3295,17 +3515,19 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "wweerrtt223" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetConnection_InTarget tdid ( tnodeidx_me.fromPrim 7us )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "wweerrtt223" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetConnection_InTarget tdid ( tnodeidx_me.fromPrim 7us )
+                        ()
+                    })
+                Assert.StartsWith( "wweerrtt223" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3318,6 +3540,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetConnection_InTarget_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetConnection_InTarget_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3340,17 +3563,19 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetConnection_InTarget tdid ( tnodeidx_me.fromPrim 7us )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetConnection_InTarget tdid ( tnodeidx_me.fromPrim 7us )
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3363,6 +3588,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetConnection_InSession_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetConnection_InSession_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3399,16 +3625,18 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_ConnectionList( { Connection = conist } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! conList = cc1.GetConnection_InSession tdid ( tsih_me.fromPrim 11us )
                 Assert.True(( conList.Length = 1 ))
                 Assert.True(( conList.[0].TSIH = tsih_me.fromPrim 13us ))
                 Assert.True(( conList.[0].ConnectionID = cid_me.fromPrim 14us ))
                 Assert.True(( conList.[0].ConnectionCount = concnt_me.fromPrim 15 ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3421,6 +3649,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetConnection_InSession_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetConnection_InSession_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3439,13 +3668,15 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_ConnectionList( { Connection = [] } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! conList = cc1.GetConnection_InSession tdid ( tsih_me.fromPrim 11us )
                 Assert.True(( conList.Length = 0 ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3458,6 +3689,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetConnection_InSession_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetConnection_InSession_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3476,17 +3708,19 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "wweerrtt224" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetConnection_InSession tdid ( tsih_me.fromPrim 11us )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "wweerrtt224" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetConnection_InSession tdid ( tsih_me.fromPrim 11us )
+                        ()
+                    })
+                Assert.StartsWith( "wweerrtt224" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3499,6 +3733,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetConnection_InSession_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetConnection_InSession_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3521,17 +3756,19 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetConnection_InSession tdid ( tsih_me.fromPrim 11us )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetConnection_InSession tdid ( tsih_me.fromPrim 11us )
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3544,6 +3781,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetLUStatus_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetLUStatus_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3573,11 +3811,12 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_LUStatus( stat )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! lustat = cc1.GetLUStatus tdid ( lun_me.fromPrim 6UL )
                 Assert.True(( lustat.ReadBytesCount.Length = 1 ))
                 Assert.True(( lustat.WrittenBytesCount.Length = 0 ))
@@ -3585,6 +3824,7 @@ type CtrlConnection_Test3() =
                 Assert.True(( lustat.WriteTickCount.Length = 0 ))
                 Assert.True(( lustat.ACAStatus.IsNone ))
 
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3597,6 +3837,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetLUStatus_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetLUStatus_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3626,17 +3867,19 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_LUStatus( stat )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetLUStatus tdid ( lun_me.fromPrim 7UL )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetLUStatus tdid ( lun_me.fromPrim 7UL )
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3649,6 +3892,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetLUStatus_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetLUStatus_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3671,17 +3915,19 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_LUStatus( stat )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetLUStatus tdid ( lun_me.fromPrim 7UL )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "aaaaa" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetLUStatus tdid ( lun_me.fromPrim 7UL )
+                        ()
+                    })
+                Assert.StartsWith( "aaaaa" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3694,6 +3940,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetLUStatus_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetLUStatus_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3709,17 +3956,19 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "wweerrtt444" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetLUStatus tdid ( lun_me.fromPrim 7UL )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "wweerrtt444" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetLUStatus tdid ( lun_me.fromPrim 7UL )
+                        ()
+                    })
+                Assert.StartsWith( "wweerrtt444" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3732,6 +3981,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetLUStatus_005() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetLUStatus_005"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3751,17 +4001,19 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetLUStatus tdid ( lun_me.fromPrim 7UL )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetLUStatus tdid ( lun_me.fromPrim 7UL )
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3774,6 +4026,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.LUReset_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "LUReset_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3793,12 +4046,14 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     })
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 do! cc1.LUReset tdid ( lun_me.fromPrim 7UL )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3811,6 +4066,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.LUReset_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "LUReset_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3830,17 +4086,18 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     })
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.LUReset tdid ( lun_me.fromPrim 7UL )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.LUReset tdid ( lun_me.fromPrim 7UL )
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3853,6 +4110,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.LUReset_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "LUReset_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3872,17 +4130,18 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "ttyyuu333";
                     })
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.LUReset tdid ( lun_me.fromPrim 7UL )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ttyyuu333" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.LUReset tdid ( lun_me.fromPrim 7UL )
+                    })
+                Assert.StartsWith( "ttyyuu333" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3895,6 +4154,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.LUReset_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "LUReset_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3910,17 +4170,18 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "wweerrtt555" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.LUReset tdid ( lun_me.fromPrim 7UL )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "wweerrtt555" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.LUReset tdid ( lun_me.fromPrim 7UL )
+                    })
+                Assert.StartsWith( "wweerrtt555" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3933,6 +4194,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.LUReset_005() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "LUReset_005"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -3952,17 +4214,18 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.LUReset tdid ( lun_me.fromPrim 7UL )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.LUReset tdid ( lun_me.fromPrim 7UL )
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -3975,6 +4238,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetMediaStatus_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetMediaStatus_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -4004,11 +4268,12 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_MediaStatus( mediastat )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! mdstat = cc1.GetMediaStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                 Assert.True(( mdstat.ReadBytesCount.Length = 1 ))
                 Assert.True(( mdstat.ReadBytesCount.[0].Value = 0L ))
@@ -4018,6 +4283,7 @@ type CtrlConnection_Test3() =
                 Assert.True(( mdstat.ReadTickCount.[0].Value = 4L ))
                 Assert.True(( mdstat.WriteTickCount.Length = 1 ))
                 Assert.True(( mdstat.WriteTickCount.[0].Value = 6L ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -4030,6 +4296,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetMediaStatus_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetMediaStatus_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -4059,17 +4326,19 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_MediaStatus( mediastat )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetMediaStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetMediaStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -4082,6 +4351,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetMediaStatus_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetMediaStatus_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -4111,17 +4381,19 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_MediaStatus( mediastat )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetMediaStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetMediaStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -4134,6 +4406,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetMediaStatus_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetMediaStatus_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -4158,17 +4431,19 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_MediaStatus( mediastat )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetMediaStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "qqwwertyuiui" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetMediaStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                        ()
+                    })
+                Assert.StartsWith( "qqwwertyuiui" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -4181,6 +4456,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetMediaStatus_005() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetMediaStatus_005"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -4197,17 +4473,19 @@ type CtrlConnection_Test3() =
                 // send response for TargetDeviceCtrlRequest
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "wweerrtt666" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetMediaStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "wweerrtt666" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetMediaStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                        ()
+                    })
+                Assert.StartsWith( "wweerrtt666" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -4220,6 +4498,7 @@ type CtrlConnection_Test3() =
     [<Fact>]
     member _.GetMediaStatus_006() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "GetMediaStatus_006"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -4240,17 +4519,19 @@ type CtrlConnection_Test3() =
                         ErrorMessage = "";
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.GetMediaStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.GetMediaStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]

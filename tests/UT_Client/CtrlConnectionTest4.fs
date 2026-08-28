@@ -91,7 +91,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! r = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                 Assert.True(( r.Length = 0 ))
                 k.NoticeTerminate()
@@ -119,7 +119,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                     Assert.Fail __LINE__
@@ -153,7 +153,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                     Assert.Fail __LINE__
@@ -191,7 +191,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                     Assert.Fail __LINE__
@@ -229,7 +229,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                     Assert.Fail __LINE__
@@ -277,7 +277,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                     Assert.Fail __LINE__
@@ -325,7 +325,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                     Assert.Fail __LINE__
@@ -360,7 +360,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                     Assert.Fail __LINE__
@@ -397,7 +397,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                     Assert.Fail __LINE__
@@ -441,7 +441,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! r = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                 Assert.True(( r.Length = Constants.DEBUG_MEDIA_MAX_TRAP_COUNT ))
                 k.NoticeTerminate()
@@ -483,7 +483,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let at_event = MediaCtrlReq.U_TestUnitReady()
                 let at_action = MediaCtrlReq.U_Count( 1 )
                 do! cc1.DebugMedia_AddTrap tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) at_event at_action
@@ -513,7 +513,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let at_event = MediaCtrlReq.U_TestUnitReady()
                 let at_action = MediaCtrlReq.U_Count( 1 )
                 try
@@ -549,7 +549,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let at_event = MediaCtrlReq.U_TestUnitReady()
                 let at_action = MediaCtrlReq.U_Count( 1 )
                 try
@@ -588,7 +588,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let at_event = MediaCtrlReq.U_TestUnitReady()
                 let at_action = MediaCtrlReq.U_Count( 1 )
                 try
@@ -622,7 +622,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let at_event = MediaCtrlReq.U_TestUnitReady()
                 let at_action = MediaCtrlReq.U_Count( 1 )
                 try
@@ -664,7 +664,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 do! cc1.DebugMedia_ClearTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                 k.NoticeTerminate()
             }
@@ -697,7 +697,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     do! cc1.DebugMedia_ClearTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                 with
@@ -731,7 +731,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     do! cc1.DebugMedia_ClearTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                 with
@@ -763,7 +763,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     do! cc1.DebugMedia_ClearTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                 with
@@ -795,7 +795,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     do! cc1.DebugMedia_ClearTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                 with
@@ -836,7 +836,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! v = cc1.DebugMedia_GetCounterValue tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 99
                 Assert.True(( v = 88 ))
                 k.NoticeTerminate()
@@ -870,7 +870,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     let! _ = cc1.DebugMedia_GetCounterValue tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 99
                     Assert.Fail __LINE__
@@ -904,7 +904,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     let! _ = cc1.DebugMedia_GetCounterValue tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 99
                     Assert.Fail __LINE__
@@ -938,7 +938,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     let! _ = cc1.DebugMedia_GetCounterValue tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 99
                     Assert.Fail __LINE__
@@ -989,7 +989,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! v = cc1.DebugMedia_GetTaskWaitStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                 Assert.True(( v.Length = 1 ))
                 Assert.True(( v.[0].ITT = itt_me.fromPrim 99u ))
@@ -1031,7 +1031,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     let! v = cc1.DebugMedia_GetTaskWaitStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                     Assert.Fail __LINE__
@@ -1071,7 +1071,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     let! v = cc1.DebugMedia_GetTaskWaitStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                     Assert.Fail __LINE__
@@ -1111,7 +1111,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     let! v = cc1.DebugMedia_GetTaskWaitStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                     Assert.Fail __LINE__
@@ -1157,7 +1157,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 do! cc1.DebugMedia_Resume tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) ( tsih_me.fromPrim 88us ) ( itt_me.fromPrim 98u )
                 k.NoticeTerminate()
             }
@@ -1198,7 +1198,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     let itn = ITNexus( "iname", isid_me.zero, "tname", tpgt_me.zero )
                     do! cc1.DebugMedia_Resume tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) ( tsih_me.fromPrim 88us ) ( itt_me.fromPrim 98u )
@@ -1245,7 +1245,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     let itn = ITNexus( "iname", isid_me.zero, "tname", tpgt_me.zero )
                     do! cc1.DebugMedia_Resume tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) ( tsih_me.fromPrim 88us ) ( itt_me.fromPrim 98u )
@@ -1287,7 +1287,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     let itn = ITNexus( "iname", isid_me.zero, "tname", tpgt_me.zero )
                     do! cc1.DebugMedia_Resume tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) ( tsih_me.fromPrim 88us ) ( itt_me.fromPrim 98u )
@@ -1329,7 +1329,7 @@ type CtrlConnection_Test4() =
                 sl.Stop()
             };
             fun () -> task {
-                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 try
                     let itn = ITNexus( "iname", isid_me.zero, "tname", tpgt_me.zero )
                     do! cc1.DebugMedia_Resume tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) ( tsih_me.fromPrim 88us ) ( itt_me.fromPrim 98u )
