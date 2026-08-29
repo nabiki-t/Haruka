@@ -18,6 +18,7 @@ open System.Net.Sockets
 open System.Diagnostics
 open System.Collections.Generic
 open System.Xml
+open System.Threading
 
 open Xunit
 
@@ -338,6 +339,7 @@ type ServerStatus_Test1() =
     [<Fact>]
     member _.LoadConfigure_001() =
         let portNo, dname = ServerStatus_Test1.Init "LoadConfigure_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -389,6 +391,7 @@ type ServerStatus_Test1() =
                     }
                 do! Functions.FramingSender c rb2
 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
@@ -398,6 +401,7 @@ type ServerStatus_Test1() =
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 do! ss.LoadConfigure cc1 true
                 Assert.True(( ss.ControllerNode.RemoteCtrlValue.PortNum = uint16 portNo ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -409,6 +413,7 @@ type ServerStatus_Test1() =
     [<Fact>]
     member _.LoadConfigure_002() =
         let portNo, dname = ServerStatus_Test1.Init "LoadConfigure_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -435,6 +440,7 @@ type ServerStatus_Test1() =
                         })
                     }
                 do! Functions.FramingSender c rb2
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
@@ -445,6 +451,7 @@ type ServerStatus_Test1() =
                 do! ss.LoadConfigure cc1 true
                 Assert.True(( ss.ControllerNode.RemoteCtrlValue.PortNum = Constants.DEFAULT_MNG_CLI_PORT_NUM ))
                 Assert.True(( ss.GetTargetDeviceNodes().Length = 0 ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -456,6 +463,7 @@ type ServerStatus_Test1() =
     [<Fact>]
     member _.LoadConfigure_003() =
         let portNo, dname = ServerStatus_Test1.Init "LoadConfigure_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -467,6 +475,7 @@ type ServerStatus_Test1() =
                 let! _ = Functions.FramingReceiver c
                 do! Functions.FramingSender c "aaaaaaaa"
 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
@@ -477,6 +486,7 @@ type ServerStatus_Test1() =
                 do! ss.LoadConfigure cc1 true
                 Assert.True(( ss.ControllerNode.RemoteCtrlValue.PortNum = uint16 portNo ))
                 Assert.True(( ss.GetTargetDeviceNodes().Length = 0 ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -489,6 +499,7 @@ type ServerStatus_Test1() =
     member _.LoadTargetDeviceConfig_001() =
         let portNo, dname = ServerStatus_Test1.Init "LoadTargetDeviceConfig_001"
         let tdid = GlbFunc.newTargetDeviceID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -548,6 +559,7 @@ type ServerStatus_Test1() =
                     }
                 do! Functions.FramingSender c rb4
 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
@@ -563,6 +575,7 @@ type ServerStatus_Test1() =
                 Assert.True(( nplist.Length = 1 ))
                 Assert.True(( nplist.[0].NetworkPortal.IdentNumber = ServerStatus_Test1.defaultNP.IdentNumber ))
                 Assert.True(( nplist.[0].NetworkPortal.PortNumber = ServerStatus_Test1.defaultNP.PortNumber ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -575,6 +588,7 @@ type ServerStatus_Test1() =
     member _.LoadTargetDeviceConfig_002() =
         let portNo, dname = ServerStatus_Test1.Init "LoadTargetDeviceConfig_002"
         let tdid = GlbFunc.newTargetDeviceID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -589,6 +603,7 @@ type ServerStatus_Test1() =
                 let! _ = Functions.FramingReceiver c 
                 do! Functions.FramingSender c "aaaa"
 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
@@ -599,6 +614,7 @@ type ServerStatus_Test1() =
                 do! ss.LoadConfigure cc1 true
                 let tdlist = ss.GetTargetDeviceNodes()
                 Assert.True(( tdlist.Length = 0 ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -611,6 +627,7 @@ type ServerStatus_Test1() =
     member _.LoadTargetGroupConfig_001() =
         let portNo, dname = ServerStatus_Test1.Init "LoadTargetGroupConfig_001"
         let tdid = GlbFunc.newTargetDeviceID()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -637,6 +654,7 @@ type ServerStatus_Test1() =
                 // send GetAllTargetGroupConfig response
                 do! Functions.FramingSender c "aaa"
 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
@@ -654,6 +672,7 @@ type ServerStatus_Test1() =
                 Assert.True(( nplist.[0].NetworkPortal.PortNumber = ServerStatus_Test1.defaultNP.PortNumber ))
                 let tglist = ( tdlist.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                 Assert.True(( tglist.Length = 0 ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -1352,10 +1371,12 @@ type ServerStatus_Test1() =
     [<Fact>]
     member _.Validate_002() =
         let portNo, dname = ServerStatus_Test1.Init "Validate_002"
+        use br = new Barrier( 2 )
 
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo false
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
@@ -1368,6 +1389,7 @@ type ServerStatus_Test1() =
                 let r = ss.Validate()
                 Assert.True(( r.Length > 0 ))
                 Assert.True(( ( fst r.[0] ) = n.NodeID ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel

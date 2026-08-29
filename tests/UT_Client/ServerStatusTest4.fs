@@ -13,6 +13,7 @@ namespace Haruka.Test.UT.Client
 
 open System
 open System.Collections.Generic
+open System.Threading
 
 open Xunit
 
@@ -33,9 +34,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.UpdateControllerNode_001() =
         let portNo, dname = ServerStatus_Test1.Init "UpdateControllerNode_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -68,6 +71,7 @@ type ServerStatus_Test4() =
                 let cnode2 = ( ctrlNode1 :> IConfigFileNode ).GetChildNodes<IConfigureNode>()
                 Assert.True(( cnode2.Length = 1 ))
                 Assert.True(( cnode1 = cnode2 ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -79,9 +83,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddTargetDeviceNode_001() =
         let portNo, dname = ServerStatus_Test1.Init "AddTargetDeviceNode_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo false
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -111,6 +117,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tdlist.[0].EnableStatSNAckChecker = true ))
                 Assert.True(( tdlist.[0].TargetDeviceID = tdid ))
                 Assert.True(( tdNode.Modified = ModifiedStatus.Modified ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -122,9 +129,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddTargetDeviceNode_002() =
         let portNo, dname = ServerStatus_Test1.Init "AddTargetDeviceNode_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo false
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -156,6 +165,7 @@ type ServerStatus_Test4() =
                     Assert.True(( tdlist.[i].TargetDeviceName = wstr ))
                     Assert.True(( tdlist.[i].EnableStatSNAckChecker = ( i % 2 = 0 ) ))
                     Assert.True(( ( tdlist.[i] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -167,9 +177,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.DeleteTargetDeviceNode_002() =
         let portNo, dname = ServerStatus_Test1.Init "DeleteTargetDeviceNode_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, _ = ServerStatus_Test1.StubLoginAndInit portNo false
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -192,6 +204,7 @@ type ServerStatus_Test4() =
 
                 let tdlist3 = ss.GetTargetDeviceNodes()
                 Assert.True(( tdlist3.Length = 0 ))
+                br.SignalAndWait()
 
             }
         |]
@@ -204,9 +217,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.DeleteTargetDeviceNode_003() =
         let portNo, dname = ServerStatus_Test1.Init "DeleteTargetDeviceNode_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo false
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -236,6 +251,7 @@ type ServerStatus_Test4() =
                 with
                 | :? KeyNotFoundException ->
                     ()
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -247,9 +263,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.UpdateTargetDeviceNode_002() =
         let portNo, dname = ServerStatus_Test1.Init "UpdateTargetDeviceNode_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, _ = ServerStatus_Test1.StubLoginAndInit portNo false
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -280,6 +298,7 @@ type ServerStatus_Test4() =
                 let tdlist3 = ss.GetTargetDeviceNodes()
                 Assert.True(( tdlist3.Length = 1 ))
                 Assert.True(( ( tdlist3.[0] :> IConfigFileNode ) = r ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -291,9 +310,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddNetworkPortalNode_002() =
         let portNo, dname = ServerStatus_Test1.Init "AddNetworkPortalNode_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo false
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -324,6 +345,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tdlist3.Length = 1 ))
                 Assert.True(( ( tdlist3.[0] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
 
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -335,10 +357,12 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddNetworkPortalNode_003() =
         let portNo, dname = ServerStatus_Test1.Init "AddNetworkPortalNode_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, _ = ServerStatus_Test1.StubLoginAndInit portNo true
 //                do! ServerStatus_Test1.RespTargetDeviceProcs c []
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -362,6 +386,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tdlist2.Length = 1 ))
                 Assert.True(( ( tdlist2.[0] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
 
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -373,9 +398,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.DeleteNetworkPortalNode_002() =
         let portNo, dname = ServerStatus_Test1.Init "DeleteNetworkPortalNode_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, _ = ServerStatus_Test1.StubLoginAndInit portNo false
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -401,6 +428,7 @@ type ServerStatus_Test4() =
                 let nplist2 = ( tdlist3.[0] :> IConfigureNode ).GetDescendantNodes<ConfNode_NetworkPortal>()
                 Assert.True(( nplist2.Length = 0 ))
 
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -412,10 +440,12 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.DeleteNetworkPortalNode_003() =
         let portNo, dname = ServerStatus_Test1.Init "DeleteNetworkPortalNode_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, _ = ServerStatus_Test1.StubLoginAndInit portNo true
 //                do! ServerStatus_Test1.RespTargetDeviceProcs c []
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -440,6 +470,7 @@ type ServerStatus_Test4() =
 
                 let nplist2 = ( tdlist2.[0] :> IConfigureNode ).GetDescendantNodes<ConfNode_NetworkPortal>()
                 Assert.True(( nplist2.Length = 0 ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -451,9 +482,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.UpdateNetworkPortalNode_002() =
         let portNo, dname = ServerStatus_Test1.Init "UpdateNetworkPortalNode_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, _ = ServerStatus_Test1.StubLoginAndInit portNo false
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -487,6 +520,7 @@ type ServerStatus_Test4() =
                 let nplist2 = ( tdlist3.[0] :> IConfigureNode ).GetDescendantNodes<ConfNode_NetworkPortal>()
                 Assert.True(( nplist2.Length = 1 ))
 
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -498,10 +532,12 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.UpdateNetworkPortalNode_003() =
         let portNo, dname = ServerStatus_Test1.Init "UpdateNetworkPortalNode_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, _ = ServerStatus_Test1.StubLoginAndInit portNo true
 //                do! ServerStatus_Test1.RespTargetDeviceProcs c []
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -531,6 +567,7 @@ type ServerStatus_Test4() =
 
                 let nplist2 = ( tdlist2.[0] :> IConfigureNode ).GetDescendantNodes<ConfNode_NetworkPortal>()
                 Assert.True(( nplist2.Length = 1 ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -542,9 +579,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddTargetGroupNode_001() =
         let portNo, dname = ServerStatus_Test1.Init "AddTargetGroupNode_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -570,6 +609,7 @@ type ServerStatus_Test4() =
 
                 let tdNodes2 = ss.GetTargetDeviceNodes()
                 Assert.True(( tdNodes2.Length = 1 ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -581,9 +621,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddTargetGroupNode_002() =
         let portNo, dname = ServerStatus_Test1.Init "AddTargetGroupNode_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -615,6 +657,7 @@ type ServerStatus_Test4() =
 
                 let tgNodes2 = ( tdNodes2.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                 Assert.True(( tgNodes2.Length = Constants.MAX_TARGET_GROUP_COUNT_IN_TD + 3 ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -626,9 +669,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.DeleteTargetGroupNode_002() =
         let portNo, dname = ServerStatus_Test1.Init "DeleteTargetGroupNode_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -654,6 +699,7 @@ type ServerStatus_Test4() =
                 let tgNodes3 = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                 Assert.True(( tgNodes3.Length = 1 ))
 
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -665,9 +711,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.UpdateTargetGroupNode_002() =
         let portNo, dname = ServerStatus_Test1.Init "UpdateTargetGroupNode_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -700,6 +748,7 @@ type ServerStatus_Test4() =
                 Assert.True(( tdNodes2.Length = 1 ))
                 Assert.True(( ( tdNodes2.[0] :> IConfigFileNode ).Modified = ModifiedStatus.NotModified ))
 
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -711,9 +760,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.DeleteNodeInTargetGroup_002() =
         let portNo, dname = ServerStatus_Test1.Init "DeleteNodeInTargetGroup_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -744,6 +795,7 @@ type ServerStatus_Test4() =
                 let tNodes3 = ( tgNode :> IConfigureNode ).GetChildNodes<ConfNode_Target>()
                 Assert.True(( tNodes3.Length = 0 ))
 
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -755,11 +807,13 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.DeleteNodeInTargetGroup_003() =
         let portNo, dname = ServerStatus_Test1.Init "DeleteNodeInTargetGroup_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
 //                do! ServerStatus_Test1.RespTargetDeviceProcs c [ tdid ]
 //                do! ServerStatus_Test1.RespLoadedTargetGroup c tdid []
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -782,6 +836,7 @@ type ServerStatus_Test4() =
                 let tgNodes2 = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                 Assert.True(( tgNodes2.Length = 1 ))
                 Assert.True(( ( tgNodes2.[0] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -793,9 +848,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddTargetNode_001() =
         let portNo, dname = ServerStatus_Test1.Init "AddTargetNode_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -826,6 +883,7 @@ type ServerStatus_Test4() =
                     ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                     |> List.find ( fun itr -> itr.TargetGroupName = "xxyyzz" )
                 Assert.True(( ( tgNode2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -837,11 +895,13 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddTargetNode_003() =
         let portNo, dname = ServerStatus_Test1.Init "AddTargetNode_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
 //                do! ServerStatus_Test1.RespTargetDeviceProcs c [ tdid ]
 //                do! ServerStatus_Test1.RespLoadedTargetGroup c tdid []
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()            };
             fun () -> task {
@@ -872,6 +932,7 @@ type ServerStatus_Test4() =
 
                 let tNodes2 = ( tgNode2.[0] :> IConfigureNode ).GetChildNodes<ConfNode_Target>()
                 Assert.True(( tNodes2.Length = 2 ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -883,9 +944,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.UpdateTargetNode_001() =
         let portNo, dname = ServerStatus_Test1.Init "UpdateTargetNode_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -920,6 +983,7 @@ type ServerStatus_Test4() =
                     ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                     |> List.find ( fun itr -> itr.TargetGroupName = "xxyyzz" )
                 Assert.True(( ( tgNode2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -931,9 +995,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.UpdateTargetNode_003() =
         let portNo, dname = ServerStatus_Test1.Init "UpdateTargetNode_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -966,6 +1032,7 @@ type ServerStatus_Test4() =
 
                 let tNodes2 = ( tgNode2.[0] :> IConfigureNode ).GetChildNodes<ConfNode_Target>()
                 Assert.True(( tNodes2.Length = 1 ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -977,9 +1044,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddTargetLURelation_001() =
         let portNo, dname = ServerStatus_Test1.Init "AddTargetLURelation_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -1025,6 +1094,7 @@ type ServerStatus_Test4() =
                     ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                     |> List.find ( fun itr -> itr.TargetGroupName = "xxyyzz" )
                 Assert.True(( ( tgNode2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -1036,6 +1106,7 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddTargetLURelation_002() =
         let portNo, dname = ServerStatus_Test1.Init "AddTargetLURelation_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1079,6 +1150,7 @@ type ServerStatus_Test4() =
                 do! ServerStatus_Test1.RespAllTargetGroupConfig c tdid { TargetGroupID = tgid; Config = tgconf; }
                 //do! ServerStatus_Test1.RespTargetDeviceProcs c [ tdid ]
                 //do! ServerStatus_Test1.RespLoadedTargetGroup c tdid []
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -1113,6 +1185,7 @@ type ServerStatus_Test4() =
                 let tgNodes2 = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                 Assert.True(( tgNodes2.Length = 1 ))
                 Assert.True(( ( tgNodes2.[0] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -1124,9 +1197,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.DeleteTargetLURelation_001() =
         let portNo, dname = ServerStatus_Test1.Init "DeleteTargetLURelation_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -1160,6 +1235,7 @@ type ServerStatus_Test4() =
                     ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                     |> List.find ( fun itr -> itr.TargetGroupName = "xxyyzz" )
                 Assert.True(( ( tgNode2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -1171,11 +1247,13 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.DeleteTargetLURelation_003() =
         let portNo, dname = ServerStatus_Test1.Init "DeleteTargetLURelation_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
 //                do! ServerStatus_Test1.RespTargetDeviceProcs c [ tdid ]
 //                do! ServerStatus_Test1.RespLoadedTargetGroup c tdid []
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -1206,6 +1284,7 @@ type ServerStatus_Test4() =
                 let luNodes2 = ( tNodes2.[0] :> IConfigureNode ).GetChildNodes<IConfigureNode>()
                 Assert.True(( luNodes2.Length = 0 ))
 
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -1217,9 +1296,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.DeleteTargetLURelation_004() =
         let portNo, dname = ServerStatus_Test1.Init "DeleteTargetLURelation_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -1259,6 +1340,7 @@ type ServerStatus_Test4() =
                 let tgNodes2 = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                 Assert.True(( tgNodes2.Length = 1 ))
                 Assert.True(( ( tgNodes2.[0] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -1270,9 +1352,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddBlockDeviceLUNode_001() =
         let portNo, dname = ServerStatus_Test1.Init "AddBlockDeviceLUNode_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -1306,6 +1390,7 @@ type ServerStatus_Test4() =
                     ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                     |> List.find ( fun itr -> itr.TargetGroupName = "xxyyzz" )
                 Assert.True(( ( tgNode2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -1317,11 +1402,13 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddBlockDeviceLUNode_003() =
         let portNo, dname = ServerStatus_Test1.Init "AddBlockDeviceLUNode_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
 //                do! ServerStatus_Test1.RespTargetDeviceProcs c [ tdid ]
 //                do! ServerStatus_Test1.RespLoadedTargetGroup c tdid []
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -1352,6 +1439,7 @@ type ServerStatus_Test4() =
                 let tgNode2 = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                 Assert.True(( tgNode2.Length = 1 ))
                 Assert.True(( ( tgNode2.[0] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -1363,9 +1451,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddBlockDeviceLUNode_InTargetGroup_001() =
         let portNo, dname = ServerStatus_Test1.Init "AddBlockDeviceLUNode_InTargetGroup_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -1398,6 +1488,7 @@ type ServerStatus_Test4() =
                 Assert.True(( clist.Length = 1 ))
 
                 Assert.True(( ( tgNode2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -1409,11 +1500,13 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddBlockDeviceLUNode_InTargetGroup_003() =
         let portNo, dname = ServerStatus_Test1.Init "AddBlockDeviceLUNode_InTargetGroup_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
 //                do! ServerStatus_Test1.RespTargetDeviceProcs c [ tdid ]
 //                do! ServerStatus_Test1.RespLoadedTargetGroup c tdid []
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -1456,6 +1549,7 @@ type ServerStatus_Test4() =
                 | _ ->
                     Assert.Fail __LINE__
 
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -1467,9 +1561,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.UpdateBlockDeviceLUNode_001() =
         let portNo, dname = ServerStatus_Test1.Init "UpdateBlockDeviceLUNode_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -1512,6 +1608,7 @@ type ServerStatus_Test4() =
                     ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                     |> List.find ( fun itr -> itr.TargetGroupName = "xxyyzz" )
                 Assert.True(( ( tgNode2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -1523,6 +1620,7 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.UpdateBlockDeviceLUNode_003() =
         let portNo, dname = ServerStatus_Test1.Init "UpdateBlockDeviceLUNode_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1555,6 +1653,7 @@ type ServerStatus_Test4() =
                         }];
                     }
                 do! ServerStatus_Test1.RespAllTargetGroupConfig c tdid { TargetGroupID = tgid; Config = tgconf; }
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -1594,6 +1693,7 @@ type ServerStatus_Test4() =
                 let tgNode2 = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                 Assert.True(( tgNode2.Length = 1 ))
                 Assert.True(( ( tgNode2.[0] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -1605,9 +1705,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddDummyDeviceLUNode_001() =
         let portNo, dname = ServerStatus_Test1.Init "AddDummyDeviceLUNode_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -1639,6 +1741,7 @@ type ServerStatus_Test4() =
                     ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                     |> List.find ( fun itr -> itr.TargetGroupName = "xxyyzz" )
                 Assert.True(( ( tgNode2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -1650,9 +1753,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddDummyDeviceLUNode_003() =
         let portNo, dname = ServerStatus_Test1.Init "AddDummyDeviceLUNode_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -1681,6 +1786,7 @@ type ServerStatus_Test4() =
                 let tgNode2 = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                 Assert.True(( tgNode2.Length = 1 ))
                 Assert.True(( ( tgNode2.[0] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -1692,9 +1798,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.UpdateDummyDeviceLUNode_001() =
         let portNo, dname = ServerStatus_Test1.Init "UpdateDummyDeviceLUNode_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -1727,6 +1835,7 @@ type ServerStatus_Test4() =
                     ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                     |> List.find ( fun itr -> itr.TargetGroupName = "xxyyzz" )
                 Assert.True(( ( tgNode2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -1738,9 +1847,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.UpdateDummyDeviceLUNode_003() =
         let portNo, dname = ServerStatus_Test1.Init "UpdateDummyDeviceLUNode_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -1772,6 +1883,7 @@ type ServerStatus_Test4() =
                 let tgNode2 = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                 Assert.True(( tgNode2.Length = 1 ))
                 Assert.True(( ( tgNode2.[0] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -1783,9 +1895,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddPlainFileMediaNode_001() =
         let portNo, dname = ServerStatus_Test1.Init "AddPlainFileMediaNode_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -1816,6 +1930,7 @@ type ServerStatus_Test4() =
                     ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                     |> List.find ( fun itr -> itr.TargetGroupName = "xxyyzz" )
                 Assert.True(( ( tgNode2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -1827,9 +1942,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddPlainFileMediaNode_003() =
         let portNo, dname = ServerStatus_Test1.Init "AddPlainFileMediaNode_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -1857,6 +1974,7 @@ type ServerStatus_Test4() =
                 let tgNode2 = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                 Assert.True(( tgNode2.Length = 1 ))
                 Assert.True(( ( tgNode2.[0] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -1868,9 +1986,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.UpdatePlainFileMediaNode_001() =
         let portNo, dname = ServerStatus_Test1.Init "AddPlainFileMediaNode_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -1912,6 +2032,7 @@ type ServerStatus_Test4() =
                     ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                     |> List.find ( fun itr -> itr.TargetGroupName = "xxyyzz" )
                 Assert.True(( ( tgNode2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -1923,6 +2044,7 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.UpdatePlainFileMediaNode_003() =
         let portNo, dname = ServerStatus_Test1.Init "UpdatePlainFileMediaNode_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1952,6 +2074,7 @@ type ServerStatus_Test4() =
                         }];
                     }
                 do! ServerStatus_Test1.RespAllTargetGroupConfig c tdid { TargetGroupID = tgid; Config = tgconf; }
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -1991,6 +2114,7 @@ type ServerStatus_Test4() =
                 let tgNode2 = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                 Assert.True(( tgNode2.Length = 1 ))
                 Assert.True(( ( tgNode2.[0] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2002,9 +2126,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddMemBufferMediaNode_001() =
         let portNo, dname = ServerStatus_Test1.Init "AddMemBufferMediaNode_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2040,6 +2166,7 @@ type ServerStatus_Test4() =
                     ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                     |> List.find ( fun itr -> itr.TargetGroupName = "xxyyzz" )
                 Assert.True(( ( tgNode2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2051,9 +2178,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddMemBufferMediaNode_003() =
         let portNo, dname = ServerStatus_Test1.Init "AddMemBufferMediaNode_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2086,6 +2215,7 @@ type ServerStatus_Test4() =
                 let tgNode2 = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                 Assert.True(( tgNode2.Length = 1 ))
                 Assert.True(( ( tgNode2.[0] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2097,9 +2227,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.UpdateMemBufferMediaNode_001() =
         let portNo, dname = ServerStatus_Test1.Init "UpdateMemBufferMediaNode_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2148,6 +2280,7 @@ type ServerStatus_Test4() =
                     ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                     |> List.find ( fun itr -> itr.TargetGroupName = "xxyyzz" )
                 Assert.True(( ( tgNode2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2159,6 +2292,7 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.UpdateMemBufferMediaNode_003() =
         let portNo, dname = ServerStatus_Test1.Init "UpdateMemBufferMediaNode_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2193,6 +2327,7 @@ type ServerStatus_Test4() =
                         }];
                     }
                 do! ServerStatus_Test1.RespAllTargetGroupConfig c tdid { TargetGroupID = tgid; Config = tgconf; }
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2234,6 +2369,7 @@ type ServerStatus_Test4() =
                 let tgNode2 = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                 Assert.True(( tgNode2.Length = 1 ))
                 Assert.True(( ( tgNode2.[0] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2245,9 +2381,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddDummyMediaNode_001() =
         let portNo, dname = ServerStatus_Test1.Init "AddDummyMediaNode_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2278,6 +2416,7 @@ type ServerStatus_Test4() =
                     ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                     |> List.find ( fun itr -> itr.TargetGroupName = "xxyyzz" )
                 Assert.True(( ( tgNode2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2289,9 +2428,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddDummyMediaNode_003() =
         let portNo, dname = ServerStatus_Test1.Init "AddDummyMediaNode_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2319,6 +2460,7 @@ type ServerStatus_Test4() =
                 let tgNode2 = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                 Assert.True(( tgNode2.Length = 1 ))
                 Assert.True(( ( tgNode2.[0] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2330,9 +2472,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.UpdateDummyMediaNode_001() =
         let portNo, dname = ServerStatus_Test1.Init "UpdateDummyMediaNode_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2371,6 +2515,7 @@ type ServerStatus_Test4() =
                     ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                     |> List.find ( fun itr -> itr.TargetGroupName = "xxyyzz" )
                 Assert.True(( ( tgNode2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2382,6 +2527,7 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.UpdateDummyMediaNode_003() =
         let portNo, dname = ServerStatus_Test1.Init "UpdateDummyMediaNode_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2414,6 +2560,7 @@ type ServerStatus_Test4() =
                         }];
                     }
                 do! ServerStatus_Test1.RespAllTargetGroupConfig c tdid { TargetGroupID = tgid; Config = tgconf; }
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2450,6 +2597,7 @@ type ServerStatus_Test4() =
                 let tgNode2 = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                 Assert.True(( tgNode2.Length = 1 ))
                 Assert.True(( ( tgNode2.[0] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2461,9 +2609,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddDebugMediaNode_001() =
         let portNo, dname = ServerStatus_Test1.Init "AddDebugMediaNode_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2494,6 +2644,7 @@ type ServerStatus_Test4() =
                     ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                     |> List.find ( fun itr -> itr.TargetGroupName = "xxyyzz" )
                 Assert.True(( ( tgNode2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2505,9 +2656,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.AddDebugMediaNode_003() =
         let portNo, dname = ServerStatus_Test1.Init "AddDebugMediaNode_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2535,6 +2688,7 @@ type ServerStatus_Test4() =
                 let tgNode2 = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                 Assert.True(( tgNode2.Length = 1 ))
                 Assert.True(( ( tgNode2.[0] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2546,9 +2700,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.UpdateDebugMediaNode_001() =
         let portNo, dname = ServerStatus_Test1.Init "UpdateDebugMediaNode_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2589,6 +2745,7 @@ type ServerStatus_Test4() =
                     ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                     |> List.find ( fun itr -> itr.TargetGroupName = "xxyyzz" )
                 Assert.True(( ( tgNode2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2600,6 +2757,7 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.UpdateDebugMediaNode_003() =
         let portNo, dname = ServerStatus_Test1.Init "UpdateDebugMediaNode_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -2636,6 +2794,7 @@ type ServerStatus_Test4() =
                         }];
                     }
                 do! ServerStatus_Test1.RespAllTargetGroupConfig c tdid { TargetGroupID = tgid; Config = tgconf; }
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2672,6 +2831,7 @@ type ServerStatus_Test4() =
                 let tgNode2 = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
                 Assert.True(( tgNode2.Length = 1 ))
                 Assert.True(( ( tgNode2.[0] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2684,9 +2844,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.IdentifyTargetDeviceNode_001() =
         let portNo, dname = ServerStatus_Test1.Init "IdentifyTargetDeviceNode_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo false
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2703,6 +2865,7 @@ type ServerStatus_Test4() =
                 with
                 | :? EditError as x ->
                     Assert.True( x.Message.StartsWith "ERRMSG_FAILED_IDENT_TARGET_DEVICE" )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2714,9 +2877,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.IdentifyTargetDeviceNode_002() =
         let portNo, dname = ServerStatus_Test1.Init "IdentifyTargetDeviceNode_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2734,6 +2899,7 @@ type ServerStatus_Test4() =
                 let pc = PrivateCaller( ss )
                 let r = pc.Invoke( "IdentifyTargetDeviceNode", tgNodes.[0] )
                 Assert.True(( r = tdNodes.[0] ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2745,9 +2911,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.IdentifyTargetDeviceNode_003() =
         let portNo, dname = ServerStatus_Test1.Init "IdentifyTargetDeviceNode_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2767,6 +2935,7 @@ type ServerStatus_Test4() =
                 with
                 | :? EditError as x ->
                     Assert.True( x.Message.StartsWith "ERRMSG_FAILED_IDENT_TARGET_DEVICE" )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2778,9 +2947,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.GetAncestorTargetDevice_001() =
         let portNo, dname = ServerStatus_Test1.Init "GetAncestorTargetDevice_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2795,6 +2966,7 @@ type ServerStatus_Test4() =
                     ()
                 | _ ->
                     Assert.Fail __LINE__
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2806,9 +2978,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.GetAncestorTargetDevice_002() =
         let portNo, dname = ServerStatus_Test1.Init "GetAncestorTargetDevice_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2828,6 +3002,7 @@ type ServerStatus_Test4() =
                     Assert.Fail __LINE__
                 | Some( x ) ->
                     Assert.True(( x = tdnodes.[0] ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2839,9 +3014,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.GetAncestorTargetDevice_003() =
         let portNo, dname = ServerStatus_Test1.Init "GetAncestorTargetDevice_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2859,6 +3036,7 @@ type ServerStatus_Test4() =
                     Assert.Fail __LINE__
                 | Some( x ) ->
                     Assert.True(( x = tdnodes.[0] ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2870,9 +3048,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.IdentifyTargetGroupNode_001() =
         let portNo, dname = ServerStatus_Test1.Init "IdentifyTargetGroupNode_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo false
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2889,6 +3069,7 @@ type ServerStatus_Test4() =
                 with
                 | :? EditError as x ->
                     Assert.True( x.Message.StartsWith "ERRMSG_FAILED_IDENT_TARGET_GROUP" )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2900,9 +3081,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.IdentifyTargetGroupNode_002() =
         let portNo, dname = ServerStatus_Test1.Init "IdentifyTargetGroupNode_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2922,6 +3105,7 @@ type ServerStatus_Test4() =
                 let pc = PrivateCaller( ss )
                 let r = pc.Invoke( "IdentifyTargetGroupNode", tNodes.[0] )
                 Assert.True(( r = tgNodes.[0] ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2933,9 +3117,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.IdentifyTargetGroupNode_003() =
         let portNo, dname = ServerStatus_Test1.Init "IdentifyTargetGroupNode_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2957,6 +3143,7 @@ type ServerStatus_Test4() =
                 with
                 | :? EditError as x ->
                     Assert.True( x.Message.StartsWith "ERRMSG_FAILED_IDENT_TARGET_GROUP" )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2968,9 +3155,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.GetAncestorTargetGroup_001() =
         let portNo, dname = ServerStatus_Test1.Init "GetAncestorTargetGroup_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -2985,6 +3174,7 @@ type ServerStatus_Test4() =
                     ()
                 | _ ->
                     Assert.Fail __LINE__
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -2996,9 +3186,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.GetAncestorTargetGroup_002() =
         let portNo, dname = ServerStatus_Test1.Init "GetAncestorTargetGroup_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -3020,6 +3212,7 @@ type ServerStatus_Test4() =
                     Assert.Fail __LINE__
                 | Some( x ) ->
                     Assert.True(( x = tgnodes.[0] ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3031,9 +3224,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.GetAncestorTargetGroup_003() =
         let portNo, dname = ServerStatus_Test1.Init "GetAncestorTargetGroup_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -3053,6 +3248,7 @@ type ServerStatus_Test4() =
                     Assert.Fail __LINE__
                 | Some( x ) ->
                     Assert.True(( x = tgnodes.[0] ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3064,9 +3260,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.GetAncestorLogicalUnit_001() =
         let portNo, dname = ServerStatus_Test1.Init "GetAncestorLogicalUnit_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -3081,6 +3279,7 @@ type ServerStatus_Test4() =
                     ()
                 | _ ->
                     Assert.Fail __LINE__
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3092,9 +3291,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.GetAncestorLogicalUnit_002() =
         let portNo, dname = ServerStatus_Test1.Init "GetAncestorLogicalUnit_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -3116,6 +3317,7 @@ type ServerStatus_Test4() =
                     Assert.Fail __LINE__
                 | Some( x ) ->
                     Assert.True(( x = lunodes.[0] ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3127,10 +3329,12 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.GetAncestorLogicalUnit_003() =
         let portNo, dname = ServerStatus_Test1.Init "GetAncestorLogicalUnit_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
 //                do! ServerStatus_Test1.RespTargetDeviceProcs c []
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -3153,6 +3357,7 @@ type ServerStatus_Test4() =
                     Assert.Fail( __LINE__ )
                 | Some( x ) ->
                     Assert.True(( x = lunodes.[0] ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3164,9 +3369,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.TryCheckTargetDeviceUnloaded_001() =
         let portNo, dname = ServerStatus_Test1.Init "TryCheckTargetDeviceUnloaded_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo false
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -3188,6 +3395,7 @@ type ServerStatus_Test4() =
 
                 let! r = ss.TryCheckTargetDeviceUnloaded cc1 tdNodes2.[0]
                 Assert.True r
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3199,10 +3407,12 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.TryCheckTargetDeviceUnloaded_002() =
         let portNo, dname = ServerStatus_Test1.Init "TryCheckTargetDeviceUnloaded_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
                 do! ServerStatus_Test1.RespTargetDeviceProcs c []
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -3218,6 +3428,7 @@ type ServerStatus_Test4() =
 
                 let! r = ss.TryCheckTargetDeviceUnloaded cc1 tdNodes.[0]
                 Assert.True r
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3229,10 +3440,12 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.TryCheckTargetDeviceUnloaded_003() =
         let portNo, dname = ServerStatus_Test1.Init "TryCheckTargetDeviceUnloaded_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
                 do! ServerStatus_Test1.RespTargetDeviceProcs c [ tdid ]
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -3248,6 +3461,7 @@ type ServerStatus_Test4() =
 
                 let! r = ss.TryCheckTargetDeviceUnloaded cc1 tdNodes.[0]
                 Assert.False r
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3259,10 +3473,12 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.TryCheckTargetDeviceUnloaded_004() =
         let portNo, dname = ServerStatus_Test1.Init "TryCheckTargetDeviceUnloaded_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
                 do! ServerStatus_Test1.RespTargetDeviceProcs c [ tdid ]
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -3281,6 +3497,7 @@ type ServerStatus_Test4() =
 
                 let! r = ss.TryCheckTargetDeviceUnloaded cc1 npNodes.[0]
                 Assert.False r
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3292,9 +3509,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.CheckTargetDeviceUnloaded_001() =
         let portNo, dname = ServerStatus_Test1.Init "CheckTargetDeviceUnloaded_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo false
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -3315,6 +3534,7 @@ type ServerStatus_Test4() =
                 Assert.True(( ( tdNodes2.[0] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
 
                 do! ss.CheckTargetDeviceUnloaded cc1 tdNodes2.[0]
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3326,10 +3546,12 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.CheckTargetDeviceUnloaded_002() =
         let portNo, dname = ServerStatus_Test1.Init "CheckTargetDeviceUnloaded_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
                 do! ServerStatus_Test1.RespTargetDeviceProcs c [ tdid ]
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -3349,6 +3571,7 @@ type ServerStatus_Test4() =
                 with
                 | :? EditError as x ->
                     Assert.True(( x.Message.StartsWith "ERRMSG_TARGET_DEVICE_RUNNING" ))
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3360,9 +3583,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.TryCheckTargetGroupUnloaded_001() =
         let portNo, dname = ServerStatus_Test1.Init "TryCheckTargetGroupUnloaded_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -3381,6 +3606,7 @@ type ServerStatus_Test4() =
 
                 let! r = ss.TryCheckTargetGroupUnloaded cc1 tgNode
                 Assert.True r
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3392,10 +3618,12 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.TryCheckTargetGroupUnloaded_002() =
         let portNo, dname = ServerStatus_Test1.Init "TryCheckTargetGroupUnloaded_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
                 do! ServerStatus_Test1.RespTargetDeviceProcs c []
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -3413,6 +3641,7 @@ type ServerStatus_Test4() =
 
                 let! r = ss.TryCheckTargetGroupUnloaded cc1 tgNodes.[0]
                 Assert.True r
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3424,11 +3653,13 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.TryCheckTargetGroupUnloaded_003() =
         let portNo, dname = ServerStatus_Test1.Init "TryCheckTargetGroupUnloaded_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
                 do! ServerStatus_Test1.RespTargetDeviceProcs c [ tdid ]
                 do! ServerStatus_Test1.RespLoadedTargetGroup c tdid []
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -3446,6 +3677,7 @@ type ServerStatus_Test4() =
 
                 let! r = ss.TryCheckTargetGroupUnloaded cc1 tgNodes.[0]
                 Assert.True r
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3457,6 +3689,7 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.TryCheckTargetGroupUnloaded_004() =
         let portNo, dname = ServerStatus_Test1.Init "TryCheckTargetGroupUnloaded_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
@@ -3465,6 +3698,7 @@ type ServerStatus_Test4() =
                         ID = tgid;
                         Name = "targetgroup000";
                     }]
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -3482,6 +3716,7 @@ type ServerStatus_Test4() =
 
                 let! r = ss.TryCheckTargetGroupUnloaded cc1 tgNodes.[0]
                 Assert.False r
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3493,6 +3728,7 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.TryCheckTargetGroupUnloaded_005() =
         let portNo, dname = ServerStatus_Test1.Init "TryCheckTargetGroupUnloaded_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
@@ -3501,6 +3737,7 @@ type ServerStatus_Test4() =
                         ID = tgid;
                         Name = "targetgroup000";
                     }]
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -3521,6 +3758,7 @@ type ServerStatus_Test4() =
 
                 let! r = ss.TryCheckTargetGroupUnloaded cc1 tNodes.[0]
                 Assert.False r
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3532,9 +3770,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.CheckTargetGroupUnloaded_001() =
         let portNo, dname = ServerStatus_Test1.Init "CheckTargetGroupUnloaded_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -3553,6 +3793,7 @@ type ServerStatus_Test4() =
                 Assert.True( tgNode.Modified.IsModified )
 
                 do! ss.CheckTargetGroupUnloaded cc1 tgNode
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3564,9 +3805,11 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.CheckTargetGroupUnloaded_002() =
         let portNo, dname = ServerStatus_Test1.Init "CheckTargetGroupUnloaded_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -3584,6 +3827,7 @@ type ServerStatus_Test4() =
                 Assert.True( tgNode.Modified.IsModified )
 
                 do! ss.CheckTargetGroupUnloaded cc1 tgNode
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
@@ -3595,6 +3839,7 @@ type ServerStatus_Test4() =
     [<Fact>]
     member _.CheckTargetGroupUnloaded_003() =
         let portNo, dname = ServerStatus_Test1.Init "CheckTargetGroupUnloaded_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, _, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
@@ -3603,6 +3848,7 @@ type ServerStatus_Test4() =
                         ID = tgid;
                         Name = "targetgroup000";
                     }]
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -3623,6 +3869,7 @@ type ServerStatus_Test4() =
                         do! ss.CheckTargetGroupUnloaded cc1 tgNodes.[0]
                     } )
                 Assert.StartsWith( "ERRMSG_TARGET_GROUP_LOADED", e.Message )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel

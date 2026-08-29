@@ -13,6 +13,7 @@ namespace Haruka.Test.UT.Client
 
 open System
 open System.Net.Sockets
+open System.Threading
 
 open Xunit
 
@@ -66,6 +67,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_GetAllTraps_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetAllTraps_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -87,6 +89,7 @@ type CtrlConnection_Test4() =
                         })
                     )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
@@ -94,6 +97,7 @@ type CtrlConnection_Test4() =
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! r = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                 Assert.True(( r.Length = 0 ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -106,6 +110,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_GetAllTraps_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetAllTraps_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -115,18 +120,18 @@ type CtrlConnection_Test4() =
 
                 // send response
                 do! Functions.FramingSender c "aaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    ()
-
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                        ()
+                    })
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -139,6 +144,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_GetAllTraps_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetAllTraps_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -149,18 +155,19 @@ type CtrlConnection_Test4() =
                 // send response
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "wweerrtt555" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "wweerrtt555" ))
-
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                        ()
+                    })
+                Assert.StartsWith( "wweerrtt555" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -173,6 +180,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_GetAllTraps_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetAllTraps_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -187,18 +195,19 @@ type CtrlConnection_Test4() =
                         })
                     )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 99UL ) ( mediaidx_me.fromPrim 2u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
-
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -211,6 +220,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_GetAllTraps_005() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetAllTraps_005"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -225,18 +235,19 @@ type CtrlConnection_Test4() =
                         })
                     )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 22222u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
-
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -249,6 +260,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_GetAllTraps_006() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetAllTraps_006"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -273,18 +285,19 @@ type CtrlConnection_Test4() =
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "aaaaaaaaaaaaaaa" ))
-
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                        ()
+                    })
+                Assert.StartsWith( "aaaaaaaaaaaaaaa" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -297,6 +310,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_GetAllTraps_007() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetAllTraps_007"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -321,18 +335,18 @@ type CtrlConnection_Test4() =
                     } )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    ()
-
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                        ()
+                    })
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -345,6 +359,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_GetAllTraps_008() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetAllTraps_008"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -356,18 +371,19 @@ type CtrlConnection_Test4() =
                 do! MediaCtrlRes.U_Unexpected( "fffffffffffffffff" )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "fffffffffffffffff" ))
-
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                        ()
+                    })
+                Assert.StartsWith( "fffffffffffffffff" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -380,6 +396,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_GetAllTraps_009() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetAllTraps_009"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -393,18 +410,19 @@ type CtrlConnection_Test4() =
                     )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
-
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                        ()
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -417,6 +435,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_GetAllTraps_010() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetAllTraps_010"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -437,6 +456,7 @@ type CtrlConnection_Test4() =
                         })
                     )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
@@ -444,6 +464,7 @@ type CtrlConnection_Test4() =
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! r = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                 Assert.True(( r.Length = Constants.DEBUG_MEDIA_MAX_TRAP_COUNT ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -456,6 +477,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_AddTrap_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_AddTrap_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -479,6 +501,7 @@ type CtrlConnection_Test4() =
                         })
                     )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
@@ -487,6 +510,7 @@ type CtrlConnection_Test4() =
                 let at_event = MediaCtrlReq.U_TestUnitReady()
                 let at_action = MediaCtrlReq.U_Count( 1 )
                 do! cc1.DebugMedia_AddTrap tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) at_event at_action
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -499,6 +523,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_AddTrap_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_AddTrap_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -509,6 +534,7 @@ type CtrlConnection_Test4() =
                 // send response for MediaCtrlReq
                 do! MediaCtrlRes.U_Unexpected( "eeeeeeeeeeeeeeee" )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
@@ -516,11 +542,12 @@ type CtrlConnection_Test4() =
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let at_event = MediaCtrlReq.U_TestUnitReady()
                 let at_action = MediaCtrlReq.U_Count( 1 )
-                try
-                    do! cc1.DebugMedia_AddTrap tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) at_event at_action
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "eeeeeeeeeeeeeeee" ))
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.DebugMedia_AddTrap tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) at_event at_action
+                    })
+                Assert.StartsWith( "eeeeeeeeeeeeeeee" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -533,6 +560,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_AddTrap_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_AddTrap_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -545,6 +573,7 @@ type CtrlConnection_Test4() =
                         MediaCtrlRes.U_CounterValue( 0 )
                     )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
@@ -552,11 +581,12 @@ type CtrlConnection_Test4() =
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let at_event = MediaCtrlReq.U_TestUnitReady()
                 let at_action = MediaCtrlReq.U_Count( 1 )
-                try
-                    do! cc1.DebugMedia_AddTrap tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) at_event at_action
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "ERRMSG_UNEXPECTED_RESPONSE" ))
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.DebugMedia_AddTrap tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) at_event at_action
+                    })
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -569,6 +599,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_AddTrap_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_AddTrap_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -584,6 +615,7 @@ type CtrlConnection_Test4() =
                         })
                     )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
@@ -591,11 +623,12 @@ type CtrlConnection_Test4() =
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let at_event = MediaCtrlReq.U_TestUnitReady()
                 let at_action = MediaCtrlReq.U_Count( 1 )
-                try
-                    do! cc1.DebugMedia_AddTrap tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) at_event at_action
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "555555555555555555" ))
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.DebugMedia_AddTrap tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) at_event at_action
+                    })
+                Assert.StartsWith( "555555555555555555" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -608,6 +641,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_AddTrap_005() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_AddTrap_005"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -618,6 +652,7 @@ type CtrlConnection_Test4() =
                 // send response
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "888888888888888888888" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
@@ -625,11 +660,12 @@ type CtrlConnection_Test4() =
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let at_event = MediaCtrlReq.U_TestUnitReady()
                 let at_action = MediaCtrlReq.U_Count( 1 )
-                try
-                    do! cc1.DebugMedia_AddTrap tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) at_event at_action
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "888888888888888888888" ))
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.DebugMedia_AddTrap tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) at_event at_action
+                    })
+                Assert.StartsWith( "888888888888888888888" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -642,6 +678,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_ClearTraps_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_ClearTraps_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -660,12 +697,14 @@ type CtrlConnection_Test4() =
                         })
                     )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 do! cc1.DebugMedia_ClearTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -678,6 +717,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_ClearTraps_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_ClearTraps_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -693,16 +733,18 @@ type CtrlConnection_Test4() =
                         })
                     )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.DebugMedia_ClearTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "4444444444444444444444444" ))
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.DebugMedia_ClearTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                    })
+                Assert.StartsWith( "4444444444444444444444444" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -715,6 +757,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_ClearTraps_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_ClearTraps_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -727,16 +770,17 @@ type CtrlConnection_Test4() =
                         MediaCtrlRes.U_CounterValue( 0 )
                     )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.DebugMedia_ClearTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
-                with
-                | :? RequestError as x ->
-                    ()
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.DebugMedia_ClearTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                    })
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -749,6 +793,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_ClearTraps_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_ClearTraps_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -759,16 +804,18 @@ type CtrlConnection_Test4() =
                 // send response for MediaCtrlReq
                 do! MediaCtrlRes.U_Unexpected( "aaawwwrrrttt" )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.DebugMedia_ClearTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "aaawwwrrrttt" ))
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.DebugMedia_ClearTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                    })
+                Assert.StartsWith( "aaawwwrrrttt" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -781,6 +828,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_ClearTraps_005() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_ClearTraps_005"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -791,16 +839,18 @@ type CtrlConnection_Test4() =
                 // send response
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "gggthththththt" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    do! cc1.DebugMedia_ClearTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "gggthththththt" ))
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.DebugMedia_ClearTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                    })
+                Assert.StartsWith( "gggthththththt" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -813,6 +863,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_GetCounterValue_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetCounterValue_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -832,6 +883,7 @@ type CtrlConnection_Test4() =
                         MediaCtrlRes.U_CounterValue( 88 )
                     )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
@@ -839,6 +891,7 @@ type CtrlConnection_Test4() =
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 let! v = cc1.DebugMedia_GetCounterValue tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 99
                 Assert.True(( v = 88 ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -851,6 +904,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_GetCounterValue_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetCounterValue_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -866,18 +920,18 @@ type CtrlConnection_Test4() =
                         })
                     )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.DebugMedia_GetCounterValue tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 99
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    ()
-                
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.DebugMedia_GetCounterValue tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 99
+                        ()
+                    })
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -890,6 +944,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_GetCounterValue_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetCounterValue_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -900,18 +955,19 @@ type CtrlConnection_Test4() =
                 // send response for MediaCtrlReq
                 do! MediaCtrlRes.U_Unexpected( "aawqqeerrr" )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.DebugMedia_GetCounterValue tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 99
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "aawqqeerrr" ))
-                
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.DebugMedia_GetCounterValue tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 99
+                        ()
+                    })
+                Assert.StartsWith( "aawqqeerrr" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -924,6 +980,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_GetCounterValue_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetCounterValue_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -934,18 +991,19 @@ type CtrlConnection_Test4() =
                 // send response
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "gggthththththt" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! _ = cc1.DebugMedia_GetCounterValue tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 99
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "gggthththththt" ))
-                
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.DebugMedia_GetCounterValue tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 99
+                        ()
+                    })
+                Assert.StartsWith( "gggthththththt" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -958,6 +1016,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_GetTaskWaitStatus_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetTaskWaitStatus_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -985,6 +1044,7 @@ type CtrlConnection_Test4() =
                         })
                     )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
@@ -993,6 +1053,7 @@ type CtrlConnection_Test4() =
                 let! v = cc1.DebugMedia_GetTaskWaitStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
                 Assert.True(( v.Length = 1 ))
                 Assert.True(( v.[0].ITT = itt_me.fromPrim 99u ))
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1005,6 +1066,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_GetTaskWaitStatus_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetTaskWaitStatus_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1027,17 +1089,18 @@ type CtrlConnection_Test4() =
                         })
                     )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! v = cc1.DebugMedia_GetTaskWaitStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    ()
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! v = cc1.DebugMedia_GetTaskWaitStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                        ()
+                    })
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1050,6 +1113,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_GetTaskWaitStatus_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetTaskWaitStatus_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1067,17 +1131,19 @@ type CtrlConnection_Test4() =
                 // send response for MediaCtrlReq
                 do! MediaCtrlRes.U_Unexpected( "aawqqeerrr" )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! v = cc1.DebugMedia_GetTaskWaitStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "aawqqeerrr" ))
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! v = cc1.DebugMedia_GetTaskWaitStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                        ()
+                    })
+                Assert.StartsWith( "aawqqeerrr" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1090,6 +1156,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_GetTaskWaitStatus_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetTaskWaitStatus_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1107,17 +1174,19 @@ type CtrlConnection_Test4() =
                 // send response
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "gggthththththt" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let! v = cc1.DebugMedia_GetTaskWaitStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "gggthththththt" ))
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! v = cc1.DebugMedia_GetTaskWaitStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                        ()
+                    })
+                Assert.StartsWith( "gggthththththt" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1130,6 +1199,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_Resume_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_Resume_001"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1153,12 +1223,14 @@ type CtrlConnection_Test4() =
                         })
                     )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
                 do! cc1.DebugMedia_Resume tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) ( tsih_me.fromPrim 88us ) ( itt_me.fromPrim 98u )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1171,6 +1243,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_Release_002() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_Resume_002"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1194,18 +1267,20 @@ type CtrlConnection_Test4() =
                         })
                     )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let itn = ITNexus( "iname", isid_me.zero, "tname", tpgt_me.zero )
-                    do! cc1.DebugMedia_Resume tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) ( tsih_me.fromPrim 88us ) ( itt_me.fromPrim 98u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "444444444444444444444444" ))
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let itn = ITNexus( "iname", isid_me.zero, "tname", tpgt_me.zero )
+                        do! cc1.DebugMedia_Resume tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) ( tsih_me.fromPrim 88us ) ( itt_me.fromPrim 98u )
+                        ()
+                    })
+                Assert.StartsWith( "444444444444444444444444" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1218,6 +1293,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_Release_003() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_Resume_003"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1241,18 +1317,18 @@ type CtrlConnection_Test4() =
                         })
                     )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let itn = ITNexus( "iname", isid_me.zero, "tname", tpgt_me.zero )
-                    do! cc1.DebugMedia_Resume tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) ( tsih_me.fromPrim 88us ) ( itt_me.fromPrim 98u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    ()
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let itn = ITNexus( "iname", isid_me.zero, "tname", tpgt_me.zero )
+                        do! cc1.DebugMedia_Resume tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) ( tsih_me.fromPrim 88us ) ( itt_me.fromPrim 98u )
+                    })
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1265,6 +1341,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_Release_004() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_Resume_004"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1283,18 +1360,19 @@ type CtrlConnection_Test4() =
                 // send response for MediaCtrlReq
                 do! MediaCtrlRes.U_Unexpected( "aawqqeerrr" )
                     |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let itn = ITNexus( "iname", isid_me.zero, "tname", tpgt_me.zero )
-                    do! cc1.DebugMedia_Resume tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) ( tsih_me.fromPrim 88us ) ( itt_me.fromPrim 98u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "aawqqeerrr" ))
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let itn = ITNexus( "iname", isid_me.zero, "tname", tpgt_me.zero )
+                        do! cc1.DebugMedia_Resume tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) ( tsih_me.fromPrim 88us ) ( itt_me.fromPrim 98u )
+                    })
+                Assert.StartsWith( "aawqqeerrr" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]
@@ -1307,6 +1385,7 @@ type CtrlConnection_Test4() =
     [<Fact>]
     member _.DebugMedia_Release_005() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_Resume_005"
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
@@ -1325,18 +1404,19 @@ type CtrlConnection_Test4() =
                 // send response
                 do! TargetDeviceCtrlRes.T_Response.U_UnexpectedError( "gggthththththt" )
                     |> CtrlConnection_Test1.SendTargetDeviceCtrlResponse c tdid
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
             fun () -> task {
                 use! cc1 = CtrlConnection.Connect st "::1" portNo false
-                try
-                    let itn = ITNexus( "iname", isid_me.zero, "tname", tpgt_me.zero )
-                    do! cc1.DebugMedia_Resume tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) ( tsih_me.fromPrim 88us ) ( itt_me.fromPrim 98u )
-                    Assert.Fail __LINE__
-                with
-                | :? RequestError as x ->
-                    Assert.True(( x.Message.StartsWith "gggthththththt" ))
+                let! e =
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let itn = ITNexus( "iname", isid_me.zero, "tname", tpgt_me.zero )
+                        do! cc1.DebugMedia_Resume tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) ( tsih_me.fromPrim 88us ) ( itt_me.fromPrim 98u )
+                    })
+                Assert.StartsWith( "gggthththththt" , e.Message )
+                br.SignalAndWait()
                 k.NoticeTerminate()
             }
         |]

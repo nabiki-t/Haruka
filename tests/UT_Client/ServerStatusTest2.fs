@@ -14,6 +14,7 @@ namespace Haruka.Test.UT.Client
 open System
 open System.IO
 open System.Collections.Concurrent
+open System.Threading
 open System.Threading.Tasks
 
 open Xunit
@@ -36,10 +37,12 @@ type ServerStatus_Test2() =
     [<Fact>]
     member _.Publish_001() =
         let portNo, dname = ServerStatus_Test1.Init "Publish_001"
+        use br = new Barrier( 2 )
 
         [|
             fun () -> task {
                 let! sl, c, sessID, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo false
+                br.SignalAndWait()
                 c.Dispose()
                 sl.Stop()
             };
@@ -56,6 +59,7 @@ type ServerStatus_Test2() =
                 with
                 | :? ConfigurationError as x ->
                     Assert.StartsWith( "ERRMSG_VALIDATION_FAILED", x.Message )
+                br.SignalAndWait()
             }
         |]
         |> Functions.RunTaskInPallalel
