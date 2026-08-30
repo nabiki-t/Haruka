@@ -190,7 +190,7 @@ type VHDXFileMedia
                 HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "VHDXFileMedia.Read." ) )
 
             task {
-                do! m_Lock.RLock()
+                do! m_Lock.WLock()
                 try
                     let sw = new Stopwatch()
                     sw.Start()
@@ -291,7 +291,7 @@ type VHDXFileMedia
 
         // ------------------------------------------------------------------------
         // Implementation of Write method
-        override _.Write
+        override this.Write
             ( initiatorTaskTag : ITT_T )
             ( source : CommandSourceInfo )
             ( argLBA : BLKCNT64_T )
@@ -321,39 +321,56 @@ type VHDXFileMedia
                     let curFA = allFileAccessors.[ lastIdx ]
                     let curStr = allStructures.[ lastIdx ]
 
-                    let blockSize_u64 = Blocksize.toUInt64 m_BlockSize
-                    let writeStartLBA = argLBA + blkcnt_me.ofUInt64 ( offset / blockSize_u64 )
                     let writeBytesLength_u64 = uint64 data.Count
-                    let writeBlockLength = ( writeBytesLength_u64 + blockSize_u64 - 1UL ) / blockSize_u64
-                    let mediaBlockCount = m_VirtualDiskSize / blockSize_u64
+                    let blockSize_u64 = Blocksize.toUInt64 m_BlockSize
+                    let writeStartBytePos = uint64 argLBA * blockSize_u64 + offset
+                    let writeStartBlockPos = writeStartBytePos / blockSize_u64 |> blkcnt_me.ofUInt64
+                    let writeEndBytePos = writeStartBytePos + writeBytesLength_u64
+                    let writeEndBlockPos = ( writeEndBytePos + blockSize_u64 - 1UL ) / blockSize_u64 |> blkcnt_me.ofUInt64
+                    let writeBlockLength = writeEndBlockPos - writeStartBlockPos
 
                     // Check specified range is in media file.
-                    if Functions.CheckAccessRange argLBA ( writeBytesLength_u64 + offset ) mediaBlockCount blockSize_u64 |> not then
+                    if VHDXFileMedia.CheckWriteRange m_VirtualDiskSize blockSize_u64 argLBA offset writeBytesLength_u64 then
                         let errmsg = 
                             sprintf
-                                "Out of media capacity. BlockSize=%d, TotalBlockCount=%d, RequestedLBA=%d, RequestedOffset=%d, RequestedBytesCount=%d"
-                                blockSize_u64 mediaBlockCount argLBA offset writeBytesLength_u64
+                                "Out of media capacity. BlockSize=%d, VirtualDiskSize=%d, RequestedLBA=%d, RequestedOffset=%d, RequestedBytesCount=%d"
+                                blockSize_u64 m_VirtualDiskSize argLBA offset writeBytesLength_u64
                         HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE, errmsg )
                         raise <| SCSIACAException ( source, true, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE, errmsg )
 
-
-                    if this.CheckAlreadyAllocated curStr writeStartLBA ( blkcnt_me.ofUInt64 writeBlockLength ) then
-                        // write data
-                        ()
-                    else
-                        // Release reader lock and aquire writer lock for updating the VHDX structures data.
+                    if this.CheckAlreadyAllocated curStr writeStartBlockPos writeBlockLength |> not then
+                        // the payload blocks to be write should be allocate.
                         do! m_Lock.Release()
                         do! m_Lock.WLock()
 
-                        // Allocate
-                        // write data
+                        let struct( updatedBAT4K, requiredFileSize ) =
+                            VhdxWriter.AllocatePayloadBlock curStr writeStartBlockPos writeBlockLength
+
+                        let updatedSB4K =
+                            if curStr.VDI.HasParent then
+                                VhdxWriter.UpdateSectorBitmap curStr updatedBAT4K writeStartBlockPos writeBlockLength
+                                |> Seq.map ( fun itr -> struct( itr.Key, itr.Value ) )
+                                |> Seq.toArray
+                            else
+                                Array.empty
+
+                        do! m_LogManager.UpdateBATEntries curStr ( updatedBAT4K |> Seq.toArray ) requiredFileSize
+                        do! m_LogManager.UpdateGenericStructesData curStr updatedSB4K
+
+                    // Write the data to allocated payload blocks.
+                    do! VHDXFileMedia.WriteData curFA curStr writeStartBytePos data
+
+                    sw.Stop()
+                    let d = DateTime.UtcNow
+                    m_WrittenBytesCounter.AddCount d ( int64 data.Count )
+                    m_WriteTickCounter.AddCount d sw.ElapsedTicks
 
                     do! m_Lock.Release()
                 with
                 | _ ->
                     do! m_Lock.Release()
 
-                return 0
+                return data.Count
             }
 
         // ------------------------------------------------------------------------
@@ -496,3 +513,31 @@ type VHDXFileMedia
                 // all range had been allocated
                 true
         loop lba
+
+    static member private CheckWriteRange ( mediaSize : uint64 ) ( blockSize : uint64 ) ( lba : BLKCNT64_T ) ( offset : uint64 ) ( len : uint64 ) : bool =
+        let posa = uint64 lba * blockSize
+        let posb = posa + offset
+        let posc = posb + len
+        ( posb <= mediaSize && posa < posb && offset < posb && posc <= mediaSize && posb < posc && len < posc )
+
+    static member private WriteData ( vhdxfs : FileAccessor ) ( structures : VhdxStructures ) ( pos : uint64 ) ( data : ArraySegment<byte> ) : Task =
+        task {
+
+            let blockSize = structures.VDI.LogicalSectorSize |> Blocksize.toUInt64
+            let writeBytesLength_u64 = uint64 data.Count
+
+            // Write only the requested bytes. No payload-block-sized buffer is needed.
+            let mutable bytesWritten = 0UL
+            while bytesWritten < writeBytesLength_u64 do
+                let currentByte = pos + bytesWritten
+                let struct( currentLBA, offsetInSector ) = Math.DivRem( currentByte, blockSize )
+                let struct( payloadIndex, sectorIndex ) = VhdxCommons.LBAtoPayloadBlockIndex ( blkcnt_me.ofUInt64 currentLBA ) structures
+                let payload = structures.BAT.Payloads.[ int32 payloadIndex ]
+
+                let offsetInPayload = ( uint64 sectorIndex * blockSize ) + offsetInSector
+                let bytesToWrite = min ( uint64 structures.VDI.PayloadBlockSize - offsetInPayload ) ( writeBytesLength_u64 - bytesWritten )
+                let fileOffset = payload.FileOffset + offsetInPayload
+                let sourceOffset = data.Offset + int32 bytesWritten
+                do! vhdxfs.Write fileOffset ( ArraySegment( data.Array, sourceOffset, int bytesToWrite ) )
+                bytesWritten <- bytesWritten + bytesToWrite
+        }
