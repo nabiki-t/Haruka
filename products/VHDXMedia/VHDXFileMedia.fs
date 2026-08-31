@@ -399,6 +399,10 @@ type VHDXFileMedia
         // Media control request.
         override _.MediaControl ( request : MediaCtrlReq.T_Request ) : Task<MediaCtrlRes.T_Response> =
             task {
+                let loginfo = struct( m_ObjID, ValueNone, ValueNone, ValueSome m_LUN )
+                if HLogger.IsVerbose then
+                    HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "VHDXFileMedia.MediaControl." ) )
+
                 return MediaCtrlRes.U_Unexpected( "Plain file media does not support media controls." )
             }
 

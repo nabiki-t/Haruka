@@ -390,6 +390,8 @@ type StatusMaster(
                     new DummyMedia( argKiller, lun ) :> IMedia
                 | TargetGroupConf.T_MEDIA.U_DebugMedia( x ) ->
                     new DebugMedia( this, x, argKiller, lun, multiplicity ) :> IMedia
+                | TargetGroupConf.T_MEDIA.U_VHDXFile( x ) ->
+                    new VHDXFileMedia( this, x, argKiller, lun, multiplicity ) :> IMedia
             r.Initialize()
             r
 

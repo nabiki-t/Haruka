@@ -456,6 +456,40 @@ type CtrlConnection_Test4() =
         GlbFunc.DeleteDir dname
 
     [<Fact>]
+    member _.DebugMedia_GetAllTraps_011() =
+        let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetAllTraps_011"
+        [|
+            fun () -> task {
+                let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
+
+                // receive MediaCtrlReq request
+                let! _ = CtrlConnection_Test4.ReceiveMediaControlRequest c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) sessID 
+
+                // send response for MediaCtrlReq
+                do! MediaCtrlRes.U_VHDX( MediaCtrlRes.U_VhdxAllSnapshotNames( { FileName=[ "" ] } ) )
+                    |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+
+                GlbFunc.ClosePorts [| c |]
+                sl.Stop()
+            };
+            fun () -> task {
+                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e = 
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.DebugMedia_GetAllTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                        ()
+                    } )
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE", e.Message )
+                k.NoticeTerminate()
+            }
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        GlbFunc.DeleteDir dname
+
+    [<Fact>]
     member _.DebugMedia_AddTrap_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_AddTrap_001"
         [|
@@ -644,6 +678,40 @@ type CtrlConnection_Test4() =
         GlbFunc.DeleteDir dname
 
     [<Fact>]
+    member _.DebugMedia_AddTrap_006() =
+        let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_AddTrap_006"
+        [|
+            fun () -> task {
+                let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
+
+                // receive MediaCtrlReq request
+                let! _ = CtrlConnection_Test4.ReceiveMediaControlRequest c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) sessID 
+
+                // send response for MediaCtrlReq
+                do! MediaCtrlRes.U_VHDX( MediaCtrlRes.U_VhdxAllSnapshotNames( { FileName=[ "" ] } ) )
+                    |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                GlbFunc.ClosePorts [| c |]
+                sl.Stop()
+            };
+            fun () -> task {
+                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let at_event = MediaCtrlReq.U_TestUnitReady()
+                let at_action = MediaCtrlReq.U_Count( 1 )
+                let! e = 
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.DebugMedia_AddTrap tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) at_event at_action
+                    } )
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE", e.Message )
+                k.NoticeTerminate()
+            }
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        GlbFunc.DeleteDir dname
+
+    [<Fact>]
     member _.DebugMedia_ClearTraps_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_ClearTraps_001"
         [|
@@ -817,6 +885,38 @@ type CtrlConnection_Test4() =
         GlbFunc.DeleteDir dname
 
     [<Fact>]
+    member _.DebugMedia_ClearTraps_006() =
+        let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_ClearTraps_006"
+        [|
+            fun () -> task {
+                let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
+
+                // receive MediaCtrlReq request
+                let! _ = CtrlConnection_Test4.ReceiveMediaControlRequest c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) sessID 
+
+                // send response for MediaCtrlReq
+                do! MediaCtrlRes.U_VHDX( MediaCtrlRes.U_VhdxAllSnapshotNames( { FileName=[ "" ] } ) )
+                    |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                GlbFunc.ClosePorts [| c |]
+                sl.Stop()
+            };
+            fun () -> task {
+                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e = 
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.DebugMedia_ClearTraps tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                    } )
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE", e.Message )
+                k.NoticeTerminate()
+            }
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        GlbFunc.DeleteDir dname
+
+    [<Fact>]
     member _.DebugMedia_GetCounterValue_001() =
         let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetCounterValue_001"
         [|
@@ -954,6 +1054,39 @@ type CtrlConnection_Test4() =
                 | :? RequestError as x ->
                     Assert.True(( x.Message.StartsWith "gggthththththt" ))
                 
+                k.NoticeTerminate()
+            }
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        GlbFunc.DeleteDir dname
+
+    [<Fact>]
+    member _.DebugMedia_GetCounterValue_005() =
+        let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetCounterValue_005"
+        [|
+            fun () -> task {
+                let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
+
+                // receive MediaCtrlReq request
+                let! _ = CtrlConnection_Test4.ReceiveMediaControlRequest c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) sessID 
+
+                // send response for MediaCtrlReq
+                do! MediaCtrlRes.U_VHDX( MediaCtrlRes.U_VhdxAllSnapshotNames( { FileName=[ "" ] } ) )
+                    |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                GlbFunc.ClosePorts [| c |]
+                sl.Stop()
+            };
+            fun () -> task {
+                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e = 
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! _ = cc1.DebugMedia_GetCounterValue tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 99
+                        ()
+                    } )
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE", e.Message )
                 k.NoticeTerminate()
             }
         |]
@@ -1134,6 +1267,48 @@ type CtrlConnection_Test4() =
                 with
                 | :? RequestError as x ->
                     Assert.True(( x.Message.StartsWith "gggthththththt" ))
+                k.NoticeTerminate()
+            }
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        GlbFunc.DeleteDir dname
+
+    [<Fact>]
+    member _.DebugMedia_GetTaskWaitStatus_005() =
+        let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_GetTaskWaitStatus_005"
+        [|
+            fun () -> task {
+                let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
+
+                // receive MediaCtrlReq request
+                let! reqData = CtrlConnection_Test4.ReceiveMediaControlRequest c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) sessID 
+                match reqData with
+                | MediaCtrlReq.U_Debug( x ) ->
+                    match x with
+                    | MediaCtrlReq.U_GetTaskWaitStatus() ->
+                        ()
+                    | _ ->
+                        Assert.Fail __LINE__
+                | _ ->
+                    Assert.Fail __LINE__
+
+                // send response for MediaCtrlReq
+                do! MediaCtrlRes.U_VHDX( MediaCtrlRes.U_VhdxAllSnapshotNames( { FileName=[ "" ] } ) )
+                    |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                GlbFunc.ClosePorts [| c |]
+                sl.Stop()
+            };
+            fun () -> task {
+                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e = 
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        let! v = cc1.DebugMedia_GetTaskWaitStatus tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u )
+                        ()
+                    } )
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE", e.Message )
                 k.NoticeTerminate()
             }
         |]
@@ -1363,6 +1538,48 @@ type CtrlConnection_Test4() =
                 with
                 | :? RequestError as x ->
                     Assert.True(( x.Message.StartsWith "gggthththththt" ))
+                k.NoticeTerminate()
+            }
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        GlbFunc.DeleteDir dname        
+
+    [<Fact>]
+    member _.DebugMedia_Release_006() =
+        let portNo, dname, k, st, tdid = CtrlConnection_Test1.Init "DebugMedia_Release_006"
+        [|
+            fun () -> task {
+                let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
+
+                // receive MediaCtrlReq request
+                let! reqData = CtrlConnection_Test4.ReceiveMediaControlRequest c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) sessID 
+                match reqData with
+                | MediaCtrlReq.U_Debug( x ) ->
+                    match x with
+                    | MediaCtrlReq.U_Resume( t ) ->
+                        Assert.True(( t.TSIH = tsih_me.fromPrim 88us ))
+                        Assert.True(( t.ITT = itt_me.fromPrim 98u ))
+                    | _ ->
+                        Assert.Fail __LINE__
+                | _ ->
+                    Assert.Fail __LINE__
+
+                // send response for MediaCtrlReq
+                do! MediaCtrlRes.U_VHDX( MediaCtrlRes.U_VhdxAllSnapshotNames( { FileName=[ "" ] } ) )
+                    |> CtrlConnection_Test4.SendMediaControlResponse c tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) 
+                GlbFunc.ClosePorts [| c |]
+                sl.Stop()
+            };
+            fun () -> task {
+                let! cc1 = CtrlConnection.Connect st "::1" portNo false
+                let! e = 
+                    Assert.ThrowsAsync<RequestError>( fun () -> task {
+                        do! cc1.DebugMedia_Resume tdid ( lun_me.fromPrim 1UL ) ( mediaidx_me.fromPrim 2u ) ( tsih_me.fromPrim 88us ) ( itt_me.fromPrim 98u )
+                    } )
+                Assert.StartsWith( "ERRMSG_UNEXPECTED_RESPONSE", e.Message )
                 k.NoticeTerminate()
             }
         |]

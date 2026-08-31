@@ -1760,9 +1760,64 @@ type ConfigurationMaster_Test () =
         GlbFunc.DeleteFile targetGroupConfName2
         GlbFunc.DeleteDir pDirName
 
-    [<Fact>]
-    member this.VerifyConfig_021() =
-        let pDirName = this.GetTestDirName "VerifyConfig_021"
+    static member m_VerifyConfig_DuplicateMediaID_001_data : obj[][] = [|
+        [|
+            TargetGroupConf.U_PlainFile( {
+                IdentNumber = mediaidx_me.fromPrim 1u;
+                MediaName = "";
+                FileName = "";
+                BlockSize = Blocksize.BS_512;
+                WriteProtect = false;
+            } )
+        |];
+        [|
+            TargetGroupConf.U_MemBuffer( {
+                IdentNumber = mediaidx_me.fromPrim 1u;
+                MediaName = "";
+                BytesCount = 65536UL;
+                BlockSize = Blocksize.BS_512;
+            } )
+        |];
+        [|
+            TargetGroupConf.U_DummyMedia( {
+                IdentNumber = mediaidx_me.fromPrim 1u;
+                MediaName = "";
+            } )
+        |];
+        [|
+            TargetGroupConf.U_DebugMedia( {
+                IdentNumber = mediaidx_me.fromPrim 1u;
+                MediaName = "";
+                Peripheral = TargetGroupConf.U_DummyMedia( {
+                    IdentNumber = mediaidx_me.fromPrim 2u;
+                    MediaName = "";
+                } );
+            } )
+        |];
+        [|
+            TargetGroupConf.U_DebugMedia( {
+                IdentNumber = mediaidx_me.fromPrim 2u;
+                MediaName = "";
+                Peripheral = TargetGroupConf.U_DummyMedia( {
+                    IdentNumber = mediaidx_me.fromPrim 1u;
+                    MediaName = "";
+                } );
+            } )
+        |];
+        [|
+            TargetGroupConf.U_VHDXFile( {
+                IdentNumber = mediaidx_me.fromPrim 1u;
+                MediaName = "";
+                FileName = "aaa";
+                WriteProtect = false;
+            } )
+        |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_VerifyConfig_DuplicateMediaID_001_data" )>]
+    member this.VerifyConfig_DuplicateMediaID_001( conf : TargetGroupConf.T_MEDIA ) =
+        let pDirName = this.GetTestDirName "VerifyConfig_DuplicateMediaID_001"
         GlbFunc.CreateDir pDirName |> ignore
 
         let targetDeviceConfName = Functions.AppendPathName pDirName Constants.TARGET_DEVICE_CONF_FILE_NAME
@@ -1797,9 +1852,12 @@ type ConfigurationMaster_Test () =
                     WorkPath = "c:\\";
                     MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.U_BlockDevice( {
-                        Peripheral = TargetGroupConf.U_DummyMedia( {
+                        Peripheral = TargetGroupConf.U_PlainFile( {
                             IdentNumber = mediaidx_me.fromPrim 1u;
                             MediaName = "";
+                            FileName = "";
+                            BlockSize = Blocksize.BS_512;
+                            WriteProtect = false;
                         })
                         OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
                     } );
@@ -1810,10 +1868,7 @@ type ConfigurationMaster_Test () =
                     WorkPath = "c:\\";
                     MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
                     LUDevice = TargetGroupConf.U_BlockDevice( {
-                        Peripheral = TargetGroupConf.U_DummyMedia({
-                            IdentNumber = mediaidx_me.fromPrim 1u;
-                            MediaName = "";
-                        })
+                        Peripheral = conf;
                         OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
                     } );
                 }

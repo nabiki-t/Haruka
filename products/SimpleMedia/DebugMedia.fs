@@ -293,6 +293,10 @@ type DebugMedia
         // Media control request.
         override this.MediaControl ( request : MediaCtrlReq.T_Request ) : Task<MediaCtrlRes.T_Response> =
             task {
+                if HLogger.IsVerbose then
+                    let loginfo = struct( m_ObjID, ValueNone, ValueNone, ValueSome m_LUN )
+                    HLogger.Trace( LogID.V_INTERFACE_CALLED, fun g -> g.Gen1( loginfo, "DebugMedia.MediaControl" ) )
+
                 match request with
                 | MediaCtrlReq.U_Debug( x ) ->
                     let result =
@@ -310,6 +314,8 @@ type DebugMedia
                         | MediaCtrlReq.U_Resume( y ) ->
                             this.MediaControl_Resume y
                     return MediaCtrlRes.U_Debug result
+                | _ ->
+                    return MediaCtrlRes.U_Unexpected( "Unexpected media control request was received." )
             }
 
         // ------------------------------------------------------------------------
@@ -425,6 +431,9 @@ type DebugMedia
     ///  Response data that will be returned to client.
     /// </returns>
     member private _.MediaControl_GetAllTraps () : MediaCtrlRes.T_Debug =
+        let loginfo = struct( m_ObjID, ValueNone, ValueNone, ValueSome m_LUN )
+        HLogger.Trace( LogID.I_MEDIA_CTRL_REQUESTED, fun g -> g.Gen1( loginfo, "GetAllTraps" ) )
+
         MediaCtrlRes.U_AllTraps( {
             Trap =
                 m_Action.obj.Values
@@ -442,6 +451,9 @@ type DebugMedia
     ///  Response data that will be returned to client.
     /// </returns>
     member private _.MediaControl_AddTrap ( y : MediaCtrlReq.T_AddTrap ) : MediaCtrlRes.T_Debug =
+        let loginfo = struct( m_ObjID, ValueNone, ValueNone, ValueSome m_LUN )
+        HLogger.Trace( LogID.I_MEDIA_CTRL_REQUESTED, fun g -> g.Gen1( loginfo, "AddTrap" ) )
+
         m_Action.Update ( fun old ->
             if old.Count >= Constants.DEBUG_MEDIA_MAX_TRAP_COUNT then
                 let result2 =
@@ -483,6 +495,9 @@ type DebugMedia
     ///  Response data that will be returned to client.
     /// </returns>
     member private _.MediaControl_ClearTraps () : MediaCtrlRes.T_Debug =
+        let loginfo = struct( m_ObjID, ValueNone, ValueNone, ValueSome m_LUN )
+        HLogger.Trace( LogID.I_MEDIA_CTRL_REQUESTED, fun g -> g.Gen1( loginfo, "ClearTraps" ) )
+
         m_Action.Update ( fun _ -> Map< int32, DebugRegist > [||] ) |> ignore
         MediaCtrlRes.U_ClearTrapsResult( {
             Result = true;
@@ -503,6 +518,9 @@ type DebugMedia
     ///  If there are multiple counters that match the index value, the first counter value is returned.
     /// </remarks>
     member private _.MediaControl_GetCounterValue ( index : int32 ) : MediaCtrlRes.T_Debug =
+        let loginfo = struct( m_ObjID, ValueNone, ValueNone, ValueSome m_LUN )
+        HLogger.Trace( LogID.I_MEDIA_CTRL_REQUESTED, fun g -> g.Gen1( loginfo, "GetCounterValue" ) )
+
         let act = m_Action.obj
         let r =
             act.Values
@@ -527,6 +545,9 @@ type DebugMedia
     ///  If there are too many waiting tasks, the excess will not be returned.
     /// </returns>
     member private _.MediaControl_GetTaskWaitStatus () : MediaCtrlRes.T_Debug =
+        let loginfo = struct( m_ObjID, ValueNone, ValueNone, ValueSome m_LUN )
+        HLogger.Trace( LogID.I_MEDIA_CTRL_REQUESTED, fun g -> g.Gen1( loginfo, "GetTaskWaitStatus" ) )
+
         MediaCtrlRes.U_AllTaskWaitStatus( {
             TaskWaitStatus = 
                 m_TaskWaiter.obj
@@ -553,6 +574,9 @@ type DebugMedia
     ///  In the current implementation, it always returns a successful completion.
     /// </returns>
     member private _.MediaControl_Resume ( t : MediaCtrlReq.T_Resume ) : MediaCtrlRes.T_Debug =
+        let loginfo = struct( m_ObjID, ValueNone, ValueNone, ValueSome m_LUN )
+        HLogger.Trace( LogID.I_MEDIA_CTRL_REQUESTED, fun g -> g.Gen1( loginfo, "Resume" ) )
+
         let itt = t.ITT
         let r, v = m_TaskWaiter.obj.TryGetValue t.TSIH
         if not r then
