@@ -68,6 +68,8 @@ type ServerStatusStub( m_MessageTable : StringTable ) =
     let mutable m_UpdateDummyMediaNode : ( ConfNode_DummyMedia -> MEDIAIDX_T -> string -> ConfNode_DummyMedia ) option = None
     let mutable m_AddDebugMediaNode : ( IConfigureNode -> MEDIAIDX_T -> string -> ConfNode_DebugMedia ) option = None
     let mutable m_UpdateDebugMediaNode : ( ConfNode_DebugMedia -> MEDIAIDX_T -> string -> ConfNode_DebugMedia ) option = None
+    let mutable m_AddVHDXMediaNode : ( IConfigureNode -> TargetGroupConf.T_VHDXFile -> ConfNode_VHDXMedia ) option = None
+    let mutable m_UpdateVHDXMediaNode : ( ConfNode_VHDXMedia -> TargetGroupConf.T_VHDXFile -> ConfNode_VHDXMedia ) option = None
     let mutable m_GetAncestorTargetDevice : ( IConfigureNode -> ConfNode_TargetDevice option ) option = None
     let mutable m_GetAncestorTargetGroup : ( IConfigureNode -> ConfNode_TargetGroup option ) option = None
     let mutable m_GetAncestorLogicalUnit : ( IConfigureNode -> ILUNode option ) option = None
@@ -113,6 +115,8 @@ type ServerStatusStub( m_MessageTable : StringTable ) =
     member _.p_UpdateDummyMediaNode with set v = m_UpdateDummyMediaNode <- Some( v )
     member _.p_AddDebugMediaNode with set v = m_AddDebugMediaNode <- Some( v )
     member _.p_UpdateDebugMediaNode with set v = m_UpdateDebugMediaNode <- Some( v )
+    member _.p_AddVHDXMediaNode with set v = m_AddVHDXMediaNode <- Some( v )
+    member _.p_UpdateVHDXMediaNode with set v = m_UpdateVHDXMediaNode <- Some( v )
     member _.p_GetAncestorTargetDevice with set v = m_GetAncestorTargetDevice <- Some( v )
     member _.p_GetAncestorTargetGroup with set v = m_GetAncestorTargetGroup <- Some( v )
     member _.p_GetAncestorLogicalUnit with set v = m_GetAncestorLogicalUnit <- Some( v )
@@ -158,6 +162,8 @@ type ServerStatusStub( m_MessageTable : StringTable ) =
     override _.UpdateDummyMediaNode mediaNode ident name = m_UpdateDummyMediaNode.Value mediaNode ident name
     override _.AddDebugMediaNode parentNode ident name = m_AddDebugMediaNode.Value parentNode ident name
     override _.UpdateDebugMediaNode mediaNode ident name = m_UpdateDebugMediaNode.Value mediaNode ident name
+    override _.AddVHDXMediaNode parentNode argValue = m_AddVHDXMediaNode.Value parentNode argValue
+    override _.UpdateVHDXMediaNode mediaNode argValue = m_UpdateVHDXMediaNode.Value mediaNode argValue
     override _.GetAncestorTargetDevice node = m_GetAncestorTargetDevice.Value node
     override _.GetAncestorTargetGroup node = m_GetAncestorTargetGroup.Value node
     override _.GetAncestorLogicalUnit node = m_GetAncestorLogicalUnit.Value node
@@ -502,6 +508,17 @@ type CommandRunner_Test1() =
         cnr.AddNode n
         n
 
+    static member m_VHDXMediaNode =
+        let conf : TargetGroupConf.T_VHDXFile = {
+            IdentNumber = mediaidx_me.fromPrim 1u;
+            MediaName = "";
+            FileName = "";
+            WriteProtect = false;
+        }
+        let cnr = new ConfNodeRelation()
+        let n = new ConfNode_VHDXMedia( new StringTable( "" ), cnr, confnode_me.fromPrim 0UL, conf ) :> IConfigureNode
+        cnr.AddNode n
+        n
 
     static member m_CommandLoop_exit_data = [|
         [| CommandRunner_Test1.m_ControllerNode :> obj; "CR" :> obj |];
@@ -515,6 +532,7 @@ type CommandRunner_Test1() =
         [| CommandRunner_Test1.m_PlainFileMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_MemBufferMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_DebugMediaNode :> obj; "MD" :> obj |];
+        [| CommandRunner_Test1.m_VHDXMediaNode :> obj; "MD" :> obj |];
     |]
 
     static member m_CommandLoop_set_data = [|
@@ -528,6 +546,7 @@ type CommandRunner_Test1() =
         [| CommandRunner_Test1.m_PlainFileMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_MemBufferMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_DebugMediaNode :> obj; "MD" :> obj |];
+        [| CommandRunner_Test1.m_VHDXMediaNode :> obj; "MD" :> obj |];
     |]
 
     static member m_CommandLoop_start_data = [|
@@ -541,6 +560,7 @@ type CommandRunner_Test1() =
         [| CommandRunner_Test1.m_PlainFileMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_MemBufferMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_DebugMediaNode :> obj; "MD" :> obj |];
+        [| CommandRunner_Test1.m_VHDXMediaNode :> obj; "MD" :> obj |];
     |]
 
     static member m_CommandLoop_setlogparam_error_data = [|
@@ -554,6 +574,7 @@ type CommandRunner_Test1() =
         [| CommandRunner_Test1.m_PlainFileMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_MemBufferMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_DebugMediaNode :> obj; "MD" :> obj |];
+        [| CommandRunner_Test1.m_VHDXMediaNode :> obj; "MD" :> obj |];
     |]
 
     static member m_CommandLoop_create_networkportal_error_data = [|
@@ -564,6 +585,7 @@ type CommandRunner_Test1() =
         [| CommandRunner_Test1.m_PlainFileMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_MemBufferMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_DebugMediaNode :> obj; "MD" :> obj |];
+        [| CommandRunner_Test1.m_VHDXMediaNode :> obj; "MD" :> obj |];
     |]
 
     static member m_CommandLoop_create_targetgroup_error_data = [|
@@ -574,6 +596,7 @@ type CommandRunner_Test1() =
         [| CommandRunner_Test1.m_PlainFileMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_MemBufferMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_DebugMediaNode :> obj; "MD" :> obj |];
+        [| CommandRunner_Test1.m_VHDXMediaNode :> obj; "MD" :> obj |];
     |]
 
     static member m_CommandLoop_add_ipwhitelist_data = [|
@@ -591,6 +614,7 @@ type CommandRunner_Test1() =
         [| CommandRunner_Test1.m_PlainFileMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_MemBufferMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_DebugMediaNode :> obj; "MD" :> obj |];
+        [| CommandRunner_Test1.m_VHDXMediaNode :> obj; "MD" :> obj |];
     |]
 
     static member m_CommandLoop_load_data = [|
@@ -602,6 +626,7 @@ type CommandRunner_Test1() =
         [| CommandRunner_Test1.m_PlainFileMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_MemBufferMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_DebugMediaNode :> obj; "MD" :> obj |];
+        [| CommandRunner_Test1.m_VHDXMediaNode :> obj; "MD" :> obj |];
     |]
 
     static member m_CommandLoop_load_error_data = [|
@@ -621,6 +646,7 @@ type CommandRunner_Test1() =
         [| CommandRunner_Test1.m_PlainFileMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_MemBufferMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_DebugMediaNode :> obj; "MD" :> obj |];
+        [| CommandRunner_Test1.m_VHDXMediaNode :> obj; "MD" :> obj |];
     |]
 
     static member m_CommandLoop_create_media_data = [|
@@ -630,6 +656,7 @@ type CommandRunner_Test1() =
         [| CommandRunner_Test1.m_PlainFileMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_MemBufferMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_DebugMediaNode :> obj; "MD" :> obj |];
+        [| CommandRunner_Test1.m_VHDXMediaNode :> obj; "MD" :> obj |];
     |]
 
     static member m_CommandLoop_expection_data = [|
@@ -656,6 +683,7 @@ type CommandRunner_Test1() =
         [| CommandRunner_Test1.m_PlainFileMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_MemBufferMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_DebugMediaNode :> obj; "MD" :> obj |];
+        [| CommandRunner_Test1.m_VHDXMediaNode :> obj; "MD" :> obj |];
     |]
 
     static member m_CommandLoop_connections_data = [|
@@ -673,6 +701,7 @@ type CommandRunner_Test1() =
         [| CommandRunner_Test1.m_PlainFileMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_MemBufferMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_DebugMediaNode :> obj; "MD" :> obj |];
+        [| CommandRunner_Test1.m_VHDXMediaNode :> obj; "MD" :> obj |];
     |]
 
     static member m_CommandLoop_lustatus_data = [|
@@ -690,6 +719,7 @@ type CommandRunner_Test1() =
         [| CommandRunner_Test1.m_PlainFileMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_MemBufferMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_DebugMediaNode :> obj; "MD" :> obj |];
+        [| CommandRunner_Test1.m_VHDXMediaNode :> obj; "MD" :> obj |];
     |]
 
     static member m_CommandLoop_mediastatus_data = [|
@@ -697,6 +727,7 @@ type CommandRunner_Test1() =
         [| CommandRunner_Test1.m_PlainFileMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_MemBufferMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_DebugMediaNode :> obj; "MD" :> obj |];
+        [| CommandRunner_Test1.m_VHDXMediaNode :> obj; "MD" :> obj |];
     |]
 
     static member m_CommandLoop_mediastatus_error_data = [|
@@ -724,6 +755,7 @@ type CommandRunner_Test1() =
         [| CommandRunner_Test1.m_DummyMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_PlainFileMediaNode :> obj; "MD" :> obj |];
         [| CommandRunner_Test1.m_MemBufferMediaNode :> obj; "MD" :> obj |];
+        [| CommandRunner_Test1.m_VHDXMediaNode :> obj; "MD" :> obj |];
     |]
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1045,6 +1077,8 @@ type CommandRunner_Test1() =
     [<InlineData( "detach" )>]
     [<InlineData( "create plainfile" )>]
     [<InlineData( "create membuffer" )>]
+    [<InlineData( "create debug" )>]
+    [<InlineData( "create vhdx" )>]
     [<InlineData( "initmedia plainfile" )>]
     [<InlineData( "imstatus" )>]
     [<InlineData( "imkill" )>]
@@ -2268,6 +2302,43 @@ type CommandRunner_Test1() =
             Some( CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice )
         )
         ss.p_AddDebugMediaNode <- ( fun argcn ident medianame ->
+            flg1 <- true
+            Assert.Same( cn, argcn )
+            sfnode
+        )
+        ss.p_CheckTargetGroupUnloaded <- ( fun cc node ->
+            Task.FromResult ()
+        )
+        ss.p_GetNode <- ( fun _ -> cn )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, cn ) )
+        Assert.True(( r ))
+        Assert.True(( stat = Some( ss, cc, cn ) ))
+        Assert.True(( flg1 ))
+
+        let out_rs = GenOutputStreamReader out_ms out_ws
+        CheckPromptAndMessage out_rs ( prompt :?> string ) "Created"
+
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Theory>]
+    [<MemberData( "m_CommandLoop_create_media_data" )>]
+    member _.CommandLoop_create_media_004 ( node : obj ) ( prompt : obj ) =
+        let st = new StringTable( "" )
+        let in_ms, in_ws, in_rs = GenCommandStream( "create vhdx a" )
+        let out_ms, out_ws = GenOutputStream()
+        let cr = new CommandRunner( st, in_rs, out_ws )
+        let ss = new ServerStatusStub( st )
+        let cc = new CtrlConnectionStub( st )
+        let cn = node :?> IConfigureNode
+        let sfnode = CommandRunner_Test1.m_VHDXMediaNode :?> ConfNode_VHDXMedia
+        let mutable flg1 = false
+
+        ss.p_GetAncestorTargetDevice <- ( fun curnode -> 
+            Assert.Same( cn, curnode )
+            Some( CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice )
+        )
+        ss.p_AddVHDXMediaNode <- ( fun argcn conf ->
             flg1 <- true
             Assert.Same( cn, argcn )
             sfnode

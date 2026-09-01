@@ -40,6 +40,7 @@
     <Compile Include="ConfNode_MemBufferMedia.fs" />
     <Compile Include="ConfNode_DummyMedia.fs" />
     <Compile Include="ConfNode_DebugMedia.fs" />
+    <Compile Include="ConfNode_VHDXMedia.fs" />
     <Compile Include="ConfNode_NetworkPortal.fs" />
     <Compile Include="ConfNode_Target.fs" />
     <Compile Include="ConfNode_TargetGroup.fs" />

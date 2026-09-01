@@ -37,6 +37,7 @@
     <Compile Include="ConfNode_MemBufferMediaTest.fs" />
     <Compile Include="ConfNode_DummyMediaTest.fs" />
     <Compile Include="ConfNode_DebugMediaTest.fs" />
+    <Compile Include="ConfNode_VHDXMediaTest.fs" />
     <Compile Include="ConfNode_NetworkPortalTest.fs" />
     <Compile Include="ConfNode_TargetTest.fs" />
     <Compile Include="ConfNode_TargetGroupTest.fs" />

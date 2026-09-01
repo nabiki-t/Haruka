@@ -1672,6 +1672,39 @@ type CommandReader_Test() =
         GlbFunc.AllDispose [ ms; ws; rs; ]
 
     [<Fact>]
+    member _.Create_Media_VHDX_002() =
+        let astr = String.replicate Constants.MAX_FILENAME_STR_LENGTH "a"
+        let ms, ws, rs = GenCommandStream ( "create vhdx " + astr )
+        let accCommands = [| CommandReader.CmdRule_create_Media_VHDX |]
+        let r = RunInputCommandMethod rs accCommands
+        Assert.True(( r.Varb = CommandVarb.Create_Media_VHDX ))
+        Assert.True(( r.NamelessArgs.Length = 1 ))
+        Assert.True(( r.NamelessArgs.[0] = EV_String( astr ) ))
+        Assert.True(( r.NamedArgs.Count = 0 ))
+        GlbFunc.AllDispose [ ms; ws; rs; ]
+
+    [<Fact>]
+    member _.Create_Media_VHDX_003() =
+        let astr = String.replicate ( Constants.MAX_FILENAME_STR_LENGTH + 1 ) "a"
+        let ms, ws, rs = GenCommandStream ( "create vhdx " + astr )
+        let accCommands = [| CommandReader.CmdRule_create_Media_VHDX |]
+        RunInputCommandMethod_CommandInputError rs accCommands ( CIE_ErrorCode.NamelessPatternMismatch )
+        GlbFunc.AllDispose [ ms; ws; rs; ]
+
+    static member Create_Media_VHDX_004_data : obj[][] = [|
+        [| "create vhdx"; CIE_ErrorCode.InvalidArgCount; |];
+        [| "create vhdx 0 1"; CIE_ErrorCode.InvalidArgCount; |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "Create_Media_VHDX_004_data" )>]
+    member _.Create_Media_VHDX_004 ( cmdstr : string ) ( msgstr : CIE_ErrorCode ) =
+        let ms, ws, rs = GenCommandStream cmdstr
+        let accCommands = [| CommandReader.CmdRule_create_Media_VHDX |]
+        RunInputCommandMethod_CommandInputError rs accCommands msgstr
+        GlbFunc.AllDispose [ ms; ws; rs; ]
+
+    [<Fact>]
     member _.Create_initmedia_PlainFile_001() =
         let fname = String.replicate Constants.MAX_FILENAME_STR_LENGTH "a"
         let ms, ws, rs = GenCommandStream ( sprintf "initmedia plainfile %s 1" fname )

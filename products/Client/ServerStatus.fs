@@ -321,6 +321,11 @@ type ServerStatus(
             m_ConfNodes.AddRelation parentID mediaID
             this.AddMediaComponentToDict mediaID x.Peripheral
 
+        | TargetGroupConf.T_MEDIA.U_VHDXFile( x ) ->
+            let sfConf = new ConfNode_VHDXMedia( m_MessageTable, m_ConfNodes, mediaID, x )
+            m_ConfNodes.AddNode sfConf
+            m_ConfNodes.AddRelation parentID mediaID
+
     /// <summary>
     /// Upload all of modified configuration files to cotroller.
     /// </summary>
@@ -1196,7 +1201,7 @@ type ServerStatus(
     ///  Update memory buffer media node.
     /// </summary>
     /// <param name="mediaNode">
-    ///  The plain file media node that will be updated.
+    ///  The memory file media node that will be updated.
     /// </param>
    /// <param name="argConf">
     ///  Configuration values of newly created memory buffer media node..
@@ -1244,7 +1249,7 @@ type ServerStatus(
     ///  Update dummy media node.
     /// </summary>
     /// <param name="mediaNode">
-    ///  The plain file media node that will be updated.
+    ///  The dummy media node that will be updated.
     /// </param>
     /// <param name="argIdent">
     ///  Media identifier number.
@@ -1292,10 +1297,10 @@ type ServerStatus(
         n
 
     /// <summary>
-    ///  Update debug buffer media node.
+    ///  Update debug media node.
     /// </summary>
     /// <param name="mediaNode">
-    ///  The plain file media node that will be updated.
+    ///  The debug media node that will be updated.
     /// </param>
     /// <param name="argIdent">
     ///  Media identifier number.
@@ -1316,6 +1321,52 @@ type ServerStatus(
         if ( tgNode :> IConfigFileNode ).Modified = ModifiedStatus.NotModified then
             tgNode.SetModified() |> m_ConfNodes.Update
         n
+
+    /// <summary>
+    ///  Add VHDX media node as a child of the specified LU or media node.
+    /// </summary>
+    /// <param name="parentNode">
+    ///  The parent node which newly created media node will be added to.
+    /// </param>
+    /// <param name="argValue">
+    ///  Configuration values of newly created VHDX media node.
+    /// </param>
+    /// <returns>
+    ///  Created VHDX media node.
+    /// </returns>
+    abstract AddVHDXMediaNode : parentNode:IConfigureNode -> argValue:TargetGroupConf.T_VHDXFile -> ConfNode_VHDXMedia
+    default this.AddVHDXMediaNode parentNode argValue =
+        let tgNode = this.IdentifyTargetGroupNode parentNode
+        let n = new ConfNode_VHDXMedia( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, argValue )
+        m_ConfNodes.AddNode n
+        m_ConfNodes.AddRelation parentNode.NodeID  ( n :> IConfigureNode ).NodeID
+        if ( tgNode :> IConfigFileNode ).Modified = ModifiedStatus.NotModified then
+            tgNode.SetModified() |> m_ConfNodes.Update
+        n
+
+    /// <summary>
+    ///  Update VHDX media node.
+    /// </summary>
+    /// <param name="mediaNode">
+    ///  The VHDX media node that will be updated.
+    /// </param>
+    /// <param name="argValue">
+    ///  Configuration values of newly created VHDX media node.
+    /// </param>
+    /// <returns>
+    ///  Updated VHDXmedia node.
+    ///  If a new node is added after being deleted, the node ID will be changed and relational child node are deleted.
+    ///  This method can update attribute value without changing node ID and relations.
+    /// </returns>
+    abstract UpdateVHDXMediaNode : mediaNode:ConfNode_VHDXMedia -> argValue:TargetGroupConf.T_VHDXFile -> ConfNode_VHDXMedia
+    default this.UpdateVHDXMediaNode mediaNode argValue =
+        let tgNode = this.IdentifyTargetGroupNode mediaNode
+        let n = mediaNode.CreateUpdatedNode argValue
+        m_ConfNodes.Update n
+        if ( tgNode :> IConfigFileNode ).Modified = ModifiedStatus.NotModified then
+            tgNode.SetModified() |> m_ConfNodes.Update
+        n
+
 
     /// <summary>
     ///  Search and return the target device node that holds specified node.
@@ -1649,6 +1700,8 @@ type ServerStatus(
                     Some( itr.NodeID, new ConfNode_DummyMedia( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, itr ) :> IConfigureNode )
                 elif itr.TypeName = ClientConst.TEMPEXP_NN_DebugMedia then
                     Some( itr.NodeID, new ConfNode_DebugMedia( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, itr ) :> IConfigureNode )
+                elif itr.TypeName = ClientConst.TEMPEXP_NN_VHDXMedia then
+                    Some( itr.NodeID, new ConfNode_VHDXMedia( m_MessageTable, m_ConfNodes, m_ConfNodes.NextID, itr ) :> IConfigureNode )
                 else
                     None
             )

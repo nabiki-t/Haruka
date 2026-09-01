@@ -4005,6 +4005,225 @@ type CommandRunner_Test3() =
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
     [<Fact>]
+    member _.Create_Media_VHDX_001 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "create vhdx aaa" )
+        let tdn = CommandRunner_Test1.m_TargetDeviceNode :?> ConfNode_TargetDevice
+        let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU
+        let mutable flg1 = false
+        let mutable flg2 = false
+
+        ss.p_GetAncestorTargetDevice <- ( fun argnode ->
+            Assert.Same( lunode, argnode )
+            flg1 <- true
+            Some tdn
+        )
+
+        ss.p_AddVHDXMediaNode <- ( fun argcn conf ->
+            Assert.Same( lunode, argcn )
+            Assert.StrictEqual( "aaa", conf.FileName )
+            flg2 <- true
+            ( CommandRunner_Test1.m_VHDXMediaNode :?> ConfNode_VHDXMedia )
+        )
+        ss.p_GetNode <- ( fun _ -> lunode )
+
+        ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, lunode ) ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "Created"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Create_Media_VHDX_002 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "create vhdx a" )
+        let st = StringTable( "" )
+        let cnr = new ConfNodeRelation()
+        let tdn =
+            let conf : TargetDeviceConf.T_TargetDevice = {
+                NetworkPortal = [];
+                NegotiableParameters = None;
+                LogParameters = None;
+                DeviceName = "";
+                EnableStatSNAckChecker = false;
+            }
+            new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf ) :> IConfigureNode
+        let tgn = new ConfNode_TargetGroup( st, cnr, cnr.NextID, GlbFunc.newTargetGroupID(), "", true, ModifiedStatus.NotModified ) :> IConfigureNode
+        let tn =
+            let conf : TargetGroupConf.T_Target = {
+                IdentNumber = tnodeidx_me.fromPrim 10us;
+                TargetPortalGroupTag = tpgt_me.zero;
+                TargetName = "";
+                TargetAlias = "";
+                LUN = [];
+                Auth = TargetGroupConf.T_Auth.U_None();
+            }
+            new ConfNode_Target( st, cnr, cnr.NextID, conf ) :> IConfigureNode
+
+        let mult = Constants.LU_DEF_MULTIPLICITY
+        let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", mult, otl ) :> IConfigureNode
+        let dmn1 = new ConfNode_DummyMedia( st, cnr, cnr.NextID, mediaidx_me.fromPrim 1u, "" ) :> IConfigureNode
+        let dmn2 = new ConfNode_DummyMedia( st, cnr, cnr.NextID, mediaidx_me.fromPrim 2u, "" ) :> IConfigureNode
+        let mutable flg1 = false
+        let mutable flg2 = false
+
+        cnr.AddNode tdn
+        cnr.AddNode tgn
+        cnr.AddNode tn
+        cnr.AddNode lunode
+        cnr.AddNode dmn1
+        cnr.AddNode dmn2
+        cnr.AddRelation tdn.NodeID tgn.NodeID
+        cnr.AddRelation tgn.NodeID tn.NodeID
+        cnr.AddRelation tn.NodeID lunode.NodeID
+        cnr.AddRelation lunode.NodeID dmn1.NodeID
+        cnr.AddRelation lunode.NodeID dmn2.NodeID
+
+        ss.p_GetAncestorTargetDevice <- ( fun argnode ->
+            Assert.Same( lunode, argnode )
+            flg1 <- true
+            Some ( tdn :?> ConfNode_TargetDevice )
+        )
+
+        ss.p_AddVHDXMediaNode <- ( fun argcn conf ->
+            Assert.Same( lunode, argcn )
+            Assert.StrictEqual( "a", conf.FileName )
+            Assert.NotStrictEqual( mediaidx_me.fromPrim 1u, conf.IdentNumber )
+            Assert.NotStrictEqual( mediaidx_me.fromPrim 2u, conf.IdentNumber )
+            flg2 <- true
+            ( CommandRunner_Test1.m_VHDXMediaNode :?> ConfNode_VHDXMedia )
+        )
+
+        ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
+        ss.p_GetNode <- ( fun _ -> lunode )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, lunode ) ))
+        Assert.True( flg1 )
+        Assert.True( flg2 )
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "Created"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Create_Media_VHDX_003 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "create vhdx a" )
+        let st = StringTable( "" )
+        let cnr = new ConfNodeRelation()
+
+        let tdn =
+            let conf : TargetDeviceConf.T_TargetDevice = {
+                NetworkPortal = [];
+                NegotiableParameters = None;
+                LogParameters = None;
+                DeviceName = "";
+                EnableStatSNAckChecker = false;
+            }
+            new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf ) :> IConfigureNode
+        cnr.AddNode tdn
+
+        let tgn = new ConfNode_TargetGroup( st, cnr, cnr.NextID, GlbFunc.newTargetGroupID(), "", true, ModifiedStatus.NotModified ) :> IConfigureNode
+        cnr.AddNode tgn
+        cnr.AddRelation tdn.NodeID tgn.NodeID
+
+        let tn =
+            let conf : TargetGroupConf.T_Target = {
+                IdentNumber = tnodeidx_me.fromPrim 10us;
+                TargetPortalGroupTag = tpgt_me.zero;
+                TargetName = "";
+                TargetAlias = "";
+                LUN = [];
+                Auth = TargetGroupConf.T_Auth.U_None();
+            }
+            new ConfNode_Target( st, cnr, cnr.NextID, conf ) :> IConfigureNode
+        cnr.AddNode tn
+        cnr.AddRelation tgn.NodeID tn.NodeID
+
+        let mult = Constants.LU_DEF_MULTIPLICITY
+        let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", mult, otl ) :> IConfigureNode
+        cnr.AddNode lunode
+        cnr.AddRelation tn.NodeID lunode.NodeID
+
+        for i = 1 to ClientConst.MAX_CHILD_NODE_COUNT - 1 do
+            let dmn1 = new ConfNode_DummyMedia( st, cnr, cnr.NextID, mediaidx_me.fromPrim 1u, "" ) :> IConfigureNode
+            cnr.AddNode dmn1
+            cnr.AddRelation lunode.NodeID dmn1.NodeID
+
+        ss.p_GetAncestorTargetDevice <- ( fun argnode ->
+            Some ( tdn :?> ConfNode_TargetDevice )
+        )
+        ss.p_AddVHDXMediaNode <- ( fun argcn conf ->
+            ( CommandRunner_Test1.m_VHDXMediaNode :?> ConfNode_VHDXMedia )
+        )
+        ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
+        ss.p_GetNode <- ( fun _ -> lunode )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, lunode ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "Created"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
+    member _.Create_Media_VHDX_004 () =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "create vhdx a" )
+        let st = StringTable( "" )
+        let cnr = new ConfNodeRelation()
+
+        let tdn =
+            let conf : TargetDeviceConf.T_TargetDevice = {
+                NetworkPortal = [];
+                NegotiableParameters = None;
+                LogParameters = None;
+                DeviceName = "";
+                EnableStatSNAckChecker = false;
+            }
+            new ConfNode_TargetDevice( st, cnr, cnr.NextID, GlbFunc.newTargetDeviceID(), conf ) :> IConfigureNode
+        cnr.AddNode tdn
+
+        let tgn = new ConfNode_TargetGroup( st, cnr, cnr.NextID, GlbFunc.newTargetGroupID(), "", true, ModifiedStatus.NotModified ) :> IConfigureNode
+        cnr.AddNode tgn
+        cnr.AddRelation tdn.NodeID tgn.NodeID
+
+        let tn =
+            let conf : TargetGroupConf.T_Target = {
+                IdentNumber = tnodeidx_me.fromPrim 10us;
+                TargetPortalGroupTag = tpgt_me.zero;
+                TargetName = "";
+                TargetAlias = "";
+                LUN = [];
+                Auth = TargetGroupConf.T_Auth.U_None();
+            }
+            new ConfNode_Target( st, cnr, cnr.NextID, conf ) :> IConfigureNode
+        cnr.AddNode tn
+        cnr.AddRelation tgn.NodeID tn.NodeID
+
+        let mult = Constants.LU_DEF_MULTIPLICITY
+        let otl = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH
+        let lunode = new ConfNode_BlockDeviceLU( st, cnr, cnr.NextID, lun_me.fromPrim 1UL, "", mult, otl ) :> IConfigureNode
+        cnr.AddNode lunode
+        cnr.AddRelation tn.NodeID lunode.NodeID
+
+        for i = 1 to ClientConst.MAX_CHILD_NODE_COUNT do
+            let dmn1 = new ConfNode_DummyMedia( st, cnr, cnr.NextID, mediaidx_me.fromPrim 1u, "" ) :> IConfigureNode
+            cnr.AddNode dmn1
+            cnr.AddRelation lunode.NodeID dmn1.NodeID
+
+        ss.p_GetAncestorTargetDevice <- ( fun argnode ->
+            Some ( tdn :?> ConfNode_TargetDevice )
+        )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, lunode ) )
+        Assert.True( r )
+        Assert.True(( stat = Some ( ss, cc, lunode ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "LU" "CMDMSG_TOO_MANY_CHILD"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Fact>]
     member _.InitMedia_PlainFile_001 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "initmedia plainfile a 1" )
         let lunode = CommandRunner_Test1.m_BlockDeviceLUNode :?> ConfNode_BlockDeviceLU

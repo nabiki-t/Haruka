@@ -244,6 +244,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             CommandReader.CmdRule_create_Media_PlainFile;
             CommandReader.CmdRule_create_Media_MemBuffer;
             CommandReader.CmdRule_create_Media_Debug;
+            CommandReader.CmdRule_create_Media_VHDX;
             CommandReader.CmdRule_initmedia_PlainFile;
             CommandReader.CmdRule_imstatus;
             CommandReader.CmdRule_imkill;
@@ -281,6 +282,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             CommandReader.CmdRule_create_Media_PlainFile;
             CommandReader.CmdRule_create_Media_MemBuffer;
             CommandReader.CmdRule_create_Media_Debug;
+            CommandReader.CmdRule_create_Media_VHDX;
             CommandReader.CmdRule_initmedia_PlainFile;
             CommandReader.CmdRule_imstatus;
             CommandReader.CmdRule_imkill;
@@ -323,6 +325,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             CommandReader.CmdRule_create_Media_PlainFile;
             CommandReader.CmdRule_create_Media_MemBuffer;
             CommandReader.CmdRule_create_Media_Debug;
+            CommandReader.CmdRule_create_Media_VHDX;
             CommandReader.CmdRule_initmedia_PlainFile;
             CommandReader.CmdRule_imstatus;
             CommandReader.CmdRule_imkill;
@@ -333,6 +336,43 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
             CommandReader.CmdRule_traps;
             CommandReader.CmdRule_task_list;
             CommandReader.CmdRule_task_resume;
+        |]
+
+    /// Commands for VHDX media.
+    static let AccCmd_VHDXMedia : AcceptableCommand< CommandVarb > [] =
+        [|
+            CommandReader.CmdRule_exit;
+            CommandReader.CmdRule_help;
+            CommandReader.CmdRule_logout;
+            CommandReader.CmdRule_reload;
+            CommandReader.CmdRule_select;
+            CommandReader.CmdRule_unselect;
+            CommandReader.CmdRule_list;
+            CommandReader.CmdRule_listparent;
+            CommandReader.CmdRule_pwd;
+            CommandReader.CmdRule_values;
+            CommandReader.CmdRule_set;
+            CommandReader.CmdRule_validate;
+            CommandReader.CmdRule_publish;
+            CommandReader.CmdRule_nop;
+            CommandReader.CmdRule_statusall;
+            CommandReader.CmdRule_status;
+            CommandReader.CmdRule_delete;
+            CommandReader.CmdRule_start;
+            CommandReader.CmdRule_kill;
+            CommandReader.CmdRule_load;
+            CommandReader.CmdRule_unload;
+            CommandReader.CmdRule_activate;
+            CommandReader.CmdRule_inactivate;
+            CommandReader.CmdRule_create_Media_PlainFile;
+            CommandReader.CmdRule_create_Media_MemBuffer;
+            CommandReader.CmdRule_create_Media_Debug;
+            CommandReader.CmdRule_create_Media_VHDX;
+            CommandReader.CmdRule_initmedia_PlainFile;
+            CommandReader.CmdRule_imstatus;
+            CommandReader.CmdRule_imkill;
+            CommandReader.CmdRule_sesskill;
+            CommandReader.CmdRule_mediastatus;
         |]
 
     /// <summary>
@@ -425,6 +465,7 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                         | :? ConfNode_MemBufferMedia -> AccCmd_MemBufferMedia, "MD"
                         | :? ConfNode_DummyMedia -> AccCmd_DummyMedia, "MD"
                         | :? ConfNode_DebugMedia -> AccCmd_DebugMedia, "MD"
+                        | :? ConfNode_VHDXMedia -> AccCmd_VHDXMedia, "MD"
                         | _ ->
                             raise <| Exception "Unexpected error."
 
@@ -588,6 +629,10 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
 
                     | CommandVarb.Create_Media_Debug ->
                         let! nextStat = this.Command_Create_Media_Debug cmd ss cc cn
+                        return struct( true, nextStat )
+
+                    | CommandVarb.Create_Media_VHDX ->
+                        let! nextStat = this.Command_Create_Media_VHDX cmd ss cc cn
                         return struct( true, nextStat )
 
                     | CommandVarb.InitMedia_PlainFile ->
@@ -1893,6 +1938,62 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     |> this.Output 0
                     return Some ( ss, cc, cn )
 
+            | :? ConfNode_VHDXMedia as x ->
+                match entNameUp with
+                | "ID" ->
+                    let r, v = UInt32.TryParse entValue
+                    if not r then
+                        m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "uint32" )
+                        |> this.Output 0
+                        return Some ( ss, cc, cn )
+                    else
+                        let nextVal = {
+                            x.Values with
+                                IdentNumber = mediaidx_me.fromPrim v;
+                        }
+                        do! ss.CheckTargetGroupUnloaded cc x
+                        let n = ss.UpdateVHDXMediaNode x nextVal
+                        return Some ( ss, cc, ( n :> IConfigureNode ) )
+
+                | "MEDIANAME" ->
+                    let nextVal = {
+                        x.Values with
+                            MediaName = entValue;
+                    }
+                    do! ss.CheckTargetGroupUnloaded cc x
+                    let n = ss.UpdateVHDXMediaNode x nextVal
+                    return Some ( ss, cc, ( n :> IConfigureNode ) )
+
+                | "FILENAME" ->
+                    let nextVal = {
+                        x.Values with
+                            FileName = entValue;
+                    }
+                    do! ss.CheckTargetGroupUnloaded cc x
+                    let n = ss.UpdateVHDXMediaNode x nextVal
+                    return Some ( ss, cc, ( n :> IConfigureNode ) )
+
+                | "WRITEPROTECT" ->
+                    let r, v = Boolean.TryParse entValue
+                    if not r then
+                        m_Messages.GetMessage( "CMDMSG_PARAMVAL_DATATYPE_MISMATCH", "bool" )
+                        |> this.Output 0
+                        return Some ( ss, cc, cn )
+                    else
+                        let nextVal = {
+                            x.Values with
+                                WriteProtect = v;
+                        }
+                        do! ss.CheckTargetGroupUnloaded cc x
+                        let n = ss.UpdateVHDXMediaNode x nextVal
+                        return Some ( ss, cc, ( n :> IConfigureNode ) )
+
+                | _ ->
+                    let paramname = "ID,MediaName,FileName,BlockSize,MaxMultiplicity,BlockSize,WriteProtect"
+                    m_Messages.GetMessage( "CMDMSG_UNKNOWN_PARAMETER_NAME", paramname )
+                    |> this.Output 0
+                    return Some ( ss, cc, cn )
+
             | _ ->
                 raise <| Exception "Unexpected error."
                 return Some ( ss, cc, cn )
@@ -2194,7 +2295,8 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                     | :? ConfNode_PlainFileMedia
                     | :? ConfNode_MemBufferMedia
                     | :? ConfNode_DummyMedia
-                    | :? ConfNode_DebugMedia as x ->
+                    | :? ConfNode_DebugMedia
+                    | :? ConfNode_VHDXMedia as x ->
                         do! ss.CheckTargetGroupUnloaded cc x
                         ss.DeleteNodeInTargetGroup x
                         this.Output 0 ( sprintf "Deleted : %s" child.[ int32 objidx ].ShortDescriptString )
@@ -3253,6 +3355,56 @@ type CommandRunner( m_Messages : StringTable, m_InFile : TextReader, m_OutFile :
                 // create
                 do! ss.CheckTargetGroupUnloaded cc cn
                 let newnode = ss.AddDebugMediaNode cn newIdent ""
+                this.Output 0 ( sprintf "Created : %s" ( newnode :> IConfigureNode ).ShortDescriptString )
+                return Some ( ss, cc, ss.GetNode cn.NodeID )
+        }
+
+    /// <summary>
+    ///  Execute create_media_VHDX command.
+    /// </summary>
+    /// <param name="cmd">
+    ///  User entered command.
+    /// </param>
+    /// <param name="ss">
+    ///  Editing configuration data.
+    /// </param>
+    /// <param name="cc">
+    ///  Connection to the controller.
+    /// </param>
+    /// <param name="cn">
+    ///  Current node. cn must be LU or media node.
+    /// </param>
+    member private this.Command_Create_Media_VHDX
+        ( cmd : CommandParser<CommandVarb> ) ( ss : ServerStatus ) ( cc : CtrlConnection ) ( cn : IConfigureNode )
+        : Task<( ServerStatus * CtrlConnection * IConfigureNode ) option> =
+        task {
+            let tdnode = ss.GetAncestorTargetDevice cn
+            if tdnode.IsNone then raise <| Exception "Unexpected error."
+
+            // gen ident number
+            let newIdent =
+                ( tdnode.Value :> IConfigureNode ).GetDescendantNodes<IMediaNode>()
+                |> ConfNode_VHDXMedia.GenNewID
+
+            // get file name
+            let fname = cmd.DefaultNamelessString 0 ""
+
+            // check child node count
+            let childCount =  cn.GetChildNodes<IConfigureNode>() |> List.length
+            if childCount >= int32 ClientConst.MAX_CHILD_NODE_COUNT then
+                m_Messages.GetMessage( "CMDMSG_TOO_MANY_CHILD" )
+                |> this.Output 0
+                return Some ( ss, cc, cn )
+            else
+                // create
+                let conf : TargetGroupConf.T_VHDXFile = {
+                    IdentNumber = newIdent;
+                    MediaName = "";
+                    FileName = fname;
+                    WriteProtect = false;
+                }
+                do! ss.CheckTargetGroupUnloaded cc cn
+                let newnode = ss.AddVHDXMediaNode cn conf
                 this.Output 0 ( sprintf "Created : %s" ( newnode :> IConfigureNode ).ShortDescriptString )
                 return Some ( ss, cc, ss.GetNode cn.NodeID )
         }

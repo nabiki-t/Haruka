@@ -3267,6 +3267,187 @@ type CommandRunner_Test2() =
         let out_rs = CheckOutputMessage out_ms out_ws "MD" "CMDMSG_UNKNOWN_PARAMETER_NAME"
         GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
 
+    [<Theory>]
+    [<InlineData( "set ID 333" )>]
+    member _.set_VHDXMedia_001 ( cmdstr : string ) =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
+        let wnode = CommandRunner_Test1.m_VHDXMediaNode :?> ConfNode_VHDXMedia
+        let conf : TargetGroupConf.T_VHDXFile = {
+            IdentNumber = mediaidx_me.fromPrim 0u;
+            MediaName = "";
+            FileName = "";
+            WriteProtect = false;
+        }
+        let initnode = wnode.CreateUpdatedNode conf
+        let mutable flg1 = false
+
+        ss.p_UpdateVHDXMediaNode <- ( fun argcn argconf ->
+            flg1 <- true
+            Assert.True(( argcn = initnode ))
+            Assert.True(( argconf.IdentNumber = mediaidx_me.fromPrim 333u ))
+            initnode.CreateUpdatedNode argconf
+        )
+        ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
+        Assert.True(( r ))
+        Assert.True(( stat.IsSome ))
+        let r_ss, r_cc, r_cn = stat.Value
+        Assert.True(( ss :> ServerStatus = r_ss ))
+        Assert.True(( cc :> CtrlConnection = r_cc ))
+        let expconf = {
+            conf with
+                IdentNumber = mediaidx_me.fromPrim 333u;
+        }
+        Assert.True(( ( r_cn :?> IMediaNode ).MediaConfData = TargetGroupConf.U_VHDXFile( expconf ) ))
+        Assert.True(( flg1 ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Theory>]
+    [<InlineData( "set ID -1" )>]
+    [<InlineData( "set ID 4294967296" )>]
+    [<InlineData( "set ID aaa" )>]
+    member _.set_VHDXMedia_002 ( cmdstr : string ) =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
+        let initnode = CommandRunner_Test1.m_VHDXMediaNode :?> ConfNode_VHDXMedia
+        let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
+        Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Theory>]
+    [<InlineData( "set MEDIANAME aaaa" )>]
+    member _.set_VHDXMedia_003 ( cmdstr : string ) =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
+        let wnode = CommandRunner_Test1.m_VHDXMediaNode :?> ConfNode_VHDXMedia
+        let conf : TargetGroupConf.T_VHDXFile = {
+            IdentNumber = mediaidx_me.fromPrim 0u;
+            MediaName = "";
+            FileName = "";
+            WriteProtect = false;
+        }
+        let initnode = wnode.CreateUpdatedNode conf
+        let mutable flg1 = false
+
+        ss.p_UpdateVHDXMediaNode <- ( fun argcn argconf ->
+            flg1 <- true
+            Assert.True(( argcn = initnode ))
+            Assert.True(( argconf.MediaName = "aaaa" ))
+            initnode.CreateUpdatedNode argconf
+        )
+        ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
+        Assert.True(( r ))
+        Assert.True(( stat.IsSome ))
+        let r_ss, r_cc, r_cn = stat.Value
+        Assert.True(( ss :> ServerStatus = r_ss ))
+        Assert.True(( cc :> CtrlConnection = r_cc ))
+        let expconf = {
+            conf with
+                MediaName = "aaaa";
+        }
+        Assert.True(( ( r_cn :?> IMediaNode ).MediaConfData = TargetGroupConf.U_VHDXFile( expconf ) ))
+        Assert.True(( flg1 ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Theory>]
+    [<InlineData( "set FILENAME aaaa" )>]
+    member _.set_VHDXMedia_004 ( cmdstr : string ) =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
+        let wnode = CommandRunner_Test1.m_VHDXMediaNode :?> ConfNode_VHDXMedia
+        let conf : TargetGroupConf.T_VHDXFile = {
+            IdentNumber = mediaidx_me.fromPrim 0u;
+            MediaName = "";
+            FileName = "";
+            WriteProtect = false;
+        }
+        let initnode = wnode.CreateUpdatedNode conf
+        let mutable flg1 = false
+
+        ss.p_UpdateVHDXMediaNode <- ( fun argcn argconf ->
+            flg1 <- true
+            Assert.True(( argcn = initnode ))
+            Assert.True(( argconf.FileName = "aaaa" ))
+            initnode.CreateUpdatedNode argconf
+        )
+        ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
+        Assert.True(( r ))
+        Assert.True(( stat.IsSome ))
+        let r_ss, r_cc, r_cn = stat.Value
+        Assert.True(( ss :> ServerStatus = r_ss ))
+        Assert.True(( cc :> CtrlConnection = r_cc ))
+        let expconf = {
+            conf with
+                FileName = "aaaa";
+        }
+        Assert.True(( ( r_cn :?> IMediaNode ).MediaConfData = TargetGroupConf.U_VHDXFile( expconf ) ))
+        Assert.True(( flg1 ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Theory>]
+    [<InlineData( "set WRITEPROTECT true" )>]
+    member _.set_VHDXMedia_005 ( cmdstr : string ) =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
+        let wnode = CommandRunner_Test1.m_VHDXMediaNode :?> ConfNode_VHDXMedia
+        let conf : TargetGroupConf.T_VHDXFile = {
+            IdentNumber = mediaidx_me.fromPrim 0u;
+            MediaName = "";
+            FileName = "";
+            WriteProtect = false;
+        }
+        let initnode = wnode.CreateUpdatedNode conf
+        let mutable flg1 = false
+
+        ss.p_UpdateVHDXMediaNode <- ( fun argcn argconf ->
+            flg1 <- true
+            Assert.True(( argcn = initnode ))
+            Assert.True(( argconf.WriteProtect = true ))
+            initnode.CreateUpdatedNode argconf
+        )
+        ss.p_CheckTargetGroupUnloaded <- ( fun cc node -> Task.FromResult () )
+
+        let r, stat = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
+        Assert.True(( r ))
+        Assert.True(( stat.IsSome ))
+        let r_ss, r_cc, r_cn = stat.Value
+        Assert.True(( ss :> ServerStatus = r_ss ))
+        Assert.True(( cc :> CtrlConnection = r_cc ))
+        let expconf = {
+            conf with
+                WriteProtect = true;
+        }
+        Assert.True(( ( r_cn :?> IMediaNode ).MediaConfData = TargetGroupConf.U_VHDXFile( expconf ) ))
+        Assert.True(( flg1 ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" ""
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Theory>]
+    [<InlineData( "set WRITEPROTECT -1" )>]
+    [<InlineData( "set WRITEPROTECT aaa" )>]
+    member _.set_VHDXMedia_006 ( cmdstr : string ) =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
+        let initnode = CommandRunner_Test1.m_VHDXMediaNode :?> ConfNode_VHDXMedia
+        let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
+        Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "CMDMSG_PARAMVAL_DATATYPE_MISMATCH"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
+    [<Theory>]
+    [<InlineData( "set aaa -1" )>]
+    member _.set_VHDXMedia_007 ( cmdstr : string ) =
+        let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( cmdstr )
+        let initnode = CommandRunner_Test1.m_VHDXMediaNode :?> ConfNode_VHDXMedia
+        let r = CallCommandLoop cr ( Some ( ss, cc, initnode ) )
+        Assert.True(( r = ( true, Some( ss, cc, initnode ) ) ))
+        let out_rs = CheckOutputMessage out_ms out_ws "MD" "CMDMSG_UNKNOWN_PARAMETER_NAME"
+        GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
+
     [<Fact>]
     member _.Validate_001 () =
         let in_ms, in_ws, in_rs, out_ms, out_ws, cr, ss, cc = GenStub( "validate" )

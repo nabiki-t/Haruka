@@ -52,6 +52,9 @@ type ClientConst() =
     /// IConfigureNode.NodeTypeName value for ConfNode_DummyMedia
     static member NODE_TYPE_NAME_DebugMedia = "Debug Media"
 
+    /// IConfigureNode.NodeTypeName value for ConfNode_VHDXMedia
+    static member NODE_TYPE_NAME_VHDXMedia = "VHDX Media"
+
     /// Node type name used at IConfigureNode.SortKey value of ConfNode_Controller
     static member SORT_KEY_TYPE_Controller = "000_Controller"
 
@@ -85,6 +88,9 @@ type ClientConst() =
     /// Node type name used at IConfigureNode.SortKey value of ConfNode_MemBufferMedia
     static member SORT_KEY_TYPE_MemBufferMedia = "010_MemBufferMedia"
 
+    /// Node type name used at IConfigureNode.SortKey value of ConfNode_VHDXMedia
+    static member SORT_KEY_TYPE_VHDXMedia = "011_VHDXMedia"
+
     /// Clipboard format string for ConfNode_TargetDevice node
     static member CB_FORMAT_TargetDevice = "Haruka-TargetDevice-fdc379a7-ee2f-4de8-8fca-a500f1a767b3"
 
@@ -108,6 +114,9 @@ type ClientConst() =
 
     /// Clipboard format string for ConfNode_DebugMedia node
     static member CB_FORMAT_DebugMedia = "Haruka-DebugMedia-fdc379a7-ee2f-4de8-8fca-a500f1a767b3"
+
+    /// Clipboard format string for ConfNode_VHDXMedia node
+    static member CB_FORMAT_VHDXMedia = "Haruka-VHDXMedia-fdc379a7-ee2f-4de8-8fca-a500f1a767b3"
 
     /// ConfNode_Controller type name string used for temp export data.
     static member TEMPEXP_NN_Controller = "ConfNode_Controller"
@@ -141,6 +150,9 @@ type ClientConst() =
 
     /// ConfNode_DummyMedia type name string used for temp export data.
     static member TEMPEXP_NN_DebugMedia = "ConfNode_DebugMedia"
+
+    /// ConfNode_VHDXMedia type name string used for temp export data.
+    static member TEMPEXP_NN_VHDXMedia = "ConfNode_VHDXMedia"
 
     /// Maximum count of child nodes.
     static member MAX_CHILD_NODE_COUNT = 1024
