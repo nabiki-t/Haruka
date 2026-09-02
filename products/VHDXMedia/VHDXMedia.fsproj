@@ -20,6 +20,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="VhdxTypes.fs" />
+    <Compile Include="VhdxCommons.fs" />
+    <Compile Include="VhdxReader.fs" />
+    <Compile Include="VhdxChecker.fs" />
+    <Compile Include="VhdxCorrupter.fs" />
+    <Compile Include="VhdxCreater.fs" />
+    <Compile Include="VhdxWriter.fs" />
+    <Compile Include="VhdxMerge.fs" />
+    <Compile Include="VhdxToRaw.fs" />
+    <Compile Include="VhdxXml.fs" />
+    <Compile Include="VHDXLogManager.fs" />
+    <Compile Include="VHDXFileMedia.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Commons\Commons.fsproj" />
     <ProjectReference Include="..\Constants\Constants.fsproj" />
   </ItemGroup>

@@ -78,6 +78,41 @@
         </item>
 
       </item>
+
+      <item name='VHDX' selection='true' >
+
+        <!--
+        summary : Create VHDX snapshot.
+        returns : MediaCtrlRes.VhdxTakeSnapshotResult
+        -->
+        <item name='VhdxTakeSnapshot' constraint='string' />
+
+        <!--
+        summary : Get parent file names.
+        returns : MediaCtrlRes.VhdxAllSnapshotNames
+        -->
+        <item name='VhdxGetSnapshotNames' constraint='unit' />
+
+        <!--
+        summary : Delete VHDX snapshot.
+        returns : MediaCtrlRes.VhdxDeleteSnapshotResult
+        -->
+        <item name='VhdxDeleteSnapshot' constraint='int' />
+
+        <!--
+        summary : Get VHDX media maintenance status.
+        returns : MediaCtrlRes.VhdxMaintenanceStatus
+        -->
+        <item name='VhdxGetMaintenanceStatus' constraint='unit' />
+
+        <!--
+        summary : Terminate VHDX media maintenance.
+        returns : MediaCtrlRes.VhdxStopMaintenanceResult
+        -->
+        <item name='VhdxStopMaintenance' constraint='unit' />
+
+      </item>
+
     </item>
   </form>
 </root>

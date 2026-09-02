@@ -1,10 +1,22 @@
-namespace VhdxLibrary
+//=============================================================================
+// Haruka Software Storage.
+// TypeDefs.fs : Define the data types used by the VHDX media utility.
+// 
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Media.VhdxUtil
+
+//=============================================================================
+// Import declaration
 
 open System
-open System.IO
 
 open Haruka.Constants
-open Haruka.Commons
+
+//=============================================================================
+// Type definition
 
 /// Data type that represents 4K sector number.
 [<Measure>]
@@ -41,6 +53,12 @@ type sec4k_me =
 /// Data type that uses uint64 to represent the 4K sector number
 type SEC4K_T = uint64<sec4k_me>
 
+/// Constant identifying the Parent Locator type.
+type ParentLocatorType =
+    | RelativePath of string
+    | VolumePath of string
+    | AbsoluteWin32Path of string
+
 
 // ============================================================================
 // File header
@@ -52,13 +70,13 @@ type VhdxHeader = {
     /// CRC-32C Checksum
     Checksum : uint32
     /// Sequence number
-    SequenceNumber : uint64
+//    SequenceNumber : uint64
     /// File write GUID
-    FileWriteGuid : Guid
+//    FileWriteGuid : Guid
     /// Data write GUID
-    DataWriteGuid : Guid
+//    DataWriteGuid : Guid
     /// Log GUID
-    LogGuid : Guid
+//    LogGuid : Guid
     /// Log version. Allways zero.
     LogVersion : uint16
     /// VHDX format version. Always 1.
@@ -71,6 +89,19 @@ type VhdxHeader = {
     Offset : uint64
     /// Index of this header ( 0 or 1 )
     Index : int;
+}
+
+/// A record within the header that holds viable values.
+[<Struct>]
+type VhdxMutableHeader = {
+    /// Sequence number
+    SequenceNumber : uint64
+    /// File write GUID
+    FileWriteGuid : Guid
+    /// Data write GUID
+    DataWriteGuid : Guid
+    /// Log GUID
+    LogGuid : Guid
 }
 
 // ============================================================================
@@ -276,8 +307,10 @@ type BatEntries = {
 type VhdxStructures = {
     /// creator string
     Creator : string;
-    /// Effective header
-    Header : VhdxHeader;
+    /// Immutable header values
+    ImmHeader : VhdxHeader;
+    /// Mutable header values
+    LoadedVarHeader : VhdxMutableHeader;
     /// Log
     Log : LogEntry list;
     /// Expected file size
@@ -289,3 +322,27 @@ type VhdxStructures = {
     /// BAT entries
     BAT : BatEntries;
 }
+
+// ============================================================================
+// Exceptions
+
+type VhdxMediaException
+    (
+        m_FileName : string option,
+        m_Structures : VhdxStructures option,
+        argMsg : string
+    ) =
+    inherit Exception( argMsg )
+
+    new( argMsg : string ) =
+        VhdxMediaException( None, None, argMsg )
+
+    new( argFileName : string, argMsg : string ) =
+        VhdxMediaException( Some argFileName, None, argMsg )
+
+    new( argStructures : VhdxStructures, argMsg : string ) =
+        VhdxMediaException( None, Some argStructures, argMsg )
+
+    member _.FileName = m_FileName
+    member _.Structures = m_Structures
+

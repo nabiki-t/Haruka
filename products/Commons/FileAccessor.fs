@@ -60,6 +60,9 @@ type FileAccessor ( m_FileName : string, m_Multiplicity : uint32, m_ReadOnly : b
         for s in streams do q.Enqueue( s )
         q
 
+    /// Current file size
+    let mutable m_CurrentFileSize = streams.[0].Length |> uint64
+
     /// <summary>
     ///  Get the stream.
     /// </summary>
@@ -237,19 +240,21 @@ type FileAccessor ( m_FileName : string, m_Multiplicity : uint32, m_ReadOnly : b
             if ( int64 size ) < 0L then
                 raise <| ArgumentOutOfRangeException( "The size value is excessive." )
 
-            let fs = getFreeStream()
-            try
-                let exc : Exception -> bool =
-                    function | :? IOException -> false | _ -> true
-                let! r =
-                    Functions.RetryAsync2 ( fun () -> task {
-                        fs.SetLength( int64 size )
-                        do! fs.FlushAsync()
-                    } ) exc
-                if r.IsError then
-                    Functions.GetErrorValue "" r |> IOException |> raise
-            finally
-                streamQueue.Enqueue fs
+            if m_CurrentFileSize <> size then
+                let fs = getFreeStream()
+                try
+                    let exc : Exception -> bool =
+                        function | :? IOException -> false | _ -> true
+                    let! r =
+                        Functions.RetryAsync2 ( fun () -> task {
+                            fs.SetLength( int64 size )
+                            do! fs.FlushAsync()
+                        } ) exc
+                    if r.IsError then
+                        Functions.GetErrorValue "" r |> IOException |> raise
+                    m_CurrentFileSize <- size
+                finally
+                    streamQueue.Enqueue fs
         }
 
     /// <summary>
@@ -261,9 +266,13 @@ type FileAccessor ( m_FileName : string, m_Multiplicity : uint32, m_ReadOnly : b
     member _.GetFileSize() : uint64 =
         let fs = getFreeStream()
         try
-            uint64 fs.Length
+            m_CurrentFileSize <- uint64 fs.Length
+            m_CurrentFileSize
         finally
             streamQueue.Enqueue fs
+
+    /// File size property
+    member _.FileSize = m_CurrentFileSize
 
     /// File name property
     member _.FileName = m_FileName

@@ -59,6 +59,7 @@
     <ProjectReference Include="../../products/Constants/Constants.fsproj" />
     <ProjectReference Include="../../products/TargetDevice/TargetDevice.fsproj" />
     <ProjectReference Include="../TestCommon/TestCommon.fsproj" />
+    <ProjectReference Include="..\..\products\VHDXMedia\VHDXMedia.fsproj" />
   </ItemGroup>
 
 </Project>

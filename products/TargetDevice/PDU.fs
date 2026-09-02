@@ -140,7 +140,7 @@ type PDU() =
 
                     // Check header digest
                     let crc = Crc32C.Compute [| wbufBHS.ArraySegment; wbufAllAHS.ArraySegment; |]
-                    if crc <> Functions.NetworkBytesToUInt32 wbufHeaderDigest 0 then
+                    if crc <> ByteFunc.ReadU32BE wbufHeaderDigest 0u then
                         HLogger.Trace( LogID.E_HEADER_DIGEST_ERROR, fun g -> g.Gen0 loginfo )
                         raise <| ConnectionErrorException( "Header digest error.", tsih_me.fromValOpt 0us argTSIH, cid_me.fromValOpt 0us argCID )
 
@@ -174,7 +174,7 @@ type PDU() =
  
                     // Check data digest
                     let crc = Crc32C.Compute [| wbufDataSegment.ArraySegment; ArraySegment wbufDataSegmentPadding |]
-                    if crc <> Functions.NetworkBytesToUInt32 wbufDataDigest 0 then
+                    if crc <> ByteFunc.ReadU32BE wbufDataDigest 0u then
                         HLogger.Trace( LogID.W_DATA_DIGEST_ERROR, fun g -> g.Gen0 loginfo )
                         match standpoint with
                         | Standpoint.Target ->
@@ -232,7 +232,7 @@ type PDU() =
                     m_F = Functions.CheckBitflag wbufBHS.[1] Constants.FINAL_BIT;
                     m_OpcodeSpecific0 = [| wbufBHS.[1] &&& ~~~ Constants.FINAL_BIT;  wbufBHS.[2]; wbufBHS.[3] |];
                     m_LUNorOpcodeSpecific1 = wbufBHS.GetPartialBytes 8 15;
-                    m_InitiatorTaskTag = Functions.NetworkBytesToUInt32_InPooledBuffer wbufBHS 16 |> itt_me.fromPrim;
+                    m_InitiatorTaskTag = ByteFunc.ReadU32BEPB wbufBHS 16u |> itt_me.fromPrim;
                     m_OpcodeSpecific2 = wbufBHS.GetPartialBytes 20 47;
                     m_AHS = PDU.ParseAHSData wbufAllAHS argTSIH argCID argCounter objid;
                     m_DataSegment = wbufDataSegment;
@@ -506,9 +506,9 @@ type PDU() =
             );
             LUN = lun_me.fromBytes a.m_LUNorOpcodeSpecific1 0;
             InitiatorTaskTag = a.m_InitiatorTaskTag;
-            ExpectedDataTransferLength = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 0;
-            CmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 4 |> cmdsn_me.fromPrim;
-            ExpStatSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 8 |> statsn_me.fromPrim;
+            ExpectedDataTransferLength = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 0u;
+            CmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 4u |> cmdsn_me.fromPrim;
+            ExpStatSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 8u |> statsn_me.fromPrim;
             ScsiCDB =
                 if extendedCDBAHS = -1 then
                     a.m_OpcodeSpecific2.[12 .. 27]
@@ -519,7 +519,7 @@ type PDU() =
                 if expectedLengthAHS = -1 then
                     0u
                 else
-                    Functions.NetworkBytesToUInt32 a.m_AHS.[expectedLengthAHS].AHSSpecific2 0
+                    ByteFunc.ReadU32BE a.m_AHS.[expectedLengthAHS].AHSSpecific2 0u
             ByteCount = a.m_ReceivedByteCount;
         }
 
@@ -584,7 +584,7 @@ type PDU() =
         // Parse sense data in DataSegment.
         let wSenseLength =
             if a.m_DataSegment.Count > 0 then
-                Functions.NetworkBytesToUInt16_InPooledBuffer a.m_DataSegment 0
+                ByteFunc.ReadU16BEPB a.m_DataSegment 0u
             else
                 0us
 
@@ -632,13 +632,13 @@ type PDU() =
                 else
                     ScsiCmdStatCd.GOOD;
             InitiatorTaskTag = a.m_InitiatorTaskTag;
-            SNACKTag = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 0 |> snacktag_me.fromPrim;
-            StatSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 4 |> statsn_me.fromPrim;
-            ExpCmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 8 |> cmdsn_me.fromPrim;
-            MaxCmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 12 |> cmdsn_me.fromPrim;
-            ExpDataSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 16 |> datasn_me.fromPrim;
-            BidirectionalReadResidualCount = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 20;
-            ResidualCount = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 24;
+            SNACKTag = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 0u |> snacktag_me.fromPrim;
+            StatSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 4u |> statsn_me.fromPrim;
+            ExpCmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 8u |> cmdsn_me.fromPrim;
+            MaxCmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 12u |> cmdsn_me.fromPrim;
+            ExpDataSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 16u |> datasn_me.fromPrim;
+            BidirectionalReadResidualCount = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 20u;
+            ResidualCount = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 24u;
             SenseLength = wSenseLength;
             SenseData = wSenseData;
             ResponseData = wResponseData;
@@ -713,11 +713,11 @@ type PDU() =
             );
             LUN = lun_me.fromBytes a.m_LUNorOpcodeSpecific1 0;
             InitiatorTaskTag = a.m_InitiatorTaskTag;
-            ReferencedTaskTag = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 0 |> itt_me.fromPrim;
-            CmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 4 |> cmdsn_me.fromPrim;
-            ExpStatSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 8 |> statsn_me.fromPrim;
-            RefCmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 12 |> cmdsn_me.fromPrim;
-            ExpDataSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 16 |> datasn_me.fromPrim;
+            ReferencedTaskTag = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 0u |> itt_me.fromPrim;
+            CmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 4u |> cmdsn_me.fromPrim;
+            ExpStatSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 8u |> statsn_me.fromPrim;
+            RefCmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 12u |> cmdsn_me.fromPrim;
+            ExpDataSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 16u |> datasn_me.fromPrim;
             ByteCount = a.m_ReceivedByteCount;
         }
 
@@ -777,9 +777,9 @@ type PDU() =
                 raise <| SessionRecoveryException ( msg, wtsih )
             );
             InitiatorTaskTag = a.m_InitiatorTaskTag;
-            StatSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 4 |> statsn_me.fromPrim;
-            ExpCmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 8 |> cmdsn_me.fromPrim;
-            MaxCmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 12 |> cmdsn_me.fromPrim;
+            StatSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 4u |> statsn_me.fromPrim;
+            ExpCmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 8u |> cmdsn_me.fromPrim;
+            MaxCmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 12u |> cmdsn_me.fromPrim;
             ResponseFence = ResponseFenceNeedsFlag.Irrelevant;
         }
 
@@ -810,10 +810,10 @@ type PDU() =
             F = a.m_F;
             LUN = lun_me.fromBytes a.m_LUNorOpcodeSpecific1 0;
             InitiatorTaskTag = a.m_InitiatorTaskTag;
-            TargetTransferTag = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 0 |> ttt_me.fromPrim;
-            ExpStatSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 8 |> statsn_me.fromPrim;
-            DataSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 16 |> datasn_me.fromPrim;
-            BufferOffset = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 20;
+            TargetTransferTag = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 0u |> ttt_me.fromPrim;
+            ExpStatSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 8u |> statsn_me.fromPrim;
+            DataSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 16u |> datasn_me.fromPrim;
+            BufferOffset = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 20u;
             DataSegment = a.m_DataSegment;
             ByteCount = a.m_ReceivedByteCount;
         }
@@ -862,13 +862,13 @@ type PDU() =
                     ScsiCmdStatCd.GOOD;
             LUN = lun_me.fromBytes a.m_LUNorOpcodeSpecific1 0;
             InitiatorTaskTag = a.m_InitiatorTaskTag;
-            TargetTransferTag = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 0 |> ttt_me.fromPrim;
-            StatSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 4 |> statsn_me.fromPrim;
-            ExpCmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 8 |> cmdsn_me.fromPrim;
-            MaxCmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 12 |> cmdsn_me.fromPrim;
-            DataSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 16 |> datasn_me.fromPrim;
-            BufferOffset = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 20;
-            ResidualCount = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 24;
+            TargetTransferTag = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 0u |> ttt_me.fromPrim;
+            StatSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 4u |> statsn_me.fromPrim;
+            ExpCmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 8u |> cmdsn_me.fromPrim;
+            MaxCmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 12u |> cmdsn_me.fromPrim;
+            DataSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 16u |> datasn_me.fromPrim;
+            BufferOffset = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 20u;
+            ResidualCount = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 24u;
             DataSegment = a.m_DataSegment.ArraySegment;
             ResponseFence = ResponseFenceNeedsFlag.Irrelevant;
         }
@@ -919,13 +919,13 @@ type PDU() =
         let retvalue = {
             LUN = lun_me.fromBytes a.m_LUNorOpcodeSpecific1 0;
             InitiatorTaskTag = a.m_InitiatorTaskTag;
-            TargetTransferTag = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 0 |> ttt_me.fromPrim;
-            StatSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 4 |> statsn_me.fromPrim;
-            ExpCmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 8 |> cmdsn_me.fromPrim;
-            MaxCmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 12 |> cmdsn_me.fromPrim;
-            R2TSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 16 |> datasn_me.fromPrim;
-            BufferOffset = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 20;
-            DesiredDataTransferLength = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 24;
+            TargetTransferTag = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 0u |> ttt_me.fromPrim;
+            StatSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 4u |> statsn_me.fromPrim;
+            ExpCmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 8u |> cmdsn_me.fromPrim;
+            MaxCmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 12u |> cmdsn_me.fromPrim;
+            R2TSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 16u |> datasn_me.fromPrim;
+            BufferOffset = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 20u;
+            DesiredDataTransferLength = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 24u;
         }
 
         // Check DesiredDataTransferLength field value
@@ -967,7 +967,7 @@ type PDU() =
         // Parse sense data in DataSegment.
         let wSenseLength =
             if a.m_DataSegment.Count > 0 then
-                Functions.NetworkBytesToUInt16_InPooledBuffer a.m_DataSegment 0
+                ByteFunc.ReadU16BEPB a.m_DataSegment 0u
             else
                 0us
         let wSenseData =
@@ -985,18 +985,18 @@ type PDU() =
         let wAsyncEventByte = a.m_OpcodeSpecific2.[16]
         let retvalue = {
             LUN = lun_me.fromBytes a.m_LUNorOpcodeSpecific1 0;
-            StatSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 4 |> statsn_me.fromPrim;
-            ExpCmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 8 |> cmdsn_me.fromPrim;
-            MaxCmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 12 |> cmdsn_me.fromPrim;
+            StatSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 4u |> statsn_me.fromPrim;
+            ExpCmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 8u |> cmdsn_me.fromPrim;
+            MaxCmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 12u |> cmdsn_me.fromPrim;
             AsyncEvent = Constants.byteToAsyncEventCd wAsyncEventByte ( fun _ -> 
                 let msg = sprintf "In Asyncronous message PDU, AsyncEvent(0x%02X) field value is invalid." wAsyncEventByte
                 HLogger.Trace( LogID.E_ISCSI_FORMAT_ERROR, fun g -> g.Gen1( loginfo, msg ) )
                 raise <| SessionRecoveryException ( msg, wtsih )
             );
             AsyncVCode = a.m_OpcodeSpecific2.[17];
-            Parameter1 = Functions.NetworkBytesToUInt16 a.m_OpcodeSpecific2 18;
-            Parameter2 = Functions.NetworkBytesToUInt16 a.m_OpcodeSpecific2 20;
-            Parameter3 = Functions.NetworkBytesToUInt16 a.m_OpcodeSpecific2 22;
+            Parameter1 = ByteFunc.ReadU16BE a.m_OpcodeSpecific2 18u;
+            Parameter2 = ByteFunc.ReadU16BE a.m_OpcodeSpecific2 20u;
+            Parameter3 = ByteFunc.ReadU16BE a.m_OpcodeSpecific2 22u;
             SenseLength = wSenseLength;
             SenseData = wSenseData;
             ISCSIEventData = wISCSIEventData;
@@ -1032,9 +1032,9 @@ type PDU() =
             C = Functions.CheckBitflag a.m_OpcodeSpecific0.[0] Constants.CONTINUE_BIT;
             LUN = lun_me.fromBytes a.m_LUNorOpcodeSpecific1 0;
             InitiatorTaskTag = a.m_InitiatorTaskTag;
-            TargetTransferTag = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 0 |> ttt_me.fromPrim;
-            CmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 4 |> cmdsn_me.fromPrim;
-            ExpStatSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 8 |> statsn_me.fromPrim;
+            TargetTransferTag = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 0u |> ttt_me.fromPrim;
+            CmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 4u |> cmdsn_me.fromPrim;
+            ExpStatSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 8u |> statsn_me.fromPrim;
             TextRequest = a.m_DataSegment.ArraySegment.ToArray();    // Since it is troublesome and occurs infrequently, it is allocated from the heap.
             ByteCount = a.m_ReceivedByteCount;
         }
@@ -1078,10 +1078,10 @@ type PDU() =
             C = Functions.CheckBitflag a.m_OpcodeSpecific0.[0] Constants.CONTINUE_BIT;
             LUN = lun_me.fromBytes a.m_LUNorOpcodeSpecific1 0;
             InitiatorTaskTag = a.m_InitiatorTaskTag;
-            TargetTransferTag = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 0 |> ttt_me.fromPrim;
-            StatSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 4 |> statsn_me.fromPrim;
-            ExpCmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 8 |> cmdsn_me.fromPrim;
-            MaxCmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 12 |> cmdsn_me.fromPrim;
+            TargetTransferTag = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 0u |> ttt_me.fromPrim;
+            StatSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 4u |> statsn_me.fromPrim;
+            ExpCmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 8u |> cmdsn_me.fromPrim;
+            MaxCmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 12u |> cmdsn_me.fromPrim;
             TextResponse = a.m_DataSegment.ArraySegment.ToArray();    // Since it is troublesome and occurs infrequently, it is allocated from the heap.
         }
 
@@ -1144,14 +1144,14 @@ type PDU() =
                 isid_me.fromElem
                     ( a.m_LUNorOpcodeSpecific1.[0] &&& 0xC0uy )
                     ( a.m_LUNorOpcodeSpecific1.[0] &&& 0x3Fuy )
-                    ( Functions.NetworkBytesToUInt16 a.m_LUNorOpcodeSpecific1 1 )
+                    ( ByteFunc.ReadU16BE a.m_LUNorOpcodeSpecific1 1u )
                     ( a.m_LUNorOpcodeSpecific1.[3] )
-                    ( Functions.NetworkBytesToUInt16 a.m_LUNorOpcodeSpecific1 4 );
-            TSIH = Functions.NetworkBytesToUInt16 a.m_LUNorOpcodeSpecific1 6 |> tsih_me.fromPrim;
+                    ( ByteFunc.ReadU16BE a.m_LUNorOpcodeSpecific1 4u );
+            TSIH = ByteFunc.ReadU16BE a.m_LUNorOpcodeSpecific1 6u |> tsih_me.fromPrim;
             InitiatorTaskTag = a.m_InitiatorTaskTag;
-            CID = Functions.NetworkBytesToUInt16 a.m_OpcodeSpecific2 0 |> cid_me.fromPrim;
-            CmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 4 |> cmdsn_me.fromPrim;
-            ExpStatSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 8 |> statsn_me.fromPrim;
+            CID = ByteFunc.ReadU16BE a.m_OpcodeSpecific2 0u |> cid_me.fromPrim;
+            CmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 4u |> cmdsn_me.fromPrim;
+            ExpStatSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 8u |> statsn_me.fromPrim;
             TextRequest = a.m_DataSegment.ArraySegment.ToArray();    // Since it is troublesome and occurs infrequently, it is allocated from the heap.
             ByteCount = a.m_ReceivedByteCount;
         }
@@ -1238,15 +1238,15 @@ type PDU() =
                 isid_me.fromElem
                     ( a.m_LUNorOpcodeSpecific1.[0] &&& 0xC0uy )
                     ( a.m_LUNorOpcodeSpecific1.[0] &&& 0x3Fuy )
-                    ( Functions.NetworkBytesToUInt16 a.m_LUNorOpcodeSpecific1 1 )
+                    ( ByteFunc.ReadU16BE a.m_LUNorOpcodeSpecific1 1u )
                     ( a.m_LUNorOpcodeSpecific1.[3] )
-                    ( Functions.NetworkBytesToUInt16 a.m_LUNorOpcodeSpecific1 4 );
-            TSIH = Functions.NetworkBytesToUInt16 a.m_LUNorOpcodeSpecific1 6 |> tsih_me.fromPrim;
+                    ( ByteFunc.ReadU16BE a.m_LUNorOpcodeSpecific1 4u );
+            TSIH = ByteFunc.ReadU16BE a.m_LUNorOpcodeSpecific1 6u |> tsih_me.fromPrim;
             InitiatorTaskTag = a.m_InitiatorTaskTag;
-            StatSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 4 |> statsn_me.fromPrim;
-            ExpCmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 8 |> cmdsn_me.fromPrim;
-            MaxCmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 12 |> cmdsn_me.fromPrim;
-            Status = Constants.shortToLoginResStatCd ( Functions.NetworkBytesToUInt16 a.m_OpcodeSpecific2 16 ) ( fun c ->
+            StatSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 4u |> statsn_me.fromPrim;
+            ExpCmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 8u |> cmdsn_me.fromPrim;
+            MaxCmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 12u |> cmdsn_me.fromPrim;
+            Status = Constants.shortToLoginResStatCd ( ByteFunc.ReadU16BE a.m_OpcodeSpecific2 16u ) ( fun c ->
                 let msg = sprintf "In Login response PDU, Status-Class and Status-Detail(0x%04X) field value is invalid." c
                 HLogger.Trace( LogID.E_ISCSI_FORMAT_ERROR, fun g -> g.Gen1( loginfo, msg ) )
                 raise <| SessionRecoveryException ( msg, wtsih )
@@ -1334,9 +1334,9 @@ type PDU() =
                 raise <| SessionRecoveryException ( msg, wtsih )
             );
             InitiatorTaskTag = a.m_InitiatorTaskTag;
-            CID = Functions.NetworkBytesToUInt16 a.m_OpcodeSpecific2 0 |> cid_me.fromPrim;
-            CmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 4 |> cmdsn_me.fromPrim;
-            ExpStatSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 8 |> statsn_me.fromPrim;
+            CID = ByteFunc.ReadU16BE a.m_OpcodeSpecific2 0u |> cid_me.fromPrim;
+            CmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 4u |> cmdsn_me.fromPrim;
+            ExpStatSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 8u |> statsn_me.fromPrim;
             ByteCount = a.m_ReceivedByteCount;
         }
 
@@ -1384,11 +1384,11 @@ type PDU() =
                 raise <| SessionRecoveryException ( msg, wtsih )
             );
             InitiatorTaskTag = a.m_InitiatorTaskTag;
-            StatSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 4 |> statsn_me.fromPrim;
-            ExpCmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 8 |> cmdsn_me.fromPrim;
-            MaxCmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 12 |> cmdsn_me.fromPrim;
-            Time2Wait = Functions.NetworkBytesToUInt16 a.m_OpcodeSpecific2 20;
-            Time2Retain = Functions.NetworkBytesToUInt16 a.m_OpcodeSpecific2 22;
+            StatSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 4u |> statsn_me.fromPrim;
+            ExpCmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 8u |> cmdsn_me.fromPrim;
+            MaxCmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 12u |> cmdsn_me.fromPrim;
+            Time2Wait = ByteFunc.ReadU16BE a.m_OpcodeSpecific2 20u;
+            Time2Retain = ByteFunc.ReadU16BE a.m_OpcodeSpecific2 22u;
 
             // This value is an internally used flag, so there is no corresponding value in the received data.
             CloseAllegiantConnection = true;
@@ -1427,10 +1427,10 @@ type PDU() =
             );
             LUN = lun_me.fromBytes a.m_LUNorOpcodeSpecific1 0;
             InitiatorTaskTag = a.m_InitiatorTaskTag;
-            TargetTransferTag = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 0 |> ttt_me.fromPrim;
-            ExpStatSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 8 |> statsn_me.fromPrim;
-            BegRun = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 20;
-            RunLength = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 24;
+            TargetTransferTag = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 0u |> ttt_me.fromPrim;
+            ExpStatSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 8u |> statsn_me.fromPrim;
+            BegRun = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 20u;
+            RunLength = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 24u;
             ByteCount = a.m_ReceivedByteCount;
         }
 
@@ -1466,10 +1466,10 @@ type PDU() =
                 HLogger.Trace( LogID.E_ISCSI_FORMAT_ERROR, fun g -> g.Gen1( loginfo, msg ) )
                 raise <| SessionRecoveryException ( msg, wtsih )
             );
-            StatSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 4 |> statsn_me.fromPrim;
-            ExpCmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 8 |> cmdsn_me.fromPrim;
-            MaxCmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 12 |> cmdsn_me.fromPrim;
-            DataSN_or_R2TSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 16 |> datasn_me.fromPrim;
+            StatSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 4u |> statsn_me.fromPrim;
+            ExpCmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 8u |> cmdsn_me.fromPrim;
+            MaxCmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 12u |> cmdsn_me.fromPrim;
+            DataSN_or_R2TSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 16u |> datasn_me.fromPrim;
             HeaderData = a.m_DataSegment.ArraySegment.ToArray();    // Since it is troublesome and occurs infrequently, it is allocated from the heap.
         }
 
@@ -1504,9 +1504,9 @@ type PDU() =
             I = a.m_I;
             LUN = lun_me.fromBytes a.m_LUNorOpcodeSpecific1 0;
             InitiatorTaskTag = a.m_InitiatorTaskTag;
-            TargetTransferTag = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 0 |> ttt_me.fromPrim;
-            CmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 4 |> cmdsn_me.fromPrim;
-            ExpStatSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 8 |> statsn_me.fromPrim;
+            TargetTransferTag = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 0u |> ttt_me.fromPrim;
+            CmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 4u |> cmdsn_me.fromPrim;
+            ExpStatSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 8u |> statsn_me.fromPrim;
             PingData = a.m_DataSegment;
             ByteCount = a.m_ReceivedByteCount;
         }
@@ -1543,10 +1543,10 @@ type PDU() =
         let retvalue = {
             LUN = lun_me.fromBytes a.m_LUNorOpcodeSpecific1 0;
             InitiatorTaskTag = a.m_InitiatorTaskTag;
-            TargetTransferTag = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 0 |> ttt_me.fromPrim;
-            StatSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 4 |> statsn_me.fromPrim;
-            ExpCmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 8 |> cmdsn_me.fromPrim;
-            MaxCmdSN = Functions.NetworkBytesToUInt32 a.m_OpcodeSpecific2 12 |> cmdsn_me.fromPrim;
+            TargetTransferTag = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 0u |> ttt_me.fromPrim;
+            StatSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 4u |> statsn_me.fromPrim;
+            ExpCmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 8u |> cmdsn_me.fromPrim;
+            MaxCmdSN = ByteFunc.ReadU32BE a.m_OpcodeSpecific2 12u |> cmdsn_me.fromPrim;
             PingData = a.m_DataSegment;
         }
 
@@ -1570,7 +1570,7 @@ type PDU() =
     ///   Written bytes count.
     /// </returns>
     static member private WriteAHSDataToBuffer ( argAHS : AHS ) ( argBuf : byte[] ) ( s : int32 ) : int32 =
-        Functions.UInt16ToNetworkBytes argBuf ( s + 0 ) argAHS.AHSLength
+        ByteFunc.WriteU16BE argBuf ( uint32 s + 0u ) argAHS.AHSLength
         argBuf.[ s + 2 ] <- (byte argAHS.AHSType )
         argBuf.[ s + 3 ] <- argAHS.AHSSpecific1
         Array.blit argAHS.AHSSpecific2 0 argBuf ( s + 4 ) argAHS.AHSSpecific2.Length
@@ -1764,7 +1764,7 @@ type PDU() =
                 let vDigest = 
                     if argDataDigest = DigestType.DST_CRC32C then
                         Crc32C.Compute( [| v; ArraySegment( paddBytes ); |] )
-                        |> Functions.UInt32ToNetworkBytes_NewVec
+                        |> ByteFunc.U32ToNVBE
                         |> Some
                     else
                         None
@@ -2215,7 +2215,7 @@ type PDU() =
                             AHSLength = 5us;
                             AHSType = AHSTypeCd.EXPECTED_LENGTH;
                             AHSSpecific1 = 0uy;
-                            AHSSpecific2 = Functions.UInt32ToNetworkBytes_NewVec argPDU.BidirectionalExpectedReadDataLength;
+                            AHSSpecific2 = ByteFunc.U32ToNVBE argPDU.BidirectionalExpectedReadDataLength;
                         }
                 |]
             let AHSLength = Array.fold ( fun acc i -> acc + 4 + i.AHSSpecific2.Length ) 0 vAHS
@@ -2237,10 +2237,10 @@ type PDU() =
             wbuf.Array.[6] <- byte( wDataSegmentLength >>> 8 )
             wbuf.Array.[7] <- byte( wDataSegmentLength )
             lun_me.toBytes wbuf.Array 8 argPDU.LUN
-            Functions.UInt32ToNetworkBytes wbuf.Array 16 ( itt_me.toPrim argPDU.InitiatorTaskTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 20 argPDU.ExpectedDataTransferLength
-            Functions.UInt32ToNetworkBytes wbuf.Array 24 ( cmdsn_me.toPrim argPDU.CmdSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 28 ( statsn_me.toPrim argPDU.ExpStatSN )
+            ByteFunc.WriteU32BE wbuf.Array 16u ( itt_me.toPrim argPDU.InitiatorTaskTag )
+            ByteFunc.WriteU32BE wbuf.Array 20u argPDU.ExpectedDataTransferLength
+            ByteFunc.WriteU32BE wbuf.Array 24u ( cmdsn_me.toPrim argPDU.CmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 28u ( statsn_me.toPrim argPDU.ExpStatSN )
             Array.blit argPDU.ScsiCDB 0 wbuf.Array 32 16
             if vAHS.Length > 0 then
                 let w = PDU.WriteAHSDataToBuffer vAHS.[0] wbuf.Array 48
@@ -2258,7 +2258,7 @@ type PDU() =
                 let headerDigestLen =
                     if argHeaderDigest = DigestType.DST_CRC32C then 4u else 0u
                 if headerDigestLen > 0u then
-                    let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
+                    let vDigest = ByteFunc.U32ToNVBE <| Crc32C.Compute( wbuf.ArraySegment )
                     let! _ = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
                     ()
 
@@ -2353,14 +2353,14 @@ type PDU() =
             wbuf.Array.[5] <- byte( wDataSegmentLength >>> 16 )
             wbuf.Array.[6] <- byte( wDataSegmentLength >>> 8 )
             wbuf.Array.[7] <- byte( wDataSegmentLength )
-            Functions.UInt32ToNetworkBytes wbuf.Array 16 ( itt_me.toPrim argPDU.InitiatorTaskTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 20 ( snacktag_me.toPrim argPDU.SNACKTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 24 ( statsn_me.toPrim argPDU.StatSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 28 ( cmdsn_me.toPrim argPDU.ExpCmdSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 32 ( cmdsn_me.toPrim argPDU.MaxCmdSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 36 ( datasn_me.toPrim argPDU.ExpDataSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 40 argPDU.BidirectionalReadResidualCount
-            Functions.UInt32ToNetworkBytes wbuf.Array 44 argPDU.ResidualCount
+            ByteFunc.WriteU32BE wbuf.Array 16u ( itt_me.toPrim argPDU.InitiatorTaskTag )
+            ByteFunc.WriteU32BE wbuf.Array 20u ( snacktag_me.toPrim argPDU.SNACKTag )
+            ByteFunc.WriteU32BE wbuf.Array 24u ( statsn_me.toPrim argPDU.StatSN )
+            ByteFunc.WriteU32BE wbuf.Array 28u ( cmdsn_me.toPrim argPDU.ExpCmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 32u ( cmdsn_me.toPrim argPDU.MaxCmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 36u ( datasn_me.toPrim argPDU.ExpDataSN )
+            ByteFunc.WriteU32BE wbuf.Array 40u argPDU.BidirectionalReadResidualCount
+            ByteFunc.WriteU32BE wbuf.Array 44u argPDU.ResidualCount
 
             // Send BHS data
             let! bhsLen =
@@ -2377,7 +2377,7 @@ type PDU() =
                 let headerDigestLen =
                     if argHeaderDigest = DigestType.DST_CRC32C then 4u else 0u
                 if headerDigestLen > 0u then
-                    let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
+                    let vDigest = ByteFunc.U32ToNVBE <| Crc32C.Compute( wbuf.ArraySegment )
                     let! _ = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
                     ()
         
@@ -2387,7 +2387,7 @@ type PDU() =
                 else
                     // Send DataSegment
                     let wSenseDataBytes = argPDU.SenseData
-                    let SenseDataLengthBytes = Functions.UInt16ToNetworkBytes_NewVec( uint16 wSenseDataBytes.Count )
+                    let SenseDataLengthBytes = ByteFunc.U16ToNVBE( uint16 wSenseDataBytes.Count )
 
                     let! senseLenLen = PDU.SendBytes( sock, SenseDataLengthBytes, argTSIH, argCID, argCounter, objid )
                     let! senseLen = PDU.SendBytes( sock, argPDU.SenseData, argTSIH, argCID, argCounter, objid )
@@ -2409,7 +2409,7 @@ type PDU() =
                                 argPDU.ResponseData;
                                 ArraySegment( paddBytes );
                             |]
-                            |> Functions.UInt32ToNetworkBytes_NewVec
+                            |> ByteFunc.U32ToNVBE
                         else
                             Array.empty
         
@@ -2485,19 +2485,19 @@ type PDU() =
             wbuf.Array.[0] <- ( Functions.SetBitflag argPDU.I Constants.IMMIDIATE_BIT ) ||| ( byte OpcodeCd.SCSI_TASK_MGR_REQ )
             wbuf.Array.[1] <- Constants.FINAL_BIT ||| ( byte argPDU.Function )
             lun_me.toBytes wbuf.Array 8 argPDU.LUN
-            Functions.UInt32ToNetworkBytes wbuf.Array 16 ( itt_me.toPrim argPDU.InitiatorTaskTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 20 ( itt_me.toPrim argPDU.ReferencedTaskTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 24 ( cmdsn_me.toPrim argPDU.CmdSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 28 ( statsn_me.toPrim argPDU.ExpStatSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 32 ( cmdsn_me.toPrim argPDU.RefCmdSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 36 ( datasn_me.toPrim argPDU.ExpDataSN )
+            ByteFunc.WriteU32BE wbuf.Array 16u ( itt_me.toPrim argPDU.InitiatorTaskTag )
+            ByteFunc.WriteU32BE wbuf.Array 20u ( itt_me.toPrim argPDU.ReferencedTaskTag )
+            ByteFunc.WriteU32BE wbuf.Array 24u ( cmdsn_me.toPrim argPDU.CmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 28u ( statsn_me.toPrim argPDU.ExpStatSN )
+            ByteFunc.WriteU32BE wbuf.Array 32u ( cmdsn_me.toPrim argPDU.RefCmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 36u ( datasn_me.toPrim argPDU.ExpDataSN )
 
             // Send BHS data
             let! bhsLen = PDU.SendBytes( sock, wbuf.ArraySegment, argTSIH, argCID, argCounter, objid )
 
             // send Header Digest
             if ( not headerOnly ) && argHeaderDigest = DigestType.DST_CRC32C then
-                let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
+                let vDigest = ByteFunc.U32ToNVBE <| Crc32C.Compute( wbuf.ArraySegment )
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
                 wbuf.Return()
                 return bhsLen + headerDigestLen
@@ -2571,17 +2571,17 @@ type PDU() =
             wbuf.Array.[0] <- ( byte OpcodeCd.SCSI_TASK_MGR_RES )
             wbuf.Array.[1] <- Constants.FINAL_BIT
             wbuf.Array.[2] <- byte argPDU.Response
-            Functions.UInt32ToNetworkBytes wbuf.Array 16 ( itt_me.toPrim argPDU.InitiatorTaskTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 24 ( statsn_me.toPrim argPDU.StatSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 28 ( cmdsn_me.toPrim argPDU.ExpCmdSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 32 ( cmdsn_me.toPrim argPDU.MaxCmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 16u ( itt_me.toPrim argPDU.InitiatorTaskTag )
+            ByteFunc.WriteU32BE wbuf.Array 24u ( statsn_me.toPrim argPDU.StatSN )
+            ByteFunc.WriteU32BE wbuf.Array 28u ( cmdsn_me.toPrim argPDU.ExpCmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 32u ( cmdsn_me.toPrim argPDU.MaxCmdSN )
 
             // send BHS data
             let! bhsLen = PDU.SendBytes( sock, wbuf.ArraySegment, argTSIH, argCID, argCounter, objid )
 
             // send Header Digest
             if ( not headerOnly ) && argHeaderDigest = DigestType.DST_CRC32C then
-                let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
+                let vDigest = ByteFunc.U32ToNVBE <| Crc32C.Compute( wbuf.ArraySegment )
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
                 wbuf.Return()
                 return bhsLen + headerDigestLen
@@ -2660,11 +2660,11 @@ type PDU() =
             wbuf.Array.[6] <- byte( wDataSegmentLength >>> 8 )
             wbuf.Array.[7] <- byte( wDataSegmentLength )
             lun_me.toBytes wbuf.Array 8 argPDU.LUN
-            Functions.UInt32ToNetworkBytes wbuf.Array 16 ( itt_me.toPrim argPDU.InitiatorTaskTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 20 ( ttt_me.toPrim argPDU.TargetTransferTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 28 ( statsn_me.toPrim argPDU.ExpStatSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 36 ( datasn_me.toPrim argPDU.DataSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 40 argPDU.BufferOffset
+            ByteFunc.WriteU32BE wbuf.Array 16u ( itt_me.toPrim argPDU.InitiatorTaskTag )
+            ByteFunc.WriteU32BE wbuf.Array 20u ( ttt_me.toPrim argPDU.TargetTransferTag )
+            ByteFunc.WriteU32BE wbuf.Array 28u ( statsn_me.toPrim argPDU.ExpStatSN )
+            ByteFunc.WriteU32BE wbuf.Array 36u ( datasn_me.toPrim argPDU.DataSN )
+            ByteFunc.WriteU32BE wbuf.Array 40u argPDU.BufferOffset
 
             // send BHS data
             let! bhsLen = PDU.SendBytes( sock, wbuf.ArraySegment, argTSIH, argCID, argCounter, objid )
@@ -2679,7 +2679,7 @@ type PDU() =
                 // Create and send Header Digest
                 let vDigest =
                     if argHeaderDigest = DigestType.DST_CRC32C then
-                        Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
+                        ByteFunc.U32ToNVBE <| Crc32C.Compute( wbuf.ArraySegment )
                     else
                         Array.empty
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
@@ -2766,14 +2766,14 @@ type PDU() =
             wbuf.Array.[6] <- byte( wDataSegmentLength >>> 8 )
             wbuf.Array.[7] <- byte( wDataSegmentLength )
             lun_me.toBytes wbuf.Array 8 argPDU.LUN
-            Functions.UInt32ToNetworkBytes wbuf.Array 16 ( itt_me.toPrim argPDU.InitiatorTaskTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 20 ( ttt_me.toPrim argPDU.TargetTransferTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 24 ( statsn_me.toPrim argPDU.StatSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 28 ( cmdsn_me.toPrim argPDU.ExpCmdSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 32 ( cmdsn_me.toPrim argPDU.MaxCmdSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 36 ( datasn_me.toPrim argPDU.DataSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 40 argPDU.BufferOffset
-            Functions.UInt32ToNetworkBytes wbuf.Array 44 argPDU.ResidualCount
+            ByteFunc.WriteU32BE wbuf.Array 16u ( itt_me.toPrim argPDU.InitiatorTaskTag )
+            ByteFunc.WriteU32BE wbuf.Array 20u ( ttt_me.toPrim argPDU.TargetTransferTag )
+            ByteFunc.WriteU32BE wbuf.Array 24u ( statsn_me.toPrim argPDU.StatSN )
+            ByteFunc.WriteU32BE wbuf.Array 28u ( cmdsn_me.toPrim argPDU.ExpCmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 32u ( cmdsn_me.toPrim argPDU.MaxCmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 36u ( datasn_me.toPrim argPDU.DataSN )
+            ByteFunc.WriteU32BE wbuf.Array 40u argPDU.BufferOffset
+            ByteFunc.WriteU32BE wbuf.Array 44u argPDU.ResidualCount
 
             // send BHS data
             let! bhsLen = PDU.SendBytes( sock, wbuf.ArraySegment, argTSIH, argCID, argCounter, objid )
@@ -2788,7 +2788,7 @@ type PDU() =
                 // Create and send Header Digest
                 let vDigest =
                     if argHeaderDigest = DigestType.DST_CRC32C then
-                        Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
+                        ByteFunc.U32ToNVBE <| Crc32C.Compute( wbuf.ArraySegment )
                     else
                         Array.empty
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
@@ -2865,21 +2865,21 @@ type PDU() =
             wbuf.Array.[0] <- ( byte OpcodeCd.R2T )
             wbuf.Array.[1] <- Constants.FINAL_BIT
             lun_me.toBytes wbuf.Array 8 argPDU.LUN
-            Functions.UInt32ToNetworkBytes wbuf.Array 16 ( itt_me.toPrim argPDU.InitiatorTaskTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 20 ( ttt_me.toPrim argPDU.TargetTransferTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 24 ( statsn_me.toPrim argPDU.StatSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 28 ( cmdsn_me.toPrim argPDU.ExpCmdSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 32 ( cmdsn_me.toPrim argPDU.MaxCmdSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 36 ( datasn_me.toPrim argPDU.R2TSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 40 argPDU.BufferOffset
-            Functions.UInt32ToNetworkBytes wbuf.Array 44 argPDU.DesiredDataTransferLength
+            ByteFunc.WriteU32BE wbuf.Array 16u ( itt_me.toPrim argPDU.InitiatorTaskTag )
+            ByteFunc.WriteU32BE wbuf.Array 20u ( ttt_me.toPrim argPDU.TargetTransferTag )
+            ByteFunc.WriteU32BE wbuf.Array 24u ( statsn_me.toPrim argPDU.StatSN )
+            ByteFunc.WriteU32BE wbuf.Array 28u ( cmdsn_me.toPrim argPDU.ExpCmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 32u ( cmdsn_me.toPrim argPDU.MaxCmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 36u ( datasn_me.toPrim argPDU.R2TSN )
+            ByteFunc.WriteU32BE wbuf.Array 40u argPDU.BufferOffset
+            ByteFunc.WriteU32BE wbuf.Array 44u argPDU.DesiredDataTransferLength
 
             // send BHS data
             let! bhsLen = PDU.SendBytes( sock, wbuf.ArraySegment, argTSIH, argCID, argCounter, objid )
 
             // Create and send Header Digest
             if ( not headerOnly ) && argHeaderDigest = DigestType.DST_CRC32C then
-                let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
+                let vDigest = ByteFunc.U32ToNVBE <| Crc32C.Compute( wbuf.ArraySegment )
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
 
                 wbuf.Return()
@@ -2962,15 +2962,15 @@ type PDU() =
             wbuf.Array.[6] <- byte( wDataSegmentLength >>> 8 )
             wbuf.Array.[7] <- byte( wDataSegmentLength )
             lun_me.toBytes wbuf.Array 8 argPDU.LUN
-            Functions.UInt32ToNetworkBytes wbuf.Array 16 0xFFFFFFFFu
-            Functions.UInt32ToNetworkBytes wbuf.Array 24 ( statsn_me.toPrim argPDU.StatSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 28 ( cmdsn_me.toPrim argPDU.ExpCmdSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 32 ( cmdsn_me.toPrim argPDU.MaxCmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 16u 0xFFFFFFFFu
+            ByteFunc.WriteU32BE wbuf.Array 24u ( statsn_me.toPrim argPDU.StatSN )
+            ByteFunc.WriteU32BE wbuf.Array 28u ( cmdsn_me.toPrim argPDU.ExpCmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 32u ( cmdsn_me.toPrim argPDU.MaxCmdSN )
             wbuf.Array.[36] <- byte argPDU.AsyncEvent
             wbuf.Array.[37] <- argPDU.AsyncVCode
-            Functions.UInt16ToNetworkBytes wbuf.Array 38 argPDU.Parameter1
-            Functions.UInt16ToNetworkBytes wbuf.Array 40 argPDU.Parameter2
-            Functions.UInt16ToNetworkBytes wbuf.Array 42 argPDU.Parameter3
+            ByteFunc.WriteU16BE wbuf.Array 38u argPDU.Parameter1
+            ByteFunc.WriteU16BE wbuf.Array 40u argPDU.Parameter2
+            ByteFunc.WriteU16BE wbuf.Array 42u argPDU.Parameter3
 
             // send BHS data
             let! bhsLen = PDU.SendBytes( sock, wbuf.ArraySegment, argTSIH, argCID, argCounter, objid )
@@ -2985,7 +2985,7 @@ type PDU() =
                 // Create and send Header Digest
                 let vDigest =
                     if argHeaderDigest = DigestType.DST_CRC32C then
-                        Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
+                        ByteFunc.U32ToNVBE <| Crc32C.Compute( wbuf.ArraySegment )
                     else
                         Array.empty
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
@@ -2998,7 +2998,7 @@ type PDU() =
                     // Send DataSegment
                     let paddBytesCount = ( Functions.AddPaddingLengthUInt32 wDataSegmentLength 4u ) - wDataSegmentLength
                     let paddBytes : byte[] = Array.zeroCreate( int32 paddBytesCount )
-                    let SenseDataLengthBytes = Functions.UInt16ToNetworkBytes_NewVec( uint16 argPDU.SenseData.Length )
+                    let SenseDataLengthBytes = ByteFunc.U16ToNVBE( uint16 argPDU.SenseData.Length )
 
                     let! senseDataLengthLen = PDU.SendBytes( sock, SenseDataLengthBytes, argTSIH, argCID, argCounter, objid )
                     let! senseDataLen = PDU.SendBytes( sock, argPDU.SenseData, argTSIH, argCID, argCounter, objid )
@@ -3008,7 +3008,7 @@ type PDU() =
                     // Send Data Digest
                     let vDigest =
                         if argDataDigest = DigestType.DST_CRC32C then
-                            Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( [| SenseDataLengthBytes; argPDU.SenseData; argPDU.ISCSIEventData; paddBytes; |] )
+                            ByteFunc.U32ToNVBE <| Crc32C.Compute( [| SenseDataLengthBytes; argPDU.SenseData; argPDU.ISCSIEventData; paddBytes; |] )
                         else
                             Array.empty
                     let! dataDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
@@ -3080,10 +3080,10 @@ type PDU() =
             wbuf.Array.[6] <- byte( wDataSegmentLength >>> 8 )
             wbuf.Array.[7] <- byte( wDataSegmentLength )
             lun_me.toBytes wbuf.Array 8 argPDU.LUN
-            Functions.UInt32ToNetworkBytes wbuf.Array 16 ( itt_me.toPrim argPDU.InitiatorTaskTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 20 ( ttt_me.toPrim argPDU.TargetTransferTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 24 ( cmdsn_me.toPrim argPDU.CmdSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 28 ( statsn_me.toPrim argPDU.ExpStatSN )
+            ByteFunc.WriteU32BE wbuf.Array 16u ( itt_me.toPrim argPDU.InitiatorTaskTag )
+            ByteFunc.WriteU32BE wbuf.Array 20u ( ttt_me.toPrim argPDU.TargetTransferTag )
+            ByteFunc.WriteU32BE wbuf.Array 24u ( cmdsn_me.toPrim argPDU.CmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 28u ( statsn_me.toPrim argPDU.ExpStatSN )
 
             // send BHS data
             let! bhsLen = PDU.SendBytes( sock, wbuf.ArraySegment, argTSIH, argCID, argCounter, objid )
@@ -3098,7 +3098,7 @@ type PDU() =
                 // Create and send Header Digest
                 let vDigest =
                     if argHeaderDigest = DigestType.DST_CRC32C then
-                        Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
+                        ByteFunc.U32ToNVBE <| Crc32C.Compute( wbuf.ArraySegment )
                     else
                         Array.empty
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
@@ -3176,11 +3176,11 @@ type PDU() =
             wbuf.Array.[6] <- byte( wDataSegmentLength >>> 8 )
             wbuf.Array.[7] <- byte( wDataSegmentLength )
             lun_me.toBytes wbuf.Array 8 argPDU.LUN
-            Functions.UInt32ToNetworkBytes wbuf.Array 16 ( itt_me.toPrim argPDU.InitiatorTaskTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 20 ( ttt_me.toPrim argPDU.TargetTransferTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 24 ( statsn_me.toPrim argPDU.StatSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 28 ( cmdsn_me.toPrim argPDU.ExpCmdSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 32 ( cmdsn_me.toPrim argPDU.MaxCmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 16u ( itt_me.toPrim argPDU.InitiatorTaskTag )
+            ByteFunc.WriteU32BE wbuf.Array 20u ( ttt_me.toPrim argPDU.TargetTransferTag )
+            ByteFunc.WriteU32BE wbuf.Array 24u ( statsn_me.toPrim argPDU.StatSN )
+            ByteFunc.WriteU32BE wbuf.Array 28u ( cmdsn_me.toPrim argPDU.ExpCmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 32u ( cmdsn_me.toPrim argPDU.MaxCmdSN )
 
             // send BHS data
             let! bhsLen = PDU.SendBytes( sock, wbuf.ArraySegment, argTSIH, argCID, argCounter, objid )
@@ -3195,7 +3195,7 @@ type PDU() =
                 // Create and send Header Digest
                 let vDigest =
                     if argHeaderDigest = DigestType.DST_CRC32C then
-                        Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
+                        ByteFunc.U32ToNVBE <| Crc32C.Compute( wbuf.ArraySegment )
                     else
                         Array.empty
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
@@ -3278,14 +3278,14 @@ type PDU() =
             wbuf.Array.[6] <- byte( wDataSegmentLength >>> 8 )
             wbuf.Array.[7] <- byte( wDataSegmentLength )
             wbuf.Array.[8] <- ( isid_me.get_T argPDU.ISID ) ||| ( isid_me.get_A argPDU.ISID )
-            Functions.UInt16ToNetworkBytes wbuf.Array 9 ( isid_me.get_B argPDU.ISID )
+            ByteFunc.WriteU16BE wbuf.Array 9u ( isid_me.get_B argPDU.ISID )
             wbuf.Array.[11] <- ( isid_me.get_C argPDU.ISID )
-            Functions.UInt16ToNetworkBytes wbuf.Array 12 ( isid_me.get_D argPDU.ISID )
-            Functions.UInt16ToNetworkBytes wbuf.Array 14 ( tsih_me.toPrim argPDU.TSIH )
-            Functions.UInt32ToNetworkBytes wbuf.Array 16 ( itt_me.toPrim argPDU.InitiatorTaskTag )
-            Functions.UInt16ToNetworkBytes wbuf.Array 20 ( cid_me.toPrim argPDU.CID )
-            Functions.UInt32ToNetworkBytes wbuf.Array 24 ( cmdsn_me.toPrim argPDU.CmdSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 28 ( statsn_me.toPrim argPDU.ExpStatSN )
+            ByteFunc.WriteU16BE wbuf.Array 12u ( isid_me.get_D argPDU.ISID )
+            ByteFunc.WriteU16BE wbuf.Array 14u ( tsih_me.toPrim argPDU.TSIH )
+            ByteFunc.WriteU32BE wbuf.Array 16u ( itt_me.toPrim argPDU.InitiatorTaskTag )
+            ByteFunc.WriteU16BE wbuf.Array 20u ( cid_me.toPrim argPDU.CID )
+            ByteFunc.WriteU32BE wbuf.Array 24u ( cmdsn_me.toPrim argPDU.CmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 28u ( statsn_me.toPrim argPDU.ExpStatSN )
 
             // send BHS data
             let! bhsLen = PDU.SendBytes( sock, wbuf.ArraySegment, argTSIH, argCID, argCounter, objid )
@@ -3300,7 +3300,7 @@ type PDU() =
                 // Create and send Header Digest
                 let vDigest =
                     if argHeaderDigest = DigestType.DST_CRC32C then
-                        Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
+                        ByteFunc.U32ToNVBE <| Crc32C.Compute( wbuf.ArraySegment )
                     else
                         Array.empty
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
@@ -3383,15 +3383,15 @@ type PDU() =
             wbuf.Array.[6] <- byte( wDataSegmentLength >>> 8 )
             wbuf.Array.[7] <- byte( wDataSegmentLength )
             wbuf.Array.[8] <- ( isid_me.get_T argPDU.ISID ) ||| ( isid_me.get_A argPDU.ISID )
-            Functions.UInt16ToNetworkBytes wbuf.Array 9 ( isid_me.get_B argPDU.ISID )
+            ByteFunc.WriteU16BE wbuf.Array 9u ( isid_me.get_B argPDU.ISID )
             wbuf.Array.[11] <- ( isid_me.get_C argPDU.ISID )
-            Functions.UInt16ToNetworkBytes wbuf.Array 12 ( isid_me.get_D argPDU.ISID )
-            Functions.UInt16ToNetworkBytes wbuf.Array 14 ( tsih_me.toPrim argPDU.TSIH )
-            Functions.UInt32ToNetworkBytes wbuf.Array 16 ( itt_me.toPrim argPDU.InitiatorTaskTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 24 ( statsn_me.toPrim argPDU.StatSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 28 ( cmdsn_me.toPrim argPDU.ExpCmdSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 32 ( cmdsn_me.toPrim argPDU.MaxCmdSN )
-            Functions.UInt16ToNetworkBytes wbuf.Array 36 ( uint16 argPDU.Status )
+            ByteFunc.WriteU16BE wbuf.Array 12u ( isid_me.get_D argPDU.ISID )
+            ByteFunc.WriteU16BE wbuf.Array 14u ( tsih_me.toPrim argPDU.TSIH )
+            ByteFunc.WriteU32BE wbuf.Array 16u ( itt_me.toPrim argPDU.InitiatorTaskTag )
+            ByteFunc.WriteU32BE wbuf.Array 24u ( statsn_me.toPrim argPDU.StatSN )
+            ByteFunc.WriteU32BE wbuf.Array 28u ( cmdsn_me.toPrim argPDU.ExpCmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 32u ( cmdsn_me.toPrim argPDU.MaxCmdSN )
+            ByteFunc.WriteU16BE wbuf.Array 36u ( uint16 argPDU.Status )
 
             // send BHS data
             let! bhsLen = PDU.SendBytes( sock, wbuf.ArraySegment, argTSIH, argCID, argCounter, objid )
@@ -3406,7 +3406,7 @@ type PDU() =
                 // Create and send Header Digest
                 let vDigest =
                     if argHeaderDigest = DigestType.DST_CRC32C then
-                        Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
+                        ByteFunc.U32ToNVBE <| Crc32C.Compute( wbuf.ArraySegment )
                     else
                         Array.empty
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
@@ -3483,17 +3483,17 @@ type PDU() =
             // Create BHS data
             wbuf.Array.[0] <- ( Functions.SetBitflag argPDU.I Constants.IMMIDIATE_BIT ) ||| ( byte OpcodeCd.LOGOUT_REQ )
             wbuf.Array.[1] <- Constants.FINAL_BIT ||| ( byte argPDU.ReasonCode )
-            Functions.UInt32ToNetworkBytes wbuf.Array 16 ( itt_me.toPrim argPDU.InitiatorTaskTag )
-            Functions.UInt16ToNetworkBytes wbuf.Array 20 ( cid_me.toPrim argPDU.CID )
-            Functions.UInt32ToNetworkBytes wbuf.Array 24 ( cmdsn_me.toPrim argPDU.CmdSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 28 ( statsn_me.toPrim argPDU.ExpStatSN )
+            ByteFunc.WriteU32BE wbuf.Array 16u ( itt_me.toPrim argPDU.InitiatorTaskTag )
+            ByteFunc.WriteU16BE wbuf.Array 20u ( cid_me.toPrim argPDU.CID )
+            ByteFunc.WriteU32BE wbuf.Array 24u ( cmdsn_me.toPrim argPDU.CmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 28u ( statsn_me.toPrim argPDU.ExpStatSN )
 
             // send BHS data
             let! bhsLen = PDU.SendBytes( sock, wbuf.ArraySegment, argTSIH, argCID, argCounter, objid )
 
             // Create and send Header Digest
             if ( not headerOnly ) && argHeaderDigest = DigestType.DST_CRC32C then
-                let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
+                let vDigest = ByteFunc.U32ToNVBE <| Crc32C.Compute( wbuf.ArraySegment )
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
 
                 wbuf.Return()
@@ -3568,19 +3568,19 @@ type PDU() =
             wbuf.Array.[0] <- ( byte OpcodeCd.LOGOUT_RES )
             wbuf.Array.[1] <- Constants.FINAL_BIT
             wbuf.Array.[2] <- byte argPDU.Response
-            Functions.UInt32ToNetworkBytes wbuf.Array 16 ( itt_me.toPrim argPDU.InitiatorTaskTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 24 ( statsn_me.toPrim argPDU.StatSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 28 ( cmdsn_me.toPrim argPDU.ExpCmdSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 32 ( cmdsn_me.toPrim argPDU.MaxCmdSN )
-            Functions.UInt16ToNetworkBytes wbuf.Array 40 argPDU.Time2Wait
-            Functions.UInt16ToNetworkBytes wbuf.Array 42 argPDU.Time2Retain
+            ByteFunc.WriteU32BE wbuf.Array 16u ( itt_me.toPrim argPDU.InitiatorTaskTag )
+            ByteFunc.WriteU32BE wbuf.Array 24u ( statsn_me.toPrim argPDU.StatSN )
+            ByteFunc.WriteU32BE wbuf.Array 28u ( cmdsn_me.toPrim argPDU.ExpCmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 32u ( cmdsn_me.toPrim argPDU.MaxCmdSN )
+            ByteFunc.WriteU16BE wbuf.Array 40u argPDU.Time2Wait
+            ByteFunc.WriteU16BE wbuf.Array 42u argPDU.Time2Retain
 
             // send BHS data
             let! bhsLen = PDU.SendBytes( sock, wbuf.ArraySegment, argTSIH, argCID, argCounter, objid )
 
             // Create and send Header Digest
             if ( not headerOnly ) && argHeaderDigest = DigestType.DST_CRC32C then
-                let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
+                let vDigest = ByteFunc.U32ToNVBE <| Crc32C.Compute( wbuf.ArraySegment )
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
 
                 wbuf.Return()
@@ -3655,18 +3655,18 @@ type PDU() =
             wbuf.Array.[0] <- ( byte OpcodeCd.SNACK )
             wbuf.Array.[1] <- Constants.FINAL_BIT ||| ( byte argPDU.Type )
             lun_me.toBytes wbuf.Array 8 argPDU.LUN
-            Functions.UInt32ToNetworkBytes wbuf.Array 16 ( itt_me.toPrim argPDU.InitiatorTaskTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 20 ( ttt_me.toPrim argPDU.TargetTransferTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 28 ( statsn_me.toPrim argPDU.ExpStatSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 40 argPDU.BegRun
-            Functions.UInt32ToNetworkBytes wbuf.Array 44 argPDU.RunLength
+            ByteFunc.WriteU32BE wbuf.Array 16u ( itt_me.toPrim argPDU.InitiatorTaskTag )
+            ByteFunc.WriteU32BE wbuf.Array 20u ( ttt_me.toPrim argPDU.TargetTransferTag )
+            ByteFunc.WriteU32BE wbuf.Array 28u ( statsn_me.toPrim argPDU.ExpStatSN )
+            ByteFunc.WriteU32BE wbuf.Array 40u argPDU.BegRun
+            ByteFunc.WriteU32BE wbuf.Array 44u argPDU.RunLength
 
             // send BHS data
             let! bhsLen = PDU.SendBytes( sock, wbuf.ArraySegment, argTSIH, argCID, argCounter, objid )
 
             // Create and send Header Digest
             if ( not headerOnly ) && argHeaderDigest = DigestType.DST_CRC32C then
-                let vDigest = Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
+                let vDigest = ByteFunc.U32ToNVBE <| Crc32C.Compute( wbuf.ArraySegment )
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
 
                 wbuf.Return()
@@ -3742,11 +3742,11 @@ type PDU() =
             wbuf.Array.[5] <- byte( wDataSegmentLength >>> 16 )
             wbuf.Array.[6] <- byte( wDataSegmentLength >>> 8 )
             wbuf.Array.[7] <- byte( wDataSegmentLength )
-            Functions.UInt32ToNetworkBytes wbuf.Array 16 0xFFFFFFFFu
-            Functions.UInt32ToNetworkBytes wbuf.Array 24 ( statsn_me.toPrim argPDU.StatSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 28 ( cmdsn_me.toPrim argPDU.ExpCmdSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 32 ( cmdsn_me.toPrim argPDU.MaxCmdSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 36 ( datasn_me.toPrim argPDU.DataSN_or_R2TSN )
+            ByteFunc.WriteU32BE wbuf.Array 16u 0xFFFFFFFFu
+            ByteFunc.WriteU32BE wbuf.Array 24u ( statsn_me.toPrim argPDU.StatSN )
+            ByteFunc.WriteU32BE wbuf.Array 28u ( cmdsn_me.toPrim argPDU.ExpCmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 32u ( cmdsn_me.toPrim argPDU.MaxCmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 36u ( datasn_me.toPrim argPDU.DataSN_or_R2TSN )
 
             // send BHS data
             let! bhsLen = PDU.SendBytes( sock, wbuf.ArraySegment, argTSIH, argCID, argCounter, objid )
@@ -3761,7 +3761,7 @@ type PDU() =
                 // Create and send Header Digest
                 let vDigest =
                     if argHeaderDigest = DigestType.DST_CRC32C then
-                        Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
+                        ByteFunc.U32ToNVBE <| Crc32C.Compute( wbuf.ArraySegment )
                     else
                         Array.empty
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
@@ -3841,10 +3841,10 @@ type PDU() =
             wbuf.Array.[6] <- byte( wDataSegmentLength >>> 8 )
             wbuf.Array.[7] <- byte( wDataSegmentLength )
             lun_me.toBytes wbuf.Array 8 argPDU.LUN
-            Functions.UInt32ToNetworkBytes wbuf.Array 16 ( itt_me.toPrim argPDU.InitiatorTaskTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 20 ( ttt_me.toPrim argPDU.TargetTransferTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 24 ( cmdsn_me.toPrim argPDU.CmdSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 28 ( statsn_me.toPrim argPDU.ExpStatSN )
+            ByteFunc.WriteU32BE wbuf.Array 16u ( itt_me.toPrim argPDU.InitiatorTaskTag )
+            ByteFunc.WriteU32BE wbuf.Array 20u ( ttt_me.toPrim argPDU.TargetTransferTag )
+            ByteFunc.WriteU32BE wbuf.Array 24u ( cmdsn_me.toPrim argPDU.CmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 28u ( statsn_me.toPrim argPDU.ExpStatSN )
 
             // send BHS data
             let! bhsLen = PDU.SendBytes( sock, wbuf.ArraySegment, argTSIH, argCID, argCounter, objid )
@@ -3859,7 +3859,7 @@ type PDU() =
                 // Create and send Header Digest
                 let vDigest =
                     if argHeaderDigest = DigestType.DST_CRC32C then
-                        Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
+                        ByteFunc.U32ToNVBE <| Crc32C.Compute( wbuf.ArraySegment )
                     else
                         Array.empty
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )
@@ -3940,11 +3940,11 @@ type PDU() =
             wbuf.Array.[6] <- byte( wDataSegmentLength >>> 8 )
             wbuf.Array.[7] <- byte( wDataSegmentLength )
             lun_me.toBytes wbuf.Array 8 argPDU.LUN
-            Functions.UInt32ToNetworkBytes wbuf.Array 16 ( itt_me.toPrim argPDU.InitiatorTaskTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 20 ( ttt_me.toPrim argPDU.TargetTransferTag )
-            Functions.UInt32ToNetworkBytes wbuf.Array 24 ( statsn_me.toPrim argPDU.StatSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 28 ( cmdsn_me.toPrim argPDU.ExpCmdSN )
-            Functions.UInt32ToNetworkBytes wbuf.Array 32 ( cmdsn_me.toPrim argPDU.MaxCmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 16u ( itt_me.toPrim argPDU.InitiatorTaskTag )
+            ByteFunc.WriteU32BE wbuf.Array 20u ( ttt_me.toPrim argPDU.TargetTransferTag )
+            ByteFunc.WriteU32BE wbuf.Array 24u ( statsn_me.toPrim argPDU.StatSN )
+            ByteFunc.WriteU32BE wbuf.Array 28u ( cmdsn_me.toPrim argPDU.ExpCmdSN )
+            ByteFunc.WriteU32BE wbuf.Array 32u ( cmdsn_me.toPrim argPDU.MaxCmdSN )
 
             // send BHS data
             let! bhsLen = PDU.SendBytes( sock, wbuf.ArraySegment, argTSIH, argCID, argCounter, objid )
@@ -3959,7 +3959,7 @@ type PDU() =
                 // Create and send Header Digest
                 let vDigest =
                     if argHeaderDigest = DigestType.DST_CRC32C then
-                        Functions.UInt32ToNetworkBytes_NewVec <| Crc32C.Compute( wbuf.ArraySegment )
+                        ByteFunc.U32ToNVBE <| Crc32C.Compute( wbuf.ArraySegment )
                     else
                         Array.empty
                 let! headerDigestLen = PDU.SendBytes( sock, vDigest, argTSIH, argCID, argCounter, objid )

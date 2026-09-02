@@ -457,7 +457,7 @@ type GenScsiParams() =
                 [|
                     for i = 0 to 7 do
                         if pv.Length > ( i * 2 ) + 58 then
-                            yield Functions.NetworkBytesToUInt16_InPooledBuffer pv ( ( i * 2 ) + 58 )
+                            yield ByteFunc.ReadU16BEPB pv ( ( uint32 i * 2u ) + 58u )
                 |];
         }
 
@@ -694,19 +694,19 @@ type GenScsiParams() =
                     0uy;
             OptimalTransferLengthGramularity =
                 if pv.Length >= 8 then
-                    Functions.NetworkBytesToUInt16_InPooledBuffer pv 6
+                    ByteFunc.ReadU16BEPB pv 6u
                     |> blkcnt_me.ofUInt16
                 else
                     blkcnt_me.zero16;
             MaximumTransferLength =
                 if pv.Length >= 12 then
-                    Functions.NetworkBytesToUInt32_InPooledBuffer pv 8
+                    ByteFunc.ReadU32BEPB pv 8u
                     |> blkcnt_me.ofUInt32
                 else
                     blkcnt_me.zero32;
             OptimalTransferLength =
                 if pv.Length >= 16 then
-                    Functions.NetworkBytesToUInt32_InPooledBuffer pv 12
+                    ByteFunc.ReadU32BEPB pv 12u
                     |> blkcnt_me.ofUInt32
                 else
                     blkcnt_me.zero32;
@@ -740,12 +740,12 @@ type GenScsiParams() =
                     0uy;
             PageLength =
                 if pv.Length >= 4 then
-                    Functions.NetworkBytesToUInt16_InPooledBuffer pv 2
+                    ByteFunc.ReadU16BEPB pv 2u
                 else
                     0us;
             MediumRotationRate =
                 if pv.Length >= 6 then
-                    Functions.NetworkBytesToUInt16_InPooledBuffer pv 4
+                    ByteFunc.ReadU16BEPB pv 4u
                 else
                     0us;
             ProductType =
@@ -831,8 +831,8 @@ type GenScsiParams() =
         let blockDescriptor =
             if m.Block.IsSome then
                 [|
-                    yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 m.Block.Value.BlockCount )
-                    yield! Functions.UInt32ToNetworkBytes_NewVec ( m.Block.Value.BlockLength &&& 0x00FFFFFFu )
+                    yield! ByteFunc.U32ToNVBE ( uint32 m.Block.Value.BlockCount )
+                    yield! ByteFunc.U32ToNVBE ( m.Block.Value.BlockLength &&& 0x00FFFFFFu )
                 |]
             else
                 Array.Empty()
@@ -875,17 +875,17 @@ type GenScsiParams() =
             if m.Block.IsSome then
                 if not m.LongLBA then
                     [|
-                        yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 m.Block.Value.BlockCount );
-                        yield! Functions.UInt32ToNetworkBytes_NewVec ( m.Block.Value.BlockLength &&& 0x00FFFFFFu );
+                        yield! ByteFunc.U32ToNVBE ( uint32 m.Block.Value.BlockCount );
+                        yield! ByteFunc.U32ToNVBE ( m.Block.Value.BlockLength &&& 0x00FFFFFFu );
                     |]
                 else
                     [|
-                        yield! Functions.UInt64ToNetworkBytes_NewVec ( blkcnt_me.toUInt64 m.Block.Value.BlockCount );
+                        yield! ByteFunc.U64ToNVBE ( blkcnt_me.toUInt64 m.Block.Value.BlockCount );
                         yield 0x00uy;
                         yield 0x00uy;
                         yield 0x00uy;
                         yield 0x00uy;
-                        yield! Functions.UInt32ToNetworkBytes_NewVec m.Block.Value.BlockLength;
+                        yield! ByteFunc.U32ToNVBE m.Block.Value.BlockLength;
                     |]
             else
                 Array.Empty()
@@ -901,13 +901,13 @@ type GenScsiParams() =
 
         let modeDataLength = 3us + ( uint16 blockDescriptor.Length ) + ( uint16 modePages.Length );
         let header = [|
-            yield! Functions.UInt16ToNetworkBytes_NewVec modeDataLength;
+            yield! ByteFunc.U16ToNVBE modeDataLength;
             yield m.MediumType;
             yield ( Functions.SetBitflag m.WriteProtect 0x80uy ) |||
                     ( Functions.SetBitflag m.DisablePageOut_ForceUnitAccess 0x10uy );
             yield Functions.SetBitflag m.LongLBA 0x01uy;
             yield 0x000uy;
-            yield! Functions.UInt16ToNetworkBytes_NewVec ( uint16 blockDescriptor.Length );
+            yield! ByteFunc.U16ToNVBE ( uint16 blockDescriptor.Length );
         |]
         let modePageData = [|
             yield! header;
@@ -944,8 +944,8 @@ type GenScsiParams() =
                     ( c.AutoLoadMode &&& 0x07uy );
             yield 0uy;
             yield 0uy;
-            yield! Functions.UInt16ToNetworkBytes_NewVec c.BusyTimeOutPeriod;
-            yield! Functions.UInt16ToNetworkBytes_NewVec c.ExtendedSelfTestCompletionTime;
+            yield! ByteFunc.U16ToNVBE c.BusyTimeOutPeriod;
+            yield! ByteFunc.U16ToNVBE c.ExtendedSelfTestCompletionTime;
         |]
 
     /// <summary>
@@ -971,16 +971,16 @@ type GenScsiParams() =
                     ( Functions.SetBitflag c.ReadCacheDisable 0x01uy );
             yield ( ( c.DemandReadRetentionPriority &&& 0x0Fuy ) <<< 4 ) |||
                     ( c.WriteRetentionPriority &&& 0x0Fuy );
-            yield! Functions.UInt16ToNetworkBytes_NewVec ( blkcnt_me.toUInt16 c.DisablePreFetchTransferLength );
-            yield! Functions.UInt16ToNetworkBytes_NewVec ( blkcnt_me.toUInt16 c.MinimumPreFetch );
-            yield! Functions.UInt16ToNetworkBytes_NewVec ( blkcnt_me.toUInt16 c.MaximumPreFetch );
-            yield! Functions.UInt16ToNetworkBytes_NewVec ( blkcnt_me.toUInt16 c.MaximumPreFetchCeiling );
+            yield! ByteFunc.U16ToNVBE ( blkcnt_me.toUInt16 c.DisablePreFetchTransferLength );
+            yield! ByteFunc.U16ToNVBE ( blkcnt_me.toUInt16 c.MinimumPreFetch );
+            yield! ByteFunc.U16ToNVBE ( blkcnt_me.toUInt16 c.MaximumPreFetch );
+            yield! ByteFunc.U16ToNVBE ( blkcnt_me.toUInt16 c.MaximumPreFetchCeiling );
             yield ( Functions.SetBitflag c.ForceSequentialWrite 0x80uy ) |||
                     ( Functions.SetBitflag c.LogicalBlockCacheSegmentSize 0x40uy ) |||
                     ( Functions.SetBitflag c.DisableReadAhead 0x20uy ) |||
                     ( Functions.SetBitflag c.NonVolatileDisabled 0x01uy );
             yield c.NumberOfCacheSegments;
-            yield! Functions.UInt16ToNetworkBytes_NewVec c.CacheSegmentSize;
+            yield! ByteFunc.U16ToNVBE c.CacheSegmentSize;
             yield 0x00uy;
             yield 0x00uy;
             yield 0x00uy;
@@ -1007,8 +1007,8 @@ type GenScsiParams() =
                     ( Functions.SetBitflag c.Test 0x04uy ) |||
                     ( Functions.SetBitflag c.LogError 0x01uy );
             yield ( c.MethodOfReportingInformationalExceptions &&& 0x0Fuy );
-            yield! Functions.UInt32ToNetworkBytes_NewVec c.IntervalTimer;
-            yield! Functions.UInt32ToNetworkBytes_NewVec c.ReportCount;
+            yield! ByteFunc.U32ToNVBE c.IntervalTimer;
+            yield! ByteFunc.U32ToNVBE c.ReportCount;
         |]
 
     /// <summary>
@@ -1049,11 +1049,11 @@ type GenScsiParams() =
                 if pv.Length >= 12 && blockDescLength >= 8uy then
                     Some {
                         BlockCount =
-                            Functions.NetworkBytesToUInt32_InPooledBuffer pv 4
+                            ByteFunc.ReadU32BEPB pv 4u
                             |> uint64
                             |> blkcnt_me.ofUInt64
                         BlockLength =
-                            ( Functions.NetworkBytesToUInt32_InPooledBuffer pv 8 ) &&& 0x00FFFFFFu;
+                            ( ByteFunc.ReadU32BEPB pv 8u ) &&& 0x00FFFFFFu;
                     }
                 else
                     None;
@@ -1074,7 +1074,7 @@ type GenScsiParams() =
     static member ModeSense10 ( pv : PooledBuffer ) : ModeParameter10 =
         let blockDescLength =
             if pv.Length >= 8 then
-                Functions.NetworkBytesToUInt16_InPooledBuffer pv 6
+                ByteFunc.ReadU16BEPB pv 6u
             else
                 0us
         let longlba =
@@ -1085,7 +1085,7 @@ type GenScsiParams() =
         {
             ModeDataLength =
                 if pv.Length >= 2 then
-                    Functions.NetworkBytesToUInt16_InPooledBuffer pv 0
+                    ByteFunc.ReadU16BEPB pv 0u
                 else
                     0us;
             MediumType =
@@ -1110,10 +1110,10 @@ type GenScsiParams() =
                     if pv.Length >= 24 && blockDescLength >= 16us then
                         Some {
                             BlockCount =
-                                Functions.NetworkBytesToUInt64_InPooledBuffer pv 8
+                                ByteFunc.ReadU64BEPB pv 8u
                                 |> blkcnt_me.ofUInt64;
                             BlockLength =
-                                Functions.NetworkBytesToUInt32_InPooledBuffer pv 20;
+                                ByteFunc.ReadU32BEPB pv 20u;
                         }
                     else
                         None;
@@ -1121,11 +1121,11 @@ type GenScsiParams() =
                     if pv.Length >= 16 && blockDescLength >= 8us then
                         Some {
                             BlockCount =
-                                Functions.NetworkBytesToUInt32_InPooledBuffer pv 8
+                                ByteFunc.ReadU32BEPB pv 8u
                                 |> uint64
                                 |> blkcnt_me.ofUInt64;
                             BlockLength =
-                                ( Functions.NetworkBytesToUInt32_InPooledBuffer pv 12 ) &&& 0x00FFFFFFu;
+                                ( ByteFunc.ReadU32BEPB pv 12u ) &&& 0x00FFFFFFu;
                         }
                     else
                         None;
@@ -1167,8 +1167,8 @@ type GenScsiParams() =
                     ApplicationTagOwner = Functions.CheckBitflag pv.Array.[ p + 5 ] 0x80uy;
                     TaskAbortedStatus = Functions.CheckBitflag pv.Array.[ p + 5 ] 0x40uy;
                     AutoLoadMode = pv.Array.[ p + 5 ] &&& 0x07uy;
-                    BusyTimeOutPeriod = Functions.NetworkBytesToUInt16_InPooledBuffer pv ( p + 8 );
-                    ExtendedSelfTestCompletionTime = Functions.NetworkBytesToUInt16_InPooledBuffer pv ( p + 10 );
+                    BusyTimeOutPeriod = ByteFunc.ReadU16BEPB pv ( uint32 p + 8u );
+                    ExtendedSelfTestCompletionTime = ByteFunc.ReadU16BEPB pv ( uint32 p + 10u );
                 }
                 |> Some
             else
@@ -1209,16 +1209,16 @@ type GenScsiParams() =
                     ReadCacheDisable = Functions.CheckBitflag pv.Array.[ p + 2 ] 0x01uy;
                     DemandReadRetentionPriority = ( pv.Array.[ p + 3 ] >>> 4 ) &&& 0x0Fuy;
                     WriteRetentionPriority = pv.Array.[ p + 3 ] &&& 0x0Fuy;
-                    DisablePreFetchTransferLength = Functions.NetworkBytesToUInt16_InPooledBuffer pv ( p + 4 ) |> blkcnt_me.ofUInt16;
-                    MinimumPreFetch = Functions.NetworkBytesToUInt16_InPooledBuffer pv ( p + 6 ) |> blkcnt_me.ofUInt16;
-                    MaximumPreFetch = Functions.NetworkBytesToUInt16_InPooledBuffer pv ( p + 8 ) |> blkcnt_me.ofUInt16;
-                    MaximumPreFetchCeiling = Functions.NetworkBytesToUInt16_InPooledBuffer pv ( p + 10 ) |> blkcnt_me.ofUInt16;
+                    DisablePreFetchTransferLength = ByteFunc.ReadU16BEPB pv ( uint32 p + 4u ) |> blkcnt_me.ofUInt16;
+                    MinimumPreFetch = ByteFunc.ReadU16BEPB pv ( uint32 p + 6u ) |> blkcnt_me.ofUInt16;
+                    MaximumPreFetch = ByteFunc.ReadU16BEPB pv ( uint32 p + 8u ) |> blkcnt_me.ofUInt16;
+                    MaximumPreFetchCeiling = ByteFunc.ReadU16BEPB pv ( uint32 p + 10u ) |> blkcnt_me.ofUInt16;
                     ForceSequentialWrite = Functions.CheckBitflag pv.Array.[ p + 12 ] 0x80uy;
                     LogicalBlockCacheSegmentSize = Functions.CheckBitflag pv.Array.[ p + 12 ] 0x40uy;
                     DisableReadAhead = Functions.CheckBitflag pv.Array.[ p + 12 ] 0x20uy;
                     NonVolatileDisabled = Functions.CheckBitflag pv.Array.[ p + 12 ] 0x01uy;
                     NumberOfCacheSegments = pv.Array.[ p + 13 ];
-                    CacheSegmentSize = Functions.NetworkBytesToUInt16_InPooledBuffer pv ( p + 14 );
+                    CacheSegmentSize = ByteFunc.ReadU16BEPB pv ( uint32 p + 14u );
                 }
                 |> Some
             else
@@ -1256,8 +1256,8 @@ type GenScsiParams() =
                     Test = Functions.CheckBitflag pv.Array.[ p + 2 ] 0x04uy;
                     LogError = Functions.CheckBitflag pv.Array.[ p + 2 ] 0x01uy;
                     MethodOfReportingInformationalExceptions = pv.Array.[ p + 3 ] &&& 0x0Fuy;
-                    IntervalTimer = Functions.NetworkBytesToUInt32_InPooledBuffer pv ( p + 4 );
-                    ReportCount = Functions.NetworkBytesToUInt32_InPooledBuffer pv ( p + 8 );
+                    IntervalTimer = ByteFunc.ReadU32BEPB pv ( uint32 p + 4u );
+                    ReportCount = ByteFunc.ReadU32BEPB pv ( uint32 p + 8u );
                 }
                 |> Some
             else
@@ -1280,13 +1280,13 @@ type GenScsiParams() =
     static member PersistentReserveIn_ReadKey ( pv : PooledBuffer ) : PR_ReadKey =
         let wAdditionalLength = 
             if pv.Length >= 8 then
-                Functions.NetworkBytesToUInt32_InPooledBuffer pv 4
+                ByteFunc.ReadU32BEPB pv 4u
             else
                 0u;
         {
             PersistentReservationsGeneration =
                 if pv.Length >= 4 then
-                    Functions.NetworkBytesToUInt32_InPooledBuffer pv 0
+                    ByteFunc.ReadU32BEPB pv 0u
                 else
                     0u;
             AdditionalLength = wAdditionalLength;
@@ -1295,7 +1295,7 @@ type GenScsiParams() =
                     [|
                         let cnt = ( min ( pv.Length - 8 ) ( int32 wAdditionalLength ) ) / 8;
                         for i = 0 to cnt - 1 do
-                            Functions.NetworkBytesToUInt64_InPooledBuffer pv ( i * 8 + 8 ) |> resvkey_me.fromPrim
+                            ByteFunc.ReadU64BEPB pv ( uint32 i * 8u + 8u ) |> resvkey_me.fromPrim
                     |];
                 else
                     [||];
@@ -1314,17 +1314,17 @@ type GenScsiParams() =
         {
             PersistentReservationsGeneration =
                 if pv.Length >= 4 then
-                    Functions.NetworkBytesToUInt32_InPooledBuffer pv 0
+                    ByteFunc.ReadU32BEPB pv 0u
                 else
                     0u;
             AdditionalLength =
                 if pv.Length >= 8 then
-                    Functions.NetworkBytesToUInt32_InPooledBuffer pv 4
+                    ByteFunc.ReadU32BEPB pv 4u
                 else
                     0u;
             ReservationKey =
                 if pv.Length >= 16 then
-                    Functions.NetworkBytesToUInt64_InPooledBuffer pv 8 |> resvkey_me.fromPrim
+                    ByteFunc.ReadU64BEPB pv 8u |> resvkey_me.fromPrim
                 else
                     resvkey_me.zero;
             Scope =
@@ -1352,7 +1352,7 @@ type GenScsiParams() =
         {
             Length =
                 if pv.Length >= 2 then
-                    Functions.NetworkBytesToUInt16_InPooledBuffer pv 0
+                    ByteFunc.ReadU16BEPB pv 0u
                 else
                     0us;
             CompatibleReservationHandling =
@@ -1429,13 +1429,13 @@ type GenScsiParams() =
     static member PersistentReserveIn_ReadFullStatus ( pv : PooledBuffer ) : PR_ReadFullStatus =
         let wAdditionalLength =
             if pv.Length >= 8 then
-                Functions.NetworkBytesToUInt32_InPooledBuffer pv 4
+                ByteFunc.ReadU32BEPB pv 4u
             else
                 0u;
         {
             PersistentReservationsGeneration =
                 if pv.Length >= 4 then
-                    Functions.NetworkBytesToUInt32_InPooledBuffer pv 0
+                    ByteFunc.ReadU32BEPB pv 0u
                 else
                     0u;
             AdditionalLength = wAdditionalLength;
@@ -1445,18 +1445,18 @@ type GenScsiParams() =
                     if s < wlen then
                         let wAdditionalDescriptorLength =
                                 if wlen >= s + 24  then
-                                    Functions.NetworkBytesToUInt32_InPooledBuffer pv ( s + 20 )
+                                    ByteFunc.ReadU32BEPB pv ( uint32 s + 20u )
                                 else
                                     0u;
                         let wAdditionalLength =
                                 if wlen >= s + 28 then
-                                    Functions.NetworkBytesToUInt16_InPooledBuffer pv ( s + 26 )
+                                    ByteFunc.ReadU16BEPB pv ( uint32 s + 26u )
                                 else
                                     0us;
                         let desc = {
                             ReservationKey =
                                 if wlen >= s + 8  then
-                                    Functions.NetworkBytesToUInt64_InPooledBuffer pv s |> resvkey_me.fromPrim
+                                    ByteFunc.ReadU64BEPB pv ( uint32 s ) |> resvkey_me.fromPrim
                                 else
                                     resvkey_me.zero;
                             AllTargetPorts =
@@ -1481,7 +1481,7 @@ type GenScsiParams() =
                                     0uy;
                             RelativeTargetPortIdentifier =
                                 if wlen >= s + 20  then
-                                    Functions.NetworkBytesToUInt16_InPooledBuffer pv ( s + 18 )
+                                    ByteFunc.ReadU16BEPB pv ( uint32 s + 18u )
                                 else
                                     0us;
                             AdditionalDescriptorLength = wAdditionalDescriptorLength;
@@ -1497,7 +1497,7 @@ type GenScsiParams() =
                                     0uy;
                             AdditionalLength =
                                 if wlen >= s + 28 then
-                                    Functions.NetworkBytesToUInt16_InPooledBuffer pv ( s + 26 )
+                                    ByteFunc.ReadU16BEPB pv ( uint32 s + 26u )
                                 else
                                     0us;
                             iSCSIName =
@@ -1537,8 +1537,8 @@ type GenScsiParams() =
             |> Array.map GenScsiParams.iSCSINameToTransportID
             |> Array.concat
         [|
-            yield! Functions.UInt64ToNetworkBytes_NewVec ( c.ReservationKey |> resvkey_me.toPrim );
-            yield! Functions.UInt64ToNetworkBytes_NewVec ( c.ServiceActionReservationKey |> resvkey_me.toPrim );
+            yield! ByteFunc.U64ToNVBE ( c.ReservationKey |> resvkey_me.toPrim );
+            yield! ByteFunc.U64ToNVBE ( c.ServiceActionReservationKey |> resvkey_me.toPrim );
             yield 0x00uy;
             yield 0x00uy;
             yield 0x00uy;
@@ -1550,7 +1550,7 @@ type GenScsiParams() =
             yield 0x00uy;
             yield 0x00uy;
             if transportIDList.Length > 0 then
-                yield! Functions.Int32ToNetworkBytes_NewVec transportIDList.Length;
+                yield! ByteFunc.S32ToNVBE transportIDList.Length;
                 yield! transportIDList;
         |]
         |> PooledBuffer.Rent
@@ -1567,12 +1567,12 @@ type GenScsiParams() =
     static member PersistentReserveOut_MoveParameterList ( c : Haruka.BlockDeviceLU.MoveParameterList ) : PooledBuffer =
         let transportID = GenScsiParams.iSCSINameToTransportID c.TransportID
         [|
-            yield! Functions.UInt64ToNetworkBytes_NewVec ( c.ReservationKey |> resvkey_me.toPrim );
-            yield! Functions.UInt64ToNetworkBytes_NewVec ( c.ServiceActionReservationKey |> resvkey_me.toPrim );
+            yield! ByteFunc.U64ToNVBE ( c.ReservationKey |> resvkey_me.toPrim );
+            yield! ByteFunc.U64ToNVBE ( c.ServiceActionReservationKey |> resvkey_me.toPrim );
             yield 0x00uy;
             yield ( Functions.SetBitflag c.UNREG 0x02uy ) ||| ( Functions.SetBitflag c.APTPL 0x01uy );
-            yield! Functions.UInt16ToNetworkBytes_NewVec c.RelativeTargetPortIdentifier;
-            yield! Functions.Int32ToNetworkBytes_NewVec transportID.Length;
+            yield! ByteFunc.U16ToNVBE c.RelativeTargetPortIdentifier;
+            yield! ByteFunc.S32ToNVBE transportID.Length;
             yield! transportID;
         |]
         |> PooledBuffer.Rent
@@ -1604,7 +1604,7 @@ type GenScsiParams() =
         [|
             yield ( Functions.SetBitflag isid.IsSome 0x40uy ) ||| 0x05uy;
             yield 0x00uy;
-            yield! Functions.UInt16ToNetworkBytes_NewVec ( uint16 v.Length )
+            yield! ByteFunc.U16ToNVBE ( uint16 v.Length )
             yield! v
         |]
 
@@ -1622,10 +1622,10 @@ type GenScsiParams() =
         if pv.Length < 4 then
             struct( 0u, [||] )
         elif pv.Length < 8 then
-            let luncount = Functions.NetworkBytesToUInt32_InPooledBuffer pv 0
+            let luncount = ByteFunc.ReadU32BEPB pv 0u
             struct( luncount, [||] )
         else
-            let luncount = Functions.NetworkBytesToUInt32_InPooledBuffer pv 0
+            let luncount = ByteFunc.ReadU32BEPB pv 0u
             let cnt = ( pv.Length - 8 ) / 8
             let rv = Array.zeroCreate<LUN_T> cnt
             for i = 0 to cnt - 1 do
@@ -1646,8 +1646,8 @@ type GenScsiParams() =
         if pv.Length < 8 then
             struct( 0u, 0u )
         else
-            let a = Functions.NetworkBytesToUInt32_InPooledBuffer pv 0
-            let b = Functions.NetworkBytesToUInt32_InPooledBuffer pv 4
+            let a = ByteFunc.ReadU32BEPB pv 0u
+            let b = ByteFunc.ReadU32BEPB pv 4u
             struct( a, b )
 
     /// <summary>
@@ -1663,12 +1663,12 @@ type GenScsiParams() =
         {
             ReturnedLogicalBlockAddress =
                 if pv.Length >= 8 then
-                    Functions.NetworkBytesToUInt64_InPooledBuffer pv 0
+                    ByteFunc.ReadU64BEPB pv 0u
                 else
                     0UL;
             BlockLengthInBytes =
                 if pv.Length >= 12 then
-                    Functions.NetworkBytesToUInt32_InPooledBuffer pv 8
+                    ByteFunc.ReadU32BEPB pv 8u
                 else
                     0u;
             ReferenceTagOwnEnable =
@@ -1696,7 +1696,7 @@ type GenScsiParams() =
         {
             CommandDataLength =
                 if pv.Length >= 4 then
-                    Functions.NetworkBytesToUInt32_InPooledBuffer pv 0 
+                    ByteFunc.ReadU32BEPB pv 0u
                 else
                     0u;
             Descs =
@@ -1706,9 +1706,9 @@ type GenScsiParams() =
                         let idx = 4 + i * 8 
                         yield {
                             OperationCode = pv.Array.[ idx + 0 ];
-                            ServiceAction = Functions.NetworkBytesToUInt16_InPooledBuffer pv ( idx + 2 );
+                            ServiceAction = ByteFunc.ReadU16BEPB pv ( uint32 idx + 2u );
                             ServiceActionValid = Functions.CheckBitflag pv.Array.[ idx + 5 ] 0x01uy;
-                            CDBLength = Functions.NetworkBytesToUInt16_InPooledBuffer pv ( idx + 6 );
+                            CDBLength = ByteFunc.ReadU16BEPB pv ( uint32 idx + 6u );
                         }
                 |];
         }
@@ -1727,7 +1727,7 @@ type GenScsiParams() =
             Support = if pv.Length > 1 then pv.[1] &&& 0x07uy else 0uy;
             CDBSize = 
                 if pv.Length >= 4 then
-                    Functions.NetworkBytesToUInt16_InPooledBuffer pv 2
+                    ByteFunc.ReadU16BEPB pv 2u
                 else
                     0us;
             CDBUsageData =

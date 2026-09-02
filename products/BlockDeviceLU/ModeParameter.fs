@@ -492,7 +492,7 @@ type ModeParameter
             )
 
         if blockDescriptorLength > 0 then
-            let blockCount = ( Functions.NetworkBytesToUInt32_InPooledBuffer v 4 ) &&& 0x00FFFFFFu
+            let blockCount = ( ByteFunc.ReadU32BEPB v 4u ) &&& 0x00FFFFFFu
             if uint64 blockCount <> m_BlockCount then
                 let errmsg = "Invalid NUMBER OF BLOCKS value in block descriptor. An attempt was made to change constant value."
                 HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST, errmsg )
@@ -502,7 +502,7 @@ type ModeParameter
                     errmsg
                 )
 
-            let blockLength = ( Functions.NetworkBytesToUInt32_InPooledBuffer v 8 ) &&& 0x00FFFFFFu
+            let blockLength = ( ByteFunc.ReadU32BEPB v 8u ) &&& 0x00FFFFFFu
             if uint64 blockLength <> m_BlockLength then
                 let errmsg = "Invalid BLOCK LENGTH value in block descriptor. An attempt was made to change constant value."
                 HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST, errmsg )
@@ -679,7 +679,7 @@ type ModeParameter
             )
 
         let mediumType = int32 v.[2]
-        let blockDescriptorLength = Functions.NetworkBytesToUInt16_InPooledBuffer v 6 |> int32
+        let blockDescriptorLength = ByteFunc.ReadU16BEPB v 6u |> int32
         let longLBA = Functions.CheckBitflag v.[4] 0x01uy
 
         if mediumType <> 0 then
@@ -703,7 +703,7 @@ type ModeParameter
             )
 
         if blockDescriptorLength = 8 then
-            let blockCount = uint64 ( Functions.NetworkBytesToUInt32_InPooledBuffer v 8 )
+            let blockCount = uint64 ( ByteFunc.ReadU32BEPB v 8u )
             if uint64 blockCount <> m_BlockCount then
                 let errmsg = "Invalid NUMBER OF BLOCKS value in block descriptor. An attempt was made to change constant value."
                 HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST, errmsg )
@@ -713,7 +713,7 @@ type ModeParameter
                     errmsg
                 )
 
-            let blockLength = uint64 ( ( Functions.NetworkBytesToUInt32_InPooledBuffer v 12 ) &&& 0x00FFFFFFu )
+            let blockLength = uint64 ( ( ByteFunc.ReadU32BEPB v 12u ) &&& 0x00FFFFFFu )
             if uint64 blockLength <> m_BlockLength then
                 let errmsg = "Invalid BLOCK LENGTH value in block descriptor. An attempt was made to change constant value."
                 HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST, errmsg )
@@ -724,7 +724,7 @@ type ModeParameter
                 )
 
         if blockDescriptorLength = 16 then
-            let blockCount = Functions.NetworkBytesToUInt64_InPooledBuffer v 8
+            let blockCount = ByteFunc.ReadU64BEPB v 8u
             if uint64 blockCount <> m_BlockCount then
                 let errmsg = "Invalid NUMBER OF BLOCKS value in block descriptor. An attempt was made to change constant value."
                 HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST, errmsg )
@@ -734,7 +734,7 @@ type ModeParameter
                     errmsg
                 )
 
-            let blockLength = uint64 ( Functions.NetworkBytesToUInt32_InPooledBuffer v 20 )
+            let blockLength = uint64 ( ByteFunc.ReadU32BEPB v 20u )
             if uint64 blockLength <> m_BlockLength then
                 let errmsg = "Invalid BLOCK LENGTH value in block descriptor. An attempt was made to change constant value."
                 HLogger.ACAException( loginfo, SenseKeyCd.ILLEGAL_REQUEST, ASCCd.INVALID_FIELD_IN_PARAMETER_LIST, errmsg )
@@ -864,12 +864,12 @@ type ModeParameter
             exit( 1 )
 
         let modeParameterHeader = [|
-            yield! Functions.Int16ToNetworkBytes_NewVec ( int16 modeDataLength );
+            yield! ByteFunc.S16ToNVBE ( int16 modeDataLength );
             mediumType;
             deviceSpecificParameter;
             if llbaa then 0x01uy else 0x00uy;
             0x00uy;
-            yield! Functions.Int16ToNetworkBytes_NewVec ( int16 modeParameterBlockDescriptor.Length );
+            yield! ByteFunc.S16ToNVBE ( int16 modeParameterBlockDescriptor.Length );
         |]
 
         [|
@@ -910,8 +910,8 @@ type ModeParameter
                     uint32 w
             let bl = uint32 m_BlockLength
             [|
-                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 bc );
-                yield! Functions.UInt32ToNetworkBytes_NewVec ( bl &&& 0x00FFFFFFu );
+                yield! ByteFunc.U32ToNVBE ( uint32 bc );
+                yield! ByteFunc.U32ToNVBE ( bl &&& 0x00FFFFFFu );
             |]
         | BlockDeviceType.BDT_Dummy ->
             Array.zeroCreate<byte> 8
@@ -925,12 +925,12 @@ type ModeParameter
             let bc = m_BlockCount
             let bl = uint32 m_BlockLength
             [|
-                yield! Functions.UInt64ToNetworkBytes_NewVec bc;
+                yield! ByteFunc.U64ToNVBE bc;
                 0x00uy;
                 0x00uy;
                 0x00uy;
                 0x00uy;
-                yield! Functions.UInt32ToNetworkBytes_NewVec bl;
+                yield! ByteFunc.U32ToNVBE bl;
             |]
         | BlockDeviceType.BDT_Dummy ->
             Array.zeroCreate<byte> 16
@@ -952,16 +952,16 @@ type ModeParameter
                 ( Functions.SetBitflag m_RCD  0x01uy );
             ( m_DemandReadRetentionPriority <<< 4 ) |||
                 ( m_WriteRetentionPriority &&& 0x0Fuy );
-            yield! Functions.UInt16ToNetworkBytes_NewVec m_DisablePreFetchTransferLength;
-            yield! Functions.UInt16ToNetworkBytes_NewVec m_MinimumPreFetch;
-            yield! Functions.UInt16ToNetworkBytes_NewVec m_MaximumPreFetch;
-            yield! Functions.UInt16ToNetworkBytes_NewVec m_MaximumPreFetchCeiling;
+            yield! ByteFunc.U16ToNVBE m_DisablePreFetchTransferLength;
+            yield! ByteFunc.U16ToNVBE m_MinimumPreFetch;
+            yield! ByteFunc.U16ToNVBE m_MaximumPreFetch;
+            yield! ByteFunc.U16ToNVBE m_MaximumPreFetchCeiling;
             ( Functions.SetBitflag m_FSW   0x80uy ) |||
                 ( Functions.SetBitflag m_LBCSS  0x40uy ) |||
                 ( Functions.SetBitflag m_DRA    0x20uy ) |||
                 ( Functions.SetBitflag m_NV_DIS 0x01uy );
             m_NumberOfCacheSegments;
-            yield! Functions.UInt16ToNetworkBytes_NewVec m_CacheSegmentSize;
+            yield! ByteFunc.U16ToNVBE m_CacheSegmentSize;
             0x00uy;
             0x00uy;
             0x00uy;
@@ -1083,8 +1083,8 @@ type ModeParameter
                 ( Functions.SetBitflag m_TEST 0x04uy ) |||      // TEST
                 ( Functions.SetBitflag m_LOGERR 0x01uy );       // LOGERR
             ( 0x0Fuy &&& m_MRIE );                              // MRIE
-            yield! Functions.UInt32ToNetworkBytes_NewVec m_IntervalTimer;   // INTERVAL TIMER
-            yield! Functions.UInt32ToNetworkBytes_NewVec m_ReportCount;     // REPORT COUNT
+            yield! ByteFunc.U32ToNVBE m_IntervalTimer;          // INTERVAL TIMER
+            yield! ByteFunc.U32ToNVBE m_ReportCount;            // REPORT COUNT
         |]
 
     /// <summary>

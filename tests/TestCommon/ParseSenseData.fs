@@ -41,7 +41,7 @@ type ParseSenseData() =
             ValueNone
         else
             let senseKey = Enum.ToObject( typeof<SenseKeyCd>, sd.[1] ) :?> SenseKeyCd
-            let additionalSenseCode = Enum.ToObject( typeof<ASCCd>, Functions.NetworkBytesToUInt16 sd 2 ) :?> ASCCd
+            let additionalSenseCode = Enum.ToObject( typeof<ASCCd>, ByteFunc.ReadU16BE sd 2u ) :?> ASCCd
 
             let rec loop (
                 i : informationSenseDataDesc voption,
@@ -133,25 +133,25 @@ type ParseSenseData() =
                     CommandData = Functions.CheckBitflag sd.[ pos + 4 ] 0x40uy;
                     BPV = Functions.CheckBitflag sd.[ pos + 4 ] 0x08uy;
                     BitPointer = sd.[ pos + 4 ] &&& 0x07uy;
-                    FieldPointer = Functions.NetworkBytesToUInt16 sd ( pos + 5 );
+                    FieldPointer = ByteFunc.ReadU16BE sd ( uint32 pos + 5u );
                 } ) |> ValueSome
             | SenseKeyCd.RECOVERED_ERROR
             | SenseKeyCd.MEDIUM_ERROR
             | SenseKeyCd.HARDWARE_ERROR ->
                 senseKeySpecificSenseDataDesc.ActualRetryCount ( {
-                    ActualRetryCount = Functions.NetworkBytesToUInt16 sd ( pos + 5 );
+                    ActualRetryCount = ByteFunc.ReadU16BE sd ( uint32 pos + 5u );
                 } ) |> ValueSome
             | SenseKeyCd.NO_SENSE
             | SenseKeyCd.NOT_READY ->
                 senseKeySpecificSenseDataDesc.ProgressIndication ( {
-                    ProgressIndication = Functions.NetworkBytesToUInt16 sd ( pos + 5 );
+                    ProgressIndication = ByteFunc.ReadU16BE sd ( uint32 pos + 5u );
                 } ) |> ValueSome
             | SenseKeyCd.COPY_ABORTED ->
                 senseKeySpecificSenseDataDesc.SegmentPointer ( {
                     SD = Functions.CheckBitflag sd.[ pos + 4 ] 0x20uy;
                     BPV = Functions.CheckBitflag sd.[ pos + 4 ] 0x08uy;
                     BitPointer = sd.[ pos + 4 ] &&& 0x07uy;
-                    FieldPointer = Functions.NetworkBytesToUInt16 sd ( pos + 5 );
+                    FieldPointer = ByteFunc.ReadU16BE sd ( uint32 pos + 5u );
                 } ) |> ValueSome
             | _ ->
                 ValueNone
@@ -189,7 +189,7 @@ type ParseSenseData() =
             ValueNone
         else
             let senseKey = Enum.ToObject( typeof<SenseKeyCd>, sd.[2] &&& 0x0Fuy ) :?> SenseKeyCd
-            let additionalSenseCode = Enum.ToObject( typeof<ASCCd>, Functions.NetworkBytesToUInt16 sd 12 ) :?> ASCCd
+            let additionalSenseCode = Enum.ToObject( typeof<ASCCd>, ByteFunc.ReadU16BE sd 12u ) :?> ASCCd
 
             let b =
                 {
@@ -223,25 +223,25 @@ type ParseSenseData() =
                                 CommandData = Functions.CheckBitflag sd.[15] 0x40uy;
                                 BPV = Functions.CheckBitflag sd.[15] 0x08uy;
                                 BitPointer = sd.[15] &&& 0x07uy;
-                                FieldPointer = Functions.NetworkBytesToUInt16 sd 16;
+                                FieldPointer = ByteFunc.ReadU16BE sd 16u;
                         } ) |> ValueSome
                     | SenseKeyCd.RECOVERED_ERROR
                     | SenseKeyCd.MEDIUM_ERROR
                     | SenseKeyCd.HARDWARE_ERROR ->
                         senseKeySpecificSenseDataDesc.ActualRetryCount( {
-                                ActualRetryCount = Functions.NetworkBytesToUInt16 sd 16;
+                                ActualRetryCount = ByteFunc.ReadU16BE sd 16u;
                         } ) |> ValueSome
                     | SenseKeyCd.NO_SENSE
                     | SenseKeyCd.NOT_READY ->
                         senseKeySpecificSenseDataDesc.ProgressIndication( {
-                                ProgressIndication = Functions.NetworkBytesToUInt16 sd 16;
+                                ProgressIndication = ByteFunc.ReadU16BE sd 16u;
                         } ) |> ValueSome
                     | SenseKeyCd.COPY_ABORTED ->
                         senseKeySpecificSenseDataDesc.SegmentPointer( {
                                 SD = Functions.CheckBitflag sd.[15] 0x20uy;
                                 BPV = Functions.CheckBitflag sd.[15] 0x08uy;
                                 BitPointer = sd.[15] &&& 0x07uy;
-                                FieldPointer = Functions.NetworkBytesToUInt16 sd 16;
+                                FieldPointer = ByteFunc.ReadU16BE sd 16u;
                         } ) |> ValueSome
                     | _ ->
                         ValueNone

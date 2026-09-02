@@ -2969,7 +2969,7 @@ type ScsiTask_Test () =
             Assert.True(( stat = ScsiCmdStatCd.GOOD ))
             let v = [|
                 0x00uy; 0x00uy; 0xAAuy; 0xBAuy; // RETURNED LOGICAL BLOCK ADDRESS
-                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 blockSize )  // BLOCK LENGTH IN BYTE
+                yield! ByteFunc.U32ToNVBE ( uint32 blockSize )  // BLOCK LENGTH IN BYTE
             |]
             Assert.True(( PooledBuffer.ValueEqualsWithArray indata v ))
             Assert.True(( alloclen = 0x10u ))
@@ -3008,7 +3008,7 @@ type ScsiTask_Test () =
             Assert.True(( stat = ScsiCmdStatCd.GOOD ))
             let v = [|
                 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // RETURNED LOGICAL BLOCK ADDRESS
-                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 blockSize )  // BLOCK LENGTH IN BYTE
+                yield! ByteFunc.U32ToNVBE ( uint32 blockSize )  // BLOCK LENGTH IN BYTE
             |]
             Assert.True(( PooledBuffer.ValueEqualsWithArray indata v ))
             Assert.True(( alloclen = 0x10u ))
@@ -3048,7 +3048,7 @@ type ScsiTask_Test () =
             let v = [|
                 0x00uy; 0x00uy; 0x00uy; 0x00uy; // RETURNED LOGICAL BLOCK ADDRESS
                 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; // RETURNED LOGICAL BLOCK ADDRESS
-                yield! Functions.UInt32ToNetworkBytes_NewVec ( uint32 blockSize )  // BLOCK LENGTH IN BYTE
+                yield! ByteFunc.U32ToNVBE ( uint32 blockSize )  // BLOCK LENGTH IN BYTE
                 0x00uy; // RTO_EN, PROT_EN
                 0x00uy; 0x00uy; 0x00uy;
                 0x00uy; 0x00uy; 0x00uy; 0x00uy;

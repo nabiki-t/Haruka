@@ -781,7 +781,13 @@ type ServerStatus_Test1() =
                 TargetPortalGroupTag = tpgt_me.fromPrim 0us;
                 TargetName = "c001";
                 TargetAlias = "";
-                LUN = [ lun_me.fromPrim 1UL; lun_me.fromPrim 2UL; lun_me.fromPrim 3UL; lun_me.fromPrim 4UL ];
+                LUN = [
+                    lun_me.fromPrim 1UL;
+                    lun_me.fromPrim 2UL;
+                    lun_me.fromPrim 3UL;
+                    lun_me.fromPrim 4UL;
+                    lun_me.fromPrim 5UL;
+                ];
                 Auth = TargetGroupConf.U_None();
             }];
             LogicalUnit = [
@@ -846,6 +852,21 @@ type ServerStatus_Test1() =
                         OptimalTransferLength = blkcnt_me.ofUInt32 ( Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH + 4u );
                     });
                 }
+                {
+                    LUN = lun_me.fromPrim 5UL;
+                    LUName = "a555";
+                    WorkPath = "";
+                    MaxMultiplicity = ( Constants.LU_MIN_MULTIPLICITY + 5u );
+                    LUDevice = TargetGroupConf.U_BlockDevice({
+                        Peripheral = TargetGroupConf.U_VHDXFile({
+                            IdentNumber = mediaidx_me.fromPrim 5u;
+                            MediaName = "";
+                            FileName = "bbb";
+                            WriteProtect = false;
+                        });
+                        OptimalTransferLength = blkcnt_me.ofUInt32 ( Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH + 5u );
+                    });
+                };
             ];
         }
         TargetGroupConf.ReaderWriter.WriteFile tgConfFName tgConf
@@ -887,12 +908,12 @@ type ServerStatus_Test1() =
             Assert.True(( tlist.Length = 1 ))
             Assert.True(( tlist.[0].Values.IdentNumber = tnodeidx_me.fromPrim 99us ))
             Assert.True(( tlist.[0].Values.TargetName = "c001" ))
-            Assert.True(( tlist.[0].Values.LUN = [ lun_me.fromPrim 1UL; lun_me.fromPrim 2UL; lun_me.fromPrim 3UL; lun_me.fromPrim 4UL ] ))
+            Assert.True(( tlist.[0].Values.LUN = [ lun_me.fromPrim 1UL; lun_me.fromPrim 2UL; lun_me.fromPrim 3UL; lun_me.fromPrim 4UL; lun_me.fromPrim 5UL; ] ))
 
             let lulist =
                 tglist.[0].GetAccessibleLUNodes()
                 |> List.sortBy ( fun itr -> itr.LUN )
-            Assert.True(( lulist.Length = 4 ))
+            Assert.True(( lulist.Length = 5 ))
             Assert.True(( lulist.[0].LUN = lun_me.fromPrim 1UL ))
             Assert.True(( lulist.[0].LUName = "a111" ))
             Assert.True(( lulist.[0].MaxMultiplicity = Constants.LU_MIN_MULTIPLICITY + 1u ))
@@ -909,6 +930,11 @@ type ServerStatus_Test1() =
             Assert.True(( lulist.[3].LUName = "a444" ))
             Assert.True(( lulist.[3].MaxMultiplicity = Constants.LU_MIN_MULTIPLICITY + 4u ))
             Assert.True(( ( lulist.[3] :?> ConfNode_BlockDeviceLU ).OptimalTransferLength = blkcnt_me.ofUInt32 ( Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH + 4u ) ))
+            Assert.True(( lulist.[4].LUN = lun_me.fromPrim 5UL ))
+            Assert.True(( lulist.[4].LUName = "a555" ))
+            Assert.True(( lulist.[4].MaxMultiplicity = Constants.LU_MIN_MULTIPLICITY + 5u ))
+            Assert.True(( ( lulist.[4] :?> ConfNode_BlockDeviceLU ).OptimalTransferLength = blkcnt_me.ofUInt32 ( Constants.LU_MIN_OPTIMAL_TRANSFER_LENGTH + 5u ) ))
+
 
             let medialist1 = lulist.[0].GetDescendantNodes<IMediaNode>()
             Assert.True(( medialist1.Length = 1 ))
@@ -950,6 +976,21 @@ type ServerStatus_Test1() =
                 Assert.True(( ( x :> IMediaNode ).IdentNumber = mediaidx_me.fromPrim 4u )) 
             | _ ->
                 Assert.Fail __LINE__
+
+            let medialist5 = lulist.[4].GetDescendantNodes<IMediaNode>()
+            Assert.True(( medialist1.Length = 1 ))
+
+            match medialist5.[0] with
+            | :? ConfNode_VHDXMedia ->
+                match medialist5.[0].MediaConfData with
+                | TargetGroupConf.U_VHDXFile( x ) ->
+                    Assert.True(( x.FileName = "bbb" ))
+                | _ ->
+                    Assert.Fail __LINE__
+            | _ ->
+                Assert.Fail __LINE__
+            Assert.True(( lulist.[4].LUN = lun_me.fromPrim 5UL ))
+
 
         finally
             killer.NoticeTerminate()
@@ -1644,6 +1685,7 @@ type ServerStatus_Test1() =
         [| ClientConst.TEMPEXP_NN_MemBufferMedia :> obj; "Haruka.Client.ConfNode_MemBufferMedia" :> obj; |];
         [| ClientConst.TEMPEXP_NN_DummyMedia :> obj; "Haruka.Client.ConfNode_DummyMedia" :> obj; |];
         [| ClientConst.TEMPEXP_NN_DebugMedia :> obj; "Haruka.Client.ConfNode_DebugMedia" :> obj; |];
+        [| ClientConst.TEMPEXP_NN_VHDXMedia :> obj; "Haruka.Client.ConfNode_VHDXMedia" :> obj; |];
     |]
 
     [<Theory>]

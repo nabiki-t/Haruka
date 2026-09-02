@@ -1565,6 +1565,8 @@ type CtrlConnection(
                         raise <| RequestError( m_MessageTable.GetMessage( "ERRMSG_UNEXPECTED_RESPONSE", "DebugMedia_GetAllTraps" ) )
                 | MediaCtrlRes.U_Unexpected( y ) ->
                     raise <| RequestError( y )
+                | _ ->
+                    raise <| RequestError( m_MessageTable.GetMessage( "ERRMSG_UNEXPECTED_RESPONSE", "DebugMedia_GetAllTraps" ) )
         }
 
     /// <summary>
@@ -1606,6 +1608,8 @@ type CtrlConnection(
                         raise <| RequestError( m_MessageTable.GetMessage( "ERRMSG_UNEXPECTED_RESPONSE", "DebugMedia_AddTrap" ) )
                 | MediaCtrlRes.U_Unexpected( y ) ->
                     raise <| RequestError( y )
+                | _ ->
+                    raise <| RequestError( m_MessageTable.GetMessage( "ERRMSG_UNEXPECTED_RESPONSE", "DebugMedia_GetAllTraps" ) )
         }
 
     /// <summary>
@@ -1641,6 +1645,8 @@ type CtrlConnection(
                         raise <| RequestError( m_MessageTable.GetMessage( "ERRMSG_UNEXPECTED_RESPONSE", "DebugMedia_ClearTraps" ) )
                 | MediaCtrlRes.U_Unexpected( y ) ->
                     raise <| RequestError( y )
+                | _ ->
+                    raise <| RequestError( m_MessageTable.GetMessage( "ERRMSG_UNEXPECTED_RESPONSE", "DebugMedia_GetAllTraps" ) )
         }
 
     /// <summary>
@@ -1678,6 +1684,8 @@ type CtrlConnection(
                         raise <| RequestError( m_MessageTable.GetMessage( "ERRMSG_UNEXPECTED_RESPONSE", "DebugMedia_GetCounterValue" ) )
                 | MediaCtrlRes.U_Unexpected( y ) ->
                     raise <| RequestError( y )
+                | _ ->
+                    raise <| RequestError( m_MessageTable.GetMessage( "ERRMSG_UNEXPECTED_RESPONSE", "DebugMedia_GetAllTraps" ) )
         }
 
     /// <summary>
@@ -1712,6 +1720,8 @@ type CtrlConnection(
                         raise <| RequestError( m_MessageTable.GetMessage( "ERRMSG_UNEXPECTED_RESPONSE", "DebugMedia_GetTaskWaitStatus" ) )
                 | MediaCtrlRes.U_Unexpected( y ) ->
                     raise <| RequestError( y )
+                | _ ->
+                    raise <| RequestError( m_MessageTable.GetMessage( "ERRMSG_UNEXPECTED_RESPONSE", "DebugMedia_GetAllTraps" ) )
         }
 
     /// <summary>
@@ -1756,6 +1766,8 @@ type CtrlConnection(
                         raise <| RequestError( m_MessageTable.GetMessage( "ERRMSG_UNEXPECTED_RESPONSE", "DebugMedia_Resume" ) )
                 | MediaCtrlRes.U_Unexpected( y ) ->
                     raise <| RequestError( y )
+                | _ ->
+                    raise <| RequestError( m_MessageTable.GetMessage( "ERRMSG_UNEXPECTED_RESPONSE", "DebugMedia_GetAllTraps" ) )
         }
 
 

@@ -64,6 +64,7 @@ type CommandVarb =
     | Create_Media_PlainFile
     | Create_Media_MemBuffer
     | Create_Media_Debug
+    | Create_Media_VHDX
     | InitMedia_PlainFile
     | IMStatus
     | IMKill
@@ -512,6 +513,16 @@ type CommandReader () =
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
         HelpMsgName = "CREATE_DEBUG";
+    }
+
+    /// "create vhdx" command for LU or media rule.
+    static member CmdRule_create_Media_VHDX : AcceptableCommand< CommandVarb > = {
+        Command = [| "CREATE"; "VHDX" |];
+        Varb = CommandVarb.Create_Media_VHDX;
+        NamedArgs = Array.empty;
+        ValuelessArgs = Array.empty;
+        NamelessArgs = [| CRVM_String( Constants.MAX_FILENAME_STR_LENGTH ) |];
+        HelpMsgName = "CREATE_VHDX";
     }
 
     /// "initmedia plainfile" command for LU or media rule.

@@ -83,120 +83,6 @@ type Functions_Test () =
         Assert.True( Functions.AddPaddingLengthUInt8 v1 v2 = v3 )
 
     [<Fact>]
-    member _.NetworkBytesToInt16_001() =
-        Assert.True( Functions.NetworkBytesToInt16 [| 0uy .. 16uy |] 1 = 0x0102s )
-
-    [<Fact>]
-    member _.NetworkBytesToInt16_InPooledBuffer_001() =
-        let p = PooledBuffer.Rent( [| 0uy .. 16uy |], 8 )
-        Assert.True( Functions.NetworkBytesToInt16_InPooledBuffer p 1 = 0x0102s )
-
-    [<Fact>]
-    member _.NetworkBytesToUInt16_001() =
-        Assert.True( Functions.NetworkBytesToUInt16 [| 0uy .. 16uy |] 2 = 0x0203us )
-
-    [<Fact>]
-    member _.NetworkBytesToUInt16_InPooledBuffer_001() =
-        let p = PooledBuffer.Rent( [| 0uy .. 16uy |], 8 )
-        Assert.True( Functions.NetworkBytesToUInt16_InPooledBuffer p 2 = 0x0203us )
-
-    [<Fact>]
-    member _.NetworkBytesToInt32_001() =
-        Assert.True( Functions.NetworkBytesToInt32 [| 0uy .. 16uy |] 3 = 0x03040506 )
-
-    [<Fact>]
-    member _.NetworkBytesToInt32_InPooledBuffer_001() =
-        let p = PooledBuffer.Rent( [| 0uy .. 16uy |], 8 )
-        Assert.True( Functions.NetworkBytesToInt32_InPooledBuffer p 3 = 0x03040506 )
-
-    [<Fact>]
-    member _.NetworkBytesToUInt32_001() =
-        Assert.True( Functions.NetworkBytesToUInt32 [| 0uy .. 16uy |] 4 = 0x04050607u )
-
-    [<Fact>]
-    member _.NetworkBytesToUInt32_InPooledBuffer_001() =
-        let p = PooledBuffer.Rent( [| 0uy .. 16uy |], 8 )
-        Assert.True( Functions.NetworkBytesToUInt32_InPooledBuffer p 4 = 0x04050607u )
-
-    [<Fact>]
-    member _.NetworkBytesToInt64_001() =
-        Assert.True( Functions.NetworkBytesToInt64 [| 0uy .. 16uy |] 5 = 0x05060708090A0B0CL )
-
-    [<Fact>]
-    member _.NetworkBytesToInt64_InPooledBuffer_001() =
-        let p = PooledBuffer.Rent( [| 0uy .. 16uy |], 15 )
-        Assert.True( Functions.NetworkBytesToInt64_InPooledBuffer p 5 = 0x05060708090A0B0CL )
-
-    [<Fact>]
-    member _.NetworkBytesToUInt64_001() =
-        Assert.True( Functions.NetworkBytesToUInt64 [| 0uy .. 16uy |] 6 = 0x060708090A0B0C0DUL )
-
-    [<Fact>]
-    member _.NetworkBytesToUInt64_InPooledBuffer_001() =
-        let p = PooledBuffer.Rent( [| 0uy .. 16uy |], 15 )
-        Assert.True( Functions.NetworkBytesToUInt64_InPooledBuffer p 6 = 0x060708090A0B0C0DUL )
-
-    [<Fact>]
-    member _.IntToNetworkBytes_001() =
-        let wbuf : byte[] = Array.zeroCreate( 8 )
-        Functions.Int16ToNetworkBytes wbuf 0 0xF1F2s
-        Assert.True( ( wbuf = [| 0xF1uy; 0xF2uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |] ) )
-
-    [<Fact>]
-    member _.IntToNetworkBytes_002() =
-        let wbuf : byte[] = Array.zeroCreate( 8 )
-        Functions.UInt16ToNetworkBytes wbuf 0 0xF2F3us
-        Assert.True( ( wbuf = [| 0xF2uy; 0xF3uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |] ) )
-
-    [<Fact>]
-    member _.IntToNetworkBytes_003() =
-        let wbuf : byte[] = Array.zeroCreate( 8 )
-        Functions.Int32ToNetworkBytes wbuf 0 0xF3F4F5F6
-        Assert.True( ( wbuf = [| 0xF3uy; 0xF4uy; 0xF5uy; 0xF6uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |] ) )
-
-    [<Fact>]
-    member _.IntToNetworkBytes_004() =
-        let wbuf : byte[] = Array.zeroCreate( 8 )
-        Functions.UInt32ToNetworkBytes wbuf 0 0xF4F5F6F7u
-        Assert.True( ( wbuf = [| 0xF4uy; 0xF5uy; 0xF6uy; 0xF7uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |] ) )
-
-    [<Fact>]
-    member _.IntToNetworkBytes_005() =
-        let wbuf : byte[] = Array.zeroCreate( 8 )
-        Functions.Int64ToNetworkBytes wbuf 0 0xF5F6F7F8F9FAFBFCL
-        Assert.True( ( wbuf = [| 0xF5uy; 0xF6uy; 0xF7uy; 0xF8uy; 0xF9uy; 0xFAuy; 0xFBuy; 0xFCuy; |] ) )
-
-    [<Fact>]
-    member _.IntToNetworkBytes_006() =
-        let wbuf : byte[] = Array.zeroCreate( 8 )
-        Functions.UInt64ToNetworkBytes wbuf 0 0xF6F7F8F9FAFBFCFDUL
-        Assert.True( ( wbuf = [| 0xF6uy; 0xF7uy; 0xF8uy; 0xF9uy; 0xFAuy; 0xFBuy; 0xFCuy; 0xFDuy; |] ) )
-
-    [<Fact>]
-    member _.IntToNetworkBytes_007() =
-        Assert.True( ( Functions.Int16ToNetworkBytes_NewVec 0xF1F2s = [| 0xF1uy; 0xF2uy; |] ) )
-
-    [<Fact>]
-    member _.IntToNetworkBytes_008() =
-        Assert.True( ( Functions.UInt16ToNetworkBytes_NewVec 0xF2F3us = [| 0xF2uy; 0xF3uy; |] ) )
-
-    [<Fact>]
-    member _.IntToNetworkBytes_009() =
-        Assert.True( ( Functions.Int32ToNetworkBytes_NewVec 0xF3F4F5F6 = [| 0xF3uy; 0xF4uy; 0xF5uy; 0xF6uy; |] ) )
-
-    [<Fact>]
-    member _.IntToNetworkBytes_010() =
-        Assert.True( ( Functions.UInt32ToNetworkBytes_NewVec 0xF4F5F6F7u = [| 0xF4uy; 0xF5uy; 0xF6uy; 0xF7uy; |] ) )
-
-    [<Fact>]
-    member _.IntToNetworkBytes_011() =
-        Assert.True( ( Functions.Int64ToNetworkBytes_NewVec 0xF5F6F7F8F9FAFBFCL = [| 0xF5uy; 0xF6uy; 0xF7uy; 0xF8uy; 0xF9uy; 0xFAuy; 0xFBuy; 0xFCuy; |] ) )
-
-    [<Fact>]
-    member _.IntToNetworkBytes_012() =
-        Assert.True( ( Functions.UInt64ToNetworkBytes_NewVec 0xF6F7F8F9FAFBFCFDUL = [| 0xF6uy; 0xF7uy; 0xF8uy; 0xF9uy; 0xFAuy; 0xFBuy; 0xFCuy; 0xFDuy; |] ) )
-
-    [<Fact>]
     member _.CheckBitflag_001() =
         Assert.False( Functions.CheckBitflag 0x00uy 0x01uy )
 
@@ -239,12 +125,6 @@ type Functions_Test () =
     [<Fact>]
     member _.SplitByteArray_003() =
         Assert.True( ( Functions.SplitByteArray 0uy Array.empty ) = [Array.empty] );
-
-//    [<Fact>]
-//    member _.CreateI_TnexusIdentifier_001() =
-//        Assert.True(
-//            ( Functions.CreateI_TnexusIdentifier "INITIATOR" { T = 0xA0uy; A = 0x0Buy; B = 0xCCCCus; C = 0xDDuy; D = 0xEEEEus } "TARGET" 0xFFFFus ) = "( INITIATOR,i,0xABCCCCDDEEEE, TARGET,t,0xFFFF )"
-//        )
 
     [<Fact>]
     member _.CompareOptValueWithDefault_001() =

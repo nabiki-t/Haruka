@@ -427,6 +427,8 @@ type ConfigurationMaster( m_WorkDirPath : string, loadtg : bool, killer : IKille
                     cont [ x.IdentNumber ]
                 | TargetGroupConf.U_DebugMedia( x ) ->
                     loop x.Peripheral ( fun li -> cont ( x.IdentNumber :: li ) )
+                | TargetGroupConf.U_VHDXFile( x ) ->
+                    cont [ x.IdentNumber ]
             [
                 for itr1 in tgConf do
                     for itr2 in itr1.LogicalUnit do

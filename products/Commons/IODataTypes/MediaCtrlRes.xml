@@ -97,6 +97,65 @@
 
       </item>
 
+      <!-- Response for VHDX media request -->
+      <item name='VHDX' selection='true' >
+
+        <!--
+          summary : Return data for MediaCtrlReq.VhdxTakeSnapshotResult
+          Result : True if it succeeded to take a snapshot otherwise false.
+          ErrorMessage : If it failed to take a snapshot, return error message.
+        -->
+        <item name='VhdxTakeSnapshotResult' >
+          <item name='Result' constraint='boolean' />
+          <item name='ErrorMessage' constraint='string' />
+        </item>
+
+        <!--
+          summary : Return data for MediaCtrlReq.VhdxGetSnapshotNames
+        -->
+        <item name='VhdxAllSnapshotNames' >
+          <item name='FileName' constraint='string' mincount='1' maxcount='VHDX_MEDIA_MAX_SNAPSHOT_COUNT' />
+        </item>
+
+        <!--
+          summary : Return data for MediaCtrlReq.VhdxDeleteSnapshotResult
+          Started : Indicates that processing has started.
+          AlreadyRunning : Indicates that another maintenance process is in progress.
+          Failed : Indicates that an other error has occurred.
+        -->
+        <item name='VhdxDeleteSnapshotResult' selection='true' >
+          <item name='DeleteSnapshotStarted' constraint='unit' />
+          <item name='OtherMaintenanceRunning' constraint='unit' />
+          <item name='FailedDeleteSnapshot' constraint='string' />
+        </item>
+
+        <!--
+          summary : Return data for MediaCtrlReq.VhdxGetMaintenanceStatus
+          RunningDeleteSnapshot : Indicates that the snapshot deletion process is in progress. The value ranges from 0 to 100, representing the percentage of progress.
+          RunningOptimization : Indicates that the optimization process is in progress. The value ranges from 0 to 100, representing the percentage of progress.
+          NotRunning : Indicates that the maintenance process has not been executed.
+          Failed : Indicates that an other error has occurred.
+        -->
+        <item name='VhdxMaintenanceStatus' selection='true' >
+          <item name='RunningDeleteSnapshot' constraint='int' minvalue='0' maxvalue='100' />
+          <item name='RunningOptimization' constraint='int' minvalue='0' maxvalue='100' />
+          <item name='NotRunningMaintenance' constraint='unit' />
+        </item>
+
+        <!--
+          summary : Return data for MediaCtrlReq.VhdxStopMaintenance
+          Result : True if it succeeded to stop maintenance process, otherwise false.
+          ErrorMessage : If it failed to stop maintenance process, return error message.
+        -->
+        <item name='VhdxStopMaintenanceResult' >
+          <item name='Result' constraint='boolean' />
+          <item name='ErrorMessage' constraint='string' />
+        </item>
+
+      </item>
+
+
+
       <!-- Message returned when an error occurs -->
       <item name='Unexpected' constraint='string' />
     </item>

@@ -2840,6 +2840,263 @@ type ServerStatus_Test4() =
 
         GlbFunc.DeleteDir dname
 
+    [<Fact>]
+    member _.AddVHDXMediaNode_001() =
+        let portNo, dname = ServerStatus_Test1.Init "AddVHDXMediaNode_001"
+        [|
+            fun () -> task {
+                let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                c.Dispose()
+                sl.Stop()
+            };
+            fun () -> task {
+                let st = new StringTable( "" )
+                let ss = new ServerStatus( st )
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                do! ss.LoadConfigure cc1 true
+
+                let tdNodes = ss.GetTargetDeviceNodes()
+                Assert.True(( tdNodes.Length = 1 ))
+                let tgid = GlbFunc.newTargetGroupID()
+                let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true :> IConfigFileNode
+                Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
+                let tconf1 = ServerStatus_Test1.defTarget 2us "target000"
+                let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
+                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
+
+                let conf : TargetGroupConf.T_VHDXFile =
+                    {
+                        IdentNumber = mediaidx_me.fromPrim 1u;
+                        MediaName = "abc";
+                        FileName = "aaa";
+                        WriteProtect = false;                    
+                    }
+                let mNode = ss.AddVHDXMediaNode luNode conf
+                let pnodes = ( mNode :> IConfigureNode ).GetParentNodes<IConfigureNode>()
+                Assert.True(( pnodes.Length = 1 ))
+                Assert.True(( pnodes.[0] = luNode ))
+
+                let clist = ( luNode :> IConfigureNode ).GetChildNodes<IConfigureNode>()
+                Assert.True(( clist.Length = 1 ))
+
+                let tgNode2 = 
+                    ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
+                    |> List.find ( fun itr -> itr.TargetGroupName = "xxyyzz" )
+                Assert.True(( ( tgNode2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
+            }
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        GlbFunc.DeleteDir dname
+
+    [<Fact>]
+    member _.AddVHDXMediaNode_003() =
+        let portNo, dname = ServerStatus_Test1.Init "AddVHDXMediaNode_003"
+        [|
+            fun () -> task {
+                let! sl, c, _, tdid, tgid = ServerStatus_Test1.StubLoginAndInit portNo true
+                c.Dispose()
+                sl.Stop()
+            };
+            fun () -> task {
+                let st = new StringTable( "" )
+                let ss = new ServerStatus( st )
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                do! ss.LoadConfigure cc1 true
+
+                let tdNodes = ss.GetTargetDeviceNodes()
+                Assert.True(( tdNodes.Length = 1 ))
+                let tgNodes = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
+                Assert.True(( tgNodes.Length = 1 ))
+                Assert.True(( ( tgNodes.[0] :> IConfigFileNode ).Modified = ModifiedStatus.NotModified ))
+                let tNodes = ( tgNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_Target>()
+                Assert.True(( tNodes.Length = 1 ))
+                let luNodes = ( tNodes.[0] :> IConfigureNode ).GetChildNodes<IConfigureNode>()
+                Assert.True(( luNodes.Length = 1 ))
+
+                let conf : TargetGroupConf.T_VHDXFile =
+                    {
+                        IdentNumber = mediaidx_me.fromPrim 1u;
+                        MediaName = "abc";
+                        FileName = "aaa";
+                        WriteProtect = false;                    
+                    }
+                let mNode = ss.AddVHDXMediaNode luNodes.[0] conf
+                let pnodes = ( mNode :> IConfigureNode ).GetParentNodes<IConfigureNode>()
+                Assert.True(( pnodes.Length = 1 ))
+                Assert.True(( pnodes.[0] = luNodes.[0] ))
+
+                let tgNode2 = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
+                Assert.True(( tgNode2.Length = 1 ))
+                Assert.True(( ( tgNode2.[0] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
+            }
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        GlbFunc.DeleteDir dname
+
+    [<Fact>]
+    member _.UpdateVHDXMediaNode_001() =
+        let portNo, dname = ServerStatus_Test1.Init "UpdateVHDXMediaNode_001"
+        [|
+            fun () -> task {
+                let! sl, c, _, _, _ = ServerStatus_Test1.StubLoginAndInit portNo true
+                c.Dispose()
+                sl.Stop()
+            };
+            fun () -> task {
+                let st = new StringTable( "" )
+                let ss = new ServerStatus( st )
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                do! ss.LoadConfigure cc1 true
+
+                let tdNodes = ss.GetTargetDeviceNodes()
+                Assert.True(( tdNodes.Length = 1 ))
+                let tgid = GlbFunc.newTargetGroupID()
+                let tgNode = ss.AddTargetGroupNode tdNodes.[0] tgid "xxyyzz" true :> IConfigFileNode
+                Assert.True(( tgNode.Modified = ModifiedStatus.Modified ))
+                let tconf1 = ServerStatus_Test1.defTarget 2us "target000"
+                let tNode1 = ss.AddTargetNode ( tgNode :?> ConfNode_TargetGroup ) tconf1
+                let luNode = ss.AddDummyDeviceLUNode tNode1 ( lun_me.fromPrim 22UL ) "luname022" Constants.LU_DEF_MULTIPLICITY
+
+                let conf1 : TargetGroupConf.T_VHDXFile =
+                    {
+                        IdentNumber = mediaidx_me.fromPrim 1u;
+                        MediaName = "abc";
+                        FileName = "aaa";
+                        WriteProtect = false;                    
+                    }
+                let mNode = ss.AddVHDXMediaNode luNode conf1
+
+                let conf2 : TargetGroupConf.T_VHDXFile =
+                    {
+                        IdentNumber = mediaidx_me.fromPrim 2u;
+                        MediaName = "xyz";
+                        FileName = "bbb";
+                        WriteProtect = true;                    
+                    }
+                let mNode2 = ss.UpdateVHDXMediaNode mNode conf2
+                match ( mNode2 :> IMediaNode ).MediaConfData with
+                | TargetGroupConf.T_MEDIA.U_VHDXFile( x ) ->
+                    Assert.StrictEqual( mediaidx_me.fromPrim 2u, x.IdentNumber )
+                    Assert.StrictEqual( "xyz", x.MediaName )
+                    Assert.StrictEqual( "bbb", x.FileName )
+                    Assert.True( x.WriteProtect )
+                | _ ->
+                    Assert.Fail __LINE__
+
+                let pnodes = ( mNode2 :> IConfigureNode ).GetParentNodes<IConfigureNode>()
+                Assert.True(( pnodes.Length = 1 ))
+                Assert.True(( pnodes.[0] = luNode ))
+
+                let clist = ( luNode :> IConfigureNode ).GetChildNodes<IConfigureNode>()
+                Assert.True(( clist.Length = 1 ))
+
+                let tgNode2 = 
+                    ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
+                    |> List.find ( fun itr -> itr.TargetGroupName = "xxyyzz" )
+                Assert.True(( ( tgNode2 :> IConfigFileNode ).Modified = ModifiedStatus.Modified ) )
+            }
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        GlbFunc.DeleteDir dname
+
+    [<Fact>]
+    member _.UpdateVHDXMediaNode_003() =
+        let portNo, dname = ServerStatus_Test1.Init "UpdateVHDXMediaNode_003"
+        [|
+            fun () -> task {
+                let! sl, c, sessID = CtrlConnection_Test1.StubLogin portNo
+                let tdid = GlbFunc.newTargetDeviceID()
+                let tgid = GlbFunc.newTargetGroupID()
+                do! ServerStatus_Test1.RespDefaultCtrlConf c portNo
+                do! ServerStatus_Test1.RespTargetDeviceDirs c [tdid]
+                do! ServerStatus_Test1.RespDefaultTargetDeviceConfig c tdid
+                let tgconf =
+                    TargetGroupConf.ReaderWriter.ToString {
+                        TargetGroupID = tgid;
+                        TargetGroupName = "targetgroup000";
+                        EnabledAtStart = false;
+                        Target = [{
+                            ( ServerStatus_Test1.defTarget 10us "target000" ) with
+                                LUN = [ lun_me.fromPrim 1UL ];
+                        }];
+                        LogicalUnit = [{
+                                LUN = lun_me.fromPrim 1UL;
+                                LUName = "";
+                                WorkPath = "";
+                                MaxMultiplicity = Constants.LU_DEF_MULTIPLICITY;
+                                LUDevice = TargetGroupConf.U_BlockDevice({
+                                    Peripheral = TargetGroupConf.U_VHDXFile({
+                                        IdentNumber = mediaidx_me.fromPrim 99u;
+                                        MediaName = "999";
+                                        FileName = "ccc";
+                                        WriteProtect = true;                                        
+                                    })
+                                    OptimalTransferLength = blkcnt_me.ofUInt32 Constants.LU_DEF_OPTIMAL_TRANSFER_LENGTH;
+                                });
+                        }];
+                    }
+                do! ServerStatus_Test1.RespAllTargetGroupConfig c tdid { TargetGroupID = tgid; Config = tgconf; }
+                c.Dispose()
+                sl.Stop()
+            };
+            fun () -> task {
+                let st = new StringTable( "" )
+                let ss = new ServerStatus( st )
+                use! cc1 = CtrlConnection.Connect st "::1" portNo false
+                do! ss.LoadConfigure cc1 true
+
+                let tdNodes = ss.GetTargetDeviceNodes()
+                Assert.True(( tdNodes.Length = 1 ))
+                let tgNodes = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
+                Assert.True(( tgNodes.Length = 1 ))
+                Assert.True(( ( tgNodes.[0] :> IConfigFileNode ).Modified = ModifiedStatus.NotModified ))
+                let tNodes = ( tgNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_Target>()
+                Assert.True(( tNodes.Length = 1 ))
+                let luNodes = ( tNodes.[0] :> IConfigureNode ).GetChildNodes<IConfigureNode>()
+                Assert.True(( luNodes.Length = 1 ))
+                let mNodes = luNodes.[0].GetDescendantNodes<IMediaNode>()
+                Assert.True(( mNodes.Length = 1 ))
+
+                let conf : TargetGroupConf.T_VHDXFile = {
+                    IdentNumber = mediaidx_me.fromPrim 88u;
+                    MediaName = "888";
+                    FileName = "ddd";
+                    WriteProtect = false;
+                }
+                let mNode2 = ss.UpdateVHDXMediaNode ( mNodes.[0] :?> ConfNode_VHDXMedia ) conf
+                match ( mNode2 :> IMediaNode ).MediaConfData with
+                | TargetGroupConf.T_MEDIA.U_VHDXFile( x ) ->
+                    Assert.StrictEqual( mediaidx_me.fromPrim 88u, x.IdentNumber )
+                    Assert.StrictEqual( "888", x.MediaName )
+                    Assert.StrictEqual( "ddd", x.FileName )
+                    Assert.False( x.WriteProtect )
+                | _ ->
+                    Assert.Fail __LINE__
+
+                let pnodes = ( mNode2 :> IConfigureNode ).GetParentNodes<IConfigureNode>()
+                Assert.True(( pnodes.Length = 1 ))
+                Assert.True(( pnodes.[0] = luNodes.[0] ))
+
+                let tgNode2 = ( tdNodes.[0] :> IConfigureNode ).GetChildNodes<ConfNode_TargetGroup>()
+                Assert.True(( tgNode2.Length = 1 ))
+                Assert.True(( ( tgNode2.[0] :> IConfigFileNode ).Modified = ModifiedStatus.Modified ))
+            }
+        |]
+        |> Functions.RunTaskInPallalel
+        |> Functions.RunTaskSynchronously
+        |> ignore
+
+        GlbFunc.DeleteDir dname
+
 
     [<Fact>]
     member _.IdentifyTargetDeviceNode_001() =

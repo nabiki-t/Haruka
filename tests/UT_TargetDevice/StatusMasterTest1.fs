@@ -25,6 +25,7 @@ open Haruka.IODataTypes
 open Haruka.TargetDevice
 open Haruka.BlockDeviceLU
 open Haruka.Test
+open Haruka.Media.VhdxUtil
 
 #nowarn "1240"
 
@@ -1359,8 +1360,8 @@ type StatusMaster_Test1 () =
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
-    member this.CreateMedia_001() =
-        let pDirName = this.GetTestDirName "CreateMedia_001"
+    member this.CreateMedia_PlainFile_001() =
+        let pDirName = this.GetTestDirName "CreateMedia_PlainFile_001"
         GlbFunc.CreateDir pDirName |> ignore
 
         let targetDeviceConfName = StatusMaster_Test1.CreateEmptyTDConf pDirName
@@ -1378,13 +1379,14 @@ type StatusMaster_Test1 () =
         let mconf : TargetGroupConf.T_MEDIA = TargetGroupConf.T_MEDIA.U_PlainFile( {
             IdentNumber = mediaidx_me.fromPrim 1u;
             MediaName = "";
-            FileName = Functions.AppendPathName pDirName "a.txt";
+            FileName = mediaFName;
             BlockSize = Blocksize.BS_512;
             WriteProtect = false;
         } )
 
         let me = sm.CreateMedia  mconf ( lun_me.fromPrim 1UL ) 1u killer 
         Assert.StrictEqual( 1UL, me.BlockCount )
+        Assert.StartsWith( "Plain File Media", me.DescriptString )
 
         killer.NoticeTerminate()
         GlbFunc.DeleteFile mediaFName
@@ -1393,8 +1395,35 @@ type StatusMaster_Test1 () =
         GlbFunc.DeleteDir pDirName
 
     [<Fact>]
-    member this.CreateMedia_002() =
-        let pDirName = this.GetTestDirName "CreateMedia_002"
+    member this.CreateMedia_MemBuffer_001() =
+        let pDirName = this.GetTestDirName "CreateMedia_MemBuffer_001"
+        GlbFunc.CreateDir pDirName |> ignore
+
+        let targetDeviceConfName = StatusMaster_Test1.CreateEmptyTDConf pDirName
+        let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
+        File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
+
+        let killer = new HKiller() :> IKiller
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
+
+        let mconf : TargetGroupConf.T_MEDIA = TargetGroupConf.T_MEDIA.U_MemBuffer({
+            IdentNumber = mediaidx_me.fromPrim 1u;
+            MediaName = "";
+            BytesCount = 65536UL;
+            BlockSize = Blocksize.BS_512;
+        })
+        let me = sm.CreateMedia  mconf ( lun_me.fromPrim 1UL ) 1u killer 
+        Assert.StrictEqual( 128UL, me.BlockCount )
+        Assert.StartsWith( "Memory buffer Media", me.DescriptString )
+
+        killer.NoticeTerminate()
+        GlbFunc.DeleteFile targetDeviceConfName
+        GlbFunc.DeleteFile targetGroupConfName0
+        GlbFunc.DeleteDir pDirName
+
+    [<Fact>]
+    member this.CreateMedia_DummyMedia_001() =
+        let pDirName = this.GetTestDirName "CreateMedia_DummyMedia_001"
         GlbFunc.CreateDir pDirName |> ignore
 
         let targetDeviceConfName = StatusMaster_Test1.CreateEmptyTDConf pDirName
@@ -1410,8 +1439,74 @@ type StatusMaster_Test1 () =
         })
         let me = sm.CreateMedia  mconf ( lun_me.fromPrim 1UL ) 1u killer 
         Assert.StrictEqual( 0UL, me.BlockCount )
+        Assert.StartsWith( "Dummy media", me.DescriptString )
 
         killer.NoticeTerminate()
+        GlbFunc.DeleteFile targetDeviceConfName
+        GlbFunc.DeleteFile targetGroupConfName0
+        GlbFunc.DeleteDir pDirName
+
+    [<Fact>]
+    member this.CreateMedia_DebugMedia_001() =
+        let pDirName = this.GetTestDirName "CreateMedia_DebugMedia_001"
+        GlbFunc.CreateDir pDirName |> ignore
+
+        let targetDeviceConfName = StatusMaster_Test1.CreateEmptyTDConf pDirName
+        let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
+        File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
+
+        let killer = new HKiller() :> IKiller
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
+
+        let mconf : TargetGroupConf.T_MEDIA = TargetGroupConf.T_MEDIA.U_DebugMedia({
+            IdentNumber = mediaidx_me.fromPrim 1u;
+            MediaName = "";
+            Peripheral = TargetGroupConf.T_MEDIA.U_DummyMedia({
+                IdentNumber = mediaidx_me.fromPrim 2u;
+                MediaName = "";
+            })
+        })
+        let me = sm.CreateMedia  mconf ( lun_me.fromPrim 1UL ) 1u killer 
+        Assert.StrictEqual( 0UL, me.BlockCount )
+        Assert.StartsWith( "Debug Media", me.DescriptString )
+
+        killer.NoticeTerminate()
+        GlbFunc.DeleteFile targetDeviceConfName
+        GlbFunc.DeleteFile targetGroupConfName0
+        GlbFunc.DeleteDir pDirName
+
+    [<Fact>]
+    member this.CreateMedia_VHDXFile_001() =
+        let pDirName = this.GetTestDirName "CreateMedia_VHDXFile_001"
+        GlbFunc.CreateDir pDirName |> ignore
+
+        let targetDeviceConfName = StatusMaster_Test1.CreateEmptyTDConf pDirName
+        let targetGroupConfName0 = Functions.AppendPathName pDirName ( tgid_me.toString tgid0 )
+        File.WriteAllText( targetGroupConfName0, defaultTargetGroupConfStr 0 false )
+
+        let killer = new HKiller() :> IKiller
+        let sm = new StatusMaster( pDirName, true, killer, stdin, stdout ) :> IStatus
+
+        let mediaFName = Functions.AppendPathName pDirName "a.vhdx"
+        File.Create mediaFName |> _.Close()
+        let fa = FileAccessor( mediaFName, 1u, false )
+        VhdxCreator.Create None fa 1048576u 1048576u false ( 64UL * 1048576UL ) Blocksize.BS_512
+        |> Functions.RunTaskSynchronously
+        fa.Close()
+
+        let mconf : TargetGroupConf.T_MEDIA = TargetGroupConf.T_MEDIA.U_VHDXFile( {
+            IdentNumber = mediaidx_me.fromPrim 1u;
+            MediaName = "";
+            FileName = mediaFName;
+            WriteProtect = false;
+        } )
+
+        let me = sm.CreateMedia  mconf ( lun_me.fromPrim 1UL ) 1u killer 
+        Assert.StrictEqual( 131072UL, me.BlockCount )
+        Assert.StartsWith( "VHDX File Media", me.DescriptString )
+
+        killer.NoticeTerminate()
+        GlbFunc.DeleteFile mediaFName
         GlbFunc.DeleteFile targetDeviceConfName
         GlbFunc.DeleteFile targetGroupConfName0
         GlbFunc.DeleteDir pDirName

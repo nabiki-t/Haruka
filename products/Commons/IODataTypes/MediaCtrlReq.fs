@@ -28,6 +28,7 @@ type [<NoComparison>]T_MediaCtrlReq = {
 
 and [<NoComparison>]T_Request = 
     | U_Debug of T_Debug
+    | U_VHDX of T_VHDX
 
 and [<NoComparison>]T_Debug = 
     | U_GetAllTraps of unit
@@ -70,6 +71,13 @@ and [<NoComparison>]T_Resume = {
     TSIH : TSIH_T;
     ITT : ITT_T;
 }
+
+and [<NoComparison>]T_VHDX = 
+    | U_VhdxTakeSnapshot of string
+    | U_VhdxGetSnapshotNames of unit
+    | U_VhdxDeleteSnapshot of int32
+    | U_VhdxGetMaintenanceStatus of unit
+    | U_VhdxStopMaintenance of unit
 
 //=============================================================================
 // Class implementation
@@ -230,6 +238,46 @@ type ReaderWriter() =
               </xsd:element>
             </xsd:choice></xsd:complexType>
           </xsd:element>
+          <xsd:element name='VHDX' >
+            <xsd:complexType><xsd:choice>
+              <xsd:element name='VhdxTakeSnapshot' >
+                <xsd:simpleType>
+                  <xsd:restriction base='xsd:string'>
+                  </xsd:restriction>
+                </xsd:simpleType>
+              </xsd:element>
+              <xsd:element name='VhdxGetSnapshotNames' >
+                <xsd:simpleType>
+                  <xsd:restriction base='xsd:int'>
+                    <xsd:minInclusive value='0' />
+                    <xsd:maxInclusive value='0' />
+                  </xsd:restriction>
+                </xsd:simpleType>
+              </xsd:element>
+              <xsd:element name='VhdxDeleteSnapshot' >
+                <xsd:simpleType>
+                  <xsd:restriction base='xsd:int'>
+                  </xsd:restriction>
+                </xsd:simpleType>
+              </xsd:element>
+              <xsd:element name='VhdxGetMaintenanceStatus' >
+                <xsd:simpleType>
+                  <xsd:restriction base='xsd:int'>
+                    <xsd:minInclusive value='0' />
+                    <xsd:maxInclusive value='0' />
+                  </xsd:restriction>
+                </xsd:simpleType>
+              </xsd:element>
+              <xsd:element name='VhdxStopMaintenance' >
+                <xsd:simpleType>
+                  <xsd:restriction base='xsd:int'>
+                    <xsd:minInclusive value='0' />
+                    <xsd:maxInclusive value='0' />
+                  </xsd:restriction>
+                </xsd:simpleType>
+              </xsd:element>
+            </xsd:choice></xsd:complexType>
+          </xsd:element>
         </xsd:choice></xsd:complexType>
       </xsd:element>
     </xsd:sequence></xsd:complexType>
@@ -340,6 +388,8 @@ type ReaderWriter() =
         match firstChildName.LocalName with
         | "Debug" ->
             U_Debug( ReaderWriter.Read_T_Debug firstChild )
+        | "VHDX" ->
+            U_VHDX( ReaderWriter.Read_T_VHDX firstChild )
         | _ -> raise <| ConfRWException( "Unexpected tag name." )
 
     /// <summary>
@@ -488,6 +538,31 @@ type ReaderWriter() =
         }
 
     /// <summary>
+    ///  Read T_VHDX data from XML document.
+    /// </summary>
+    /// <param name="elem">
+    ///  Loaded XML document.
+    /// </param>
+    /// <returns>
+    ///  parsed T_VHDX data structure.
+    /// </returns>
+    static member private Read_T_VHDX ( elem : XElement ) : T_VHDX = 
+        let firstChild = elem.Elements() |> Seq.head 
+        let firstChildName = firstChild.Name
+        match firstChildName.LocalName with
+        | "VhdxTakeSnapshot" ->
+            U_VhdxTakeSnapshot( firstChild.Value )
+        | "VhdxGetSnapshotNames" ->
+            U_VhdxGetSnapshotNames( () )
+        | "VhdxDeleteSnapshot" ->
+            U_VhdxDeleteSnapshot( Int32.Parse( firstChild.Value ) )
+        | "VhdxGetMaintenanceStatus" ->
+            U_VhdxGetMaintenanceStatus( () )
+        | "VhdxStopMaintenance" ->
+            U_VhdxStopMaintenance( () )
+        | _ -> raise <| ConfRWException( "Unexpected tag name." )
+
+    /// <summary>
     ///  Write MediaCtrlReq data to specified file.
     /// </summary>
     /// <param name="fname">
@@ -569,6 +644,8 @@ type ReaderWriter() =
             match elem with
             | U_Debug( x ) ->
                 yield! ReaderWriter.T_Debug_toString ( indent + 1 ) indentStep ( x ) "Debug"
+            | U_VHDX( x ) ->
+                yield! ReaderWriter.T_VHDX_toString ( indent + 1 ) indentStep ( x ) "VHDX"
             yield sprintf "%s</%s>" indentStr elemName
         }
 
@@ -794,6 +871,43 @@ type ReaderWriter() =
             yield sprintf "%s<%s>" indentStr elemName
             yield sprintf "%s%s<TSIH>%d</TSIH>" singleIndent indentStr ( tsih_me.toPrim (elem.TSIH) )
             yield sprintf "%s%s<ITT>%d</ITT>" singleIndent indentStr ( itt_me.toPrim (elem.ITT) )
+            yield sprintf "%s</%s>" indentStr elemName
+        }
+
+    /// <summary>
+    ///  Write T_VHDX data structure to configuration file.
+    /// </summary>
+    /// <param name="indent">
+    ///  Indent space count.
+    /// </param>
+    /// <param name="indentStep">
+    ///  Indent step count.
+    /// </param>
+    /// <param name="elem">
+    ///  Data structure for output.
+    /// </param>
+    /// <param name="elemName">
+    ///  XML tag name for the data.
+    /// </param>
+    /// <returns>
+    ///  Array of the generated string.
+    /// </returns>
+    static member private T_VHDX_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_VHDX ) ( elemName : string ) : seq<string> = 
+        let indentStr = String.replicate ( indent * indentStep ) " "
+        let singleIndent = String.replicate ( indentStep ) " "
+        seq {
+            yield sprintf "%s<%s>" indentStr elemName
+            match elem with
+            | U_VhdxTakeSnapshot( x ) ->
+                yield sprintf "%s%s<VhdxTakeSnapshot>%s</VhdxTakeSnapshot>" singleIndent indentStr ( ReaderWriter.xmlEncode(x) )
+            | U_VhdxGetSnapshotNames( x ) ->
+                yield sprintf "%s%s<VhdxGetSnapshotNames>0</VhdxGetSnapshotNames>" singleIndent indentStr
+            | U_VhdxDeleteSnapshot( x ) ->
+                yield sprintf "%s%s<VhdxDeleteSnapshot>%d</VhdxDeleteSnapshot>" singleIndent indentStr (x)
+            | U_VhdxGetMaintenanceStatus( x ) ->
+                yield sprintf "%s%s<VhdxGetMaintenanceStatus>0</VhdxGetMaintenanceStatus>" singleIndent indentStr
+            | U_VhdxStopMaintenance( x ) ->
+                yield sprintf "%s%s<VhdxStopMaintenance>0</VhdxStopMaintenance>" singleIndent indentStr
             yield sprintf "%s</%s>" indentStr elemName
         }
 

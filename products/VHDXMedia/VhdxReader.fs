@@ -1,9 +1,21 @@
-namespace VhdxLibrary
+//=============================================================================
+// Haruka Software Storage.
+// VhdxReader.fs : Define a function to read the structural data of a VHDX file.
+//
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Media.VhdxUtil
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
 open System.Text
 open System.Threading.Tasks
+open System.Collections.Generic
 
 open Haruka.Constants
 open Haruka.Commons
@@ -27,10 +39,9 @@ type VhdxReader() =
             // signature
             let sigBuf = Array.zeroCreate<byte> 8 
             do! fa.Read 0UL ( ArraySegment sigBuf )
-            let signature = VhdxCommon.ReadUInt64BE sigBuf 0u
-            printfn "File type identifier signature : 0x%016X" signature
+            let signature = ByteFunc.ReadU64BE sigBuf 0u
             if signature <> 0x7668647866696C65UL then
-                raise <| Exception( "File type identifier signature mismatch" )
+                raise <| VhdxMediaException( fa.FileName, sprintf "File type identifier signature mismatch. Signature=0x%016X" signature )
 
             // Creator
             let wv = Array.zeroCreate<byte> ( 512 - 8 )
@@ -40,7 +51,6 @@ type VhdxReader() =
                 |> Encoding.Unicode.GetString
                 |> _.Replace( "\000", "" )
                 |> _.Trim()
-            printfn "Creator : %s" rs
             return rs
         }
 
@@ -53,106 +63,83 @@ type VhdxReader() =
     /// <returns>
     ///  Retrieved VHDX file headeres.
     /// </returns>
-    static member private ReadHeaders ( fa : FileAccessor ) : Task<VhdxHeader list> =
+    static member private ReadHeaders ( fa : FileAccessor ) : Task< ( VhdxHeader * VhdxMutableHeader ) > =
         task {
             let fileSize = fa.GetFileSize()
 
             // Read header 0 (offset=0x10000)
             let header0Buf = Array.zeroCreate<byte> 4096
             do! fa.Read 0x10000UL ( ArraySegment header0Buf )
-            let header0 = {
-                Signature = VhdxCommon.ReadUInt32BE header0Buf 0u;
-                Checksum = VhdxCommon.ReadUInt32LE header0Buf 4u;
-                SequenceNumber = VhdxCommon.ReadUInt64LE header0Buf 8u;
-                FileWriteGuid = VhdxCommon.ReadGuid header0Buf 16u;
-                DataWriteGuid = VhdxCommon.ReadGuid header0Buf 32u;
-                LogGuid = VhdxCommon.ReadGuid header0Buf 48u;
-                LogVersion = VhdxCommon.ReadUInt16LE header0Buf 64u;
-                Version = VhdxCommon.ReadUInt16LE header0Buf 66u;
-                LogLength = VhdxCommon.ReadUInt32LE header0Buf 68u;
-                LogOffset = VhdxCommon.ReadUInt64LE header0Buf 72u;
+            let immheader0 = {
+                Signature = ByteFunc.ReadU32BE header0Buf 0u;
+                Checksum = ByteFunc.ReadU32LE header0Buf 4u;
+                LogVersion = ByteFunc.ReadU16LE header0Buf 64u;
+                Version = ByteFunc.ReadU16LE header0Buf 66u;
+                LogLength = ByteFunc.ReadU32LE header0Buf 68u;
+                LogOffset = ByteFunc.ReadU64LE header0Buf 72u;
                 Offset = 0x10000UL;
                 Index = 0;
             }
+            let verheader0 = {
+                SequenceNumber = ByteFunc.ReadU64LE header0Buf 8u;
+                FileWriteGuid = ByteFunc.ReadGuid header0Buf 16u;
+                DataWriteGuid = ByteFunc.ReadGuid header0Buf 32u;
+                LogGuid = ByteFunc.ReadGuid header0Buf 48u;
+            }
 
             let header0Enable =
-                let c0 = VhdxCommon.CheckHeaderChecksum header0Buf header0.Checksum && header0.Signature = 0x68656164u
-                let c1 = header0.LogVersion = 0us
-                let c2 = header0.Version = 1us
-                let c3 = header0.LogLength &&& 0x000FFFFFu = 0u             // Multiples of 1MB
-                let c4 = header0.LogOffset &&& 0x00000000000FFFFFUL = 0UL   // Multiples of 1MB
-                let c5 = ( int32 header0.LogLength ) >= 0
-                let c6 = ( int64 header0.LogOffset ) >= 0L
-                let c7 = header0.LogOffset + ( uint64 header0.LogLength ) <= fileSize
-                let c8 = header0.LogOffset + ( uint64 header0.LogLength ) <= 0x0000400000000000UL   // 64TB or less
+                let c0 = VhdxCommons.CheckHeaderChecksum header0Buf immheader0.Checksum && immheader0.Signature = 0x68656164u
+                let c1 = immheader0.LogVersion = 0us
+                let c2 = immheader0.Version = 1us
+                let c3 = immheader0.LogLength &&& 0x000FFFFFu = 0u             // Multiples of 1MB
+                let c4 = immheader0.LogOffset &&& 0x00000000000FFFFFUL = 0UL   // Multiples of 1MB
+                let c5 = ( int32 immheader0.LogLength ) >= 0
+                let c6 = ( int64 immheader0.LogOffset ) >= 0L
+                let c7 = immheader0.LogOffset + ( uint64 immheader0.LogLength ) <= fileSize
+                let c8 = immheader0.LogOffset + ( uint64 immheader0.LogLength ) <= 0x0000400000000000UL   // 64TB or less
                 c0 && c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8
-
-            printfn "Header 0"
-            printfn "  Signature : 0x%08X" header0.Signature
-            printfn "  Checksum : 0x%08X" header0.Checksum
-            printfn "  Sequence Number : %d" header0.SequenceNumber
-            printfn "  File Write Guid : %s" ( header0.FileWriteGuid.ToString( "D" ) )
-            printfn "  Data Write Guid : %s" ( header0.DataWriteGuid.ToString( "D" ) )
-            printfn "  Log Guid : %s" ( header0.LogGuid.ToString( "D" ) )
-            printfn "  Log Version : %d" header0.LogVersion
-            printfn "  Version : %d" header0.Version
-            printfn "  Log Length : %d" header0.LogLength
-            printfn "  Log Offset : %d" header0.LogOffset
-            printfn "  Header 0 Offset : %d" header0.Offset
-            printfn "  Validity : %s" ( if header0Enable then "valid" else "invalid" )
 
             // Read header 1 (offset=0x20000)
             let header1Buf = Array.zeroCreate<byte> 4096
             do! fa.Read 0x20000UL ( ArraySegment header1Buf )
-            let header1 = {
-                Signature = VhdxCommon.ReadUInt32BE header1Buf 0u;
-                Checksum = VhdxCommon.ReadUInt32LE header1Buf 4u;
-                SequenceNumber = VhdxCommon.ReadUInt64LE header1Buf 8u;
-                FileWriteGuid = VhdxCommon.ReadGuid header1Buf 16u;
-                DataWriteGuid = VhdxCommon.ReadGuid header1Buf 32u;
-                LogGuid = VhdxCommon.ReadGuid header1Buf 48u;
-                LogVersion = VhdxCommon.ReadUInt16LE header1Buf 64u;
-                Version = VhdxCommon.ReadUInt16LE header1Buf 66u;
-                LogLength = VhdxCommon.ReadUInt32LE header1Buf 68u;
-                LogOffset = VhdxCommon.ReadUInt64LE header1Buf 72u;
+            let immheader1 = {
+                Signature = ByteFunc.ReadU32BE header1Buf 0u;
+                Checksum = ByteFunc.ReadU32LE header1Buf 4u;
+                LogVersion = ByteFunc.ReadU16LE header1Buf 64u;
+                Version = ByteFunc.ReadU16LE header1Buf 66u;
+                LogLength = ByteFunc.ReadU32LE header1Buf 68u;
+                LogOffset = ByteFunc.ReadU64LE header1Buf 72u;
                 Offset = 0x20000UL;
                 Index = 1;
             }
-            let header1Enable =
-                let c0 = VhdxCommon.CheckHeaderChecksum header1Buf header1.Checksum && header1.Signature = 0x68656164u
-                let c1 = header1.LogVersion = 0us
-                let c2 = header1.Version = 1us
-                let c3 = header1.LogLength &&& 0x000FFFFFu = 0u             // Multiples of 1MB
-                let c4 = header1.LogOffset &&& 0x00000000000FFFFFUL = 0UL   // Multiples of 1MB
-                let c5 = ( int32 header1.LogLength ) >= 0
-                let c6 = ( int64 header1.LogOffset ) >= 0L
-                let c7 = header1.LogOffset + ( uint64 header1.LogLength ) <= fileSize
-                let c8 = header1.LogOffset + ( uint64 header1.LogLength ) <= 0x0000400000000000UL   // 64TB or less
-                c0 && c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8
+            let verheader1 = {
+                SequenceNumber = ByteFunc.ReadU64LE header1Buf 8u;
+                FileWriteGuid = ByteFunc.ReadGuid header1Buf 16u;
+                DataWriteGuid = ByteFunc.ReadGuid header1Buf 32u;
+                LogGuid = ByteFunc.ReadGuid header1Buf 48u;
+            }
 
-            printfn "Header 1"
-            printfn "  Signature : 0x%08X" header1.Signature
-            printfn "  Checksum : 0x%08X" header1.Checksum
-            printfn "  Sequence Number : %d" header1.SequenceNumber
-            printfn "  File Write Guid : %s" ( header1.FileWriteGuid.ToString( "D" ) )
-            printfn "  Data Write Guid : %s" ( header1.DataWriteGuid.ToString( "D" ) )
-            printfn "  Log Guid : %s" ( header1.LogGuid.ToString( "D" ) )
-            printfn "  Log Version : %d" header1.LogVersion
-            printfn "  Version : %d" header1.Version
-            printfn "  Log Length : %d" header1.LogLength
-            printfn "  Log Offset : %d" header1.LogOffset
-            printfn "  Header 1 Offset : %d" header1.Offset
-            printfn "  Validity : %s" ( if header1Enable then "valid" else "invalid" )
+            let header1Enable =
+                let c0 = VhdxCommons.CheckHeaderChecksum header1Buf immheader1.Checksum && immheader1.Signature = 0x68656164u
+                let c1 = immheader1.LogVersion = 0us
+                let c2 = immheader1.Version = 1us
+                let c3 = immheader1.LogLength &&& 0x000FFFFFu = 0u             // Multiples of 1MB
+                let c4 = immheader1.LogOffset &&& 0x00000000000FFFFFUL = 0UL   // Multiples of 1MB
+                let c5 = ( int32 immheader1.LogLength ) >= 0
+                let c6 = ( int64 immheader1.LogOffset ) >= 0L
+                let c7 = immheader1.LogOffset + ( uint64 immheader1.LogLength ) <= fileSize
+                let c8 = immheader1.LogOffset + ( uint64 immheader1.LogLength ) <= 0x0000400000000000UL   // 64TB or less
+                c0 && c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8
 
             // Determine which headers to use
             if header0Enable && header1Enable then
-                return [ header0; header1 ]
+                return ( immheader0, verheader0 )
             elif header0Enable && not header1Enable then
-                return [ header0 ]
+                return ( immheader0, verheader0 )
             elif not header0Enable && header1Enable then
-                return [ header1 ]
+                return ( immheader1, verheader1 )
             else
-                return raise <| Exception( "No valid header exists." )
+                return raise <| VhdxMediaException( fa.FileName, "No valid header exists." )
         }
 
     /// <summary>
@@ -172,25 +159,13 @@ type VhdxReader() =
     ///  If there is an error in the data, an array of length 0 is returned.
     /// </returns>
     static member private ReadLogDataSector ( data : byte[] ) ( offset : uint32 ) ( seqNum : uint64 ) : byte[] =
-        printfn "  ReadLogDataSector( offset=%d )" offset
-
-        let signeture = VhdxCommon.ReadUInt32BE data offset
-        let sequenceHigh = VhdxCommon.ReadUInt32LE data ( offset + 4u )
-        let sequenceLow = VhdxCommon.ReadUInt32LE data ( offset + 4092u )
-
-        printfn "    Signeture : 0x%08X" signeture
-        printfn "    Sequence High : %d" sequenceHigh
-        printfn "    Sequence Low : %d" sequenceLow
+        let signeture = ByteFunc.ReadU32BE data offset
+        let sequenceHigh = ByteFunc.ReadU32LE data ( offset + 4u )
+        let sequenceLow = ByteFunc.ReadU32LE data ( offset + 4092u )
 
         let signeture_Check = signeture = 0x64617461u
-        if not signeture_Check then printfn "    Invalid signature"
-
         let sequenceHigh_Check = sequenceHigh = uint32 ( seqNum >>> 32 )
-        if not sequenceHigh_Check then printfn "    Invalid sequence high"
-
         let sequenceLow_Check = sequenceLow = uint32 ( seqNum &&& 0xFFFFFFFFUL )
-        if not sequenceLow_Check then printfn "    Invalid sequence low"
-
         if not signeture_Check || not sequenceHigh_Check || not sequenceLow_Check then
             [||]
         else
@@ -216,31 +191,17 @@ type VhdxReader() =
     ///  If there is an error in the data, None is returned.
     /// </returns>
     static member private ReadLogDescriptor ( data : byte[] ) ( offset : uint32 ) ( dataDescCount : uint32 ) ( seqNum : uint64 ) : LogDescriptor option =
-
-        printfn "  ReadLogDescriptor( offset=%d )" offset
-
-        let signeture = VhdxCommon.ReadUInt32BE data offset
-        printfn "    Signeture : 0x%08X" signeture
+        let signeture = ByteFunc.ReadU32BE data offset
 
          // Zero descriptor
         if signeture = 0x7A65726Fu then
-            let zeroLength = VhdxCommon.ReadUInt64LE data ( offset + 8u )
-            let fileOffset = VhdxCommon.ReadUInt64LE data ( offset + 16u )
-            let sequenceNumber = VhdxCommon.ReadUInt64LE data ( offset + 24u )
-
-            printfn "    Zero Length : %d" zeroLength
-            printfn "    File Offset : %d" fileOffset
-            printfn "    Sequence Number : %d" sequenceNumber
+            let zeroLength = ByteFunc.ReadU64LE data ( offset + 8u )
+            let fileOffset = ByteFunc.ReadU64LE data ( offset + 16u )
+            let sequenceNumber = ByteFunc.ReadU64LE data ( offset + 24u )
 
             let zeroLength_Check = ( zeroLength &&& 0x0000000000000FFFUL ) = 0UL
-            if not zeroLength_Check then printfn "    Invalid zero length"
-
             let fileOffset_Check = ( fileOffset &&& 0x0000000000000FFFUL ) = 0UL
-            if not fileOffset_Check then printfn "    Invalid file offset"
-
             let sequenceNumber_Check = seqNum = sequenceNumber
-            if not sequenceNumber_Check then printfn "    Invalid sequence number"
-
             if zeroLength_Check && fileOffset_Check && sequenceNumber_Check then
                 {
                     ZeroSignature = signeture;
@@ -257,20 +218,11 @@ type VhdxReader() =
         elif signeture = 0x64657363u then
             let trailingBytes = data.[ int32 offset + 4 .. int32 offset + 7 ]
             let leadingBytes = data.[ int32 offset + 8 .. int32 offset + 15 ]
-            let fileOffset = VhdxCommon.ReadUInt64LE data ( offset + 16u )
-            let sequenceNumber = VhdxCommon.ReadUInt64LE data ( offset + 24u )
-
-            printfn "    Trailing Bytes : %s" ( trailingBytes |> Array.map ( sprintf "%02X" ) |> String.concat "," )
-            printfn "    Leading Bytes : %s" ( leadingBytes |> Array.map ( sprintf "%02X" ) |> String.concat "," )
-            printfn "    File Offset : %d" fileOffset
-            printfn "    Sequence Number : %d" sequenceNumber
+            let fileOffset = ByteFunc.ReadU64LE data ( offset + 16u )
+            let sequenceNumber = ByteFunc.ReadU64LE data ( offset + 24u )
 
             let fileOffset_Check = ( fileOffset &&& 0x0000000000000FFFUL ) = 0UL
-            if not fileOffset_Check then printfn "    Invalid file offset"
-
             let sequenceNumber_Check = seqNum = sequenceNumber
-            if not sequenceNumber_Check then printfn "  Invalid sequence number"
-
             if fileOffset_Check && sequenceNumber_Check then
                 {
                     DataSignature = signeture;
@@ -284,9 +236,7 @@ type VhdxReader() =
                 |> Some
             else
                 None
-
         else
-            printfn "    Unknown signature in log descriptor"
             None
 
     /// <summary>
@@ -305,67 +255,48 @@ type VhdxReader() =
     ///  Retrieved log entry value, or None.
     /// </returns>
     static member private ReadLogEntry ( logData : byte[] ) ( pos : uint32 ) ( headerLogGuid : Guid ) : LogEntry option =
-        printfn "-----------------------"
-        printfn "ReadLogEntry( pos=%d )" pos
 
         // The log data length should be in units of 1MB,
         // and the starting position should be in units of 4KB.
         if ( logData.Length &&& 0x000FFFFF ) <> 0 then
-            raise <| Exception( "The log data length is not in units of 1MB." )
+            raise <| VhdxMediaException( sprintf "The log data length must be in units of 1MB. Length=%d" logData.Length )
         if ( pos &&& 0x00000FFFu ) <> 0u then
-            raise <| Exception( "The log sequence start position is not in 4KB units." )
+            raise <| VhdxMediaException( sprintf "The log sequence start position msut be in 4KB units. Position=%d" pos )
 
         let wpos = pos % ( uint32 logData.Length )  // wraparound
 
         // Retrieve each item in the entry header.
-        let signature = VhdxCommon.ReadUInt32BE logData wpos
-        let checksum = VhdxCommon.ReadUInt32LE logData ( wpos + 4u )
-        let entryLength = VhdxCommon.ReadUInt32LE logData ( wpos + 8u )
-        let tail = VhdxCommon.ReadUInt32LE logData ( wpos + 12u )
-        let sequenceNumber = VhdxCommon.ReadUInt64LE logData ( wpos + 16u )
-        let descriptorCount = VhdxCommon.ReadUInt32LE logData ( wpos + 24u )
-        let logGuid = VhdxCommon.ReadGuid logData ( wpos + 32u );
-        let flushedFileOffset = VhdxCommon.ReadUInt64LE logData ( wpos + 48u )
-        let lastFileOffset = VhdxCommon.ReadUInt64LE logData ( wpos + 56u )
-
-        printfn "  Signature : 0x%08X" signature
-        printfn "  Checksum : 0x%08X" checksum
-        printfn "  Entry Length : %d" entryLength
-        printfn "  Tail : 0x%08X" tail
-        printfn "  Sequence Number : %d" sequenceNumber
-        printfn "  Descriptor Count : %d" descriptorCount
-        printfn "  Log GGuid : %s" ( logGuid.ToString "D" )
-        printfn "  Flushed File Offset : %d" flushedFileOffset
-        printfn "  Last File Offset : %d" lastFileOffset
+        let signature = ByteFunc.ReadU32BE logData wpos
+        let checksum = ByteFunc.ReadU32LE logData ( wpos + 4u )
+        let entryLength = ByteFunc.ReadU32LE logData ( wpos + 8u )
+        let tail = ByteFunc.ReadU32LE logData ( wpos + 12u )
+        let sequenceNumber = ByteFunc.ReadU64LE logData ( wpos + 16u )
+        let descriptorCount = ByteFunc.ReadU32LE logData ( wpos + 24u )
+        let logGuid = ByteFunc.ReadGuid logData ( wpos + 32u );
+        let flushedFileOffset = ByteFunc.ReadU64LE logData ( wpos + 48u )
+        let lastFileOffset = ByteFunc.ReadU64LE logData ( wpos + 56u )
 
         // Verify whether the signature is correct.
         let signature_Check = signature = 0x6C6F6765u
-        if not signature_Check then printfn "  Invalid signature"
 
         // Verify whether the entry length is correct.
         let entryLength_Check =
             ( int32 entryLength ) >= 0 && int32 entryLength <= logData.Length && ( entryLength &&& 0x00000FFFu ) = 0u
-        if not entryLength_Check then printfn "  Invalid entry length"
 
         // Verify whether the tail is correct.
         let tail_Check = ( int32 tail ) >= 0 && int32 tail < logData.Length && ( tail &&& 0x00000FFFu ) = 0u
-        if not tail_Check then printfn "  Invalid tail"
 
         // Verify whether the number of descriptors is correct.
         let descriptorCount_Check = ( int32 descriptorCount ) >= 0 && ( 64u + descriptorCount * 32u ) <= uint32 entryLength
-        if not descriptorCount_Check then printfn "  Invalid descriptors count"
 
         // Check if the log GUID is equal to the one in the header.
         let logGuid_Check = logGuid = headerLogGuid
-        if not logGuid_Check then printfn "  Invalid log guid"
 
         // Verify whether the flushed file offset is correct.
         let flushedFileOffset_Check = ( flushedFileOffset &&& 0x00000000000FFFFFUL ) = 0UL
-        if not flushedFileOffset_Check then printfn "  Invalid flushed file offset"
 
         // Verify whether the last file offset is correct.
         let lastFileOffset_Check = ( lastFileOffset &&& 0x00000000000FFFFFUL ) = 0UL
-        if not lastFileOffset_Check then printfn "  Invalid last file offset"
 
         if not signature_Check || not entryLength_Check ||
                 not tail_Check || not descriptorCount_Check || not logGuid_Check ||
@@ -379,9 +310,8 @@ type VhdxReader() =
                 Array.blit logData srcidx logEntryData ( i * 4096 ) 4096
 
             /// Verify whether the checksum is correct.
-            let checksum_Check = VhdxCommon.CheckHeaderChecksum logEntryData checksum
+            let checksum_Check = VhdxCommons.CheckHeaderChecksum logEntryData checksum
             if not checksum_Check then
-                printfn "  Invalid checksum"
                 None
             else
                 // Retrieve the descriptor
@@ -399,7 +329,6 @@ type VhdxReader() =
                         ( List.rev r ), ddcnt
                 let logDescriptors, dataDescCount = loop 0u 0u []
                 if logDescriptors.Length <> int32 descriptorCount then
-                    printfn "Failed to retrieve the descriptor"
                     None
                 else
                     // Identify the starting position of the data sector.
@@ -410,11 +339,7 @@ type VhdxReader() =
                     // Find the number of data sectors.
                     let dataSectorCount = ( entryLength - dataSectorPos ) / 4096u
 
-                    printfn "  starting position of the data sector : %d" dataSectorPos
-                    printfn "  number of data sectors : %d" dataSectorCount
-
                     if dataSectorCount <> dataDescCount then
-                        printfn "  The number of data sectors and the number of descriptors do not match."
                         None
                     else
                         // Retrieve the data sector
@@ -425,10 +350,8 @@ type VhdxReader() =
                                     d
                         ]
                         if dataSectores.Length <> int32 dataSectorCount then
-                            printfn "Failed ReadLogDataSector function"
                             None
                         else
-                            printfn "This log entry looks correct..."
                             {
                                 Signature = signature;
                                 Checksum = checksum;
@@ -457,10 +380,6 @@ type VhdxReader() =
     ///  Retrieved log entry value list.
     /// </returns>
     static member private ReadActiveLogSequense ( logData : byte[] ) ( headerLogGuid : Guid ) : LogEntry list =
-
-        printfn "================================================================"
-        printfn "Read Active Log Sequense"
-
         let rec getCurrentSeq ( pos : uint32 ) ( acc : LogEntry list ) =
             match VhdxReader.ReadLogEntry logData pos headerLogGuid with
             | Some x ->
@@ -469,34 +388,25 @@ type VhdxReader() =
                     if h.SequenceNumber + 1u = x.SequenceNumber then
                         getCurrentSeq ( pos + x.EntryLength ) ( x :: acc )
                     else
-                        printfn "The sequence numbers are not consecutive."
                         acc |> List.rev
                 | [] ->
                     getCurrentSeq ( pos + x.EntryLength ) ( x :: acc )
             | None ->
-                printfn "Failed to read log entry."
                 acc |> List.rev
 
         let rec getActiveSeq ( activeSeq : LogEntry list ) ( curTail : uint32 ) : LogEntry list =
-            printfn "-----------------------"
-            printfn "getActiveSeq( activeSeq.Length=%d, curTail=%d )" activeSeq.Length curTail
 
             // Read current entry
             let curSeq = getCurrentSeq curTail []
-            printfn "Retrieved entry count : %d" curSeq.Length
 
             // Check whether the Tail of each entry falls within the sequence length range from curTail.
             let SeqTotalLen = curSeq |> List.sumBy _.EntryLength
-            let r = curSeq |> List.exists ( fun itr -> itr.Tail < curTail || itr.Tail >= curTail + SeqTotalLen )
-
-            if r then
-                printfn "The Tail of each entry is not within the sequence length range from curTail."
-                printfn "  SeqTotalLen = %d" SeqTotalLen
-                printfn "  curTail = %d" curTail
+            let r =
+                curSeq
+                |> List.exists ( fun itr -> itr.Tail < curTail || itr.Tail >= curTail + SeqTotalLen )
 
             let nextActiveSeq, nextCurTail =
                 if curSeq.Length = 0 || r then
-                    printfn "The retrieved sequence is invalid."
                     activeSeq, ( ( curTail + 4096u ) % ( uint32 logData.Length ) )
                 else
                     // The current entry appears to be correct.
@@ -506,19 +416,13 @@ type VhdxReader() =
                         else
                             activeSeq.[0].SequenceNumber
                     let nas =
-                        printfn "Sequence number of active sequence : %d" asSecNum
-                        printfn "Sequence number of retrieved sequence : %d" curSeq.[0].SequenceNumber
-
                         if asSecNum < curSeq.[0].SequenceNumber then
-                            printfn "The retrieved sequence is valid."
                             curSeq
                         else
-                            printfn "The retrieved sequence appears correct, but the sequence number is old."
                             activeSeq
                     nas, ( ( curTail + SeqTotalLen ) % ( uint32 logData.Length ) )
 
             if nextCurTail < curTail then
-                printfn "Search for active sequences complete."
                 nextActiveSeq
             else
                 getActiveSeq nextActiveSeq nextCurTail
@@ -552,9 +456,9 @@ type VhdxReader() =
             ( length : uint32 ) : Task<byte[]> =
         task {
             if offset &&& 0x0000000000000FFFUL <> 0UL then
-                raise <| Exception "offset is not in units of 4KB."
+                raise <| VhdxMediaException( sprintf "The offset(%d) must be a multiple of 4 KB." offset )
             if length &&& 0x00000FFFu <> 0u then
-                raise <| Exception "length is not in units of 4KB."
+                raise <| VhdxMediaException( sprintf "The length(%d) must be a multiple of 4 KB." length )
 
             if length = 0u then
                 return [||]
@@ -598,17 +502,12 @@ type VhdxReader() =
     static member private ReadRegionTable ( data : byte[] ) ( fileLen : uint64 ) : RegionTable option =
 
         // Interpretation of the region table header
-        let signature = VhdxCommon.ReadUInt32BE data 0u
-        let checksum = VhdxCommon.ReadUInt32LE data 4u
-        let entryCount = VhdxCommon.ReadUInt32LE data 8u
+        let signature = ByteFunc.ReadU32BE data 0u
+        let checksum = ByteFunc.ReadU32LE data 4u
+        let entryCount = ByteFunc.ReadU32LE data 8u
         let signature_Check = signature = 0x72656769u
-        let checksum_Check = VhdxCommon.CheckHeaderChecksum data checksum
+        let checksum_Check = VhdxCommons.CheckHeaderChecksum data checksum
         let entryCount_Check = 0u <= entryCount && entryCount <= 2047u
-
-        printfn "Region table header"
-        printfn "  Signature : 0x%08X" signature
-        printfn "  Checksum : 0x%08X" checksum
-        printfn "  Entry count : %d" entryCount
 
         if not signature_Check || not checksum_Check || not entryCount_Check then
             None
@@ -618,17 +517,10 @@ type VhdxReader() =
                 [
                     for i in 0u .. entryCount - 1u do
                         let entryOffset = 16u + i * 32u
-                        let guid = VhdxCommon.ReadGuid data entryOffset
-                        let fileOffsetBytes = VhdxCommon.ReadUInt64LE data ( entryOffset + 16u )
-                        let lengthBytes = VhdxCommon.ReadUInt32LE data ( entryOffset + 24u )
-                        let required = VhdxCommon.ReadUInt32LE data ( entryOffset + 28u )
-
-                        printfn "Region table entry(%d)" i
-                        printfn "  Entry offset : 0x%08X" entryOffset
-                        printfn "  Guid : %s" ( guid.ToString( "D" ) )
-                        printfn "  File offset : %d" fileOffsetBytes
-                        printfn "  Length : %d" lengthBytes
-                        printfn "  Required : %d" required
+                        let guid = ByteFunc.ReadGuid data entryOffset
+                        let fileOffsetBytes = ByteFunc.ReadU64LE data ( entryOffset + 16u )
+                        let lengthBytes = ByteFunc.ReadU32LE data ( entryOffset + 24u )
+                        let required = ByteFunc.ReadU32LE data ( entryOffset + 28u )
 
                         let fileOffsetBytes_Check = ( fileOffsetBytes &&& 0xFFFFFUL ) = 0UL && fileOffsetBytes >= 0x100000UL
                         let lengthBytes_Check1 = ( lengthBytes &&& 0xFFFFFu ) = 0u
@@ -676,38 +568,28 @@ type VhdxReader() =
     /// </returns>
     static member private ReadMetadata ( data : byte[] ) : VirtualDiskInfo =
 
-        let signature = VhdxCommon.ReadUInt64BE data 0u        // signature
-        let mtEntryCount = VhdxCommon.ReadUInt16LE data 10u    // Entry count
-
-        printfn "Metadata table header."
-        printfn "  Signature : 0x%016X" signature
-        printfn "  Entry count : %d" mtEntryCount
+        let signature = ByteFunc.ReadU64BE data 0u        // signature
+        let mtEntryCount = ByteFunc.ReadU16LE data 10u    // Entry count
 
         if signature <> 0x6D65746164617461UL then
-            raise <| Exception( "The signatures in the metadata table do not match." )
+            let msg = sprintf "The signatures in the metadata table do not match. Signature=0x%016X" signature
+            raise <| VhdxMediaException( msg )
         if mtEntryCount > 2047us then
-            raise <| Exception( "The number of metadata entries is invalid." )
+            let msg = sprintf "The number of metadata entries is invalid. Count=%d" mtEntryCount
+            raise <| VhdxMediaException( msg )
 
         // Metadata entries
         let metadataItems =
             [
                 for i in 0u .. uint32 mtEntryCount - 1u do
                     let eo = 32u + i * 32u
-                    let itemId = VhdxCommon.ReadGuid data eo
-                    let offset = VhdxCommon.ReadUInt32LE data ( eo + 16u );
-                    let length = VhdxCommon.ReadUInt32LE data ( eo + 20u );
+                    let itemId = ByteFunc.ReadGuid data eo
+                    let offset = ByteFunc.ReadU32LE data ( eo + 16u );
+                    let length = ByteFunc.ReadU32LE data ( eo + 20u );
                     let b = data.[ int32 eo + 24 ]
                     let isUser = ( b &&& 0x01uy ) <> 0uy
                     let isVirtualDisk = ( b &&& 0x02uy ) <> 0uy
                     let isRequired = ( b &&& 0x04uy ) <> 0uy
-
-                    printfn "Metadata entry(%d)" i
-                    printfn "  Item ID : %s" ( itemId.ToString( "D" ) )
-                    printfn "  Offset : %d" offset
-                    printfn "  Length : %d" length
-                    printfn "  IsUser : %b" isUser
-                    printfn "  IsVirtualDisk : %b" isVirtualDisk
-                    printfn "  IsRequired : %b" isRequired
 
                     if ( offset = 0u && length = 0u ) then  // It's OK if both the offset and length are 0.
                         yield {
@@ -736,131 +618,131 @@ type VhdxReader() =
                         }
             ]
         if metadataItems.Length <> int32 mtEntryCount then
-            raise <| Exception( "Invalid metadata entry" )
+            let msg = sprintf "There are invalid metadata entry. Expected=%d, Retrieved=%d" mtEntryCount metadataItems.Length
+            raise <| VhdxMediaException( msg )
 
         let userEntCount =
             metadataItems
             |> List.sumBy ( fun itr -> if itr.IsUser then 1 else 0 )
         if 1024 < userEntCount then
-            raise <| Exception( "The number of user entries is incorrect." )
+            let msg = sprintf "The number of user entries is incorrect. Count=%d" userEntCount
+            raise <| VhdxMediaException( msg )
 
         // Retrieve file parameters
         let fileParamItem =
             metadataItems
-            |> List.tryFind ( fun m -> m.ItemId = VhdxCommon.METADATA_FILE_PARAM )
+            |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_FILE_PARAM )
         if fileParamItem.IsNone then
-            raise <| Exception( "Metadata item(file parameter) missing" )
+            raise <| VhdxMediaException( "Metadata item(file parameter) missing" )
         if fileParamItem.Value.Length < 8u then
-            raise <| Exception( "Invalid Length of metadata item(file parameter)." )
-        let payloadBlockSize = VhdxCommon.ReadUInt32LE fileParamItem.Value.Data 0u
+            raise <| VhdxMediaException( "Invalid Length of metadata item(file parameter)." )
+        let payloadBlockSize = ByteFunc.ReadU32LE fileParamItem.Value.Data 0u
         let leaveBlockAllocated = ( fileParamItem.Value.Data.[4] &&& 0x01uy ) = 0x01uy
         let hasParent = ( fileParamItem.Value.Data.[4] &&& 0x02uy ) = 0x02uy
-
-        printfn "File parameter(block size) : %d" payloadBlockSize
-        printfn "File parameter(A-LeaveBlockAllocated) : %b" leaveBlockAllocated
-        printfn "File parameter(B-HasParent) : %b" hasParent
 
         if payloadBlockSize < 0x100000u ||      // 1MB or more
             0x10000000u < payloadBlockSize ||   // 256MB or less
             ( payloadBlockSize &&& ( payloadBlockSize - 1u ) ) <> 0u then   // Powers of 2
-            raise <| Exception( "Incorrect payload block size" )
+            let msg = sprintf "Incorrect payload block size. Size=%d" payloadBlockSize
+            raise <| VhdxMediaException( msg )
 
         // Retrieve the virtual disk size.
         let diskSizeItem =
             metadataItems
-            |> List.tryFind ( fun m -> m.ItemId = VhdxCommon.METADATA_VIRT_DISK_SIZE )
+            |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_VIRT_DISK_SIZE )
         if diskSizeItem.IsNone then
-            raise <| Exception( "metadata item(virtual disk size) missing" )
+            raise <| VhdxMediaException( "Metadata item(virtual disk size) missing" )
         if diskSizeItem.Value.Length < 8u then
-            raise <| Exception( "Length of metadata item(virtual disk size) is invalid." )
-        let virtualDiskSize = VhdxCommon.ReadUInt64LE diskSizeItem.Value.Data 0u
-
-        printfn "metadata item(virtual disk size): %d" virtualDiskSize
+            let msg = sprintf "Length of metadata item(virtual disk size) is invalid. Length=%d" diskSizeItem.Value.Length
+            raise <| VhdxMediaException( msg )
+        let virtualDiskSize = ByteFunc.ReadU64LE diskSizeItem.Value.Data 0u
 
         if 0x400000000000UL < virtualDiskSize then
-            raise <| Exception( "The virtual disk size is too large." )
+            let msg = sprintf "The virtual disk size(%d) is too large." virtualDiskSize
+            raise <| VhdxMediaException( msg )
         if virtualDiskSize = 0UL then
-            raise <| Exception( "The virtual disk size is too small." )
+            let msg = sprintf "The virtual disk size(%d) is too small." virtualDiskSize
+            raise <| VhdxMediaException( msg )
 
         // Retrieve the virtual disk ID
         let diskIDItem =
             metadataItems
-            |> List.tryFind ( fun m -> m.ItemId = VhdxCommon.METADATA_VIRT_DISK_ID )
+            |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_VIRT_DISK_ID )
         if diskIDItem.IsNone then
-            raise <| Exception( "Metadata item(virtual disk ID) missing." )
+            raise <| VhdxMediaException( "Metadata item(virtual disk ID) missing." )
         if diskIDItem.Value.Length < 16u then
-            raise <| Exception( "Length of metadata item(virtual disk ID) is invalid" )
-        let VirtualDiskId = VhdxCommon.ReadGuid diskIDItem.Value.Data 0u
-        printfn "Metadata item(virtual disk ID) : %s" ( VirtualDiskId.ToString( "D" ) )
+            let msg = sprintf "Length of metadata item(virtual disk ID) is invalid. Length=%d" diskIDItem.Value.Length
+            raise <| VhdxMediaException( msg )
+        let VirtualDiskId = ByteFunc.ReadGuid diskIDItem.Value.Data 0u
 
         // Retrieve logical sector size.
         let logiSecSizeItem =
             metadataItems
-            |> List.tryFind ( fun m -> m.ItemId = VhdxCommon.METADATA_LOGI_SECTOR_SIZE )
+            |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_LOGI_SECTOR_SIZE )
         if logiSecSizeItem.IsNone then
-            raise <| Exception( "Metadata item(logical sector size) missing." )
+            raise <| VhdxMediaException( "Metadata item(logical sector size) missing." )
         if logiSecSizeItem.Value.Length < 4u then
-            raise <| Exception( "Length of metadata item(logical sector size) is invalid." )
-        let logicalSectorSize = VhdxCommon.ReadUInt32LE logiSecSizeItem.Value.Data 0u
-
-        printfn "Metadata item(logical sector size) : %d" logicalSectorSize
+            let msg = sprintf "Length of metadata item(logical sector size) is invalid. Length=%d" logiSecSizeItem.Value.Length
+            raise <| VhdxMediaException( msg )
+        let logicalSectorSize = ByteFunc.ReadU32LE logiSecSizeItem.Value.Data 0u
 
         if logicalSectorSize <> 512u && logicalSectorSize <> 4096u then
-            raise <| Exception( "Incorrect logical sector size" )
+            let msg = sprintf "Incorrect logical sector size. Size=%d" logicalSectorSize
+            raise <| VhdxMediaException( msg )
         if virtualDiskSize % uint64 logicalSectorSize <> 0UL then
-            raise <| Exception( "The virtual disk size is not a multiple of the logical sector size." )
+            let msg = sprintf "The virtual disk size(%d) is not a multiple of the logical sector size." virtualDiskSize
+            raise <| VhdxMediaException( msg )
 
         // Retrieve the physical sector size.
         let physSecSizeItem =
             metadataItems
-            |> List.tryFind ( fun m -> m.ItemId = VhdxCommon.METADATA_LOGI_SECTOR_SIZE )
+            |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_LOGI_SECTOR_SIZE )
         if physSecSizeItem.IsNone then
-            raise <| Exception( "Metadata item(physical sector size) missing" )
+            raise <| VhdxMediaException( "Metadata item(physical sector size) missing" )
         if physSecSizeItem.Value.Length < 4u then
-            raise <| Exception( "Length of metadata item(physical sector size) is invalid" )
-        let physicalSectorSize = VhdxCommon.ReadUInt32LE physSecSizeItem.Value.Data 0u
-
-        printfn "Metadata item(physical sector size) : %d" physicalSectorSize
+            let msg = sprintf "Length of metadata item(physical sector size) is invalid. Length=%d" physSecSizeItem.Value.Length
+            raise <| VhdxMediaException( msg )
+        let physicalSectorSize = ByteFunc.ReadU32LE physSecSizeItem.Value.Data 0u
 
         if physicalSectorSize <> 512u && physicalSectorSize <> 4096u then
-            raise <| Exception( "Incorrect physical sector size" )
+            let msg = sprintf "Incorrect physical sector size. Size=%d" physicalSectorSize
+            raise <| VhdxMediaException( msg )
 
         // Retrieve the parent locator
         let parentLocator =
             if hasParent then
                 let parLocItem =
                     metadataItems
-                    |> List.tryFind ( fun m -> m.ItemId = VhdxCommon.METADATA_PARENT_LOC )
+                    |> List.tryFind ( fun m -> m.ItemId = VhdxCommons.METADATA_PARENT_LOC )
                 if parLocItem.IsNone then
-                    raise <| Exception( "Metadata item(parent locator) missing" )
+                    raise <| VhdxMediaException( "Metadata item(parent locator) missing" )
                 if parLocItem.Value.Length < 20u then
-                    raise <| Exception( "Length of metadata item(parent locator) is invalid" )
-                let locatorType = VhdxCommon.ReadGuid parLocItem.Value.Data 0u
-                printfn "Metadata item(parent locator type) : %s" ( locatorType.ToString "D" )
-                if locatorType <> VhdxCommon.METADATA_PARENT_LOC_VHDX then
-                    raise <| Exception( "The type of metadata item (parent locator) is unknown." )
-                let keyValueCount = VhdxCommon.ReadUInt16LE parLocItem.Value.Data 18u
-                printfn "Metadata item(parent locator count) : %d" keyValueCount
+                    let msg = sprintf "Length of metadata item(parent locator) is invalid. Length=%d" parLocItem.Value.Length
+                    raise <| VhdxMediaException( msg )
+                let locatorType = ByteFunc.ReadGuid parLocItem.Value.Data 0u
+
+                if locatorType <> VhdxCommons.METADATA_PARENT_LOC_VHDX then
+                    let msg = sprintf "The type of metadata item (parent locator) is unknown. Locator Type=%s" ( locatorType.ToString() )
+                    raise <| VhdxMediaException( msg )
+                let keyValueCount = ByteFunc.ReadU16LE parLocItem.Value.Data 18u
                 if parLocItem.Value.Length < 20u + uint32 keyValueCount * 12u then
-                    raise <| Exception( "The number of metadata item(parent locator) is invalid." )
+                    let msg = sprintf "The number of metadata item(parent locator) is invalid. Count=%d" keyValueCount
+                    raise <| VhdxMediaException( msg )
                 let data = parLocItem.Value.Data
                 let dlen = data.Length |> uint32
                 let parLocEntry = [
                     for i in 0u .. uint32 keyValueCount - 1u do
                         let wpos = 20u + i * 12u
-                        let keyOffset = VhdxCommon.ReadUInt32LE data wpos
-                        let valueOffset = VhdxCommon.ReadUInt32LE data ( wpos + 4u )
-                        let keyLength = VhdxCommon.ReadUInt16LE data ( wpos + 8u )
-                        let valueLength = VhdxCommon.ReadUInt16LE data ( wpos + 10u )
-                        printfn "  Parent locator key offset : %d" keyOffset
-                        printfn "  Parent locator value offset  : %d" valueOffset
-                        printfn "  Parent locator key length : %d" keyLength
-                        printfn "  Parent locator value length : %d" valueLength
+                        let keyOffset = ByteFunc.ReadU32LE data wpos
+                        let valueOffset = ByteFunc.ReadU32LE data ( wpos + 4u )
+                        let keyLength = ByteFunc.ReadU16LE data ( wpos + 8u )
+                        let valueLength = ByteFunc.ReadU16LE data ( wpos + 10u )
+
                         if keyOffset = 0u || valueOffset = 0u || keyLength = 0us || valueLength = 0us ||
                             dlen < keyOffset + uint32 keyLength ||
                             dlen < valueOffset + uint32 valueLength ||
                             ( int32 keyOffset ) <= 0 || ( int32 valueOffset ) <= 0 then
-                                printfn "  Invalid parent locator(%d) values. Ignore this entry." i
+                                ()
                         else
                             let lpkey =
                                 data.[ int32 keyOffset .. int32 keyOffset + int32 keyLength - 1 ]
@@ -870,26 +752,25 @@ type VhdxReader() =
                                 data.[ int32 valueOffset .. int32 valueOffset + int32 valueLength - 1 ]
                                 |> Encoding.Unicode.GetString
 
-                            printfn "  Parent locator %d : %s  %s" i lpkey lpval
-
                             yield ( lpkey, lpval )
                 ]
                 if parLocEntry.Length <> int32 keyValueCount then
-                    raise <| Exception( "Invalid metadata item(Parent locator)" )
+                    let msg = sprintf "There are invalid metadata item(Parent locator). Expected=%d, Retrieved=%d" keyValueCount parLocEntry.Length
+                    raise <| VhdxMediaException( msg )
                 let m = parLocEntry |> Map
                 if m.ContainsKey "parent_linkage" |> not then
-                    raise <| Exception( "Missing parent_linkage in metadata item(Parent locator)" )
+                    raise <| VhdxMediaException( "Missing parent_linkage in metadata item(Parent locator)." )
                 let r, _ = Guid.TryParse m.[ "parent_linkage" ]
                 if not r then
-                    raise <| Exception( "Invalid format of parent_linkage in metadata item(Parent locator)" )
+                    raise <| VhdxMediaException( "Invalid format of parent_linkage in metadata item(Parent locator)." )
                 let pathCheck =
                     [| "relative_path"; "volume_path"; "absolute_win32_path"; |]
                     |> Array.exists m.ContainsKey
                 if not pathCheck then
-                    raise <| Exception( "Metadata item(parent locator) does not contain relative_path, volume_path, or absolute_win32_path." )
+                    let msg = "Metadata item(parent locator) does not contain relative_path, volume_path, or absolute_win32_path."
+                    raise <| VhdxMediaException( msg )
                 m
             else
-                printfn "Since there is no parent, the parent locator is not obtained."
                 Map.empty
 
         {
@@ -920,7 +801,7 @@ type VhdxReader() =
     /// </returns>
     static member private GetPayloadBlockEntry ( batData : byte[] ) ( chunkRatio : uint64 ) ( pbIndex : uint64 ) : PayloadBATEntry =
         let idx = ( pbIndex / chunkRatio ) * ( chunkRatio + 1UL ) + ( pbIndex % chunkRatio )
-        let entry = VhdxCommon.ReadUInt64LE batData ( uint32 idx * 8u )
+        let entry = ByteFunc.ReadU64LE batData ( uint32 idx * 8u )
         let state =
             match entry &&& 0x0000000000000007UL with
             | 0UL -> BatEntryStatePB.PayloadNotPresent
@@ -931,10 +812,6 @@ type VhdxReader() =
             | 7UL -> BatEntryStatePB.PayloadPartiallyPresent
             | _ -> BatEntryStatePB.PayloadNotPresent
         let fileOffset = entry &&& 0xFFFFFFFFFFFFFFF8UL
-
-        printfn "Payload BAT entry(Index) : %d" idx
-        printfn "Payload BAT entry(State) : %s" ( state.ToString() )
-        printfn "Payload BAT entry(Offset) : %d" fileOffset
 
         {
             BatEntryIndex = idx;
@@ -959,17 +836,13 @@ type VhdxReader() =
     /// </returns>
     static member GetSectorBitmapBlockEntry ( batData : byte[] ) ( chunkRatio : uint64 ) ( sbbIndex : uint64 ) : struct( uint64 * BatEntryStateSB * uint64 ) =
         let idx = sbbIndex * ( chunkRatio + 1UL ) + chunkRatio
-        let entry = VhdxCommon.ReadUInt64LE batData ( uint32 idx * 8u )
+        let entry = ByteFunc.ReadU64LE batData ( uint32 idx * 8u )
         let state =
             match entry &&& 0x0000000000000007UL with
             | 0UL -> BatEntryStateSB.SectorBitmapNotPresent
             | 6UL -> BatEntryStateSB.SectorBitmapPresent
             | _ -> BatEntryStateSB.SectorBitmapNotPresent
         let fileOffset = entry &&& 0xFFFFFFFFFFFFFFF8UL
-
-        printfn "Sector bitmap BAT entry(Index) : %d" idx
-        printfn "Sector bitmap BAT entry(Status) : %s" ( state.ToString() )
-        printfn "Sector bitmap BAT entry(Offset) : %d" fileOffset
 
         struct ( idx, state, fileOffset )
 
@@ -1010,14 +883,9 @@ type VhdxReader() =
                 else
                     sectorBitmapBlockCount * ( chunkRatio + 1UL )
 
-            printfn "  Chunk Size : %d" chunkSize
-            printfn "  Chunk Ratio : %d" chunkRatio
-            printfn "  Payload Block Count : %d" payloadBlockCount
-            printfn "  Sector Bitmap Block Count : %d" sectorBitmapBlockCount
-            printfn "  Bat Entry Count : %d" batEntryCount
-
             if uint64( fileData.Length / 8 ) < batEntryCount then
-                raise <| Exception "The BAT entry has insufficient data length."
+                let msg = sprintf "The BAT entry has insufficient data length. Length=%d, EntryCount=%d" fileData.Length batEntryCount
+                raise <| VhdxMediaException( fa.FileName, msg )
 
             // Read payload BAT entries
             let payloads = [|
@@ -1073,30 +941,29 @@ type VhdxReader() =
         task {
             let fileSize = fa.GetFileSize()
             if fileSize < 0x30000UL then
-                raise <| Exception( "The VHDX file is too small." )
+                let msg = sprintf "The VHDX file is too small. FileSize=%d" fileSize
+                raise <| VhdxMediaException( fa.FileName, msg )
 
             // Validating the file type identifier and obtaining the creator
-            printfn "================================================================"
             let! creator = VhdxReader.ReadFileTypeIdentifier fa
 
             // Load the header
-            printfn "================================================================"
-            let! headers = VhdxReader.ReadHeaders fa
-            let currentHeader = headers.[ 0 ]
+            let! immheader, varheader = VhdxReader.ReadHeaders fa
 
             // Retrieve log information (active log entries only)
             let! log = task {
-                if currentHeader.LogLength > 0u && currentHeader.LogGuid <> Guid.Empty then
-                    let logData = Array.zeroCreate<byte>( int currentHeader.LogLength )
-                    do! fa.Read currentHeader.LogOffset ( ArraySegment logData )
-                    let e = VhdxReader.ReadActiveLogSequense logData currentHeader.LogGuid
+                if immheader.LogLength > 0u && varheader.LogGuid <> Guid.Empty then
+                    let logData = Array.zeroCreate<byte>( int immheader.LogLength )
+                    do! fa.Read immheader.LogOffset ( ArraySegment logData )
+                    let e = VhdxReader.ReadActiveLogSequense logData varheader.LogGuid
                     if e.Length = 0 then
-                        raise <| Exception "No valid logs exist."
+                        raise <| VhdxMediaException( fa.FileName, "No valid logs exist." )
 
                     // Verify the value of FlushedFileOffset in the last entry.
                     let headFFO = ( e |> List.last ).FlushedFileOffset
                     if fileSize < headFFO then
-                        raise <| Exception "The file has been truncated."
+                        let msg = sprintf "The file has been truncated. FlushedFileOffset=%d" headFFO
+                        raise <| VhdxMediaException( fa.FileName, msg )
                     return e
                 else
                     return []
@@ -1108,50 +975,11 @@ type VhdxReader() =
                 else
                     fileSize |> uint64
 
-            printfn "Number of log entries retrieved : %d" log.Length
-            for itr in log do
-                printfn "***"
-                printfn "  Signature : 0x%08X" itr.Signature
-                printfn "  Checksum : 0x%08X" itr.Checksum
-                printfn "  Entry Length : %d" itr.EntryLength
-                printfn "  Tail : 0x%08X" itr.Tail
-                printfn "  Descriptor Count: %d" itr.DescriptorCount
-                printfn "  Log Guid : %s" ( itr.LogGuid.ToString "D" )
-                printfn "  Flushed File Offset : %d" itr.FlushedFileOffset
-                printfn "  Last File Offset : %d" itr.LastFileOffset
-                printfn "  Log Descriptors---"
-                for di in itr.Descriptors do
-                    match di with
-                    | LogDescriptor.Data( x ) ->
-                        printfn "    Data Descriptor"
-                        printfn "    Data Signature : 0x%08X" x.DataSignature
-                        printfn "    Trailing Bytes : %s" ( x.TrailingBytes |> Array.map ( sprintf "%02X" ) |> String.concat "" )
-                        printfn "    Leading Bytes : %s" ( x.LeadingBytes |> Array.map ( sprintf "%02X" ) |> String.concat "" )
-                        printfn "    File Offset : %d" x.FileOffset
-                        printfn "    Sequence Number : %d" x.SequenceNumber
-                        printfn "    Index : %d" x.ddIndex
-                    | LogDescriptor.Zero( x ) ->
-                        printfn "    Zero Descriptor"
-                        printfn "    Zero Signature : 0x%08X" x.ZeroSignature
-                        printfn "    Zero Length : %d" x.ZeroLength
-                        printfn "    File Offset : %d" x.FileOffset
-                        printfn "    Sequence Number : %d" x.SequenceNumber
-
             // Read Region table 1 0x30000
-            printfn "================================================================"
-            printfn "Region Table 1"
-            printfn "  4K Sector Number : %d .. %d"
-                        ( 0x30000UL / 4096UL )
-                        ( 0x30000UL / 4096UL + 65536UL / 4096UL - 1UL )
             let! regionTable1Buf = VhdxReader.ReadBytesWithLog log lastFileSize fa 0x30000UL 65536u
             let regionTable1 = VhdxReader.ReadRegionTable regionTable1Buf lastFileSize
 
             // Read Region table 2 0x40000
-            printfn "================================================================"
-            printfn "Region Table 2"
-            printfn "  4K Sector Number : %d .. %d"
-                        ( 0x40000UL / 4096UL )
-                        ( 0x40000UL / 4096UL + 65536UL / 4096UL - 1UL )
             let! regionTable2Buf = VhdxReader.ReadBytesWithLog log lastFileSize fa 0x40000UL 65536u
             let regionTable2 = VhdxReader.ReadRegionTable regionTable2Buf lastFileSize
 
@@ -1165,37 +993,27 @@ type VhdxReader() =
                 ]
             let currentRegionTable =
                 if regionTables.Length = 0 then
-                    raise <| Exception( "No valid region table exists." )
+                    raise <| VhdxMediaException( fa.FileName, "No valid region table exists." )
                 regionTables.[0]
 
             // Get the locations of the metadata region and BAT region.
             let metadataRegion =
                 currentRegionTable.Entries
-                |> List.tryFind ( fun e -> e.Guid = VhdxCommon.REGENT_TYPE_METADATA )
+                |> List.tryFind ( fun e -> e.Guid = VhdxCommons.REGENT_TYPE_METADATA )
             if metadataRegion.IsNone then
-                raise <| Exception("Metadata region not found.")
+                raise <| VhdxMediaException( fa.FileName, "Metadata region not found.")
 
             let batRegion =
                 currentRegionTable.Entries
-                |> List.tryFind ( fun e -> e.Guid = VhdxCommon.REGENT_TYPE_BAT )
+                |> List.tryFind ( fun e -> e.Guid = VhdxCommons.REGENT_TYPE_BAT )
             if batRegion.IsNone then
-                raise <| Exception("BAT region not found.")
+                raise <| VhdxMediaException( fa.FileName, "BAT region not found.")
 
             // Read metadata region.
-            printfn "================================================================"
-            printfn "Metadata region"
-            printfn "  4K Sector Number : %d .. %d"
-                        ( metadataRegion.Value.FileOffset / 4096UL )
-                        ( metadataRegion.Value.FileOffset / 4096UL + uint64 metadataRegion.Value.Length / 4096UL - 1UL )
             let! metadataBuf = VhdxReader.ReadBytesWithLog log lastFileSize fa metadataRegion.Value.FileOffset metadataRegion.Value.Length
             let virtualDiskInfo = VhdxReader.ReadMetadata metadataBuf
 
             // Read BAT
-            printfn "================================================================"
-            printfn "BAT"
-            printfn "  4K Sector Number : %d .. %d"
-                        ( batRegion.Value.FileOffset / 4096UL )
-                        ( batRegion.Value.FileOffset / 4096UL + uint64 batRegion.Value.Length / 4096UL - 1UL )
             let! batEntries = VhdxReader.ReadBat log lastFileSize fa batRegion.Value virtualDiskInfo
 
             if virtualDiskInfo.HasParent then
@@ -1206,24 +1024,101 @@ type VhdxReader() =
                 |> Array.iteri ( fun idx itr ->
                     let j = idx / int32 batEntries.ChunkRatio  // Index of sector bitmap BAT entry
                     if batEntries.SectorBitmap.[j].Bitmap.Length = 0 then
-                        raise <| Exception "There is no sector bitmap BAT entry corresponding to the payload BAT entry for PartiallyPresent."
+                        let msg = "There is no sector bitmap BAT entry corresponding to the payload BAT entry for PartiallyPresent."
+                        raise <| VhdxMediaException( fa.FileName, msg )
                 )
             else
                 // If there is no parent, the PartiallyPresent payload BAT entry must not exist.
                 if batEntries.Payloads |> Array.exists ( _.State.IsPayloadPartiallyPresent ) then
-                    raise <| Exception "A fixed or dynamic VHDX file exists with a payload BAT entry for PartiallyPresent."
+                    let msg = "A fixed or dynamic VHDX file exists with a payload BAT entry for PartiallyPresent."
+                    raise <| VhdxMediaException( fa.FileName, msg ) 
 
                 // If a parent does not exist, a sector bitmap BAT entry must not exist.
                 if batEntries.SectorBitmap |> Array.exists ( fun itr -> itr.Bitmap.Length > 0 ) then
-                    raise <| Exception "The VHDX file has either fixed or dynamic sector bitmap BAT entries assigned to it."
+                    let msg = "The VHDX file has either fixed or dynamic sector bitmap BAT entries assigned to it."
+                    raise <| VhdxMediaException( fa.FileName, msg ) 
 
             return {
                 Creator = creator;
-                Header = currentHeader;
+                ImmHeader = immheader;
+                LoadedVarHeader = varheader;
                 Log = log;
                 LastFileSize = lastFileSize;
                 Region = currentRegionTable;
                 VDI = virtualDiskInfo;
                 BAT = batEntries;
             }
+        }
+
+    /// <summary>
+    /// Retrieve all of VHDX file structures, including the parent VHDX file.
+    /// </summary>
+    /// <param name="fa">
+    ///  FileAccessor object for VHDX file.
+    /// </param>
+    /// <returns>
+    ///  Retrieved structures data.
+    /// </returns>
+    static member ReadAllStructures( fa : FileAccessor ) : Task<( FileAccessor * VhdxStructures )[]> =
+        task {
+            let acc = List<FileAccessor * VhdxStructures>()
+            let loop ( ( fn : FileAccessor ), ( expDWG : Guid option ) ) : Task<struct( bool * ( FileAccessor * Guid option ) )> =
+                task {
+                    // Read metadata
+                    let! meta = VhdxReader.ReadVhdx fn
+                    let hasParent = meta.VDI.HasParent
+
+                    // Check Data Write Guid
+                    if expDWG.IsSome && meta.LoadedVarHeader.DataWriteGuid <> expDWG.Value then
+                        raise <| VhdxMediaException( fa.FileName, "Data Write Guid does not match" )
+
+                    // Check if a File Write GUID with the same one already exists.
+                    for ( _, itr ) in acc do
+                        if itr.LoadedVarHeader.FileWriteGuid = meta.LoadedVarHeader.FileWriteGuid then
+                            raise <| VhdxMediaException( fa.FileName, "The same file is specified as the parent VHDX file." )
+
+                    if not hasParent then
+                        // If there is no parent file, add the current file to the list and finish.
+                        acc.Add( fn, meta )
+                        return struct( false, ( fn, None ) )
+                    else
+                        // The value of parent_linkage is the DataWriteGuid value expected in the parent VHDX file.
+                        let struct( parentDataWriteGuid, plt ) = VhdxCommons.GetParentFileName meta
+                        let parentFileName =
+                            match plt with
+                            | RelativePath x ->
+                                Path.Combine( [| Path.GetDirectoryName fn.FileName; x; |] )
+                            | VolumePath x ->
+                                x
+                            | AbsoluteWin32Path x ->
+                                x
+                        let parentFA = FileAccessor( parentFileName, fn.Multiplicity, fn.ReadOnly )
+
+                        // Read next parent VHDX file.
+                        acc.Add( fn, meta )
+                        return struct( true, ( parentFA, ( Some parentDataWriteGuid ) ) )
+                }
+
+            let! _ = Functions.loopAsyncWithState loop ( fa, None )
+            acc.Reverse()
+            let rv = acc.ToArray()
+
+            // Verify that the metadata matches.
+            for i = 1 to rv.Length - 1 do
+                let vdi0 = ( snd rv.[0] ).VDI
+                let vdix = ( snd rv.[i] ).VDI
+                if vdi0.VirtualDiskSize <> vdix.VirtualDiskSize then
+                    let msg = sprintf "The virtual disk size of the parent (%d) does not match." i
+                    raise <| VhdxMediaException( fa.FileName, msg )
+                if vdi0.VirtualDiskId <> vdix.VirtualDiskId then
+                    let msg = sprintf "The virtual disk ID of the parent (%d) does not match." i
+                    raise <| VhdxMediaException( fa.FileName, msg )
+                if vdi0.LogicalSectorSize <> vdix.LogicalSectorSize then
+                    let msg = sprintf "The logical sector size of the parent (%d) does not match." i
+                    raise <| VhdxMediaException( fa.FileName, msg )
+                if vdi0.PhysicalSectorSize <> vdix.PhysicalSectorSize then
+                    let msg = sprintf "The physical sector size of the parent (%d) does not match." i
+                    raise <| VhdxMediaException( fa.FileName, msg )
+            
+            return rv
         }

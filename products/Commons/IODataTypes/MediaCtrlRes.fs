@@ -28,6 +28,7 @@ type [<NoComparison>]T_MediaCtrlRes = {
 
 and [<NoComparison>]T_Response = 
     | U_Debug of T_Debug
+    | U_VHDX of T_VHDX
     | U_Unexpected of string
 
 and [<NoComparison>]T_Debug = 
@@ -97,6 +98,37 @@ and [<NoComparison>]T_TaskWaitStatus = {
 }
 
 and [<NoComparison>]T_ResumeResult = {
+    Result : bool;
+    ErrorMessage : string;
+}
+
+and [<NoComparison>]T_VHDX = 
+    | U_VhdxTakeSnapshotResult of T_VhdxTakeSnapshotResult
+    | U_VhdxAllSnapshotNames of T_VhdxAllSnapshotNames
+    | U_VhdxDeleteSnapshotResult of T_VhdxDeleteSnapshotResult
+    | U_VhdxMaintenanceStatus of T_VhdxMaintenanceStatus
+    | U_VhdxStopMaintenanceResult of T_VhdxStopMaintenanceResult
+
+and [<NoComparison>]T_VhdxTakeSnapshotResult = {
+    Result : bool;
+    ErrorMessage : string;
+}
+
+and [<NoComparison>]T_VhdxAllSnapshotNames = {
+    FileName : string list;
+}
+
+and [<NoComparison>]T_VhdxDeleteSnapshotResult = 
+    | U_DeleteSnapshotStarted of unit
+    | U_OtherMaintenanceRunning of unit
+    | U_FailedDeleteSnapshot of string
+
+and [<NoComparison>]T_VhdxMaintenanceStatus = 
+    | U_RunningDeleteSnapshot of int32
+    | U_RunningOptimization of int32
+    | U_NotRunningMaintenance of unit
+
+and [<NoComparison>]T_VhdxStopMaintenanceResult = {
     Result : bool;
     ErrorMessage : string;
 }
@@ -299,6 +331,100 @@ type ReaderWriter() =
               </xsd:element>
             </xsd:choice></xsd:complexType>
           </xsd:element>
+          <xsd:element name='VHDX' >
+            <xsd:complexType><xsd:choice>
+              <xsd:element name='VhdxTakeSnapshotResult' >
+                <xsd:complexType><xsd:sequence>
+                  <xsd:element name='Result' >
+                    <xsd:simpleType><xsd:restriction base='xsd:boolean' /></xsd:simpleType>
+                  </xsd:element>
+                  <xsd:element name='ErrorMessage' >
+                    <xsd:simpleType>
+                      <xsd:restriction base='xsd:string'>
+                      </xsd:restriction>
+                    </xsd:simpleType>
+                  </xsd:element>
+                </xsd:sequence></xsd:complexType>
+              </xsd:element>
+              <xsd:element name='VhdxAllSnapshotNames' >
+                <xsd:complexType><xsd:sequence>
+                  <xsd:element name='FileName' minOccurs='1' maxOccurs='32' >
+                    <xsd:simpleType>
+                      <xsd:restriction base='xsd:string'>
+                      </xsd:restriction>
+                    </xsd:simpleType>
+                  </xsd:element>
+                </xsd:sequence></xsd:complexType>
+              </xsd:element>
+              <xsd:element name='VhdxDeleteSnapshotResult' >
+                <xsd:complexType><xsd:choice>
+                  <xsd:element name='DeleteSnapshotStarted' >
+                    <xsd:simpleType>
+                      <xsd:restriction base='xsd:int'>
+                        <xsd:minInclusive value='0' />
+                        <xsd:maxInclusive value='0' />
+                      </xsd:restriction>
+                    </xsd:simpleType>
+                  </xsd:element>
+                  <xsd:element name='OtherMaintenanceRunning' >
+                    <xsd:simpleType>
+                      <xsd:restriction base='xsd:int'>
+                        <xsd:minInclusive value='0' />
+                        <xsd:maxInclusive value='0' />
+                      </xsd:restriction>
+                    </xsd:simpleType>
+                  </xsd:element>
+                  <xsd:element name='FailedDeleteSnapshot' >
+                    <xsd:simpleType>
+                      <xsd:restriction base='xsd:string'>
+                      </xsd:restriction>
+                    </xsd:simpleType>
+                  </xsd:element>
+                </xsd:choice></xsd:complexType>
+              </xsd:element>
+              <xsd:element name='VhdxMaintenanceStatus' >
+                <xsd:complexType><xsd:choice>
+                  <xsd:element name='RunningDeleteSnapshot' >
+                    <xsd:simpleType>
+                      <xsd:restriction base='xsd:int'>
+                        <xsd:minInclusive value='0' />
+                        <xsd:maxInclusive value='100' />
+                      </xsd:restriction>
+                    </xsd:simpleType>
+                  </xsd:element>
+                  <xsd:element name='RunningOptimization' >
+                    <xsd:simpleType>
+                      <xsd:restriction base='xsd:int'>
+                        <xsd:minInclusive value='0' />
+                        <xsd:maxInclusive value='100' />
+                      </xsd:restriction>
+                    </xsd:simpleType>
+                  </xsd:element>
+                  <xsd:element name='NotRunningMaintenance' >
+                    <xsd:simpleType>
+                      <xsd:restriction base='xsd:int'>
+                        <xsd:minInclusive value='0' />
+                        <xsd:maxInclusive value='0' />
+                      </xsd:restriction>
+                    </xsd:simpleType>
+                  </xsd:element>
+                </xsd:choice></xsd:complexType>
+              </xsd:element>
+              <xsd:element name='VhdxStopMaintenanceResult' >
+                <xsd:complexType><xsd:sequence>
+                  <xsd:element name='Result' >
+                    <xsd:simpleType><xsd:restriction base='xsd:boolean' /></xsd:simpleType>
+                  </xsd:element>
+                  <xsd:element name='ErrorMessage' >
+                    <xsd:simpleType>
+                      <xsd:restriction base='xsd:string'>
+                      </xsd:restriction>
+                    </xsd:simpleType>
+                  </xsd:element>
+                </xsd:sequence></xsd:complexType>
+              </xsd:element>
+            </xsd:choice></xsd:complexType>
+          </xsd:element>
           <xsd:element name='Unexpected' >
             <xsd:simpleType>
               <xsd:restriction base='xsd:string'>
@@ -415,6 +541,8 @@ type ReaderWriter() =
         match firstChildName.LocalName with
         | "Debug" ->
             U_Debug( ReaderWriter.Read_T_Debug firstChild )
+        | "VHDX" ->
+            U_VHDX( ReaderWriter.Read_T_VHDX firstChild )
         | "Unexpected" ->
             U_Unexpected( firstChild.Value )
         | _ -> raise <| ConfRWException( "Unexpected tag name." )
@@ -671,6 +799,125 @@ type ReaderWriter() =
         }
 
     /// <summary>
+    ///  Read T_VHDX data from XML document.
+    /// </summary>
+    /// <param name="elem">
+    ///  Loaded XML document.
+    /// </param>
+    /// <returns>
+    ///  parsed T_VHDX data structure.
+    /// </returns>
+    static member private Read_T_VHDX ( elem : XElement ) : T_VHDX = 
+        let firstChild = elem.Elements() |> Seq.head 
+        let firstChildName = firstChild.Name
+        match firstChildName.LocalName with
+        | "VhdxTakeSnapshotResult" ->
+            U_VhdxTakeSnapshotResult( ReaderWriter.Read_T_VhdxTakeSnapshotResult firstChild )
+        | "VhdxAllSnapshotNames" ->
+            U_VhdxAllSnapshotNames( ReaderWriter.Read_T_VhdxAllSnapshotNames firstChild )
+        | "VhdxDeleteSnapshotResult" ->
+            U_VhdxDeleteSnapshotResult( ReaderWriter.Read_T_VhdxDeleteSnapshotResult firstChild )
+        | "VhdxMaintenanceStatus" ->
+            U_VhdxMaintenanceStatus( ReaderWriter.Read_T_VhdxMaintenanceStatus firstChild )
+        | "VhdxStopMaintenanceResult" ->
+            U_VhdxStopMaintenanceResult( ReaderWriter.Read_T_VhdxStopMaintenanceResult firstChild )
+        | _ -> raise <| ConfRWException( "Unexpected tag name." )
+
+    /// <summary>
+    ///  Read T_VhdxTakeSnapshotResult data from XML document.
+    /// </summary>
+    /// <param name="elem">
+    ///  Loaded XML document.
+    /// </param>
+    /// <returns>
+    ///  parsed T_VhdxTakeSnapshotResult data structure.
+    /// </returns>
+    static member private Read_T_VhdxTakeSnapshotResult ( elem : XElement ) : T_VhdxTakeSnapshotResult = 
+        {
+            Result =
+                Boolean.Parse( elem.Element( XName.Get "Result" ).Value );
+            ErrorMessage =
+                elem.Element( XName.Get "ErrorMessage" ).Value;
+        }
+
+    /// <summary>
+    ///  Read T_VhdxAllSnapshotNames data from XML document.
+    /// </summary>
+    /// <param name="elem">
+    ///  Loaded XML document.
+    /// </param>
+    /// <returns>
+    ///  parsed T_VhdxAllSnapshotNames data structure.
+    /// </returns>
+    static member private Read_T_VhdxAllSnapshotNames ( elem : XElement ) : T_VhdxAllSnapshotNames = 
+        {
+            FileName =
+                elem.Elements()
+                |> Seq.filter ( fun itr -> itr.Name = XName.Get "FileName" )
+                |> Seq.map ( fun itr -> itr.Value )
+                |> Seq.toList
+        }
+
+    /// <summary>
+    ///  Read T_VhdxDeleteSnapshotResult data from XML document.
+    /// </summary>
+    /// <param name="elem">
+    ///  Loaded XML document.
+    /// </param>
+    /// <returns>
+    ///  parsed T_VhdxDeleteSnapshotResult data structure.
+    /// </returns>
+    static member private Read_T_VhdxDeleteSnapshotResult ( elem : XElement ) : T_VhdxDeleteSnapshotResult = 
+        let firstChild = elem.Elements() |> Seq.head 
+        let firstChildName = firstChild.Name
+        match firstChildName.LocalName with
+        | "DeleteSnapshotStarted" ->
+            U_DeleteSnapshotStarted( () )
+        | "OtherMaintenanceRunning" ->
+            U_OtherMaintenanceRunning( () )
+        | "FailedDeleteSnapshot" ->
+            U_FailedDeleteSnapshot( firstChild.Value )
+        | _ -> raise <| ConfRWException( "Unexpected tag name." )
+
+    /// <summary>
+    ///  Read T_VhdxMaintenanceStatus data from XML document.
+    /// </summary>
+    /// <param name="elem">
+    ///  Loaded XML document.
+    /// </param>
+    /// <returns>
+    ///  parsed T_VhdxMaintenanceStatus data structure.
+    /// </returns>
+    static member private Read_T_VhdxMaintenanceStatus ( elem : XElement ) : T_VhdxMaintenanceStatus = 
+        let firstChild = elem.Elements() |> Seq.head 
+        let firstChildName = firstChild.Name
+        match firstChildName.LocalName with
+        | "RunningDeleteSnapshot" ->
+            U_RunningDeleteSnapshot( Int32.Parse( firstChild.Value ) )
+        | "RunningOptimization" ->
+            U_RunningOptimization( Int32.Parse( firstChild.Value ) )
+        | "NotRunningMaintenance" ->
+            U_NotRunningMaintenance( () )
+        | _ -> raise <| ConfRWException( "Unexpected tag name." )
+
+    /// <summary>
+    ///  Read T_VhdxStopMaintenanceResult data from XML document.
+    /// </summary>
+    /// <param name="elem">
+    ///  Loaded XML document.
+    /// </param>
+    /// <returns>
+    ///  parsed T_VhdxStopMaintenanceResult data structure.
+    /// </returns>
+    static member private Read_T_VhdxStopMaintenanceResult ( elem : XElement ) : T_VhdxStopMaintenanceResult = 
+        {
+            Result =
+                Boolean.Parse( elem.Element( XName.Get "Result" ).Value );
+            ErrorMessage =
+                elem.Element( XName.Get "ErrorMessage" ).Value;
+        }
+
+    /// <summary>
     ///  Write MediaCtrlRes data to specified file.
     /// </summary>
     /// <param name="fname">
@@ -752,6 +999,8 @@ type ReaderWriter() =
             match elem with
             | U_Debug( x ) ->
                 yield! ReaderWriter.T_Debug_toString ( indent + 1 ) indentStep ( x ) "Debug"
+            | U_VHDX( x ) ->
+                yield! ReaderWriter.T_VHDX_toString ( indent + 1 ) indentStep ( x ) "VHDX"
             | U_Unexpected( x ) ->
                 yield sprintf "%s%s<Unexpected>%s</Unexpected>" singleIndent indentStr ( ReaderWriter.xmlEncode(x) )
             yield sprintf "%s</%s>" indentStr elemName
@@ -1146,6 +1395,203 @@ type ReaderWriter() =
     ///  Array of the generated string.
     /// </returns>
     static member private T_ResumeResult_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_ResumeResult ) ( elemName : string ) : seq<string> = 
+        let indentStr = String.replicate ( indent * indentStep ) " "
+        let singleIndent = String.replicate ( indentStep ) " "
+        seq {
+            yield sprintf "%s<%s>" indentStr elemName
+            yield sprintf "%s%s<Result>%b</Result>" singleIndent indentStr (elem.Result)
+            yield sprintf "%s%s<ErrorMessage>%s</ErrorMessage>" singleIndent indentStr ( ReaderWriter.xmlEncode(elem.ErrorMessage) )
+            yield sprintf "%s</%s>" indentStr elemName
+        }
+
+    /// <summary>
+    ///  Write T_VHDX data structure to configuration file.
+    /// </summary>
+    /// <param name="indent">
+    ///  Indent space count.
+    /// </param>
+    /// <param name="indentStep">
+    ///  Indent step count.
+    /// </param>
+    /// <param name="elem">
+    ///  Data structure for output.
+    /// </param>
+    /// <param name="elemName">
+    ///  XML tag name for the data.
+    /// </param>
+    /// <returns>
+    ///  Array of the generated string.
+    /// </returns>
+    static member private T_VHDX_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_VHDX ) ( elemName : string ) : seq<string> = 
+        let indentStr = String.replicate ( indent * indentStep ) " "
+        let singleIndent = String.replicate ( indentStep ) " "
+        seq {
+            yield sprintf "%s<%s>" indentStr elemName
+            match elem with
+            | U_VhdxTakeSnapshotResult( x ) ->
+                yield! ReaderWriter.T_VhdxTakeSnapshotResult_toString ( indent + 1 ) indentStep ( x ) "VhdxTakeSnapshotResult"
+            | U_VhdxAllSnapshotNames( x ) ->
+                yield! ReaderWriter.T_VhdxAllSnapshotNames_toString ( indent + 1 ) indentStep ( x ) "VhdxAllSnapshotNames"
+            | U_VhdxDeleteSnapshotResult( x ) ->
+                yield! ReaderWriter.T_VhdxDeleteSnapshotResult_toString ( indent + 1 ) indentStep ( x ) "VhdxDeleteSnapshotResult"
+            | U_VhdxMaintenanceStatus( x ) ->
+                yield! ReaderWriter.T_VhdxMaintenanceStatus_toString ( indent + 1 ) indentStep ( x ) "VhdxMaintenanceStatus"
+            | U_VhdxStopMaintenanceResult( x ) ->
+                yield! ReaderWriter.T_VhdxStopMaintenanceResult_toString ( indent + 1 ) indentStep ( x ) "VhdxStopMaintenanceResult"
+            yield sprintf "%s</%s>" indentStr elemName
+        }
+
+    /// <summary>
+    ///  Write T_VhdxTakeSnapshotResult data structure to configuration file.
+    /// </summary>
+    /// <param name="indent">
+    ///  Indent space count.
+    /// </param>
+    /// <param name="indentStep">
+    ///  Indent step count.
+    /// </param>
+    /// <param name="elem">
+    ///  Data structure for output.
+    /// </param>
+    /// <param name="elemName">
+    ///  XML tag name for the data.
+    /// </param>
+    /// <returns>
+    ///  Array of the generated string.
+    /// </returns>
+    static member private T_VhdxTakeSnapshotResult_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_VhdxTakeSnapshotResult ) ( elemName : string ) : seq<string> = 
+        let indentStr = String.replicate ( indent * indentStep ) " "
+        let singleIndent = String.replicate ( indentStep ) " "
+        seq {
+            yield sprintf "%s<%s>" indentStr elemName
+            yield sprintf "%s%s<Result>%b</Result>" singleIndent indentStr (elem.Result)
+            yield sprintf "%s%s<ErrorMessage>%s</ErrorMessage>" singleIndent indentStr ( ReaderWriter.xmlEncode(elem.ErrorMessage) )
+            yield sprintf "%s</%s>" indentStr elemName
+        }
+
+    /// <summary>
+    ///  Write T_VhdxAllSnapshotNames data structure to configuration file.
+    /// </summary>
+    /// <param name="indent">
+    ///  Indent space count.
+    /// </param>
+    /// <param name="indentStep">
+    ///  Indent step count.
+    /// </param>
+    /// <param name="elem">
+    ///  Data structure for output.
+    /// </param>
+    /// <param name="elemName">
+    ///  XML tag name for the data.
+    /// </param>
+    /// <returns>
+    ///  Array of the generated string.
+    /// </returns>
+    static member private T_VhdxAllSnapshotNames_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_VhdxAllSnapshotNames ) ( elemName : string ) : seq<string> = 
+        let indentStr = String.replicate ( indent * indentStep ) " "
+        let singleIndent = String.replicate ( indentStep ) " "
+        seq {
+            yield sprintf "%s<%s>" indentStr elemName
+            if elem.FileName.Length < 1 || elem.FileName.Length > 32 then 
+                raise <| ConfRWException( "Element count restriction error. FileName" )
+            for itr in elem.FileName do
+                yield sprintf "%s%s<FileName>%s</FileName>" singleIndent indentStr ( ReaderWriter.xmlEncode(itr) )
+            yield sprintf "%s</%s>" indentStr elemName
+        }
+
+    /// <summary>
+    ///  Write T_VhdxDeleteSnapshotResult data structure to configuration file.
+    /// </summary>
+    /// <param name="indent">
+    ///  Indent space count.
+    /// </param>
+    /// <param name="indentStep">
+    ///  Indent step count.
+    /// </param>
+    /// <param name="elem">
+    ///  Data structure for output.
+    /// </param>
+    /// <param name="elemName">
+    ///  XML tag name for the data.
+    /// </param>
+    /// <returns>
+    ///  Array of the generated string.
+    /// </returns>
+    static member private T_VhdxDeleteSnapshotResult_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_VhdxDeleteSnapshotResult ) ( elemName : string ) : seq<string> = 
+        let indentStr = String.replicate ( indent * indentStep ) " "
+        let singleIndent = String.replicate ( indentStep ) " "
+        seq {
+            yield sprintf "%s<%s>" indentStr elemName
+            match elem with
+            | U_DeleteSnapshotStarted( x ) ->
+                yield sprintf "%s%s<DeleteSnapshotStarted>0</DeleteSnapshotStarted>" singleIndent indentStr
+            | U_OtherMaintenanceRunning( x ) ->
+                yield sprintf "%s%s<OtherMaintenanceRunning>0</OtherMaintenanceRunning>" singleIndent indentStr
+            | U_FailedDeleteSnapshot( x ) ->
+                yield sprintf "%s%s<FailedDeleteSnapshot>%s</FailedDeleteSnapshot>" singleIndent indentStr ( ReaderWriter.xmlEncode(x) )
+            yield sprintf "%s</%s>" indentStr elemName
+        }
+
+    /// <summary>
+    ///  Write T_VhdxMaintenanceStatus data structure to configuration file.
+    /// </summary>
+    /// <param name="indent">
+    ///  Indent space count.
+    /// </param>
+    /// <param name="indentStep">
+    ///  Indent step count.
+    /// </param>
+    /// <param name="elem">
+    ///  Data structure for output.
+    /// </param>
+    /// <param name="elemName">
+    ///  XML tag name for the data.
+    /// </param>
+    /// <returns>
+    ///  Array of the generated string.
+    /// </returns>
+    static member private T_VhdxMaintenanceStatus_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_VhdxMaintenanceStatus ) ( elemName : string ) : seq<string> = 
+        let indentStr = String.replicate ( indent * indentStep ) " "
+        let singleIndent = String.replicate ( indentStep ) " "
+        seq {
+            yield sprintf "%s<%s>" indentStr elemName
+            match elem with
+            | U_RunningDeleteSnapshot( x ) ->
+                if (x) < 0 then
+                    raise <| ConfRWException( "Min value(int) restriction error. RunningDeleteSnapshot" )
+                if (x) > 100 then
+                    raise <| ConfRWException( "Max value(int) restriction error. RunningDeleteSnapshot" )
+                yield sprintf "%s%s<RunningDeleteSnapshot>%d</RunningDeleteSnapshot>" singleIndent indentStr (x)
+            | U_RunningOptimization( x ) ->
+                if (x) < 0 then
+                    raise <| ConfRWException( "Min value(int) restriction error. RunningOptimization" )
+                if (x) > 100 then
+                    raise <| ConfRWException( "Max value(int) restriction error. RunningOptimization" )
+                yield sprintf "%s%s<RunningOptimization>%d</RunningOptimization>" singleIndent indentStr (x)
+            | U_NotRunningMaintenance( x ) ->
+                yield sprintf "%s%s<NotRunningMaintenance>0</NotRunningMaintenance>" singleIndent indentStr
+            yield sprintf "%s</%s>" indentStr elemName
+        }
+
+    /// <summary>
+    ///  Write T_VhdxStopMaintenanceResult data structure to configuration file.
+    /// </summary>
+    /// <param name="indent">
+    ///  Indent space count.
+    /// </param>
+    /// <param name="indentStep">
+    ///  Indent step count.
+    /// </param>
+    /// <param name="elem">
+    ///  Data structure for output.
+    /// </param>
+    /// <param name="elemName">
+    ///  XML tag name for the data.
+    /// </param>
+    /// <returns>
+    ///  Array of the generated string.
+    /// </returns>
+    static member private T_VhdxStopMaintenanceResult_toString ( indent : int32 ) ( indentStep : int32 ) ( elem : T_VhdxStopMaintenanceResult ) ( elemName : string ) : seq<string> = 
         let indentStr = String.replicate ( indent * indentStep ) " "
         let singleIndent = String.replicate ( indentStep ) " "
         seq {

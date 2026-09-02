@@ -68,6 +68,7 @@
             <MenuItem Name="ContMenu_TVI_BlockDeviceLU_AddPlainFileMedia" Header="Add Plain File Media" />
             <MenuItem Name="ContMenu_TVI_BlockDeviceLU_AddMemBufferMedia" Header="Add MemBuffer Media" />
             <MenuItem Name="ContMenu_TVI_BlockDeviceLU_AddDebugMedia" Header="Add Debug Media" />
+            <MenuItem Name="ContMenu_TVI_BlockDeviceLU_AddVHDXMedia" Header="Add VHDX Media" />
             <MenuItem Name="ContMenu_TVI_BlockDeviceLU_Copy" Header="Copy" />
             <MenuItem Name="ContMenu_TVI_BlockDeviceLU_Paste" Header="Paste" />
 
@@ -103,6 +104,7 @@
             <MenuItem Name="ContMenu_TVI_DebugMedia_AddPlainFileMedia" Header="Add Plain File Media" />
             <MenuItem Name="ContMenu_TVI_DebugMedia_AddMemBufferMedia" Header="Add MemBuffer Media" />
             <MenuItem Name="ContMenu_TVI_DebugMedia_AddDebugMedia" Header="Add Debug Media" />
+            <MenuItem Name="ContMenu_TVI_DebugMedia_AddVHDXMedia" Header="Add VHDX Media" />
             <MenuItem Name="ContMenu_TVI_DebugMedia_Copy" Header="Copy" />
             <MenuItem Name="ContMenu_TVI_DebugMedia_Paste" Header="Paste" />
             <Separator />
@@ -114,6 +116,15 @@
             <Separator />
             <MenuItem Name="ContMenu_TVI_DummyMedia_Delete" Header="Delete" />
         </ContextMenu>
+        <!-- Tree view context menu for VHDX media node -->
+        <ContextMenu x:Key="ContMenu_TVI_VHDXMedia" Name="ContMenu_TVI_VHDXMedia">
+            <MenuItem Name="ContMenu_TVI_VHDXMedia_Select" Header="Select" />
+            <Separator />
+            <MenuItem Name="ContMenu_TVI_VHDXMedia_Copy" Header="Copy" />
+            <Separator />
+            <MenuItem Name="ContMenu_TVI_VHDXMedia_Delete" Header="Delete" />
+        </ContextMenu>
+
     </Window.Resources>
 
     <Window.InputBindings>

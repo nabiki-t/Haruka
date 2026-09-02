@@ -170,10 +170,11 @@ type FileAccessorTest() =
         let mutable cnt = 0
         let f ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
             cnt <- cnt + 1
-            new Stream_Stub()
+            new Stream_Stub( p_get_Length = fun _ -> 99L )
 
-        let _ = FileAccessor( fname, Constants.LU_MAX_MULTIPLICITY, true, f )
+        let r = FileAccessor( fname, Constants.LU_MAX_MULTIPLICITY, true, f )
         Assert.StrictEqual( int32 Constants.LU_MAX_MULTIPLICITY, cnt )
+        Assert.StrictEqual( 99UL, r.FileSize )
         File.Delete fname
 
     [<Theory>]
@@ -282,9 +283,16 @@ type FileAccessorTest() =
     [<InlineData( false )>]
     member _.Read_GetLengthError_001 ( flg : bool ) =
         task {
+            let mutable cnt = 0
             let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
                 new Stream_Stub(
-                    p_get_Length = ( fun () -> raise <| IOException "aaa" ),
+                    p_get_Length = ( fun () ->
+                        if cnt > 0 then
+                            raise <| IOException "aaa"
+                        else
+                            cnt <- cnt + 1
+                            0L
+                    ),
                     p_Close = ( fun _ -> () )
                 )
 
@@ -661,9 +669,16 @@ type FileAccessorTest() =
     [<Fact>]
     member _.Write_GetLengthError_001 () =
         task {
+            let mutable cnt = 0
             let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
                 new Stream_Stub(
-                    p_get_Length = ( fun () -> raise <| IOException "aaa" ),
+                    p_get_Length = ( fun () ->
+                        if cnt > 0 then
+                            raise <| IOException "aaa"
+                        else
+                            cnt <- cnt + 1
+                            0L
+                    ),
                     p_Close = ( fun _ -> () )
                 )
 
@@ -824,6 +839,20 @@ type FileAccessorTest() =
         }
 
     [<Fact>]
+    member _.SetFileSize_Success_002() =
+        task {
+            let fname = Path.GetTempFileName()
+            let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+                new Stream_Stub(
+                    p_get_Length = ( fun () -> 10L )
+                )
+            let fa = FileAccessor( fname, 1u, false, fc )
+            do! fa.SetFileSize 10UL
+            fa.Close()
+            File.Delete fname
+        }
+
+    [<Fact>]
     member _.SetFileSize_ReadOnly_001 () =
         task {
             let fname = Path.GetTempFileName()
@@ -845,6 +874,7 @@ type FileAccessorTest() =
 
             let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
                 new Stream_Stub(
+                    p_get_Length = ( fun _ -> 0L ),
                     p_SetLength = ( fun ( _ ) -> 
                         Interlocked.Increment &cnt |> ignore
                         sm.Wait()
@@ -885,6 +915,7 @@ type FileAccessorTest() =
             let mutable cnt = 0
             let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
                 new Stream_Stub(
+                    p_get_Length = ( fun _ -> 0L ),
                     p_SetLength = ( fun _ ->
                         cnt <- cnt + 1
                         raise <| Exception( "gggg" )
@@ -912,6 +943,7 @@ type FileAccessorTest() =
             let mutable cnt = 0
             let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
                 new Stream_Stub(
+                    p_get_Length = ( fun _ -> 10L ),
                     p_SetLength = ( fun _ ->
                         cnt <- cnt + 1
                         if cnt < 3 then
@@ -940,13 +972,25 @@ type FileAccessorTest() =
         task {
             let fname = Path.GetTempFileName()
             let fa = FileAccessor( fname, 1u, false )
+            Assert.StrictEqual( fa.FileSize, 0UL )
             fa.Close()
 
             let! _ =
                 Assert.ThrowsAsync< InvalidOperationException >( fun () -> task {
-                    do! fa.SetFileSize 0UL
+                    do! fa.SetFileSize 1UL
                 } )
 
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.SetFileSize_WriteAfterClose_002 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false )
+            Assert.StrictEqual( fa.FileSize, 0UL )
+            fa.Close()
+            do! fa.SetFileSize 0UL
             File.Delete fname
         }
 
@@ -980,8 +1024,8 @@ type FileAccessorTest() =
             let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
                 new Stream_Stub(
                     p_get_Length = ( fun ( _ ) -> 
-                        Interlocked.Increment &cnt |> ignore
-                        sm.Wait()
+                        if Interlocked.Increment &cnt > 1 then
+                            sm.Wait()
                         0L
                     ),
                     p_Close = ( fun _ -> () )
@@ -1015,6 +1059,32 @@ type FileAccessorTest() =
             fa.Close()
             File.Delete fname
         }
+
+    [<Fact>]
+    member _.GetFileSize_Success_002 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let mutable cnt = 0
+            let fc ( fn : string ) ( fm : FileMode ) ( fa : FileAccess ) ( fs : FileShare ) : Stream =
+                new Stream_Stub(
+                    p_get_Length = ( fun _ ->
+                        cnt <- cnt + 1
+                        if cnt = 1 then
+                            10L
+                        else
+                            20L
+                    ),
+                    p_Close = ( fun _ -> () )
+                )
+
+            let fa = FileAccessor( fname, 1u, false, fc )
+            Assert.StrictEqual( 10UL, fa.FileSize )
+            Assert.StrictEqual( 20UL, fa.GetFileSize() )
+            Assert.StrictEqual( 20UL, fa.FileSize )
+            fa.Close()
+            File.Delete fname
+        }
+
 
     [<Fact>]
     member _.Close_001 () =

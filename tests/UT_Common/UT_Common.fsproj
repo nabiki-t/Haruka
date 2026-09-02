@@ -55,6 +55,7 @@
     <Compile Include="TaskWaiterTest.fs" />
     <Compile Include="ResCounterTest.fs" />
     <Compile Include="ResponseFenceTest.fs" />
+    <Compile Include="ByteFuncTest.fs" />
     <Compile Include="FunctionsTest.fs" />
     <Compile Include="PDUInterfaceTest.fs" />
     <Compile Include="ExceptionsTest.fs" />

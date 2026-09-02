@@ -662,6 +662,10 @@
       <Value>create debug : Add Debug Media as a child object.</Value>
     </Message>
     <Message>
+      <Name>CREATE_VHDX</Name>
+      <Value>create vhdx : Add VHDX Media as a child object.</Value>
+    </Message>
+    <Message>
       <Name>INITMEDIA_PLAINFILE</Name>
       <Value>initmedia plainfile : Create a media file for Plain File Media.</Value>
     </Message>
@@ -1060,6 +1064,18 @@ Registers an object that uses a memory buffer as its medium as a child of the cu
 
 Register the object that provides debugging functionality as a child of the currently selected object.
 </Value>
+    </Message>
+    <Message>
+      <Name>CREATE_VHDX</Name>
+      <Value>
+        create vhdx FileName
+
+        FileName    Specify the VHDX file name to access.
+
+        Register an object for accessing VHDX format files as a child of the currently selected object. All settings except the file name will be created with their default values. Note that default values ​​are not always practical; therefore, settings must be changed as needed.
+
+        The path name is represented by the path name in the system where the controller or Target Device is running. Note that this will differ from the path name on the client's system if the client is connected to a remote controller. If a file name is specified using a relative path, it will be interpreted as a relative path from the configuration directory specified when the controller was started. To avoid confusion, it is recommended to specify an absolute path.
+      </Value>
     </Message>
     <Message>
       <Name>INITMEDIA_PLAINFILE</Name>

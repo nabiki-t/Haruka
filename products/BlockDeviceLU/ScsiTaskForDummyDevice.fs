@@ -334,7 +334,7 @@ type ScsiTaskForDummyDevice
 
                         // PAGE LENGTH
                         yield! int16( dec2.Length + dec3.Length )
-                                |> Functions.Int16ToNetworkBytes_NewVec
+                                |> ByteFunc.S16ToNVBE
 
                         yield! dec2;    // DISCRIPTOR 2
                         yield! dec3;    // DISCRIPTOR 3

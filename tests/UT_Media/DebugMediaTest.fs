@@ -1915,3 +1915,22 @@ type DebugMedia_Test () =
         |> Functions.RunTaskInPallalel
         |> Functions.RunTaskSynchronously
         |> ignore
+
+    [<Fact>]
+    member _.MediaControl_Unexpected_001() =
+        let k1 = new HKiller() :> IKiller
+        let stat_stub = new CStatus_Stub()
+        let stub_media = new CMedia_Stub( p_GetBlockSize = fun _ -> Blocksize.BS_512 )
+        stat_stub.p_CreateMedia <- ( fun c lun m k -> stub_media )
+        let dm = new DebugMedia( stat_stub, defaultConf, k1, lun_me.fromPrim 1UL, 1u ) :> IMedia
+        stub_media.p_Format <- ( fun _ _ -> Task.FromResult () )
+
+        task {
+            let! r1 = dm.MediaControl( MediaCtrlReq.U_VHDX( MediaCtrlReq.U_VhdxTakeSnapshot( "" ) ) )
+            match r1 with
+            | MediaCtrlRes.U_Unexpected( y ) ->
+                Assert.StartsWith( "Unexpected media control request was received", y )
+            | _ ->
+                Assert.Fail __LINE__
+        }
+

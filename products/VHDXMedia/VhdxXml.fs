@@ -1,13 +1,24 @@
-namespace VhdxLibrary
+//=============================================================================
+// Haruka Software Storage.
+// VhdxXml.fs : Output the VHDX structures data of the VHDX file in XML format.
+// 
+
+//=============================================================================
+// Namespace declaration
+
+namespace Haruka.Media.VhdxUtil
+
+//=============================================================================
+// Import declaration
 
 open System
 open System.IO
 open System.Text
 open System.Xml
 
-open Haruka.Constants
-open Haruka.Commons
 
+//=============================================================================
+// Class implementation
 
 /// Output VHDX file structures as XML data.
 type VhdxXmlSerializer() =
@@ -50,17 +61,17 @@ type VhdxXmlSerializer() =
             
         // Header
         writer.WriteStartElement( "Header" )
-        writer.WriteElementString( "Checksum", "0x" + structures.Header.Checksum.ToString( "X8" ) )
-        writer.WriteElementString( "SequenceNumber", string structures.Header.SequenceNumber )
-        writer.WriteElementString( "FileWriteGuid", structures.Header.FileWriteGuid.ToString "D" )
-        writer.WriteElementString( "DataWriteGuid", structures.Header.DataWriteGuid.ToString "D" )
-        writer.WriteElementString( "LogGuid", structures.Header.LogGuid.ToString "D" )
-        writer.WriteElementString( "LogVersion", string structures.Header.LogVersion )
-        writer.WriteElementString( "Version", string structures.Header.Version )
-        writer.WriteElementString( "LogLength", string structures.Header.LogLength )
-        writer.WriteElementString( "LogOffset", string structures.Header.LogOffset )
-        writer.WriteElementString( "Offset", string structures.Header.Offset )
-        writer.WriteElementString( "Index", string structures.Header.Index )
+        writer.WriteElementString( "Checksum", "0x" + structures.ImmHeader.Checksum.ToString( "X8" ) )
+        writer.WriteElementString( "SequenceNumber", string structures.LoadedVarHeader.SequenceNumber )
+        writer.WriteElementString( "FileWriteGuid", structures.LoadedVarHeader.FileWriteGuid.ToString "D" )
+        writer.WriteElementString( "DataWriteGuid", structures.LoadedVarHeader.DataWriteGuid.ToString "D" )
+        writer.WriteElementString( "LogGuid", structures.LoadedVarHeader.LogGuid.ToString "D" )
+        writer.WriteElementString( "LogVersion", string structures.ImmHeader.LogVersion )
+        writer.WriteElementString( "Version", string structures.ImmHeader.Version )
+        writer.WriteElementString( "LogLength", string structures.ImmHeader.LogLength )
+        writer.WriteElementString( "LogOffset", string structures.ImmHeader.LogOffset )
+        writer.WriteElementString( "Offset", string structures.ImmHeader.Offset )
+        writer.WriteElementString( "Index", string structures.ImmHeader.Index )
         writer.WriteEndElement()
 
         // Log
@@ -108,9 +119,9 @@ type VhdxXmlSerializer() =
         writer.WriteStartElement( "Entries" )
         List.iteri ( fun j ( e : RegionEntry ) ->
             let regionName =
-                if e.Guid = VhdxCommon.REGENT_TYPE_BAT then
+                if e.Guid = VhdxCommons.REGENT_TYPE_BAT then
                     "BAT"
-                elif e.Guid = VhdxCommon.REGENT_TYPE_METADATA then
+                elif e.Guid = VhdxCommons.REGENT_TYPE_METADATA then
                     "Metadata"
                 else
                     sprintf "Region_%d" j
