@@ -47,6 +47,7 @@ type IconImageIndex =
     | III_MEDIA_MEM_BUFFER
     | III_MEDIA_DUMMY
     | III_MEDIA_DEBUG
+    | III_MEDIA_VHDX
     | III_STATUS_RUNNING
     | III_STATUS_UNLOADED
     | III_STATUS_MODIFIED
@@ -89,6 +90,7 @@ type IconLoader ( m_ExeDir : string ) =
             ( IconImageIndex.III_MEDIA_MEM_BUFFER, "MediaMembuffer" )
             ( IconImageIndex.III_MEDIA_DUMMY, "MediaDummy" )
             ( IconImageIndex.III_MEDIA_DEBUG, "MediaDebug" )
+            ( IconImageIndex.III_MEDIA_VHDX, "MediaVHDX" )
             ( IconImageIndex.III_STATUS_RUNNING, "StatusRunning" )
             ( IconImageIndex.III_STATUS_UNLOADED, "StatusUnloaded" )
             ( IconImageIndex.III_STATUS_MODIFIED, "StatusModified" )

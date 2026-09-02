@@ -101,6 +101,7 @@ type MainWindow( m_ExeDir : string ) as this =
     let m_ContMenu_TVI_BlockDeviceLU_AddPlainFileMedia = m_Window.FindName "ContMenu_TVI_BlockDeviceLU_AddPlainFileMedia" :?> MenuItem
     let m_ContMenu_TVI_BlockDeviceLU_AddMemBufferMedia = m_Window.FindName "ContMenu_TVI_BlockDeviceLU_AddMemBufferMedia" :?> MenuItem
     let m_ContMenu_TVI_BlockDeviceLU_AddDebugMedia = m_Window.FindName "ContMenu_TVI_BlockDeviceLU_AddDebugMedia" :?> MenuItem
+    let m_ContMenu_TVI_BlockDeviceLU_AddVHDXMedia = m_Window.FindName "ContMenu_TVI_BlockDeviceLU_AddVHDXMedia" :?> MenuItem
     let m_ContMenu_TVI_BlockDeviceLU_Copy = m_Window.FindName "ContMenu_TVI_BlockDeviceLU_Copy" :?> MenuItem
     let m_ContMenu_TVI_BlockDeviceLU_Paste = m_Window.FindName "ContMenu_TVI_BlockDeviceLU_Paste" :?> MenuItem
     let m_ContMenu_TVI_BlockDeviceLU_Delete = m_Window.FindName "ContMenu_TVI_BlockDeviceLU_Delete" :?> MenuItem
@@ -119,11 +120,17 @@ type MainWindow( m_ExeDir : string ) as this =
     let m_ContMenu_TVI_MemBufferMedia_Copy = m_Window.FindName "ContMenu_TVI_MemBufferMedia_Copy" :?> MenuItem
     let m_ContMenu_TVI_MemBufferMedia_Delete = m_Window.FindName "ContMenu_TVI_MemBufferMedia_Delete" :?> MenuItem
 
+    let m_ContMenu_TVI_VHDXMedia = m_Window.FindName "ContMenu_TVI_VHDXMedia" :?> ContextMenu
+    let m_ContMenu_TVI_VHDXMedia_Select = m_Window.FindName "ContMenu_TVI_VHDXMedia_Select" :?> MenuItem
+    let m_ContMenu_TVI_VHDXMedia_Copy = m_Window.FindName "ContMenu_TVI_VHDXMedia_Copy" :?> MenuItem
+    let m_ContMenu_TVI_VHDXMedia_Delete = m_Window.FindName "ContMenu_TVI_VHDXMedia_Delete" :?> MenuItem
+
     let m_ContMenu_TVI_DebugMedia = m_Window.FindName "ContMenu_TVI_DebugMedia" :?> ContextMenu
     let m_ContMenu_TVI_DebugMedia_Select = m_Window.FindName "ContMenu_TVI_DebugMedia_Select" :?> MenuItem
     let m_ContMenu_TVI_DebugMedia_AddPlainFileMedia = m_Window.FindName "ContMenu_TVI_DebugMedia_AddPlainFileMedia" :?> MenuItem
     let m_ContMenu_TVI_DebugMedia_AddMemBufferMedia = m_Window.FindName "ContMenu_TVI_DebugMedia_AddMemBufferMedia" :?> MenuItem
     let m_ContMenu_TVI_DebugMedia_AddDebugMedia = m_Window.FindName "ContMenu_TVI_DebugMedia_AddDebugMedia" :?> MenuItem
+    let m_ContMenu_TVI_DebugMedia_AddVHDXMedia = m_Window.FindName "ContMenu_TVI_DebugMedia_AddVHDXMedia" :?> MenuItem
     let m_ContMenu_TVI_DebugMedia_Copy = m_Window.FindName "ContMenu_TVI_DebugMedia_Copy" :?> MenuItem
     let m_ContMenu_TVI_DebugMedia_Paste = m_Window.FindName "ContMenu_TVI_DebugMedia_Paste" :?> MenuItem
     let m_ContMenu_TVI_DebugMedia_Delete = m_Window.FindName "ContMenu_TVI_DebugMedia_Delete" :?> MenuItem
@@ -235,6 +242,7 @@ type MainWindow( m_ExeDir : string ) as this =
         m_ContMenu_TVI_BlockDeviceLU_AddPlainFileMedia.Click.AddHandler this.OnClicked_ContMenu_TVI_BlockDeviceLU_AddPlainFileMedia
         m_ContMenu_TVI_BlockDeviceLU_AddMemBufferMedia.Click.AddHandler this.OnClicked_ContMenu_TVI_BlockDeviceLU_AddMemBufferMedia
         m_ContMenu_TVI_BlockDeviceLU_AddDebugMedia.Click.AddHandler this.OnClicked_ContMenu_TVI_BlockDeviceLU_AddDebugMedia
+        m_ContMenu_TVI_BlockDeviceLU_AddVHDXMedia.Click.AddHandler this.OnClicked_ContMenu_TVI_BlockDeviceLU_AddVHDXMedia
         m_ContMenu_TVI_BlockDeviceLU_Copy.Click.AddHandler ( this.OnClicked_ContMenu_TVI_Copy ClientConst.CB_FORMAT_BlockDeviceLU true )
         m_ContMenu_TVI_BlockDeviceLU_Paste.Click.AddHandler this.OnClicked_ContMenu_TVI_BlockDeviceLU_Paste
         m_ContMenu_TVI_BlockDeviceLU_Delete.Click.AddHandler this.OnClicked_ContMenu_TVI_Target_Delete  // Same as the prodecure of to delete target node
@@ -262,9 +270,16 @@ type MainWindow( m_ExeDir : string ) as this =
         m_ContMenu_TVI_DebugMedia_AddPlainFileMedia.Click.AddHandler this.OnClicked_ContMenu_TVI_DebugMedia_AddPlainFileMedia
         m_ContMenu_TVI_DebugMedia_AddMemBufferMedia.Click.AddHandler this.OnClicked_ContMenu_TVI_DebugMedia_AddMemBufferMedia
         m_ContMenu_TVI_DebugMedia_AddDebugMedia.Click.AddHandler this.OnClicked_ContMenu_TVI_DebugMedia_AddDebugMedia
+        m_ContMenu_TVI_DebugMedia_AddVHDXMedia.Click.AddHandler this.OnClicked_ContMenu_TVI_DebugMedia_AddVHDXMedia
         m_ContMenu_TVI_DebugMedia_Copy.Click.AddHandler ( this.OnClicked_ContMenu_TVI_Copy ClientConst.CB_FORMAT_DebugMedia true )
         m_ContMenu_TVI_DebugMedia_Paste.Click.AddHandler this.OnClicked_ContMenu_TVI_DebugMedia_Paste
         m_ContMenu_TVI_DebugMedia_Delete.Click.AddHandler this.OnClicked_ContMenu_TVI_Target_Delete // Same as the prodecure of to delete target node
+        m_ContMenu_TVI_VHDXMedia.Opened.AddHandler this.OnOpened_ContMenu_TVI_VHDXMedia
+        m_ContMenu_TVI_VHDXMedia.Closed.AddHandler this.OnClosed_ContMenu
+        m_ContMenu_TVI_VHDXMedia_Select.Click.AddHandler this.OnClicked_ContMenu_TVI_Select
+        m_ContMenu_TVI_VHDXMedia_Copy.Click.AddHandler ( this.OnClicked_ContMenu_TVI_Copy ClientConst.CB_FORMAT_VHDXMedia true )
+        m_ContMenu_TVI_VHDXMedia_Delete.Click.AddHandler this.OnClicked_ContMenu_TVI_Target_Delete // Same as the prodecure of to delete target node
+
         m_Window.Closing.AddHandler this.OnClosing
 
         // Set window size
@@ -360,7 +375,8 @@ type MainWindow( m_ExeDir : string ) as this =
             | :? ConfNode_PlainFileMedia
             | :? ConfNode_MemBufferMedia
             | :? ConfNode_DummyMedia
-            | :? ConfNode_DebugMedia as x ->
+            | :? ConfNode_DebugMedia
+            | :? ConfNode_VHDXMedia as x ->
                 let tgn = ss.GetAncestorTargetGroup x
                 let tdtvi = this.SearchTreeViewItemFromConfigureNode tgn.Value
                 updateTargetGroupIcon tgn.Value tdtvi.Value
@@ -1526,13 +1542,19 @@ type MainWindow( m_ExeDir : string ) as this =
             let confnode = this.GetContextMenuSelectedNode doc.Stat menu
             menu.Tag <- confnode
             let pastFlg =
-                [| ClientConst.CB_FORMAT_PlainFileMedia; ClientConst.CB_FORMAT_MemBufferMedia; ClientConst.CB_FORMAT_DebugMedia; |]
+                [|
+                    ClientConst.CB_FORMAT_PlainFileMedia;
+                    ClientConst.CB_FORMAT_MemBufferMedia;
+                    ClientConst.CB_FORMAT_DebugMedia;
+                    ClientConst.CB_FORMAT_VHDXMedia;
+                |]
                 |> Seq.exists Clipboard.ContainsData
             let editable = this.IsEditable_TargetGroupNode doc.Stat confnode
             m_ContMenu_TVI_BlockDeviceLU_Paste.IsEnabled <- pastFlg && editable
             m_ContMenu_TVI_BlockDeviceLU_AddPlainFileMedia.IsEnabled <- editable
             m_ContMenu_TVI_BlockDeviceLU_AddMemBufferMedia.IsEnabled <- editable
             m_ContMenu_TVI_BlockDeviceLU_AddDebugMedia.IsEnabled <- editable
+            m_ContMenu_TVI_BlockDeviceLU_AddVHDXMedia.IsEnabled <- editable
             m_ContMenu_TVI_BlockDeviceLU_Delete.IsEnabled <- editable
 
     /// <summary>
@@ -1566,6 +1588,16 @@ type MainWindow( m_ExeDir : string ) as this =
             |> this.AddDebugMedia doc.Stat
 
     /// <summary>
+    ///  "Add VHDX media" item of context menu is clicked.
+    /// </summary>
+    member private this.OnClicked_ContMenu_TVI_BlockDeviceLU_AddVHDXMedia ( sender : obj ) ( e : RoutedEventArgs ) =
+        match m_Document with
+        | None -> ()
+        | Some doc ->
+            this.GetContMenu_CurrentNode<ConfNode_BlockDeviceLU> sender
+            |> this.AddVHDXMedia doc.Stat
+
+    /// <summary>
     ///  "Paste" item of context menu for the block device LU node is clicked.
     /// </summary>
     member private this.OnClicked_ContMenu_TVI_BlockDeviceLU_Paste ( sender : obj ) ( e : RoutedEventArgs ) =
@@ -1580,6 +1612,7 @@ type MainWindow( m_ExeDir : string ) as this =
                 ClientConst.CB_FORMAT_PlainFileMedia;
                 ClientConst.CB_FORMAT_MemBufferMedia;
                 ClientConst.CB_FORMAT_DebugMedia;
+                ClientConst.CB_FORMAT_VHDXMedia;
             |]
 
             let fmtname =
@@ -1627,7 +1660,7 @@ type MainWindow( m_ExeDir : string ) as this =
             m_ContMenu_TVI_PlainFileMedia_Delete.IsEnabled <- editable
 
     /// <summary>
-    ///  Context menu for the tree view item of the plain file media node has opened.
+    ///  Context menu for the tree view item of the membuffer media node has opened.
     /// </summary>
     member private this.OnOpened_ContMenu_TVI_MemBufferMedia ( sender : obj ) ( e : RoutedEventArgs ) =
         match m_Document with
@@ -1640,7 +1673,7 @@ type MainWindow( m_ExeDir : string ) as this =
             m_ContMenu_TVI_MemBufferMedia_Delete.IsEnabled <- editable
 
     /// <summary>
-    ///  Context menu for the tree view item of the plain file media node has opened.
+    ///  Context menu for the tree view item of the dummy media node has opened.
     /// </summary>
     member private this.OnOpened_ContMenu_TVI_DummyMedia ( sender : obj ) ( e : RoutedEventArgs ) =
         match m_Document with
@@ -1653,6 +1686,19 @@ type MainWindow( m_ExeDir : string ) as this =
             m_ContMenu_TVI_DummyMedia_Delete.IsEnabled <- editable
 
     /// <summary>
+    ///  Context menu for the tree view item of the VHDX media node has opened.
+    /// </summary>
+    member private this.OnOpened_ContMenu_TVI_VHDXMedia ( sender : obj ) ( e : RoutedEventArgs ) =
+        match m_Document with
+        | None -> ()
+        | Some doc ->
+            let menu = sender :?> ContextMenu
+            let confnode = this.GetContextMenuSelectedNode doc.Stat menu
+            menu.Tag <- confnode
+            let editable = this.IsEditable_TargetGroupNode doc.Stat confnode
+            m_ContMenu_TVI_VHDXMedia_Delete.IsEnabled <- editable
+
+    /// <summary>
     ///  Context menu for the tree view item of the target node has opened.
     /// </summary>
     member private this.OnOpened_ContMenu_TVI_DebugMedia ( sender : obj ) ( e : RoutedEventArgs ) =
@@ -1663,12 +1709,18 @@ type MainWindow( m_ExeDir : string ) as this =
             let confnode = this.GetContextMenuSelectedNode doc.Stat menu
             menu.Tag <- confnode
             let pastFlg =
-                [| ClientConst.CB_FORMAT_PlainFileMedia; ClientConst.CB_FORMAT_MemBufferMedia; ClientConst.CB_FORMAT_DebugMedia; |]
+                [|
+                    ClientConst.CB_FORMAT_PlainFileMedia; 
+                    ClientConst.CB_FORMAT_MemBufferMedia;
+                    ClientConst.CB_FORMAT_DebugMedia;
+                    ClientConst.CB_FORMAT_VHDXMedia; 
+                |]
                 |> Seq.exists Clipboard.ContainsData
             let editable = this.IsEditable_TargetGroupNode doc.Stat confnode
             m_ContMenu_TVI_DebugMedia_AddPlainFileMedia.IsEnabled <- editable
             m_ContMenu_TVI_DebugMedia_AddMemBufferMedia.IsEnabled <- editable
             m_ContMenu_TVI_DebugMedia_AddDebugMedia.IsEnabled <- editable
+            m_ContMenu_TVI_DebugMedia_AddVHDXMedia.IsEnabled <- editable
             m_ContMenu_TVI_DebugMedia_Paste.IsEnabled <- pastFlg && editable
             m_ContMenu_TVI_DebugMedia_Delete.IsEnabled <- editable
 
@@ -1703,6 +1755,16 @@ type MainWindow( m_ExeDir : string ) as this =
             |> this.AddDebugMedia doc.Stat
 
     /// <summary>
+    ///  "Add VHDX media" item of context menu for the debug media node is clicked.
+    /// </summary>
+    member private this.OnClicked_ContMenu_TVI_DebugMedia_AddVHDXMedia ( sender : obj ) ( e : RoutedEventArgs ) =
+        match m_Document with
+        | None -> ()
+        | Some doc ->
+            this.GetContMenu_CurrentNode<ConfNode_DebugMedia> sender
+            |> this.AddVHDXMedia doc.Stat
+
+    /// <summary>
     ///  "Paste" item of context menu for the debug media node is clicked.
     /// </summary>
     member private this.OnClicked_ContMenu_TVI_DebugMedia_Paste ( sender : obj ) ( e : RoutedEventArgs ) =
@@ -1717,6 +1779,7 @@ type MainWindow( m_ExeDir : string ) as this =
                 ClientConst.CB_FORMAT_PlainFileMedia;
                 ClientConst.CB_FORMAT_MemBufferMedia;
                 ClientConst.CB_FORMAT_DebugMedia;
+                ClientConst.CB_FORMAT_VHDXMedia;
             |]
 
             let fmtname =
@@ -1981,6 +2044,8 @@ type MainWindow( m_ExeDir : string ) as this =
                 IconImageIndex.III_MEDIA_MEM_BUFFER, m_ContMenu_TVI_MemBufferMedia
             | :? ConfNode_DebugMedia as x ->
                 IconImageIndex.III_MEDIA_DEBUG, m_ContMenu_TVI_DebugMedia
+            | :? ConfNode_VHDXMedia as x ->
+                IconImageIndex.III_MEDIA_VHDX, m_ContMenu_TVI_VHDXMedia
             | _ ->
                 IconImageIndex.III_MEDIA_DUMMY, m_ContMenu_TVI_DummyMedia
         let tviMedia = this.CreateTreeViewItem medianode icon contMenu
@@ -2071,6 +2136,9 @@ type MainWindow( m_ExeDir : string ) as this =
             | :? ConfNode_DebugMedia ->
                 let g = m_Config.UIElem.Get PropertyViewIndex.PVI_MEDIA_DEBUG :?> Grid
                 new DebugMediaPropPage( m_Config, g, this, m_Document.Value.Stat, m_Document.Value.Conn, confNode.NodeID )
+            | :? ConfNode_VHDXMedia ->
+                let g = m_Config.UIElem.Get PropertyViewIndex.PVI_MEDIA_VHDX :?> Grid
+                new VHDXMediaPropPage( m_Config, g, this, m_Document.Value.Stat, m_Document.Value.Conn, confNode.NodeID )
             | _ ->
                 let g = m_Config.UIElem.Get PropertyViewIndex.PVI_INITIAL :?> Grid
                 new InitialPropPage( m_Config, g )
@@ -2315,6 +2383,13 @@ type MainWindow( m_ExeDir : string ) as this =
                 }
                 let newNode = ss.UpdateMemBufferMediaNode x conf
                 ( newNode :> IMediaNode ) :: statMediaNodes
+            | :? ConfNode_VHDXMedia as x ->
+                let conf = {
+                    x.Values with
+                        IdentNumber = statMediaNodes |> ConfNode_VHDXMedia.GenNewID
+                }
+                let newNode = ss.UpdateVHDXMediaNode x conf
+                ( newNode :> IMediaNode ) :: statMediaNodes
             | _ ->
                 statMediaNodes
         ) oldMediaNodes
@@ -2386,7 +2461,7 @@ type MainWindow( m_ExeDir : string ) as this =
         }
         let newnode = ss.AddMemBufferMediaNode selectedNode conf
 
-        // Add tree view item for newly created plain file media node.
+        // Add tree view item for newly created membuffer media node.
         this.CreateTreeViewItem_Media ss newnode
         |> this.AddTreeViewItem tvi.Value
 
@@ -2409,7 +2484,7 @@ type MainWindow( m_ExeDir : string ) as this =
         // create new Debug media node
         let newnode = ss.AddDebugMediaNode selectedNode newIdent newName
 
-        // Add tree view item for newly created plain file media node.
+        // Add tree view item for newly created debug media node.
         this.CreateTreeViewItem_Media ss newnode
         |> this.AddTreeViewItem tvi.Value
 
@@ -2417,3 +2492,28 @@ type MainWindow( m_ExeDir : string ) as this =
         ss.GetAncestorTargetGroup newnode
         |> Option.iter ( this :> IMainWindowIFForPP ).NoticeUpdateStat
 
+    member private this.AddVHDXMedia ( ss : ServerStatus )( selectedNode : IConfigureNode ) =
+        let tdnode = ss.GetAncestorTargetDevice selectedNode
+        let tvi = this.SearchTreeViewItemFromConfigureNode selectedNode
+
+        // gen ident number
+        let newIdent =
+            ( tdnode.Value :> IConfigureNode ).GetDescendantNodes<IMediaNode>()
+            |> ConfNode_VHDXMedia.GenNewID
+
+        // create new VHDX media node
+        let conf : TargetGroupConf.T_VHDXFile = {
+            IdentNumber = newIdent;
+            MediaName = sprintf "VHDX_%d" newIdent;
+            FileName = "";
+            WriteProtect = false;
+        }
+        let newnode = ss.AddVHDXMediaNode selectedNode conf
+
+        // Add tree view item for newly created VHDX media node.
+        this.CreateTreeViewItem_Media ss newnode
+        |> this.AddTreeViewItem tvi.Value
+
+        // Update tree view icon
+        ss.GetAncestorTargetGroup newnode
+        |> Option.iter ( this :> IMainWindowIFForPP ).NoticeUpdateStat

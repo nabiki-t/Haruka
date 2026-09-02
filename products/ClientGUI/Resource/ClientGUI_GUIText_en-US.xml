@@ -1212,6 +1212,75 @@
     </Message>
   </Section>
 
+  <!-- VHDX Media property page -->
+  <Section>
+    <Name>VHDXMediaPropPage</Name>
+    <Message>
+      <Name>Title</Name>
+      <Value>VHDX Media</Value>
+    </Message>
+    <Message>
+      <Name>UsageExpander</Name>
+      <Value>Usage</Value>
+    </Message>
+    <Message>
+      <Name>ReadBytesTextBlock</Name>
+      <Value>Read Bytes</Value>
+    </Message>
+    <Message>
+      <Name>WrittenBytesTextBlock</Name>
+      <Value>Written Bytes</Value>
+    </Message>
+    <Message>
+      <Name>ReadTickCountTextBlock</Name>
+      <Value>Read Tick Count</Value>
+    </Message>
+    <Message>
+      <Name>WriteTickCountTextBlock</Name>
+      <Value>Write Tick Count</Value>
+    </Message>
+    <Message>
+      <Name>ReadCountTextBlock</Name>
+      <Value>Read Count</Value>
+    </Message>
+    <Message>
+      <Name>WrittenCountTextBlock</Name>
+      <Value>Written Count</Value>
+    </Message>
+    <Message>
+      <Name>ConfigurationExpander</Name>
+      <Value>Configuration</Value>
+    </Message>
+    <Message>
+      <Name>EditButton</Name>
+      <Value>Edit</Value>
+    </Message>
+    <Message>
+      <Name>ApplyButton</Name>
+      <Value>Apply</Value>
+    </Message>
+    <Message>
+      <Name>DiscardButton</Name>
+      <Value>Discard</Value>
+    </Message>
+    <Message>
+      <Name>IdentNumberTextBlock</Name>
+      <Value>Ident Number</Value>
+    </Message>
+    <Message>
+      <Name>MediaNameTextBlock</Name>
+      <Value>Media Name</Value>
+    </Message>
+    <Message>
+      <Name>FileNameTextBlock</Name>
+      <Value>File Name</Value>
+    </Message>
+    <Message>
+      <Name>WriteProtectTextBlock</Name>
+      <Value>Write Protect</Value>
+    </Message>
+  </Section>  
+  
   <!-- Main Window -->
   <Section>
     <Name>MainWindow</Name>
@@ -1420,6 +1489,10 @@
       <Value>Add _Plain File Media</Value>
     </Message>
     <Message>
+      <Name>ContMenu_TVI_BlockDeviceLU_AddVHDXMedia</Name>
+      <Value>Add _VHDX Media</Value>
+    </Message>
+    <Message>
       <Name>ContMenu_TVI_BlockDeviceLU_Copy</Name>
       <Value>_Copy</Value>
     </Message>
@@ -1487,6 +1560,21 @@
       <Name>ContMenu_TVI_DummyMedia_Delete</Name>
       <Value>_Delete</Value>
     </Message>
+
+    <!-- Tree view context menu for VHDX media node -->
+    <Message>
+      <Name>ContMenu_TVI_VHDXMedia_Select</Name>
+      <Value>_Select</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_VHDXMedia_Copy</Name>
+      <Value>_Copy</Value>
+    </Message>
+    <Message>
+      <Name>ContMenu_TVI_VHDXMedia_Delete</Name>
+      <Value>_Delete</Value>
+    </Message>
+
 
   </Section>
 

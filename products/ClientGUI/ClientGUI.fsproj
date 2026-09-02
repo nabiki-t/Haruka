@@ -33,6 +33,7 @@
     <Page Remove="icon\MediaMembuffer.xaml" />
     <Page Remove="icon\MediaDummy.xaml" />
     <Page Remove="icon\MediaDebug.xaml" />
+    <Page Remove="icon\MediaVHDX.xaml" />
     <Page Remove="icon\NetworkPortal.xaml" />
     <Page Remove="icon\StatusModified.xaml" />
     <Page Remove="icon\StatusRunning.xaml" />
@@ -62,6 +63,7 @@
     <Page Remove="XAML\TargetDevicePropPage.xaml" />
     <Page Remove="XAML\TargetGroupPropPage.xaml" />
     <Page Remove="XAML\TargetPropPage.xaml" />
+    <Page Remove="XAML\VHDXMediaPropPage.xaml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -88,6 +90,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="icon\MediaDebug.xaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="icon\MediaVHDX.xaml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="icon\NetworkPortal.xaml">
@@ -200,6 +205,10 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <Generator>MSBuild:Compile</Generator>
     </None>
+    <None Include="XAML\VHDXMediaPropPage.xaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <Generator>MSBuild:Compile</Generator>
+    </None>
     <None Include="XAML\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -233,6 +242,7 @@
     <Compile Include="MemBufferMediaPropPage.fs" />
     <Compile Include="DummyMediaPropPage.fs" />
     <Compile Include="DebugMediaPropPage.fs" />
+    <Compile Include="VHDXMediaPropPage.fs" />
     <Compile Include="MainWindow.fs" />
     <Compile Include="main.fs" />
   </ItemGroup>

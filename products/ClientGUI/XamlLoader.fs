@@ -45,6 +45,7 @@ type PropertyViewIndex =
     | PVI_MEDIA_MEM_BUFFER
     | PVI_MEDIA_DUMMY
     | PVI_MEDIA_DEBUG
+    | PVI_MEDIA_VHDX
     | PVI_MAIN_WINDOW
 
 //=============================================================================
@@ -83,6 +84,7 @@ type XamlLoader ( m_ExeDir : string ) =
             ( PropertyViewIndex.PVI_MEDIA_MEM_BUFFER, "MemBufferMediaPropPage" );
             ( PropertyViewIndex.PVI_MEDIA_DUMMY, "DummyMediaPropPage" );
             ( PropertyViewIndex.PVI_MEDIA_DEBUG, "DebugMediaPropPage" );
+            ( PropertyViewIndex.PVI_MEDIA_VHDX, "VHDXMediaPropPage" );
             ( PropertyViewIndex.PVI_MAIN_WINDOW, "MainWindow" );
         |]
         |> Seq.map ( fun ( pid, fn ) ->
