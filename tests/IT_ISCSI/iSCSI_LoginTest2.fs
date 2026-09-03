@@ -75,7 +75,10 @@ type iSCSI_LoginTest2_Fixture() =
             client.RunCommand ( sprintf "select %d" ( i - 1 ) ) "" "T > "
             client.RunCommand ( sprintf "create /l %d" i ) "Created" "T > "
             client.RunCommand "select 0" "" "LU> "
-            client.RunCommand ( sprintf "create membuffer %d" m_TD0_MediaSize ) "Created" "LU> "
+            if i = 1 then
+                client.RunCommand ( sprintf "create membuffer %d" m_TD0_MediaSize ) "Created" "LU> "
+            else
+                client.RunCommand "create membuffer 4096" "Created" "LU> "
             client.RunCommand "select 0" "" "MD> "
             client.RunCommand "set BlockSize 512" "" "MD> "
             client.RunCommand "unselect" "" "LU> "
