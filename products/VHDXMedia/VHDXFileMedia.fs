@@ -76,7 +76,7 @@ type VHDXFileMedia
                 else
                     Task.FromResult fvs.LoadedVarHeader
 
-            let lm = VhdxLogManager( ffa, fvs.ImmHeader, verhd1 )
+            let lm = VhdxLogManager( m_LUN, ffa, fvs.ImmHeader, verhd1 )
 
             // Although this is earlier than the intended timing,
             // io opend in read/write mode, data write GUID is updated at this point.
