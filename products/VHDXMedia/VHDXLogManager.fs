@@ -100,8 +100,17 @@ type VhdxLogManager (
         }
 
     /// <summary>
-    ///  Update BAT entries.
+    ///  Update the BAT entry to reflect the changes in the media.
     /// </summary>
+    /// <param name="structures">
+    ///  The VHDX structures data.
+    /// </param>
+    /// <param name="sec4Ks">
+    ///  An array of 4K sector numbers indicating the updated range.
+    /// </param>
+    /// <param name="requiredFileSizeAfterCommit">
+    ///  File size after update.
+    /// </param>
     member this.UpdateBATEntries ( structures : VhdxStructures ) ( sec4Ks : SEC4K_T[] ) ( requiredFileSizeAfterCommit : uint64 ) : Task =
         task {
             HLogger.Trace( LogID.V_TRACE, fun g ->
@@ -131,9 +140,20 @@ type VhdxLogManager (
                 // Output log entries.
                 do! this.WriteLogEntries structures updates requiredFileSizeAfterCommit
                 index <- index + count
+
+            // Update file size
+            do! m_FA.SetFileSize requiredFileSizeAfterCommit
         }
 
-    // Update file size only.
+    /// <summary>
+    ///  Reflect the file size changes in the media.
+    /// </summary>
+    /// <param name="structures">
+    ///  The VHDX structures data.
+    /// </param>
+    /// <param name="requiredFileSizeAfterCommit">
+    ///  File size after update.
+    /// </param>
     member this.UpdateFileSize ( structures : VhdxStructures ) ( requiredFileSizeAfterCommit : uint64 ) : Task =
         task {
             HLogger.Trace( LogID.V_TRACE, fun g ->
@@ -147,9 +167,20 @@ type VhdxLogManager (
 
             // Output log entries.
             do! this.WriteLogEntries structures [||] requiredFileSizeAfterCommit
+
+            // Update file size
+            do! m_FA.SetFileSize requiredFileSizeAfterCommit
         }
 
-    // Update structures data.
+    /// <summary>
+    ///  The VHDX structures data update is reflected in the media.
+    /// </summary>
+    /// <param name="structures">
+    ///  The VHDX structures data.
+    /// </param>
+    /// <param name="sec4Ks">
+    ///  An array of 4K sector numbers indicating the updated range.
+    /// </param>
     member this.UpdateGenericStructesData ( structures : VhdxStructures ) ( sec4Ks : struct( SEC4K_T * ArraySegment<byte> )[] ) : Task =
         task {
             HLogger.Trace( LogID.V_TRACE, fun g ->
@@ -183,12 +214,8 @@ type VhdxLogManager (
                 index <- index + count
         }
 
-
     /// <summary>
-    /// Commit every metadata update represented by the active VHDX log and
-    /// invalidate the log.
-    ///
-    /// If no active transaction exists, this method performs no operation.
+    ///  All the information recorded in the log will be reflected in the actual recording location, and the log will be deleted.
     /// </summary>
     member _.Flush () : Task =
         task {
@@ -214,10 +241,23 @@ type VhdxLogManager (
             pendingEntries.Clear()
         }
 
-    /// Append one already-created logical group of metadata sectors.
-    ///
-    /// If the active log does not have enough remaining capacity, it is
-    /// flushed before the supplied update is appended.
+    /// <summary>
+    ///  Output log entries.
+    ///  Append one already-created logical group of metadata sectors.
+    /// </summary>
+    /// <param name="structures">
+    ///  The VHDX structures data.
+    /// </param>
+    /// <param name="updates">
+    ///  Updated data.
+    /// </param>
+    /// <param name="fileSizeAfterCommit">
+    ///  File size after update.
+    /// </param>
+    /// <remarks>
+    ///  If the active log does not have enough remaining capacity, it is
+    ///  flushed before the supplied update is appended.
+    /// </remarks>
     member private _.WriteLogEntries ( structures : VhdxStructures ) ( updates : struct( SEC4K_T * byte[] )[] ) ( fileSizeAfterCommit : uint64 ) : Task =
         task {
             // A new transaction is required.

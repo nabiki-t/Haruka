@@ -481,6 +481,21 @@ type VHDXFileMedia
                 do! m_Lock.Release()
         }
 
+    /// <summary>
+    ///  Check whether the necessary area for writing user data has been allocated.
+    /// </summary>
+    /// <param name="structures">
+    ///  The VHDX structure data.
+    /// </param>
+    /// <param name="lba">
+    ///  The starting position for writing data.
+    /// </param>
+    /// <param name="blkCnt">
+    ///  Length of data to write.
+    /// </param>
+    /// <returns>
+    ///  Returns true if no additional memory allocation is required.
+    /// </returns>
     member private _.CheckAlreadyAllocated ( structures : VhdxStructures ) ( lba : BLKCNT64_T ) ( blkCnt : BLKCNT64_T ) : bool =
         
         let blockSize = Blocksize.toUInt32 structures.VDI.LogicalSectorSize
@@ -518,12 +533,48 @@ type VHDXFileMedia
                 true
         loop lba
 
+    /// <summary>
+    ///  Check whether the area to be written to the data is within the media size limits.
+    /// </summary>
+    /// <param name="mediaSize">
+    ///  Specify the media size in bytes.
+    /// </param>
+    /// <param name="blockSize">
+    ///  Specify the block length in bytes.
+    /// </param>
+    /// <param name="lba">
+    ///  LBA requested as the write start position.
+    /// </param>
+    /// <param name="offset">
+    ///  The offset for the start position of data writing. Writing is performed to ( LBA * blockSize ) + offset.
+    /// </param>
+    /// <param name="len">
+    ///  Specifies the number of bytes of data to be written.
+    /// </param>
+    /// <returns>
+    ///  Returns true if the area to be updated is within the media length limit.
+    /// </returns>
     static member private CheckWriteRange ( mediaSize : uint64 ) ( blockSize : uint64 ) ( lba : BLKCNT64_T ) ( offset : uint64 ) ( len : uint64 ) : bool =
         let posa = uint64 lba * blockSize
         let posb = posa + offset
         let posc = posb + len
         ( posb <= mediaSize && posa < posb && offset < posb && posc <= mediaSize && posb < posc && len < posc )
 
+    /// <summary>
+    ///  Write data to the media. It is assumed that all necessary areas have already been allocated.
+    /// </summary>
+    /// <param name="vhdxfs">
+    ///  The FileAccessor object for the CHDX file.
+    /// </param>
+    /// <param name="structures">
+    ///  The VHDX structures data/
+    /// </param>
+    /// <param name="pos">
+    ///  Starting position for writing data. Specifies the byte location on the virtual disk image.
+    /// </param>
+    /// <param name="data">
+    ///  Data to write.
+    /// </param>
     static member private WriteData ( vhdxfs : FileAccessor ) ( structures : VhdxStructures ) ( pos : uint64 ) ( data : ArraySegment<byte> ) : Task =
         task {
 
