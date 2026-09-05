@@ -1370,7 +1370,7 @@ type tdid_me =
             loop 0 ( maxTDIDs + 1u )
 
     static member fromString ( v : string ) : uint32<tdid_me> = 
-        if not( Constants.TARGET_DEVICE_DIR_NAME_REGOBJ.IsMatch v ) then
+        if not( Constants.TARGET_DEVICE_DIR_NAME_REGOBJ.Value.IsMatch v ) then
             raise <| FormatException( "TargetDeviceID format error. Unexpected value \"" + v + "\"." )
         Convert.ToUInt32( v.[ Constants.TARGET_DEVICE_DIR_PREFIX.Length .. ], 16 )
         |> tdid_me.fromPrim
@@ -1439,7 +1439,7 @@ type tgid_me =
             loop 0 ( maxTDIDs + 1u )
 
     static member fromString ( v : string ) : uint32<tgid_me> = 
-        if not( Constants.TARGET_GRP_CONFIG_FILE_NAME_REGOBJ.IsMatch v ) then
+        if not( Constants.TARGET_GRP_CONFIG_FILE_NAME_REGOBJ.Value.IsMatch v ) then
             raise <| FormatException( "TargetGroupID format error. Unexpected value \"" + v + "\"." )
         Convert.ToUInt32( v.[ Constants.TARGET_GRP_CONFIG_FILE_PREFIX.Length .. ], 16 )
         |> tgid_me.fromPrim

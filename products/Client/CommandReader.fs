@@ -421,7 +421,7 @@ type CommandReader () =
     static member CmdRule_create_Target : AcceptableCommand< CommandVarb > = {
         Command = [| "CREATE" |];
         Varb = CommandVarb.Create_Target;
-        NamedArgs = [| ( "/n", CRV_Regex( Constants.ISCSI_TEXT_ISCSI_NAME_VALUE_REGEX_OBJ ) ); |];
+        NamedArgs = [| ( "/n", CRV_Regex( Constants.ISCSI_TEXT_ISCSI_NAME_VALUE_REGEX_OBJ.Value ) ); |];
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;
         HelpMsgName = "CREATE_TARGET";
@@ -432,10 +432,10 @@ type CommandReader () =
         Command = [| "SETCHAP" |];
         Varb = CommandVarb.SetChap;
         NamedArgs = [|
-            ( "/iu", CRVM_Regex( Constants.USER_NAME_REGEX_OBJ ) );
-            ( "/ip", CRVM_Regex( Constants.PASSWORD_REGEX_OBJ ) );
-            ( "/tu", CRV_Regex( Constants.USER_NAME_REGEX_OBJ ) );
-            ( "/tp", CRV_Regex( Constants.PASSWORD_REGEX_OBJ ) );
+            ( "/iu", CRVM_Regex( Constants.USER_NAME_REGEX_OBJ.Value ) );
+            ( "/ip", CRVM_Regex( Constants.PASSWORD_REGEX_OBJ.Value ) );
+            ( "/tu", CRV_Regex( Constants.USER_NAME_REGEX_OBJ.Value ) );
+            ( "/tp", CRV_Regex( Constants.PASSWORD_REGEX_OBJ.Value ) );
         |];
         ValuelessArgs = Array.empty;
         NamelessArgs = Array.empty;

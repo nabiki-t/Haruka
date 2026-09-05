@@ -337,7 +337,7 @@ type IscsiTextEncode() =
             ValueNone
         else
             let str = Encoding.UTF8.GetString( v )
-            if Constants.ISCSI_TEXT_STANDERD_LABE_REGEX_OBJ.IsMatch( str ) then
+            if Constants.ISCSI_TEXT_STANDERD_LABE_REGEX_OBJ.Value.IsMatch( str ) then
                 ValueSome( str )
             else
                 ValueNone
@@ -350,7 +350,7 @@ type IscsiTextEncode() =
     /// <returns>Converted bytes array.</returns>
     /// <remarks>If input string does not conform standerd-label format, it generates an assertion.</remarks>
     static member String2StandardLabelBytes ( s : string ) : byte[] =
-        assert( Constants.ISCSI_TEXT_STANDERD_LABE_REGEX_OBJ.IsMatch( s ) )
+        assert( Constants.ISCSI_TEXT_STANDERD_LABE_REGEX_OBJ.Value.IsMatch( s ) )
         Encoding.UTF8.GetBytes s
 
     // ----------------------------------------------------------------------------
@@ -361,7 +361,7 @@ type IscsiTextEncode() =
     /// <returns>Converted string value, or None if input bytes does not conform text-value format.</returns>
     static member TextValueBytes2String ( v : byte[] ) : string voption =
         let str = Encoding.UTF8.GetString( v )
-        if Constants.ISCSI_TEXT_TEXT_VALUE_REGEX_OBJ.IsMatch( str ) then
+        if Constants.ISCSI_TEXT_TEXT_VALUE_REGEX_OBJ.Value.IsMatch( str ) then
             ValueSome( str )
         else
             ValueNone
@@ -374,7 +374,7 @@ type IscsiTextEncode() =
     /// <returns>Converted bytes array.</returns>
     /// <remarks>If input string does not conform text-value format, it generates an assertion.</remarks>
     static member String2TextValueBytes ( s : string ) : byte[] =
-        assert( Constants.ISCSI_TEXT_TEXT_VALUE_REGEX_OBJ.IsMatch( s ) )
+        assert( Constants.ISCSI_TEXT_TEXT_VALUE_REGEX_OBJ.Value.IsMatch( s ) )
         Encoding.UTF8.GetBytes s
 
     // ----------------------------------------------------------------------------
@@ -385,7 +385,7 @@ type IscsiTextEncode() =
     /// <returns>Converted string value, or None if input bytes does not conform iSCSI-name-value format.</returns>
     static member ISCSINameValueBytes2String ( v : byte[] ) : string voption =
         let str = Encoding.UTF8.GetString( v )
-        if Constants.ISCSI_TEXT_ISCSI_NAME_VALUE_REGEX_OBJ.IsMatch( str ) then
+        if Constants.ISCSI_TEXT_ISCSI_NAME_VALUE_REGEX_OBJ.Value.IsMatch( str ) then
             ValueSome( str )
         else
             ValueNone
@@ -398,7 +398,7 @@ type IscsiTextEncode() =
     /// <returns>Converted bytes array.</returns>
     /// <remarks>If input string does not conform iSCSI-name-value format, it generates an assertion.</remarks>
     static member String2ISCSINameValueBytes ( s : string ) : byte[] =
-        assert( Constants.ISCSI_TEXT_ISCSI_NAME_VALUE_REGEX_OBJ.IsMatch( s ) )
+        assert( Constants.ISCSI_TEXT_ISCSI_NAME_VALUE_REGEX_OBJ.Value.IsMatch( s ) )
         Encoding.UTF8.GetBytes s
  
     // ----------------------------------------------------------------------------
@@ -851,7 +851,7 @@ type IscsiTextEncode() =
             ValueNone
         else
             let str = Encoding.UTF8.GetString( v )
-            if Constants.ISCSI_TEXT_LIST_OF_VALUES_REGEX_OBJ.IsMatch( str ) then
+            if Constants.ISCSI_TEXT_LIST_OF_VALUES_REGEX_OBJ.Value.IsMatch( str ) then
                 ValueSome( str.Split( ',' ) )
             else
                 ValueNone

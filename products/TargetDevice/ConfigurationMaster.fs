@@ -264,7 +264,7 @@ type ConfigurationMaster( m_WorkDirPath : string, loadtg : bool, killer : IKille
         TargetDeviceConf.T_TargetDevice * ConcurrentDictionary< TGID_T, {| conf : TargetGroupConf.T_TargetGroup; killer : IKiller |} > =
         try
             let sysConfName = Functions.AppendPathName workDirPath Constants.TARGET_DEVICE_CONF_FILE_NAME
-            let rx = Constants.TARGET_GRP_CONFIG_FILE_NAME_REGOBJ
+            let rx = Constants.TARGET_GRP_CONFIG_FILE_NAME_REGOBJ.Value
 
             HLogger.Trace( LogID.V_FALLBACK_CONFIG_VALUE, fun g -> g.Gen1( objId, workDirPath ) )
 

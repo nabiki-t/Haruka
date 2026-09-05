@@ -131,7 +131,7 @@ type ConfNode_Target(
             )
             |> ( fun argmsg ->
                 let v = m_Value.TargetName
-                if not ( Constants.ISCSI_TEXT_ISCSI_NAME_VALUE_REGEX_OBJ.IsMatch( v ) ) then
+                if not ( Constants.ISCSI_TEXT_ISCSI_NAME_VALUE_REGEX_OBJ.Value.IsMatch( v ) ) then
                     let msg = m_MessageTable.GetMessage( "CHKMSG_INVALID_TARGET_NAME_FORMAT", v )
                     ( curID, msg ) :: argmsg
                 else
@@ -152,7 +152,7 @@ type ConfNode_Target(
                     argmsg
                     |> ( fun argmsg2 ->
                         let v = x.InitiatorAuth.UserName
-                        if not ( Constants.USER_NAME_REGEX_OBJ.IsMatch( v ) ) then
+                        if not ( Constants.USER_NAME_REGEX_OBJ.Value.IsMatch( v ) ) then
                             let msg = m_MessageTable.GetMessage( "CHKMSG_INVALID_CHAP_AUTH_USERNAME_FORMAT" )
                             ( curID, msg ) :: argmsg2
                         else
@@ -160,7 +160,7 @@ type ConfNode_Target(
                     )
                     |> ( fun argmsg2 ->
                         let v = x.InitiatorAuth.Password
-                        if not ( Constants.PASSWORD_REGEX_OBJ.IsMatch( v ) ) then
+                        if not ( Constants.PASSWORD_REGEX_OBJ.Value.IsMatch( v ) ) then
                             let msg = m_MessageTable.GetMessage( "CHKMSG_INVALID_CHAP_AUTH_PASSWORD_FORMAT" )
                             ( curID, msg ) :: argmsg2
                         else
@@ -168,7 +168,7 @@ type ConfNode_Target(
                     )
                     |> ( fun argmsg2 ->
                         let v = x.TargetAuth.UserName
-                        if v.Length = 0 || Constants.USER_NAME_REGEX_OBJ.IsMatch( v ) then
+                        if v.Length = 0 || Constants.USER_NAME_REGEX_OBJ.Value.IsMatch( v ) then
                             argmsg2
                         else
                             let msg = m_MessageTable.GetMessage( "CHKMSG_INVALID_CHAP_AUTH_USERNAME_FORMAT" )
@@ -178,7 +178,7 @@ type ConfNode_Target(
                         let u = x.TargetAuth.UserName
                         let p = x.TargetAuth.Password
                         if u.Length > 0 then
-                            if not ( Constants.PASSWORD_REGEX_OBJ.IsMatch( p ) ) then
+                            if not ( Constants.PASSWORD_REGEX_OBJ.Value.IsMatch( p ) ) then
                                 let msg = m_MessageTable.GetMessage( "CHKMSG_INVALID_CHAP_AUTH_PASSWORD_FORMAT" )
                                 ( curID, msg ) :: argmsg2
                             else

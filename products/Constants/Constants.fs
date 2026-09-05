@@ -1472,8 +1472,8 @@ module Constants =
         "^" + TARGET_DEVICE_DIR_PREFIX + "[0-9a-fA-F]{8}$"
 
     /// Target device working directory name regex pattern
-    let TARGET_DEVICE_DIR_NAME_REGOBJ : Regex =
-        new Regex( TARGET_DEVICE_DIR_NAME_REGEX, REGEXOPT_SEARCH_FLAG )
+    let TARGET_DEVICE_DIR_NAME_REGOBJ : Lazy<Regex> =
+        lazy( new Regex( TARGET_DEVICE_DIR_NAME_REGEX, REGEXOPT_SEARCH_FLAG ) )
 
     /// Target device configuration file name. 
     let TARGET_DEVICE_CONF_FILE_NAME : string =
@@ -1503,8 +1503,8 @@ module Constants =
         "^" + TARGET_GRP_CONFIG_FILE_PREFIX + "[0-9a-fA-F]{8}$"
 
     /// Target device working directory name regex pattern
-    let TARGET_GRP_CONFIG_FILE_NAME_REGOBJ : Regex =
-        new Regex( TARGET_GRP_CONFIG_FILE_NAME_REGEX, REGEXOPT_SEARCH_FLAG )
+    let TARGET_GRP_CONFIG_FILE_NAME_REGOBJ : Lazy<Regex> =
+        lazy( new Regex( TARGET_GRP_CONFIG_FILE_NAME_REGEX, REGEXOPT_SEARCH_FLAG ) )
 
     /// Regex pattern which checks string matches long LUN pattern.
     let LONG_LUN_REGEX : string =
@@ -1527,8 +1527,8 @@ module Constants =
         255UL
 
     /// Target device working directory name regex pattern
-    let LU_WORK_DIR_NAME_REGOBJ : Regex =
-        new Regex( LU_WORK_DIR_NAME_REGEX, REGEXOPT_SEARCH_FLAG )
+    let LU_WORK_DIR_NAME_REGOBJ : Lazy<Regex> =
+        lazy( new Regex( LU_WORK_DIR_NAME_REGEX, REGEXOPT_SEARCH_FLAG ) )
 
     /// Contoroller session ID prefix value.
     let CTRL_SESS_ID_PREFIX : string =
@@ -1547,24 +1547,24 @@ module Constants =
         "^[A-Z][a-zA-Z0-9\.\-+@_]{0,62}$"
 
     /// Regex object for ISCSI_TEXT_STANDERD_LABE_REGEX_STR
-    let ISCSI_TEXT_STANDERD_LABE_REGEX_OBJ : Regex =
-        new Regex( ISCSI_TEXT_STANDERD_LABE_REGEX_STR, RegexOptions.Compiled )
+    let ISCSI_TEXT_STANDERD_LABE_REGEX_OBJ : Lazy<Regex> =
+        lazy( new Regex( ISCSI_TEXT_STANDERD_LABE_REGEX_STR, RegexOptions.Compiled ) )
 
     /// Data format of "text-value" used at iSCSI text request/responce. Reffer RFC 3720 5.1 Text Format.
     let ISCSI_TEXT_TEXT_VALUE_REGEX_STR : string =
         "^[a-zA-Z0-9\.\-+@_/\[\]\:]*$"
 
     /// Regex object for ISCSI_TEXT_TEXT_VALUE_REGEX_STR
-    let ISCSI_TEXT_TEXT_VALUE_REGEX_OBJ : Regex =
-        new Regex( ISCSI_TEXT_TEXT_VALUE_REGEX_STR, RegexOptions.Compiled )
+    let ISCSI_TEXT_TEXT_VALUE_REGEX_OBJ : Lazy<Regex> =
+        lazy( new Regex( ISCSI_TEXT_TEXT_VALUE_REGEX_STR, RegexOptions.Compiled ) )
 
     /// Data format of "list-of-values" used at iSCSI text request/responce. Reffer RFC 3720 5.1 Text Format.
     let ISCSI_TEXT_LIST_OF_VALUES_REGEX_STR : string =
         "^[a-zA-Z0-9\.\-+@_/\[\]\:\,]*$"
 
     /// Regex object for ISCSI_TEXT_LIST_OF_VALUES_REGEX_STR
-    let ISCSI_TEXT_LIST_OF_VALUES_REGEX_OBJ : Regex =
-        new Regex( ISCSI_TEXT_LIST_OF_VALUES_REGEX_STR, RegexOptions.Compiled )
+    let ISCSI_TEXT_LIST_OF_VALUES_REGEX_OBJ : Lazy<Regex> =
+        lazy( new Regex( ISCSI_TEXT_LIST_OF_VALUES_REGEX_STR, RegexOptions.Compiled ) )
 
     /// Maximum "iSCSI-name-value" length. Reffer RFC 3720 3.2.6.2.
     let ISCSI_TEXT_MAX_ISCSI_NAME_LENGTH : int32 =
@@ -1575,32 +1575,32 @@ module Constants =
         sprintf "^[\-\.\:a-z0-9]{1,%d}$" ISCSI_TEXT_MAX_ISCSI_NAME_LENGTH
 
     /// Regex object for ISCSI_TEXT_ISCSI_NAME_VALUE_REGEX_STR
-    let ISCSI_TEXT_ISCSI_NAME_VALUE_REGEX_OBJ : Regex =
-        new Regex( ISCSI_TEXT_ISCSI_NAME_VALUE_REGEX_STR, RegexOptions.Compiled )
+    let ISCSI_TEXT_ISCSI_NAME_VALUE_REGEX_OBJ : Lazy<Regex> =
+        lazy( new Regex( ISCSI_TEXT_ISCSI_NAME_VALUE_REGEX_STR, RegexOptions.Compiled ) )
 
     /// Data format of "hex-constant" used at iSCSI text request/responce. Reffer RFC 3720 5.1 Text Format.
     let ISCSI_TEXT_HEX_CONSTANT_REGEX_STR : string =
         "^0(X|x)[0-9a-fA-F]+$"
 
     /// Regex object for ISCSI_TEXT_HEX_CONSTANT_REGEX_STR
-    let ISCSI_TEXT_HEX_CONSTANT_REGEX_OBJ : Regex =
-        new Regex( ISCSI_TEXT_HEX_CONSTANT_REGEX_STR, RegexOptions.Compiled )
+    let ISCSI_TEXT_HEX_CONSTANT_REGEX_OBJ : Lazy<Regex> =
+        lazy( new Regex( ISCSI_TEXT_HEX_CONSTANT_REGEX_STR, RegexOptions.Compiled ) )
 
     /// Data format of "decimal-constant" used at iSCSI text request/responce. Reffer RFC 3720 5.1 Text Format.
     let ISCSI_TEXT_DECIMAL_CONSTANT_REGEX_STR : string =
         "^0|([1-9][0-9]+)$"
 
     /// Regex object for ISCSI_TEXT_DECIMAL_CONSTANT_REGEX_STR
-    let ISCSI_TEXT_DECIMAL_CONSTANT_REGEX_OBJ : Regex =
-        new Regex( ISCSI_TEXT_DECIMAL_CONSTANT_REGEX_STR, RegexOptions.Compiled )
+    let ISCSI_TEXT_DECIMAL_CONSTANT_REGEX_OBJ : Lazy<Regex> =
+        lazy( new Regex( ISCSI_TEXT_DECIMAL_CONSTANT_REGEX_STR, RegexOptions.Compiled ) )
 
     /// Data format of "base64-constant" used at iSCSI text request/responce. Reffer RFC 3720 5.1 Text Format.
     let ISCSI_TEXT_BASE64_CONSTANT_REGEX_STR : string =
         "^0(B|b)[0-9a-zA-Z\+\/]+\=*$"
 
     /// Regex object for ISCSI_TEXT_BASE64_CONSTANT_REGEX_STR
-    let ISCSI_TEXT_BASE64_CONSTANT_REGEX_OBJ : Regex =
-        new Regex( ISCSI_TEXT_BASE64_CONSTANT_REGEX_STR, RegexOptions.Compiled )
+    let ISCSI_TEXT_BASE64_CONSTANT_REGEX_OBJ : Lazy<Regex> =
+        lazy( new Regex( ISCSI_TEXT_BASE64_CONSTANT_REGEX_STR, RegexOptions.Compiled ) )
 
     //=============================================================================
     // Constants definitions. Thay my be changed in the future.
@@ -1866,14 +1866,14 @@ module Constants =
     let USER_NAME_REGEX_STR : string =
         sprintf "^[a-zA-Z0-9\.\-+@_/\[\]\:]{1,%d}$" MAX_USER_NAME_STR_LENGTH
 
-    let USER_NAME_REGEX_OBJ : Regex =
-        new Regex( USER_NAME_REGEX_STR, RegexOptions.Compiled )
+    let USER_NAME_REGEX_OBJ : Lazy<Regex> =
+        lazy( new Regex( USER_NAME_REGEX_STR, RegexOptions.Compiled ) )
 
     let PASSWORD_REGEX_STR : string =
         sprintf "^[a-zA-Z0-9\.\-+@_/\[\]\:]{1,%d}$" MAX_PASSWORD_STR_LENGTH
 
-    let PASSWORD_REGEX_OBJ : Regex =
-        new Regex( PASSWORD_REGEX_STR, RegexOptions.Compiled )
+    let PASSWORD_REGEX_OBJ : Lazy<Regex> =
+        lazy( new Regex( PASSWORD_REGEX_STR, RegexOptions.Compiled ) )
 
     /// Max target device count in on haruka controller configuration.
     let MAX_TARGET_DEVICE_COUNT : int32 =

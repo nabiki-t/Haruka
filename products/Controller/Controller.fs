@@ -220,7 +220,7 @@ type Controller (
     ///  Load target device process at startup.
     /// </summary>
     member this.LoadInitialTargetDeviceProcs () : unit =
-        let rx = Constants.TARGET_DEVICE_DIR_NAME_REGOBJ
+        let rx = Constants.TARGET_DEVICE_DIR_NAME_REGOBJ.Value
         Directory.GetDirectories m_ConfPath
         |> Array.map Path.GetFileName
         |> Array.filter rx.IsMatch
@@ -664,7 +664,7 @@ type Controller (
     /// </returns>
     member private _.GetTargetDeviceDir ( sessID : CtrlSessionID ) : Task<string> =
         HLogger.Trace( LogID.V_CTRL_REQ_RECEIVED, fun g -> g.Gen1( m_ObjID, "GetTargetDeviceDir" ) )
-        let rx = Constants.TARGET_DEVICE_DIR_NAME_REGOBJ
+        let rx = Constants.TARGET_DEVICE_DIR_NAME_REGOBJ.Value
         let curStatus = m_MgrCliSessID
 
         let rdir, msg =
@@ -729,7 +729,7 @@ type Controller (
             m_MgrCliSessID <- MgrCliSessionStatus.LoggedIn( arg.SessionID, DateTime.UtcNow )
             task {
                 let dirName = Functions.AppendPathName m_ConfPath tdidStr
-                let dirRegex = Constants.TARGET_DEVICE_DIR_NAME_REGOBJ
+                let dirRegex = Constants.TARGET_DEVICE_DIR_NAME_REGOBJ.Value
 
                 // count current target device dir count
                 let count =
@@ -900,7 +900,7 @@ type Controller (
             if Controller.CheckLoginStatus curStatus arg.SessionID then
                 m_MgrCliSessID <- MgrCliSessionStatus.LoggedIn( arg.SessionID, DateTime.UtcNow )
                 try
-                    let tgRegex = Constants.TARGET_GRP_CONFIG_FILE_NAME_REGOBJ
+                    let tgRegex = Constants.TARGET_GRP_CONFIG_FILE_NAME_REGOBJ.Value
                     let fNames = 
                         Directory.GetFiles dirName
                         |> Seq.map Path.GetFileName
@@ -1013,7 +1013,7 @@ type Controller (
             m_MgrCliSessID <- MgrCliSessionStatus.LoggedIn( arg.SessionID, DateTime.UtcNow )
             task {
                 try
-                    let tgRegex = Constants.TARGET_GRP_CONFIG_FILE_NAME_REGOBJ
+                    let tgRegex = Constants.TARGET_GRP_CONFIG_FILE_NAME_REGOBJ.Value
                     let fNames = 
                         Directory.GetFiles dirName
                         |> Seq.filter ( Path.GetFileName >> tgRegex.IsMatch )
@@ -1086,7 +1086,7 @@ type Controller (
         if Controller.CheckLoginStatus curStatus tgConf.SessionID then
             m_MgrCliSessID <- MgrCliSessionStatus.LoggedIn( tgConf.SessionID, DateTime.UtcNow )
             task {
-                let tgRegex = Constants.TARGET_GRP_CONFIG_FILE_NAME_REGOBJ
+                let tgRegex = Constants.TARGET_GRP_CONFIG_FILE_NAME_REGOBJ.Value
 
                 // count number of current target device dir
                 let count =
@@ -1175,7 +1175,7 @@ type Controller (
         let tdid = arg.TargetDeviceID
         let tdidStr = tdid_me.toString tdid
         HLogger.Trace( LogID.V_CTRL_REQ_RECEIVED, fun g -> g.Gen1( m_ObjID, sprintf "GetLUWorkDir(%s)" tdidStr ) )
-        let rx = Constants.LU_WORK_DIR_NAME_REGOBJ
+        let rx = Constants.LU_WORK_DIR_NAME_REGOBJ.Value
         let dirName = Functions.AppendPathName m_ConfPath tdidStr
         let curStatus = m_MgrCliSessID
 
@@ -1247,7 +1247,7 @@ type Controller (
             task {
                 let tdDirName = Functions.AppendPathName m_ConfPath tdidStr
                 let dirName = Functions.AppendPathName tdDirName ( lun_me.WorkDirName arg.LUN )
-                let luRegex = Constants.LU_WORK_DIR_NAME_REGOBJ
+                let luRegex = Constants.LU_WORK_DIR_NAME_REGOBJ.Value
 
                 if not ( Directory.Exists tdDirName ) then
                     let wmsg = "Target device directory missing."

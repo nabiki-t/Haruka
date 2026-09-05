@@ -269,7 +269,7 @@ type TargetPropPage(
                     w |> tnodeidx_me.fromPrim
 
             let targetName = m_TargetNameTextBox.Text
-            if Constants.ISCSI_TEXT_ISCSI_NAME_VALUE_REGEX_OBJ.IsMatch targetName |> not then
+            if Constants.ISCSI_TEXT_ISCSI_NAME_VALUE_REGEX_OBJ.Value.IsMatch targetName |> not then
                 let msg = m_Config.MessagesText.GetMessage( "MSG_INVALID_TARGET_NAME" )
                 raise <| Exception msg
 
@@ -285,7 +285,7 @@ type TargetPropPage(
             let auth =
                 if m_AuthTypeCombo.SelectedIndex = 0 then
                     let initiatorUserName = m_InitiatorAuthUserNameTextBox.Text
-                    if Constants.USER_NAME_REGEX_OBJ.IsMatch initiatorUserName |> not || initiatorUserName.Length < 1 then
+                    if Constants.USER_NAME_REGEX_OBJ.Value.IsMatch initiatorUserName |> not || initiatorUserName.Length < 1 then
                         let msg =
                             m_Config.MessagesText.GetMessage(
                                 "MSG_INVALID_INITIATOR_USER_NAME",
@@ -294,7 +294,7 @@ type TargetPropPage(
                         raise <| Exception msg
 
                     let initiatorPassword = m_InitiatorAuthPasswordTextBox.Text
-                    if Constants.PASSWORD_REGEX_OBJ.IsMatch initiatorPassword |> not || initiatorPassword.Length < 1 then
+                    if Constants.PASSWORD_REGEX_OBJ.Value.IsMatch initiatorPassword |> not || initiatorPassword.Length < 1 then
                         let msg =
                             m_Config.MessagesText.GetMessage(
                                 "MSG_INVALID_INITIATOR_PASSWORD",
@@ -303,7 +303,7 @@ type TargetPropPage(
                         raise <| Exception msg
 
                     let targetUserName = m_TargetAuthUserNameTextBox.Text
-                    if Constants.USER_NAME_REGEX_OBJ.IsMatch targetUserName |> not || targetUserName.Length < 1 then
+                    if Constants.USER_NAME_REGEX_OBJ.Value.IsMatch targetUserName |> not || targetUserName.Length < 1 then
                         let msg =
                             m_Config.MessagesText.GetMessage(
                                 "MSG_INVALID_TARGET_USER_NAME",
@@ -312,7 +312,7 @@ type TargetPropPage(
                         raise <| Exception msg
 
                     let targetPassword = m_TargetAuthPasswordTextBox.Text
-                    if Constants.PASSWORD_REGEX_OBJ.IsMatch targetPassword |> not || targetPassword.Length < 1 then
+                    if Constants.PASSWORD_REGEX_OBJ.Value.IsMatch targetPassword |> not || targetPassword.Length < 1 then
                         let msg =
                             m_Config.MessagesText.GetMessage(
                                 "MSG_INVALID_TARGET_PASSWORD",
