@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <Title>Haruka software storage</Title>
+    <Authors>nabiki_t</Authors>
+    <Company>nabiki_t</Company>
+    <Product>Haruka software storage.</Product>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Tailcalls>True</Tailcalls>
+    <WarningLevel>5</WarningLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>5</WarningLevel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="VhdxCommonsTest.fs" />
+    <Compile Include="main.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\products\Commons\Commons.fsproj" />
+    <ProjectReference Include="..\..\products\Constants\Constants.fsproj" />
+    <ProjectReference Include="..\..\products\VHDXMedia\VHDXMedia.fsproj" />
+    <ProjectReference Include="..\TestCommon\TestCommon.fsproj" />
+  </ItemGroup>
+
+</Project>

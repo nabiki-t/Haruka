@@ -134,21 +134,19 @@ type VhdxCommons() =
     static member ResolvLBA( lba : BLKCNT64_T ) ( meta : VhdxStructures[] ) : struct( int32 * uint64 ) voption =
         let rec loop ( idx : int32 ) =
             if idx >= 0 then
-                let pbSize =
-                    meta.[idx].VDI.PayloadBlockSize |> uint64       // Payload Block Size
+                let pbSize = meta.[idx].VDI.PayloadBlockSize |> uint64          // Payload Block Size
                 let logiSecSize =
-                    Blocksize.toUInt64 meta.[idx].VDI.LogicalSectorSize // Logical Sector Size
-                let chunkRatio =
-                    meta.[idx].BAT.ChunkRatio |> uint64                  // Chunk Ratio
+                    Blocksize.toUInt64 meta.[idx].VDI.LogicalSectorSize         // Logical Sector Size
+                let chunkRatio = meta.[idx].BAT.ChunkRatio |> uint64            // Chunk Ratio
                 let secCntInPB = pbSize / logiSecSize                           // Number of sectors in a payload block.
                 let pbIdx = ( blkcnt_me.toUInt64 lba ) / secCntInPB             // Payload block index
                 let secIdxInPB = ( blkcnt_me.toUInt64 lba ) % secCntInPB        // Sector index within payload block
                 let sbIdx = pbIdx / chunkRatio                                  // Index of sector bitmap BAT entries
                 let pbIdxInSB = pbIdx % chunkRatio                              // Index of payload blocks within a sector bitmap BAT entry
                 let byteIdxInSB =
-                    ( pbIdxInSB * secCntInPB / 8UL) + ( secIdxInPB / 8UL )      // Byte position within a sector bitmap BAT entry
+                    ( pbIdxInSB * secCntInPB / 8UL ) + ( secIdxInPB / 8UL )     // Byte position within a sector bitmap BAT entry
                 let bitIdx = secIdxInPB % 8UL                                   // Bit position within a byte
-                let pbEntry = meta.[idx].BAT.Payloads.[ int32 pbIdx ]      // Payload BAT Entry
+                let pbEntry = meta.[idx].BAT.Payloads.[ int32 pbIdx ]           // Payload BAT Entry
 
                 match pbEntry.State with
                 | PayloadNotPresent ->
