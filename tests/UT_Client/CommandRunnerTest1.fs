@@ -13,6 +13,7 @@ namespace Haruka.Test.UT.Client
 
 open System
 open System.IO
+open System.Threading
 open System.Threading.Tasks
 open System.Net
 open System.Net.Sockets
@@ -841,6 +842,7 @@ type CommandRunner_Test1() =
     [<Fact>]
     member _.CommandLoop_login_001() =
         let portNo = GlbFunc.nextTcpPortNo()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let sl = new TcpListener( IPAddress.Parse "::1", portNo )
@@ -869,6 +871,7 @@ type CommandRunner_Test1() =
                 do! Functions.FramingSender c rb
                 do! ServerStatus_Test1.RespDefaultCtrlConf c portNo
                 do! ServerStatus_Test1.RespTargetDeviceDirs c []
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
@@ -894,6 +897,7 @@ type CommandRunner_Test1() =
 
                 Assert.StartsWith( "--> ", outline )
 
+                br.SignalAndWait()
                 GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
             }
         |]
@@ -904,6 +908,7 @@ type CommandRunner_Test1() =
     [<Fact>]
     member _.CommandLoop_login_002() =
         let portNo = GlbFunc.nextTcpPortNo()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let sl = new TcpListener( IPAddress.Parse "::1", portNo )
@@ -932,6 +937,7 @@ type CommandRunner_Test1() =
                 do! Functions.FramingSender c rb
                 do! ServerStatus_Test1.RespDefaultCtrlConf c portNo
                 do! ServerStatus_Test1.RespTargetDeviceDirs c []
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
@@ -957,6 +963,7 @@ type CommandRunner_Test1() =
 
                 Assert.StartsWith( "--> ", outline )
 
+                br.SignalAndWait()
                 GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
             }
         |]
@@ -967,6 +974,7 @@ type CommandRunner_Test1() =
     [<Fact>]
     member _.CommandLoop_login_003() =
         let portNo = GlbFunc.nextTcpPortNo()
+        use br = new Barrier( 2 )
         [|
             fun () -> task {
                 let sl = new TcpListener( IPAddress.Parse "::1", portNo )
@@ -993,6 +1001,7 @@ type CommandRunner_Test1() =
                         })
                     }
                 do! Functions.FramingSender c rb
+                br.SignalAndWait()
                 GlbFunc.ClosePorts [| c |]
                 sl.Stop()
             };
@@ -1012,6 +1021,7 @@ type CommandRunner_Test1() =
                     let out_rs = new StreamReader( out_ms )
                     CheckPromptAndMessage out_rs "--" "CMDERR_FAILED_LOGIN"
 
+                    br.SignalAndWait()
                     GlbFunc.AllDispose [ in_ws; in_rs; in_ms; out_ws; out_rs; out_ms; ]
                 with
                 | _ as x ->
