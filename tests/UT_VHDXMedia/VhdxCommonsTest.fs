@@ -66,7 +66,7 @@ type VhdxCommons_Test () =
 
         let structure = {
             Creator = "";
-            ImmHeader = zeroHeader;
+            ImmHeader = { zeroHeader with Offset = 0x10000UL };
             LoadedVarHeader = zeroVarHeader;
             Log = [];
             LastFileSize = 1024UL;
@@ -349,3 +349,117 @@ type VhdxCommons_Test () =
         Assert.StrictEqual( sbidx, a )
         Assert.StrictEqual( byteoff, b )
         Assert.StrictEqual( bitoff, c )
+
+    [<Theory>]
+    [<InlineData( false, 0UL, 0L )>]
+    [<InlineData( false, 1UL, 1048576L )>]
+    [<InlineData( false, 2UL, 2097152L )>]
+    [<InlineData( true, 1UL, 1048576L )>]
+    member _.CreateRandomFile_001 ( initexist : bool ) ( req : uint64 ) ( res : int64 ) =
+        let fname = Path.GetTempFileName()
+        if not initexist then
+            File.Delete fname
+
+        VhdxCommons.CreateRandomFile fname req
+
+        Assert.True( File.Exists fname )
+        let s = File.OpenRead fname
+        Assert.StrictEqual( res, s.Length )
+        s.Close()
+        s.Dispose()
+        File.Delete fname
+
+    [<Fact>]
+    member _.CreateRandomFile_002 () =
+        let fname = Path.GetTempFileName()
+        File.Delete fname
+        Directory.CreateDirectory fname |> ignore
+
+        Assert.ThrowsAny<Exception>( fun () ->
+            VhdxCommons.CreateRandomFile fname 1UL
+        ) |> ignore
+
+        Directory.Delete fname
+
+    static member m_GetParentFileName_001_Data : obj[][] = [|
+        [| [| ( "relative_path", "a" ); |]; RelativePath( "a" ); |];
+        [| [| ( "volume_path", "b" ); |]; VolumePath( "b" ); |];
+        [| [| ( "absolute_win32_path", "c" ); |]; AbsoluteWin32Path( "c" ); |];
+        [| [| ( "volume_path", "a" ); ( "relative_path", "b" ); |]; RelativePath( "b" ); |];
+        [| [| ( "absolute_win32_path", "a" ); ( "volume_path", "b" ); |]; VolumePath( "b" ); |];
+        [| [| ( "relative_path", "a" ); ( "absolute_win32_path", "b" ); |]; RelativePath( "a" ); |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_GetParentFileName_001_Data" )>]
+    member _.GetParentFileName_001 ( data : ( string * string ) [] ) ( exp : ParentLocatorType ) =
+        let structure1 = GenStructures 2048u 8192UL BatEntryStatePB.PayloadFullyPresent BatEntryStateSB.SectorBitmapNotPresent false
+        let prguid = Guid.NewGuid()
+        let pd = 
+            Map<string,string> data
+            |> Map.add "parent_linkage" ( prguid.ToString "D" )
+        let structure2 = {
+            structure1 with
+                VDI.ParentLocator = pd
+        }
+        let struct( a, b ) = VhdxCommons.GetParentFileName structure2
+        Assert.StrictEqual( prguid, a )
+        Assert.StrictEqual( exp, b )
+
+    [<Fact>]
+    member _.GetParentFileName_002 () =
+        let structure1 = GenStructures 2048u 8192UL BatEntryStatePB.PayloadFullyPresent BatEntryStateSB.SectorBitmapNotPresent false
+        let structure2 = {
+            structure1 with
+                VDI.ParentLocator = Map<string,string> [| ( "relative_path", "a" ) |]
+        }
+        Assert.ThrowsAny<Exception>( fun () ->
+            VhdxCommons.GetParentFileName structure2 |> ignore
+        ) |> ignore
+
+    [<Fact>]
+    member _.GetParentFileName_003 () =
+        let structure1 = GenStructures 2048u 8192UL BatEntryStatePB.PayloadFullyPresent BatEntryStateSB.SectorBitmapNotPresent false
+        let structure2 = {
+            structure1 with
+                VDI.ParentLocator = Map<string,string> [| ( "parent_linkage", Guid.NewGuid() |> _.ToString() ) |]
+        }
+        let r =
+            Assert.Throws<VhdxMediaException>( fun () ->
+                VhdxCommons.GetParentFileName structure2 |> ignore
+            )
+        Assert.StartsWith( "Unable to identify the parent VHDX file name", r.Message )
+
+    [<Fact>]
+    member _.UpdateFileWriteGuidAndDataWriteGuid_001 () =
+        task {
+            let fname = Path.GetTempFileName()
+            let ms = new MemoryStream()
+            let fa = FileAccessor( fname, 1u, false, fun _ _ _ _ -> ms )
+            do! fa.SetFileSize( 192UL * 1024UL )
+
+            let structure = GenStructures 2048u 8192UL BatEntryStatePB.PayloadFullyPresent BatEntryStateSB.SectorBitmapNotPresent false
+            let verheader : VhdxMutableHeader = {
+                SequenceNumber = 0UL;
+                FileWriteGuid = Guid.NewGuid();
+                DataWriteGuid = Guid.NewGuid();
+                LogGuid = Guid.NewGuid();
+            }
+            let! r = VhdxCommons.UpdateFileWriteGuidAndDataWriteGuid fa structure verheader
+            Assert.NotStrictEqual( verheader.FileWriteGuid, r.FileWriteGuid )
+            Assert.NotStrictEqual( verheader.DataWriteGuid, r.DataWriteGuid )
+            Assert.StrictEqual( Guid(), r.LogGuid )
+            Assert.StrictEqual( 3UL, r.SequenceNumber )
+
+            ms.Seek( 0L, SeekOrigin.Begin ) |> ignore
+            let v = ms.ToArray()
+            Assert.StrictEqual( 192 * 1024, v.Length )
+
+            let hdpos = [| 64u * 1024u; 128u * 1024u; |]
+            for i = 0 to 1 do
+                Assert.StrictEqual( r.FileWriteGuid, ByteFunc.ReadGuid v ( hdpos.[i] + 16u ) )
+                Assert.StrictEqual( r.DataWriteGuid, ByteFunc.ReadGuid v ( hdpos.[i] + 32u ) )
+                Assert.StrictEqual( Guid(), ByteFunc.ReadGuid v ( hdpos.[i] + 48u ) )
+
+            File.Delete fname
+        }
