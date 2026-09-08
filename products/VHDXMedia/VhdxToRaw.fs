@@ -181,24 +181,22 @@ type VhdxToRaw() =
                     let buf1 = Array.zeroCreate<byte>( int32 sectorSize )
                     let buf2 = Array.zeroCreate<byte>( int32 sectorSize )
 
-                    let loop ( cnt : BLKCNT64_T ) : Task<struct( bool * BLKCNT64_T )> =
-                        task {
-                            if cnt < sectorCount then
-                                fs2.ReadExactly buf2
-                                match VhdxCommons.ResolvLBA cnt metadatas with
-                                | ValueSome ( struct( fileidx, offset ) ) ->
-                                    do! vfiles.[ fileidx ].ReadWithPseudoLimit metadatas.[ fileidx ].LastFileSize offset ( ArraySegment buf1 )
-                                | ValueNone ->
-                                    Array.fill buf1 0 ( int32 sectorSize ) 0uy
-                                if buf1 <> buf2 then
-                                    return struct( false, cnt )
-                                else
-                                    return struct( true, cnt + blkcnt_me.ofUInt64 1UL )
+                    let ps = PseudoSeq< BLKCNT64_T >( blkcnt_me.zero64 )
+                    for cnt in ps do
+                        if cnt < sectorCount then
+                            fs2.ReadExactly buf2
+                            match VhdxCommons.ResolvLBA cnt metadatas with
+                            | ValueSome ( struct( fileidx, offset ) ) ->
+                                do! vfiles.[ fileidx ].ReadWithPseudoLimit metadatas.[ fileidx ].LastFileSize offset ( ArraySegment buf1 )
+                            | ValueNone ->
+                                Array.fill buf1 0 ( int32 sectorSize ) 0uy
+                            if buf1 <> buf2 then
+                                ps.Break cnt
                             else
-                                return struct( false, cnt )
-                        }
-                    let! r = Functions.loopAsyncWithState loop blkcnt_me.zero64
-                    return ( r = sectorCount )
+                                ps.Continue( cnt + blkcnt_me.ofUInt64 1UL )
+                        else
+                            ps.Break cnt
+                    return ( ValueOption.get ps.LastValue = sectorCount )
             finally
                 vfiles
                 |> Array.iter _.Close()
@@ -240,33 +238,31 @@ type VhdxToRaw() =
                     let buf1 = Array.zeroCreate<byte>( int32 sectorSize1 )
                     let buf2 = Array.zeroCreate<byte>( int32 sectorSize1 )
 
-                    let loop ( cnt : BLKCNT64_T ) : Task<struct( bool * BLKCNT64_T )> =
-                        task {
-                            if cnt < sectorCount then
+                    let ps = PseudoSeq< BLKCNT64_T >( blkcnt_me.zero64 )
+                    for cnt in ps do
+                        if cnt < sectorCount then
 
-                                // read file1
-                                match VhdxCommons.ResolvLBA cnt metadatas1 with
-                                | ValueSome ( struct( fileidx1, offset1 ) ) ->
-                                    do! vfiles1.[ fileidx1 ].ReadWithPseudoLimit metadatas1.[ fileidx1 ].LastFileSize offset1 ( ArraySegment buf1 )
-                                | ValueNone ->
-                                    Array.fill buf1 0 ( int32 sectorSize1 ) 0uy
+                            // read file1
+                            match VhdxCommons.ResolvLBA cnt metadatas1 with
+                            | ValueSome ( struct( fileidx1, offset1 ) ) ->
+                                do! vfiles1.[ fileidx1 ].ReadWithPseudoLimit metadatas1.[ fileidx1 ].LastFileSize offset1 ( ArraySegment buf1 )
+                            | ValueNone ->
+                                Array.fill buf1 0 ( int32 sectorSize1 ) 0uy
 
-                                // read file2
-                                match VhdxCommons.ResolvLBA cnt metadatas2 with
-                                | ValueSome ( struct( fileidx2, offset2 ) ) ->
-                                    do! vfiles2.[ fileidx2 ].ReadWithPseudoLimit metadatas1.[ fileidx2 ].LastFileSize offset2 ( ArraySegment buf1 )
-                                | ValueNone ->
-                                    Array.fill buf2 0 ( int32 sectorSize1 ) 0uy
+                            // read file2
+                            match VhdxCommons.ResolvLBA cnt metadatas2 with
+                            | ValueSome ( struct( fileidx2, offset2 ) ) ->
+                                do! vfiles2.[ fileidx2 ].ReadWithPseudoLimit metadatas1.[ fileidx2 ].LastFileSize offset2 ( ArraySegment buf1 )
+                            | ValueNone ->
+                                Array.fill buf2 0 ( int32 sectorSize1 ) 0uy
 
-                                if buf1 <> buf2 then
-                                    return struct( false, cnt )
-                                else
-                                    return struct( true, cnt + blkcnt_me.ofUInt64 1UL )
+                            if buf1 <> buf2 then
+                                ps.Break cnt
                             else
-                                return struct( false, cnt )
-                        }
-                    let! r = Functions.loopAsyncWithState loop blkcnt_me.zero64
-                    return ( r = sectorCount )
+                                ps.Continue( cnt + blkcnt_me.ofUInt64 1UL )
+                        else
+                            ps.Break cnt
+                    return ( ValueOption.get ps.LastValue = sectorCount )
 
             finally
                 vfiles1

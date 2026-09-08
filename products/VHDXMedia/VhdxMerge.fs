@@ -344,24 +344,25 @@ type VhdxMerge() =
             let! verhd2 = VhdxCommons.UpdateFileWriteGuidAndDataWriteGuid mfa mstr verhd1
 
             // Allocate area and copy data
-            let! _, verhd3 =
-                Functions.loopAsyncWithState ( fun ( lba, verhd4 ) -> task {
+            let ps = PseudoSeqStat< ( BLKCNT64_T * VhdxMutableHeader ), VhdxMutableHeader >( ( blkcnt_me.zero64, verhd2 ) )
+            for ( lba, verhd4 ) in ps do
+                let requiredFileSize, updatedPB4K, nextLba =
+                    VhdxMerge.UpdateBATForDeleteRoot dstr mstr lba updateLbaBuf
+                let updated4KSecsForBAT = Seq.toArray updatedPB4K
 
-                    let requiredFileSize, updatedPB4K, nextLba =
-                        VhdxMerge.UpdateBATForDeleteRoot dstr mstr lba updateLbaBuf
-                    let updated4KSecsForBAT = Seq.toArray updatedPB4K
+                // Output BAT entries.
+                let! verhd5 = VhdxWriter.WriteUpdatedBAT mfa mstr verhd4 updated4KSecsForBAT requiredFileSize 0
 
-                    // Output BAT entries.
-                    let! verhd5 = VhdxWriter.WriteUpdatedBAT mfa mstr verhd4 updated4KSecsForBAT requiredFileSize 0
+                // Copy payload data.
+                for struct( start, cnt ) in updateLbaBuf do
+                    if start <> blkcnt_me.ofUInt64 UInt64.MaxValue then
+                        do! VhdxMerge.CopyData dfa dstr mfa mstr start cnt
 
-                    // Copy payload data.
-                    for struct( start, cnt ) in updateLbaBuf do
-                        if start <> blkcnt_me.ofUInt64 UInt64.MaxValue then
-                            do! VhdxMerge.CopyData dfa dstr mfa mstr start cnt
-
-                    return struct( ( nextLba < d_VirtualDiskLBACount ), ( nextLba, verhd5 ) )
-
-                } ) ( blkcnt_me.zero64, verhd2 )
+                if nextLba < d_VirtualDiskLBACount then
+                    ps.Continue( nextLba, verhd5 )
+                else
+                    ps.Break( verhd5 )
+            let verhd3 = ps.LastValue |> _.Value
 
             // Update parent locator.
             let structures2 = {
@@ -538,31 +539,32 @@ type VhdxMerge() =
             let! verhd2 = VhdxCommons.UpdateFileWriteGuidAndDataWriteGuid mfa mstr verhd1
 
             // Allocate area and copy data
-            let! _, verhd3 =
-                Functions.loopAsyncWithState ( fun ( lba, verhd4 ) -> task {
+            let ps = PseudoSeqStat< ( BLKCNT64_T * VhdxMutableHeader ), VhdxMutableHeader >( ( blkcnt_me.zero64, verhd2 ) )
+            for ( lba, verhd4 ) in ps do
+                let requiredFileSize, updatedPB4K, updatedSB4K, nextLba =
+                    VhdxMerge.UpdateBATForMergeIntermediate dstr mstr lba updateLbaBuf
+                let updated4KSecsForSB =
+                    updatedSB4K
+                    |> Seq.map ( fun itr -> struct( itr.Key, itr.Value ) )
+                    |> Seq.toArray
+                let updated4KSecsForBAT = Seq.toArray updatedPB4K
 
-                    let requiredFileSize, updatedPB4K, updatedSB4K, nextLba =
-                        VhdxMerge.UpdateBATForMergeIntermediate dstr mstr lba updateLbaBuf
-                    let updated4KSecsForSB =
-                        updatedSB4K
-                        |> Seq.map ( fun itr -> struct( itr.Key, itr.Value ) )
-                        |> Seq.toArray
-                    let updated4KSecsForBAT = Seq.toArray updatedPB4K
+                // Output BAT entries.
+                let! verhd5 = VhdxWriter.WriteUpdatedBAT mfa mstr verhd4 updated4KSecsForBAT requiredFileSize 0
 
-                    // Output BAT entries.
-                    let! verhd5 = VhdxWriter.WriteUpdatedBAT mfa mstr verhd4 updated4KSecsForBAT requiredFileSize 0
+                // Output sector bitmap.
+                let! verhd6 = VhdxWriter.WriteUpdatedSB mfa mstr verhd5 updated4KSecsForSB
 
-                    // Output sector bitmap.
-                    let! verhd6 = VhdxWriter.WriteUpdatedSB mfa mstr verhd5 updated4KSecsForSB
+                // Copy payload data.
+                for struct( start, cnt ) in updateLbaBuf do
+                    if start <> blkcnt_me.ofUInt64 UInt64.MaxValue then
+                        do! VhdxMerge.CopyData dfa dstr mfa mstr start cnt
 
-                    // Copy payload data.
-                    for struct( start, cnt ) in updateLbaBuf do
-                        if start <> blkcnt_me.ofUInt64 UInt64.MaxValue then
-                            do! VhdxMerge.CopyData dfa dstr mfa mstr start cnt
-
-                    return struct( ( nextLba < d_VirtualDiskLBACount ), ( nextLba, verhd6 ) )
-
-                } ) ( blkcnt_me.zero64, verhd2 )
+                if nextLba < d_VirtualDiskLBACount then
+                    ps.Continue( nextLba, verhd6 )
+                else
+                    ps.Break( verhd6 )
+            let verhd3 = ps.LastValue |> _.Value
 
             // Update parent locator.
             let structures2 = {

@@ -26,6 +26,199 @@ open Haruka.Commons
 type VhdxReader() =
 
     /// <summary>
+    ///  Read the VHDX file and retrieve the all of structures.
+    /// </summary>
+    /// <param name="filePath">
+    ///  VHDX file name.
+    /// </param>
+    /// <returns>
+    ///  Retrieved structures data.
+    /// </returns>
+    static member ReadVhdx ( fa : FileAccessor ) : Task<VhdxStructures> =
+        task {
+            let fileSize = fa.GetFileSize()
+            if fileSize < 0x30000UL then
+                let msg = sprintf "The VHDX file is too small. FileSize=%d" fileSize
+                raise <| VhdxMediaException( fa.FileName, msg )
+
+            // Validating the file type identifier and obtaining the creator
+            let! creator = VhdxReader.ReadFileTypeIdentifier fa
+
+            // Load the header
+            let! immheader, varheader = VhdxReader.ReadHeaders fa
+
+            // Retrieve log information (active log entries only)
+            let! log = task {
+                if immheader.LogLength > 0u && varheader.LogGuid <> Guid.Empty then
+                    let logData = Array.zeroCreate<byte>( int immheader.LogLength )
+                    do! fa.Read immheader.LogOffset ( ArraySegment logData )
+                    let e = VhdxReader.ReadActiveLogSequense logData varheader.LogGuid
+                    if e.Length = 0 then
+                        raise <| VhdxMediaException( fa.FileName, "No valid logs exist." )
+
+                    // Verify the value of FlushedFileOffset in the last entry.
+                    let headFFO = ( e |> List.last ).FlushedFileOffset
+                    if fileSize < headFFO then
+                        let msg = sprintf "The file has been truncated. FlushedFileOffset=%d" headFFO
+                        raise <| VhdxMediaException( fa.FileName, msg )
+                    return e
+                else
+                    return []
+            }
+
+            let lastFileSize =
+                if log.Length > 0 then
+                    ( log |> List.last ).LastFileOffset
+                else
+                    fileSize |> uint64
+
+            // Read Region table 1 0x30000
+            let! regionTable1Buf = VhdxReader.ReadBytesWithLog log lastFileSize fa 0x30000UL 65536u
+            let regionTable1 = VhdxReader.ReadRegionTable regionTable1Buf lastFileSize
+
+            // Read Region table 2 0x40000
+            let! regionTable2Buf = VhdxReader.ReadBytesWithLog log lastFileSize fa 0x40000UL 65536u
+            let regionTable2 = VhdxReader.ReadRegionTable regionTable2Buf lastFileSize
+
+            // Region Table List
+            let regionTables =
+                [
+                    if regionTable1.IsSome then
+                        yield regionTable1.Value;
+                    if regionTable2.IsSome then
+                        yield regionTable2.Value;
+                ]
+            let currentRegionTable =
+                if regionTables.Length = 0 then
+                    raise <| VhdxMediaException( fa.FileName, "No valid region table exists." )
+                regionTables.[0]
+
+            // Get the locations of the metadata region and BAT region.
+            let metadataRegion =
+                currentRegionTable.Entries
+                |> List.tryFind ( fun e -> e.Guid = VhdxCommons.REGENT_TYPE_METADATA )
+            if metadataRegion.IsNone then
+                raise <| VhdxMediaException( fa.FileName, "Metadata region not found.")
+
+            let batRegion =
+                currentRegionTable.Entries
+                |> List.tryFind ( fun e -> e.Guid = VhdxCommons.REGENT_TYPE_BAT )
+            if batRegion.IsNone then
+                raise <| VhdxMediaException( fa.FileName, "BAT region not found.")
+
+            // Read metadata region.
+            let! metadataBuf = VhdxReader.ReadBytesWithLog log lastFileSize fa metadataRegion.Value.FileOffset metadataRegion.Value.Length
+            let virtualDiskInfo = VhdxReader.ReadMetadata metadataBuf
+
+            // Read BAT
+            let! batEntries = VhdxReader.ReadBat log lastFileSize fa batRegion.Value virtualDiskInfo
+
+            if virtualDiskInfo.HasParent then
+                // For differential VHDX files, if a PartiallyPresent payload BAT entry exists,
+                // a corresponding sector bitmap BAT entry must also exist.
+                batEntries.Payloads
+                |> Array.filter ( _.State.IsPayloadPartiallyPresent )
+                |> Array.iteri ( fun idx itr ->
+                    let j = idx / int32 batEntries.ChunkRatio  // Index of sector bitmap BAT entry
+                    if batEntries.SectorBitmap.[j].Bitmap.Length = 0 then
+                        let msg = "There is no sector bitmap BAT entry corresponding to the payload BAT entry for PartiallyPresent."
+                        raise <| VhdxMediaException( fa.FileName, msg )
+                )
+            else
+                // If there is no parent, the PartiallyPresent payload BAT entry must not exist.
+                if batEntries.Payloads |> Array.exists ( _.State.IsPayloadPartiallyPresent ) then
+                    let msg = "A fixed or dynamic VHDX file exists with a payload BAT entry for PartiallyPresent."
+                    raise <| VhdxMediaException( fa.FileName, msg ) 
+
+                // If a parent does not exist, a sector bitmap BAT entry must not exist.
+                if batEntries.SectorBitmap |> Array.exists ( fun itr -> itr.Bitmap.Length > 0 ) then
+                    let msg = "The VHDX file has either fixed or dynamic sector bitmap BAT entries assigned to it."
+                    raise <| VhdxMediaException( fa.FileName, msg ) 
+
+            return {
+                Creator = creator;
+                ImmHeader = immheader;
+                LoadedVarHeader = varheader;
+                Log = log;
+                LastFileSize = lastFileSize;
+                Region = currentRegionTable;
+                VDI = virtualDiskInfo;
+                BAT = batEntries;
+            }
+        }
+
+    /// <summary>
+    /// Retrieve all of VHDX file structures, including the parent VHDX file.
+    /// </summary>
+    /// <param name="fa">
+    ///  FileAccessor object for VHDX file.
+    /// </param>
+    /// <returns>
+    ///  Retrieved structures data.
+    /// </returns>
+    static member ReadAllStructures( fa : FileAccessor ) : Task<( FileAccessor * VhdxStructures )[]> =
+        task {
+            let acc = List<FileAccessor * VhdxStructures>()
+            let ps = PseudoSeq< struct ( FileAccessor * Guid voption ) >( struct( fa, ValueNone ) )
+            for struct( fn, expDWG ) in ps do
+                // Read metadata
+                let! meta = VhdxReader.ReadVhdx fn
+                let hasParent = meta.VDI.HasParent
+
+                // Check Data Write Guid
+                if expDWG.IsSome && meta.LoadedVarHeader.DataWriteGuid <> expDWG.Value then
+                    raise <| VhdxMediaException( fa.FileName, "Data Write Guid does not match" )
+
+                // Check if a File Write GUID with the same one already exists.
+                for ( _, itr ) in acc do
+                    if itr.LoadedVarHeader.FileWriteGuid = meta.LoadedVarHeader.FileWriteGuid then
+                        raise <| VhdxMediaException( fa.FileName, "The same file is specified as the parent VHDX file." )
+
+                if not hasParent then
+                    // If there is no parent file, add the current file to the list and finish.
+                    acc.Add( fn, meta )
+                    ps.Break()
+                else
+                    // The value of parent_linkage is the DataWriteGuid value expected in the parent VHDX file.
+                    let struct( parentDataWriteGuid, plt ) = VhdxCommons.GetParentFileName meta
+                    let parentFileName =
+                        match plt with
+                        | RelativePath x ->
+                            Path.Combine( [| Path.GetDirectoryName fn.FileName; x; |] )
+                        | VolumePath x ->
+                            x
+                        | AbsoluteWin32Path x ->
+                            x
+                    let parentFA = FileAccessor( parentFileName, fn.Multiplicity, fn.ReadOnly )
+
+                    // Read next parent VHDX file.
+                    acc.Add( fn, meta )
+                    ps.Continue( parentFA, ( ValueSome parentDataWriteGuid ) )
+
+            acc.Reverse()
+            let rv = acc.ToArray()
+
+            // Verify that the metadata matches.
+            for i = 1 to rv.Length - 1 do
+                let vdi0 = ( snd rv.[0] ).VDI
+                let vdix = ( snd rv.[i] ).VDI
+                if vdi0.VirtualDiskSize <> vdix.VirtualDiskSize then
+                    let msg = sprintf "The virtual disk size of the parent (%d) does not match." i
+                    raise <| VhdxMediaException( fa.FileName, msg )
+                if vdi0.VirtualDiskId <> vdix.VirtualDiskId then
+                    let msg = sprintf "The virtual disk ID of the parent (%d) does not match." i
+                    raise <| VhdxMediaException( fa.FileName, msg )
+                if vdi0.LogicalSectorSize <> vdix.LogicalSectorSize then
+                    let msg = sprintf "The logical sector size of the parent (%d) does not match." i
+                    raise <| VhdxMediaException( fa.FileName, msg )
+                if vdi0.PhysicalSectorSize <> vdix.PhysicalSectorSize then
+                    let msg = sprintf "The physical sector size of the parent (%d) does not match." i
+                    raise <| VhdxMediaException( fa.FileName, msg )
+            
+            return rv
+        }
+
+    /// <summary>
     ///  Read file type identifier
     /// </summary>
     /// <param name="fa">
@@ -34,7 +227,7 @@ type VhdxReader() =
     /// <returns>
     ///  creator string.
     /// </returns>
-    static member private ReadFileTypeIdentifier ( fa : FileAccessor ) : Task<string> =
+    static member ReadFileTypeIdentifier ( fa : FileAccessor ) : Task<string> =
         task {
             // signature
             let sigBuf = Array.zeroCreate<byte> 8 
@@ -63,7 +256,7 @@ type VhdxReader() =
     /// <returns>
     ///  Retrieved VHDX file headeres.
     /// </returns>
-    static member private ReadHeaders ( fa : FileAccessor ) : Task< ( VhdxHeader * VhdxMutableHeader ) > =
+    static member ReadHeaders ( fa : FileAccessor ) : Task< ( VhdxHeader * VhdxMutableHeader ) > =
         task {
             let fileSize = fa.GetFileSize()
 
@@ -158,7 +351,7 @@ type VhdxReader() =
     ///  Values ​​of log data sectors, excluding signature and sequence numbers.
     ///  If there is an error in the data, an array of length 0 is returned.
     /// </returns>
-    static member private ReadLogDataSector ( data : byte[] ) ( offset : uint32 ) ( seqNum : uint64 ) : byte[] =
+    static member ReadLogDataSector ( data : byte[] ) ( offset : uint32 ) ( seqNum : uint64 ) : byte[] =
         let signeture = ByteFunc.ReadU32BE data offset
         let sequenceHigh = ByteFunc.ReadU32LE data ( offset + 4u )
         let sequenceLow = ByteFunc.ReadU32LE data ( offset + 4092u )
@@ -190,7 +383,7 @@ type VhdxReader() =
     ///  Retrieved log descriptor.
     ///  If there is an error in the data, None is returned.
     /// </returns>
-    static member private ReadLogDescriptor ( data : byte[] ) ( offset : uint32 ) ( dataDescCount : uint32 ) ( seqNum : uint64 ) : LogDescriptor option =
+    static member ReadLogDescriptor ( data : byte[] ) ( offset : uint32 ) ( dataDescCount : uint32 ) ( seqNum : uint64 ) : LogDescriptor option =
         let signeture = ByteFunc.ReadU32BE data offset
 
          // Zero descriptor
@@ -254,7 +447,7 @@ type VhdxReader() =
     /// <returns>
     ///  Retrieved log entry value, or None.
     /// </returns>
-    static member private ReadLogEntry ( logData : byte[] ) ( pos : uint32 ) ( headerLogGuid : Guid ) : LogEntry option =
+    static member ReadLogEntry ( logData : byte[] ) ( pos : uint32 ) ( headerLogGuid : Guid ) : LogEntry option =
 
         // The log data length should be in units of 1MB,
         // and the starting position should be in units of 4KB.
@@ -379,7 +572,7 @@ type VhdxReader() =
     /// <returns>
     ///  Retrieved log entry value list.
     /// </returns>
-    static member private ReadActiveLogSequense ( logData : byte[] ) ( headerLogGuid : Guid ) : LogEntry list =
+    static member ReadActiveLogSequense ( logData : byte[] ) ( headerLogGuid : Guid ) : LogEntry list =
         let rec getCurrentSeq ( pos : uint32 ) ( acc : LogEntry list ) =
             match VhdxReader.ReadLogEntry logData pos headerLogGuid with
             | Some x ->
@@ -448,7 +641,7 @@ type VhdxReader() =
     /// <returns>
     ///  Retrieved data.
     /// </returns>
-    static member private ReadBytesWithLog
+    static member ReadBytesWithLog
             ( log : LogEntry list )
             ( lastFileSize : uint64 )
             ( fa : FileAccessor )
@@ -499,7 +692,7 @@ type VhdxReader() =
     /// <returns>
     ///  Retrieved region table data, or None.
     /// </returns>
-    static member private ReadRegionTable ( data : byte[] ) ( fileLen : uint64 ) : RegionTable option =
+    static member ReadRegionTable ( data : byte[] ) ( fileLen : uint64 ) : RegionTable option =
 
         // Interpretation of the region table header
         let signature = ByteFunc.ReadU32BE data 0u
@@ -566,7 +759,7 @@ type VhdxReader() =
     /// <returns>
     ///  Retrieved metadata information, or None.
     /// </returns>
-    static member private ReadMetadata ( data : byte[] ) : VirtualDiskInfo =
+    static member ReadMetadata ( data : byte[] ) : VirtualDiskInfo =
 
         let signature = ByteFunc.ReadU64BE data 0u        // signature
         let mtEntryCount = ByteFunc.ReadU16LE data 10u    // Entry count
@@ -799,7 +992,7 @@ type VhdxReader() =
     /// <returns>
     ///  Retrieved payload BAT Entry.
     /// </returns>
-    static member private GetPayloadBlockEntry ( batData : byte[] ) ( chunkRatio : uint64 ) ( pbIndex : uint64 ) : PayloadBATEntry =
+    static member GetPayloadBlockEntry ( batData : byte[] ) ( chunkRatio : uint64 ) ( pbIndex : uint64 ) : PayloadBATEntry =
         let idx = ( pbIndex / chunkRatio ) * ( chunkRatio + 1UL ) + ( pbIndex % chunkRatio )
         let entry = ByteFunc.ReadU64LE batData ( uint32 idx * 8u )
         let state =
@@ -864,7 +1057,7 @@ type VhdxReader() =
     /// <returns>
     ///  Retrieved BAT entries.
     /// </returns>
-    static member private ReadBat
+    static member ReadBat
         ( log : LogEntry list )
         ( lastFileSize : uint64 )
         ( fa : FileAccessor )
@@ -926,199 +1119,4 @@ type VhdxReader() =
                 Payloads = payloads;
                 SectorBitmap = sectorBitmapBlock;
             }
-        }
-
-    /// <summary>
-    ///  Read the VHDX file and retrieve the all of structures.
-    /// </summary>
-    /// <param name="filePath">
-    ///  VHDX file name.
-    /// </param>
-    /// <returns>
-    ///  Retrieved structures data.
-    /// </returns>
-    static member ReadVhdx ( fa : FileAccessor ) : Task<VhdxStructures> =
-        task {
-            let fileSize = fa.GetFileSize()
-            if fileSize < 0x30000UL then
-                let msg = sprintf "The VHDX file is too small. FileSize=%d" fileSize
-                raise <| VhdxMediaException( fa.FileName, msg )
-
-            // Validating the file type identifier and obtaining the creator
-            let! creator = VhdxReader.ReadFileTypeIdentifier fa
-
-            // Load the header
-            let! immheader, varheader = VhdxReader.ReadHeaders fa
-
-            // Retrieve log information (active log entries only)
-            let! log = task {
-                if immheader.LogLength > 0u && varheader.LogGuid <> Guid.Empty then
-                    let logData = Array.zeroCreate<byte>( int immheader.LogLength )
-                    do! fa.Read immheader.LogOffset ( ArraySegment logData )
-                    let e = VhdxReader.ReadActiveLogSequense logData varheader.LogGuid
-                    if e.Length = 0 then
-                        raise <| VhdxMediaException( fa.FileName, "No valid logs exist." )
-
-                    // Verify the value of FlushedFileOffset in the last entry.
-                    let headFFO = ( e |> List.last ).FlushedFileOffset
-                    if fileSize < headFFO then
-                        let msg = sprintf "The file has been truncated. FlushedFileOffset=%d" headFFO
-                        raise <| VhdxMediaException( fa.FileName, msg )
-                    return e
-                else
-                    return []
-            }
-
-            let lastFileSize =
-                if log.Length > 0 then
-                    ( log |> List.last ).LastFileOffset
-                else
-                    fileSize |> uint64
-
-            // Read Region table 1 0x30000
-            let! regionTable1Buf = VhdxReader.ReadBytesWithLog log lastFileSize fa 0x30000UL 65536u
-            let regionTable1 = VhdxReader.ReadRegionTable regionTable1Buf lastFileSize
-
-            // Read Region table 2 0x40000
-            let! regionTable2Buf = VhdxReader.ReadBytesWithLog log lastFileSize fa 0x40000UL 65536u
-            let regionTable2 = VhdxReader.ReadRegionTable regionTable2Buf lastFileSize
-
-            // Region Table List
-            let regionTables =
-                [
-                    if regionTable1.IsSome then
-                        yield regionTable1.Value;
-                    if regionTable2.IsSome then
-                        yield regionTable2.Value;
-                ]
-            let currentRegionTable =
-                if regionTables.Length = 0 then
-                    raise <| VhdxMediaException( fa.FileName, "No valid region table exists." )
-                regionTables.[0]
-
-            // Get the locations of the metadata region and BAT region.
-            let metadataRegion =
-                currentRegionTable.Entries
-                |> List.tryFind ( fun e -> e.Guid = VhdxCommons.REGENT_TYPE_METADATA )
-            if metadataRegion.IsNone then
-                raise <| VhdxMediaException( fa.FileName, "Metadata region not found.")
-
-            let batRegion =
-                currentRegionTable.Entries
-                |> List.tryFind ( fun e -> e.Guid = VhdxCommons.REGENT_TYPE_BAT )
-            if batRegion.IsNone then
-                raise <| VhdxMediaException( fa.FileName, "BAT region not found.")
-
-            // Read metadata region.
-            let! metadataBuf = VhdxReader.ReadBytesWithLog log lastFileSize fa metadataRegion.Value.FileOffset metadataRegion.Value.Length
-            let virtualDiskInfo = VhdxReader.ReadMetadata metadataBuf
-
-            // Read BAT
-            let! batEntries = VhdxReader.ReadBat log lastFileSize fa batRegion.Value virtualDiskInfo
-
-            if virtualDiskInfo.HasParent then
-                // For differential VHDX files, if a PartiallyPresent payload BAT entry exists,
-                // a corresponding sector bitmap BAT entry must also exist.
-                batEntries.Payloads
-                |> Array.filter ( _.State.IsPayloadPartiallyPresent )
-                |> Array.iteri ( fun idx itr ->
-                    let j = idx / int32 batEntries.ChunkRatio  // Index of sector bitmap BAT entry
-                    if batEntries.SectorBitmap.[j].Bitmap.Length = 0 then
-                        let msg = "There is no sector bitmap BAT entry corresponding to the payload BAT entry for PartiallyPresent."
-                        raise <| VhdxMediaException( fa.FileName, msg )
-                )
-            else
-                // If there is no parent, the PartiallyPresent payload BAT entry must not exist.
-                if batEntries.Payloads |> Array.exists ( _.State.IsPayloadPartiallyPresent ) then
-                    let msg = "A fixed or dynamic VHDX file exists with a payload BAT entry for PartiallyPresent."
-                    raise <| VhdxMediaException( fa.FileName, msg ) 
-
-                // If a parent does not exist, a sector bitmap BAT entry must not exist.
-                if batEntries.SectorBitmap |> Array.exists ( fun itr -> itr.Bitmap.Length > 0 ) then
-                    let msg = "The VHDX file has either fixed or dynamic sector bitmap BAT entries assigned to it."
-                    raise <| VhdxMediaException( fa.FileName, msg ) 
-
-            return {
-                Creator = creator;
-                ImmHeader = immheader;
-                LoadedVarHeader = varheader;
-                Log = log;
-                LastFileSize = lastFileSize;
-                Region = currentRegionTable;
-                VDI = virtualDiskInfo;
-                BAT = batEntries;
-            }
-        }
-
-    /// <summary>
-    /// Retrieve all of VHDX file structures, including the parent VHDX file.
-    /// </summary>
-    /// <param name="fa">
-    ///  FileAccessor object for VHDX file.
-    /// </param>
-    /// <returns>
-    ///  Retrieved structures data.
-    /// </returns>
-    static member ReadAllStructures( fa : FileAccessor ) : Task<( FileAccessor * VhdxStructures )[]> =
-        task {
-            let acc = List<FileAccessor * VhdxStructures>()
-            let loop ( ( fn : FileAccessor ), ( expDWG : Guid option ) ) : Task<struct( bool * ( FileAccessor * Guid option ) )> =
-                task {
-                    // Read metadata
-                    let! meta = VhdxReader.ReadVhdx fn
-                    let hasParent = meta.VDI.HasParent
-
-                    // Check Data Write Guid
-                    if expDWG.IsSome && meta.LoadedVarHeader.DataWriteGuid <> expDWG.Value then
-                        raise <| VhdxMediaException( fa.FileName, "Data Write Guid does not match" )
-
-                    // Check if a File Write GUID with the same one already exists.
-                    for ( _, itr ) in acc do
-                        if itr.LoadedVarHeader.FileWriteGuid = meta.LoadedVarHeader.FileWriteGuid then
-                            raise <| VhdxMediaException( fa.FileName, "The same file is specified as the parent VHDX file." )
-
-                    if not hasParent then
-                        // If there is no parent file, add the current file to the list and finish.
-                        acc.Add( fn, meta )
-                        return struct( false, ( fn, None ) )
-                    else
-                        // The value of parent_linkage is the DataWriteGuid value expected in the parent VHDX file.
-                        let struct( parentDataWriteGuid, plt ) = VhdxCommons.GetParentFileName meta
-                        let parentFileName =
-                            match plt with
-                            | RelativePath x ->
-                                Path.Combine( [| Path.GetDirectoryName fn.FileName; x; |] )
-                            | VolumePath x ->
-                                x
-                            | AbsoluteWin32Path x ->
-                                x
-                        let parentFA = FileAccessor( parentFileName, fn.Multiplicity, fn.ReadOnly )
-
-                        // Read next parent VHDX file.
-                        acc.Add( fn, meta )
-                        return struct( true, ( parentFA, ( Some parentDataWriteGuid ) ) )
-                }
-
-            let! _ = Functions.loopAsyncWithState loop ( fa, None )
-            acc.Reverse()
-            let rv = acc.ToArray()
-
-            // Verify that the metadata matches.
-            for i = 1 to rv.Length - 1 do
-                let vdi0 = ( snd rv.[0] ).VDI
-                let vdix = ( snd rv.[i] ).VDI
-                if vdi0.VirtualDiskSize <> vdix.VirtualDiskSize then
-                    let msg = sprintf "The virtual disk size of the parent (%d) does not match." i
-                    raise <| VhdxMediaException( fa.FileName, msg )
-                if vdi0.VirtualDiskId <> vdix.VirtualDiskId then
-                    let msg = sprintf "The virtual disk ID of the parent (%d) does not match." i
-                    raise <| VhdxMediaException( fa.FileName, msg )
-                if vdi0.LogicalSectorSize <> vdix.LogicalSectorSize then
-                    let msg = sprintf "The logical sector size of the parent (%d) does not match." i
-                    raise <| VhdxMediaException( fa.FileName, msg )
-                if vdi0.PhysicalSectorSize <> vdix.PhysicalSectorSize then
-                    let msg = sprintf "The physical sector size of the parent (%d) does not match." i
-                    raise <| VhdxMediaException( fa.FileName, msg )
-            
-            return rv
         }

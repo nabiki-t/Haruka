@@ -222,59 +222,52 @@ type VHDXFileMedia
                     let blockSize_u64 = Blocksize.toUInt64 curStr.VDI.LogicalSectorSize
                     let secCntInPB = childPBSize / blockSize_u64
 
-                    let loop ( sectorsRead : uint64 ) : Task<struct( bool * uint64 )> = task {
+                    let ps = PseudoSeqCond< uint64 >( 0UL, ( fun v -> v < totalSectors ) )
+                    for sectorsRead in ps do
+                        let curLBA = blkcnt_me.ofUInt64 ( blkcnt_me.toUInt64 argLBA + uint64 sectorsRead )
 
-                        if sectorsRead < totalSectors then
-                            let curLBA = blkcnt_me.ofUInt64 ( blkcnt_me.toUInt64 argLBA + uint64 sectorsRead )
+                        // Identify payload block index within child file and sector index inside it
+                        let struct( pbIdx, secIdxInPB ) = VhdxCommons.LBAtoPayloadBlockIndex curLBA curStr
+                        let secIdx = blkcnt_me.toUInt32 secIdxInPB |> uint64
 
-                            // Identify payload block index within child file and sector index inside it
-                            let struct( pbIdx, secIdxInPB ) = VhdxCommons.LBAtoPayloadBlockIndex curLBA curStr
-                            let secIdx = blkcnt_me.toUInt32 secIdxInPB |> uint64
+                        // Determine how many sectors remain in this payload block
+                        let remainInPB = secCntInPB - secIdx
+                        let remainTotal = totalSectors - sectorsRead
+                        let takeSectors = min remainInPB remainTotal
 
-                            // Determine how many sectors remain in this payload block
-                            let remainInPB = secCntInPB - secIdx
-                            let remainTotal = totalSectors - sectorsRead
-                            let takeSectors = min remainInPB remainTotal
+                        match curStr.BAT.Payloads.[ int pbIdx ].State with
+                        | PayloadUndefined
+                        | PayloadZero
+                        | PayloadUnapped ->
+                            // Entire payload block range can be zero-filled
+                            let bytesToZero = takeSectors * blockSize_u64
+                            Array.Clear( buffer.Array, buffer.Offset + int ( sectorsRead * blockSize_u64 ), int bytesToZero )
 
-                            match curStr.BAT.Payloads.[ int pbIdx ].State with
-                            | PayloadUndefined
-                            | PayloadZero
-                            | PayloadUnapped ->
-                                // Entire payload block range can be zero-filled
-                                let bytesToZero = takeSectors * blockSize_u64
-                                Array.Clear( buffer.Array, buffer.Offset + int ( sectorsRead * blockSize_u64 ), int bytesToZero )
-                                return struct( true, sectorsRead + takeSectors )
+                        | PayloadFullyPresent ->
+                            // All data for this payload exists in child file; read as a single request
+                            let pbEntry = curStr.BAT.Payloads.[ int pbIdx ]
+                            let posInFile = pbEntry.FileOffset + secIdx * blockSize_u64
+                            let bytesToRead = takeSectors * blockSize_u64
+                            let dstOffset = buffer.Offset + int ( sectorsRead * blockSize_u64 )
+                            do! curFA.ReadWithPseudoLimit curStr.LastFileSize posInFile ( ArraySegment( buffer.Array, dstOffset, int bytesToRead ) )
 
-                            | PayloadFullyPresent ->
-                                // All data for this payload exists in child file; read as a single request
-                                let pbEntry = curStr.BAT.Payloads.[ int pbIdx ]
-                                let posInFile = pbEntry.FileOffset + secIdx * blockSize_u64
-                                let bytesToRead = takeSectors * blockSize_u64
-                                let dstOffset = buffer.Offset + int ( sectorsRead * blockSize_u64 )
-                                do! curFA.ReadWithPseudoLimit curStr.LastFileSize posInFile ( ArraySegment( buffer.Array, dstOffset, int bytesToRead ) )
-                                return struct( true, sectorsRead + takeSectors )
-
-                            | PayloadNotPresent
-                            | PayloadPartiallyPresent ->
-                                // Must resolve per logical block (may involve parent files)
-                                for i in 0UL .. takeSectors - 1UL do
-                                    let lba = blkcnt_me.ofUInt64 ( blkcnt_me.toUInt64 argLBA + sectorsRead + i )
-                                    match VhdxCommons.ResolvLBA lba allStructures with
-                                    | ValueSome( struct( fsidx, fpos ) ) ->
-                                        let dstOffset = buffer.Offset + int ( ( sectorsRead + i ) * blockSize_u64 )
-                                        let bytesAvail = buffer.Count - dstOffset
-                                        let readCount = min ( int blockSize_u64 ) bytesAvail
-                                        do! allFileAccessors.[fsidx].ReadWithPseudoLimit curStr.LastFileSize fpos ( ArraySegment( buffer.Array, dstOffset, readCount ) )
-                                    | _ ->
-                                        let dstOffset = buffer.Offset + int ( ( sectorsRead + i ) * blockSize_u64 )
-                                        let bytesAvail = buffer.Count - dstOffset
-                                        let zeroCount = min ( int blockSize_u64 ) bytesAvail
-                                        Array.Clear( buffer.Array, dstOffset, zeroCount )
-                                return struct( true, sectorsRead + takeSectors )
-                        else
-                            return struct( false, 0UL )
-                    }
-                    let! _ = Functions.loopAsyncWithState loop 0UL
+                        | PayloadNotPresent
+                        | PayloadPartiallyPresent ->
+                            // Must resolve per logical block (may involve parent files)
+                            for i in 0UL .. takeSectors - 1UL do
+                                let lba = blkcnt_me.ofUInt64 ( blkcnt_me.toUInt64 argLBA + sectorsRead + i )
+                                match VhdxCommons.ResolvLBA lba allStructures with
+                                | ValueSome( struct( fsidx, fpos ) ) ->
+                                    let dstOffset = buffer.Offset + int ( ( sectorsRead + i ) * blockSize_u64 )
+                                    let bytesAvail = buffer.Count - dstOffset
+                                    let readCount = min ( int blockSize_u64 ) bytesAvail
+                                    do! allFileAccessors.[fsidx].ReadWithPseudoLimit curStr.LastFileSize fpos ( ArraySegment( buffer.Array, dstOffset, readCount ) )
+                                | _ ->
+                                    let dstOffset = buffer.Offset + int ( ( sectorsRead + i ) * blockSize_u64 )
+                                    let bytesAvail = buffer.Count - dstOffset
+                                    let zeroCount = min ( int blockSize_u64 ) bytesAvail
+                                    Array.Clear( buffer.Array, dstOffset, zeroCount )
+                        ps.Next( sectorsRead + takeSectors )
 
                     sw.Stop()
                     let d = DateTime.UtcNow
