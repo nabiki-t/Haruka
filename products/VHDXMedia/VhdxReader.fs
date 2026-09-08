@@ -237,7 +237,7 @@ type VhdxReader() =
                 raise <| VhdxMediaException( fa.FileName, sprintf "File type identifier signature mismatch. Signature=0x%016X" signature )
 
             // Creator
-            let wv = Array.zeroCreate<byte> ( 512 - 8 )
+            let wv = Array.zeroCreate<byte> ( 512 )
             do! fa.Read 8UL ( ArraySegment wv )
             let rs =
                 wv
