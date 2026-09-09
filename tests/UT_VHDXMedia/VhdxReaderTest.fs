@@ -16,6 +16,7 @@ open System.IO
 open System.Threading
 open System.Threading.Tasks
 open System.Text
+open System.Net
 
 open Xunit
 
@@ -99,4 +100,312 @@ type VhdxReaderTest_Test () =
             File.Delete fname
         }
 
+    static member m_ReadHeaders_001_Data : obj[][] = [|
+        [|
+            // No Error
+            [||]; true; true; true; 0x10000UL; 0UL;
+        |];
+        [|
+            // header0 CRC check error
+            [||]; false; true; true; 0x20000UL; 0UL;
+        |];
+        [|
+            [|
+                // incollect header0 Signature
+                ( 0, 0, [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |] );
+            |]; true; true; true; 0x20000UL; 0UL;
+        |];
+        [|
+            [|
+                // incollect header0 LogVersion
+                ( 0, 64, [| 0xFFuy; 0xFFuy; |] );
+            |]; true; true; true; 0x20000UL; 0UL;
+        |];
+        [|
+            [|
+                // incollect header0 Version
+                ( 0, 66, [| 0xFFuy; 0xFFuy; |] );
+            |]; true; true; true; 0x20000UL; 0UL;
+        |];
+        [|
+            [|
+                // header0 LogLength is zero.
+                ( 0, 68, [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; |] );
+            |]; true; true; true; 0x20000UL; 0UL;
+        |];
+        [|
+            [|
+                // header0 LogLength is not multiple of 1MB.
+                ( 0, 68, [| 0x00uy; 0x00uy; 0x08uy; 0x00uy; |] );
+            |]; true; true; true; 0x20000UL; 0UL;
+        |];
+        [|
+            [|
+                // header0 LogOffset is zero.
+                ( 0, 72, [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |] );
+            |]; true; true; true; 0x20000UL; 0UL;
+        |];
+        [|
+            [|
+                // header0 LogOffset is not multiple of 1MB.
+                ( 0, 72, [| 0x00uy; 0x00uy; 0x08uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |] );
+            |]; true; true; true; 0x20000UL; 0UL;
+        |];
+        [|
+            [|
+                // header0 LogLength is excessive.
+                ( 0, 68, [| 0x00uy; 0x00uy; 0x00uy; 0x80uy |] );
+            |]; true; true; true; 0x20000UL; 0UL;
+        |];
+        [|
+            [|
+                // header0 LogOffset is excessive.
+                ( 0, 72, [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x80uy; |] );
+            |]; true; true; true; 0x20000UL; 0UL;
+        |];
+        [|
+            [|
+                // header0 LogLength + LogOffset exceeds the file size.
+                ( 0, 68, [| 0x00uy; 0x00uy; 0x20uy; 0x80uy; |] );
+            |]; true; true; true; 0x20000UL; 0UL;
+        |];
+        [|
+            // header1 CRC check error
+            [||]; true; false; true; 0x10000UL; 0UL;
+        |];
+        [|
+            [|
+                // incollect header1 Signature
+                ( 1, 0, [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |] );
+            |]; true; true; true; 0x10000UL; 0UL;
+        |];
+        [|
+            [|
+                // incollect header1 LogVersion
+                ( 1, 64, [| 0xFFuy; 0xFFuy; |] );
+            |]; true; true; true; 0x10000UL; 0UL;
+        |];
+        [|
+            [|
+                // incollect header1 Version
+                ( 1, 66, [| 0xFFuy; 0xFFuy; |] );
+            |]; true; true; true; 0x10000UL; 0UL;
+        |];
+        [|
+            [|
+                // header1 LogLength is zero.
+                ( 1, 68, [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; |] );
+            |]; true; true; true; 0x10000UL; 0UL;
+        |];
+        [|
+            [|
+                // header1 LogLength is not multiple of 1MB.
+                ( 1, 68, [| 0x00uy; 0x00uy; 0x08uy; 0x00uy; |] );
+            |]; true; true; true; 0x10000UL; 0UL;
+        |];
+        [|
+            [|
+                // header1 LogOffset is zero.
+                ( 1, 72, [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |] );
+            |]; true; true; true; 0x10000UL; 0UL;
+        |];
+        [|
+            [|
+                // header1 LogOffset is not multiple of 1MB.
+                ( 1, 72, [| 0x00uy; 0x00uy; 0x08uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |] );
+            |]; true; true; true; 0x10000UL; 0UL;
+        |];
+        [|
+            [|
+                // header1 LogLength is excessive.
+                ( 1, 68, [| 0x00uy; 0x00uy; 0x00uy; 0x80uy |] );
+            |]; true; true; true; 0x10000UL; 0UL;
+        |];
+        [|
+            [|
+                // header1 LogOffset is excessive.
+                ( 1, 72, [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x80uy; |] );
+            |]; true; true; true; 0x10000UL; 0UL;
+        |];
+        [|
+            [|
+                // header1 LogLength + LogOffset exceeds the file size.
+                ( 1, 68, [| 0x00uy; 0x00uy; 0x20uy; 0x80uy; |] );
+            |]; true; true; true; 0x10000UL; 0UL;
+        |];
+        [|
+            [|
+                // header0 SequenceNumber
+                ( 0, 8, [| 0x01uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |] );
+                // header1 SequenceNumber
+                ( 1, 8, [| 0x02uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |] );
+            |]; true; true; true; 0x20000UL; 2UL;
+        |];
+        [|
+            [|
+                // header0 SequenceNumber
+                ( 0, 8, [| 0x05uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |] );
+                // header1 SequenceNumber
+                ( 1, 8, [| 0x04uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |] );
+            |]; true; true; true; 0x10000UL; 5UL;
+        |];
+        [|
+            // CRC of both header0 and header1 is incollect.
+            [||]; false; false; false; 0UL; 0UL;
+        |];
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_ReadHeaders_001_Data" )>]
+    member _.ReadHeaders_001 ( v : ( int32 * int32 * byte[] )[] ) ( crc0 : bool ) ( crc1 : bool ) ( success : bool ) ( extoffset : uint64 ) ( extseq : uint64 ) =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false )
+            do! fa.SetFileSize 2097152UL // 2MB
+
+            let hddata0 = [|
+                yield! ( "head" |> Encoding.UTF8.GetBytes ) // signature ( 0 .. 3 )
+                0x00uy; 0x00uy; 0x00uy; 0x00uy;             // checksum ( 4 .. 7 )
+                0x00uy; 0x00uy; 0x00uy; 0x00uy;             // SequenceNumber ( 8 .. 15 )
+                0x00uy; 0x00uy; 0x00uy; 0x00uy;
+                yield! ( Guid() ).ToByteArray();            // FileWriteGuid ( 16 .. 31 )
+                yield! ( Guid() ).ToByteArray();            // DataWriteGuid ( 32 .. 47 )
+                yield! ( Guid() ).ToByteArray();            // LogGuid ( 48 .. 63 )
+                0x00uy; 0x00uy;                             // LogVersion ( 64 .. 65 )
+                0x01uy; 0x00uy;                             // Version (1) ( 66 .. 67 )
+                0x00uy; 0x00uy; 0x10uy; 0x00uy;             // LogLength (1MB) ( 68 .. 71 )
+                0x00uy; 0x00uy; 0x10uy; 0x00uy;             // LogOffset (1MB) ( 72 .. 79 )
+                0x00uy; 0x00uy; 0x00uy; 0x00uy;
+                yield! Array.zeroCreate<byte> 4016;         // Reserved ( 80 .. 4095 )
+            |]
+            let hddata1 = Array.copy hddata0
+
+            for ( hdidx, pos, data ) in v do
+                let v = if hdidx = 0 then hddata0 else hddata1
+                Array.blit data 0 v pos data.Length
+
+            if crc0 then
+                Crc32C.Compute hddata0
+                |> ByteFunc.WriteU32LE hddata0 4u
+
+            if crc1 then
+                Crc32C.Compute hddata1
+                |> ByteFunc.WriteU32LE hddata1 4u
+
+            do! fa.Write 65536UL ( ArraySegment hddata0 )
+            do! fa.Write 131072UL ( ArraySegment hddata1 )
+
+            if success then
+                let! rih, rvh = VhdxReader.ReadHeaders fa
+                Assert.StrictEqual( extoffset, rih.Offset )
+                Assert.StrictEqual( extseq, rvh.SequenceNumber )
+            else
+                let! r =
+                    Assert.ThrowsAsync<VhdxMediaException>( fun () -> task {
+                        let! _ = VhdxReader.ReadHeaders fa
+                        ()
+                    } )
+                Assert.StartsWith( "No valid header exists", r.Message )
+
+            fa.Close()
+            File.Delete fname
+        }
+
+    [<Theory>]
+    [<InlineData( 0 ) >]
+    [<InlineData( 1 ) >]
+    member _.ReadHeaders_002 ( hdindex : int32 ) =
+        task {
+            let fname = Path.GetTempFileName()
+            let fa = FileAccessor( fname, 1u, false )
+            do! fa.SetFileSize 4194304UL // 4MB
+
+            let fileWriteGuid = Guid.NewGuid()
+            let dataWriteGuid = Guid.NewGuid()
+            let logGuid = Guid.NewGuid()
+            let hddata0 = [|
+                yield! ( "head" |> Encoding.UTF8.GetBytes ) // signature
+                0x00uy; 0x00uy; 0x00uy; 0x00uy;             // checksum
+                0x11uy; 0x22uy; 0x33uy; 0x44uy;             // SequenceNumber
+                0x55uy; 0x66uy; 0x77uy; 0x88uy;
+                yield! fileWriteGuid.ToByteArray();         // FileWriteGuid
+                yield! dataWriteGuid.ToByteArray();         // DataWriteGuid
+                yield! logGuid.ToByteArray();               // LogGuid
+                0x00uy; 0x00uy;                             // LogVersion
+                0x01uy; 0x00uy;                             // Version
+                0x00uy; 0x00uy; 0x20uy; 0x00uy;             // LogLength
+                0x00uy; 0x00uy; 0x20uy; 0x00uy;             // LogOffset
+                0x00uy; 0x00uy; 0x00uy; 0x00uy;
+                yield! Array.zeroCreate<byte> 4016;         // Reserved ( 80 .. 4095 )
+            |]
+            let hddata1 = Array.copy hddata0
+
+            if hdindex = 0 then
+                Crc32C.Compute hddata0
+                |> ByteFunc.WriteU32LE hddata0 4u
+
+            if hdindex = 1 then
+                Crc32C.Compute hddata1
+                |> ByteFunc.WriteU32LE hddata1 4u
+
+            do! fa.Write 65536UL ( ArraySegment hddata0 )
+            do! fa.Write 131072UL ( ArraySegment hddata1 )
+
+            let! rih, rvh = VhdxReader.ReadHeaders fa
+            let sigstring = rih.Signature |> int32 |> IPAddress.NetworkToHostOrder |> BitConverter.GetBytes |> Encoding.UTF8.GetString
+            Assert.StrictEqual( "head", sigstring )
+            Assert.StrictEqual( 0x8877665544332211UL, rvh.SequenceNumber )
+            Assert.StrictEqual( fileWriteGuid, rvh.FileWriteGuid )
+            Assert.StrictEqual( dataWriteGuid, rvh.DataWriteGuid )
+            Assert.StrictEqual( logGuid, rvh.LogGuid )
+            Assert.StrictEqual( 0us, rih.LogVersion )
+            Assert.StrictEqual( 1us, rih.Version )
+            Assert.StrictEqual( 2097152u, rih.LogLength )
+            Assert.StrictEqual( 2097152UL, rih.LogOffset )
+            Assert.StrictEqual( hdindex, rih.Index )
+
+            fa.Close()
+            File.Delete fname
+        }
+
+    [<Fact>]
+    member _.ReadLogDataSector_001 () =
+        let data = Array.zeroCreate<byte> 4084
+        Random.Shared.NextBytes data
+        let v = [|
+            yield! ( "data" |> Encoding.UTF8.GetBytes ) // DataSignature
+            0x11uy; 0x22uy; 0x33uy; 0x44uy;             // SequenceHigh
+            yield! data;                                // Data
+            0x55uy; 0x66uy; 0x77uy; 0x88uy;             // SequenceLow
+        |]
+        let v2 = VhdxReader.ReadLogDataSector v 0u 0x4433221188776655UL
+        Assert.True(( v2 = data ))
+
+    [<Theory>]
+    [<InlineData( 0 )>]
+    [<InlineData( 4 )>]
+    [<InlineData( 4092 )>]
+    member _.ReadLogDataSector_Fail_001 ( dpos : int32 ) =
+        let data = Array.zeroCreate<byte> 4084
+        Random.Shared.NextBytes data
+        let v = [|
+            yield! ( "data" |> Encoding.UTF8.GetBytes ) // DataSignature
+            0x11uy; 0x22uy; 0x33uy; 0x44uy;             // SequenceHigh
+            yield! data;                                // Data
+            0x55uy; 0x66uy; 0x77uy; 0x88uy;             // SequenceLow
+        |]
+        for i = dpos to dpos + 3 do
+            v.[i] <- 0xFFuy;
+        let v2 = VhdxReader.ReadLogDataSector v 0u 0x4433221188776655UL
+        Assert.Empty v2
+
+    [<Theory>]
+    [<InlineData( 4095, 0u )>]
+    [<InlineData( 8191, 4096u )>]
+    member _.ReadLogDataSector_Fail_002 ( len : int32 ) ( pos : uint32 ) =
+        let v = Array.zeroCreate<byte> len
+        Assert.ThrowsAny<Exception>( fun () ->
+            VhdxReader.ReadLogDataSector v pos 0x4433221188776655UL |> ignore
+        )
+        |> ignore
 

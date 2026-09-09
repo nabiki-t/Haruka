@@ -286,8 +286,8 @@ type VhdxReader() =
                 let c2 = immheader0.Version = 1us
                 let c3 = immheader0.LogLength &&& 0x000FFFFFu = 0u             // Multiples of 1MB
                 let c4 = immheader0.LogOffset &&& 0x00000000000FFFFFUL = 0UL   // Multiples of 1MB
-                let c5 = ( int32 immheader0.LogLength ) >= 0
-                let c6 = ( int64 immheader0.LogOffset ) >= 0L
+                let c5 = ( int32 immheader0.LogLength ) > 0
+                let c6 = ( int64 immheader0.LogOffset ) > 0L
                 let c7 = immheader0.LogOffset + ( uint64 immheader0.LogLength ) <= fileSize
                 let c8 = immheader0.LogOffset + ( uint64 immheader0.LogLength ) <= 0x0000400000000000UL   // 64TB or less
                 c0 && c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8
@@ -326,7 +326,10 @@ type VhdxReader() =
 
             // Determine which headers to use
             if header0Enable && header1Enable then
-                return ( immheader0, verheader0 )
+                if verheader0.SequenceNumber >= verheader1.SequenceNumber then
+                    return ( immheader0, verheader0 )
+                else
+                    return ( immheader1, verheader1 )
             elif header0Enable && not header1Enable then
                 return ( immheader0, verheader0 )
             elif not header0Enable && header1Enable then
@@ -499,7 +502,7 @@ type VhdxReader() =
             // Retrieve all log entry data
             let logEntryData = Array.zeroCreate<byte>( int32 entryLength )
             for i = 0 to int32 ( entryLength / 4096u ) - 1 do
-                let srcidx = ( int32 wpos + i * 4096 ) % 0x000FFFFF
+                let srcidx = ( int32 wpos + i * 4096 ) % logData.Length
                 Array.blit logData srcidx logEntryData ( i * 4096 ) 4096
 
             /// Verify whether the checksum is correct.
