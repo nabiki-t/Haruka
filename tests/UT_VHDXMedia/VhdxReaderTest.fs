@@ -404,8 +404,142 @@ type VhdxReaderTest_Test () =
     [<InlineData( 8191, 4096u )>]
     member _.ReadLogDataSector_Fail_002 ( len : int32 ) ( pos : uint32 ) =
         let v = Array.zeroCreate<byte> len
-        Assert.ThrowsAny<Exception>( fun () ->
-            VhdxReader.ReadLogDataSector v pos 0x4433221188776655UL |> ignore
-        )
-        |> ignore
+        Array.blit ( "data" |> Encoding.UTF8.GetBytes ) 0 v 0 4
+        let r = VhdxReader.ReadLogDataSector v pos 0UL
+        Assert.Empty r
 
+    [<Theory>]
+    [<InlineData( 0 )>]
+    [<InlineData( 16 )>]
+    member _.ReadLogDescriptor_ZeroDescriptor_001 ( dummyDataLen : int32 ) =
+        let v = [|
+            yield! Array.zeroCreate<byte> dummyDataLen
+            yield! ( "zero" |> Encoding.UTF8.GetBytes ) // ZeroSignature
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;             // Reserved
+            0x00uy; 0x10uy; 0x66uy; 0x55uy;             // ZeroLength
+            0x44uy; 0x33uy; 0x22uy; 0x11uy;
+            0x00uy; 0x10uy; 0xDDuy; 0xCCuy;             // FileOffset
+            0xBBuy; 0xAAuy; 0x99uy; 0x88uy;
+            0x88uy; 0x77uy; 0x66uy; 0x55uy;             // SequenceNumber
+            0x44uy; 0x33uy; 0x22uy; 0x11uy;
+        |]
+        match VhdxReader.ReadLogDescriptor v ( uint32 dummyDataLen ) 0u 0x1122334455667788UL with
+        | Some( LogDescriptor.Zero( x ) ) ->
+            let signature = x.ZeroSignature |> int32 |> IPAddress.NetworkToHostOrder |> BitConverter.GetBytes |> Encoding.UTF8.GetString
+            Assert.StrictEqual( "zero", signature )
+            Assert.StrictEqual( 0x1122334455661000UL, x.ZeroLength )
+            Assert.StrictEqual( 0x8899AABBCCDD1000UL, x.FileOffset )
+            Assert.StrictEqual( 0x1122334455667788UL, x.SequenceNumber )
+        | _ ->
+            Assert.Fail __LINE__
+
+    static member m_ReadLogDescriptor_ZeroDescriptor_Fail_001_Data : obj[][] = [|
+        [| 24; [| 0xFFuy; |] |];  // ZeroLength is not multiple of 4KB
+        [| 32; [| 0xFFuy; |] |];  // FileOffset is not multiple of 4KB
+        [| 40; [| 0xFFuy; |] |];  // SequenceNumber Unmatch
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_ReadLogDescriptor_ZeroDescriptor_Fail_001_Data" )>]
+    member _.ReadLogDescriptor_ZeroDescriptor_Fail_001 ( pos : int32 ) ( dd : byte[] ) =
+        let v = [|
+            yield! Array.zeroCreate<byte> 16
+            yield! ( "zero" |> Encoding.UTF8.GetBytes ) // ZeroSignature
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;             // Reserved
+            0x00uy; 0x10uy; 0x66uy; 0x55uy;             // ZeroLength
+            0x44uy; 0x33uy; 0x22uy; 0x11uy;
+            0x00uy; 0x10uy; 0xDDuy; 0xCCuy;             // FileOffset
+            0xBBuy; 0xAAuy; 0x99uy; 0x88uy;
+            0x88uy; 0x77uy; 0x66uy; 0x55uy;             // SequenceNumber
+            0x44uy; 0x33uy; 0x22uy; 0x11uy;
+        |]
+        Array.blit dd 0 v pos dd.Length
+        let r = VhdxReader.ReadLogDescriptor v 16u 0u 0x1122334455667788UL
+        Assert.StrictEqual( None, r )
+
+    [<Theory>]
+    [<InlineData( 0 )>]
+    [<InlineData( 16 )>]
+    member _.ReadLogDescriptor_DataDescriptor_001 ( dummyDataLen : int32 ) =
+        let v = [|
+            yield! Array.zeroCreate<byte> dummyDataLen
+            yield! ( "desc" |> Encoding.UTF8.GetBytes ) // DataSignature
+            0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy;             // TrailingBytes
+            0x11uy; 0x22uy; 0x33uy; 0x44uy;             // LeadingBytes
+            0x55uy; 0x66uy; 0x77uy; 0x88uy;
+            0x00uy; 0x10uy; 0xDDuy; 0xCCuy;             // FileOffset
+            0xBBuy; 0xAAuy; 0x99uy; 0x88uy;
+            0x88uy; 0x77uy; 0x66uy; 0x55uy;             // SequenceNumber
+            0x44uy; 0x33uy; 0x22uy; 0x11uy;
+        |]
+        match VhdxReader.ReadLogDescriptor v ( uint32 dummyDataLen ) 99u 0x1122334455667788UL with
+        | Some( LogDescriptor.Data( x ) ) ->
+            let signature = x.DataSignature |> int32 |> IPAddress.NetworkToHostOrder |> BitConverter.GetBytes |> Encoding.UTF8.GetString
+            Assert.StrictEqual( "desc", signature )
+            Assert.True(( [| 0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy; |] = x.TrailingBytes ))
+            Assert.True(( [| 0x11uy; 0x22uy; 0x33uy; 0x44uy; 0x55uy; 0x66uy; 0x77uy; 0x88uy; |] = x.LeadingBytes ))
+            Assert.StrictEqual( 0x8899AABBCCDD1000UL, x.FileOffset )
+            Assert.StrictEqual( 0x1122334455667788UL, x.SequenceNumber )
+        | _ ->
+            Assert.Fail __LINE__
+
+    static member m_ReadLogDescriptor_DataDescriptor_Fail_001_Data : obj[][] = [|
+        [| 32; [| 0xFFuy; |] |];  // FileOffset is not multiple of 4KB
+        [| 40; [| 0xFFuy; |] |];  // SequenceNumber Unmatch
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_ReadLogDescriptor_DataDescriptor_Fail_001_Data" )>]
+    member _.ReadLogDescriptor_DataDescriptor_Fail_001 ( pos : int32 ) ( dd : byte[] ) =
+        let v = [|
+            yield! Array.zeroCreate<byte> 16
+            yield! ( "desc" |> Encoding.UTF8.GetBytes ) // DataSignature
+            0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy;             // TrailingBytes
+            0x11uy; 0x22uy; 0x33uy; 0x44uy;             // LeadingBytes
+            0x55uy; 0x66uy; 0x77uy; 0x88uy;
+            0x00uy; 0x10uy; 0xDDuy; 0xCCuy;             // FileOffset
+            0xBBuy; 0xAAuy; 0x99uy; 0x88uy;
+            0x88uy; 0x77uy; 0x66uy; 0x55uy;             // SequenceNumber
+            0x44uy; 0x33uy; 0x22uy; 0x11uy;
+        |]
+        Array.blit dd 0 v pos dd.Length
+        let r = VhdxReader.ReadLogDescriptor v 16u 99u 0x1122334455667788UL
+        Assert.StrictEqual( None, r )
+
+    [<Fact>]
+    member _.ReadLogDescriptor_Fail_001 () =
+        let v = Array.zeroCreate<byte> 32
+        let r = VhdxReader.ReadLogDescriptor v 0u 0u 0UL
+        Assert.StrictEqual( None, r )
+
+    [<Theory>]
+    [<InlineData( 31, 0u )>]
+    [<InlineData( 32, 1u )>]
+    [<InlineData( 32, 0x80000000u )>]
+    [<InlineData( 32, 0xFFFFFFFFu )>]
+    member _.ReadLogDescriptor_Fail_002 ( dataLen : int32 ) ( offset : uint32 ) =
+        let v1 = Array.zeroCreate<byte> dataLen
+        let v2 = [|
+            yield! ( "desc" |> Encoding.UTF8.GetBytes ) // DataSignature
+            0xAAuy; 0xBBuy; 0xCCuy; 0xDDuy;             // TrailingBytes
+            0x11uy; 0x22uy; 0x33uy; 0x44uy;             // LeadingBytes
+            0x55uy; 0x66uy; 0x77uy; 0x88uy;
+            0x00uy; 0x10uy; 0xDDuy; 0xCCuy;             // FileOffset
+            0xBBuy; 0xAAuy; 0x99uy; 0x88uy;
+            0x88uy; 0x77uy; 0x66uy; 0x55uy;             // SequenceNumber
+            0x44uy; 0x33uy; 0x22uy; 0x11uy;
+        |]
+        Array.blit v2 0 v1 0 dataLen
+        let r = VhdxReader.ReadLogDescriptor v1 offset 0u 0x1122334455667788UL
+        Assert.StrictEqual( None, r )
+
+    [<Theory>]
+    [<InlineData( 0, 0u, "The log data length must not be empty" )>]
+    [<InlineData( 1048575, 0u, "The log data length must be in units of 1MB" )>]
+    [<InlineData( 1048576, 4095u, "The log sequence start position msut be in 4KB units" )>]
+    member _.ReadLogEntry_Fail_001 ( dataLen : int32 ) ( offset : uint32 ) ( exmsg : string ) =
+        let v1 = Array.zeroCreate<byte> dataLen
+        let r = Assert.Throws<VhdxMediaException>( fun () ->
+            VhdxReader.ReadLogEntry v1 offset ( Guid() ) |> ignore
+        )
+        Assert.StartsWith( exmsg, r.Message )

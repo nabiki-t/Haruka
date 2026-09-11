@@ -355,17 +355,20 @@ type VhdxReader() =
     ///  If there is an error in the data, an array of length 0 is returned.
     /// </returns>
     static member ReadLogDataSector ( data : byte[] ) ( offset : uint32 ) ( seqNum : uint64 ) : byte[] =
-        let signeture = ByteFunc.ReadU32BE data offset
-        let sequenceHigh = ByteFunc.ReadU32LE data ( offset + 4u )
-        let sequenceLow = ByteFunc.ReadU32LE data ( offset + 4092u )
-
-        let signeture_Check = signeture = 0x64617461u
-        let sequenceHigh_Check = sequenceHigh = uint32 ( seqNum >>> 32 )
-        let sequenceLow_Check = sequenceLow = uint32 ( seqNum &&& 0xFFFFFFFFUL )
-        if not signeture_Check || not sequenceHigh_Check || not sequenceLow_Check then
-            [||]
+        if offset >= 0x80000000u || data.Length - ( int32 offset ) < 4096 then
+            Array.empty
         else
-            data.[ int32 offset + 8 .. int32 offset + 4091 ]
+            let signeture = ByteFunc.ReadU32BE data offset
+            let sequenceHigh = ByteFunc.ReadU32LE data ( offset + 4u )
+            let sequenceLow = ByteFunc.ReadU32LE data ( offset + 4092u )
+
+            let signeture_Check = signeture = 0x64617461u
+            let sequenceHigh_Check = sequenceHigh = uint32 ( seqNum >>> 32 )
+            let sequenceLow_Check = sequenceLow = uint32 ( seqNum &&& 0xFFFFFFFFUL )
+            if not signeture_Check || not sequenceHigh_Check || not sequenceLow_Check then
+                Array.empty
+            else
+                data.[ int32 offset + 8 .. int32 offset + 4091 ]
 
     /// <summary>
     ///  Read log descriptor.
@@ -387,53 +390,56 @@ type VhdxReader() =
     ///  If there is an error in the data, None is returned.
     /// </returns>
     static member ReadLogDescriptor ( data : byte[] ) ( offset : uint32 ) ( dataDescCount : uint32 ) ( seqNum : uint64 ) : LogDescriptor option =
-        let signeture = ByteFunc.ReadU32BE data offset
-
-         // Zero descriptor
-        if signeture = 0x7A65726Fu then
-            let zeroLength = ByteFunc.ReadU64LE data ( offset + 8u )
-            let fileOffset = ByteFunc.ReadU64LE data ( offset + 16u )
-            let sequenceNumber = ByteFunc.ReadU64LE data ( offset + 24u )
-
-            let zeroLength_Check = ( zeroLength &&& 0x0000000000000FFFUL ) = 0UL
-            let fileOffset_Check = ( fileOffset &&& 0x0000000000000FFFUL ) = 0UL
-            let sequenceNumber_Check = seqNum = sequenceNumber
-            if zeroLength_Check && fileOffset_Check && sequenceNumber_Check then
-                {
-                    ZeroSignature = signeture;
-                    ZeroLength = zeroLength;
-                    FileOffset = fileOffset;
-                    SequenceNumber = sequenceNumber;
-                }
-                |> LogDescriptor.Zero
-                |> Some
-            else
-                None
-
-        // Data descriptor
-        elif signeture = 0x64657363u then
-            let trailingBytes = data.[ int32 offset + 4 .. int32 offset + 7 ]
-            let leadingBytes = data.[ int32 offset + 8 .. int32 offset + 15 ]
-            let fileOffset = ByteFunc.ReadU64LE data ( offset + 16u )
-            let sequenceNumber = ByteFunc.ReadU64LE data ( offset + 24u )
-
-            let fileOffset_Check = ( fileOffset &&& 0x0000000000000FFFUL ) = 0UL
-            let sequenceNumber_Check = seqNum = sequenceNumber
-            if fileOffset_Check && sequenceNumber_Check then
-                {
-                    DataSignature = signeture;
-                    TrailingBytes = trailingBytes;
-                    LeadingBytes = leadingBytes;
-                    FileOffset = fileOffset;
-                    SequenceNumber = sequenceNumber;
-                    ddIndex = dataDescCount;
-                }
-                |> LogDescriptor.Data
-                |> Some
-            else
-                None
-        else
+        if offset >= 0x80000000u || data.Length - ( int32 offset ) < 32 then
             None
+        else
+            let signeture = ByteFunc.ReadU32BE data offset
+
+             // Zero descriptor
+            if signeture = 0x7A65726Fu then
+                let zeroLength = ByteFunc.ReadU64LE data ( offset + 8u )
+                let fileOffset = ByteFunc.ReadU64LE data ( offset + 16u )
+                let sequenceNumber = ByteFunc.ReadU64LE data ( offset + 24u )
+
+                let zeroLength_Check = ( zeroLength &&& 0x0000000000000FFFUL ) = 0UL
+                let fileOffset_Check = ( fileOffset &&& 0x0000000000000FFFUL ) = 0UL
+                let sequenceNumber_Check = seqNum = sequenceNumber
+                if zeroLength_Check && fileOffset_Check && sequenceNumber_Check then
+                    {
+                        ZeroSignature = signeture;
+                        ZeroLength = zeroLength;
+                        FileOffset = fileOffset;
+                        SequenceNumber = sequenceNumber;
+                    }
+                    |> LogDescriptor.Zero
+                    |> Some
+                else
+                    None
+
+            // Data descriptor
+            elif signeture = 0x64657363u then
+                let trailingBytes = data.[ int32 offset + 4 .. int32 offset + 7 ]
+                let leadingBytes = data.[ int32 offset + 8 .. int32 offset + 15 ]
+                let fileOffset = ByteFunc.ReadU64LE data ( offset + 16u )
+                let sequenceNumber = ByteFunc.ReadU64LE data ( offset + 24u )
+
+                let fileOffset_Check = ( fileOffset &&& 0x0000000000000FFFUL ) = 0UL
+                let sequenceNumber_Check = seqNum = sequenceNumber
+                if fileOffset_Check && sequenceNumber_Check then
+                    {
+                        DataSignature = signeture;
+                        TrailingBytes = trailingBytes;
+                        LeadingBytes = leadingBytes;
+                        FileOffset = fileOffset;
+                        SequenceNumber = sequenceNumber;
+                        ddIndex = dataDescCount;
+                    }
+                    |> LogDescriptor.Data
+                    |> Some
+                else
+                    None
+            else
+                None
 
     /// <summary>
     ///  Read log entry
@@ -454,6 +460,8 @@ type VhdxReader() =
 
         // The log data length should be in units of 1MB,
         // and the starting position should be in units of 4KB.
+        if logData.Length <= 0 then
+            raise <| VhdxMediaException( sprintf "The log data length must not be empty." )
         if ( logData.Length &&& 0x000FFFFF ) <> 0 then
             raise <| VhdxMediaException( sprintf "The log data length must be in units of 1MB. Length=%d" logData.Length )
         if ( pos &&& 0x00000FFFu ) <> 0u then
