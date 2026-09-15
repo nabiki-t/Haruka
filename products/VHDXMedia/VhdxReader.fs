@@ -561,7 +561,7 @@ type VhdxReader() =
                                 Checksum = checksum;
                                 EntryLength = uint32 entryLength;
                                 Tail = uint32 tail;
-                                SequenceNumber = uint32 sequenceNumber;
+                                SequenceNumber = sequenceNumber;
                                 DescriptorCount = uint32 descriptorCount;
                                 LogGuid = logGuid;
                                 FlushedFileOffset = flushedFileOffset;
@@ -589,7 +589,7 @@ type VhdxReader() =
             | Some x ->
                 match acc with
                 | h :: _ ->
-                    if h.SequenceNumber + 1u = x.SequenceNumber then
+                    if h.SequenceNumber + 1UL = x.SequenceNumber then
                         getCurrentSeq ( pos + x.EntryLength ) ( x :: acc )
                     else
                         acc |> List.rev
@@ -616,7 +616,7 @@ type VhdxReader() =
                     // The current entry appears to be correct.
                     let asSecNum =
                         if activeSeq.Length = 0 then
-                            0u
+                            0UL
                         else
                             activeSeq.[0].SequenceNumber
                     let nas =

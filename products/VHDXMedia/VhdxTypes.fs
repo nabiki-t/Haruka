@@ -154,7 +154,7 @@ type LogEntry = {
     /// Tail
     Tail : uint32;
     /// Sequence number
-    SequenceNumber : uint32;
+    SequenceNumber : uint64;
     /// Number of descriptors in this log entry.
     DescriptorCount : uint32;
     /// Log GUID

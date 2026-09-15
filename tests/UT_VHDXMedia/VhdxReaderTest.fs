@@ -25,10 +25,120 @@ open Haruka.Commons
 open Haruka.Media.VhdxUtil
 open Haruka.Test
 
+
+//=============================================================================
+// Type definitions
+
+type TestLogEntry =
+    | Zero of ( uint64 * uint64 )
+    | Data of byte[] * uint64   // The byte array must be 4KB
+
 //=============================================================================
 // Class implementation
 
 type VhdxReaderTest_Test () =
+
+    let logEntryHeader
+        ( entryLength : uint32 )
+        ( tail : uint32 )
+        ( sequenceNumber : uint64 )
+        ( descriptorCount : uint32 )
+        ( logGuid : Guid )
+        ( flushedFileOffset : uint64 )
+        ( lastFileOffset : uint64 ) =
+        [|
+            yield! ( "loge" |> Encoding.UTF8.GetBytes )     // ZeroSignature
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;                 // checksum
+            yield! BitConverter.GetBytes entryLength        // EntryLength
+            yield! BitConverter.GetBytes tail               // tail
+            yield! BitConverter.GetBytes sequenceNumber     // SequenceNumber
+            yield! BitConverter.GetBytes descriptorCount    // DescriptorCount
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;                 // Reserved
+            yield! logGuid.ToByteArray()                    // LogGuid
+            yield! BitConverter.GetBytes flushedFileOffset  // FlushedFileOffset
+            yield! BitConverter.GetBytes lastFileOffset     // lastFileOffset
+        |]
+
+    let zeroDiscriptor
+        ( zeroLength : uint64 )
+        ( fileOffset : uint64 )
+        ( sequenceNumber : uint64 ) =
+        [|
+            yield! ( "zero" |> Encoding.UTF8.GetBytes )     // Signature
+            0x00uy; 0x00uy; 0x00uy; 0x00uy;                 // Reserved
+            yield! BitConverter.GetBytes zeroLength         // ZeroLength
+            yield! BitConverter.GetBytes fileOffset         // FileOffset
+            yield! BitConverter.GetBytes sequenceNumber     // SequenceNumber
+        |]
+
+    let dataDiscriptor
+        ( trailingBytes : byte[] )
+        ( leadingBytes : byte[] )
+        ( fileOffset : uint64 )
+        ( sequenceNumber : uint64 ) =
+        [|
+            yield! ( "desc" |> Encoding.UTF8.GetBytes )     // DataSignature
+            yield! trailingBytes                            // TrailingBytes
+            yield! leadingBytes                             // LeadingBytes
+            yield! BitConverter.GetBytes fileOffset         // FileOffset
+            yield! BitConverter.GetBytes sequenceNumber     // SequenceNumber
+        |]
+
+    let genLogData
+        ( logLength : int32 )
+        ( startPos : int32 )    // 4KB unit
+        ( logEntries : TestLogEntry[][] )
+        ( logGuid : Guid )
+        ( sequenceNumber : uint64 )
+        ( flushedFileOffset : uint64 )
+        ( lastFileOffset : uint64 ) =
+
+        let v = [|
+            for i = 0 to logEntries.Length - 1 do
+                let logents = logEntries.[i]
+                let entryBytes = [|
+                    let dataCount = Array.fold ( fun cnt j -> cnt + ( match j with | Data _ -> 1 | _ -> 0 ) ) 0 logents
+                    let headerlength = Functions.AddPaddingLengthInt32 ( 64 + logents.Length * 32 ) 4096
+                    let entryLength = headerlength + dataCount * 4096
+                    // log entry header
+                    yield! logEntryHeader ( uint32 entryLength ) ( uint32 startPos ) ( sequenceNumber + uint64 i ) ( uint32 logents.Length ) logGuid flushedFileOffset lastFileOffset
+                    // descriptor
+                    for itr2 in logents do
+                        match itr2 with
+                        | Zero( x, y ) ->
+                            yield! zeroDiscriptor x y sequenceNumber
+                        | Data( x, y ) ->
+                            let trailingBytes = if x.Length > 0 then x.[ 4092 .. 4095 ] else Array.zeroCreate<byte> 4
+                            let leadingBytes = if x.Length > 0 then x.[ 0 .. 7 ] else Array.zeroCreate<byte> 8
+                            yield! dataDiscriptor trailingBytes leadingBytes y sequenceNumber
+                    // padding
+                    let padlength = headerlength - ( 64 + logents.Length * 32 )
+                    yield! Array.zeroCreate<byte> padlength
+                    // data sector
+                    for itr2 in logents do
+                        match itr2 with
+                        | Data( x, y ) ->
+                            yield! ( "data" |> Encoding.UTF8.GetBytes )     // DataSignature
+                            yield! BitConverter.GetBytes ( uint32 ( sequenceNumber >>> 32 ) )   // SequenceHigh
+                            yield! if x.Length > 0 then x.[ 8 .. 4091 ] else Array.zeroCreate<byte> 4084
+                            yield! BitConverter.GetBytes ( uint32 sequenceNumber )   // SequenceLow
+                        | _ ->
+                            ()
+                |]
+                let crc = Crc32C.Compute entryBytes
+                ByteFunc.WriteU32LE entryBytes 4u crc
+                yield! entryBytes
+        |]
+        let logBuffer = Array.zeroCreate<byte> logLength
+        let bufferOffset = startPos % logLength
+        if bufferOffset + v.Length <= logLength then
+            Array.blit v 0 logBuffer bufferOffset v.Length
+        else
+            let firstChunkSize = logLength - bufferOffset
+            let secondChunkSize = v.Length - firstChunkSize
+            Array.blit v 0 logBuffer bufferOffset firstChunkSize
+            Array.blit v firstChunkSize logBuffer 0 secondChunkSize
+        logBuffer
 
     ///////////////////////////////////////////////////////////////////////////
     // Test cases
@@ -543,3 +653,48 @@ type VhdxReaderTest_Test () =
             VhdxReader.ReadLogEntry v1 offset ( Guid() ) |> ignore
         )
         Assert.StartsWith( exmsg, r.Message )
+
+    [<Fact>]
+    member _.ReadLogEntry_001 () =
+        let entry = [|
+            [| Data( [||], 0UL ); Data( [||], 4096UL ); Data( [||], 8192UL ); Zero( 4096UL, 12288UL ) |]
+            [| Data( [||], 12288UL ); Data( [||], 16384UL ); |]
+            [| Data( [||], 20480UL ); |]
+        |]
+        let logGuid = Guid.NewGuid()
+        let logData = genLogData 1048576 0 entry logGuid 99UL 2097152UL 3145728UL
+        let r = VhdxReader.ReadLogEntry logData 0u logGuid
+        Assert.True( r.IsSome )
+        let signature = r.Value.Signature |> int32 |> IPAddress.NetworkToHostOrder |> BitConverter.GetBytes |> Encoding.UTF8.GetString
+        Assert.StrictEqual( "loge", signature )
+        Assert.StrictEqual( 4u * 4u * 1024u, r.Value.EntryLength )
+        Assert.StrictEqual( 0u, r.Value.Tail )
+        Assert.StrictEqual( 99UL, r.Value.SequenceNumber )
+        Assert.StrictEqual( 4u, r.Value.DescriptorCount )
+        Assert.StrictEqual( logGuid, r.Value.LogGuid )
+        Assert.StrictEqual( 2097152UL, r.Value.FlushedFileOffset )
+        Assert.StrictEqual( 3145728UL, r.Value.LastFileOffset )
+        Assert.StrictEqual( 4, r.Value.Descriptors.Length )
+        for i = 0 to 2 do
+            match r.Value.Descriptors.[i] with
+            | LogDescriptor.Data( x ) ->
+                let signature = x.DataSignature |> int32 |> IPAddress.NetworkToHostOrder |> BitConverter.GetBytes |> Encoding.UTF8.GetString
+                Assert.StrictEqual( "desc", signature )
+                Assert.True(( [| 0uy; 0uy; 0uy; 0uy; |] = x.TrailingBytes ))
+                Assert.True(( [| 0uy; 0uy; 0uy; 0uy; 0uy; 0uy; 0uy; 0uy; |] = x.LeadingBytes ))
+                Assert.True(( 4096UL * uint64 i = x.FileOffset ))
+                Assert.True(( 99UL = x.SequenceNumber ))
+                Assert.True(( uint32 i = x.ddIndex ))
+            | _ ->
+                Assert.Fail __LINE__
+
+        match r.Value.Descriptors.[3] with
+        | LogDescriptor.Zero( x ) ->
+            let signature = x.ZeroSignature |> int32 |> IPAddress.NetworkToHostOrder |> BitConverter.GetBytes |> Encoding.UTF8.GetString
+            Assert.StrictEqual( "zero", signature )
+            Assert.True(( 4096UL = x.ZeroLength ))
+            Assert.True(( 12288UL = x.FileOffset ))
+            Assert.True(( 99UL = x.SequenceNumber ))
+        | _ ->
+            Assert.Fail __LINE__
+
