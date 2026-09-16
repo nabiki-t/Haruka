@@ -29,9 +29,15 @@ open Haruka.Test
 //=============================================================================
 // Type definitions
 
-type TestLogEntry =
-    | Zero of ( uint64 * uint64 )
-    | Data of byte[] * uint64   // The byte array must be 4KB
+type TestLogDesc =
+    | Zero of ( uint64 * uint64 )   // ZeroLength and FileOffset
+    | Data of byte[] * uint64       // byte data and FileOffset. The byte data must be 4KB length.
+
+type TestLogEntry = {
+    PatchPosition : int;
+    PatchData : byte[];
+    Descriptor : TestLogDesc[];
+}
 
 //=============================================================================
 // Class implementation
@@ -87,7 +93,7 @@ type VhdxReaderTest_Test () =
     let genLogData
         ( logLength : int32 )
         ( startPos : int32 )    // 4KB unit
-        ( logEntries : TestLogEntry[][] )
+        ( logEntries : TestLogEntry[] )
         ( logGuid : Guid )
         ( sequenceNumber : uint64 )
         ( flushedFileOffset : uint64 )
@@ -95,7 +101,7 @@ type VhdxReaderTest_Test () =
 
         let v = [|
             for i = 0 to logEntries.Length - 1 do
-                let logents = logEntries.[i]
+                let logents = logEntries.[i].Descriptor
                 let entryBytes = [|
                     let dataCount = Array.fold ( fun cnt j -> cnt + ( match j with | Data _ -> 1 | _ -> 0 ) ) 0 logents
                     let headerlength = Functions.AddPaddingLengthInt32 ( 64 + logents.Length * 32 ) 4096
@@ -125,6 +131,7 @@ type VhdxReaderTest_Test () =
                         | _ ->
                             ()
                 |]
+                Array.blit logEntries.[i].PatchData 0 entryBytes logEntries.[i].PatchPosition logEntries.[i].PatchData.Length
                 let crc = Crc32C.Compute entryBytes
                 ByteFunc.WriteU32LE entryBytes 4u crc
                 yield! entryBytes
@@ -654,15 +661,56 @@ type VhdxReaderTest_Test () =
         )
         Assert.StartsWith( exmsg, r.Message )
 
+    static member m_ReadLogEntry_Fail_002_Data : obj[][] = [|
+        [|  0; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]; 0; [||] |];   // Signature
+        [|  0; [||]; 4; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |] |];   // Checksum
+        [|  8; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]; 0; [||] |];   // EntryLength
+        [| 12; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]; 0; [||] |];   // Tail
+        [| 16; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]; 0; [||] |];   // SequenceNumber
+        [| 24; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]; 0; [||] |];   // DescriptorCount
+        [| 32; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]; 0; [||] |];   // LogGuid
+        [| 48; [| 0x00uy; 0x00uy; 0x08uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |]; 0; [||] |];   // FlushedFileOffset
+        [| 56; [| 0x00uy; 0x00uy; 0x08uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |]; 0; [||] |];   // LastFileOffset
+    |]
+
+    [<Theory>]
+    [<MemberData( "m_ReadLogEntry_Fail_002_Data" )>]
+    member _.ReadLogEntry_Fail_002 ( patch1Pos : int ) ( patch1Data : byte[] ) ( patch2Pos : int ) ( patch2Data : byte[] ) =
+        let entry = [|
+            {
+                PatchPosition = patch1Pos;
+                PatchData = patch1Data;
+                Descriptor = [| Data( [||], 0UL ); |];
+            };
+        |]
+        let logGuid = Guid()
+        let logData = genLogData 1048576 0 entry logGuid 99UL 2097152UL 3145728UL
+        Array.blit patch2Data 0 logData patch2Pos patch2Data.Length
+        let r = VhdxReader.ReadLogEntry logData 0u logGuid
+        Assert.True( r.IsNone )
+
+
     [<Fact>]
     member _.ReadLogEntry_001 () =
         let entry = [|
-            [| Data( [||], 0UL ); Data( [||], 4096UL ); Data( [||], 8192UL ); Zero( 4096UL, 12288UL ) |]
-            [| Data( [||], 12288UL ); Data( [||], 16384UL ); |]
-            [| Data( [||], 20480UL ); |]
+            {
+                PatchPosition = 0;
+                PatchData = Array.Empty();
+                Descriptor = [| Data( [||], 0UL ); Data( [||], 4096UL ); Data( [||], 8192UL ); Zero( 4096UL, 12288UL ) |];
+            };
+            {
+                PatchPosition = 0;
+                PatchData = Array.Empty();
+                Descriptor = [| Data( [||], 12288UL ); Data( [||], 16384UL ); |];
+            };
+            {
+                PatchPosition = 0;
+                PatchData = Array.Empty();
+                Descriptor = [| Data( [||], 20480UL ); |];
+            };
         |]
         let logGuid = Guid.NewGuid()
-        let logData = genLogData 1048576 0 entry logGuid 99UL 2097152UL 3145728UL
+        let logData = genLogData 1048576 0 entry logGuid 99UL 2097152UL 3145728UL 
         let r = VhdxReader.ReadLogEntry logData 0u logGuid
         Assert.True( r.IsSome )
         let signature = r.Value.Signature |> int32 |> IPAddress.NetworkToHostOrder |> BitConverter.GetBytes |> Encoding.UTF8.GetString
