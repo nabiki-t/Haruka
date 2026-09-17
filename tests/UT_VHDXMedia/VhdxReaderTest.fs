@@ -662,15 +662,40 @@ type VhdxReaderTest_Test () =
         Assert.StartsWith( exmsg, r.Message )
 
     static member m_ReadLogEntry_Fail_002_Data : obj[][] = [|
-        [|  0; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]; 0; [||] |];   // Signature
-        [|  0; [||]; 4; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |] |];   // Checksum
-        [|  8; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]; 0; [||] |];   // EntryLength
-        [| 12; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]; 0; [||] |];   // Tail
-        [| 16; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]; 0; [||] |];   // SequenceNumber
-        [| 24; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]; 0; [||] |];   // DescriptorCount
-        [| 32; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]; 0; [||] |];   // LogGuid
-        [| 48; [| 0x00uy; 0x00uy; 0x08uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |]; 0; [||] |];   // FlushedFileOffset
-        [| 56; [| 0x00uy; 0x00uy; 0x08uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |]; 0; [||] |];   // LastFileOffset
+        [|    0; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]; 0; [||] |];   // Signature
+        [|    0; [||]; 4; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |] |];   // Checksum
+        [|    8; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]; 0; [||] |];   // EntryLength = -1
+        [|    8; [| 0x00uy; 0x00uy; 0x00uy; 0x80uy; |]; 0; [||] |];   // EntryLength = -2147483648
+        [|    8; [| 0x00uy; 0x00uy; 0x00uy; 0x00uy; |]; 0; [||] |];   // EntryLength = 0
+        [|    8; [| 0x00uy; 0x10uy; 0x10uy; 0x00uy; |]; 0; [||] |];   // EntryLength exceeds the log length.
+        [|    8; [| 0x00uy; 0x08uy; 0x00uy; 0x00uy; |]; 0; [||] |];   // EntryLength is not a multiple of 4K.
+        [|   12; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]; 0; [||] |];   // Tail = -1
+        [|   12; [| 0x00uy; 0x00uy; 0x00uy; 0x80uy; |]; 0; [||] |];   // Tail = -2147483648
+        [|   12; [| 0x00uy; 0x10uy; 0x10uy; 0x00uy; |]; 0; [||] |];   // Tail exceeds the log length.
+        [|   12; [| 0x00uy; 0x08uy; 0x00uy; 0x00uy; |]; 0; [||] |];   // Tail is not a multiple of 4K.
+        [|   16; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]; 0; [||] |];   // SequenceNumber
+        [|   24; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]; 0; [||] |];   // DescriptorCount = -1
+        [|   24; [| 0x00uy; 0x00uy; 0x00uy; 0x80uy; |]; 0; [||] |];   // DescriptorCount = -2147483648
+        [|   24; [| 0xFFuy; 0x00uy; 0x00uy; 0x00uy; |]; 0; [||] |];   // DescriptorCount exceeds the EntryLength
+        [|   32; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]; 0; [||] |];   // LogGuid
+        [|   48; [| 0x00uy; 0x00uy; 0x08uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |]; 0; [||] |];   // FlushedFileOffset is not a multiple of 1M.
+        [|   48; [| 0x00uy; 0x00uy; 0x10uy; 0x00uy; 0x00uy; 0x40uy; 0x00uy; 0x00uy; |]; 0; [||] |];   // FlushedFileOffset exceeds the EntryLength 64T.
+        [|   56; [| 0x00uy; 0x00uy; 0x08uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; 0x00uy; |]; 0; [||] |];   // LastFileOffset is not a multiple of 1M.
+        [|   56; [| 0x00uy; 0x00uy; 0x10uy; 0x00uy; 0x00uy; 0x40uy; 0x00uy; 0x00uy; |]; 0; [||] |];   // LastFileOffset exceeds the EntryLength 64T.
+        [|   64; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]; 0; [||] |];   // DataSignature
+        // The number of DataSignatures differs from the number of DataSectors.
+        [|   64; [|
+                    0x7Auy; 0x65uy; 0x72uy; 0x6Fuy; // zero
+                    0x00uy; 0x00uy; 0x00uy; 0x00uy; // Reserved
+                    0x00uy; 0x10uy; 0x00uy; 0x00uy; // ZeroLength
+                    0x00uy; 0x00uy; 0x00uy; 0x00uy;
+                    0x00uy; 0x00uy; 0x00uy; 0x00uy; // FileOffset
+                    0x00uy; 0x00uy; 0x00uy; 0x00uy;
+                    0x63uy; 0x00uy; 0x00uy; 0x00uy; // SequenceNumber
+                    0x00uy; 0x00uy; 0x00uy; 0x00uy;
+                |]; 0; [||]
+        |];
+        [| 4096; [| 0xFFuy; 0xFFuy; 0xFFuy; 0xFFuy; |]; 0; [||] |];   // DataSignature
     |]
 
     [<Theory>]
@@ -680,7 +705,7 @@ type VhdxReaderTest_Test () =
             {
                 PatchPosition = patch1Pos;
                 PatchData = patch1Data;
-                Descriptor = [| Data( [||], 0UL ); |];
+                Descriptor = [| Data( [||], 0UL ); Data( [||], 4096UL ); |];
             };
         |]
         let logGuid = Guid()
@@ -688,7 +713,6 @@ type VhdxReaderTest_Test () =
         Array.blit patch2Data 0 logData patch2Pos patch2Data.Length
         let r = VhdxReader.ReadLogEntry logData 0u logGuid
         Assert.True( r.IsNone )
-
 
     [<Fact>]
     member _.ReadLogEntry_001 () =
@@ -746,3 +770,63 @@ type VhdxReaderTest_Test () =
         | _ ->
             Assert.Fail __LINE__
 
+    [<Theory>]
+    [<InlineData( 0 )>]
+    [<InlineData( 4096 )>]
+    [<InlineData( 1032192 )>]
+    [<InlineData( 1036288 )>]
+    [<InlineData( 1044480 )>]
+    member _.ReadLogEntry_002 ( pos : int32 ) =
+        let entry = [|
+            {
+                PatchPosition = 0;
+                PatchData = Array.Empty();
+                Descriptor = [| Data( [||], 0UL ); Data( [||], 4096UL ); Data( [||], 8192UL ); Zero( 4096UL, 12288UL ) |];
+            };
+        |]
+        let logGuid = Guid.NewGuid()
+        let logData = genLogData 1048576 pos entry logGuid 99UL 2097152UL 3145728UL 
+        let r = VhdxReader.ReadLogEntry logData ( uint32 pos ) logGuid
+        Assert.True( r.IsSome )
+        Assert.StrictEqual( 4, r.Value.Descriptors.Length )
+ 
+    [<Theory>]
+    [<InlineData( 1 )>]
+    [<InlineData( 125 )>]
+    [<InlineData( 126 )>]
+    [<InlineData( 127 )>]
+    member _.ReadLogEntry_003 ( count : int32 ) =
+        let entry = [|
+            {
+                PatchPosition = 0;
+                PatchData = Array.Empty();
+                Descriptor = [|
+                    for i = 1 to count do
+                        yield Zero( 4096UL, 12288UL )
+                    yield Data( [||], 0UL );
+                |];
+            };
+        |]
+        let logGuid = Guid.NewGuid()
+        let logData = genLogData 1048576 0 entry logGuid 99UL 2097152UL 3145728UL 
+        let r = VhdxReader.ReadLogEntry logData 0u logGuid
+        Assert.True( r.IsSome )
+        Assert.StrictEqual( count + 1, r.Value.Descriptors.Length )
+
+    [<Fact>]
+    member _.ReadLogEntry_004 () =
+        let entry = [|
+            {
+                PatchPosition = 0;
+                PatchData = Array.Empty();
+                Descriptor = [|
+                    for i = 1 to 254 do
+                        yield Data( [||], 0UL )
+                |];
+            };
+        |]
+        let logGuid = Guid.NewGuid()
+        let logData = genLogData 1048576 0 entry logGuid 99UL 2097152UL 3145728UL 
+        let r = VhdxReader.ReadLogEntry logData 0u logGuid
+        Assert.True( r.IsSome )
+        Assert.StrictEqual( 254, r.Value.Descriptors.Length )

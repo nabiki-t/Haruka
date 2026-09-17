@@ -485,7 +485,7 @@ type VhdxReader() =
 
         // Verify whether the entry length is correct.
         let entryLength_Check =
-            ( int32 entryLength ) >= 0 && int32 entryLength <= logData.Length && ( entryLength &&& 0x00000FFFu ) = 0u
+            ( int32 entryLength ) > 0 && int32 entryLength <= logData.Length && ( entryLength &&& 0x00000FFFu ) = 0u
 
         // Verify whether the tail is correct.
         let tail_Check = ( int32 tail ) >= 0 && int32 tail < logData.Length && ( tail &&& 0x00000FFFu ) = 0u
@@ -497,10 +497,10 @@ type VhdxReader() =
         let logGuid_Check = logGuid = headerLogGuid
 
         // Verify whether the flushed file offset is correct.
-        let flushedFileOffset_Check = ( flushedFileOffset &&& 0x00000000000FFFFFUL ) = 0UL
+        let flushedFileOffset_Check = ( flushedFileOffset &&& 0x00000000000FFFFFUL ) = 0UL && ( flushedFileOffset <= 0x400000000000UL )
 
         // Verify whether the last file offset is correct.
-        let lastFileOffset_Check = ( lastFileOffset &&& 0x00000000000FFFFFUL ) = 0UL
+        let lastFileOffset_Check = ( lastFileOffset &&& 0x00000000000FFFFFUL ) = 0UL && ( lastFileOffset <= 0x400000000000UL )
 
         if not signature_Check || not entryLength_Check ||
                 not tail_Check || not descriptorCount_Check || not logGuid_Check ||
